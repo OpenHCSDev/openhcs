@@ -38,6 +38,7 @@ from openhcs.core.registry_strategies import (
     EnumKeyedStrategyMixin,
     RegisteredLeafClassSpec,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
@@ -76,6 +77,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     ParentChildLineageArtifactOutputModule,
 )
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
@@ -112,7 +114,7 @@ class IdentifyTertiaryObjectsModule(
     PairedPrimarySecondaryObjectInputPolicy,
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     ParentChildLineageArtifactOutputModule,
     MeasurementArtifactOutputModule,
     CellProfilerModule,
@@ -275,9 +277,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     CellProfilerPlaneGeometry,
 )
@@ -310,7 +310,7 @@ from openhcs.processing.backends.cellprofiler.watershed import (
 )
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 ClassNamespaceValue: TypeAlias = (
     str
     | bool
@@ -1148,7 +1148,7 @@ def _replacement_primary_output_from_relationship(
 
 
 def _execute_identify_secondary_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,
@@ -1338,7 +1338,7 @@ def _execute_identify_secondary_objects(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("primary_labels")
 def identify_secondary_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,
@@ -1408,7 +1408,7 @@ def identify_secondary_objects(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("primary_labels")
 def identify_secondary_objects_with_replacement_primary(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,

@@ -154,6 +154,14 @@ class MetaXpressWavelengthSettings:
     intensity_above_local_background: float = 100.0
     """Minimum raw-intensity difference above adaptive local background."""
 
+    def minimum_width_px(self, coordinate_scale: float) -> float:
+        """Project this wavelength's lower width into image pixels."""
+        return self.approx_min_width / coordinate_scale
+
+    def maximum_width_px(self, coordinate_scale: float) -> float:
+        """Project this wavelength's upper width into image pixels."""
+        return self.approx_max_width / coordinate_scale
+
     def validate(self, name: str) -> None:
         """Validate one wavelength's complete public settings block."""
 
@@ -579,23 +587,23 @@ class RoundObjectSegmentationStages:
 def segment_metaxpress_round_objects(
     slice_data: np.ndarray,
     settings: MetaXpressWavelengthSettings,
-    pixel_size_um: float,
+    coordinate_scale: float,
 ) -> np.ndarray:
     """Segment bright round objects using shared MetaXpress-style controls."""
     return round_object_segmentation_stages(
-        slice_data, settings, pixel_size_um
+        slice_data, settings, coordinate_scale
     ).accepted_labels
 
 
 def round_object_segmentation_stages(
     slice_data: np.ndarray,
     settings: MetaXpressWavelengthSettings,
-    pixel_size_um: float,
+    coordinate_scale: float,
 ) -> RoundObjectSegmentationStages:
     """Run the shared detector once and retain its exact acceptance evidence."""
 
-    min_width_px = settings.approx_min_width / pixel_size_um
-    max_width_px = settings.approx_max_width / pixel_size_um
+    min_width_px = settings.minimum_width_px(coordinate_scale)
+    max_width_px = settings.maximum_width_px(coordinate_scale)
     intensity_above_background = local_background_response(
         slice_data,
         object_width_px=max_width_px,

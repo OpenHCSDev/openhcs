@@ -7,6 +7,7 @@ from typing import cast
 from unittest.mock import Mock
 
 import numpy as np
+import pytest
 
 from openhcs.core.aligned_image_payload import ImageOutputBundle
 from openhcs.core.artifacts import (
@@ -18,6 +19,11 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.function_patterns import (
+    CompiledFunctionGroup,
+    CompiledFunctionInvocation,
+    FunctionInvocationKey,
+)
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
@@ -95,19 +101,51 @@ def test_independent_exact_invocations_accumulate_named_image_outputs() -> None:
         )
 
 
-def test_true_preserves_input_adapter_contract_keeps_main_flow_unchanged() -> None:
-    measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
-    executor = _executor(measurements)
-    plan = ArtifactOutputPlan(
-        name=measurements.name,
-        path="/memory/Measurements.pkl",
-        artifact_type=measurements.artifact_type,
+@pytest.mark.parametrize(
+    "output_kinds",
+    [
+        (),
+        (MeasurementsArtifactType,),
+        (MeasurementsArtifactType, ObjectLabelsArtifactType),
+    ],
+    ids=["no-outputs", "measurements", "measurements-before-labels"],
+)
+def test_true_preserves_input_adapter_contract_keeps_main_flow_unchanged(
+    output_kinds,
+) -> None:
+    outputs = tuple(
+        ArtifactSpec.output(f"Output{index}", kind)
+        for index, kind in enumerate(output_kinds)
     )
+    plans = tuple(
+        ArtifactOutputPlan(
+            name=spec.name,
+            path=f"/memory/{spec.name}.pkl",
+            artifact_type=spec.artifact_type,
+        )
+        for spec in outputs
+    )
+    executor = _executor(*outputs)
+    contract = executor.callable_contract
+    invocation = CompiledFunctionInvocation(
+        key=FunctionInvocationKey.from_contract(contract, "default", 0),
+        contract=contract,
+        artifact_output_plans=plans,
+    )
+    group = CompiledFunctionGroup("default", (invocation,))
     current = np.zeros((2, 2), dtype=np.float32)
 
-    assert executor.callable_contract.preserves_input_main_flow()
+    assert contract.preserves_input_main_flow()
+    assert group.preserves_input_main_flow()
+    assert group.resulting_implicit_main_flow_invocation() is None
+    assert group.resulting_main_flow_output_plans() == ()
+    assert group.unwrapped_main_flow_output_context(
+        {plan.ref(): plan for plan in plans}
+    ) is None
     result = executor._published_active_main_flow_output(
-        matched_outputs=((plan, measurements, object()),),
+        matched_outputs=tuple(
+            (plan, spec, object()) for plan, spec in zip(plans, outputs, strict=True)
+        ),
         declared_only_outputs={},
         adapter=cast(CellProfilerRuntimeAdapter, object()),
         current_image=current,
@@ -155,3 +193,46 @@ def test_mixed_outputs_publish_only_the_active_canonical_return_slot() -> None:
     assert tuple(context.output_key for context in result.slice_contexts) == ("Gray",)
     np.testing.assert_array_equal(result.slices[0], image_value)
     adapter.artifact_output_value.assert_called_once_with(image_plan)
+
+
+@pytest.mark.parametrize("named_producer", [False, True])
+def test_preserving_cellprofiler_tail_retains_the_existing_producer(named_producer):
+    image, image_plan = _image_output("Original", "Gray")
+    producer_contract = _executor(image).callable_contract
+    if not named_producer:
+        from openhcs.core.artifact_key_selection import NativeReturnArtifactOutputPolicy
+        from openhcs.core.runtime_adapters import RuntimeAdapterSpec
+
+        producer_contract = replace(
+            producer_contract,
+            metadata=replace(
+                producer_contract.metadata,
+                artifact_outputs=(),
+                runtime_adapter=RuntimeAdapterSpec(
+                    "runtime",
+                    lambda request: object(),
+                    artifact_output_policy=NativeReturnArtifactOutputPolicy,
+                ),
+            ),
+        )
+    producer = CompiledFunctionInvocation(
+        key=FunctionInvocationKey.from_contract(producer_contract, "default", 0),
+        contract=producer_contract,
+        artifact_output_plans=(image_plan,) if named_producer else (),
+    )
+    tail_contract = _executor().callable_contract
+    tail = CompiledFunctionInvocation(
+        key=FunctionInvocationKey.from_contract(tail_contract, "default", 1),
+        contract=tail_contract,
+    )
+    group = CompiledFunctionGroup("default", (producer, tail))
+
+    assert not group.preserves_input_main_flow()
+    if named_producer:
+        assert group.resulting_main_flow_output_plans() == (image_plan,)
+        assert group.resulting_implicit_main_flow_invocation() is None
+        context = group.unwrapped_main_flow_output_context({image_plan.ref(): image_plan})
+        assert context.output_key == "Gray"
+    else:
+        assert group.resulting_main_flow_output_plans() == ()
+        assert group.resulting_implicit_main_flow_invocation() is producer

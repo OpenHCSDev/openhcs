@@ -327,6 +327,7 @@ class NativeCellProfilerInputDomain:
     cppipe_path: Path
     input_dir: Path
     provenance: dict[str, Any]
+    source_universe: NativeCellProfilerSelectedSourceUniverse
     file_list_path: Path | None = None
 
     def __post_init__(self) -> None:
@@ -454,7 +455,9 @@ class NativeCellProfilerSelectedSourceUniverse:
         )
         return Path(address).resolve()
 
-    def materialize_flat_input_dir(self, input_dir: Path) -> tuple[Path, ...]:
+    def materialize_flat_input_dir(
+        self, input_dir: Path
+    ) -> NativeCellProfilerSelectedSourceUniverse:
         input_dir = Path(input_dir)
         if input_dir.exists():
             shutil.rmtree(input_dir)
@@ -482,7 +485,22 @@ class NativeCellProfilerSelectedSourceUniverse:
                 except OSError:
                     shutil.copy2(placement.source_path, target_path)
             projected_paths.append(target_path)
-        return tuple(projected_paths)
+        return NativeCellProfilerSelectedSourceUniverse(
+            tuple(projected_paths),
+            placements=tuple(
+                NativeCellProfilerSourcePlacement(target_path, placement.relative_path)
+                for placement, target_path in zip(
+                    self.placements, projected_paths, strict=True
+                )
+            ),
+            imported_metadata_paths=tuple(
+                target_path
+                for placement, target_path in zip(
+                    self.placements, projected_paths, strict=True
+                )
+                if placement.source_path in self.imported_metadata_paths
+            ),
+        )
 
     def _materialize_selected_imported_metadata_table(
         self,
@@ -784,6 +802,7 @@ class SelectedWellNativeCellProfilerInputDomainStrategy(
             return NativeCellProfilerInputDomain(
                 cppipe_path=patched_cppipe_path,
                 input_dir=input_dir,
+                source_universe=selected_source_universe,
                 provenance={
                     NativeCellProfilerProvenanceField.INPUT_DOMAIN_STRATEGY: (
                         self.strategy_key
@@ -807,7 +826,9 @@ class SelectedWellNativeCellProfilerInputDomainStrategy(
         selected_input_dir = selected_input_path.input_dir()
         file_list_path = None
         if requires_flat_input_dir:
-            selected_source_universe.materialize_flat_input_dir(selected_input_dir)
+            selected_source_universe = selected_source_universe.materialize_flat_input_dir(
+                selected_input_dir
+            )
         else:
             file_list_path = self._write_file_list(
                 request.output_dir / "native_cellprofiler_file_list.txt",
@@ -819,6 +840,7 @@ class SelectedWellNativeCellProfilerInputDomainStrategy(
                 selected_input_dir if requires_flat_input_dir else request.dataset_path
             ),
             file_list_path=file_list_path,
+            source_universe=selected_source_universe,
             provenance={
                 NativeCellProfilerProvenanceField.INPUT_DOMAIN_STRATEGY: (
                     self.strategy_key
@@ -931,6 +953,7 @@ class EmbeddedImagePlaneNativeCellProfilerInputDomainStrategy(
         return NativeCellProfilerInputDomain(
             cppipe_path=patched_cppipe_path,
             input_dir=input_dir,
+            source_universe=NativeCellProfilerSelectedSourceUniverse(source_paths),
             provenance={
                 NativeCellProfilerProvenanceField.INPUT_DOMAIN_STRATEGY: (
                     self.strategy_key
@@ -1027,9 +1050,21 @@ class DefaultNativeCellProfilerInputDomainStrategy(
         execution_cppipe_path: Path,
     ) -> NativeCellProfilerInputDomain:
         del source
+        source_paths = tuple(
+            path for path in request.dataset_path.rglob("*") if path.is_file()
+        )
         return NativeCellProfilerInputDomain(
             cppipe_path=execution_cppipe_path,
             input_dir=request.dataset_path,
+            source_universe=NativeCellProfilerSelectedSourceUniverse(
+                source_paths,
+                placements=tuple(
+                    NativeCellProfilerSourcePlacement(
+                        path, path.relative_to(request.dataset_path)
+                    )
+                    for path in source_paths
+                ),
+            ),
             provenance={
                 NativeCellProfilerProvenanceField.INPUT_DOMAIN_STRATEGY: (
                     self.strategy_key

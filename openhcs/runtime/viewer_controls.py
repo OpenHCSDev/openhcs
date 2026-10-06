@@ -3,15 +3,30 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from math import isfinite
+from math import floor, isfinite
 from numbers import Real
-from typing import ClassVar, Self, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Self, TypeAlias, TypeVar
+
+from polystore.streaming.identity import (
+    StreamProducerIdentity,
+    StreamProducerPayloadMapping,
+)
+from zmqruntime.viewer_protocol import (
+    ViewerNativeLayerTransform,
+    ViewerSourceSpatialDomainPayload,
+)
+from openhcs.core.source_metadata import SourceVoxelSpacing
+
+if TYPE_CHECKING:
+    import numpy as np
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
 
 from zmqruntime.viewer_protocol import ViewerWireField
 
 ViewerScalar: TypeAlias = str | int | float | bool | None
+VerticesYX: TypeAlias = tuple[tuple[float, float], ...]
 ViewerPayloadAxisIndices: TypeAlias = tuple[int, ...] | dict[str, int]
 ViewerShapePayloadValueT = TypeVar("ViewerShapePayloadValueT")
 
@@ -59,23 +74,29 @@ class ViewerResultElementCoordinateAuthority:
         *,
         coordinates: Iterable[object],
         axis_labels: Sequence[str],
-        displayed_axis_count: int,
+        displayed_axis_indices: Sequence[int],
+        spatial_axis_labels: Sequence[str],
     ) -> dict[str, int]:
         """Return exact route-local indices for every non-displayed axis."""
 
-        if isinstance(displayed_axis_count, bool) or not isinstance(
-            displayed_axis_count,
-            int,
+        displayed = tuple(displayed_axis_indices)
+        if any(
+            isinstance(axis, bool) or not isinstance(axis, int) for axis in displayed
         ):
-            raise TypeError("Viewer displayed_axis_count must be an integer.")
-        if displayed_axis_count <= 0:
-            raise ValueError("Viewer displayed_axis_count must be positive.")
+            raise TypeError("Viewer displayed_axis_indices must contain integers.")
+        if not displayed or len(set(displayed)) != len(displayed):
+            raise ValueError(
+                "Viewer displayed_axis_indices must be nonempty and unique."
+            )
 
         labels = tuple(axis_labels)
         if any(not isinstance(label, str) or not label for label in labels):
             raise ValueError("Viewer axis_labels must contain non-empty strings.")
         if len(set(labels)) != len(labels):
             raise ValueError("Viewer axis_labels must be unique.")
+        spatial = tuple(spatial_axis_labels)
+        if len(set(spatial)) != len(spatial) or any(axis not in labels for axis in spatial):
+            raise ValueError("Viewer spatial axes must be unique declared route axes.")
 
         rows = cls._coordinate_rows(coordinates)
         coordinate_width = len(rows[0])
@@ -88,20 +109,20 @@ class ViewerResultElementCoordinateAuthority:
                 "Viewer result element coordinate width must match its axis labels: "
                 f"{coordinate_width} != {len(labels)}."
             )
-        if displayed_axis_count > coordinate_width:
+        if any(axis < 0 or axis >= coordinate_width for axis in displayed):
             raise ValueError(
-                "Viewer displayed_axis_count exceeds the result element coordinate "
-                f"width: {displayed_axis_count} > {coordinate_width}."
+                "Viewer displayed_axis_indices are outside the result coordinate width."
             )
 
-        slice_axis_count = coordinate_width - displayed_axis_count
         return {
             labels[axis_position]: cls._slice_index(
                 rows,
                 axis_position=axis_position,
                 axis_label=labels[axis_position],
+                spatial_axis_labels=spatial,
             )
-            for axis_position in range(slice_axis_count)
+            for axis_position in range(coordinate_width)
+            if axis_position not in displayed
         }
 
     @classmethod
@@ -145,11 +166,13 @@ class ViewerResultElementCoordinateAuthority:
         *,
         axis_position: int,
         axis_label: str,
+        spatial_axis_labels: Sequence[str],
     ) -> int:
         coordinates = tuple(
-            cls._integral_coordinate(
+            cls._slice_coordinate(
                 row[axis_position],
                 axis_label=axis_label,
+                spatial_axis_labels=spatial_axis_labels,
             )
             for row in rows
         )
@@ -160,20 +183,61 @@ class ViewerResultElementCoordinateAuthority:
             )
         return coordinates[0]
 
+    @classmethod
+    def _slice_coordinate(
+        cls, value: object, *, axis_label: str, spatial_axis_labels: Sequence[str],
+    ) -> int:
+        numeric_value = cls._coordinate_value(value, axis_label=axis_label)
+        if not numeric_value.is_integer():
+            raise ValueError(
+                f"Viewer result element coordinate for axis {axis_label!r} "
+                f"must identify one integral slice, got {value!r}."
+            )
+        return int(numeric_value)
+
     @staticmethod
-    def _integral_coordinate(value: object, *, axis_label: str) -> int:
+    def _coordinate_value(value: object, *, axis_label: str) -> float:
         if isinstance(value, bool) or not isinstance(value, Real):
             raise TypeError(
                 f"Viewer result element coordinate for axis {axis_label!r} "
                 "must be numeric."
             )
         numeric_value = float(value)
-        if not isfinite(numeric_value) or not numeric_value.is_integer():
+        if not isfinite(numeric_value):
             raise ValueError(
                 f"Viewer result element coordinate for axis {axis_label!r} "
-                f"must identify one integral slice, got {value!r}."
+                f"must be finite, got {value!r}."
             )
-        return int(numeric_value)
+        return numeric_value
+
+
+class ViewerPointCoordinateAuthority(ViewerResultElementCoordinateAuthority):
+    """Navigate to the nearest spatial slice without rounding stored geometry."""
+
+    @classmethod
+    def _slice_coordinate(
+        cls, value: object, *, axis_label: str, spatial_axis_labels: Sequence[str],
+    ) -> int:
+        if axis_label not in spatial_axis_labels:
+            return super()._slice_coordinate(
+                value, axis_label=axis_label, spatial_axis_labels=spatial_axis_labels,
+            )
+        return floor(cls._coordinate_value(value, axis_label=axis_label) + 0.5)
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerNativeDimensions:
+    """Actual native readback; canvas_size is logical Qt (width, height)."""
+
+    order: tuple[int, ...]
+    ndisplay: int
+    displayed_axes: tuple[str, ...]
+    point: tuple[float, ...]
+    camera_angles: tuple[float, float, float]
+    canvas_size: tuple[int, int] | None
+
+    def to_wire_mapping(self) -> dict[str, object]:
+        return asdict(self)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -187,6 +251,16 @@ class ViewerPayloadControlOptions:
     array_slices: tuple[tuple[int, int], ...] | None = None
     include_shape_payloads: bool = True
     max_shape_payloads: int = 256
+
+    def sample_axis_indices(
+        self,
+        data: np.ndarray,
+        image_metadata: ImagePayloadMetadata | None,
+        source_data: np.ndarray,
+        removed_leading_axes: int,
+    ) -> tuple[int, ...]:
+        """Raw array slices retain their existing trailing-dimension contract."""
+        return tuple(range(data.ndim - len(self.array_slices), data.ndim))
 
     def __post_init__(self) -> None:
         if self.route_key is not None and (
@@ -222,7 +296,7 @@ class ViewerPayloadControlOptions:
         include_shape_payloads: bool | None = None,
         max_shape_payloads: int | None = None,
     ) -> Self:
-        defaults = cls()
+        defaults = cls(array_slices=array_slices)
         return cls(
             route_key=route_key,
             axis_indices=(
@@ -303,6 +377,33 @@ class ViewerPayloadControlOptions:
             raise TypeError(f"Viewer payload {field_name} must be an integer.")
         if value < 0:
             raise ValueError(f"Viewer payload {field_name} must be nonnegative.")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerImageSpatialSampleControls(ViewerPayloadControlOptions):
+    """Semantic Y/X bounds; metadata, not payload rank or size, owns layout."""
+
+    def __post_init__(self) -> None:
+        super(ViewerImageSpatialSampleControls, self).__post_init__()
+        if self.array_slices is None or len(self.array_slices) != 2:
+            raise ValueError("Spatial image sampling requires exactly Y/X bounds.")
+
+    def sample_axis_indices(
+        self,
+        data: np.ndarray,
+        image_metadata: ImagePayloadMetadata | None,
+        source_data: np.ndarray,
+        removed_leading_axes: int,
+    ) -> tuple[int, ...]:
+        if image_metadata is None:
+            raise ValueError("Spatial image sampling requires image metadata.")
+        axes = image_metadata.spatial_axes_yx(source_data)
+        if axes is None:
+            raise ValueError("Image metadata does not declare a spatial Y/X layout.")
+        projected = tuple(axis - removed_leading_axes for axis in axes)
+        if any(axis < 0 or axis >= data.ndim for axis in projected):
+            raise ValueError("Spatial Y/X axes were removed by the payload projection.")
+        return projected
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -404,7 +505,20 @@ class ViewerStateControlOptions:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ViewerIntensityWindowControlOptions:
+class ViewerRoutedImageControlOptions:
+    """Exact route and route-local semantic image coordinates."""
+
+    route_key: str
+    axis_indices: Mapping[str, int] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.route_key, str) or not self.route_key:
+            raise ValueError("Viewer image route_key must be a non-empty string.")
+        ViewerPayloadControlOptions._validate_axis_indices(dict(self.axis_indices))
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerIntensityWindowControlOptions(ViewerRoutedImageControlOptions):
     """Route-global image contrast derived from caller-declared percentiles.
 
     Semantic ``axis_indices`` select every real payload record matching those
@@ -412,17 +526,11 @@ class ViewerIntensityWindowControlOptions:
     coordinate on the route; display-array padding is outside this contract.
     """
 
-    route_key: str
-    axis_indices: Mapping[str, int] = field(default_factory=dict)
     low_percentile: float = 1.0
     high_percentile: float = 99.0
 
     def __post_init__(self) -> None:
-        if not isinstance(self.route_key, str) or not self.route_key:
-            raise ValueError(
-                "Viewer intensity-window route_key must be a non-empty string."
-            )
-        ViewerPayloadControlOptions._validate_axis_indices(dict(self.axis_indices))
+        ViewerRoutedImageControlOptions.__post_init__(self)
         low = self._percentile(self.low_percentile, "low_percentile")
         high = self._percentile(self.high_percentile, "high_percentile")
         if low >= high:
@@ -463,6 +571,226 @@ class ViewerIntensityWindowControlOptions:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerFeatureMeasurementControlOptions(ViewerRoutedImageControlOptions):
+    """Read-only source-native XY measurement, never a rendered screenshot."""
+
+    vertices_yx: tuple[tuple[float, float], ...]
+    max_pixels: int = 262144
+    MAX_VERTICES: ClassVar[int] = 64
+    MIN_VERTICES: ClassVar[int] = 2
+    MAX_PIXELS: ClassVar[int] = 262144
+
+    def __post_init__(self) -> None:
+        ViewerRoutedImageControlOptions.__post_init__(self)
+        self.validate_vertices(self.vertices_yx, self.MIN_VERTICES)
+        self.validate_budget(self.max_pixels, "max_pixels", self.MAX_PIXELS)
+
+    @classmethod
+    def validate_vertices(
+        cls, vertices: Sequence[Sequence[float]], minimum: int
+    ) -> None:
+        if not minimum <= len(vertices) <= cls.MAX_VERTICES:
+            raise ValueError(
+                f"Measurement requires {minimum}..{cls.MAX_VERTICES} vertices."
+            )
+        for vertex in vertices:
+            if len(vertex) != 2:
+                raise ValueError(
+                    "Measurement vertices must be source-native (y,x) pairs."
+                )
+            for value in vertex:
+                if isinstance(value, bool) or not isinstance(value, Real):
+                    raise TypeError("Measurement coordinates must be real numbers.")
+                if not isfinite(float(value)):
+                    raise ValueError("Measurement coordinates must be finite.")
+
+    @staticmethod
+    def validate_budget(value: int, name: str, ceiling: int) -> None:
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(f"Measurement {name} must be an integer.")
+        if not 1 <= value <= ceiling:
+            raise ValueError(f"Measurement {name} must be within 1..{ceiling}.")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerPolylineControlOptions(ViewerFeatureMeasurementControlOptions):
+    """Polyline profile: inclusive endpoints, mean across a centred pixel band."""
+
+    line_width: int = 1
+    interpolation_order: int = 1
+    max_samples: int = 4096
+
+    def __post_init__(self) -> None:
+        ViewerFeatureMeasurementControlOptions.__post_init__(self)
+        self.validate_budget(self.line_width, "line_width", 31)
+        self.validate_budget(self.max_samples, "max_samples", 4096)
+        if isinstance(self.interpolation_order, bool) or not isinstance(
+            self.interpolation_order, int
+        ):
+            raise TypeError("Measurement interpolation_order must be an integer.")
+        if self.interpolation_order not in (0, 1):
+            raise ValueError(
+                "Only nearest(0) and bilinear(1) interpolation are supported."
+            )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerRegionControlOptions(ViewerFeatureMeasurementControlOptions):
+    """An independently authored simple polygon, not a biological object mask."""
+
+    MIN_VERTICES: ClassVar[int] = 3
+    background_vertices_yx: tuple[tuple[float, float], ...] | None = None
+    support_threshold: float | None = None
+    background_sigma: float = 2.0
+
+    def __post_init__(self) -> None:
+        ViewerFeatureMeasurementControlOptions.__post_init__(self)
+        if self.background_vertices_yx is not None:
+            self.validate_vertices(self.background_vertices_yx, 3)
+        for name, value in (
+            ("support_threshold", self.support_threshold),
+            ("background_sigma", self.background_sigma),
+        ):
+            if value is not None:
+                if isinstance(value, bool) or not isinstance(value, Real):
+                    raise TypeError(f"Measurement {name} must be numeric.")
+                if not isfinite(float(value)):
+                    raise ValueError(f"Measurement {name} must be finite.")
+        if self.background_sigma < 0:
+            raise ValueError("Measurement background_sigma must be nonnegative.")
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerMeasurementCoordinates:
+    """Audit projection from the admitted item and native coordinate owners."""
+
+    route_key: str
+    source_path: str
+    producer: StreamProducerIdentity
+    components: dict[str, ViewerScalar | tuple[ViewerScalar, ...]]
+    axis_indices: dict[str, int]
+    aggregate_axis_indices: tuple[int, ...]
+    layer_axis_labels: tuple[str, ...]
+    source_domain: ViewerSourceSpatialDomainPayload
+    source_spacing: SourceVoxelSpacing
+    native_transform: ViewerNativeLayerTransform
+    world_units: tuple[str, ...]
+    physical_calibration_verified: bool = False
+    coordinate_convention: str = (
+        "source-native (y,x) pixel centres; world points use mounted layer.data_to_world including full affine"
+    )
+    calibration_note: str = (
+        "Source spacing/units are declared provenance, not independent physical verification; scale1 is not proof of micrometres."
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerIntensityStatistics:
+    count: int
+    minimum: float
+    maximum: float
+    mean: float
+    median: float
+    standard_deviation: float
+    total: float
+
+    @classmethod
+    def from_pixels(cls, values: np.ndarray) -> ViewerIntensityStatistics:
+        import numpy as np
+
+        if not values.size or not np.isfinite(values).all():
+            raise ValueError("Measurement pixels must be nonempty and finite.")
+        result = cls(
+            int(values.size),
+            float(values.min()),
+            float(values.max()),
+            float(values.mean()),
+            float(np.median(values)),
+            float(values.std(ddof=0)),
+            float(values.sum()),
+        )
+        if not all(
+            isfinite(v) for v in (result.mean, result.standard_deviation, result.total)
+        ):
+            raise ValueError("Measurement statistics overflowed.")
+        return result
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerPolylineMeasurement:
+    vertices_yx: VerticesYX
+    world_vertices: tuple[tuple[float, ...], ...]
+    data_length: float
+    data_chord_length: float
+    world_length: float
+    world_chord_length: float
+    profile_distance_data: tuple[float, ...]
+    profile_distance_world: tuple[float, ...]
+    profile_values: tuple[float, ...]
+    statistics: ViewerIntensityStatistics
+    line_width: int
+    interpolation_order: int
+    reduction: str = "mean across centred perpendicular band"
+    sampling: str = (
+        "ceil(segment length+1) endpoint-inclusive; repeated junction uses preceding segment; "
+        "nearest(0)/bilinear(1), constant exterior=0 with full band admitted inside source"
+    )
+    data_length_unit: str = "pixel"
+    intensity_unit: str = "raw source value"
+    statistics_precision: str = "float64, population standard deviation (ddof=0)"
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerPolygonGeometry:
+    area: float
+    perimeter: float
+    extent: float
+    roundness: float
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerRasterRegionGeometry:
+    area_pixels: int
+    bbox_yx: tuple[int, int, int, int]
+    centroid_yx: tuple[float, float]
+    extent: float
+    perimeter_pixels: float
+    roundness: float | None
+    eccentricity: float
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerRegionMeasurement:
+    vertices_yx: VerticesYX
+    world_vertices: tuple[tuple[float, ...], ...]
+    polygon: ViewerPolygonGeometry
+    world_area: float
+    world_perimeter: float
+    world_roundness: float
+    raster: ViewerRasterRegionGeometry
+    statistics: ViewerIntensityStatistics
+    background_vertices_yx: VerticesYX | None
+    background_statistics: ViewerIntensityStatistics | None
+    support_threshold: float | None
+    support_count: int | None
+    support_fraction: float | None
+    foreground_minus_background_mean: float | None
+    background_sigma: float
+    region_definition: str = (
+        "independent simple polygon; integer pixel centres including boundary; NOT a biological mask"
+    )
+    support_definition: str = (
+        "raw values strictly > threshold; explicit threshold or background mean + sigma*population std"
+    )
+    geometry_definition: str = (
+        "polygon area/perimeter are continuous; raster area/extent/perimeter use skimage.regionprops, 4-neighbour perimeter; roundness=4*pi*area/perimeter^2 (not clamped)"
+    )
+    data_area_unit: str = "pixel^2"
+    intensity_unit: str = "raw source value"
+    statistics_precision: str = "float64, population standard deviation (ddof=0)"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerNavigationControlOptions:
     """Formal viewer navigation controls shared by agent and viewer runtimes."""
 
@@ -476,8 +804,22 @@ class ViewerNavigationControlOptions:
     visible: bool | None = None
     selected: bool | None = None
     data_index: int | None = None
+    display_axes: tuple[str, str] | None = None
 
     def __post_init__(self) -> None:
+        if self.display_axes is not None:
+            if isinstance(self.display_axes, (str, bytes)):
+                raise TypeError("Viewer display_axes must be a pair of axis names.")
+            axes = tuple(self.display_axes)
+            if len(axes) != 2 or any(
+                not isinstance(axis, str) or not axis for axis in axes
+            ):
+                raise ValueError(
+                    "Viewer display_axes requires two nonempty axis names."
+                )
+            if axes[0] == axes[1]:
+                raise ValueError("Viewer display_axes must select distinct axes.")
+            object.__setattr__(self, "display_axes", axes)
         if not isinstance(self.route_key, str) or not self.route_key:
             raise ValueError("Viewer navigation route_key must be a non-empty string.")
         if not isinstance(self.axis_indices, Mapping):
@@ -530,6 +872,7 @@ class ViewerNavigationControlOptions:
         visible: bool | None = None,
         selected: bool | None = None,
         data_index: int | None = None,
+        display_axes: tuple[str, str] | None = None,
     ) -> Self:
         return cls(
             route_key=route_key,
@@ -537,7 +880,39 @@ class ViewerNavigationControlOptions:
             visible=visible,
             selected=selected,
             data_index=data_index,
+            display_axes=display_axes,
         )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerLayerRetirementControlOptions:
+    """Explicit routes guarded by their complete observed producer incarnations."""
+
+    expected_producers: Mapping[str, tuple[StreamProducerIdentity, ...]]
+
+    def __post_init__(self) -> None:
+        if not self.expected_producers:
+            raise ValueError("Layer retirement requires explicit route identities.")
+        for route, producers in self.expected_producers.items():
+            if not isinstance(route, str) or not route:
+                raise ValueError("Retirement route keys must be non-empty strings.")
+            if not producers or any(
+                not isinstance(producer, StreamProducerIdentity) for producer in producers
+            ):
+                raise ValueError("Retirement requires full typed producer identities.")
+            if len(frozenset(producers)) != len(producers):
+                raise ValueError("Retirement producer identities must be distinct.")
+
+    @classmethod
+    def from_overrides(
+        cls, *, expected_producers: Mapping[
+            str, Sequence[StreamProducerIdentity | StreamProducerPayloadMapping]
+        ],
+    ) -> Self:
+        return cls(expected_producers={
+            route: tuple(StreamProducerIdentity.from_payload(value) for value in values)
+            for route, values in expected_producers.items()
+        })
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from enum import Enum
 from functools import lru_cache
 from types import MappingProxyType
@@ -10,7 +11,6 @@ from openhcs.core.equivalence import (
     RuntimeEquivalencePolicy,
     RuntimeMeasurementDialect,
     RuntimeMeasurementSourceNameEncoding,
-    measurement_row_qualifiers,
 )
 from openhcs.core.measurement_lookup_dialect import (
     RuntimeMeasurementFeatureLookup,
@@ -107,8 +107,42 @@ CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT = RuntimeMeasurementLookupDialect(
         CellProfilerModule.alternative_measurement_feature_part_aliases
     ),
     source_qualified_feature_families_provider=CellProfilerModule.source_qualified_measurement_feature_family_parts,
+    indexed_descriptor_suffix_width_provider=(
+        RuntimeMeasurementFeatureDeclaration.indexed_suffix_token_width_for
+    ),
     object_domain_policy=CellProfilerMeasurementObjectDomainPolicy(),
 )
+
+
+@lru_cache(maxsize=None)
+def cellprofiler_lookup_dialect_for_measurement_owner(
+    owner: type[CellProfilerModule] | None,
+) -> RuntimeMeasurementLookupDialect:
+    """Project the global lookup dialect through one recorded table owner."""
+    owner_name = getattr(owner, "module_name", None)
+    if (
+        not isinstance(owner_name, str)
+        or dict.get(CellProfilerModule.__registry__, owner_name) is not owner
+    ):
+        return CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT
+    return replace(
+        CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        category_prefixes=owner.measurement_category_prefixes,
+        category_prefixes_provider=None,
+        feature_part_aliases={
+            **CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT.feature_part_aliases,
+            **owner.declared_measurement_feature_part_rewrites(),
+        },
+        feature_part_aliases_provider=None,
+        alternative_feature_part_aliases=owner.measurement_feature_part_aliases,
+        alternative_feature_part_aliases_provider=None,
+        source_qualified_feature_families=(
+            owner.declared_source_qualified_measurement_feature_family_parts()
+        ),
+        source_qualified_feature_families_provider=None,
+    )
+
+
 CELLPROFILER_MEASUREMENT_DIALECT = RuntimeMeasurementDialect(
     category_prefixes_provider=CellProfilerModule.measurement_category_prefix_declarations,
     primary_category_prefixes_provider=(
@@ -134,6 +168,7 @@ CELLPROFILER_MEASUREMENT_DIALECT = RuntimeMeasurementDialect(
         CellProfilerModule.measurement_feature_marker_types_for_key
     ),
     row_identity_contract=RuntimeMeasurementRowIdentityContract(
+        object_identity_output_field=MeasurementRowAxisField.OBJECT_NUMBER.value,
         object_identity_fields=(
             "_".join(CELLPROFILER_OBJECT_NUMBER_FEATURE_PARTS),
             *MeasurementRowAxisField.object_id_field_names(),
@@ -175,23 +210,6 @@ CELLPROFILER_MEASUREMENT_DIALECT = RuntimeMeasurementDialect(
     ),
     measurement_feature_relation_provider=CellProfilerModule.measurement_feature_relation_declarations,
 )
-
-
-@lru_cache(maxsize=8192)
-def cellprofiler_projected_measurement_feature_name(
-    feature_name: str,
-    qualifier_values: tuple[tuple[str, object], ...],
-) -> str:
-    """Append declared descriptor axes to an exact producer feature name."""
-
-    qualifiers = measurement_row_qualifiers(
-        dict(qualifier_values),
-        CELLPROFILER_MEASUREMENT_DIALECT,
-        feature_name,
-    )
-    if not qualifiers:
-        return feature_name
-    return "_".join((feature_name, *qualifiers))
 
 
 def cellprofiler_runtime_equivalence_policy(

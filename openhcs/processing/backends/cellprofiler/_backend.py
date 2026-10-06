@@ -12,10 +12,9 @@ from typing import Annotated, ClassVar, TypeAlias, TypeVar, cast
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import (
-    CallableContract,
-    CompilerPreparedAutoRegisterFamily,
-)
+from openhcs.core.callable_contract import CallableContract
+from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
+from openhcs.core.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 
 
@@ -24,6 +23,7 @@ class CellProfilerBackendProvider(str, Enum):
 
     NATIVE = "native"
     NUMBA = "numba"
+    CPP = "cpp"
     CENTROSOME = "centrosome"
     OPENCV = "opencv"
     LEGACY_FAST = "legacy_fast"
@@ -276,7 +276,7 @@ class CellProfilerBackendAuthority:
         )
 
 
-class CellProfilerBackendStrategyMixin(CompilerPreparedAutoRegisterFamily):
+class CellProfilerBackendStrategyMixin(PersistentNumbaKernelPreparation):
     """Mixin for backend strategies keyed by OpenHCS memory type and provider.
 
     Concrete strategy families keep their own AutoRegisterMeta registry; this
@@ -293,10 +293,21 @@ class CellProfilerBackendStrategyMixin(CompilerPreparedAutoRegisterFamily):
     is_default_backend: ClassVar[bool] = False
 
     @classmethod
+    def requires_persistent_kernel_cache(cls) -> bool:
+        """Require cache preparation only for declared compiler-backed providers."""
+        if cls is CellProfilerBackendStrategyMixin:
+            return False
+        return any(
+            strategy.requires_explicit_prepare_backend()
+            for strategy in cls.__registry__.values()
+        )
+
+    @classmethod
     def prepare_registered_family(cls) -> None:
         """Prepare every registered backend implementation for compiler warmup."""
         if cls is CellProfilerBackendStrategyMixin:
             return
+        DenseArrayObjectLabelStorageStrategy.prepare_coordinates()
         snapshot = CellProfilerBackendRegistrySnapshot.for_family(
             cls,
             MemoryType.NUMPY,

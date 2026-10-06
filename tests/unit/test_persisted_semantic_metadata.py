@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
+import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
@@ -17,7 +18,6 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
-from openhcs.core.source_bindings import SourceBindingRuntimeContext
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
@@ -33,6 +33,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
+from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.serialization.json import to_jsonable
 
@@ -94,14 +95,10 @@ def _resolve_persisted_nested_metadata_in_spawned_runtime(
     projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
         Path("/plate"), document
     )
-    runtime_context = SourceBindingRuntimeContext(
-        step_input_files=(VIRTUAL_PATH,),
-        step_input_source_paths={VIRTUAL_PATH: VIRTUAL_PATH},
-        source_metadata_by_path=projection.source_metadata_by_path,
-    )
-    selection_context = SourcePatternResolutionContext.from_runtime_context(
+    selection_context = SourcePatternResolutionContext.from_sources(
         parser=SourceSchemaFilenameParser(),
-        runtime_context=runtime_context,
+        source_paths_by_virtual_path={VIRTUAL_PATH: VIRTUAL_PATH},
+        source_metadata_by_path=projection.source_metadata_by_path,
     )
     metadata = selection_context.metadata_for_path(VIRTUAL_PATH)
     if metadata is None:
@@ -132,6 +129,28 @@ def test_source_projection_serialization_decodes_typed_image_metadata() -> None:
 
     assert projection.address.value_for(AllComponents.SITE) == "1"
     assert projection.image_metadata == _collapsed_metadata()
+
+
+def test_publication_retains_typed_provenance_and_exact_wire_document() -> None:
+    subdirectory = _serialized_metadata(_collapsed_metadata())["subdirectories"]["."]
+    original = json.dumps(subdirectory)
+    typed = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
+    retained = typed.publish_into_subdirectory(
+        subdirectory, saved_image_paths=(VIRTUAL_PATH,), reconcile_directory=".",
+        admitted_entries=typed,
+    )
+
+    assert retained.entries[VIRTUAL_PATH].image_metadata == _collapsed_metadata()
+    assert json.dumps(subdirectory) == original
+
+
+def test_retained_corrupt_provenance_fails_at_admission() -> None:
+    subdirectory = _serialized_metadata(_collapsed_metadata())["subdirectories"]["."]
+    subdirectory["source_projection"][0]["image_metadata"]["source_provenance"][
+        "source_image_provenance_planes"
+    ][0]["undeclared_field"] = "corrupt"
+    with pytest.raises(ValueError, match="undeclared field"):
+        VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
 
 
 def test_image_artifact_projection_round_trips_typed_pixel_metadata() -> None:

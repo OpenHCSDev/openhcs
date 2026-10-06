@@ -1,12 +1,12 @@
 {
-  "generator_sha256": "9fcb6c749a4b55d8c89c8c5841a004a6a85a96541b01d55a7214ec52314b0c10",
+  "generator_sha256": "2a4c520aff09e67ecd3c37e7ffd6237e0da94e2cfd16d0fdb342ab8d728ef996",
   "source_sha256": {
-    "docs/source/architecture/quick_start.rst": "4dcc151050f02da75a6819db0be0053a1dcbefcf236b34998536ad9fbece915d",
-    "openhcs/core/pipeline_document.py": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
-    "openhcs/core/compiled_step_plan.py": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
-    "openhcs/core/runtime_stores.py": "5f323ec8edd4221ee30e34ed0c9c09e0f4e45ef502749c1a2d331b7a5452af99",
-    "openhcs/core/source_bindings.py": "af35b6ace33c9f43f9921fac7dd497cd8a64b0bdf558ba12dfc4d154e93ea256",
-    "openhcs/agent/capabilities.py": "25d0ff59dc921bb2589d14656b9e7b07d89650ea109bcd118ed1446b7a01423a",
+    "docs/source/architecture/quick_start.rst": "e0f403e65287bdd6b65bdafdcaee5fc54556205411a5cb988bcb95e2a67f7339",
+    "openhcs/core/pipeline_document.py": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
+    "openhcs/core/compiled_step_plan.py": "8bf2b30a367511c03915614d60bd6d3efacd036ce6b21cccc7240713d78779dc",
+    "openhcs/core/runtime_stores.py": "70bb51b0b02d92eaff6e7a5177cbc84b298e5d1c2b2697534be324288117eefe",
+    "openhcs/core/source_bindings.py": "fce49a28b8a41a7af1f6d33e326d77ab618eab2168ab33e6088db34bd5c72f9c",
+    "openhcs/agent/capabilities.py": "6928c4d2af41555a27dbbfe6ed2cc868d635fca6c2251a80ec2832336a9cab88",
     "website/assets/logos/README.md": "244baac8bc62478d51d3f50a750559edc1205763bcdb4c6fbab87e698a93e43b",
     "website/assets/logos/python.svg": "adca85e1d0bd6d796abea422d983fd131a432fe78efeac58af18461eb1548780",
     "website/assets/logos/mcp.svg": "05f47fb3ffb7323bdbf6b397330229a7f32a3a1f2d17365e748f8777a82dd6c0",
@@ -21,9 +21,9 @@
   },
   "ui_crops": [],
   "output_sha256": {
-    "shared_workflow.png": "70d1df787f4f72f7911c94216ee244eb0cb239928f97b20a8eed084ffe393aa1",
-    "shared_workflow.pdf": "4fe5268709e401d923777b38aaf9320f4a490dd5b58cfe45e13fa62f507e9545",
-    "shared_workflow.svg": "9ac75f5bb84a4b5d25588869e1d272407bb73dd28bbf744171d6cc5b1da38985"
+    "shared_workflow.png": "b9f2212837a1683187cb967b556874d7f2cc9743492edca490eaef3f8d65b443",
+    "shared_workflow.pdf": "9852bb7c0cdc6937454289313b021769c5206a6b6077cf3f0763534b44b4870a",
+    "shared_workflow.svg": "502e8f7a4a3b6c06756469b73554174f8b7ccb4253da1163f5c1d013fc009ffa"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

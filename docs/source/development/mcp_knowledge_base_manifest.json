@@ -9,6 +9,8 @@
         "architecture quick start",
         "first use",
         "MCP quick start",
+        "task authorization",
+        "routine authorized workflow",
         "execution flow",
         "FunctionStep",
         "function patterns",
@@ -613,6 +615,8 @@
         "mixed image stores",
         "named source bindings",
         "named channels",
+        "imported metadata table",
+        "source-set metadata join",
         "component metadata",
         "well site channel Z timepoint",
         "source provenance"
@@ -705,10 +709,14 @@
       "document_id": "openhcs_callable_artifact_authoring",
       "section_count": 0,
       "source_path": "docs/source/development/callable_artifact_authoring.rst",
-      "summary": "Canonical callable and artifact authoring reference with executable imports and decorators for typed NumPy main flow, object labels, dataclass ColumnarRows, RuntimeMeasurementFeatureOwner, exact subject/source relations, CSV and ROI materialization, and custom registration namespace boundaries.",
+      "summary": "Canonical callable and artifact authoring reference with executable nominal input annotations and artifact bindings, earliest compile-error repair, aligned diagnostic-image returns, typed NumPy main flow, object labels, dataclass ColumnarRows, RuntimeMeasurementFeatureOwner, exact subject/source relations, CSV and fractional 3D Points materialization, custom registration namespace boundaries, and a terminal PLATE summary using RuntimeArtifactBatch.",
       "tags": [
         "custom function artifacts",
         "callable artifact authoring",
+        "artifact_inputs",
+        "ObjectLabelValue",
+        "nominal input annotation",
+        "PLATE summary RuntimeArtifactBatch",
         "artifact_outputs",
         "MainFlowStackOutputSpec",
         "ObjectLabelsArtifactType",
@@ -718,6 +726,8 @@
         "ObjectMeasurementSubjectRelation",
         "materialization",
         "ROIOptions",
+        "PointROIOptions fractional centres",
+        "aligned diagnostic image returns",
         "CsvOptions",
         "exact imports decorators",
         "custom registration namespace"
@@ -767,7 +777,7 @@
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md",
       "summary": "Task-specific domain decisions and failure diagnostics.",
-      "tags": ["autonomous analysis strategy", "AgenticJ", "Agentic-J", "unfamiliar assay", "biological target", "channel verification", "preprocessing", "segmentation diagnostics", "recipe error learning", "RAM budget"],
+      "tags": ["autonomous analysis strategy", "graded segmentation quality", "reference disagreement", "runtime only measurement checkpoint persistence artifact planning", "AgenticJ", "Agentic-J", "unfamiliar assay", "biological target", "channel verification", "preprocessing", "segmentation diagnostics", "recipe error learning", "RAM budget"],
       "title": "Analysis strategy"
     },
     {
@@ -782,32 +792,32 @@
       "document_id": "openhcs_image_preprocessing",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/image-preprocessing.md",
-      "summary": "Preprocessing method selection validation: testable recipes for high-end compression, additive background subtraction, multiplicative illumination correction, Gaussian/median denoising, CLAHE, adaptive thresholds, spot/ridge enhancement and hysteresis; preserve measurement pixels and faint biology.",
-      "tags": ["preprocessing method selection validation", "uneven background", "bright outliers", "high end clipping gamma", "additive background subtraction", "white top hat", "flat field illumination", "denoise Gaussian median", "CLAHE", "local adaptive threshold", "faint neurite", "hysteresis", "Bankhead"],
+      "summary": "Preprocessing method selection validation: testable recipes for high-end compression, additive background subtraction, multiplicative illumination correction, denoising, CLAHE, adaptive thresholds, spot/ridge enhancement and hysteresis. Interpret nuisances, retain source provenance and validate faint biology with claim-appropriate measurement inputs.",
+      "tags": ["preprocessing method selection validation", "shared registration positions join ghosts original channels", "composite placement analytical channel separation", "uneven background", "bright outliers", "high end clipping gamma", "additive background subtraction", "white top hat", "flat field illumination", "denoise Gaussian median", "CLAHE", "local adaptive threshold", "faint neurite", "hysteresis", "Bankhead"],
       "title": "Choose and test microscopy preprocessing"
     },
     {
       "document_id": "openhcs_segmentation_diagnostics",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/segmentation-diagnostics.md",
-      "summary": "Diagnose foreground, seeds, watershed and secondary growth: false nucleus splits, merged neighbours, zero-growth cytoplasm, neurite topology, puncta, learned-model applicability, tiling and label identity. Retain failed-stage and regression-control artifacts.",
-      "tags": ["segmentation diagnostics", "nucleus split watershed", "touching nuclei", "merged neighbours", "seeding prominence H maxima", "zero growth cytoplasm", "primary secondary", "neurite outgrowth", "puncta", "Cellpose", "StarDist", "tile boundary", "label count", "MorphoLibJ"],
+      "summary": "Diagnose foreground, seeds, watershed and secondary growth. Compare body-admission models for noisy ring/textured bodies using local positives/background and regional negatives; nuclear anchors are not boundary evidence. Distinguish weak body-channel subsets from failed growth, and faint skeleton support recovery from rooted graph validity, soma loops and neuronal ownership.",
+      "tags": ["segmentation diagnostics", "ridge junction missing raw support union", "strong seed component retention", "near-track nuisance fragments", "body admission models noisy ring textured", "local background difference intensity class separation", "diffuse foreground threshold flooding faint loss", "threshold shrinkage minimum size tiny island raw body", "nucleus split watershed", "touching nuclei", "merged neighbours", "seeding prominence H maxima", "unchanged markers regional maxima plateau component connectivity neighbourhood", "component local axis aware measured marker spacing body association", "zero growth cytoplasm", "weak absent body signal nuclear scope", "primary secondary", "neurite outgrowth", "faint skeleton support rooted graph", "soma medial axis loops branchpoints ownership", "puncta", "Cellpose", "StarDist", "tile boundary", "label count", "MorphoLibJ"],
       "title": "Diagnose microscopy segmentation by stage"
     },
     {
       "document_id": "openhcs_measurement_interpretation",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/measurement-interpretation.md",
-      "summary": "Measurement-image choice, calibrated 2-D versus 3-D quantities, anisotropic Z spacing, Pearson/Manders and colocalisation controls, randomisation-statistic interpretation, biological replicate hierarchy and comparable figures.",
-      "tags": ["measurement interpretation", "raw intensity measurement", "volume anisotropic Z spacing", "3D projection", "colocalisation colocalization", "Pearson Manders Costes", "background bleed through", "biological replicate pseudoreplication", "physical units", "publication scale bar", "shared contrast"],
+      "summary": "Empirical native viewer measurements for first-candidate method and parameter selection: body/background, within-body texture and genuine-pair geometry choose the marker landscape before smoothing/separation. Crowded haze-connected support can inflate shape-distance markers and hide merged basins after size filtering. Calibrated quantities and source/object/slice export coverage follow compiled bindings, grouping and declared long/wide layout; foreign-source blanks are not automatically missing values.",
+      "tags": ["measurement interpretation", "empirical parameter selection", "whole no-object field sampling", "Otsu noise partition threshold floor", "first candidate declumping method", "compound detector enhanced response admission", "raw measurement stage applicability", "marker landscape internal texture", "genuine close pair suppression", "napari feature measurement", "diameter radius seed separation", "line profile geometry", "native coordinates uncertainty", "raw intensity measurement", "volume anisotropic Z spacing", "3D projection", "colocalisation colocalization", "Pearson Manders Costes", "background bleed through", "biological replicate pseudoreplication", "physical units", "publication scale bar", "shared contrast", "source object slice export coverage", "compiled invocation grouping", "long wide table foreign source blanks"],
       "title": "Choose valid microscopy measurements and comparisons"
     },
     {
       "document_id": "openhcs_viewer_qa",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md",
-      "summary": "Matched raw-only/result-only/combined inspection across channels, positions, scales and numeric windows; verify live viewer state and recapture after canvas changes.",
-      "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "segmentation visual debugging"],
+      "summary": "Distributed raw-only faint-structure and nuisance scans with progressively lower numeric upper display limits; diagnostic soma saturation versus publication intent. Matched raw-only/result-only/combined QA across channels, positions and scales. Saturated positive-ID support is admission evidence, not instance separation; categorical IDs or per-ID outlines expose dividing interfaces. Settled explicit producer-incarnation retirement preserves current routes and saved evidence; measure actual memory rather than layer visibility.",
+      "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "per image contrast check", "channel switch contrast window", "remote desktop compression native capture", "segmentation visual debugging", "faint neurite lower upper display limit", "diagnostic soma saturation", "noise background illumination scan", "viewer layer retirement", "producer incarnation expected_producers", "settled candidate memory RSS"],
       "title": "Review matched microscopy views"
     },
     {
@@ -822,16 +832,16 @@
       "document_id": "openhcs_custom_function_workflow",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md",
-      "summary": "Add a missing analysis operation through existing typed custom-function owners: discover contracts, scope catalog and persistence, verify fresh-process imports, compile artifacts, inspect bounded outputs and separate technical reuse from biological recipe acceptance.",
-      "tags": ["missing analysis operation", "custom function workflow", "typed artifact authoring", "isolated catalog endpoint", "persisted custom import", "registration timeout reconcile", "ColumnarRows", "3D centres"],
+      "summary": "Add a missing operation through typed custom-function owners: explicit endpoint/name/store admission, responsive native catalogue preparation with an incarnation-bound start/status/cancel handle, single source dispatch only after readiness, postdispatch uncertainty without replay, stable imports, compilation and bounded outputs; separate technical reuse from biological acceptance.",
+      "tags": ["missing analysis operation", "custom function workflow", "typed artifact authoring", "isolated catalog endpoint", "catalog preparation readiness cancellation", "persisted custom import", "registration timeout reconcile", "ColumnarRows", "3D centres"],
       "title": "Add a missing analysis operation as a typed custom function"
     },
     {
       "document_id": "openhcs_analysis_learning",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/analysis-learning.md",
-      "summary": "Reuse diagnosed failures and validated recipes through existing source-backed knowledge: retrieve by symptom, retain failed-predecessor/repair/rerun lineage, distinguish technical from biological acceptance, scope lessons by version, protect blind answers and test skill changes independently.",
-      "tags": ["analysis learning", "recipe error memory", "repair lineage", "failed predecessor rerun", "recipe promotion", "version applicability", "source backed knowledge", "AgenticJ", "Agentic-J", "timeout startup memory leak", "blind evaluation"],
+      "summary": "Retrieve conditional learned reasoning before FIRST authorship for unfamiliar tasks or contradictory raw morphology, not only retries. Search target/pattern/failure mechanism; preserve opposing shape/intensity lessons, body-admission contrasts, repair lineage and applicability without leaking blind answers.",
+      "tags": ["analysis learning", "first authorship conditional lesson retrieval", "raw morphology failure mechanism", "textured body internal peaks false splits", "unequal neighbours intensity division", "ring bodies diffuse background", "crowded cluster shape intensity counterexample", "recipe error memory", "repair lineage", "failed predecessor rerun", "recipe promotion", "version applicability", "source backed knowledge", "AgenticJ", "Agentic-J", "timeout startup memory leak", "blind evaluation"],
       "title": "Reuse analysis recipes and diagnosed failures"
     }
   ],

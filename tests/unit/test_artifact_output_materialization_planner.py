@@ -1,4 +1,5 @@
 import numpy as np
+from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
@@ -12,7 +13,6 @@ from openhcs.core.artifacts import (
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticArtifactOutputMaterializationStrategy,
     ArtifactOutputMaterializationPlanner,
-    TerminalMaterializationSpec,
 )
 from openhcs.core.runtime_exports import RuntimeExportExpectation
 from openhcs.processing.materialization import (

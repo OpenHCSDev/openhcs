@@ -24,6 +24,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -608,7 +609,7 @@ class CropImageRequest:
 class CropRequest:
     """Executable CellProfiler Crop request."""
 
-    image: np.ndarray
+    image: RuntimeArrayData
     mask_plane: np.ndarray | None = None
     crop_shape: CropModule.Shape = CropModule.Shape.RECTANGLE
     cropping_method: CropModule.Method = CropModule.Method.COORDINATES
@@ -857,7 +858,7 @@ def crop_output_metadata(
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 @special_inputs("topology_inputs")
 def crop(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     topology_inputs: tuple[np.ndarray | ObjectLabelValue, ...] = (),
     crop_shape: CropModule.Shape = CropModule.Shape.RECTANGLE,
     cropping_method: CropModule.Method = CropModule.Method.COORDINATES,

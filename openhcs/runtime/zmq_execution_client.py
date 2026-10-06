@@ -9,6 +9,7 @@ import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import CancelledError
+from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, replace
 from enum import Enum
@@ -37,16 +38,22 @@ from zmqruntime.execution import (
 from zmqruntime.messages import (
     CancelRequest,
     ControlMessageType,
+    ControlRequestHeader,
+    EndpointApplicationCompatibilityError,
+    ExecutionRecord,
     MessageFields,
     PongResponse,
+    ServerRole,
 )
 from zmqruntime.startup import (
+    EndpointStartupObserver,
     EndpointStartupPhase,
     EndpointStartupStatusCallback,
     EndpointStartupStatusMonitor,
 )
-from zmqruntime.transport import wait_for_endpoint_ready
+from zmqruntime.transport import TransportEndpoint
 
+from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
@@ -70,10 +77,16 @@ from openhcs.runtime.zmq_execution_signature import (
 
 if TYPE_CHECKING:
     from openhcs.agent.dto.functions import (
+        CustomFunctionRegistrationDestination,
+        CustomFunctionRegistrationDestinationRequest,
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
+        CustomFunctionRegistrationHandle,
+        CustomFunctionRegistrationObservation,
         FunctionCatalogControlRequest,
+        FunctionCatalogControlRequestABC,
         FunctionCatalogPage,
+        FunctionCatalogPreparationState,
         FunctionDetail,
         FunctionDetailControlRequest,
         FunctionReferenceControlRequest,
@@ -82,6 +95,122 @@ if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionRuntimeLaunchPlan:
+    """Canonical native launch destinations, projected before any write."""
+
+    runtime_dir: Path
+    log_file: Path
+    startup_status_file: Path
+    storage_dir: Path
+    registry_cache_dir: Path
+    transport_write_paths: tuple[Path, ...]
+
+    @classmethod
+    def resolve(
+        cls, endpoint: TransportEndpoint, config: OpenHCSZMQConfig
+    ) -> ExecutionRuntimeLaunchPlan:
+        """Project existing destination owners without writing or warming."""
+        from metaclass_registry.cache import get_cache_file_path
+
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        log_file = get_openhcs_log_dir(create=False) / (
+            f"openhcs_zmq_server_port_{endpoint.port}_{time.time_ns()}.log"
+        )
+        declaration = endpoint.transport_mode.declaration
+        ports = endpoint.port_pair(config).ports
+        sockets = tuple(
+            path
+            for port in ports
+            if (path := declaration.socket_path(port, config)) is not None
+        )
+        return cls(
+            runtime_dir=get_openhcs_data_dir(create=False),
+            log_file=log_file,
+            startup_status_file=log_file.with_suffix(".startup.jsonl"),
+            storage_dir=CustomFunctionManager.default_storage_directory(),
+            registry_cache_dir=get_cache_file_path("", create=False),
+            transport_write_paths=(
+                *(declaration.startup_lock_path(port, config) for port in ports),
+                *sockets,
+            ),
+        )
+
+    def writable_paths(self) -> tuple[Path, ...]:
+        return (
+            self.runtime_dir,
+            self.log_file,
+            self.startup_status_file,
+            self.storage_dir,
+            self.registry_cache_dir,
+            *self.transport_write_paths,
+        )
+
+    def spawn(
+        self,
+        endpoint: TransportEndpoint,
+        config: OpenHCSZMQConfig,
+        *,
+        persistent: bool,
+    ) -> subprocess.Popen:
+        """Materialize this admitted plan through the canonical process policy.
+
+        Reservation and child-incarnation publication remain with the native
+        ExecutionClient. This operation consumes its selected paths; it does
+        not resolve another launch plan or acquire another transport owner.
+        """
+        self.runtime_dir.mkdir(parents=True, exist_ok=True)
+        self.log_file.parent.mkdir(parents=True, exist_ok=True)
+        self.startup_status_file.unlink(missing_ok=True)
+        server_config = replace(
+            config,
+            default_port=endpoint.port,
+            persistent=persistent,
+            transport_mode=endpoint.transport_mode,
+        )
+        launch_policy = BackgroundProcessLaunchPolicy.current(detached=persistent)
+        # The execution server is a multiprocessing parent. Preserve the
+        # interpreter identity used by its worker bootstrap; Windows window
+        # suppression belongs to the launch policy's creation flags.
+        cmd = [
+            sys.executable,
+            "-B",
+            "-X",
+            "faulthandler",
+            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+                "openhcs.runtime.zmq_execution_server_launcher"
+            ),
+            "--log-file-path",
+            str(self.log_file),
+            "--startup-status-path",
+            str(self.startup_status_file),
+            "--config-source",
+            _pycodify_config_source(server_config),
+        ]
+        root_logger = logging.getLogger()
+        current_log_level = root_logger.getEffectiveLevel()
+        log_level_name = logging.getLevelName(current_log_level)
+        logger.debug(
+            "Spawning ZMQ server with log level: %s (numeric: %s)",
+            log_level_name,
+            current_log_level,
+        )
+        cmd.extend(["--log-level", log_level_name])
+        with self.log_file.open("w", encoding="utf-8") as log_stream:
+            return subprocess.Popen(
+                cmd,
+                stdout=log_stream,
+                stderr=subprocess.STDOUT,
+                cwd=self.runtime_dir,
+                env=MemoryType.subprocess_environment(),
+                **launch_policy.popen_arguments(),
+            )
+
+
+_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS = 0.05
 
 
 ZMQScalar: TypeAlias = str | int | float | bool | None
@@ -214,9 +343,6 @@ class OpenHCSExecutionSubmission:
     def compile_only(self) -> bool:
         return self.compile_control.compile_only
 
-    def to_task(self) -> "OpenHCSExecutionSubmission":
-        return self
-
     def with_config_params(
         self, config_params: ZMQParams
     ) -> "OpenHCSExecutionSubmission":
@@ -269,9 +395,6 @@ class OpenHCSExecutionSubmission:
     def pipeline_code(self) -> str:
         return PipelineDocumentAuthority.execution_source(self.pipeline_document)
 
-    def step_count_label(self) -> str:
-        return str(len(self.pipeline_steps))
-
 
 class ZMQPipelineRunPhase(Enum):
     """Source-owned boundaries for one compiled pipeline execution."""
@@ -288,17 +411,16 @@ class ZMQCompiledPipelineRun:
 
     compile_artifact_id: str
     execution_id: str
-    completion_response: Mapping[str, Any]
+    request: ZMQExecutionRequestBuilder
+    compile_record: ExecutionRecord
+    execution_record: ExecutionRecord
     completion_observed_at: float
 
     @property
     def results_summary(self) -> Mapping[str, Any]:
         """Project the completed wait response's ordinary result summary."""
 
-        value = self.completion_response.get("results")
-        if not value:
-            value = self.completion_response.get(MessageFields.RESULTS_SUMMARY)
-        return dict(value) if isinstance(value, Mapping) else {}
+        return dict(self.execution_record.results_summary or {})
 
     @property
     def output_plate(self) -> ExecutionOutputPlateSummary:
@@ -321,8 +443,9 @@ def run_compiled_pipeline(
         return nullcontext() if phase_context is None else phase_context(phase)
 
     with phase_scope(ZMQPipelineRunPhase.SUBMIT_COMPILE):
+        request = ZMQExecutionRequestBuilder.from_task(submission)
         compile_response = ExecutionSubmissionResponse.from_wire(
-            client.submit_compile(submission)
+            client.submit_prepared_pipeline(request.compile_request())
         )
     if not compile_response.accepted:
         raise RuntimeError(
@@ -332,15 +455,20 @@ def run_compiled_pipeline(
         "OpenHCS ZMQ compile submission"
     )
     with phase_scope(ZMQPipelineRunPhase.WAIT_COMPILE):
-        compile_wait_response = client.wait_for_completion(compile_artifact_id)
-    ExecutionWaitResult.from_wire(compile_wait_response).require_complete(
-        "OpenHCS ZMQ compilation failed"
+        compile_wait_response = client.wait_for_completion(
+            compile_artifact_id,
+            poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
+        )
+    compile_record = ExecutionWaitResult.from_wire(
+        compile_wait_response
+    ).require_completed_execution(
+        "OpenHCS ZMQ compilation failed", expected_execution_id=compile_artifact_id
     )
 
-    execution_submission = submission.with_compile_artifact_id(compile_artifact_id)
+    execution_request = request.with_compile_artifact_id(compile_artifact_id)
     with phase_scope(ZMQPipelineRunPhase.SUBMIT_EXECUTION):
         execution_response = ExecutionSubmissionResponse.from_wire(
-            client.submit_pipeline(execution_submission)
+            client.submit_prepared_pipeline(execution_request)
         )
     if not execution_response.accepted:
         raise RuntimeError(
@@ -350,15 +478,22 @@ def run_compiled_pipeline(
         "OpenHCS ZMQ execution submission"
     )
     with phase_scope(ZMQPipelineRunPhase.WAIT_EXECUTION):
-        completion_response = client.wait_for_completion(execution_id)
+        completion_response = client.wait_for_completion(
+            execution_id,
+            poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
+        )
         completion_observed_at = time.time()
-    ExecutionWaitResult.from_wire(completion_response).require_complete(
-        "OpenHCS ZMQ execution failed"
+    execution_record = ExecutionWaitResult.from_wire(
+        completion_response
+    ).require_completed_execution(
+        "OpenHCS ZMQ execution failed", expected_execution_id=execution_id
     )
     return ZMQCompiledPipelineRun(
         compile_artifact_id=compile_artifact_id,
         execution_id=execution_id,
-        completion_response=completion_response,
+        request=execution_request,
+        compile_record=compile_record,
+        execution_record=execution_record,
         completion_observed_at=completion_observed_at,
     )
 
@@ -374,9 +509,10 @@ def _pycodify_config_source(
 
 @dataclass(frozen=True, slots=True)
 class ZMQExecutionRequestBuilder:
-    task: OpenHCSExecutionSubmission
+    identity: ZMQExecutionIdentity
+    compile_control: ZMQExecutionCompileControl
     pipeline_code: str
-    config_projection: "ZMQConfigProjection"
+    config_projection: ZMQConfigProjection
 
     @classmethod
     def from_task(
@@ -384,18 +520,40 @@ class ZMQExecutionRequestBuilder:
         task: OpenHCSExecutionSubmission,
     ) -> "ZMQExecutionRequestBuilder":
         return cls(
-            task=task,
+            identity=task.identity,
+            compile_control=task.compile_control,
             pipeline_code=task.pipeline_code(),
             config_projection=ZMQConfigProjection.from_task(task),
         )
 
+    def compile_request(self) -> ZMQExecutionRequestBuilder:
+        return replace(self, compile_control=self.compile_control.as_compile_request())
+
+    def with_compile_artifact_id(self, artifact_id: str) -> ZMQExecutionRequestBuilder:
+        return replace(
+            self,
+            compile_control=self.compile_control.as_execution_request(artifact_id),
+        )
+
+    @property
+    def global_config_code(self) -> str:
+        fields = self.config_projection.source_fields
+        if fields is None or fields.config_code is None:
+            raise RuntimeError("Prepared execution request has no global config source")
+        return fields.config_code
+
+    @property
+    def config_params(self) -> ZMQParams | None:
+        boundary = self.config_projection.params_boundary
+        return None if boundary is None else boundary.params
+
     @property
     def request_payload(self) -> ZMQExecutionRequestPayload:
         return ZMQExecutionRequestPayload(
-            identity=self.task.identity,
+            identity=self.identity,
             pipeline_code=self.pipeline_code,
             config_transport=self.config_projection.signature_transport(),
-            compile_control=self.task.compile_control,
+            compile_control=self.compile_control,
         )
 
     def request(self) -> "ZMQRequest":
@@ -403,8 +561,8 @@ class ZMQExecutionRequestBuilder:
             (
                 (MessageFields.TYPE, ControlMessageType.EXECUTE.value),
                 (MessageFields.PIPELINE_CODE, self.pipeline_code),
-                *self.task.identity.request_items(),
-                *self.task.compile_control.request_items(),
+                *self.identity.request_items(),
+                *self.compile_control.request_items(),
                 *self.config_projection.request_items(),
             )
         )
@@ -490,7 +648,7 @@ class ZMQConfigProjection:
         config_source = _pycodify_config_source(task.global_pipeline_config)
         return cls(
             params_boundary=(
-                task.config_boundary
+                ZMQConfigParamsBoundary(deepcopy(task.config_boundary.params))
                 if task.config_boundary.params is not None
                 else None
             ),
@@ -540,10 +698,298 @@ class ZMQClientResponseView:
         return str(value)
 
 
-class ZMQExecutionClient(
+class FunctionCatalogEndpointUnavailableError(AgentFacingErrorMixin, RuntimeError):
+    """The selected catalog connection cannot prove its execution owner."""
+
+    agent_error_code = "function_catalog_endpoint_unavailable"
+    agent_error_hint = (
+        "The catalog owner is unavailable or changed. Explicitly select an existing "
+        "execution runtime with openhcs_start_function_catalog_preparation; "
+        "the rejected exchange delivered no catalog request and started no replacement runtime."
+    )
+
+
+class FunctionCatalogExecutionClient(
     ExecutionClient[OpenHCSExecutionSubmission, None],
     EndpointCompatibilityClientABC,
 ):
+    """Catalog-control capability on the original execution/compatibility owners.
+
+    Concrete execution clients supply their original application proof and
+    transport/serialization hooks. No catalog service, connection or registry
+    is duplicated by this ancestor.
+    """
+
+    config: OpenHCSZMQConfig
+
+    def require_compatible_endpoint(self) -> EndpointApplicationCompatibility:
+        """Admit only the OpenHCS application version declared by this client."""
+
+        compatibility = self.endpoint_compatibility()
+        compatibility.require_match()
+        return compatibility
+
+    def get_function_catalog(
+        self,
+        request: FunctionCatalogControlRequest,
+        *,
+        cancellation: OperationCancellation | None = None,
+        endpoint_owner: FunctionCatalogExecutionClient | None = None,
+    ) -> FunctionCatalogPage:
+        """Read the authoritative callable catalog from this execution endpoint."""
+
+        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
+
+        response = self._send_function_catalog_control_request(
+            request,
+            cancellation=cancellation,
+            endpoint_owner=endpoint_owner,
+        )
+        return FunctionCatalogControlResponse.from_control_response(response).catalog
+
+    def search_function_catalog(
+        self,
+        request: FunctionSearchRequest,
+    ) -> FunctionCatalogPage:
+        """Search this endpoint through the authoritative catalog ranking policy."""
+
+        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
+
+        response = self._send_function_catalog_control_request(request)
+        return FunctionCatalogControlResponse.from_control_response(response).catalog
+
+    def get_function_detail(
+        self,
+        request: FunctionDetailControlRequest,
+    ) -> FunctionDetail:
+        """Read one callable detail from an exact endpoint catalog revision."""
+
+        from openhcs.agent.dto.functions import FunctionDetailControlResponse
+
+        response = self._send_function_catalog_control_request(request)
+        return FunctionDetailControlResponse.from_control_response(response).detail
+
+    def get_function_reference(
+        self,
+        request: FunctionReferenceControlRequest,
+    ) -> FunctionReference:
+        """Read one exact compiler reference from this execution endpoint."""
+
+        from openhcs.agent.dto.functions import FunctionReferenceControlResponse
+
+        response = self._send_function_catalog_control_request(request)
+        return FunctionReferenceControlResponse.from_control_response(
+            response
+        ).reference
+
+    def register_custom_function(
+        self,
+        request: CustomFunctionRegistrationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> CustomFunctionRegistrationResult:
+        """Send one mutation; readiness belongs to preceding read-only discovery.
+
+        Never poll/resend a source-bearing request, including when the server
+        reports preparation pending. A missing mutation receipt is uncertain.
+        """
+
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationControlResponse,
+        )
+
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
+        )
+        return CustomFunctionRegistrationControlResponse.from_control_response(
+            response
+        ).result
+
+    def custom_function_registration_destination(
+        self,
+        request: CustomFunctionRegistrationDestinationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> CustomFunctionRegistrationDestination:
+        """Require the selected endpoint's native admission contract before mutation."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationDestinationControlResponse,
+        )
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
+        )
+        return (
+            CustomFunctionRegistrationDestinationControlResponse.from_control_response(
+                response
+            ).destination
+        )
+
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        """One read-only exchange; never register/load the requested source."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationObservationRequest,
+            CustomFunctionRegistrationObservationControlResponse,
+        )
+        response = self._send_function_catalog_exchange(
+            CustomFunctionRegistrationObservationRequest(handle),
+        )
+        return CustomFunctionRegistrationObservationControlResponse.from_control_response(response).value
+
+    def function_catalog_preparation(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> FunctionCatalogPreparationState:
+        """One responsive start/status/cancel exchange on an existing endpoint."""
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogPreparationStateControlResponse,
+        )
+
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
+        )
+        return FunctionCatalogPreparationStateControlResponse.from_control_response(
+            response
+        ).value
+
+    def _send_function_catalog_control_request(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        cancellation: OperationCancellation | None = None,
+        endpoint_owner: FunctionCatalogExecutionClient | None = None,
+    ) -> dict:
+        """Poll read-only discovery while endpoint catalog preparation is active."""
+
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogPreparationControlResponse,
+        )
+
+        cancellation = cancellation or OperationCancellation()
+        last_preparation_sequence: int | None = None
+        while True:
+            if cancellation.requested():
+                raise CancelledError("Function catalog preparation was cancelled")
+            response = self._send_function_catalog_exchange(
+                request, cancellation=cancellation, endpoint_owner=endpoint_owner
+            )
+            pending = FunctionCatalogPreparationControlResponse.from_control_response(
+                response
+            )
+            if pending is None:
+                if last_preparation_sequence is not None:
+                    self._emit_connection_status(
+                        EndpointStartupPhase.CONNECTED,
+                        "Function catalog is ready",
+                    )
+                return response
+            if pending.status.sequence != last_preparation_sequence:
+                last_preparation_sequence = pending.status.sequence
+                self._emit_connection_status(
+                    pending.status.phase,
+                    pending.status.message,
+                )
+            if cancellation.wait(pending.retry_after_seconds):
+                raise CancelledError("Function catalog preparation was cancelled")
+
+    def _send_function_catalog_exchange(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+        cancellation: OperationCancellation | None = None,
+        endpoint_owner: FunctionCatalogExecutionClient | None = None,
+    ) -> dict:
+        """Admit one nominal catalog control without creating or adopting an owner.
+
+        The original connection handshake is the only incarnation authority.
+        Read-only preparation polling calls this per exchange; mutations call it
+        once and never enter that polling path.
+        """
+        from openhcs.agent.dto.functions import FunctionCatalogControlPayload
+
+        payload = FunctionCatalogControlPayload.from_request(request)
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms, operation="function catalog control"
+        )
+        deadline.remaining_seconds()
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError("Function catalog preparation was cancelled")
+        owner = self if endpoint_owner is None else endpoint_owner
+        if not owner.is_connected() and not owner.new_connection_attempt(
+            cancellation=cancellation
+        ).connect(EndpointConnectionPolicy.ATTACH_EXISTING, deadline.cap_seconds(1.0)):
+            raise FunctionCatalogEndpointUnavailableError(
+                "Function catalog requires an existing execution endpoint."
+            )
+        expected = owner.connected_endpoint
+        if expected is None:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog attachment returned no connection-owned handshake."
+            )
+        identity = expected.process_identity
+        if identity is None:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog connection has no native process-incarnation proof."
+            )
+        if owner.known_server_process_is_alive() is False:
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Selected catalog owner {identity!r} has exited."
+            )
+        if expected.server_role is not ServerRole.EXECUTION:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog connection is not a compatible OpenHCS execution runtime."
+            )
+        try:
+            owner.require_compatible_endpoint()
+        except EndpointApplicationCompatibilityError as error:
+            raise FunctionCatalogEndpointUnavailableError(str(error)) from error
+        # PING is the existing generic endpoint observation, not a catalog request.
+        # Clamp its original one-second observation to the caller's remaining budget.
+        try:
+            observed = PongResponse.from_dict(
+                self._send_control_request(
+                    ControlRequestHeader(ControlMessageType.PING).to_dict(),
+                    timeout_ms=min(1000, deadline.remaining_milliseconds()),
+                )
+            )
+        except (TimeoutError, KeyError, TypeError, ValueError) as error:
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Could not verify selected catalog owner: {error}"
+            ) from error
+        # Compare the binding projected from the original typed handshake; volatile
+        # readiness/resource/progress fields are not incarnation authorities.
+        if (
+            observed.process_identity,
+            observed.port,
+            observed.control_port,
+            observed.server_role,
+            observed.application,
+        ) != (
+            identity,
+            expected.port,
+            expected.control_port,
+            expected.server_role,
+            expected.application,
+        ):
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Catalog endpoint no longer belongs to {identity!r}; "
+                f"observed {observed.process_identity!r} ({observed.server_role.value})."
+            )
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError("Function catalog preparation was cancelled")
+        return self._send_control_request(
+            payload.to_dict(), timeout_ms=deadline.remaining_milliseconds()
+        )
+
+
+class ZMQExecutionClient(FunctionCatalogExecutionClient):
     """ZMQ client for OpenHCS pipeline execution with progress streaming."""
 
     config: OpenHCSZMQConfig
@@ -558,15 +1004,17 @@ class ZMQExecutionClient(
         config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
         connection_status_callback: EndpointStartupStatusCallback | None = None,
     ):
+        endpoint = config.client_endpoint(
+            port, host=host, transport_mode=transport_mode
+        )
         self._startup_status_path: Path | None = None
+        self._runtime_launch_plan: ExecutionRuntimeLaunchPlan | None = None
         super().__init__(
-            config.default_port if port is None else port,
-            config.client_host if host is None else host,
+            endpoint.port,
+            endpoint.host,
             config.persistent if persistent is None else persistent,
             progress_callback=progress_callback,
-            transport_mode=(
-                config.transport_mode if transport_mode is None else transport_mode
-            ),
+            transport_mode=endpoint.transport_mode,
             config=config,
             connection_status_callback=connection_status_callback,
         )
@@ -598,27 +1046,23 @@ class ZMQExecutionClient(
             raise RuntimeError("ZMQ endpoint compatibility requires a connection")
         return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(handshake.application)
 
-    def require_compatible_endpoint(self) -> EndpointApplicationCompatibility:
-        """Admit only the OpenHCS application version declared by this client."""
-
-        compatibility = self.endpoint_compatibility()
-        compatibility.require_match()
-        return compatibility
-
     def serialize_task(
         self,
         task: OpenHCSExecutionSubmission,
         config=None,
     ) -> dict[str, ZMQValue]:
-        request_builder = ZMQExecutionRequestBuilder.from_task(task)
+        return self.serialize_prepared_request(ZMQExecutionRequestBuilder.from_task(task))
+
+    def serialize_prepared_request(
+        self, request_builder: ZMQExecutionRequestBuilder
+    ) -> dict[str, ZMQValue]:
         request = request_builder.request()
         request_payload = request_builder.request_payload
         logger.info(
-            "Serialize task: plate=%s compile_only=%s artifact_id=%s step_count=%s pipeline_sha=%s config_sha=%s",
-            task.plate_id,
-            task.compile_only,
-            task.compile_artifact_id,
-            task.step_count_label(),
+            "Serialize task: plate=%s compile_only=%s artifact_id=%s pipeline_sha=%s config_sha=%s",
+            request_builder.identity.plate_id,
+            request_builder.compile_control.compile_only,
+            request_builder.compile_control.compile_artifact_id,
             request_payload.pipeline_sha,
             request_builder.config_projection.config_sha,
         )
@@ -631,7 +1075,19 @@ class ZMQExecutionClient(
         timeout_ms: int | None = None,
     ):
         return self._submit_submission(
-            submission.to_task(),
+            lambda: self.serialize_task(submission),
+            timeout_ms=self._submission_timeout_ms(timeout_ms),
+        )
+
+    def submit_prepared_pipeline(
+        self,
+        request: ZMQExecutionRequestBuilder,
+        *,
+        timeout_ms: int | None = None,
+    ):
+        """Submit the exact declaration already admitted for a compiled run."""
+        return self._submit_submission(
+            lambda: self.serialize_prepared_request(request),
             timeout_ms=self._submission_timeout_ms(timeout_ms),
         )
 
@@ -646,7 +1102,9 @@ class ZMQExecutionClient(
             submission.config_params
         ).with_updates(debug_config.to_config_params())
         return self._submit_submission(
-            submission.with_config_params(config_params_boundary.params).to_task(),
+            lambda: self.serialize_task(
+                submission.with_config_params(config_params_boundary.params)
+            ),
             timeout_ms=self._submission_timeout_ms(timeout_ms),
         )
 
@@ -657,7 +1115,7 @@ class ZMQExecutionClient(
         timeout_ms: int | None = None,
     ):
         return self._submit_submission(
-            submission.compile_request().to_task(),
+            lambda: self.serialize_task(submission.compile_request()),
             timeout_ms=self._submission_timeout_ms(timeout_ms),
         )
 
@@ -713,7 +1171,7 @@ class ZMQExecutionClient(
 
     def _submit_submission(
         self,
-        submission: OpenHCSExecutionSubmission,
+        build_request: Callable[[], dict[str, ZMQValue]],
         *,
         timeout_ms: int,
     ):
@@ -734,7 +1192,7 @@ class ZMQExecutionClient(
             self._ensure_progress_subscription(
                 timeout_ms=deadline.remaining_milliseconds()
             )
-            request = self.serialize_task(submission, None)
+            request = build_request()
             if MessageFields.TYPE not in request:
                 request[MessageFields.TYPE] = ControlMessageType.EXECUTE.value
             request_timeout_ms = deadline.remaining_milliseconds()
@@ -798,147 +1256,6 @@ class ZMQExecutionClient(
         return CompiledArtifactInspectionResponse.from_control_response(
             response
         ).inspection
-
-    def get_function_catalog(
-        self,
-        request: FunctionCatalogControlRequest,
-        *,
-        cancellation: OperationCancellation | None = None,
-    ) -> FunctionCatalogPage:
-        """Read the authoritative callable catalog from this execution endpoint."""
-
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionCatalogControlResponse,
-        )
-
-        if not self.is_connected():
-            connection_attempt = self.new_connection_attempt(
-                cancellation=cancellation,
-            )
-            if not connection_attempt.connect(
-                EndpointConnectionPolicy.ATTACH_OR_START,
-                self.config.client_connect_timeout_seconds,
-            ):
-                raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict(),
-            cancellation=cancellation,
-        )
-        return FunctionCatalogControlResponse.from_control_response(response).catalog
-
-    def search_function_catalog(
-        self,
-        request: FunctionSearchRequest,
-    ) -> FunctionCatalogPage:
-        """Search this endpoint through the authoritative catalog ranking policy."""
-
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionCatalogControlResponse,
-        )
-
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
-        )
-        return FunctionCatalogControlResponse.from_control_response(response).catalog
-
-    def get_function_detail(
-        self,
-        request: FunctionDetailControlRequest,
-    ) -> FunctionDetail:
-        """Read one callable detail from an exact endpoint catalog revision."""
-
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionDetailControlResponse,
-        )
-
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
-        )
-        return FunctionDetailControlResponse.from_control_response(response).detail
-
-    def get_function_reference(
-        self,
-        request: FunctionReferenceControlRequest,
-    ) -> FunctionReference:
-        """Read one exact compiler reference from this execution endpoint."""
-
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionReferenceControlResponse,
-        )
-
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
-        )
-        return FunctionReferenceControlResponse.from_control_response(
-            response
-        ).reference
-
-    def register_custom_function(
-        self,
-        request: CustomFunctionRegistrationRequest,
-    ) -> CustomFunctionRegistrationResult:
-        """Register custom source through this execution endpoint's catalog."""
-
-        from openhcs.agent.dto.functions import (
-            CustomFunctionRegistrationControlResponse,
-            FunctionCatalogControlPayload,
-        )
-
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
-        )
-        return CustomFunctionRegistrationControlResponse.from_control_response(
-            response
-        ).result
-
-    def _send_function_catalog_control_request(
-        self,
-        request: dict,
-        *,
-        cancellation: OperationCancellation | None = None,
-    ) -> dict:
-        """Poll a responsive endpoint while its catalog preparation is active."""
-
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogPreparationControlResponse,
-        )
-
-        cancellation = cancellation or OperationCancellation()
-        last_preparation_sequence: int | None = None
-        while True:
-            if cancellation.requested():
-                raise CancelledError("Function catalog preparation was cancelled")
-            response = self._send_control_request(request)
-            pending = FunctionCatalogPreparationControlResponse.from_control_response(
-                response
-            )
-            if pending is None:
-                if last_preparation_sequence is not None:
-                    self._emit_connection_status(
-                        EndpointStartupPhase.CONNECTED,
-                        "Function catalog is ready",
-                    )
-                return response
-            if pending.status.sequence != last_preparation_sequence:
-                last_preparation_sequence = pending.status.sequence
-                self._emit_connection_status(
-                    pending.status.phase,
-                    pending.status.message,
-                )
-            if cancellation.wait(pending.retry_after_seconds):
-                raise CancelledError("Function catalog preparation was cancelled")
 
     def send_debug_worker_command(
         self,
@@ -1013,124 +1330,36 @@ class ZMQExecutionClient(
         return DebugArtifactExportResponse.from_control_response(response)
 
     @override
-    def _spawn_server_process(self):
-        import logging
+    def _spawn_server_process(self) -> subprocess.Popen:
+        plan = self.runtime_launch_plan()
+        self._runtime_launch_plan = None
+        self._startup_status_path = plan.startup_status_file
+        return plan.spawn(self.endpoint, self.config, persistent=self.persistent)
 
-        runtime_dir = get_openhcs_data_dir()
-        log_dir = get_openhcs_log_dir()
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = (
-            log_dir
-            / f"openhcs_zmq_server_port_{self.port}_{int(time.time() * 1000000)}.log"
-        )
-        self._startup_status_path = log_file_path.with_suffix(".startup.jsonl")
-        self._startup_status_path.unlink(missing_ok=True)
-        server_config = replace(
-            self.config,
-            default_port=self.port,
-            persistent=self.persistent,
-            transport_mode=self.transport_mode,
-        )
-        launch_policy = BackgroundProcessLaunchPolicy.current(detached=self.persistent)
-        # The execution server is a multiprocessing parent. Preserve the
-        # interpreter identity used by its worker bootstrap; Windows window
-        # suppression belongs to the launch policy's creation flags.
-        cmd = [
-            sys.executable,
-            "-X",
-            "faulthandler",
-            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-                "openhcs.runtime.zmq_execution_server_launcher"
-            ),
-        ]
-        cmd.extend(["--log-file-path", str(log_file_path)])
-        cmd.extend(["--startup-status-path", str(self._startup_status_path)])
-        cmd.extend(["--config-source", _pycodify_config_source(server_config)])
-
-        # Pass the current process's logging level to the server
-        # Get the root logger's effective level
-        root_logger = logging.getLogger()
-        current_log_level = root_logger.getEffectiveLevel()
-        log_level_name = logging.getLevelName(current_log_level)
-
-        # Log what we're passing to help debug
-        logger = logging.getLogger(__name__)
-        logger.debug(
-            f"Spawning ZMQ server with log level: {log_level_name} (numeric: {current_log_level})"
-        )
-
-        cmd.extend(["--log-level", log_level_name])
-
-        with log_file_path.open("w", encoding="utf-8") as log_stream:
-            return subprocess.Popen(
-                cmd,
-                stdout=log_stream,
-                stderr=subprocess.STDOUT,
-                cwd=runtime_dir,
-                env=MemoryType.subprocess_environment(),
-                **launch_policy.popen_arguments(),
+    def runtime_launch_plan(self) -> ExecutionRuntimeLaunchPlan:
+        """Resolve owner defaults without creating directories or warming."""
+        if self._runtime_launch_plan is None:
+            self._runtime_launch_plan = ExecutionRuntimeLaunchPlan.resolve(
+                self.endpoint, self.config
             )
+        return self._runtime_launch_plan
 
     @override
-    def _wait_for_endpoint_ready(
-        self,
-        process: EndpointProcess,
-        timeout: float = 10.0,
-    ) -> PongResponse | None:
-        """Wait with an inactivity deadline refreshed by real child phases."""
-
-        return self._wait_for_endpoint_ready_observed(
-            process,
-            timeout=timeout,
-        )
-
-    @override
-    def _wait_for_endpoint_ready_before_deadline(
-        self,
-        process: EndpointProcess,
-        *,
-        timeout: float,
-        operation_deadline: OperationDeadline,
-    ) -> PongResponse | None:
-        """Wait for startup activity without exceeding the caller's total budget."""
-
-        return self._wait_for_endpoint_ready_observed(
-            process,
-            timeout=timeout,
-            operation_deadline=operation_deadline,
-        )
-
-    def _wait_for_endpoint_ready_observed(
-        self,
-        process: EndpointProcess,
-        *,
-        timeout: float,
-        operation_deadline: OperationDeadline | None = None,
-    ) -> PongResponse | None:
-        """Relay startup phases while waiting for the authoritative handshake."""
-
-        startup_monitor = EndpointStartupStatusMonitor(
+    def _endpoint_startup_observer(
+        self, process: EndpointProcess
+    ) -> EndpointStartupObserver:
+        """Supply the execution child's journal to the inherited readiness owner."""
+        return EndpointStartupStatusMonitor(
             self._startup_status_path,
             status_emitter=self._emit_connection_status,
             process_has_exited=lambda: process.exit() is not None,
         )
 
-        endpoint: PongResponse | None = None
-        try:
-            endpoint = wait_for_endpoint_ready(
-                self.port,
-                self.transport_mode,
-                host=self.host,
-                config=self.config,
-                timeout=timeout,
-                poll_interval=self.config.server_poll_interval_seconds,
-                startup_observer=self._connection_startup_observer(startup_monitor),
-                operation_deadline=operation_deadline,
-            )
-            return endpoint
-        finally:
-            if endpoint is not None and self._startup_status_path is not None:
-                self._startup_status_path.unlink(missing_ok=True)
+    @override
+    def _endpoint_ready_observed(self, endpoint: PongResponse) -> None:
+        """Release the domain journal only after the typed handshake is ready."""
+        if self._startup_status_path is not None:
+            self._startup_status_path.unlink(missing_ok=True)
 
     @override
     def send_data(self, data):

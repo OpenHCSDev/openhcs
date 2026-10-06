@@ -22,6 +22,7 @@ from openhcs.core.artifacts import (
     ArtifactType,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    InputGroupLineageSourceRelation,
     InputStackBroadcastSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -901,9 +902,16 @@ def test_area_occupied_and_calculate_math_chain_measurement_artifacts() -> None:
         "Objects2",
     )
     assert len(_artifact_names(area.artifact_outputs, MeasurementsArtifactType)) == 1
-    assert _artifact_names(math.artifact_inputs, MeasurementsArtifactType) == (
-        area_measurement.name,
+    measurement_inputs = math.artifact_inputs.of_artifact_type(MeasurementsArtifactType)
+    (measurement_input,) = measurement_inputs
+    assert measurement_input.name == area_measurement.name
+    assert measurement_input.relations == tuple(
+        InputGroupLineageSourceRelation(
+            source=spec.for_plan_type(ArtifactInputPlan).ref(),
+        )
+        for spec in objects
     )
+    assert math.artifact_inputs.by_ref(measurement_input.ref()) is measurement_input
     assert len(_artifact_names(math.artifact_outputs, MeasurementsArtifactType)) == 1
 
 

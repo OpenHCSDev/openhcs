@@ -25,6 +25,7 @@ from openhcs.core.source_bindings import (
     SourceProjectionRole,
 )
 from openhcs.core.source_matching import (
+    SourceImageSetIdentityPolicy,
     source_component_metadata_raw_value,
     source_component_metadata_values,
     source_metadata_component,
@@ -34,9 +35,9 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
-    SourceMetadataIdentityProjection,
+    SourceMetadataFields,
+    ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
     SourceMetadataValue,
     source_metadata_dict,
     source_metadata_scalar,
@@ -448,7 +449,7 @@ class SourceCandidate:
             self.declared_address,
             self.dataset_identity,
             self.store_identity,
-            SourceMetadataIdentityProjection(self.metadata).items(),
+            SourceMetadataFields.identity_items(self.metadata),
         )
 
 
@@ -631,6 +632,12 @@ class SourceProjection:
     image_metadata: ClassVar[ImagePayloadMetadata | None] = None
     execution_scope: ClassVar[RuntimeExecutionAxisScope | None] = None
 
+    def artifact_result_directory(
+        self, virtual_path: str, backend: str
+    ) -> Path | None:
+        """Return a declared artifact destination, if this role owns one."""
+        return None
+
     @property
     def identity_key(self) -> tuple[object, ...]:
         """Return the projection identity enforced within one source set."""
@@ -705,6 +712,11 @@ class SourceProjection:
             and self.source_alias == binding.alias
             and self.artifact_kind is binding.artifact_kind
         )
+
+    def belongs_to_execution_axis(self, axis_id: str) -> bool:
+        """Retain an unscoped source or its exact declared execution axis."""
+
+        return self.execution_scope is None or self.execution_scope.axis_id == axis_id
 
 
 def declared_optional_payload_field(cls, payload_type: type) -> str:
@@ -796,6 +808,14 @@ class SourceArtifactProjection(SourceProjection):
     image_metadata: ImagePayloadMetadata | None = None
     execution_scope: RuntimeExecutionAxisScope | None = None
 
+    def artifact_result_directory(
+        self, virtual_path: str, backend: str
+    ) -> Path | None:
+        """Use the persisted virtual path, not the source pixel reference address."""
+        if self.ref.backend != backend:
+            return None
+        return Path(virtual_path).parent
+
     def __post_init__(self) -> None:
         normalized_alias = str(self.source_alias).strip()
         if not normalized_alias:
@@ -815,6 +835,8 @@ class SourceArtifactProjection(SourceProjection):
     ) -> OpenHCSPlaneAddress | None:
         """Return a plane address only when the whole artifact is scalar."""
 
+        if metadata.persists_whole_image():
+            return None
         return OpenHCSPlaneAddress.from_complete_source_metadata(
             metadata.source_component_metadata
         )
@@ -830,6 +852,26 @@ class SourceArtifactProjection(SourceProjection):
         if self.address is not None:
             return identity
         return (*identity, self.execution_scope, self.ref)
+
+    def image_plane_cohort_key(
+        self, image_set_policy: SourceImageSetIdentityPolicy
+    ) -> tuple[object, ...] | None:
+        """Derive an exact scalar Z cohort, or retain this whole image export."""
+        if (
+            image_set_policy.is_identity_component(AllComponents.Z_INDEX)
+            or self.address is None
+        ):
+            return None
+        return (
+            self.source_alias,
+            self.artifact_kind,
+            self.execution_scope,
+            tuple(
+                (component, value)
+                for component, value in self.source_component_values()
+                if component is not AllComponents.Z_INDEX
+            ),
+        )
 
     def component_value(self, component: AllComponents) -> str | None:
         """Return scalar address or runtime-scope identity for one component."""
@@ -966,6 +1008,52 @@ class SourceProjectionSet:
             ),
         )
 
+    def image_export_groups(
+        self,
+        image_set_policy: SourceImageSetIdentityPolicy,
+    ) -> tuple[
+        tuple[SourceArtifactProjection, ...],
+        tuple[tuple[SourceArtifactProjection, ...], ...],
+    ]:
+        """Partition whole exports and ordered scalar Z cohorts from one set.
+
+        Producer, execution scope and all other source coordinates remain
+        distinct. Coordinates alone never declare a pixel axis.
+        """
+        whole_images = []
+        groups: dict[tuple[object, ...], list[SourceArtifactProjection]] = {}
+        for projection in self.artifact_projections:
+            key = projection.image_plane_cohort_key(image_set_policy)
+            if key is None:
+                whole_images.append(projection)
+            else:
+                groups.setdefault(key, []).append(projection)
+        ordered_groups = []
+        for group in groups.values():
+            z_indexes = tuple(
+                projection.component_value(AllComponents.Z_INDEX)
+                for projection in group
+            )
+            if any(value is None or not value.isdecimal() for value in z_indexes):
+                raise ValueError(
+                    "Exported Z planes require integral source coordinates."
+                )
+            ordered = tuple(
+                projection
+                for _, projection in sorted(
+                    zip((int(value) for value in z_indexes), group, strict=True),
+                    key=lambda item: item[0],
+                )
+            )
+            first_z_index = int(ordered[0].component_value(AllComponents.Z_INDEX))
+            if tuple(
+                int(projection.component_value(AllComponents.Z_INDEX))
+                for projection in ordered
+            ) != tuple(range(first_z_index, first_z_index + len(ordered))):
+                raise ValueError("Exported Z planes must be unique and contiguous.")
+            ordered_groups.append(ordered)
+        return tuple(whole_images), tuple(ordered_groups)
+
     @property
     def execution_anchor_projections(self) -> tuple[SourceProjection, ...]:
         """Return primary planes, or typed artifacts for artifact-only source sets."""
@@ -1053,15 +1141,7 @@ class SourceProjectionMetadataSerializer:
                 for projection, path in projection_paths
                 if projection in execution_anchors
             ],
-            **{
-                SourceComponentProjectionStrategy.for_enum_member(
-                    component
-                ).metadata_collection_field: self._component_values(
-                    projection_set,
-                    component,
-                )
-                for component in AllComponents
-            },
+            **self.component_metadata(projection_set),
             self.AVAILABLE_BACKENDS_FIELD: dict(
                 available_backends
                 if available_backends is not None
@@ -1080,25 +1160,65 @@ class SourceProjectionMetadataSerializer:
             ]
         return metadata
 
-    def projection_fields(
+    def component_metadata(
         self,
+        projection_set: SourceProjectionSet,
+        *,
+        labels: Mapping[AllComponents, Mapping[str, str | None] | None] | None = None,
+    ) -> dict[str, dict[str, str | None]]:
+        """Project inventory keys from typed addresses; labels cannot add keys."""
+        metadata = {}
+        for component in AllComponents:
+            values = self._component_values(projection_set, component)
+            component_labels = (labels or {}).get(component) or {}
+            metadata[
+                SourceComponentProjectionStrategy.for_enum_member(
+                    component
+                ).metadata_collection_field
+            ] = {
+                value: label if label is not None else component_labels.get(value)
+                for value, label in values.items()
+            }
+        return metadata
+
+    @classmethod
+    def projection_fields(
+        cls,
         projection_paths: tuple[tuple[SourceProjection, str], ...],
     ) -> dict[str, Any]:
         """Serialize the coherent path-keyed projection fields as one unit."""
 
         return {
-            self.WORKSPACE_MAPPING_FIELD: {
+            **cls.workspace_fields(projection_paths),
+            cls.SOURCE_PROJECTION_FIELD: cls.projection_records(projection_paths),
+        }
+
+    @classmethod
+    def projection_records(
+        cls,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
+    ) -> list[dict[str, Any]]:
+        """Encode producer records independently of normalized workspace views."""
+        return [
+            cls._source_projection_payload(projection, path)
+            for projection, path in projection_paths
+        ]
+
+    @classmethod
+    def workspace_fields(
+        cls,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
+    ) -> dict[str, Any]:
+        """Derive normalized workspace views without encoding image records."""
+        return {
+            cls.WORKSPACE_MAPPING_FIELD: {
                 path: projection.ref.to_workspace_mapping()
                 for projection, path in projection_paths
             },
-            self.SOURCE_METADATA_FIELD: {
-                path: self._source_metadata(projection)
+            cls.SOURCE_METADATA_FIELD: {
+                path: cls._source_metadata(projection)
                 for projection, path in projection_paths
             },
-            self.SOURCE_PROJECTION_FIELD: [
-                self._source_projection_payload(projection, path)
-                for projection, path in projection_paths
-            ],
         }
 
     def projection_paths(
@@ -1199,14 +1319,15 @@ class SourceProjectionMetadataSerializer:
             projection.ref.backend: True for projection in projection_set.projections
         }
 
+    @classmethod
     def _source_metadata(
-        self,
+        cls,
         projection: SourceProjection,
     ) -> dict[str, SourceMetadataValue]:
         metadata = source_metadata_dict(projection.source_metadata)
         source_component_fields = {
             field: value
-            for field, value in SourceMetadataRoleView(metadata).scalar_items()
+            for field, value in SourceMetadataFields.scalar_items(metadata)
             if (
                 (component := source_metadata_component(field)) is not None
                 and field != component.value
@@ -1218,7 +1339,7 @@ class SourceProjectionMetadataSerializer:
                 source_component_fields,
                 path=projection.ref.backend_address,
             )
-        original_metadata = dict(SourceMetadataRoleView(metadata).original_items())
+        original_metadata = dict(SourceMetadataFields.original_items(metadata))
         for component, value in projection.source_component_values():
             canonical_value = metadata.get(component.value)
             conflicts_with_address = (
@@ -1250,8 +1371,9 @@ class SourceProjectionMetadataSerializer:
         projection.extend_source_metadata(metadata)
         return metadata
 
+    @classmethod
     def _source_projection_payload(
-        self,
+        cls,
         projection: SourceProjection,
         path: str,
     ) -> dict[str, Any]:
@@ -1290,21 +1412,6 @@ def _padded(value: str, width: int) -> str:
     return f"{int(value):0{width}d}" if value.isdecimal() else value
 
 
-def _normalized_source_metadata_value(
-    value: SourceMetadataValue,
-) -> SourceMetadataValue:
-    """Freeze one source-metadata value without erasing its nominal shape."""
-
-    if isinstance(value, Mapping):
-        return MappingProxyType(
-            {
-                str(key): source_metadata_scalar(nested_value)
-                for key, nested_value in value.items()
-            }
-        )
-    return source_metadata_scalar(value)
-
-
 def _normalize_projection(projection: SourceProjection) -> None:
     """Normalize fields shared by every nominal source projection."""
 
@@ -1325,12 +1432,7 @@ def _normalize_projection(projection: SourceProjection) -> None:
     object.__setattr__(
         projection,
         "source_metadata",
-        MappingProxyType(
-            {
-                str(key): _normalized_source_metadata_value(value)
-                for key, value in projection.source_metadata.items()
-            }
-        ),
+        ResolvedSourceMetadataRecord.normalized_mapping(projection.source_metadata),
     )
     object.__setattr__(
         projection,

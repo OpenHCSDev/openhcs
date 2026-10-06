@@ -8,6 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 
 from objectstate import DataclassFieldAccess, get_base_config_type
+from python_introspect.validation import overlay_non_none_dataclass
 from polystore.filemanager import FileManager
 from polystore.streaming.viewer_transport import (
     ExplicitViewerTransportConfig,
@@ -18,6 +19,7 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSource,
     ViewerStreamSourceIdentity,
     ViewerStreamSourceMetadata,
+    ViewerDisplayConfigABC,
 )
 from zmqruntime.config import TransportMode, ZMQConfig
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
@@ -80,6 +82,7 @@ class ViewerProcessLaunchField(str, Enum):
     """Wire fields projected from the viewer process-launch declaration."""
 
     QT_FONT_DPI = "qt_font_dpi"
+    LISTEN_HOST = "listen_host"
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,17 +90,39 @@ class ViewerProcessLaunchConfig:
     """Process-global settings that must exist before viewer construction."""
 
     qt_font_dpi: int | None = None
+    listen_host: str = "127.0.0.1"
 
     def __post_init__(self) -> None:
+        if not isinstance(self.listen_host, str):
+            raise TypeError("Viewer listen host must be a string.")
+        if not self.listen_host.strip():
+            raise ValueError("Viewer listen host must not be blank.")
         if self.qt_font_dpi is not None and self.qt_font_dpi <= 0:
             raise ValueError("Viewer Qt font DPI must be positive when provided.")
 
-    def to_wire_mapping(self) -> dict[str, int | None]:
+    def to_wire_mapping(self) -> dict[str, str | int | None]:
         """Project the launch declaration onto the viewer control boundary."""
 
         return {
             ViewerProcessLaunchField.QT_FONT_DPI.value: self.qt_font_dpi,
+            ViewerProcessLaunchField.LISTEN_HOST.value: self.listen_host,
         }
+
+    def matches_existing_viewer(
+        self,
+        active: "ViewerProcessLaunchConfig",
+        *,
+        owns_process: bool,
+    ) -> bool:
+        """Require local bind policy only for a process this lifecycle owns.
+
+        An externally owned viewer's listen interface is not a client launch
+        setting: accepting its connection must not request a rebind/restart.
+        """
+
+        return self.qt_font_dpi == active.qt_font_dpi and (
+            not owns_process or self.listen_host == active.listen_host
+        )
 
     @classmethod
     def from_wire_mapping(
@@ -111,7 +136,10 @@ class ViewerProcessLaunchConfig:
             not isinstance(value, int) or isinstance(value, bool)
         ):
             raise TypeError("Viewer Qt font DPI must be an integer or None.")
-        return cls(qt_font_dpi=value)
+        return cls(
+            qt_font_dpi=value,
+            listen_host=payload[ViewerProcessLaunchField.LISTEN_HOST.value],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +162,14 @@ class StreamingConfigBehaviorMixin:
 
     viewer_type_declaration: ClassVar[ViewerType]
     transport_mode: TransportMode
+
+    def with_display_config(self, display: ViewerDisplayConfigABC | None):
+        """Overlay the original display declaration on its matching viewer config."""
+        if display is None:
+            return self
+        if not isinstance(self, type(display)):
+            raise TypeError("Display config must belong to the selected viewer config.")
+        return overlay_non_none_dataclass(self, display)
 
     @classmethod
     def port_from_config(cls, config) -> int | None:
@@ -190,7 +226,7 @@ class StreamingConfigBehaviorMixin:
     def viewer_process_launch_config(self) -> ViewerProcessLaunchConfig:
         """Return process-launch settings owned by this viewer declaration."""
 
-        return ViewerProcessLaunchConfig()
+        return ViewerProcessLaunchConfig(listen_host=self.listen_host)
 
     def viewer_surface(
         self,

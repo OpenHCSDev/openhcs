@@ -1,0 +1,19 @@
+{
+  "common_revision": "fb5fea4f1",
+  "source_hashes": {
+    "candidate": "479de9d7962159f966ba346d24e58d6a945e94a4ff2a0d6bf1ecb01a63720817",
+    "control": "157dd6cf217aabcff0fa846e70110bb9bf508ad2d3937392c702bec98135c501"
+  },
+  "native_hashes": {
+    "_granularity_reconstruct.abi3.so": "f994c055501133b45da79ea91cdae92dfb5823457601c9e5503bd05654c585c8",
+    "_granularity_native.abi3.so": "043e8733b565a2042a449cdd2464fa08603844fdaecc37a76c38e255c49e9ee2"
+  },
+  "env": {
+    "OPENHCS_CPU_ONLY": "true",
+    "OPENHCS_SUBPROCESS_NO_GPU": "1",
+    "POLYSTORE_SUBPROCESS_NO_GPU": "1",
+    "NUMBA_CACHE_DIR": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2"
+  },
+  "design": "control/candidate/candidate/control; declared public callable preparation before each ordinary timed run; candidate restored finally; no concurrent audits/tests/compilation; fresh server per run",
+  "mode": "1w_1t"
+}

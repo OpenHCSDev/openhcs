@@ -1,0 +1,24 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
+@@ -9,6 +9,7 @@
+ from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
+ from openhcs.core.processing_preparation import PreparationOperation
+ from openhcs.utils.environment import OpenHCSProcessEnvironment
++from openhcs.processing.backends.cellprofiler.perf_fixtures import capture_enabled
+ 
+ 
+ class CellProfilerKernelCachePreparationMixin:
+@@ -50,6 +51,13 @@
+     __registry_key__ = "__name__"
+     __registry__: ClassVar[dict[str, type[CellProfilerCallableKernelPreparation]]]
+ 
++    @classmethod
++    def can_prepare_in_child(cls) -> bool:
++        """Keep opt-in fixture writes out of cache-only children."""
++        if capture_enabled():
++            return False
++        return super().can_prepare_in_child()
++
+     @property
+     def identity(self) -> Hashable:
+         return type(self)

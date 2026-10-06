@@ -19,6 +19,7 @@ from benchmark.adapters.cellprofiler import (
     HeadlessCellProfilerPipelinePatch,
     NativeCellProfilerImportedMetadataPlacementPlan,
     NativeCellProfilerImportedMetadataPipelinePatch,
+    NativeCellProfilerSelectedSourceUniverse,
     NativeCellProfilerInputDomainStrategyKey,
     NativeCellProfilerProvenanceField,
     NUMPY_DISABLED_CPU_FEATURES_ENV,
@@ -38,7 +39,6 @@ from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_bindings import (
     ImportedMetadataTable,
-    SourceBindingRuntimeContext,
 )
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
@@ -204,6 +204,20 @@ def test_native_cellprofiler_imported_metadata_places_files_by_path_columns(
         "IXMtest_A01_s1_w1.tif": "20585/IXMtest_A01_s1_w1.tif",
         "20585_AE.csv": "20585_AE.csv",
     }
+    with csv_path.open("a", encoding="utf-8") as handle:
+        handle.write("unselected.tif,20585/\n")
+    universe = NativeCellProfilerSelectedSourceUniverse(
+        (image_path, csv_path), placements=placements,
+        imported_metadata_paths=(csv_path,),
+    )
+    staged = universe.materialize_flat_input_dir(tmp_path / "staged")
+    assert staged.source_paths == (
+        tmp_path / "staged/20585/IXMtest_A01_s1_w1.tif",
+        tmp_path / "staged/20585_AE.csv",
+    )
+    assert staged.imported_metadata_paths == (tmp_path / "staged/20585_AE.csv",)
+    assert "unselected.tif" not in staged.imported_metadata_paths[0].read_text()
+    assert "unselected.tif" in csv_path.read_text()
 
 
 def test_native_cellprofiler_imported_metadata_rejects_unresolved_foreign_path(

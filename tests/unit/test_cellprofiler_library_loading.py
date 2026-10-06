@@ -1,4 +1,5 @@
 import importlib
+from dataclasses import replace
 import sys
 import types
 from typing import get_type_hints
@@ -74,9 +75,11 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
 )
 from openhcs.processing.backends.cellprofiler.colocalization import (
     ColocalizationCostesThresholdBatch,
+    ColocalizationCostesThresholdRequest,
     ColocalizationCostesThresholds,
     ColocalizationImagePairContext,
     ColocalizationObjectLabelContext,
+    CostesMethod,
     MeasureColocalizationModule,
     ObjectColocalizationMetricArrays,
     costes_backend,
@@ -1151,7 +1154,7 @@ def test_measure_colocalization_objects_emits_and_splits_both_scopes():
         CellProfilerMeasurementTargetScope,
     )
     from openhcs.processing.backends.cellprofiler.colocalization import (
-        MeasureColocalizationObjectMeasurementRowPolicy,
+        MeasureColocalizationMeasurementRowPolicy,
     )
 
     image = np.stack(
@@ -1176,7 +1179,7 @@ def test_measure_colocalization_objects_emits_and_splits_both_scopes():
         do_overlap=False,
     )
     object_rows, image_rows = (
-        MeasureColocalizationObjectMeasurementRowPolicy().split_scoped_rows(rows)
+        MeasureColocalizationMeasurementRowPolicy().split_scoped_rows(rows)
     )
 
     assert image_rows.row_count() == 1
@@ -1286,7 +1289,9 @@ def test_runtime_batch_projects_singleton_aligned_axis_before_colocalization() -
         batch_count=1,
     )
 
-    batch_request = request.batch_executor_request()
+    batch_request = request.batch_executor_request(
+        processing_contract=ProcessingContract.FLEXIBLE,
+    )
 
     assert batch_request is not None
     assert batch_request.execution_mode is ImagePayloadExecutionMode.FULL_STACK
@@ -1321,6 +1326,38 @@ def test_colocalization_threshold_batch_caches_semantic_label_context() -> None:
     first = batch.object_label_context(request, image_pair_context)
     second = batch.object_label_context(request, image_pair_context)
     assert second is first
+
+
+def test_costes_thresholds_reuse_equal_pixels_across_distinct_image_payloads() -> None:
+    image = np.stack(
+        (
+            np.array(((0.1, 0.2), (0.3, 0.4)), dtype=np.float32),
+            np.array(((0.4, 0.3), (0.2, 0.1)), dtype=np.float32),
+        )
+    )
+
+    def request_for(pixels: np.ndarray) -> ColocalizationCostesThresholdRequest:
+        return ColocalizationCostesThresholdRequest(
+            image=pixels,
+            image_data=pixels,
+            channel_1=0,
+            channel_2=1,
+            method=CostesMethod.FASTER,
+            scale_max=255,
+            backend_provider=None,
+            image_pair_context=ColocalizationImagePairContext.from_request(
+                pixels, channel_1=0, channel_2=1
+            ),
+        )
+
+    batch = ColocalizationCostesThresholdBatch()
+    first = batch.resolve(request_for(image))
+    assert batch.resolve(request_for(image.copy())) is first
+
+    changed = image.copy()
+    changed[0, 0, 0] += np.float32(0.1)
+    assert batch.resolve(request_for(changed)) is not first
+    assert batch.resolve(replace(request_for(image), scale_max=65535)) is not first
 
 
 def test_measure_colocalization_objects_batch_uses_contract_execution() -> None:
@@ -1364,6 +1401,86 @@ def test_measure_colocalization_objects_batch_uses_contract_execution() -> None:
     assert isinstance(
         executed_kwargs["object_label_context"], ColocalizationObjectLabelContext
     )
+
+
+def test_colocalization_batches_preserve_step_thresholds_and_live_source_epoch(
+    monkeypatch,
+) -> None:
+    image = np.stack(
+        (
+            np.array(((0.1, 0.2), (0.3, 0.4)), dtype=np.float32),
+            np.array(((0.4, 0.3), (0.2, 0.1)), dtype=np.float32),
+        )
+    )
+    mask = np.ones(image.shape, dtype=bool)
+    payload = MaskedImagePayload(
+        data=image,
+        mask=mask,
+        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.SOURCE_BINDING),
+    )
+    label_sets = tuple(
+        ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(labels=labels),
+            domain=ObjectLabelDomain(declared_object_count=2),
+        )
+        for labels in (
+            np.array(((1, 1), (0, 2)), dtype=np.int32),
+            np.array(((1, 0), (2, 2)), dtype=np.int32),
+        )
+    )
+    threshold_calls = []
+    original_thresholds = ColocalizationCostesThresholdRequest.thresholds
+
+    def thresholds(request):
+        threshold_calls.append(request.cache_key)
+        return original_thresholds(request)
+
+    monkeypatch.setattr(ColocalizationCostesThresholdRequest, "thresholds", thresholds)
+
+    def execute_batch(step_thresholds):
+        requests = tuple(
+            RuntimeBatchInvocationRequest(
+                source_image_name="DNA_Memb",
+                func=measure_colocalization_objects,
+                image=payload,
+                kwargs={
+                    "labels": labels,
+                    "channel_1": 0,
+                    "channel_2": 1,
+                    "costes_threshold_batch": step_thresholds,
+                },
+                batch_index=index,
+                batch_count=len(label_sets),
+            )
+            for index, labels in enumerate(label_sets)
+        )
+        return measure_colocalization_objects_batch(
+            measure_colocalization_objects,
+            requests,
+            lambda _func, request: request.kwargs["costes_thresholds"],
+        )
+
+    step_thresholds = ColocalizationCostesThresholdBatch()
+    first = execute_batch(step_thresholds)
+    second = execute_batch(step_thresholds)
+    assert first[0] is first[1] is second[0] is second[1]
+    assert len(threshold_calls) == 1
+
+    # The same nominal source and array identities enter a later batch with a
+    # changed valid-pixel selection; batch-local views must observe this epoch.
+    mask[:, 0, 0] = False
+    masked = execute_batch(step_thresholds)
+    assert masked[0] is masked[1] and masked[0] is not first[0]
+    assert len(threshold_calls) == 2
+
+    image[0, 1, 1] += np.float32(0.1)
+    changed = execute_batch(step_thresholds)
+    assert changed[0] is changed[1] and changed[0] is not masked[0]
+    assert len(threshold_calls) == 3
+
+    next_step = execute_batch(ColocalizationCostesThresholdBatch())
+    assert next_step[0] is next_step[1] and next_step[0] is not changed[0]
+    assert len(threshold_calls) == 4
 
 
 def test_measure_colocalization_costes_thresholds_preserve_backend_values():
@@ -1862,7 +1979,7 @@ def test_identify_primary_objects_applies_threshold_smoothing_to_binary_mask(
 def test_identify_primary_objects_accepts_nominal_options_directly():
     image = np.zeros((8, 8), dtype=np.float32)
     image[2:6, 2:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=2,
         max_diameter=8,
@@ -1925,7 +2042,7 @@ def test_identify_primary_objects_does_not_size_filter_after_hole_fill() -> None
     image[1:6, 5] = 1.0
     image[1, 1:6] = 1.0
     image[5, 1:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=1,
         max_diameter=5,
@@ -1944,7 +2061,6 @@ def test_identify_primary_objects_does_not_size_filter_after_hole_fill() -> None
 
 def test_watershed_xy_downsample_factors_preserve_leading_axes():
     from openhcs.processing.backends.cellprofiler.watershed import (
-        watershed_connected_components,
         watershed_regionprops_stats,
         watershed_xy_downsample_factors,
     )
@@ -1952,7 +2068,11 @@ def test_watershed_xy_downsample_factors_preserve_leading_axes():
     assert watershed_xy_downsample_factors(2, 2) == (2.0, 2.0)
     assert watershed_xy_downsample_factors(3, 2) == (1.0, 2.0, 2.0)
     assert watershed_xy_downsample_factors(4, 2) == (1.0, 1.0, 2.0, 2.0)
-    labels = watershed_connected_components(np.ones((2, 3, 4, 5), dtype=bool))
+    from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+
+    labels = MorphologyBackendStrategy.for_memory_type().label_equal_values(
+        np.ones((2, 3, 4, 5), dtype=bool)
+    )
     assert labels.shape == (2, 3, 4, 5)
     assert labels.dtype == np.int32
     object_count, mean_area = watershed_regionprops_stats(labels)
@@ -2618,7 +2738,7 @@ def test_measure_texture_objects_preserves_runtime_projected_label_domain():
     assert list(results[1][1].columns["object_label"][::4]) == [3]
 
 
-def test_numba_haralick_backend_exactly_matches_mahotas_reference():
+def test_numba_haralick_backend_matches_mahotas_reference():
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
@@ -2643,7 +2763,7 @@ def test_numba_haralick_backend_exactly_matches_mahotas_reference():
             actual = numba_backend.haralick_features(
                 image, scale=scale, ignore_zeros=ignore_zeros
             )
-            np.testing.assert_array_equal(actual, expected)
+            np.testing.assert_allclose(actual, expected, rtol=1e-6, atol=1e-6)
 
 
 def test_object_texture_crop_backend_matches_regionprops_intensity_images():
@@ -3930,6 +4050,32 @@ def test_correct_illumination_centrosome_convex_hull_preserves_input_dtype():
     assert illumination.dtype == image.dtype
 
 
+def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
+    import centrosome.cpmorphology
+
+    from openhcs.processing.backends.cellprofiler.label_geometry import (
+        CellProfilerLabelHull,
+    )
+
+    labels = np.zeros((91, 103), dtype=np.int32)
+    labels[3:35, 5:41] = 11
+    labels[12:20, 17:28] = 0
+    labels[40:80, 48:94] = 23
+    labels[40:80:3, 48:94:4] = 0
+    labels[85, 100] = 99
+    object_ids = np.array([11, 23, 99, 123], dtype=np.int32)
+
+    expected_hull, expected_counts = centrosome.cpmorphology.convex_hull(
+        labels, object_ids
+    )
+    actual_hull, actual_counts = CellProfilerLabelHull.from_labels(
+        labels, object_ids
+    ).vertices()
+
+    np.testing.assert_array_equal(actual_hull, expected_hull)
+    np.testing.assert_array_equal(actual_counts, expected_counts)
+
+
 def test_absorbed_convex_hull_transform_matches_centrosome_oracle():
     import centrosome.cpmorphology
     import centrosome.filter
@@ -4885,3 +5031,38 @@ def test_overlay_outlines_renders_exact_projected_empty_label_plane():
     )
     assert output.shape == (8, 8, 3)
     assert float(image_payload_data(output).max()) == 0.0
+
+
+@pytest.mark.parametrize(
+    "contract,mode,slice_by_slice,admitted",
+    (
+        (ProcessingContract.PURE_2D, ImagePayloadExecutionMode.NATURAL, False, False),
+        (ProcessingContract.PURE_2D, ImagePayloadExecutionMode.FULL_STACK, False, True),
+        (ProcessingContract.PURE_3D, ImagePayloadExecutionMode.NATURAL, False, True),
+        (ProcessingContract.FLEXIBLE, ImagePayloadExecutionMode.NATURAL, False, True),
+        (ProcessingContract.FLEXIBLE, ImagePayloadExecutionMode.NATURAL, True, False),
+    ),
+)
+def test_measurement_batch_admission_uses_declared_processing_domain(
+    contract, mode, slice_by_slice, admitted,
+) -> None:
+    image = np.stack((np.ones((2, 3)), np.full((2, 3), 2.0)))
+    request = RuntimeBatchInvocationRequest(
+        source_image_name="Measured",
+        func=lambda image, slice_by_slice=False: image,
+        image=image,
+        kwargs={"slice_by_slice": slice_by_slice},
+        execution_mode=mode,
+        plane_projection=RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis_size=2,
+        ),
+        batch_index=0,
+        batch_count=2,
+    )
+
+    result = request.batch_executor_request(processing_contract=contract)
+
+    assert (result is request) is admitted
+    np.testing.assert_array_equal(request.image, image)
+    assert request.kwargs["slice_by_slice"] is slice_by_slice

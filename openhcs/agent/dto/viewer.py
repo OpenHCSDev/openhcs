@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields as dataclass_fields
-from typing import ClassVar, Self, cast
+from typing import Annotated, ClassVar, Self, cast
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
@@ -13,14 +14,17 @@ from polystore.streaming_constants import StreamingDataType
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotCaptureSpec,
+    WindowSnapshotFrameCondition,
+    WindowVisualObservation,
 )
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, project_dataclass
+from pydantic import BeforeValidator, StrictFloat, StrictInt
+from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_protocol import (
     ViewerImageIntensityControlOptions,
     ViewerNativeImageIntensityPresentation,
     ViewerNativeLayerTransform,
     ViewerNativeViewportPresentation,
-    ViewerSourceSpatialDomainPayload,
 )
 
 from openhcs.agent.dto.common import (
@@ -40,15 +44,32 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.viewer_controls import (
+    ViewerImageSpatialSampleControls,
+    ViewerMeasurementCoordinates,
+    ViewerPolylineMeasurement,
+    ViewerRegionMeasurement,
+    ViewerPolylineControlOptions,
+    ViewerRegionControlOptions,
     ViewerIntensityWindowControlOptions,
     ViewerLayerIsolationControlOptions,
+    ViewerLayerRetirementControlOptions,
     ViewerNavigationControlOptions,
+    ViewerNativeDimensions,
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
 from openhcs.serialization.json import to_jsonable
+from openhcs.runtime.viewer_protocol import (
+    ViewerPayloadSummary, ViewerPayloadRecord, ViewerPayloadContent,
+    ViewerProjectionRecord, ViewerShapeCoordinateBounds,
+    ViewerControlField, ViewerControlResponseField, ViewerControlMessageType,
+    OpenHCSViewerControlMessageType, ViewerProtocolStatus,
+    ViewerImageColorControlOptions, ViewerNativeImageColorPresentation,
+    ViewerNativeWindowControlOptions, ViewerNativeWindowState,
+    ViewerLayerRetirementReceipt,
+)
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
 
@@ -79,6 +100,17 @@ class ViewerWindowControlRequest(ExecutionConnectionProjection):
 
     timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
     include_response: bool = True
+    operation_deadline: OperationDeadline | None = field(default=None, repr=False)
+
+    def start_operation(self) -> Self:
+        from dataclasses import replace
+
+        return replace(self, operation_deadline=self.control_deadline())
+
+    def control_deadline(self) -> OperationDeadline:
+        return self.operation_deadline or OperationDeadline.after_milliseconds(
+            self.timeout_ms, operation="viewer control request",
+        )
 
     @classmethod
     def factory_injected_field_names(cls) -> frozenset[str]:
@@ -164,6 +196,38 @@ class ViewerWindowCloseRequest(ViewerWindowControlRequest):
 class ViewerWindowSnapshotRequest(
     WindowSnapshotCaptureSpec, ViewerWindowControlRequest
 ):
+    frame_condition: WindowSnapshotFrameCondition = (
+        WindowSnapshotFrameCondition.RENDER_COMPLETE
+    )
+    observation_timeout_s: float | None = None
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.timeout_ms, bool)
+            or not isinstance(self.timeout_ms, int)
+            or self.timeout_ms <= 0
+        ):
+            raise ValueError(
+                "Snapshot transport timeout_ms must be a positive integer."
+            )
+        if self.observation_timeout_s is None:
+            object.__setattr__(
+                self,
+                "observation_timeout_s",
+                min(
+                    WindowSnapshotCaptureSpec.observation_timeout_s,
+                    self.observation_phase_budget(self.timeout_ms / 1000),
+                ),
+            )
+        super(ViewerWindowSnapshotRequest, self).__post_init__()
+        if self.observation_timeout_s * 1000 >= self.timeout_ms:
+            raise ValueError(
+                "Snapshot observation timeout must be less than transport timeout."
+            )
+
+    def snapshot_operation_deadline(self) -> OperationDeadline | None:
+        return self.operation_deadline
+
     @classmethod
     def from_connection(
         cls,
@@ -172,6 +236,8 @@ class ViewerWindowSnapshotRequest(
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
+        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
+        observation_timeout_s: float | None = None,
     ) -> "ViewerWindowSnapshotRequest":
         if output_dir_path is None:
             output_dir_path = str(DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR)
@@ -180,6 +246,8 @@ class ViewerWindowSnapshotRequest(
             timeout_ms=timeout_ms,
             output_dir_path=output_dir_path,
             capture_scope=WindowSnapshotCaptureScope(capture_scope),
+            frame_condition=WindowSnapshotFrameCondition(frame_condition),
+            observation_timeout_s=observation_timeout_s,
         )
 
     @classmethod
@@ -190,23 +258,23 @@ class ViewerWindowSnapshotRequest(
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
+        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
+        observation_timeout_s: float | None = None,
     ) -> "ViewerWindowSnapshotRequest":
         return cls.from_connection(
             connection=connection,
             timeout_ms=timeout_ms,
             output_dir_path=output_dir_path,
             capture_scope=capture_scope,
+            frame_condition=frame_condition,
+            observation_timeout_s=observation_timeout_s,
         )
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
-        payload = self.connection_tool_arguments()
-        payload.update(
-            {
-                "output_dir_path": self.output_dir_path,
-                "capture_scope": self.capture_scope.value,
-            }
-        )
-        return payload
+        return {
+            **self.connection_tool_arguments(),
+            **to_jsonable(self.capture_fields()),
+        }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -334,11 +402,36 @@ class ViewerWindowPayloadRequest(ViewerWindowControlRequest):
         return payload
 
 
+class ViewerWindowPresentationRequest(ViewerWindowControlRequest, ABC):
+    """One typed operation owns its payload and native reply declaration."""
+
+    message_type: ClassVar[str]
+
+    @property
+    @abstractmethod
+    def result_type(self) -> type[ViewerWindowPresentationResult]:
+        """Return the declaration that owns this operation's native readback."""
+
+    @property
+    @abstractmethod
+    def control_payload(self):
+        """Return the original typed payload sent to the native action."""
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ViewerWindowViewportRequest(ViewerWindowControlRequest):
+class ViewerWindowViewportRequest(ViewerWindowPresentationRequest):
     """Apply native 2D camera properties without changing layer or pixel state."""
 
     presentation: ViewerNativeViewportPresentation
+    message_type = ViewerControlMessageType.VIEWPORT.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowViewportResult
+
+    @property
+    def control_payload(self):
+        return self.presentation
 
     @classmethod
     def from_fields(
@@ -387,6 +480,57 @@ class ViewerWindowImageIntensityRequest(ViewerWindowControlRequest):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowImageColorRequest(ViewerWindowPresentationRequest):
+    color: ViewerImageColorControlOptions
+    message_type = OpenHCSViewerControlMessageType.IMAGE_COLOR.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowImageColorResult
+
+    @property
+    def control_payload(self):
+        return self.color
+
+    @classmethod
+    def from_fields(
+        cls, *, connection: ExecutionConnectionSpec, route_key: str,
+        presentation: ViewerNativeImageColorPresentation,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(connection=connection, timeout_ms=timeout_ms,
+                   color=ViewerImageColorControlOptions(route_key, presentation))
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), **to_jsonable(self.color)}
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowNativePresentationRequest(ViewerWindowPresentationRequest):
+    presentation: ViewerNativeWindowControlOptions
+    message_type = OpenHCSViewerControlMessageType.WINDOW_PRESENTATION.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowNativePresentationResult
+
+    @property
+    def control_payload(self):
+        return self.presentation
+
+    @classmethod
+    def from_fields(
+        cls, *, connection: ExecutionConnectionSpec,
+        presentation: ViewerNativeWindowControlOptions,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(connection=connection, timeout_ms=timeout_ms, presentation=presentation)
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), "presentation": to_jsonable(self.presentation)}
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerWindowNavigationRequest(ViewerWindowControlRequest):
     navigation: ViewerNavigationControlOptions
 
@@ -401,6 +545,7 @@ class ViewerWindowNavigationRequest(ViewerWindowControlRequest):
         visible: bool | None = True,
         selected: bool | None = True,
         data_index: int | None = None,
+        display_axes: tuple[str, str] | None = None,
     ) -> Self:
         return cls(
             connection=connection,
@@ -411,6 +556,7 @@ class ViewerWindowNavigationRequest(ViewerWindowControlRequest):
                 visible=visible,
                 selected=selected,
                 data_index=data_index,
+                display_axes=display_axes,
             ),
         )
 
@@ -457,6 +603,48 @@ class ViewerWindowLayerIsolationRequest(ViewerWindowControlRequest):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowLayerRetirementRequest(ViewerWindowPresentationRequest):
+    retirement: ViewerLayerRetirementControlOptions
+    message_type = OpenHCSViewerControlMessageType.RETIRE_LAYERS.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowLayerRetirementResult
+
+    @property
+    def control_payload(self):
+        return self
+
+    @classmethod
+    def from_fields(
+        cls, *, connection: ExecutionConnectionSpec,
+        expected_producers: dict[
+            str,
+            list[Annotated[
+                StreamProducerIdentity,
+                BeforeValidator(StreamProducerIdentity.from_payload),
+            ]],
+        ],
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(
+            connection=connection, timeout_ms=timeout_ms,
+            retirement=ViewerLayerRetirementControlOptions.from_overrides(
+                expected_producers=expected_producers,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {
+            **self.connection_tool_arguments(),
+            "expected_producers": {
+                route: [to_jsonable(producer.to_payload()) for producer in producers]
+                for route, producers in self.retirement.expected_producers.items()
+            },
+        }
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerWindowIntensityWindowRequest(ViewerWindowControlRequest):
     """Apply a route-global window over payloads matching semantic coordinates."""
 
@@ -495,6 +683,86 @@ class ViewerWindowIntensityWindowRequest(ViewerWindowControlRequest):
             }
         )
         return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowPolylineMeasurementRequest(ViewerWindowControlRequest):
+    measurement: ViewerPolylineControlOptions
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        route_key: str,
+        vertices_yx: list[tuple[StrictFloat, StrictFloat]],
+        axis_indices: dict[str, StrictInt],
+        line_width: StrictInt = 1,
+        interpolation_order: StrictInt = 1,
+        max_samples: StrictInt = 4096,
+        max_pixels: StrictInt = 262144,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        ViewerPolylineControlOptions.validate_vertices(vertices_yx, 2)
+        return cls(
+            connection=connection,
+            timeout_ms=timeout_ms,
+            measurement=ViewerPolylineControlOptions(
+                route_key=route_key,
+                vertices_yx=tuple(tuple(v) for v in vertices_yx),
+                axis_indices=dict(axis_indices),
+                line_width=line_width,
+                interpolation_order=interpolation_order,
+                max_samples=max_samples,
+                max_pixels=max_pixels,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), **to_jsonable(self.measurement)}
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRegionMeasurementRequest(ViewerWindowControlRequest):
+    measurement: ViewerRegionControlOptions
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        route_key: str,
+        vertices_yx: list[tuple[StrictFloat, StrictFloat]],
+        axis_indices: dict[str, StrictInt],
+        background_vertices_yx: list[tuple[StrictFloat, StrictFloat]] | None = None,
+        support_threshold: StrictFloat | None = None,
+        background_sigma: StrictFloat = 2.0,
+        max_pixels: StrictInt = 262144,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        ViewerRegionControlOptions.validate_vertices(vertices_yx, 3)
+        if background_vertices_yx is not None:
+            ViewerRegionControlOptions.validate_vertices(background_vertices_yx, 3)
+        return cls(
+            connection=connection,
+            timeout_ms=timeout_ms,
+            measurement=ViewerRegionControlOptions(
+                route_key=route_key,
+                vertices_yx=tuple(tuple(v) for v in vertices_yx),
+                axis_indices=dict(axis_indices),
+                background_vertices_yx=(
+                    tuple(tuple(v) for v in background_vertices_yx)
+                    if background_vertices_yx is not None
+                    else None
+                ),
+                support_threshold=support_threshold,
+                background_sigma=background_sigma,
+                max_pixels=max_pixels,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), **to_jsonable(self.measurement)}
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -579,7 +847,7 @@ class ViewerWindowImageSampleRequest(ViewerWindowControlRequest):
             timeout_ms=self.timeout_ms,
             include_response=False,
             payload_projection=ViewerPayloadProjectionOptions(
-                controls=ViewerPayloadControlOptions.from_overrides(
+                controls=ViewerImageSpatialSampleControls.from_overrides(
                     route_key=self.route_key,
                     axis_indices=self.axis_indices,
                     include_array_values=True,
@@ -768,7 +1036,7 @@ class ViewerWindowLayerState(ViewerWindowLayerDescriptor):
     component_values: tuple[JsonObject, ...] = ()
     component_value_count: int = 0
     component_values_truncated: bool = False
-    payload_summaries: tuple[JsonObject, ...] = ()
+    payload_summaries: tuple[ViewerPayloadSummary, ...] = ()
     payload_summary_count: int = 0
     payload_summaries_truncated: bool = False
     axis_offsets: tuple[int, ...] = ()
@@ -836,9 +1104,9 @@ class ViewerWindowSnapshotErrorResultMixin(ViewerWindowErrorResultFactory):
         return cls(
             schema_version=SCHEMA_VERSION,
             connection=context.connection,
-            output_dir_path=context.output_dir_path,
-            capture_scope=context.capture_scope,
+            **context.capture_fields(),
             captured=False,
+            observation=context.observation,
             errors=(context.error,),
         )
 
@@ -848,11 +1116,13 @@ class ViewerWindowSnapshotErrorResultMixin(ViewerWindowErrorResultFactory):
         *,
         request: "ViewerWindowSnapshotRequest",
         error: AgentError,
+        observation: WindowVisualObservation | None = None,
     ) -> Self:
         return cls.from_error_context(
             ViewerWindowSnapshotErrorContext.from_request_error(
                 request=request,
                 error=error,
+                observation=observation,
             )
         )
 
@@ -900,6 +1170,7 @@ class ViewerWindowSnapshotResult(
     registry_key: ClassVar[str] = "snapshot"
 
     captured: bool
+    observation: WindowVisualObservation | None = None
     resource: AgentResourceRef | None = None
     viewer: ViewerWindowDescriptor | None = None
     width: int | None = None
@@ -926,6 +1197,7 @@ class ViewerWindowStateResult(
     component_group_count: int = 0
     component_item_count: int = 0
     native_viewport: ViewerNativeViewportPresentation | None = None
+    native_dimensions: ViewerNativeDimensions | None = None
     response: JsonObject = field(default_factory=dict)
 
     @classmethod
@@ -948,7 +1220,7 @@ class ViewerWindowStateResult(
             (layer, summary)
             for layer in self.layers
             for summary in layer.payload_summaries
-            if summary.get("path") == path
+            if summary.path == path
         )
         if len(matches) != 1:
             raise ValueError("Image receipt requires exactly one matching source path.")
@@ -960,7 +1232,7 @@ class ViewerWindowStateResult(
             or layer.payload_summary_count != len(layer.payload_summaries)
             or layer.item_count != len(layer.payload_summaries)
             or len(layer.producer_identities) != 1
-            or summary.get("data_type") != StreamingDataType.IMAGE.value
+            or summary.data_type != StreamingDataType.IMAGE.value
         ):
             raise ValueError(
                 "Image receipt has incomplete or non-image payload evidence."
@@ -970,40 +1242,30 @@ class ViewerWindowStateResult(
             len(transform.scale) != self.viewer_ndim
             or len(transform.translate) != self.viewer_ndim
             or not transform.scale
-            or any(value != 1.0 for value in transform.scale)
             or any(value != 0.0 for value in transform.translate)
         ):
             raise ValueError(
                 "Image receipt requires explicit identity pixel placement."
             )
-        domain = ViewerSourceSpatialDomainPayload.from_wire_mapping(
-            summary, source_label="image receipt"
-        )
-        if any(
-            type(value) is not int
-            for wire_field in domain.to_wire_mapping()
-            for value in summary[wire_field]
-        ):
-            raise ValueError("Image receipt window coordinates require exact integers.")
-        shape = summary.get("shape")
-        if (
-            not isinstance(shape, (tuple, list))
-            or len(shape) != 3
-            or any(type(value) is not int or value <= 0 for value in shape)
-            or domain.origin_yx != (0, 0)
-            or domain.source_shape_yx != tuple(shape[-2:])
-        ):
+        spacing = summary.voxel_spacing
+        if spacing.has_values:
+            if len(layer.axis_labels) != self.viewer_ndim:
+                raise ValueError(
+                    "Calibrated image receipt requires its complete semantic axes."
+                )
+            expected_scale = spacing.layer_coordinate_kwargs(layer.axis_labels)["scale"]
+        else:
+            expected_scale = (1.0,) * self.viewer_ndim
+        if transform.scale != expected_scale:
             raise ValueError(
-                "Image receipt requires an explicit full three-axis image window."
+                "Image receipt transform conflicts with its declared source calibration."
             )
-        projected = {
-            member.name: summary[member.name]
-            for member in dataclass_fields(ViewerWindowPayloadRecord)
-            if member.name in summary
-        }
-        projected.update(route_key=layer.route_key, summary=summary)
+        summary.require_full_image_window()
         return (
-            dataclass_from_mapping(ViewerWindowPayloadRecord, projected),
+            ViewerWindowPayloadRecord(
+                route_key=layer.route_key, data_type=summary.data_type,
+                path=summary.path, components=summary.components, summary=summary,
+            ),
             layer.producer_identities[0],
         )
 
@@ -1012,18 +1274,23 @@ class ViewerWindowStateResult(
         return self.image_payload_binding_for(path)[0]
 
 
-@dataclass(frozen=True, slots=True)
-class ViewerWindowPayloadRecord:
-    route_key: str
-    data_type: str
-    path: str
-    components: JsonObject
-    axis_indices: tuple[int, ...] = ()
-    aggregate_axis_indices: tuple[int, ...] = ()
-    summary: JsonObject = field(default_factory=dict)
-    array_values: tuple[JsonValue, ...] = ()
-    array_value_summary: JsonObject = field(default_factory=dict)
-    shape_payloads: tuple[JsonObject, ...] = ()
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowPayloadRecord(ViewerPayloadRecord):
+    """Agent payload identity inherits the original native content declaration."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerWindowLayerPayloadAssociation(ViewerProjectionRecord):
+    layer_route_key: str
+    layer_title: str | None
+    payload_route_key: str
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowImageSampleRecord(
+    ViewerWindowLayerPayloadAssociation, ViewerPayloadContent,
+):
+    """Layer association composes independently with original payload content."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -1047,16 +1314,85 @@ class ViewerWindowPayloadResult(
 
 
 @dataclass(frozen=True, slots=True)
-class ViewerWindowViewportResult(
+class ViewerWindowPolylineMeasurementResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
     ExecutionConnectionProjection,
 ):
-    registry_key: ClassVar[str] = "viewport"
+    registry_key: ClassVar[str] = "polyline_measurement"
+    observed: bool
+    measurement: ViewerPolylineMeasurement | None = None
+    coordinates: ViewerMeasurementCoordinates | None = None
 
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowRegionMeasurementResult(
+    ViewerWindowObservedErrorResultMixin,
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+):
+    registry_key: ClassVar[str] = "region_measurement"
+    observed: bool
+    measurement: ViewerRegionMeasurement | None = None
+    coordinates: ViewerMeasurementCoordinates | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowPresentationResult(
+    ViewerWindowObservedErrorResultMixin,
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+):
+    """One reply admission and error lifecycle shared by native presentations."""
+
+    response_field: ClassVar[ViewerControlField]
+    snapshot_type: ClassVar[type]
     observed: bool
     applied: bool = False
+
+    @classmethod
+    def from_native_response(cls, connection, response: Mapping[str, object]):
+        status = response[ViewerControlResponseField.STATUS.value]
+        if status != ViewerProtocolStatus.SUCCESS.value:
+            raise ValueError(response[ViewerControlResponseField.MESSAGE.value])
+        payload = response[cls.response_field.value]
+        if not isinstance(payload, Mapping):
+            raise TypeError("Native presentation readback must be a mapping.")
+        snapshot = cls.snapshot_type.from_wire_mapping(payload)
+        return cls.from_snapshot(connection, snapshot)
+
+    @classmethod
+    def from_snapshot(cls, connection, snapshot):
+        return cls(schema_version=SCHEMA_VERSION, connection=connection,
+                   observed=True, applied=True, **{cls.response_field.value: snapshot})
+
+    def admit_request(self, request: ViewerWindowPresentationRequest) -> Self:
+        """Operation-specific reply custody; concrete declarations supply hooks."""
+        return self
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowViewportResult(ViewerWindowPresentationResult):
+    registry_key: ClassVar[str] = "viewport"
+    response_field = ViewerControlField.NATIVE_VIEWPORT
+    snapshot_type = ViewerNativeViewportPresentation
     native_viewport: ViewerNativeViewportPresentation | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowImageColorResult(ViewerWindowPresentationResult):
+    registry_key: ClassVar[str] = "image_color"
+    response_field = ViewerControlField.NATIVE_IMAGE_COLOR
+    snapshot_type = ViewerNativeImageColorPresentation
+    native_image_color: ViewerNativeImageColorPresentation | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowNativePresentationResult(ViewerWindowPresentationResult):
+    registry_key: ClassVar[str] = "native_window"
+    response_field = ViewerControlField.NATIVE_WINDOW
+    snapshot_type = ViewerNativeWindowState
+    native_window: ViewerNativeWindowState | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1092,6 +1428,7 @@ class ViewerWindowNavigationResult(
     active_dimension_label_route: str | None = None
     current_step: tuple[int, ...] = ()
     axis_labels: tuple[str, ...] = ()
+    native_dimensions: ViewerNativeDimensions | None = None
     available_layers: tuple["ViewerWindowLayerVisibilityRecord", ...] = ()
 
 
@@ -1101,6 +1438,37 @@ class ViewerWindowLayerVisibilityRecord:
     title: str | None
     visible: bool
     selected: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowLayerRetirementResult(
+    ViewerWindowPresentationResult,
+    ViewerLayerRetirementReceipt,
+):
+    registry_key: ClassVar[str] = "layer_retirement"
+    response_field = ViewerControlField.RETIREMENT
+    snapshot_type = ViewerLayerRetirementReceipt
+    observed: bool = field(kw_only=True)
+
+    @classmethod
+    def from_snapshot(cls, connection, snapshot):
+        return project_dataclass(
+            cls, snapshot, schema_version=SCHEMA_VERSION,
+            connection=connection, observed=True,
+        )
+
+    def admit_request(self, request: ViewerWindowLayerRetirementRequest) -> Self:
+        # slots=True replaces the dataclass type; use that declared MRO owner,
+        # not the pre-transformation __class__ captured by zero-argument super.
+        super(ViewerWindowLayerRetirementResult, self).admit_request(request)
+        if not self.applied:
+            raise ValueError("Native retirement did not apply the requested set.")
+        requested = frozenset(request.retirement.expected_producers)
+        if frozenset(self.retired_route_keys) != requested:
+            raise ValueError("Native retirement acknowledgement has a different route set.")
+        if requested.intersection(self.remaining_route_keys):
+            raise ValueError("Retired routes remain mounted in the acknowledgement.")
+        return self
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1196,7 +1564,50 @@ class ViewerWindowImageSampleResult(AgentResultEnvelope):
     sample_protocol_supported: bool = False
     sample_included_count: int = 0
     sample_omitted_count: int = 0
-    records: tuple[JsonObject, ...] = ()
+    records: tuple[ViewerWindowImageSampleRecord, ...] = ()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRoiNumericStatistics(ViewerProjectionRecord):
+    min: float
+    median: float
+    mean: float
+    max: float
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRoiExample(ViewerProjectionRecord):
+    """Known projection fields; analysis metadata values remain extensible JSON."""
+
+    type: JsonValue = None
+    label: JsonValue = None
+    area: JsonValue = None
+    centroid_yx: JsonValue = None
+    bbox_yxyx: JsonValue = None
+    perimeter: JsonValue = None
+    source_spatial_shape_yx: JsonValue = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRoiPayloadSummary(ViewerWindowLayerPayloadAssociation):
+    path: str
+    components: JsonObject
+    axis_indices: tuple[StrictInt, ...]
+    roi_count: StrictInt
+    returned_roi_count: StrictInt
+    roi_count_exact: bool
+    roi_member_count: StrictInt
+    returned_roi_member_count: StrictInt
+    roi_duplicate_member_count: StrictInt
+    roi_payloads_truncated: bool
+    area: ViewerWindowRoiNumericStatistics | None
+    perimeter: ViewerWindowRoiNumericStatistics | None
+    bounds_yx: ViewerShapeCoordinateBounds | None
+    coordinate_count: StrictInt | None
+    spatial_origin_yx: tuple[StrictInt, StrictInt] | None
+    source_spatial_shape_yx: tuple[StrictInt, StrictInt] | None
+    out_of_source_bounds_count: StrictInt | None
+    example_rois: tuple[ViewerWindowRoiExample, ...]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1214,7 +1625,12 @@ class ViewerWindowRoiSummaryResult(AgentResultEnvelope):
     total_roi_member_count: int = 0
     returned_roi_member_count: int = 0
     roi_payloads_truncated: bool = False
-    payloads: tuple[JsonObject, ...] = ()
+    payloads: tuple[ViewerWindowRoiPayloadSummary, ...] = ()
+
+    @property
+    def should_explain_missing_rois(self) -> bool:
+        """An empty successful ROI observation admits absence guidance."""
+        return not self.errors and not self.payloads and self.total_roi_count == 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1316,18 +1732,21 @@ class ViewerWindowSnapshotErrorContext(
 ):
     """Viewer snapshot error context plus the requested capture contract."""
 
+    observation: WindowVisualObservation | None = None
+
     @classmethod
     def from_request_error(
         cls,
         *,
         request: ViewerWindowSnapshotRequest,
         error: AgentError,
+        observation: WindowVisualObservation | None = None,
     ) -> Self:
         return cls(
             connection=request.connection,
-            output_dir_path=request.output_dir_path,
-            capture_scope=request.capture_scope,
+            **request.capture_fields(),
             error=error,
+            observation=observation,
         )
 
 

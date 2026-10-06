@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import replace
 
 from openhcs.core.artifacts import (
     ArtifactSpec,
 )
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableKwargs,
-    RuntimeFunctionOutput,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
 
@@ -22,21 +21,41 @@ class ObjectLabelDrivenPrimaryImageInputPolicy:
     @classmethod
     def primary_image_inputs(
         cls,
-        func: Callable[..., RuntimeFunctionOutput],
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
-        del cls, func, declared_inputs
+        del cls, contract, declared_inputs
         return ()
+
+    @classmethod
+    def primary_image_domain_specs(
+        cls, domain_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        """Admit the one scalar label binding that owns this domain."""
+        if len(domain_inputs) != 1:
+            raise ValueError(
+                f"{cls.__name__} requires exactly one invocation-domain input, "
+                f"got {tuple(spec.ref() for spec in domain_inputs)!r}."
+            )
+        return domain_inputs
+
+    @classmethod
+    def primary_image_domain_value(
+        cls, runtime_kwargs: RuntimeCallableKwargs,
+    ) -> ObjectLabelValue:
+        """Resolve the scalar value through the original binding declaration."""
+        binding = cls.primary_image_domain_input_binding()
+        return runtime_kwargs[binding.require_runtime_parameter_name()]
 
     @classmethod
     def invocation_domain_inputs(
         cls,
-        func: Callable[..., RuntimeFunctionOutput],
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Return the exact object-label input that owns one invocation."""
 
-        del func
+        del contract
         binding = cls.primary_image_domain_input_binding()
         parameter_name = binding.require_runtime_parameter_name()
         artifact_type = binding.require_artifact_type()
@@ -46,13 +65,7 @@ class ObjectLabelDrivenPrimaryImageInputPolicy:
             if artifact_input.parameter_name == parameter_name
             and artifact_input.artifact_type is artifact_type
         )
-        if len(domain_inputs) != 1:
-            raise ValueError(
-                f"{cls.__name__} requires exactly one invocation-domain input "
-                f"bound to {parameter_name!r}, got "
-                f"{tuple(spec.ref() for spec in domain_inputs)!r}."
-            )
-        return domain_inputs
+        return cls.primary_image_domain_specs(domain_inputs)
 
     @classmethod
     def project_invocation_image_request(
@@ -70,7 +83,7 @@ class ObjectLabelDrivenPrimaryImageInputPolicy:
                 f"{cls.__name__} requires bound object-label parameter "
                 f"{parameter_name!r} before invocation image projection."
             )
-        labels = runtime_kwargs[parameter_name]
+        labels = cls.primary_image_domain_value(runtime_kwargs)
         if not isinstance(labels, ObjectLabelValue):
             raise TypeError(
                 f"{cls.__name__} object-label image domain requires "

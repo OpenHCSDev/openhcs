@@ -1,0 +1,14 @@
+{
+  "common_revision": "32d070c26",
+  "source_hashes": {
+    "candidate": "93f50c8ad2fb25217caa8c7951539bfffbc7ae25401c98e165e18949194edb87",
+    "control": "ea94cbfa92ac0eb984e650aadc8f3759596cbff1aca688b20fff192d58450f0a"
+  },
+  "env": {
+    "OPENHCS_CPU_ONLY": "true",
+    "OPENHCS_SUBPROCESS_NO_GPU": "1",
+    "POLYSTORE_SUBPROCESS_NO_GPU": "1",
+    "NUMBA_CACHE_DIR": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2"
+  },
+  "design": "control/candidate/candidate/control; existing public radial family preparation before each timed run; source restored finally; no concurrent audits/tests"
+}

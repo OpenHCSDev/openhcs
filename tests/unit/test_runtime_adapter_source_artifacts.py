@@ -1,7 +1,9 @@
+from openhcs.core.steps.abstract import StepExecutionObservation
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from scipy.io import savemat
@@ -12,7 +14,9 @@ from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source_binding_selection import SourcePatternResolutionContext
 from openhcs.core.runtime_object_labels import ObjectLabelSet
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
@@ -20,7 +24,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
-    SourceBindingRuntimeContext,
     SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
@@ -30,7 +33,6 @@ from openhcs.core.source_bindings import (
     StepSourceBindingsConfig,
 )
 from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
@@ -38,9 +40,8 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspaceSourceProjectionCache,
 )
-from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactInputRequest,
-    RuntimeArtifactTypeStrategy,
+from openhcs.interop.cellprofiler.runtime.output_recording import (
+    CellProfilerOutputRecorder,
 )
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
@@ -54,6 +55,7 @@ def _filemanager() -> FileManager:
 
 def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source_root = tmp_path / "source"
     workspace_root = tmp_path / "workspace"
@@ -137,13 +139,17 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     microscope_handler.initialize_workspace(workspace_root, filemanager)
     projection_cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
+        completed_step_outputs=StepExecutionObservation.empty(),
         plate_path=workspace_root,
         filemanager=filemanager,
         microscope_handler=microscope_handler,
-        runtime_source_workspace_projection_cache=projection_cache,
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
             frozenset((AllComponents.CHANNEL,))
         ),
+    )
+    context.runtime_source_workspace_projection_authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+        context, cache=projection_cache,
     )
     projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
         context,
@@ -174,9 +180,8 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             Backend.VIRTUAL_WORKSPACE.value,
         ),
     )
-    primary_payload = apply_source_binding_payload(
+    primary_payload = primary_binding.apply_loaded_payload(
         primary_payload,
-        primary_binding,
         ImagePayloadSourceMetadataContext(
             SourceImageIdentity(
                 primary_virtual_path,
@@ -186,13 +191,6 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             filemanager,
             primary_projection.ref.backend_address,
         ),
-    )
-    runtime_context = SourceBindingRuntimeContext(
-        step_input_source_paths={
-            virtual_path: source_ref.backend_address
-            for virtual_path, source_ref in projection.source_refs_by_virtual_path.items()
-        },
-        source_metadata_by_path=projection.source_metadata_by_path,
     )
 
     def request() -> RuntimeAdapterRequest:
@@ -206,7 +204,6 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
                     enabled=True,
                 ),
             ),
-            source_binding_context=runtime_context,
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
                 component=None,
@@ -215,12 +212,11 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         )
 
     illumination_request = request()
+    illumination_payload = illumination_request.source_artifact_payload(
+        illumination_binding.input_spec().ref()
+    )
     np.testing.assert_array_equal(
-        image_payload_data(
-            illumination_request.source_artifact_payload(
-                illumination_binding.input_spec().ref()
-            )
-        ),
+        image_payload_data(illumination_payload),
         illumination[np.newaxis, ...],
     )
 
@@ -235,13 +231,87 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     labels_request = request()
     labels_spec = labels_binding.input_spec()
     labels_payload = labels_request.source_artifact_payload(labels_spec.ref())
-    label_set = RuntimeArtifactTypeStrategy.for_artifact_type(
+    label_set = CellProfilerOutputRecorder.for_artifact_type(
         ObjectLabelsArtifactType
     ).raw_runtime_input_value(
-        RuntimeArtifactInputRequest(
-            spec=labels_spec,
-            value=labels_payload,
-        )
+        spec=labels_spec, value=labels_payload
     )
     assert isinstance(label_set, ObjectLabelSet)
     np.testing.assert_array_equal(label_set.labels, labels[np.newaxis, ...])
+
+    # Exercise the actual source adapter and VFS under the independent live
+    # selector route. Payload identity belongs to the unchanged typed source
+    # projection, not the selector's resolved metadata record representation.
+    with monkeypatch.context() as live_selector:
+        live_selector.setattr(
+            RuntimeSourceBindingContextCache,
+            "source_pattern_context",
+            lambda self, **kwargs: SourcePatternResolutionContext.from_projection(
+                **kwargs
+            ),
+        )
+        live_illumination = request().source_artifact_payload(
+            illumination_binding.input_spec().ref()
+        )
+        live_labels = request().source_artifact_payload(labels_spec.ref())
+    for produced, live in (
+        (illumination_payload, live_illumination),
+        (labels_payload, live_labels),
+    ):
+        np.testing.assert_array_equal(
+            image_payload_data(produced), image_payload_data(live)
+        )
+        produced_metadata = image_payload_metadata(produced)
+        live_metadata = image_payload_metadata(live)
+        assert produced_metadata == live_metadata
+        assert (
+            produced_metadata.source_provenance.source_identity.identity
+            == live_metadata.source_provenance.source_identity.identity
+        )
+        assert (
+            produced_metadata.source_provenance.represented_source_identities
+            == live_metadata.source_provenance.represented_source_identities
+        )
+
+
+@pytest.mark.parametrize("mode", ("rgb", "monochrome", "mask"))
+def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mode):
+    from PIL import Image
+    from skimage.color import rgb2gray
+    source_root, workspace_root = tmp_path / "source", tmp_path / "workspace"
+    source_root.mkdir()
+    path = source_root / "A01_s1_w1_z001_t001.tif"
+    pixels = np.arange(60, dtype=np.uint8).reshape(4, 5, 3)
+    if mode == "mask":
+        pixels = pixels[..., 0]
+    Image.fromarray(pixels).save(path)
+    binding = NamedSourceBinding(
+        alias="Raw", load_as_monochrome=mode == "monochrome", load_as_mask=mode == "mask",
+    )
+    bindings = SourceBindingsConfig(bindings=(binding,))
+    filemanager = _filemanager()
+    SourceBindingWorkspaceProjector(bindings, parser=SourceSchemaFilenameParser()).materialize(
+        source_root, workspace_root, filemanager=filemanager,
+        source_backend=Backend.DISK, workspace_backend=Backend.DISK, source_files=(path,),
+    )
+    microscope = create_microscope_handler(
+        microscope_type="auto", plate_folder=workspace_root,
+        filemanager=filemanager, source_bindings_config=bindings,
+    )
+    microscope.initialize_workspace(workspace_root, filemanager)
+    cache = VirtualWorkspaceSourceProjectionCache()
+    context = SimpleNamespace(
+        completed_step_outputs=StepExecutionObservation.empty(),
+        plate_path=workspace_root, filemanager=filemanager, microscope_handler=microscope,
+    )
+    workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(context, cache=cache).projection_or_empty()
+    paths = tuple(path for path, _projection in workspace.source_occurrences_for_binding(binding, axis_id="A01"))
+    assert len(paths) == 1
+    (payload,) = workspace.load_binding_payloads(paths, binding=binding, filemanager=filemanager)
+    expected = rgb2gray(pixels.astype(np.float32) / 255) if mode == "monochrome" else pixels.astype(bool) if mode == "mask" else pixels
+    assert np.allclose(image_payload_data(payload), expected)
+    metadata = image_payload_metadata(payload)
+    assert metadata.source_channel_axis == (-1 if mode == "rgb" else None)
+    assert metadata.source_provenance.represented_source_image_names == ("Raw",)
+    if mode in ("monochrome", "mask"):
+        assert metadata.has_normalized_intensity

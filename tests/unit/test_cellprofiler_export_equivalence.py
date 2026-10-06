@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
@@ -352,6 +353,9 @@ def test_database_export_equivalence_compares_sqlite_and_semantic_properties(
     )
 
     assert report.is_equivalent
+    assert report.compared_output_files == frozenset(
+        (*reference.iterdir(), *candidate.iterdir())
+    )
 
 
 def test_database_export_equivalence_rejects_unequal_row_count_before_value_projection(
@@ -884,3 +888,87 @@ def test_database_column_declarations_own_export_and_equivalence_names() -> None
         normalize_runtime_identifier(family.field_prefix).rstrip("_") + "_"
         for family in CellProfilerImageStructuralFieldFamily
     )
+
+
+def test_database_measurements_keep_complete_relationship_cohort(tmp_path: Path) -> None:
+    import pytest
+
+    from benchmark.cellprofiler_export_equivalence import _sqlite_database_differences
+
+    subjects = {
+        "Per_Parents": MeasurementSubject(MeasurementScope.OBJECT, "Parents"),
+        "Per_Children": MeasurementSubject(MeasurementScope.OBJECT, "Children"),
+    }
+    reference, candidate = (tmp_path / name for name in ("reference.db", "candidate.db"))
+    for path, value in ((reference, 1.5), (candidate, 1.5 + 1e-13)):
+        with sqlite3.connect(path) as connection:
+            connection.execute(
+                "CREATE TABLE Per_Parents (ImageNumber INTEGER, "
+                "Parents_Number_Object_Number INTEGER, Parents_Children_Children_Count INTEGER, "
+                "Parents_AreaShape_Area REAL)"
+            )
+            connection.execute("INSERT INTO Per_Parents VALUES (1, 7, 1, ?)", (value,))
+            connection.execute(
+                "CREATE TABLE Per_Children (ImageNumber INTEGER, "
+                "Children_Number_Object_Number INTEGER, Children_Parent_Parents INTEGER)"
+            )
+            connection.execute("INSERT INTO Per_Children VALUES (1, 11, 7)")
+    policy = cellprofiler_runtime_equivalence_policy()
+    assert not _sqlite_database_differences(
+        reference, candidate, subjects, subjects, policy
+    )
+    # Equal byte content does not excuse a scientifically invalid relationship.
+    for path in (reference, candidate):
+        with sqlite3.connect(path) as connection:
+            connection.execute("UPDATE Per_Children SET Children_Parent_Parents = 8")
+    with pytest.raises(ValueError, match="absent parent endpoint"):
+        _sqlite_database_differences(reference, candidate, subjects, subjects, policy)
+
+
+def test_repeated_assignment_database_projection_preserves_complete_relationships(
+    tmp_path: Path,
+) -> None:
+    from openhcs.core.steps.abstract import StepExecutionObservation
+
+    native = tmp_path / "native"
+    candidate = tmp_path / "candidate"
+    _write_sharded_native_output(native, (1,))
+    _write_sharded_native_output(candidate, (1, 2))
+    for root, numbers in ((native, (1,)), (candidate, (1, 2))):
+        with sqlite3.connect(root / "analysis.db") as connection:
+            connection.execute(
+                "CREATE TABLE Per_Relationships (relationship_type_id INTEGER, "
+                "image_number1 INTEGER, object_number1 INTEGER, "
+                "image_number2 INTEGER, object_number2 INTEGER)"
+            )
+            connection.executemany(
+                "INSERT INTO Per_Relationships VALUES (1, ?, 1, ?, 1)",
+                ((number, number) for number in numbers),
+            )
+    exports = RuntimeExportObservation.from_output_root(
+        candidate,
+        outputs=StepExecutionObservation(
+            {},
+            image_numbers_by_export_path={
+                candidate / "analysis.db": {"W001": (1,), "W002": (2,)}
+            },
+        ),
+    )
+    report = cellprofiler_database_export_equivalence(
+        native,
+        exports,
+        policy=RuntimeEquivalencePolicy(),
+        execution_axis_id="W002",
+    )
+    assert report.is_equivalent, report.differences
+    with sqlite3.connect(candidate / "analysis.db") as connection:
+        connection.execute(
+            "UPDATE Per_Relationships SET image_number1 = 1 WHERE image_number2 = 2"
+        )
+    with pytest.raises(ValueError, match="different execution image domains"):
+        cellprofiler_database_export_equivalence(
+            native,
+            exports,
+            policy=RuntimeEquivalencePolicy(),
+            execution_axis_id="W002",
+        )

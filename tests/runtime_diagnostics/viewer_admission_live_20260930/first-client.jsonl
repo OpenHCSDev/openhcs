@@ -1,0 +1,811 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "automatic_recovery_on_reconnect": false,
+          "errors": [],
+          "installation_pointer_available": null,
+          "installation_pointer_changed_since_import": false,
+          "installation_pointer_path": null,
+          "missing_packaged_resource_paths": [],
+          "openhcs_version": "0.8.6",
+          "packaged_resource_count": 56,
+          "packaged_resources_ready": true,
+          "reconnect_owner": null,
+          "reconnect_required": false,
+          "recovery_reason": "current",
+          "restart_command": [],
+          "restart_command_is_stable": false,
+          "restart_hint": null,
+          "restart_required": false,
+          "retry_after_reconnect": false,
+          "schema_version": "openhcs.agent.v1",
+          "server_current_mtime_ns": 1790772771376925738,
+          "server_import_mtime_ns": 1790772771376925738,
+          "server_process_id": 3247237,
+          "server_source_changed_since_import": false,
+          "server_source_path": "/home/ts/wt/openhcs-viewer-live-20260930/openhcs/mcp/server.py",
+          "service": "openhcs.mcp",
+          "stale_source_paths": [],
+          "started_at_unix": 1790774285.2953663,
+          "status": "ok",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_health_check"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capabilities": [
+            {
+              "data_exposure": [
+                "local_plate_path",
+                "plate_virtual_image_path",
+                "plate_source_image_path",
+                "result_artifact_names",
+                "viewer_connection"
+              ],
+              "description": "Resolves image or ROI result records by virtual path, source path, result path, basename, or bounded inventory query, then streams them to a managed viewer through the same core service used by the Image Browser. Set result_directory to reopen retained native results independently of their output location; plate_path supplies the original source context. ROI reopening requires persisted source metadata, not filename guesses.",
+              "input_type": "PlateFileStreamRequest",
+              "kind": "tool",
+              "name": "openhcs_stream_plate_files_to_viewer",
+              "output_type": "PlateFileStreamResult",
+              "read_only": false,
+              "required_extras": [
+                "viz"
+              ],
+              "requires_network": false,
+              "role": "primary",
+              "runtime_requirements": [
+                "napari_or_fiji_viewer_runtime"
+              ],
+              "security_requirements": [
+                "AgentPathPolicy readable root"
+              ],
+              "side_effects": [
+                "launches_or_updates_managed_viewer"
+              ],
+              "target_context": "plate_path",
+              "title": "Stream plate files to viewer",
+              "visibility": "beginner",
+              "workflow_group": "plate_data",
+              "workflow_stage": "data_preparation"
+            },
+            {
+              "data_exposure": [
+                "ui_selected_plate_path",
+                "plate_virtual_image_path",
+                "plate_source_image_path",
+                "result_artifact_names",
+                "viewer_connection"
+              ],
+              "description": "Reads the current PlateManager selection from the running UI bridge, resolves selected/source/output image or ROI records through the same inventory API as openhcs_ui_query_selected_plate_files, then streams them to a managed viewer.",
+              "input_type": "SelectedPlateFileStreamRequest",
+              "kind": "tool",
+              "name": "openhcs_ui_stream_selected_plate_files_to_viewer",
+              "output_type": "SelectedPlateFileStreamResult",
+              "read_only": true,
+              "required_extras": [
+                "viz"
+              ],
+              "requires_network": false,
+              "role": "mode_variant",
+              "runtime_requirements": [
+                "running_openhcs_ui_bridge",
+                "napari_or_fiji_viewer_runtime"
+              ],
+              "security_requirements": [
+                "ui_bridge_auth_token",
+                "AgentPathPolicy readable root"
+              ],
+              "side_effects": [],
+              "target_context": "ui_selected_plate",
+              "title": "Stream selected plate files to viewer",
+              "visibility": "standard",
+              "workflow_group": "ui_selected_plate",
+              "workflow_stage": "data_preparation"
+            }
+          ],
+          "matched_count": 2,
+          "next_offset": null,
+          "query": {
+            "has_side_effects": null,
+            "kind": null,
+            "limit": 12,
+            "offset": 0,
+            "role": null,
+            "side_effect_contains": null,
+            "target_context": null,
+            "text": "managed viewer",
+            "visibility": null,
+            "workflow_group": null,
+            "workflow_stage": null
+          },
+          "returned_count": 2,
+          "schema_version": "openhcs.agent.v1",
+          "surface_profile": "full"
+        }
+      ],
+      "tool": "openhcs_search_capabilities"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5794,
+            "transport_mode": "tcp"
+          },
+          "detected_microscope_type": "openhcsdata",
+          "errors": [],
+          "handler_class": "OpenHCSMicroscopeHandler",
+          "parser_class": "SourceSchemaFilenameParser",
+          "plate_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate",
+          "requested_microscope_type": "auto",
+          "requested_paths": [],
+          "resolved_records": [
+            {
+              "file_format": null,
+              "full_path": null,
+              "full_virtual_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/A01_s001_w1_z001_t001.tif",
+              "key": "A01_s001_w1_z001_t001.tif",
+              "kind": "image",
+              "metadata": {
+                "channel": 1,
+                "extension": ".tif",
+                "filename": "A01_s001_w1_z001_t001.tif",
+                "full_virtual_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/A01_s001_w1_z001_t001.tif",
+                "modified": "2026-09-30T09:13:48",
+                "site": 1,
+                "size": "8.2 KB",
+                "source_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/synthetic-channel1.tif",
+                "timepoint": 1,
+                "type": "Image",
+                "virtual_path": "A01_s001_w1_z001_t001.tif",
+                "well": "A01",
+                "z_index": 1
+              },
+              "preview": null,
+              "relative_path": null,
+              "source_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/synthetic-channel1.tif",
+              "virtual_path": "A01_s001_w1_z001_t001.tif"
+            },
+            {
+              "file_format": null,
+              "full_path": null,
+              "full_virtual_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/A01_s001_w2_z002_t001.tif",
+              "key": "A01_s001_w2_z002_t001.tif",
+              "kind": "image",
+              "metadata": {
+                "channel": 2,
+                "extension": ".tif",
+                "filename": "A01_s001_w2_z002_t001.tif",
+                "full_virtual_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/A01_s001_w2_z002_t001.tif",
+                "modified": "2026-09-30T09:13:48",
+                "site": 1,
+                "size": "8.2 KB",
+                "source_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/synthetic-channel2.tif",
+                "timepoint": 1,
+                "type": "Image",
+                "virtual_path": "A01_s001_w2_z002_t001.tif",
+                "well": "A01",
+                "z_index": 2
+              },
+              "preview": null,
+              "relative_path": null,
+              "source_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/plate/synthetic-channel2.tif",
+              "virtual_path": "A01_s001_w2_z002_t001.tif"
+            }
+          ],
+          "schema_version": "openhcs.agent.v1",
+          "skipped_records": [],
+          "status_messages": [
+            "Loading chunk 1/1 (2 images)...",
+            "Streamed 2 images to Napari"
+          ],
+          "streamed_image_paths": [
+            "A01_s001_w1_z001_t001.tif",
+            "A01_s001_w2_z002_t001.tif"
+          ],
+          "streamed_roi_paths": [],
+          "viewer_config_key": "napari_streaming_config",
+          "viewer_type": "napari",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_stream_plate_files_to_viewer"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "active_dimension_label_route": "origin_manual_kind_manual_projection_selected_images_2279edf51d62e30c88170a053918455cf4575618753b42fb99afb6149c7e1fc1",
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ],
+          "component_group_count": 1,
+          "component_item_count": 2,
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5794,
+            "transport_mode": "tcp"
+          },
+          "current_step": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            39,
+            49
+          ],
+          "errors": [],
+          "layer_count": 1,
+          "layers": [
+            {
+              "axis_component_values": {
+                "channel": [
+                  1,
+                  2
+                ],
+                "z_index": [
+                  1,
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0,
+                0
+              ],
+              "component_value_count": 2,
+              "component_values": [
+                {
+                  "channel": 1,
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 1
+                },
+                {
+                  "channel": 2,
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 2
+                }
+              ],
+              "component_values_truncated": false,
+              "data_shape": [
+                1,
+                2,
+                2,
+                1,
+                1,
+                80,
+                100
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 2,
+              "labels": {
+                "channel": [
+                  "Ch 1",
+                  "Ch 2"
+                ],
+                "z_index": [
+                  "Z 1",
+                  "Z 2"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0.0,
+                  693.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [
+                {
+                  "components": {
+                    "channel": 1,
+                    "site": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    "z_index": 1
+                  },
+                  "data_type": "image",
+                  "dtype": "uint16",
+                  "max": 693,
+                  "min": 0,
+                  "nonzero_count": 4095,
+                  "nonzero_example_coordinates": [
+                    [
+                      0,
+                      1
+                    ],
+                    [
+                      4,
+                      17
+                    ],
+                    [
+                      8,
+                      34
+                    ],
+                    [
+                      12,
+                      51
+                    ],
+                    [
+                      17,
+                      4
+                    ],
+                    [
+                      21,
+                      21
+                    ],
+                    [
+                      25,
+                      38
+                    ],
+                    [
+                      29,
+                      55
+                    ],
+                    [
+                      34,
+                      8
+                    ],
+                    [
+                      38,
+                      25
+                    ],
+                    [
+                      42,
+                      42
+                    ],
+                    [
+                      46,
+                      59
+                    ],
+                    [
+                      51,
+                      12
+                    ],
+                    [
+                      55,
+                      29
+                    ],
+                    [
+                      59,
+                      46
+                    ],
+                    [
+                      63,
+                      63
+                    ]
+                  ],
+                  "nonzero_max_coordinate": [
+                    63,
+                    63
+                  ],
+                  "nonzero_min_coordinate": [
+                    0,
+                    0
+                  ],
+                  "path": "A01_s001_w1_z001_t001.tif",
+                  "payload_type": "ndarray",
+                  "shape": [
+                    64,
+                    64
+                  ],
+                  "size": 4096,
+                  "source_spatial_shape_yx": [
+                    80,
+                    100
+                  ],
+                  "spatial_origin_yx": [
+                    7,
+                    11
+                  ]
+                },
+                {
+                  "components": {
+                    "channel": 2,
+                    "site": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    "z_index": 2
+                  },
+                  "data_type": "image",
+                  "dtype": "uint16",
+                  "max": 80,
+                  "min": 5,
+                  "nonzero_count": 4096,
+                  "nonzero_example_coordinates": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      4,
+                      17
+                    ],
+                    [
+                      8,
+                      34
+                    ],
+                    [
+                      12,
+                      51
+                    ],
+                    [
+                      17,
+                      4
+                    ],
+                    [
+                      21,
+                      21
+                    ],
+                    [
+                      25,
+                      38
+                    ],
+                    [
+                      29,
+                      55
+                    ],
+                    [
+                      34,
+                      8
+                    ],
+                    [
+                      38,
+                      25
+                    ],
+                    [
+                      42,
+                      42
+                    ],
+                    [
+                      46,
+                      59
+                    ],
+                    [
+                      51,
+                      12
+                    ],
+                    [
+                      55,
+                      29
+                    ],
+                    [
+                      59,
+                      46
+                    ],
+                    [
+                      63,
+                      63
+                    ]
+                  ],
+                  "nonzero_max_coordinate": [
+                    63,
+                    63
+                  ],
+                  "nonzero_min_coordinate": [
+                    0,
+                    0
+                  ],
+                  "path": "A01_s001_w2_z002_t001.tif",
+                  "payload_type": "ndarray",
+                  "shape": [
+                    64,
+                    64
+                  ],
+                  "size": 4096,
+                  "source_spatial_shape_yx": [
+                    80,
+                    100
+                  ],
+                  "spatial_origin_yx": [
+                    7,
+                    11
+                  ]
+                }
+              ],
+              "payload_summaries_truncated": false,
+              "payload_summary_count": 2,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "manual",
+                  "output_key": "selected_images",
+                  "output_kind": "manual",
+                  "pipeline_position": null,
+                  "projection_key": "selected_images_2279edf51d62e30c88170a053918455cf4575618753b42fb99afb6149c7e1fc1",
+                  "step_name": null,
+                  "step_scope_id": null
+                }
+              ],
+              "route_key": "origin_manual_kind_manual_projection_selected_images_2279edf51d62e30c88170a053918455cf4575618753b42fb99afb6149c7e1fc1",
+              "routed_component_coordinates": [
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1,
+                  2
+                ],
+                "z_index": [
+                  1,
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": true,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel",
+                "z_index"
+              ],
+              "title": "selected_images",
+              "visible": true
+            }
+          ],
+          "native_dimensions": {
+            "camera_angles": [
+              0.0,
+              0.0,
+              90.0
+            ],
+            "canvas_size": [
+              962,
+              426
+            ],
+            "displayed_axes": [
+              "y",
+              "x"
+            ],
+            "ndisplay": 2,
+            "order": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "point": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              78.0,
+              147.0
+            ]
+          },
+          "native_viewport": {
+            "center": [
+              0.0,
+              79.0,
+              148.5
+            ],
+            "zoom": 1.349
+          },
+          "observed": true,
+          "response": {},
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "viewer_ndim": 7,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_get_viewer_window_state"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capture_scope": "widget",
+          "captured": true,
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5794,
+            "transport_mode": "tcp"
+          },
+          "errors": [],
+          "frame_condition": "immediate",
+          "height": 950,
+          "observation_timeout_s": 5.0,
+          "output_dir_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/captures",
+          "resource": {
+            "mime_type": "image/png",
+            "path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/captures/20260930T131815752112Z_napari_5794_OpenHCS_Napari_Visualization.png",
+            "sha256": "af10d4def4dd0e67e31ccd8425b5850a3b0df5cfd43b9c726f8b8f4621226be4",
+            "size_bytes": 78836,
+            "title": "OpenHCS Napari Visualization",
+            "uri": "file:///home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/captures/20260930T131815752112Z_napari_5794_OpenHCS_Napari_Visualization.png"
+          },
+          "response": {
+            "height": 950,
+            "native_dimensions": {
+              "camera_angles": [
+                0.0,
+                0.0,
+                90.0
+              ],
+              "canvas_size": [
+                962,
+                426
+              ],
+              "displayed_axes": [
+                "y",
+                "x"
+              ],
+              "ndisplay": 2,
+              "order": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ],
+              "point": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                78.0,
+                147.0
+              ]
+            },
+            "resource": {
+              "mime_type": "image/png",
+              "path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/captures/20260930T131815752112Z_napari_5794_OpenHCS_Napari_Visualization.png",
+              "sha256": "af10d4def4dd0e67e31ccd8425b5850a3b0df5cfd43b9c726f8b8f4621226be4",
+              "size_bytes": 78836,
+              "title": "OpenHCS Napari Visualization",
+              "uri": "file:///home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/captures/20260930T131815752112Z_napari_5794_OpenHCS_Napari_Visualization.png"
+            },
+            "snapshot": {
+              "capture_scope": "widget",
+              "connection": {
+                "host": "127.0.0.1",
+                "persistent": true,
+                "port": 5794,
+                "transport_mode": "tcp"
+              },
+              "frame_condition": "immediate",
+              "include_response": true,
+              "observation_timeout_s": 5.0,
+              "output_dir_path": "/home/ts/wt/openhcs-viewer-live-20260930/tests/runtime_diagnostics/viewer_admission_live_20260930/captures",
+              "timeout_ms": 5000
+            },
+            "status": "success",
+            "type": "screenshot_ack",
+            "viewer": {
+              "title": "OpenHCS Napari Visualization",
+              "type": "napari"
+            },
+            "width": 1440
+          },
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "warnings": [],
+          "width": 1440
+        }
+      ],
+      "tool": "openhcs_viewer_snapshot_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

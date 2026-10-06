@@ -1,0 +1,5 @@
+42be36c171b4e9059011c9da000de027d99f2f81c4084a4f90b046b7d6745ed8  validation/r0-fixture-470-evidence.tar.gz
+7d9b663b1801754fe934b76ae5c740c5355b34ec7bfa8ebac55762b236ee118e  .github/tests/test_refactor_guardrails.py
+4c6282f52e7c188068dd9d63399f5522a7cb1d222504d0c0b809be10303884ca  scripts/check_refactor_r1.py
+12643290f7c763a7e65baa9317248fc6fae3e7741ea3574d96b45922146c0d43  validation/r0-invocation-ast.py
+b1446d088d0da9f004c20082cfbc771c1384f28b131e69b26bf0470b63c31961  docs/validation/r0-policy-fixture-invocation-20261002/CLI-SOURCE.py

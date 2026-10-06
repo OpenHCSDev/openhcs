@@ -1,0 +1,2385 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "active_dimension_label_route": "origin_pipeline_kind_main_projection_main_step_4_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_4_name_CandidateProcesses_channel_1",
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ],
+          "component_group_count": 21,
+          "component_item_count": 21,
+          "connection": {
+            "host": "localhost",
+            "persistent": true,
+            "port": 6023,
+            "transport_mode": "tcp"
+          },
+          "current_step": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            399,
+            399
+          ],
+          "errors": [],
+          "layer_count": 21,
+          "layers": [
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  80
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "main",
+                  "output_kind": "main",
+                  "pipeline_position": 0,
+                  "projection_key": "main",
+                  "step_name": "RawChannelMeasurements",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6289b5e600::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6289b5e600::step_0_name_RawChannelMeasurements_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. RawChannelMeasurements channel 1",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  80
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "main",
+                  "output_kind": "main",
+                  "pipeline_position": 0,
+                  "projection_key": "main",
+                  "step_name": "RawChannelMeasurements",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6289b5e600::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6289b5e600::step_0_name_RawChannelMeasurements_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. RawChannelMeasurements channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  255
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "main",
+                  "output_kind": "main",
+                  "pipeline_position": 0,
+                  "projection_key": "main",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                8
+              ],
+              "data_types": [
+                "shapes"
+              ],
+              "feature_row_count": 8,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": null,
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "object_labels",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2_shapes",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei channel 2 ROIs",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  8
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "object_labels",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  1.333679640169727e-9,
+                  14.036088982229987
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei__qa_checkpoint__declump_response",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei__qa_checkpoint__declump_response",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei__qa_checkpoint__declump_response_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei__qa_checkpoint__declump_response channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  23
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei__qa_checkpoint__initial_components",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei__qa_checkpoint__initial_components",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei__qa_checkpoint__initial_components_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei__qa_checkpoint__initial_components channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  23
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei__qa_checkpoint__seed_markers",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei__qa_checkpoint__seed_markers",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei__qa_checkpoint__seed_markers_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei__qa_checkpoint__seed_markers channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  1
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei__qa_checkpoint__seed_maxima",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei__qa_checkpoint__seed_maxima",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei__qa_checkpoint__seed_maxima_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei__qa_checkpoint__seed_maxima channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  8
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei__qa_checkpoint__small_removed_objects",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei__qa_checkpoint__small_removed_objects",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei__qa_checkpoint__small_removed_objects_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei__qa_checkpoint__small_removed_objects channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  1
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei__qa_checkpoint__threshold_support",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei__qa_checkpoint__threshold_support",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei__qa_checkpoint__threshold_support_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei__qa_checkpoint__threshold_support channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                1
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch2: Nuclear"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  23
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Nuclei__qa_checkpoint__unedited_objects",
+                  "output_kind": "artifact",
+                  "pipeline_position": 0,
+                  "projection_key": "Nuclei__qa_checkpoint__unedited_objects",
+                  "step_name": "NuclearAnchors",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Nuclei__qa_checkpoint__unedited_objects_step_0_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_0_name_NuclearAnchors_channel_2",
+              "routed_component_coordinates": [
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "1. NuclearAnchors Nuclei__qa_checkpoint__unedited_objects channel 2",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  255
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "main",
+                  "output_kind": "main",
+                  "pipeline_position": 1,
+                  "projection_key": "main",
+                  "step_name": "SignalSomata",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_1"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_1_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_1_name_SignalSomata_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "2. SignalSomata channel 1",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                9
+              ],
+              "data_types": [
+                "shapes"
+              ],
+              "feature_row_count": 9,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": null,
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "object_labels",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Somata",
+                  "output_kind": "artifact",
+                  "pipeline_position": 1,
+                  "projection_key": "Somata",
+                  "step_name": "SignalSomata",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_1"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Somata_step_1_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_1_name_SignalSomata_channel_1_shapes",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "2. SignalSomata Somata channel 1 ROIs",
+              "visible": true
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  8
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "object_labels",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "Somata",
+                  "output_kind": "artifact",
+                  "pipeline_position": 1,
+                  "projection_key": "Somata",
+                  "step_name": "SignalSomata",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_1"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_artifact_projection_Somata_step_1_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_1_name_SignalSomata_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "2. SignalSomata Somata channel 1",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  255
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "main",
+                  "output_kind": "main",
+                  "pipeline_position": 2,
+                  "projection_key": "main",
+                  "step_name": "RawProcess",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_2"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_2_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_2_name_RawProcess_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "3. RawProcess channel 1 [step 3]",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  1
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "EnhancedProcesses",
+                  "output_kind": "main",
+                  "pipeline_position": 3,
+                  "projection_key": "main",
+                  "step_name": "EnhancedProcesses",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_3"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_3_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_3_name_EnhancedProcesses_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "4. EnhancedProcesses channel 1 [step 4]",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  1
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "CandidateProcesses",
+                  "output_kind": "main",
+                  "pipeline_position": 4,
+                  "projection_key": "main",
+                  "step_name": "CandidateProcesses",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_4"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_4_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_4_name_CandidateProcesses_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": true,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "5. CandidateProcesses channel 1 [step 5]",
+              "visible": true
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  1
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "ProcessSkeleton",
+                  "output_kind": "main",
+                  "pipeline_position": 5,
+                  "projection_key": "main",
+                  "step_name": "ProcessMedialAxis",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_5"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_5_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_5_name_ProcessMedialAxis_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "6. ProcessMedialAxis channel 1 [step 6]",
+              "visible": true
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  1
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "ProcessSkeleton",
+                  "output_kind": "main",
+                  "pipeline_position": 6,
+                  "projection_key": "main",
+                  "step_name": "SeedRelativeTopology",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_6"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_6_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_6_name_SeedRelativeTopology_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "7. SeedRelativeTopology channel 1 [step 7]",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                800,
+                800
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch1: Process"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0,
+                  1
+                ],
+                "gamma": 1
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": "image",
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "ProcessSkeleton",
+                  "output_kind": "main",
+                  "pipeline_position": 7,
+                  "projection_key": "main",
+                  "step_name": "SomaGeometry",
+                  "step_scope_id": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/staged_input::pipeline::submission_7f6280216780::step_7"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_7_scope__run_media_ts_hdd_openhcs-science_next-h004-fresh10-89-20261005_H004_FRESH10_89_staged_input::pipeline::submission_7f6280216780::step_7_name_SomaGeometry_channel_1",
+              "routed_component_coordinates": [
+                [
+                  1
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "8. SomaGeometry channel 1 [step 8]",
+              "visible": false
+            }
+          ],
+          "native_dimensions": {
+            "camera_angles": [
+              0,
+              0,
+              90
+            ],
+            "canvas_size": [
+              953,
+              442
+            ],
+            "displayed_axes": [
+              "y",
+              "x"
+            ],
+            "ndisplay": 2,
+            "order": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "point": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              399,
+              399
+            ]
+          },
+          "native_viewport": {
+            "center": [
+              0,
+              365,
+              370
+            ],
+            "zoom": 3
+          },
+          "observed": true,
+          "response": {},
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "viewer_ndim": 7,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_get_viewer_window_state"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

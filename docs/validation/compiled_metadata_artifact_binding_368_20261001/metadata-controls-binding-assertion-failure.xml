@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="7" time="1.109" timestamp="2026-10-01T09:44:05.295740-04:00" hostname="desktop"><testcase classname="tests.unit.test_path_planner_materialization" name="test_metadata_satisfied_artifact_input_compiles_without_runtime_plan" time="0.107" /><testcase classname="tests.unit.test_path_planner_materialization" name="test_registered_metadata_provider_value_reaches_runtime_unchanged[pixel_size-1.3556]" time="0.006"><failure message="AssertionError: assert (RuntimeParam... 'native'&gt;)),) == ()&#10;  &#10;  Left contains one more item: RuntimeParameterBinding(parameter_name='dtype_config', value=LazyDtypeConfig(default_dtype_conversion=&lt;DtypeConversion.NATIVE_OUTPUT: 'native'&gt;))&#10;  Use -v to get more diff">artifact_name = 'pixel_size', expected = 1.3556
+
+    @pytest.mark.parametrize(
+        "artifact_name, expected",
+        [("pixel_size", 1.3556), ("engineering_exposure_duration", 17.25)],
+    )
+    def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_name, expected):
+        received = []
+        spec = ArtifactSpec.input(artifact_name, SpecialArtifactType, parameter_name="calibration")
+    
+        @numpy
+        @artifact_inputs(spec)
+        def metadata_consumer(image, *, calibration):
+            received.append(calibration)
+            return image
+    
+        planner = _artifact_planner_stub()
+        planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
+        planner.ctx.plate_path = planner.plate_path
+        assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(artifact_name)
+        compiled, input_plans = _compile_metadata_pattern(planner, (metadata_consumer, {"calibration": -7.0}))
+        (invocation,) = compiled.default_group.invocations
+        (edge,) = invocation.artifact_input_edges
+        assert isinstance(edge, CompiledMetadataArtifactInputEdgePlan)
+        assert input_plans == {}
+        assert invocation.kwargs_dict == {"calibration": expected}
+&gt;       assert invocation.runtime_parameter_bindings == ()
+E       AssertionError: assert (RuntimeParam... 'native'&gt;)),) == ()
+E         
+E         Left contains one more item: RuntimeParameterBinding(parameter_name='dtype_config', value=LazyDtypeConfig(default_dtype_conversion=&lt;DtypeConversion.NATIVE_OUTPUT: 'native'&gt;))
+E         Use -v to get more diff
+
+tests/unit/test_path_planner_materialization.py:427: AssertionError</failure></testcase><testcase classname="tests.unit.test_path_planner_materialization" name="test_registered_metadata_provider_value_reaches_runtime_unchanged[engineering_exposure_duration-17.25]" time="0.006"><failure message="AssertionError: assert (RuntimeParam... 'native'&gt;)),) == ()&#10;  &#10;  Left contains one more item: RuntimeParameterBinding(parameter_name='dtype_config', value=LazyDtypeConfig(default_dtype_conversion=&lt;DtypeConversion.NATIVE_OUTPUT: 'native'&gt;))&#10;  Use -v to get more diff">artifact_name = 'engineering_exposure_duration', expected = 17.25
+
+    @pytest.mark.parametrize(
+        "artifact_name, expected",
+        [("pixel_size", 1.3556), ("engineering_exposure_duration", 17.25)],
+    )
+    def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_name, expected):
+        received = []
+        spec = ArtifactSpec.input(artifact_name, SpecialArtifactType, parameter_name="calibration")
+    
+        @numpy
+        @artifact_inputs(spec)
+        def metadata_consumer(image, *, calibration):
+            received.append(calibration)
+            return image
+    
+        planner = _artifact_planner_stub()
+        planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
+        planner.ctx.plate_path = planner.plate_path
+        assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(artifact_name)
+        compiled, input_plans = _compile_metadata_pattern(planner, (metadata_consumer, {"calibration": -7.0}))
+        (invocation,) = compiled.default_group.invocations
+        (edge,) = invocation.artifact_input_edges
+        assert isinstance(edge, CompiledMetadataArtifactInputEdgePlan)
+        assert input_plans == {}
+        assert invocation.kwargs_dict == {"calibration": expected}
+&gt;       assert invocation.runtime_parameter_bindings == ()
+E       AssertionError: assert (RuntimeParam... 'native'&gt;)),) == ()
+E         
+E         Left contains one more item: RuntimeParameterBinding(parameter_name='dtype_config', value=LazyDtypeConfig(default_dtype_conversion=&lt;DtypeConversion.NATIVE_OUTPUT: 'native'&gt;))
+E         Use -v to get more diff
+
+tests/unit/test_path_planner_materialization.py:427: AssertionError</failure></testcase><testcase classname="tests.unit.test_path_planner_materialization" name="test_required_metadata_input_has_no_magic_default[None]" time="0.004" /><testcase classname="tests.unit.test_path_planner_materialization" name="test_required_metadata_input_has_no_magic_default[0.0]" time="0.004" /><testcase classname="tests.unit.test_path_planner_materialization" name="test_required_metadata_input_has_no_magic_default[False]" time="0.004" /><testcase classname="tests.unit.test_path_planner_materialization" name="test_exact_producer_takes_precedence_over_metadata_provider" time="0.006" /></testsuite></testsuites>

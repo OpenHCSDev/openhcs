@@ -355,7 +355,7 @@ def create_synthetic_plate_data(
             else:  # OperaPhenix
                 sub_dir = "Images"
 
-            generator.generate_openhcs_metadata(sub_dir=sub_dir, pixel_size=0.65)
+            generator.generate_openhcs_metadata(sub_dir=sub_dir)
 
     # Return the plate directory
     return plate_dir

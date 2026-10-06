@@ -1,0 +1,193 @@
+CompilationDebugConfig enabled but no compiled_execution_bundle_path was set.
+PUBLIC_COMPILE_ADMITTED /home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/outside-results
+Error in FunctionStep 0 (objects): '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/outside-results' is not in the subpath of '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/external/source_out'
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 766, in run
+    step_observation = finalize_function_step_outputs(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 145, in finalize_function_step_outputs
+    OpenHCSMetadataWriter.write(context, plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 989, in write
+    for target in cls.OutputTarget.for_execution(context, plan):
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 722, in for_execution
+    return tuple(
+           ^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 725, in <genexpr>
+    if (target := declaration.from_execution(context, plan)) is not None
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1109, in from_execution
+    target = super().from_execution(context, plan)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 716, in from_execution
+    return cls.from_plan(plan)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1125, in from_plan
+    sub_dir=str(output_dir.relative_to(plate_root)),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/pathlib.py", line 682, in relative_to
+    raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+ValueError: '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/outside-results' is not in the subpath of '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/external/source_out'
+Full traceback for FunctionStep 0 (objects):
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 766, in run
+    step_observation = finalize_function_step_outputs(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 145, in finalize_function_step_outputs
+    OpenHCSMetadataWriter.write(context, plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 989, in write
+    for target in cls.OutputTarget.for_execution(context, plan):
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 722, in for_execution
+    return tuple(
+           ^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 725, in <genexpr>
+    if (target := declaration.from_execution(context, plan)) is not None
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1109, in from_execution
+    target = super().from_execution(context, plan)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 716, in from_execution
+    return cls.from_plan(plan)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1125, in from_plan
+    sub_dir=str(output_dir.relative_to(plate_root)),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/pathlib.py", line 682, in relative_to
+    raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+ValueError: '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/outside-results' is not in the subpath of '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/external/source_out'
+
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/docs/validation/artifact_publication_315_20260930/qualify-original.py", line 20, in qualify
+    step.process(context, index)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_step.py", line 46, in process
+    return FunctionStepExecutor.execute(context, step_index)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 766, in run
+    step_observation = finalize_function_step_outputs(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 145, in finalize_function_step_outputs
+    OpenHCSMetadataWriter.write(context, plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 989, in write
+    for target in cls.OutputTarget.for_execution(context, plan):
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 722, in for_execution
+    return tuple(
+           ^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 725, in <genexpr>
+    if (target := declaration.from_execution(context, plan)) is not None
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1109, in from_execution
+    target = super().from_execution(context, plan)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 716, in from_execution
+    return cls.from_plan(plan)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1125, in from_plan
+    sub_dir=str(output_dir.relative_to(plate_root)),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/pathlib.py", line 682, in relative_to
+    raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+ValueError: '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/outside-results' is not in the subpath of '/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/external/source_out'
+CompilationDebugConfig enabled but no compiled_execution_bundle_path was set.
+PUBLIC_COMPILE_ADMITTED results
+Error in FunctionStep 1 (render): Path is not a directory: /home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/converted/source_out/converted
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 766, in run
+    step_observation = finalize_function_step_outputs(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 145, in finalize_function_step_outputs
+    OpenHCSMetadataWriter.write(context, plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1000, in write
+    target.write(context, produced_plan=plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 776, in write
+    for path in context.filemanager.list_image_files(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/external/PolyStore/src/polystore/filemanager.py", line 479, in list_image_files
+    files = backend_instance.list_files(str(directory), pattern, extensions, recursive)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/external/PolyStore/src/polystore/disk.py", line 489, in list_files
+    raise ValueError(f"Path is not a directory: {disk_directory}")
+ValueError: Path is not a directory: /home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/converted/source_out/converted
+Full traceback for FunctionStep 1 (render):
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 766, in run
+    step_observation = finalize_function_step_outputs(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 145, in finalize_function_step_outputs
+    OpenHCSMetadataWriter.write(context, plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1000, in write
+    target.write(context, produced_plan=plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 776, in write
+    for path in context.filemanager.list_image_files(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/external/PolyStore/src/polystore/filemanager.py", line 479, in list_image_files
+    files = backend_instance.list_files(str(directory), pattern, extensions, recursive)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/external/PolyStore/src/polystore/disk.py", line 489, in list_files
+    raise ValueError(f"Path is not a directory: {disk_directory}")
+ValueError: Path is not a directory: /home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/converted/source_out/converted
+
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/docs/validation/artifact_publication_315_20260930/qualify-original.py", line 20, in qualify
+    step.process(context, index)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_step.py", line 46, in process
+    return FunctionStepExecutor.execute(context, step_index)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_execution.py", line 766, in run
+    step_observation = finalize_function_step_outputs(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 145, in finalize_function_step_outputs
+    OpenHCSMetadataWriter.write(context, plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 1000, in write
+    target.write(context, produced_plan=plan)
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/.qualification-original-main/openhcs/core/steps/function_outputs.py", line 776, in write
+    for path in context.filemanager.list_image_files(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/external/PolyStore/src/polystore/filemanager.py", line 479, in list_image_files
+    files = backend_instance.list_files(str(directory), pattern, extensions, recursive)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/external/PolyStore/src/polystore/disk.py", line 489, in list_files
+    raise ValueError(f"Path is not a directory: {disk_directory}")
+ValueError: Path is not a directory: /home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native/converted/source_out/converted
+	Command being timed: "timeout 45s /home/ts/code/projects/openhcs/.venv/bin/python docs/validation/artifact_publication_315_20260930/qualify-original.py /home/ts/.cache/agent-scratch/artifact-publication-315-20260930/original-native"
+	User time (seconds): 6.70
+	System time (seconds): 0.50
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:07.28
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 332260
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 70744
+	Voluntary context switches: 7
+	Involuntary context switches: 48
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

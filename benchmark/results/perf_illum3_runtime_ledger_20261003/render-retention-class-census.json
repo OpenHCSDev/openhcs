@@ -1,0 +1,671 @@
+{
+  "source_head": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "nra_head": "0844525ecaba93e090a064a4ae4914466b2dae60",
+  "scope": "All original classes in11 determining benchmark/document/transport modules, joined to actual canonical NRA family; reused731module global inventory for retrieval, unresolvedexternal/MRO effects OPEN. No source edits/importingproduction/metaclass execution.",
+  "source_hashes": {
+    "openhcs/core/pipeline_document.py": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
+    "openhcs/core/config_document.py": "37f66fd971806e059da6194c003e20a7ad08f69066eec4af7ebb11b4b70a08db",
+    "openhcs/core/function_step_transport.py": "b4c89539ace519926d178eb85a7909b4a7894203bf340213279e4f2a11e1152f",
+    "openhcs/runtime/zmq_execution_client.py": "8f98169438b1f9d65dd2a4f1517b5901e5d2ffd944fce4b0779a8f9b17d01db3",
+    "openhcs/runtime/zmq_compilation.py": "ad958c78ec9a26b778ad231501751f38ec6dd3d0c73ca2c1082207031fc6781f",
+    "openhcs/runtime/zmq_execution_signature.py": "41dcdb0a40446947a42a87482f27da051408015eec972e11e4d3329464db11ac",
+    "openhcs/serialization/source_path_factoring.py": "d8dd55b7d45882e067f9fddbe87327000a7e226dbc531a90fc543f201ea665ab",
+    "openhcs/serialization/pycodify_formatters.py": "b86d8a18b32084839667ebeb1322fd2e86ccb5fd8bea0365f01c03bc56042e9f",
+    "benchmark/openhcs_measured_run.py": "1e0cccc518fb6bec9c92ea8057dd7adfc7305b2d90a6da8f152c1b97601878ab",
+    "benchmark/well_throughput_scaling.py": "bcb58517c9c699be96d87027725a1fe299082874002cf0dc1032c6b267283e35",
+    "benchmark/metrics/memory.py": "bc049ff424564b876b82d79f5a34f49a3d5dc7f374804b23d53eed1dd729e25e"
+  },
+  "modules": 11,
+  "classes": [
+    {
+      "path": "openhcs/core/pipeline_document.py",
+      "line": 15,
+      "name": "PipelineDocument",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.core.pipeline_document.PipelineDocument",
+      "bases": []
+    },
+    {
+      "path": "openhcs/core/pipeline_document.py",
+      "line": 23,
+      "name": "PipelineDocumentAuthority",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.core.pipeline_document.PipelineDocumentAuthority",
+      "bases": []
+    },
+    {
+      "path": "openhcs/core/config_document.py",
+      "line": 15,
+      "name": "ConfigDocumentField",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.core.config_document.ConfigDocumentField",
+      "bases": [
+        "str",
+        "Enum"
+      ]
+    },
+    {
+      "path": "openhcs/core/config_document.py",
+      "line": 21,
+      "name": "ConfigDocumentAuthority",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.core.config_document.ConfigDocumentAuthority",
+      "bases": []
+    },
+    {
+      "path": "openhcs/core/function_step_transport.py",
+      "line": 23,
+      "name": "FunctionStepTransportAuthority",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.core.function_step_transport.FunctionStepTransportAuthority",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 97,
+      "name": "ExecutionRuntimeLaunchPlan",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ExecutionRuntimeLaunchPlan",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 218,
+      "name": "ExecutionSubmissionPreparationTimeoutError",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ExecutionSubmissionPreparationTimeoutError",
+      "bases": [
+        "TimeoutError"
+      ]
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 229,
+      "name": "OpenHCSExecutionSubmission",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.OpenHCSExecutionSubmission",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 401,
+      "name": "ZMQPipelineRunPhase",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQPipelineRunPhase",
+      "bases": [
+        "Enum"
+      ]
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 411,
+      "name": "ZMQCompiledPipelineRun",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQCompiledPipelineRun",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 507,
+      "name": "ZMQExecutionRequestBuilder",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQExecutionRequestBuilder",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 545,
+      "name": "ZMQRequest",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQRequest",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 570,
+      "name": "ZMQConfigParamsBoundary",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQConfigParamsBoundary",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 600,
+      "name": "ZMQConfigSourceFields",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQConfigSourceFields",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 611,
+      "name": "ZMQConfigProjection",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQConfigProjection",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 657,
+      "name": "ZMQClientResponseView",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQClientResponseView",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 674,
+      "name": "FunctionCatalogEndpointUnavailableError",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.FunctionCatalogEndpointUnavailableError",
+      "bases": [
+        "AgentFacingErrorMixin",
+        "RuntimeError"
+      ]
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 685,
+      "name": "FunctionCatalogExecutionClient",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.FunctionCatalogExecutionClient",
+      "bases": [
+        "ExecutionClient",
+        "EndpointCompatibilityClientABC"
+      ]
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_client.py",
+      "line": 953,
+      "name": "ZMQExecutionClient",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_client.ZMQExecutionClient",
+      "bases": [
+        "FunctionCatalogExecutionClient"
+      ]
+    },
+    {
+      "path": "openhcs/runtime/zmq_compilation.py",
+      "line": 53,
+      "name": "ZMQCompilationResult",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_compilation.ZMQCompilationResult",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_compilation.py",
+      "line": 69,
+      "name": "ZMQCompilationRequest",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_compilation.ZMQCompilationRequest",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_compilation.py",
+      "line": 219,
+      "name": "ZMQCompileArtifactRecord",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_compilation.ZMQCompileArtifactRecord",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 36,
+      "name": "ZMQAuxiliaryParamField",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.ZMQAuxiliaryParamField",
+      "bases": [
+        "Enum"
+      ]
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 44,
+      "name": "ZMQRuntimeObservationExportScope",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.ZMQRuntimeObservationExportScope",
+      "bases": [
+        "Enum"
+      ]
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 52,
+      "name": "ZMQAuxiliaryExecutionParams",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.ZMQAuxiliaryExecutionParams",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 206,
+      "name": "OpenHCSExecutionConfigBundle",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.OpenHCSExecutionConfigBundle",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 214,
+      "name": "ZMQExecutionIdentity",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.ZMQExecutionIdentity",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 240,
+      "name": "ZMQExecutionCompileControl",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.ZMQExecutionCompileControl",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 283,
+      "name": "ZMQExecutionConfigTransport",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.ZMQExecutionConfigTransport",
+      "bases": []
+    },
+    {
+      "path": "openhcs/runtime/zmq_execution_signature.py",
+      "line": 307,
+      "name": "ZMQExecutionRequestPayload",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.runtime.zmq_execution_signature.ZMQExecutionRequestPayload",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/source_path_factoring.py",
+      "line": 23,
+      "name": "SourcePathOccurrenceCollector",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.source_path_factoring.SourcePathOccurrenceCollector",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/source_path_factoring.py",
+      "line": 33,
+      "name": "FactoredPathSourceLiteral",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.source_path_factoring.FactoredPathSourceLiteral",
+      "bases": [
+        "PythonSourceLiteral"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/source_path_factoring.py",
+      "line": 47,
+      "name": "SourcePathFactoringPlan",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.source_path_factoring.SourcePathFactoringPlan",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/source_path_factoring.py",
+      "line": 126,
+      "name": "OpenHCSPythonSourceDocument",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.source_path_factoring.OpenHCSPythonSourceDocument",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 25,
+      "name": "NameMappingLookup",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.NameMappingLookup",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 37,
+      "name": "OpenHCSCallableFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.OpenHCSCallableFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 54,
+      "name": "OpenHCSImportableTypeFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.OpenHCSImportableTypeFormatter",
+      "bases": [
+        "OpenHCSCallableFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 69,
+      "name": "PythonSourceLiteralFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.PythonSourceLiteralFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 84,
+      "name": "OpenHCSPathFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.OpenHCSPathFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 115,
+      "name": "EnumMemberFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.EnumMemberFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 136,
+      "name": "MaterializationSpecFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.MaterializationSpecFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 221,
+      "name": "FunctionPatternTupleFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.FunctionPatternTupleFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 273,
+      "name": "FunctionPatternListFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.FunctionPatternListFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 296,
+      "name": "LazyDataclassFieldEmissionState",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.LazyDataclassFieldEmissionState",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 401,
+      "name": "LazyDataclassSerializedField",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.LazyDataclassSerializedField",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 407,
+      "name": "LazyDataclassSerializationPlan",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.LazyDataclassSerializationPlan",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 454,
+      "name": "LazyDataclassFormatEligibility",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.LazyDataclassFormatEligibility",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 460,
+      "name": "FunctionStepCleanModeFieldPolicy",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.FunctionStepCleanModeFieldPolicy",
+      "bases": []
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 489,
+      "name": "LazyDataclassFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.LazyDataclassFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "openhcs/serialization/pycodify_formatters.py",
+      "line": 517,
+      "name": "FunctionStepFormatter",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.openhcs.serialization.pycodify_formatters.FunctionStepFormatter",
+      "bases": [
+        "SourceFormatter"
+      ]
+    },
+    {
+      "path": "benchmark/openhcs_measured_run.py",
+      "line": 99,
+      "name": "_ZMQOpenHCSExecution",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.openhcs_measured_run._ZMQOpenHCSExecution",
+      "bases": []
+    },
+    {
+      "path": "benchmark/openhcs_measured_run.py",
+      "line": 131,
+      "name": "_ZMQProgressTimingObserver",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.openhcs_measured_run._ZMQProgressTimingObserver",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 90,
+      "name": "WellThroughputExecutionRoute",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputExecutionRoute",
+      "bases": [
+        "StrEnum"
+      ]
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 103,
+      "name": "WellThroughputServerLifecycle",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputServerLifecycle",
+      "bases": [
+        "StrEnum"
+      ]
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 111,
+      "name": "WellThroughputMode",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputMode",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 131,
+      "name": "WellThroughputObservationKey",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputObservationKey",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 138,
+      "name": "WellThroughputPreset",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputPreset",
+      "bases": [
+        "StrEnum"
+      ]
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 183,
+      "name": "WellThroughputModeOrder",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputModeOrder",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 210,
+      "name": "WellThroughputBenchmarkPlan",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputBenchmarkPlan",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 288,
+      "name": "WellThroughputPresentationSources",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputPresentationSources",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 299,
+      "name": "WellThroughputPresentationMode",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputPresentationMode",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 308,
+      "name": "ModuleAbstractionCoverageKind",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.ModuleAbstractionCoverageKind",
+      "bases": [
+        "StrEnum"
+      ]
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 350,
+      "name": "ModuleAbstractionCoverageRow",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.ModuleAbstractionCoverageRow",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 365,
+      "name": "ModuleAbstractionCoverageTable",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.ModuleAbstractionCoverageTable",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 417,
+      "name": "PresentationAxisBand",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.PresentationAxisBand",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 441,
+      "name": "PresentationAxisBandPolicy",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.PresentationAxisBandPolicy",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 491,
+      "name": "WellThroughputPresentationReport",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputPresentationReport",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 1860,
+      "name": "WellsPerCoreSummaryRow",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellsPerCoreSummaryRow",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 1898,
+      "name": "NativeCellProfilerExecutionBaseline",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.NativeCellProfilerExecutionBaseline",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 1909,
+      "name": "WellThroughputStatus",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputStatus",
+      "bases": [
+        "StrEnum"
+      ]
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 1918,
+      "name": "ChildProcessTerminator",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.ChildProcessTerminator",
+      "bases": []
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 1947,
+      "name": "WorkerLaneEventPhase",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WorkerLaneEventPhase",
+      "bases": [
+        "str",
+        "Enum"
+      ]
+    },
+    {
+      "path": "benchmark/well_throughput_scaling.py",
+      "line": 2017,
+      "name": "WellThroughputResult",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.well_throughput_scaling.WellThroughputResult",
+      "bases": []
+    },
+    {
+      "path": "benchmark/metrics/memory.py",
+      "line": 15,
+      "name": "MemoryMetric",
+      "canonical": true,
+      "symbol": "home.ts.code.projects.openhcs-shared-runtime-plumbing.benchmark.metrics.memory.MemoryMetric",
+      "bases": [
+        "MetricCollector"
+      ]
+    }
+  ],
+  "original_class_count": 74,
+  "canonical_count": 74
+}

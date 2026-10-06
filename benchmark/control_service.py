@@ -64,7 +64,7 @@ class BenchmarkControlService:
             request.job_id
         )
         observation_path = ZMQAuxiliaryExecutionParams.from_transport(
-            completed.submission.config_params
+            completed.request.config_params
         ).runtime_observation_export_path
         if observation_path is None:
             raise ValueError("Completed job has no runtime observation export.")
@@ -91,12 +91,12 @@ class BenchmarkControlService:
             seconds=execution_seconds,
         )
         return retain_measured_openhcs_completion(
-            submission=completed.submission,
+            request=completed.request,
             execution_id=record.execution_id,
             results_summary=record.results_summary,
             endpoint_provenance=measured_endpoint_provenance(completed.endpoint),
             phase_timing=phase_timing,
-            compile_artifact_id=completed.submission.compile_artifact_id,
+            compile_artifact_id=completed.request.compile_control.compile_artifact_id,
         ).receipt
 
     def discover_cases(

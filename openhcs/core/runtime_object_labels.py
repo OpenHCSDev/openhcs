@@ -6,14 +6,17 @@ from abc import ABC, abstractmethod
 from collections.abc import (
     Callable,
     Hashable,
+    Iterable,
     MutableMapping,
     Sequence,
 )
 from dataclasses import dataclass, field
+from threading import Lock
 from typing import Any, ClassVar, Self, cast
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
+from numba import njit
 
 from openhcs.core import (
     runtime_array_values,
@@ -28,6 +31,7 @@ from openhcs.core.registry_strategies import (
     NominalTypeStrategyFamilyMixin,
 )
 from openhcs.core.runtime_object_label_domains import (
+    DenseIntegerObjectLabelIdDomain,
     ObjectLabelDomain,
     ObjectLabelDomainDeclaration,
     ObjectLabelDomainMetadata,
@@ -112,6 +116,19 @@ class ObjectLabelVariantData:
     unedited_labels: ObjectLabelData | None = None
     small_removed_labels: ObjectLabelData | None = None
 
+    @property
+    def shape(self) -> tuple[int, ...] | None:
+        return ObjectLabelStorageStrategy.for_value(self.labels).label_shape(self.labels)
+
+    @property
+    def dtype(self) -> Any:
+        return self.labels.dtype
+
+    def validate_plane_count(self, plane_count: int, context: str) -> None:
+        object_label_validate_plane_count(
+            self.labels, plane_count=plane_count, context=context,
+        )
+
     @classmethod
     def compatible_replacement(
         cls,
@@ -187,10 +204,21 @@ class ObjectLabelVariantData:
 
     def with_labels(self, labels: ObjectLabelData) -> "ObjectLabelVariantData":
         """Return these variants with replacement final labels."""
-        return type(self)(
+        return self.replacement_data(
             labels=labels,
             unedited_labels=self.unedited_labels,
             small_removed_labels=self.small_removed_labels,
+        )
+
+    def replacement_data(
+        self, *, labels: ObjectLabelData,
+        unedited_labels: ObjectLabelData | None,
+        small_removed_labels: ObjectLabelData | None,
+    ) -> "ObjectLabelVariantData":
+        """Construct replacement storage in this variant family's scalar law."""
+        return type(self)(
+            labels=labels, unedited_labels=unedited_labels,
+            small_removed_labels=small_removed_labels,
         )
 
     def project(
@@ -211,6 +239,44 @@ class ObjectLabelVariantData:
                 else projector(self.small_removed_labels)
             ),
         )
+
+    def validate_representation(
+        self,
+        *,
+        representation: ObjectLabelRepresentation,
+        value_label: str,
+    ) -> None:
+        """Validate final and optional variants before admitting a label carrier."""
+        label_data = self.labels
+        if isinstance(label_data, ObjectLabelValue):
+            raise TypeError(
+                f"{value_label}.labels requires label data, not another "
+                "ObjectLabelValue. Pass its variant_data explicitly instead."
+            )
+        final_authority = ObjectLabelStorageStrategy.for_value(label_data)
+        final_authority.validate_representation(
+            label_data,
+            representation=representation,
+            value_label=value_label,
+        )
+        for variant_name, variant in (
+            ("unedited_labels", self.unedited_labels),
+            ("small_removed_labels", self.small_removed_labels),
+        ):
+            if variant is None:
+                continue
+            variant_authority = ObjectLabelStorageStrategy.for_value(variant)
+            variant_authority.validate_representation(
+                variant,
+                representation=representation,
+                value_label=f"{value_label} {variant_name}",
+            )
+            if variant_authority.matching_variant(variant, variant, label_data) is None:
+                raise ValueError(
+                    f"{value_label} {variant_name} shape "
+                    f"{variant_authority.label_shape(variant)!r} does not match "
+                    f"final labels shape {final_authority.label_shape(label_data)!r}."
+                )
 
     def in_representation(
         self,
@@ -253,6 +319,16 @@ class ObjectLabelVariantData:
             )
         )
 
+    def project_planes(
+        self, plane_indices: tuple[int, ...], *, plane_count: int,
+    ) -> "ObjectLabelVariantData":
+        """Project each variant through the same ordered plane selection."""
+        return self.project(
+            lambda labels: object_label_project_planes(
+                labels, plane_indices, plane_count=plane_count,
+            )
+        )
+
     @staticmethod
     def project_label_data_plane(
         labels: ObjectLabelData,
@@ -266,6 +342,229 @@ class ObjectLabelVariantData:
             labels,
             plane_index,
             plane_count=plane_count,
+        )
+
+
+class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
+    """Ordered produced label planes with independent dense variant storage."""
+
+    __slots__ = ("_planes", "_dense_variants", "_memory_type", "_shape", "_lock")
+
+    def __init__(
+        self, variants: Sequence[ObjectLabelVariantData], memory_type: str,
+    ) -> None:
+        from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry
+
+        target = MemoryType(memory_type)
+        if target is not MemoryType.NUMPY:
+            raise ValueError("Produced label planes require NumPy storage.")
+        values = tuple(variants)
+        if not values:
+            raise ValueError("Object-label slice aggregation requires values.")
+        planes = {
+            variant: tuple(value.labels_for_variant(variant) for value in values)
+            for variant in ObjectLabelVariant
+            if ObjectLabelVariantData.variant_is_present(variant, values)
+        }
+        geometry = runtime_slice_stack_geometry(planes[ObjectLabelVariant.FINAL])
+        for variant_planes in planes.values():
+            ObjectLabelStorageStrategy.for_planes(variant_planes)
+            if runtime_slice_stack_geometry(variant_planes).shape != geometry.shape:
+                raise ValueError("Object-label variants must match final labels shape.")
+        object.__setattr__(self, "_planes", planes)
+        object.__setattr__(self, "_dense_variants", {})
+        object.__setattr__(self, "_memory_type", memory_type)
+        object.__setattr__(self, "_shape", geometry.shape)
+        object.__setattr__(self, "_lock", Lock())
+
+    def replacement_data(
+        self, *, labels: ObjectLabelData,
+        unedited_labels: ObjectLabelData | None,
+        small_removed_labels: ObjectLabelData | None,
+    ) -> ObjectLabelVariantData:
+        return ObjectLabelVariantData(
+            labels=labels, unedited_labels=unedited_labels,
+            small_removed_labels=small_removed_labels,
+        )
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(shape={self.shape!r}, variants={self.present_variants!r})"
+
+    __hash__ = None
+
+    def _dense_variant(self, variant: ObjectLabelVariant) -> ObjectLabelData:
+        with self._lock:
+            if variant not in self._dense_variants:
+                dense = object_label_stack_planes(self._planes[variant], self._memory_type)
+                self._dense_variants[variant] = dense
+                self._planes[variant] = tuple(dense[index] for index in range(len(dense)))
+            return self._dense_variants[variant]
+
+    @property
+    def labels(self) -> ObjectLabelData:
+        return self._dense_variant(ObjectLabelVariant.FINAL)
+
+    @property
+    def unedited_labels(self) -> ObjectLabelData | None:
+        if ObjectLabelVariant.UNEDITED not in self._planes:
+            return None
+        return self._dense_variant(ObjectLabelVariant.UNEDITED)
+
+    @property
+    def small_removed_labels(self) -> ObjectLabelData | None:
+        if ObjectLabelVariant.SMALL_REMOVED not in self._planes:
+            return None
+        return self._dense_variant(ObjectLabelVariant.SMALL_REMOVED)
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return self._shape
+
+    @property
+    def dtype(self) -> Any:
+        return np.result_type(*(plane.dtype for plane in self._planes[ObjectLabelVariant.FINAL]))
+
+    @property
+    def present_variants(self) -> tuple[ObjectLabelVariant, ...]:
+        return tuple(self._planes)
+
+    def validate_plane_count(self, plane_count: int, context: str) -> None:
+        if len(self.shape) < 3 or self.shape[0] != plane_count:
+            raise ValueError(
+                f"{context} declares {plane_count} plane(s), but dense label "
+                f"storage has shape {self.shape!r}."
+            )
+
+    def validate_representation(
+        self, *, representation: ObjectLabelRepresentation, value_label: str,
+    ) -> None:
+        for planes in self._planes.values():
+            for plane in planes:
+                ObjectLabelStorageStrategy.for_value(plane).validate_representation(
+                    plane, representation=representation, value_label=value_label,
+                )
+
+    def in_representation(self, representation: ObjectLabelRepresentation) -> ObjectLabelVariantData:
+        if representation is ObjectLabelRepresentation.DENSE_LABELS:
+            self.validate_representation(representation=representation, value_label=type(self).__name__)
+            return self
+        return super().in_representation(representation)
+
+    def project_plane(
+        self, *, plane_axis: RuntimePlaneAxis, plane_index: int, plane_count: int,
+    ) -> ObjectLabelVariantData:
+        self.validate_plane_count(plane_count, "Object-label data plane projection")
+        if plane_index < 0 or plane_index >= plane_count:
+            raise IndexError(plane_index)
+        return ObjectLabelPlaneVariantData(self, plane_index)
+
+    def project_planes(
+        self, plane_indices: tuple[int, ...], *, plane_count: int,
+    ) -> ObjectLabelVariantData:
+        self.validate_plane_count(plane_count, "Object-label data plane projection")
+        if any(index < 0 or index >= plane_count for index in plane_indices):
+            raise IndexError(plane_indices)
+        return ProjectedObjectLabelVariantData(self, plane_indices)
+
+    def __getstate__(self) -> dict[str, Any]:
+        with self._lock:
+            return {
+                "variants": {
+                    variant: self._dense_variants[variant]
+                    if variant in self._dense_variants else planes
+                    for variant, planes in self._planes.items()
+                },
+                "memory_type": self._memory_type,
+                "shape": self.shape,
+            }
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        object.__setattr__(self, "_dense_variants", {
+            variant: data for variant, data in state["variants"].items()
+            if isinstance(data, np.ndarray)
+        })
+        object.__setattr__(self, "_planes", {
+            variant: tuple(data[index] for index in range(len(data)))
+            if isinstance(data, np.ndarray) else data
+            for variant, data in state["variants"].items()
+        })
+        object.__setattr__(self, "_memory_type", state["memory_type"])
+        object.__setattr__(self, "_shape", state["shape"])
+        object.__setattr__(self, "_lock", Lock())
+
+
+class ProjectedObjectLabelVariantData(PlaneStackObjectLabelVariantData):
+    """A declared plane view of the canonical produced variant storage."""
+
+    __slots__ = ("_source", "_indices")
+
+    def __init__(
+        self, source: PlaneStackObjectLabelVariantData, indices: tuple[int, ...],
+    ) -> None:
+        object.__setattr__(self, "_source", source)
+        object.__setattr__(self, "_indices", indices)
+        object.__setattr__(self, "_dense_variants", {})
+        object.__setattr__(self, "_lock", Lock())
+        object.__setattr__(self, "_shape", (len(indices), *source.shape[1:]))
+
+    @property
+    def present_variants(self) -> tuple[ObjectLabelVariant, ...]:
+        return self._source.present_variants
+
+    @property
+    def dtype(self) -> Any:
+        return self._source.dtype
+
+    @property
+    def unedited_labels(self) -> ObjectLabelData | None:
+        if ObjectLabelVariant.UNEDITED not in self.present_variants:
+            return None
+        return self._dense_variant(ObjectLabelVariant.UNEDITED)
+
+    @property
+    def small_removed_labels(self) -> ObjectLabelData | None:
+        if ObjectLabelVariant.SMALL_REMOVED not in self.present_variants:
+            return None
+        return self._dense_variant(ObjectLabelVariant.SMALL_REMOVED)
+
+    def _dense_variant(self, variant: ObjectLabelVariant) -> ObjectLabelData:
+        with self._lock:
+            if variant not in self._dense_variants:
+                source = self._source._dense_variant(variant)
+                self._dense_variants[variant] = self._project_variant(source)
+            return self._dense_variants[variant]
+
+    def _project_variant(self, source: ObjectLabelData) -> ObjectLabelData:
+        return object_label_project_planes(
+            source, self._indices, plane_count=self._source.shape[0],
+        )
+
+    def validate_representation(
+        self, *, representation: ObjectLabelRepresentation, value_label: str,
+    ) -> None:
+        self._source.validate_representation(
+            representation=representation, value_label=value_label,
+        )
+
+    def __reduce__(self):
+        # A transported scalar/subset owns only its selected canonical buffers.
+        return (ObjectLabelVariantData, (
+            self.labels, self.unedited_labels, self.small_removed_labels,
+        ))
+
+
+class ObjectLabelPlaneVariantData(ProjectedObjectLabelVariantData):
+    """A scalar plane view retaining canonical per-variant write ownership."""
+
+    __slots__ = ()
+
+    def __init__(self, source: PlaneStackObjectLabelVariantData, index: int) -> None:
+        super().__init__(source, (index,))
+        object.__setattr__(self, "_shape", source.shape[1:])
+
+    def _project_variant(self, source: ObjectLabelData) -> ObjectLabelData:
+        return object_label_project_plane(
+            source, self._indices[0], plane_count=self._source.shape[0],
         )
 
 
@@ -311,15 +610,15 @@ class ObjectLabelValue(
 
     @property
     def shape(self) -> Any:
-        return self.labels.shape
+        return self.variant_data.shape
 
     @property
     def ndim(self) -> int:
-        return self.labels.ndim
+        return len(self.shape)
 
     @property
     def dtype(self) -> Any:
-        return self.labels.dtype
+        return self.variant_data.dtype
 
     def __array__(self, dtype: Any | None = None) -> Any:
         return np.asarray(self.labels, dtype=dtype)
@@ -414,11 +713,7 @@ class ObjectLabelValue(
                 "object-ID domain per plane."
             )
         plane_count = len(declared_domains)
-        object_label_validate_plane_count(
-            self.labels,
-            plane_count=plane_count,
-            context=type(self).__name__,
-        )
+        self.variant_data.validate_plane_count(plane_count, type(self).__name__)
         return plane_count
 
     def validate_source_alignment(self, label_name: str) -> None:
@@ -582,10 +877,11 @@ class ObjectLabelValue(
             return self
         return self.with_variants(variants)
 
-    def with_source_plane_measurement_labels(
+    def project_source_plane(
         self,
-        labels: ObjectLabelData,
         plane_index: int,
+        *,
+        labels: ObjectLabelData | None = None,
     ) -> Self:
         """Return measurement labels projected from one declared source plane."""
         plane_count = self.declared_plane_count()
@@ -599,7 +895,9 @@ class ObjectLabelValue(
             plane_axis=self.plane_axis,
             plane_index=plane_index,
             plane_count=plane_count,
-        ).with_labels(labels)
+        )
+        if labels is not None:
+            variants = variants.with_labels(labels)
         return self.with_variants(
             variants,
             domain=object_label_domain_for_projected_label_plane(self, plane_index),
@@ -620,25 +918,21 @@ class ObjectLabelValue(
             return self
         source_variants = self.variant_data
         variants = (
-            source_variants.project(
-                lambda labels: (
-                    object_label_project_plane(
-                        labels,
-                        label_plane_indices[0],
-                        plane_count=len(self.domain.declared_object_id_domains),
-                    )
-                    if len(label_plane_indices) == 1
-                    else object_label_project_planes(
-                        labels,
-                        label_plane_indices,
-                        plane_count=len(self.domain.declared_object_id_domains),
-                    )
+            (
+                source_variants.project_plane(
+                    plane_axis=self.plane_axis,
+                    plane_index=label_plane_indices[0],
+                    plane_count=len(self.domain.declared_object_id_domains),
+                )
+                if len(label_plane_indices) == 1
+                else source_variants.project_planes(
+                    label_plane_indices,
+                    plane_count=len(self.domain.declared_object_id_domains),
                 )
             )
             if label_plane_indices is not None
             else source_variants.project_runtime_slice(
-                slice_index=slice_index,
-                slice_count=slice_count,
+                slice_index=slice_index, slice_count=slice_count,
             )
         )
         projected_domain = self.runtime_slice_domain(
@@ -693,12 +987,8 @@ class ObjectLabelValue(
         metadata = runtime_image_values.image_payload_metadata(self).for_source_planes(
             normalized_indices
         )
-        variants = self.variant_data.project(
-            lambda labels: object_label_project_planes(
-                labels,
-                normalized_indices,
-                plane_count=plane_count,
-            )
+        variants = self.variant_data.project_planes(
+            normalized_indices, plane_count=plane_count,
         )
         return self.with_variants(
             variants,
@@ -744,11 +1034,7 @@ class ObjectLabelValue(
                     f"{value_label} plane-scoped labels require a declared plane axis."
                 )
             declared_domains = self.domain.declared_object_id_domains
-            object_label_validate_plane_count(
-                self.labels,
-                plane_count=len(declared_domains),
-                context=value_label,
-            )
+            self.variant_data.validate_plane_count(len(declared_domains), value_label)
         else:
             raise TypeError(
                 f"{value_label} has unsupported object-label domain scope "
@@ -928,9 +1214,7 @@ class ObjectLabelPayload(ObjectLabelValue):
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_object_label_variants()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_object_label_metadata("ObjectLabelPayload")
 
 
@@ -975,28 +1259,69 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         *,
         dimensions: tuple[str, ...] = (),
         source_image_name: str | None = None,
+        source_image_payload: runtime_array_values.RuntimeArrayData | None = None,
+        parent_image_payload: runtime_array_values.RuntimeArrayData | None = None,
+        source_image_names: tuple[str, ...] = (),
     ) -> Self:
-        """Bind artifact identity to an already nominal object-label payload."""
+        """Admit a named label value with its resolved source and parent context."""
+        variants = payload.variant_data
+        provenance = payload.source_provenance
+        spatial_domain = payload.source_spatial_domain
+        plane_axis = payload.plane_axis
+        if source_image_payload is not None:
+            metadata = runtime_image_values.image_payload_metadata(source_image_payload)
+            provenance = object_label_source_context_provenance(
+                payload, source_image_payload
+            )
+            spatial_domain = (
+                payload.object_label_source_spatial_domain().with_missing_from(
+                    metadata.object_label_source_spatial_domain()
+                )
+            )
+            plane_axis = ObjectLabelPlaneDomainStrategy.for_enum_member(
+                payload.domain.scope
+            ).value_plane_axis(payload.plane_axis)
+            variants = variants.in_representation(payload.representation)
+            if isinstance(payload, ObjectLabelSet):
+                payload.validate_artifact_name()
+                if payload.source_image_name == "":
+                    raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
+            variants.validate_representation(
+                representation=ObjectLabelRepresentation(payload.representation),
+                value_label=type(payload).__name__,
+            )
+        spacing = payload.parent_image_source_voxel_spacing
+        if parent_image_payload is not None:
+            spacing = spacing.with_missing_from(
+                runtime_image_values.image_payload_metadata(
+                    parent_image_payload
+                ).source_voxel_spacing
+            )
+        fallback_names = source_image_names
+        if not fallback_names and source_image_payload is not None:
+            fallback_names = runtime_image_values.image_payload_metadata(
+                source_image_payload
+            ).source_image_names
+        if fallback_names:
+            provenance = provenance.with_source_image_names(
+                provenance.source_image_names or fallback_names
+            )
         return cls(
             name=name,
             dimensions=dimensions,
             source_image_name=source_image_name,
-            variant_data=payload.variant_data,
+            variant_data=variants,
             representation=payload.representation,
             domain=payload.domain,
-            plane_axis=payload.plane_axis,
-            source_spatial_domain=payload.source_spatial_domain,
-            parent_image_source_voxel_spacing=(
-                payload.parent_image_source_voxel_spacing
-            ),
-            source_provenance=payload.source_provenance,
+            plane_axis=plane_axis,
+            source_spatial_domain=spatial_domain,
+            parent_image_source_voxel_spacing=spacing,
+            source_provenance=provenance,
         )
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_object_label_variants()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.validate_artifact_name()
         if self.source_image_name == "":
             raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
@@ -1062,6 +1387,16 @@ class ObjectLabelStorageStrategy(
             context="Object-label storage",
         )
 
+    @classmethod
+    def for_planes(cls, labels: Sequence[ObjectLabelData]) -> "ObjectLabelStorageStrategy":
+        """Admit one homogeneous semantic plane family before stacking."""
+        if not labels:
+            raise ValueError("Object-label plane stacking requires values.")
+        authority = cls.for_value(labels[0])
+        if any(type(value) is not type(labels[0]) for value in labels[1:]):
+            raise TypeError("Object-label plane stacking requires one nominal storage type.")
+        return authority
+
     @abstractmethod
     def storage_representation(
         self,
@@ -1077,6 +1412,12 @@ class ObjectLabelStorageStrategy(
         source_spatial_shape_yx: tuple[int, int] | None,
     ) -> np.ndarray:
         """Materialize dense labels from this storage."""
+
+    def rendering_layers(
+        self, labels: object, *, source_spatial_shape_yx: tuple[int, int] | None,
+    ) -> tuple[np.ndarray, ...]:
+        """Return nonoverlapping dense layers for image rendering consumers."""
+        return (self.dense_data(labels, source_spatial_shape_yx=source_spatial_shape_yx),)
 
     @abstractmethod
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
@@ -1115,14 +1456,30 @@ class ObjectLabelStorageStrategy(
             if sparse_labels.has_slice_index
             else (sparse_labels.y_column, sparse_labels.x_column)
         )
+        return self.coordinate_centers(
+            counts,
+            (
+                np.bincount(
+                    object_ids,
+                    weights=array[:, coordinate_column],
+                    minlength=max_label + 1,
+                )
+                for coordinate_column in coordinate_columns
+            ),
+            maximum_label=max_label,
+        )
+
+    @staticmethod
+    def coordinate_centers(
+        counts: np.ndarray,
+        coordinate_sums: Iterable[np.ndarray],
+        *,
+        maximum_label: int,
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        """Allocate and divide each coordinate sum in its declared ID domain."""
         axis_centers: list[np.ndarray] = []
-        for coordinate_column in coordinate_columns:
-            sums = np.bincount(
-                object_ids,
-                weights=array[:, coordinate_column],
-                minlength=max_label + 1,
-            )
-            centers = np.full(max_label + 1, np.nan, dtype=np.float64)
+        for sums in coordinate_sums:
+            centers = np.full(maximum_label + 1, np.nan, dtype=np.float64)
             np.divide(sums, counts, out=centers, where=counts > 0)
             axis_centers.append(centers)
         return tuple(axis_centers), counts
@@ -1202,6 +1559,62 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
         return SparseIJVLabelRows.from_dense_stack(cast(np.ndarray, labels))
 
+    @classmethod
+    def prepare_coordinates(cls) -> None:
+        """Prepare C/F/strided signatures with both input mutability policies."""
+        plane = np.array([[0, 1], [1, 0]], dtype=np.int32)
+        volume = np.stack((plane, plane))
+        for labels in (volume, np.asfortranarray(volume), volume.copy()[..., ::-1]):
+            for writeable in (True, False):
+                labels.flags.writeable = writeable
+                _dense_label_coordinate_moments_numba(labels, 1)
+        for labels in (plane, np.asfortranarray(plane), plane.copy()[:, ::-1]):
+            for writeable in (True, False):
+                labels.flags.writeable = writeable
+                dense_label_centers_2d_numba(labels, 1)
+
+    def axis_centers(
+        self, labels: object, *, domain: Sequence[int]
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        array = np.asarray(labels)
+        if (
+            array.dtype != np.dtype(np.int32)
+            or array.ndim not in (2, 3)
+            or any(size > np.iinfo(np.int32).max for size in array.shape)
+        ):
+            return super().axis_centers(labels, domain=domain)
+        coordinate_planes = array[None, ...] if array.ndim == 2 else array
+        positive_parts = tuple(plane[plane > 0] for plane in coordinate_planes)
+        coordinate_domain = DenseIntegerObjectLabelIdDomain.from_array(
+            np.concatenate(positive_parts or (np.empty(0, dtype=np.int32),))
+        )
+        del positive_parts
+        if coordinate_domain is None:
+            return super().axis_centers(labels, domain=domain)
+        coordinate_columns = tuple(range(3 - array.ndim, 3))
+        sums, pixel_counts = _dense_label_coordinate_moments_numba(
+            coordinate_planes, coordinate_domain.max_label,
+        )
+        del coordinate_domain
+        # Like sparse conversion, the moments snapshot precedes domain callbacks.
+        object_ids = np.flatnonzero(pixel_counts)
+        max_domain_label = max(domain, default=0)
+        maximum_label = max(int(object_ids.max(initial=0)), max_domain_label)
+        counts = np.bincount(object_ids, minlength=maximum_label + 1)
+        counts[object_ids] = pixel_counts[object_ids]
+        return self.coordinate_centers(
+            counts,
+            (
+                np.bincount(
+                    object_ids,
+                    weights=sums[object_ids, coordinate_column],
+                    minlength=maximum_label + 1,
+                )
+                for coordinate_column in coordinate_columns
+            ),
+            maximum_label=maximum_label,
+        )
+
     def stack_planes(
         self,
         labels: Sequence[object],
@@ -1279,6 +1692,13 @@ class SparseIJVObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
         source_spatial_shape_yx: tuple[int, int] | None,
     ) -> np.ndarray:
         return cast(SparseIJVLabelRows, labels).to_dense(
+            source_spatial_shape_yx=source_spatial_shape_yx,
+        )
+
+    def rendering_layers(
+        self, labels: object, *, source_spatial_shape_yx: tuple[int, int] | None,
+    ) -> tuple[np.ndarray, ...]:
+        return cast(SparseIJVLabelRows, labels).nonoverlapping_dense_layers(
             source_spatial_shape_yx=source_spatial_shape_yx,
         )
 
@@ -1397,10 +1817,28 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
             source_spatial_shape_yx=label_value.source_spatial_domain.source_shape_yx,
         )
 
+    def rendering_layers(
+        self, labels: object, *, source_spatial_shape_yx: tuple[int, int] | None,
+    ) -> tuple[np.ndarray, ...]:
+        del source_spatial_shape_yx
+        value = cast(ObjectLabelValue, labels)
+        data = self.label_data(value)
+        return ObjectLabelStorageStrategy.for_value(data).rendering_layers(
+            data, source_spatial_shape_yx=value.source_spatial_shape_yx,
+        )
+
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
         label_data = self.label_data(labels)
         return ObjectLabelStorageStrategy.for_value(label_data).sparse_ijv_rows(
             label_data
+        )
+
+    def axis_centers(
+        self, labels: object, *, domain: Sequence[int]
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        label_data = self.label_data(labels)
+        return ObjectLabelStorageStrategy.for_value(label_data).axis_centers(
+            label_data, domain=domain
         )
 
     def stack_planes(
@@ -1424,31 +1862,10 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
         value_label: str,
     ) -> None:
         label_value = cast(ObjectLabelValue, labels)
-        label_data = self.label_data(label_value)
-        final_authority = ObjectLabelStorageStrategy.for_value(label_data)
-        final_authority.validate_representation(
-            label_data,
+        label_value.variant_data.validate_representation(
             representation=representation,
             value_label=value_label,
         )
-        for variant_name, variant in (
-            ("unedited_labels", label_value.unedited_labels),
-            ("small_removed_labels", label_value.small_removed_labels),
-        ):
-            if variant is None:
-                continue
-            variant_authority = ObjectLabelStorageStrategy.for_value(variant)
-            variant_authority.validate_representation(
-                variant,
-                representation=representation,
-                value_label=f"{value_label} {variant_name}",
-            )
-            if variant_authority.matching_variant(variant, variant, label_data) is None:
-                raise ValueError(
-                    f"{value_label} {variant_name} shape "
-                    f"{variant_authority.label_shape(variant)!r} does not match "
-                    f"final labels shape {final_authority.label_shape(label_data)!r}."
-                )
 
     def validate_plane_count(
         self,
@@ -1502,8 +1919,7 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
         )
 
     def label_shape(self, labels: object) -> tuple[int, ...] | None:
-        label_data = self.label_data(labels)
-        return ObjectLabelStorageStrategy.for_value(label_data).label_shape(label_data)
+        return cast(ObjectLabelValue, labels).variant_data.shape
 
 
 def object_label_dense_array(
@@ -1533,13 +1949,7 @@ def object_label_stack_planes(
 ) -> ObjectLabelData:
     """Stack homogeneous label planes through their nominal storage authority."""
     values = tuple(labels)
-    if not values:
-        raise ValueError("Object-label plane stacking requires values.")
-    authority = ObjectLabelStorageStrategy.for_value(values[0])
-    if any(type(value) is not type(values[0]) for value in values[1:]):
-        raise TypeError(
-            "Object-label plane stacking requires one nominal storage type."
-        )
+    authority = ObjectLabelStorageStrategy.for_planes(values)
     return authority.stack_planes(values, memory_type)
 
 
@@ -1553,6 +1963,46 @@ def object_label_axis_centers(
         payload,
         domain=domain,
     )
+
+
+@njit(cache=True)
+def _dense_label_coordinate_moments_numba(
+    labels: np.ndarray,
+    maximum_label: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Reduce dense positive labels once in their declared row-major geometry."""
+    sums = np.zeros((maximum_label + 1, 3), dtype=np.float64)
+    counts = np.zeros(maximum_label + 1, dtype=np.int64)
+    plane_count, height, width = labels.shape
+    for plane in range(plane_count):
+        for y in range(height):
+            for x in range(width):
+                label_id = int(labels[plane, y, x])
+                if label_id > 0 and label_id <= maximum_label:
+                    sums[label_id, 0] += plane
+                    sums[label_id, 1] += y
+                    sums[label_id, 2] += x
+                    counts[label_id] += 1
+    return sums, counts
+
+
+@njit(cache=True)
+def dense_label_centers_2d_numba(
+    labels: np.ndarray, label_count: int
+) -> np.ndarray:
+    """Validate compiled two-dimensional geometry and return its y/x centers."""
+    height, width = labels.shape
+    sums, counts = _dense_label_coordinate_moments_numba(
+        labels[None, :height, :width], label_count
+    )
+    centers = np.empty((label_count + 1, 2), dtype=np.float64)
+    for label_id in range(label_count + 1):
+        for axis in range(2):
+            centers[label_id, axis] = (
+                np.nan if counts[label_id] == 0
+                else sums[label_id, axis + 1] / counts[label_id]
+            )
+    return centers
 
 
 def object_label_storage_is_sparse_ijv(payload: object) -> bool:

@@ -5,8 +5,10 @@ Provides unified access to all registry implementations with automatic discovery
 Follows OpenHCS generic solution principle - automatically adapts to new registries.
 """
 
+import gc
 import inspect
 import logging
+import os
 import subprocess
 import sys
 import tempfile
@@ -16,11 +18,18 @@ from concurrent.futures import CancelledError
 from typing import TYPE_CHECKING, Dict, Optional
 
 from arraybridge import MemoryType
+from objectstate import LazyDataclassFactory
+from python_introspect import SignatureAnalyzer
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
+from openhcs.core.callable_contract import CallableProjection
 from openhcs.core.function_reference import ResolvedRegistryFunction
+from openhcs.core.processing_preparation import (
+    CallablePreparation,
+    PreparationCacheBatch,
+)
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -55,6 +64,73 @@ class RegistryService:
         tuple[str, "CallableImportIdentity", str | None], ResolvedRegistryFunction
     ] = {}
     _registry_inventory_lock = threading.RLock()
+    _startup_heap_prepared = False
+    _startup_heap_frozen = False
+
+    @classmethod
+    def freeze_prepared_catalog_once(cls) -> None:
+        """Exclude the prepared startup graph from later cyclic collections.
+
+        Only endpoint startup calls this boundary. After declaration retirement
+        or shutdown releases the graph, it must never capture subsequent jobs.
+        Catalog and custom-source locks follow the existing inventory-first
+        order; retirement needs only the source lifecycle lock.
+        """
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        with cls._registry_inventory_lock, CustomFunctionRuntimeRegistry.lifecycle():
+            if cls._startup_heap_prepared:
+                return
+            gc.collect()
+            gc.freeze()
+            cls._startup_heap_prepared = True
+            cls._startup_heap_frozen = True
+
+    @classmethod
+    def release_prepared_catalog(cls) -> None:
+        """Thaw before a captured source graph or endpoint is retired.
+
+        Custom declaration mutations already hold this reentrant lifecycle
+        lock. Do not acquire the inventory lock here and reverse its order.
+        Ordinary GC remains enabled throughout both lifecycle operations.
+        """
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        with CustomFunctionRuntimeRegistry.lifecycle():
+            if cls._startup_heap_frozen:
+                gc.unfreeze()
+                cls._startup_heap_frozen = False
+
+    @classmethod
+    def metadata_for_canonical_key(cls, function_id: str) -> FunctionMetadata:
+        """Ask the original registry declaration to resolve one public identity."""
+
+        registry_name, separator, name = function_id.partition(":")
+        registry_type = LIBRARY_REGISTRIES.get(registry_name) if separator and name else None
+        claims = () if registry_type is None else tuple(
+            registry_type._canonical_metadata_claims(function_id)
+        )
+        for metadata in claims:
+            if metadata.composite_key != function_id:
+                raise ValueError(
+                    f"Canonical function {function_id!r} contradicts declaration "
+                    f"{metadata.composite_key!r}."
+                )
+            metadata.require_current_declaration()
+        if not claims:
+            raise KeyError(f"Unknown canonical function ID {function_id!r}.")
+        first = claims[0]
+        if any(
+            metadata.import_identity != first.import_identity
+            or inspect.unwrap(metadata.func) is not inspect.unwrap(first.func)
+            for metadata in claims[1:]
+        ):
+            raise ValueError(f"Canonical function {function_id!r} has ambiguous owners.")
+        return first
 
     @classmethod
     def get_all_functions_with_metadata(
@@ -64,31 +140,34 @@ class RegistryService:
         cancellation: OperationCancellation | None = None,
     ) -> Dict[str, FunctionMetadata]:
         """Get unified metadata for all functions from all registries."""
-        if cls._metadata_cache is not None:
-            logger.debug(
-                f"🎯 REGISTRY SERVICE: Using cached metadata ({len(cls._metadata_cache)} functions)"
-            )
-            return cls._metadata_cache
+        with cls._registry_inventory_lock:
+            if cls._metadata_cache is not None:
+                logger.debug(
+                    f"🎯 REGISTRY SERVICE: Using cached metadata ({len(cls._metadata_cache)} functions)"
+                )
+                return cls._metadata_cache
 
-        emit_status = status_callback or logger.debug
-        emit_status("Loading cached function catalog")
-        registry_instances = cls._available_registry_instances()
-        cached_functions = cls._load_valid_persistent_catalog(registry_instances)
-        if cached_functions is None:
-            cls._prepare_persistent_catalog(
-                status_callback=emit_status,
-                cancellation=cancellation,
-            )
-            emit_status("Loading the prepared function catalog")
+            emit_status = status_callback or logger.debug
+            emit_status("Loading cached function catalog")
+            registry_instances = cls._available_registry_instances()
             cached_functions = cls._load_valid_persistent_catalog(registry_instances)
-        if cached_functions is None:
-            raise RuntimeError(
-                "Function registry preparation completed without producing a valid "
-                "persistent catalog."
-            )
-        cls._metadata_cache = cached_functions
-        emit_status(f"Function catalog ready ({len(cached_functions)} functions)")
-        return cached_functions
+            if cached_functions is None:
+                cls.prepare_persistent_catalog(
+                    status_callback=emit_status,
+                    cancellation=cancellation,
+                )
+                emit_status("Loading the prepared function catalog")
+                cached_functions = cls._load_valid_persistent_catalog(
+                    registry_instances
+                )
+            if cached_functions is None:
+                raise RuntimeError(
+                    "Function registry preparation completed without producing a valid "
+                    "persistent catalog."
+                )
+            cls._metadata_cache = cached_functions
+            emit_status(f"Function catalog ready ({len(cached_functions)} functions)")
+            return cached_functions
 
     @classmethod
     def cached_metadata_snapshot(cls) -> Dict[str, FunctionMetadata]:
@@ -98,18 +177,44 @@ class RegistryService:
             return {} if cls._metadata_cache is None else dict(cls._metadata_cache)
 
     @classmethod
-    def prepare_in_current_process(cls) -> Dict[str, FunctionMetadata]:
-        """Discover the complete catalog in this dedicated preparation process."""
+    def prepare_in_current_process(
+        cls, *, status_callback: RegistryPreparationCallback | None = None
+    ) -> Dict[str, FunctionMetadata]:
+        """Prepare registered declarations before publishing execution readiness."""
 
-        if cls._metadata_cache is not None:
-            return cls._metadata_cache
-
-        logger.debug(
-            "🎯 REGISTRY SERVICE: Discovering functions from all registries..."
+        emit_status = status_callback or logger.debug
+        emit_status("Discovering registered callables")
+        if cls._metadata_cache is None:
+            cls._metadata_cache = cls._metadata_from_instances(
+                cls._available_registry_instances()
+            )
+        callables = tuple(dict.fromkeys(
+            target
+            for metadata in cls._metadata_cache.values()
+            for target in CallableProjection.from_callable(metadata.func).prepare_targets()
+        ))
+        emit_status("Preparing registered kernel caches")
+        PreparationCacheBatch.from_callables(callables).populate_child_caches(
+            max_workers=os.cpu_count() or 1,
+            status_callback=emit_status,
         )
-        cls._metadata_cache = cls._metadata_from_instances(
-            cls._available_registry_instances()
+        for func in callables:
+            preparation = CallablePreparation.from_callable(func)
+            preparation.prepare()
+            emit_status(
+                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
+            )
+        emit_status("Resolving prepared callable signatures")
+        for func in callables:
+            CallableProjection.from_callable(func).warm_canonical_signature()
+        emit_status("Preparing registered configuration source declarations")
+        SignatureAnalyzer.prepare_dataclass_declarations(
+            declaration
+            for pair in LazyDataclassFactory.registered_type_pairs()
+            for declaration in pair
         )
+        emit_status(f"Registered kernels ready ({len(callables)} callables)")
+        emit_status(f"Function catalog ready ({len(cls._metadata_cache)} callables)")
         return cls._metadata_cache
 
     @classmethod
@@ -201,18 +306,18 @@ class RegistryService:
         return all_functions
 
     @classmethod
-    def _prepare_persistent_catalog(
+    def prepare_persistent_catalog(
         cls,
         *,
         status_callback: RegistryPreparationCallback | None = None,
         cancellation: OperationCancellation | None = None,
     ) -> None:
-        """Run behavior probing in a dedicated interpreter main thread."""
+        """Prepare registered declarations in a dedicated interpreter main thread."""
 
         if cancellation is not None and cancellation.requested():
             raise CancelledError
         status_callback = status_callback or logger.debug
-        status_callback("Discovering functions in an isolated execution process")
+        status_callback("Preparing function catalog and declared kernels")
 
         policy = BackgroundProcessLaunchPolicy.current(detached=False)
         command = (
@@ -391,7 +496,8 @@ class RegistryService:
         declared = reference.require_current_declaration(declared)
 
         registry = registry_type()
-        registry.require_declared_callable_composite_key(
+        cls._require_declared_callable_composite_key(
+            registry,
             declared,
             reference.composite_key,
         )
@@ -419,6 +525,21 @@ class RegistryService:
         return resolved
 
     @staticmethod
+    def _require_declared_callable_composite_key(
+        registry: LibraryRegistryBase,
+        func: Callable,
+        composite_key: str,
+    ) -> None:
+        """Validate a transported key against its original declaration inventory."""
+
+        declared_keys = registry.composite_keys_for_declared_callable(func)
+        if composite_key not in declared_keys:
+            raise RuntimeError(
+                f"Function reference {composite_key!r} contradicts "
+                f"declaration-owned identity candidates {declared_keys!r}."
+            )
+
+    @staticmethod
     def _validate_reference_metadata(
         reference: "RegistryFunctionReference",
         metadata: FunctionMetadata,
@@ -441,6 +562,7 @@ class RegistryService:
     def clear_metadata_cache(cls) -> None:
         """Clear cached metadata to force re-discovery."""
         with cls._registry_inventory_lock:
+            cls.release_prepared_catalog()
             cls._metadata_cache = None
             cls._registry_instances = None
             cls._resolved_reference_callables.clear()

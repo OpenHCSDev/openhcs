@@ -1,0 +1,98 @@
+{
+  "rows": [
+    {
+      "step": 1,
+      "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-1-cb8f69f6b1ae-_validate_and_unstack.pickle",
+      "input_type": "ImageOutputBundle",
+      "slices": 60,
+      "exact_data_mask_metadata_context_parity": true,
+      "samples": {
+        "original": [
+          0.02976798778399825,
+          0.02862845314666629,
+          0.06853944202885032,
+          0.028996505308896303,
+          0.028927796985954046,
+          0.033002639189362526,
+          0.03195668011903763
+        ],
+        "shared": [
+          0.014910119120031595,
+          0.015420750249177217,
+          0.015195696149021387,
+          0.01570762088522315,
+          0.015215422958135605,
+          0.014804389327764511,
+          0.015924748964607716
+        ]
+      },
+      "medians": {
+        "original": 0.02976798778399825,
+        "shared": 0.015215422958135605
+      }
+    },
+    {
+      "step": 13,
+      "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-13-cb8f69f6b1ae-_validate_and_unstack.pickle",
+      "input_type": "ImageOutputBundle",
+      "slices": 60,
+      "exact_data_mask_metadata_context_parity": true,
+      "samples": {
+        "original": [
+          0.017208246048539877,
+          0.01783233182504773,
+          0.01715639792382717,
+          0.017885571345686913,
+          0.017070546746253967,
+          0.018426029942929745,
+          0.01727927988395095
+        ],
+        "shared": [
+          0.008287667762488127,
+          0.008968640118837357,
+          0.009164207614958286,
+          0.008805132005363703,
+          0.009045674931257963,
+          0.008591689169406891,
+          0.008798318915069103
+        ]
+      },
+      "medians": {
+        "original": 0.01727927988395095,
+        "shared": 0.008805132005363703
+      }
+    },
+    {
+      "step": 17,
+      "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-17-cb8f69f6b1ae-_validate_and_unstack.pickle",
+      "input_type": "ImageOutputBundle",
+      "slices": 60,
+      "exact_data_mask_metadata_context_parity": true,
+      "samples": {
+        "original": [
+          0.032272574957460165,
+          0.03204007772728801,
+          0.03153128828853369,
+          0.0315414578653872,
+          0.031116186641156673,
+          0.032110949978232384,
+          0.03100740211084485
+        ],
+        "shared": [
+          0.016227590385824442,
+          0.015442770905792713,
+          0.015923426020890474,
+          0.015830521937459707,
+          0.01597720803692937,
+          0.015061744023114443,
+          0.01576752308756113
+        ]
+      },
+      "medians": {
+        "original": 0.0315414578653872,
+        "shared": 0.015830521937459707
+      }
+    }
+  ],
+  "scope": "Captured native Resize, ImageMath and Threshold output bundles from current installed common pipeline, before promotion; one shared correlated projection algorithm, no processing-function branches. Prototype only, not whole pipeline evidence."
+}

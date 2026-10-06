@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
+from openhcs.core.runtime_profile import RuntimeProfiler
+
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field, fields as dataclass_fields
+from dataclasses import dataclass, field
 import hashlib
 import logging
-import os
 import re
-from threading import Lock
 import time
 from types import MappingProxyType
 from typing import ClassVar
@@ -42,10 +41,14 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.measurement_row_materialization import (
-    DataclassMeasurementColumnarRows,
+    ObjectMeasurementColumnarRows,
 )
-from openhcs.core.runtime_profile import RuntimeProfileLogger
+from openhcs.core.process_local_cache import (
+    RegisteredProcessLocalBoundedCache,
+    SynchronizedBoundedCache,
+)
 from openhcs.core.runtime_tabular_values import (
+    ColumnarRows,
     FieldSpec,
 )
 from openhcs.core.runtime_measurements import (
@@ -87,10 +90,11 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
 )
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
-)
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.backends.cellprofiler._granularity_native import (
+    reconstruct_f32 as _reconstruct_f32,
+    sample_order_one_grid as _sample_order_one_grid,
+)
 
 GRANULARITY_SPECTRUM_LENGTH = 16
 
@@ -104,10 +108,9 @@ class GranularitySpectrumDescriptor:
     def __post_init__(self) -> None:
         if not isinstance(self.spectrum_index, int):
             raise TypeError("Granularity spectrum index must be an integer.")
-        if not 1 <= self.spectrum_index <= GRANULARITY_SPECTRUM_LENGTH:
+        if self.spectrum_index < 1:
             raise ValueError(
-                "Granularity spectrum index must be between 1 and "
-                f"{GRANULARITY_SPECTRUM_LENGTH}, got {self.spectrum_index}."
+                f"Granularity spectrum index must be positive, got {self.spectrum_index}."
             )
 
 
@@ -119,8 +122,8 @@ class GranularitySpectrumDescriptorDeclaration(
 
     declaration_key = "cellprofiler_granularity_spectrum"
     feature_category = "Granularity"
-    _row_field_pattern = re.compile(r"gs([1-9]|1[0-6])\Z")
-    _feature_name_pattern = re.compile(r"Granularity_([1-9]|1[0-6])\Z", re.I)
+    _row_field_pattern = re.compile(r"gs([1-9][0-9]*)\Z")
+    _feature_name_pattern = re.compile(r"Granularity_([1-9][0-9]*)\Z", re.I)
 
     @classmethod
     def from_measurement_row_field_name(
@@ -143,6 +146,13 @@ class GranularitySpectrumDescriptorDeclaration(
         if match is None:
             return None
         return GranularitySpectrumDescriptor(int(match.group(1)))
+
+    @classmethod
+    def measurement_row_field_name(
+        cls, descriptor: GranularitySpectrumDescriptor
+    ) -> str:
+        """Render the producer field for one actual spectrum sample."""
+        return f"gs{descriptor.spectrum_index}"
 
     @classmethod
     def feature_name(cls, descriptor: object) -> str:
@@ -321,29 +331,10 @@ class MeasureGranularityModule(
         )
 
 
-_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 logger = logging.getLogger(__name__)
 
 
-def profile_enabled() -> bool:
-    """Return whether per-function granularity runtime profiling is enabled."""
-    return os.environ.get(_PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
-
-
-@dataclass(frozen=True, slots=True)
-class CellProfilerRuntimeProfiler:
-    """Shared CellProfiler runtime-profile emitter bound to a module logger."""
-
-    logger: logging.Logger
-
-    def enabled(self) -> bool:
-        return profile_enabled()
-
-    def log(self, label: str, seconds: float, **fields: object) -> None:
-        RuntimeProfileLogger.log(self.logger, label, seconds, **fields)
-
-
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 def log_profile(label: str, seconds: float, **fields: object) -> None:
@@ -351,166 +342,166 @@ def log_profile(label: str, seconds: float, **fields: object) -> None:
     runtime_profiler.log(label, seconds, **fields)
 
 
-@dataclass
-class GranularityMeasurement:
-    """Granularity spectrum measurements for an image."""
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GranularitySpectrumMeasurementRows(ColumnarRows, ABC):
+    """One actual spectrum matrix and its derived measurement columns."""
 
-    slice_index: int
-    gs1: float
-    gs2: float
-    gs3: float
-    gs4: float
-    gs5: float
-    gs6: float
-    gs7: float
-    gs8: float
-    gs9: float
-    gs10: float
-    gs11: float
-    gs12: float
-    gs13: float
-    gs14: float
-    gs15: float
-    gs16: float
-
-
-@dataclass
-class ObjectGranularityMeasurement:
-    """Granularity spectrum measurements per object."""
-
-    slice_index: int
-    object_id: int
-    gs1: float
-    gs2: float
-    gs3: float
-    gs4: float
-    gs5: float
-    gs6: float
-    gs7: float
-    gs8: float
-    gs9: float
-    gs10: float
-    gs11: float
-    gs12: float
-    gs13: float
-    gs14: float
-    gs15: float
-    gs16: float
-
-
-def _granularity_measurement(gs_values: list[float]) -> GranularityMeasurement:
-    while len(gs_values) < GRANULARITY_SPECTRUM_LENGTH:
-        gs_values.append(0.0)
-    return GranularityMeasurement(
-        slice_index=0,
-        gs1=gs_values[0],
-        gs2=gs_values[1],
-        gs3=gs_values[2],
-        gs4=gs_values[3],
-        gs5=gs_values[4],
-        gs6=gs_values[5],
-        gs7=gs_values[6],
-        gs8=gs_values[7],
-        gs9=gs_values[8],
-        gs10=gs_values[9],
-        gs11=gs_values[10],
-        gs12=gs_values[11],
-        gs13=gs_values[12],
-        gs14=gs_values[13],
-        gs15=gs_values[14],
-        gs16=gs_values[15],
-    )
-
-
-def _object_granularity_measurement(
-    object_id: int, gs: np.ndarray
-) -> ObjectGranularityMeasurement:
-    return ObjectGranularityMeasurement(
-        slice_index=0,
-        object_id=int(object_id),
-        gs1=gs[0],
-        gs2=gs[1],
-        gs3=gs[2],
-        gs4=gs[3],
-        gs5=gs[4],
-        gs6=gs[5],
-        gs7=gs[6],
-        gs8=gs[7],
-        gs9=gs[8],
-        gs10=gs[9],
-        gs11=gs[10],
-        gs12=gs[11],
-        gs13=gs[12],
-        gs14=gs[13],
-        gs15=gs[14],
-        gs16=gs[15],
-    )
-
-
-def object_granularity_measurement_value_fields() -> tuple[str, ...]:
-    """Return granularity spectrum fields from the row declaration."""
-    return tuple(
-        field.name
-        for field in dataclass_fields(ObjectGranularityMeasurement)
-        if field.name not in {"slice_index", "object_id"}
-    )
-
-
-@dataclass(frozen=True, slots=True)
-class ObjectGranularityMeasurementRows(ObjectMeasurementColumnarRows):
-    """Columnar object granularity rows over the emitted label-id domain."""
-
-    fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(
-        ObjectGranularityMeasurement
-    )
-    object_ids: np.ndarray
     gs_values: np.ndarray
     slice_index: int = 0
     _columns: Mapping[str, np.ndarray] = field(init=False, repr=False, compare=False)
+    _fields: tuple[FieldSpec, ...] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
-        object_ids = np.asarray(self.object_ids, dtype=np.int32)
-        gs_values = np.asarray(self.gs_values, dtype=np.float64)
-        if gs_values.ndim != 2:
-            raise ValueError("Object granularity values must be a 2-D array.")
-        if object_ids.size != gs_values.shape[0]:
-            raise ValueError(
-                "Object granularity rows require one spectrum per object ID."
+        values = np.asarray(self.gs_values, dtype=np.float64)
+        if values.ndim != 2:
+            raise ValueError("Granularity values must be a 2-D spectrum matrix.")
+        object.__setattr__(self, "gs_values", values)
+        identities = self.identity_columns()
+        columns = dict(identities)
+        for index in range(values.shape[1]):
+            descriptor = GranularitySpectrumDescriptor(index + 1)
+            name = GranularitySpectrumDescriptorDeclaration.measurement_row_field_name(
+                descriptor
             )
-        columns: dict[str, np.ndarray] = {
-            "slice_index": np.full(
-                object_ids.size, int(self.slice_index), dtype=np.int32
-            ),
-            "object_id": object_ids,
-        }
-        for column_index, field_name in enumerate(
-            object_granularity_measurement_value_fields()
-        ):
-            columns[field_name] = (
-                gs_values[:, column_index]
-                if column_index < gs_values.shape[1]
-                else np.zeros(object_ids.size, dtype=np.float64)
-            )
-        object.__setattr__(self, "object_ids", object_ids)
-        object.__setattr__(self, "gs_values", gs_values)
+            columns[name] = values[:, index]
         object.__setattr__(self, "_columns", MappingProxyType(columns))
+        object.__setattr__(
+            self,
+            "_fields",
+            tuple(
+                FieldSpec(name, int if name in identities else float)
+                for name in columns
+            ),
+        )
         self.validate_fields()
+
+    @abstractmethod
+    def identity_columns(self) -> Mapping[str, np.ndarray]:
+        """Declare image or object row identities for this spectrum matrix."""
+
+    @property
+    def fields(self) -> tuple[FieldSpec, ...]:
+        return self._fields
 
     @property
     def columns(self) -> Mapping[str, np.ndarray]:
         return self._columns
 
-    def __len__(self) -> int:
-        return int(self.object_ids.size)
 
-    def __iter__(self):
-        for row_index in range(len(self)):
-            yield self[row_index]
+@dataclass(frozen=True, slots=True)
+class ImageGranularityMeasurementRows(GranularitySpectrumMeasurementRows):
+    """A single image's measured spectrum, including its exact sample count."""
 
-    def __getitem__(self, row_index: int) -> ObjectGranularityMeasurement:
-        return _object_granularity_measurement(
-            int(self.object_ids[row_index]),
-            self.gs_values[row_index],
+    def identity_columns(self) -> Mapping[str, np.ndarray]:
+        if self.gs_values.shape[0] != 1:
+            raise ValueError("Image granularity rows require exactly one spectrum.")
+        return {"slice_index": np.asarray((self.slice_index,), dtype=np.int32)}
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectGranularityMeasurementRows(
+    GranularitySpectrumMeasurementRows,
+    ObjectMeasurementColumnarRows,
+):
+    """Actual object spectra over the emitted label-id domain."""
+
+    object_ids: np.ndarray
+
+    def identity_columns(self) -> Mapping[str, np.ndarray]:
+        object_ids = np.asarray(self.object_ids, dtype=np.int32)
+        if object_ids.ndim != 1 or object_ids.size != self.gs_values.shape[0]:
+            raise ValueError(
+                "Object granularity rows require one spectrum per object ID."
+            )
+        object.__setattr__(self, "object_ids", object_ids)
+        return {
+            "slice_index": np.full(
+                object_ids.size, int(self.slice_index), dtype=np.int32
+            ),
+            "object_id": object_ids,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GranularitySamplingGrid:
+    """CP logical extent, physical samples and coordinate-grid policy."""
+
+    logical_shape: tuple[float, float]
+
+    def __post_init__(self) -> None:
+        if len(self.logical_shape) != 2 or not all(
+            np.isfinite(value) for value in self.logical_shape
+        ):
+            raise ValueError("Granularity logical grids require two finite dimensions.")
+        object.__setattr__(
+            self, "logical_shape", tuple(float(value) for value in self.logical_shape)
+        )
+
+    @property
+    def array_shape(self) -> tuple[int, int]:
+        return tuple(max(0, int(np.ceil(value))) for value in self.logical_shape)
+
+    def subsampled(self, factor: float) -> "GranularitySamplingGrid":
+        return type(self)(tuple(value * float(factor) for value in self.logical_shape))
+
+    def coordinate_scales_from(
+        self, source: "GranularitySamplingGrid"
+    ) -> tuple[float, float]:
+        return tuple(
+            (source_size - 1.0) / (target_size - 1.0) if target_size > 1.0 else 0.0
+            for source_size, target_size in zip(
+                source.logical_shape, self.logical_shape, strict=True
+            )
+        )
+
+    def sample_pixels(
+        self, image: np.ndarray, *, coordinate_scales: tuple[float, float]
+    ) -> np.ndarray:
+        """Sample origin-scaled coordinates without materializing coordinate planes."""
+        image_array = np.asarray(image)
+        if image_array.ndim != 2:
+            raise ValueError("Granularity sampling requires a 2-D image.")
+        dtype = image_array.dtype.newbyteorder("=")
+        output = np.empty(self.array_shape, dtype=dtype)
+        if np.iscomplexobj(image_array):
+            output.real = self.sample_pixels(
+                image_array.real, coordinate_scales=coordinate_scales
+            )
+            output.imag = self.sample_pixels(
+                image_array.imag, coordinate_scales=coordinate_scales
+            )
+        else:
+            _sample_order_one_grid(
+                np.ascontiguousarray(image_array, dtype=dtype),
+                output,
+                float(coordinate_scales[0]),
+                float(coordinate_scales[1]),
+            )
+        return output
+
+    def sample_positions(
+        self,
+        image: np.ndarray,
+        source: "GranularitySamplingGrid",
+        rows: np.ndarray,
+        columns: np.ndarray,
+    ) -> np.ndarray:
+        """Sample supplied physical positions through the same logical grid policy."""
+        from scipy import ndimage as ndi
+
+        scales = self.coordinate_scales_from(source)
+        coordinates = (
+            np.asarray(rows, dtype=np.float64) * scales[0],
+            np.asarray(columns, dtype=np.float64) * scales[1],
+        )
+        return ndi.map_coordinates(image, coordinates, order=1)
+
+    def sample_grid(
+        self, image: np.ndarray, source: "GranularitySamplingGrid"
+    ) -> np.ndarray:
+        """Sample another logical grid with CP endpoint coordinate scales."""
+        return self.sample_pixels(
+            image, coordinate_scales=self.coordinate_scales_from(source)
         )
 
 
@@ -519,7 +510,7 @@ class GranularityImageSeries:
     """Background-corrected image and reconstruction series."""
 
     pixels: np.ndarray
-    new_shape: np.ndarray
+    grid: GranularitySamplingGrid
     reconstructions: tuple[np.ndarray, ...]
 
 
@@ -593,8 +584,10 @@ class GranularityBatchInvocation:
             return (
                 self.request.image,
                 ObjectGranularityMeasurementRows(
-                    np.empty(0, dtype=np.int32),
-                    np.empty((0, GRANULARITY_SPECTRUM_LENGTH), dtype=np.float64),
+                    object_ids=np.empty(0, dtype=np.int32),
+                    gs_values=np.empty(
+                        (0, self.settings.spectrum_length), dtype=np.float64
+                    ),
                 ),
             )
         gs_per_object = object_granularity_values(
@@ -607,7 +600,9 @@ class GranularityBatchInvocation:
         )
         return (
             self.request.image,
-            ObjectGranularityMeasurementRows(self.object_range, gs_per_object),
+            ObjectGranularityMeasurementRows(
+                object_ids=self.object_range, gs_values=gs_per_object
+            ),
         )
 
 
@@ -641,14 +636,13 @@ class GranularityImageSeriesRequest:
             int(self.element_radius),
             int(self.spectrum_length),
         )
-        with GRANULARITY_IMAGE_SERIES_CACHE_LOCK:
-            entry = GRANULARITY_IMAGE_SERIES_CACHE.get(key)
-            if entry is not None:
-                GRANULARITY_IMAGE_SERIES_CACHE.move_to_end(key)
-                self.log_profile("granularity_series_cache_hit", 0.0)
-                return entry
+        cache = GranularityImageSeriesCache.process_cache()
+        entry = cache.cached_value(key)
+        if entry is not None:
+            self.log_profile("granularity_series_cache_hit", 0.0)
+            return entry
         phase_started_at = time.perf_counter()
-        pixels, new_shape = background_corrected_pixels(
+        pixels, grid = background_corrected_pixels(
             image_array,
             self.subsample_size,
             self.background_subsample_size,
@@ -669,25 +663,25 @@ class GranularityImageSeriesRequest:
             reconstructions=len(reconstructions),
         )
         series = GranularityImageSeries(
-            pixels=pixels, new_shape=new_shape, reconstructions=reconstructions
+            pixels=pixels, grid=grid, reconstructions=reconstructions
         )
-        with GRANULARITY_IMAGE_SERIES_CACHE_LOCK:
-            GRANULARITY_IMAGE_SERIES_CACHE[key] = series
-            GRANULARITY_IMAGE_SERIES_CACHE.move_to_end(key)
-            while (
-                len(GRANULARITY_IMAGE_SERIES_CACHE)
-                > GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES
-            ):
-                GRANULARITY_IMAGE_SERIES_CACHE.popitem(last=False)
-        return series
+        return cache.store_value(key, series)
 
 
-GRANULARITY_IMAGE_SERIES_CACHE: dict[
-    tuple[str, tuple[int, ...], bytes, float, float, int, int],
-    GranularityImageSeries,
-] = OrderedDict()
-GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES = 16
-GRANULARITY_IMAGE_SERIES_CACHE_LOCK = Lock()
+@dataclass
+class GranularityImageSeriesCache(
+    SynchronizedBoundedCache[
+        tuple[str, tuple[int, ...], bytes, float, float, int, int],
+        GranularityImageSeries,
+    ],
+    RegisteredProcessLocalBoundedCache[
+        tuple[str, tuple[int, ...], bytes, float, float, int, int],
+        GranularityImageSeries,
+    ],
+):
+    """Process-local reconstructed spectra; calculation and keys stay numerical."""
+
+    max_entries: int = 16
 
 
 def granularity_array_content_key(
@@ -800,7 +794,7 @@ class NumbaGranularityReconstructionBackendStrategy(
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.NUMBA
-    is_default_backend = True
+    is_default_backend = False
 
     def prepare_backend(self) -> None:
         for dtype in (np.float32, np.float64):
@@ -855,6 +849,114 @@ class NumbaGranularityReconstructionBackendStrategy(
             reconstruction = _granularity_reconstruction_radius_one_numba_with_queue(
                 np.ascontiguousarray(ero),
                 pixels_array,
+                queue_rows,
+                queue_cols,
+                queued,
+            )
+            reconstruction_seconds += time.perf_counter() - phase_started_at
+            log_profile(
+                "granularity_reconstruction_iteration",
+                time.perf_counter() - phase_started_at,
+                function="measure_granularity_objects",
+                iteration=index + 1,
+                shape=tuple((int(value) for value in pixels_array.shape)),
+            )
+            reconstructions.append(reconstruction)
+        log_profile(
+            "granularity_reconstruction_erosion_total",
+            erosion_seconds,
+            function="measure_granularity_objects",
+            reconstructions=len(reconstructions),
+        )
+        log_profile(
+            "granularity_reconstruction_dilation_total",
+            reconstruction_seconds,
+            function="measure_granularity_objects",
+            reconstructions=len(reconstructions),
+        )
+        return tuple(reconstructions)
+
+
+class CppGranularityReconstructionBackendStrategy(
+    GranularityReconstructionBackendStrategy
+):
+    """Exact single-thread reconstruction backed by the C++ extension."""
+
+    backend_key = CellProfilerBackendAuthority.backend_key(
+        MemoryType.NUMPY,
+        CellProfilerBackendProvider.CPP,
+    )
+    memory_type = MemoryType.NUMPY
+    backend_provider = CellProfilerBackendProvider.CPP
+    is_default_backend = True
+
+    def reconstruct_radius_one(
+        self,
+        seed: np.ndarray,
+        mask: np.ndarray,
+    ) -> np.ndarray:
+        seed_array = np.asarray(seed)
+        mask_array = np.asarray(mask)
+        if seed_array.ndim != 2 or mask_array.ndim != 2:
+            raise ValueError("Granularity reconstruction requires 2-D arrays.")
+        if seed_array.shape != mask_array.shape:
+            raise ValueError(
+                "Granularity reconstruction seed and mask shapes must match, "
+                f"got {seed_array.shape!r} and {mask_array.shape!r}."
+            )
+        if seed_array.dtype != np.float32 or mask_array.dtype != np.float32:
+            return (
+                NumbaGranularityReconstructionBackendStrategy().reconstruct_radius_one(
+                    seed_array, mask_array
+                )
+            )
+        seed_array = np.ascontiguousarray(seed_array)
+        mask_array = np.ascontiguousarray(mask_array)
+        output = np.empty_like(seed_array)
+        capacity = seed_array.size
+        _reconstruct_f32(
+            seed_array,
+            mask_array,
+            output,
+            np.empty(capacity, dtype=np.uint32),
+            np.empty(capacity, dtype=np.uint32),
+            np.empty(capacity, dtype=np.uint8),
+        )
+        return output
+
+    def reconstruct_series(
+        self,
+        pixels: np.ndarray,
+        spectrum_length: int,
+    ) -> tuple[np.ndarray, ...]:
+        pixels_array = np.ascontiguousarray(np.asarray(pixels))
+        if pixels_array.ndim != 2:
+            raise ValueError("Granularity reconstruction requires 2-D arrays.")
+        if pixels_array.dtype != np.float32:
+            return NumbaGranularityReconstructionBackendStrategy().reconstruct_series(
+                pixels_array, spectrum_length
+            )
+        from skimage import morphology
+
+        ero = pixels_array.copy()
+        footprint = morphology.disk(1, dtype=np.uint8)
+        capacity = pixels_array.size
+        queue_rows = np.empty(capacity, dtype=np.uint32)
+        queue_cols = np.empty(capacity, dtype=np.uint32)
+        queued = np.empty(capacity, dtype=np.uint8)
+        reconstructions = []
+        erosion_seconds = 0.0
+        reconstruction_seconds = 0.0
+        for index in range(int(spectrum_length)):
+            phase_started_at = time.perf_counter()
+            ero = granularity_grey_erosion(ero, footprint)
+            erosion_seconds += time.perf_counter() - phase_started_at
+            phase_started_at = time.perf_counter()
+            reconstruction = np.empty_like(pixels_array)
+            _reconstruct_f32(
+                np.ascontiguousarray(ero),
+                pixels_array,
+                reconstruction,
                 queue_rows,
                 queue_cols,
                 queued,
@@ -1246,38 +1348,36 @@ def background_corrected_pixels(
     subsample_size: float,
     background_subsample_size: float,
     element_radius: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return CP-style background-subtracted granularity pixels."""
+) -> tuple[np.ndarray, GranularitySamplingGrid]:
+    """Return background-subtracted pixels and their owned CP sampling grid."""
     from skimage import morphology
 
     image = np.asarray(image)
-    orig_shape = image.shape
+    original_grid = GranularitySamplingGrid(tuple(image.shape))
     if subsample_size < 1:
-        new_shape = np.asarray(orig_shape, dtype=np.float64) * float(subsample_size)
-        pixels = resample_from_cp_grid(image, new_shape, 1.0 / float(subsample_size))
+        grid = original_grid.subsampled(subsample_size)
+        scale = 1.0 / float(subsample_size)
+        pixels = grid.sample_pixels(image, coordinate_scales=(scale, scale))
     else:
         pixels = image.copy()
-        new_shape = np.asarray(orig_shape, dtype=np.float64)
+        grid = original_grid
     if background_subsample_size < 1:
-        back_shape = new_shape * float(background_subsample_size)
-        back_pixels = resample_from_cp_grid(
-            pixels, back_shape, 1.0 / float(background_subsample_size)
+        background_grid = grid.subsampled(background_subsample_size)
+        scale = 1.0 / float(background_subsample_size)
+        back_pixels = background_grid.sample_pixels(
+            pixels, coordinate_scales=(scale, scale)
         )
     else:
         back_pixels = pixels.copy()
-        back_shape = new_shape
+        background_grid = grid
     footprint = morphology.disk(int(element_radius), dtype=np.uint8)
-    back_pixels_mask = np.zeros_like(back_pixels)
-    back_pixels_mask[...] = back_pixels
-    back_pixels = granularity_grey_erosion(back_pixels_mask, footprint)
-    back_pixels_mask = np.zeros_like(back_pixels)
-    back_pixels_mask[...] = back_pixels
-    back_pixels = granularity_grey_dilation(back_pixels_mask, footprint)
+    back_pixels = granularity_grey_erosion(back_pixels, footprint)
+    back_pixels = granularity_grey_dilation(back_pixels, footprint)
     if background_subsample_size < 1:
-        back_pixels = resample_between_cp_grids(back_pixels, back_shape, new_shape)
+        back_pixels = grid.sample_grid(back_pixels, background_grid)
     pixels = pixels - back_pixels
     pixels[pixels < 0] = 0
-    return (pixels, new_shape)
+    return pixels, grid
 
 
 def granularity_grey_erosion(image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
@@ -1302,6 +1402,7 @@ def granularity_grey_dilation(image: np.ndarray, footprint: np.ndarray) -> np.nd
 class GranularityLabelPixels:
     """Foreground label pixels used to compute object granularity means."""
 
+    grid: GranularitySamplingGrid
     object_ids: np.ndarray
     flat_offsets: np.ndarray
     row_offsets: np.ndarray
@@ -1317,9 +1418,10 @@ class GranularityLabelPixels:
     ) -> "GranularityLabelPixels":
         label_array = np.asarray(labels, dtype=np.int32)
         object_ids = np.asarray(object_ids, dtype=np.int32)
+        grid = GranularitySamplingGrid(tuple(label_array.shape))
         if object_ids.size == 0:
             empty = np.empty(0, dtype=np.int64)
-            return cls(object_ids, empty, empty, empty, empty, empty)
+            return cls(grid, object_ids, empty, empty, empty, empty, empty)
         label_to_index = np.full(int(object_ids.max()) + 1, -1, dtype=np.int64)
         label_to_index[object_ids] = np.arange(object_ids.size, dtype=np.int64)
         flat_labels = label_array.ravel()
@@ -1342,6 +1444,7 @@ class GranularityLabelPixels:
             minlength=int(object_ids.size),
         ).astype(np.float64, copy=False)
         return cls(
+            grid=grid,
             object_ids=object_ids,
             flat_offsets=flat_offsets,
             row_offsets=row_offsets,
@@ -1362,11 +1465,10 @@ class GranularityLabelPixels:
     def means_from_resampled_image(
         self,
         image: np.ndarray,
-        logical_shape: np.ndarray,
-        original_shape: tuple[int, int],
+        source_grid: GranularitySamplingGrid,
     ) -> np.ndarray:
         """Return per-object means after CP coordinate-grid resampling."""
-        sampled_values = self.resampled_values(image, logical_shape, original_shape)
+        sampled_values = self.resampled_values(image, source_grid)
         return _granularity_label_values_means(
             sampled_values,
             self.object_indexes,
@@ -1376,24 +1478,11 @@ class GranularityLabelPixels:
     def resampled_values(
         self,
         image: np.ndarray,
-        logical_shape: np.ndarray,
-        original_shape: tuple[int, int],
+        source_grid: GranularitySamplingGrid,
     ) -> np.ndarray:
-        from scipy import ndimage as ndi
-
-        row_coords = self.row_offsets.astype(np.float64)
-        column_coords = self.column_offsets.astype(np.float64)
-        row_coords *= (
-            float(logical_shape[0] - 1) / float(original_shape[0] - 1)
-            if original_shape[0] > 1
-            else 0.0
+        return self.grid.sample_positions(
+            image, source_grid, self.row_offsets, self.column_offsets
         )
-        column_coords *= (
-            float(logical_shape[1] - 1) / float(original_shape[1] - 1)
-            if original_shape[1] > 1
-            else 0.0
-        )
-        return ndi.map_coordinates(image, (row_coords, column_coords), order=1)
 
 
 @njit(cache=True)
@@ -1453,19 +1542,16 @@ def object_granularity_values(
             "and one same-shaped 2-D object-label plane; got "
             f"image shape {image.shape!r} and labels shape {labels.shape!r}."
         )
-    orig_shape = image.shape
-    new_shape = series.new_shape
     label_pixels = GranularityLabelPixels.from_labels(labels, object_range)
     current_means = label_pixels.means_from_image(image)
     start_means = np.maximum(current_means, np.finfo(float).eps)
-    gs_per_object = np.zeros((int(object_range.size), 16))
+    gs_per_object = np.zeros((int(object_range.size), int(spectrum_length)))
     for gs_idx, rec in enumerate(series.reconstructions[: int(spectrum_length)]):
         prev_means = current_means.copy()
         if subsample_size < 1:
             new_means = label_pixels.means_from_resampled_image(
                 rec,
-                new_shape,
-                orig_shape,
+                series.grid,
             )
         else:
             new_means = label_pixels.means_from_image(rec)
@@ -1475,70 +1561,6 @@ def object_granularity_values(
     return gs_per_object
 
 
-def resample_to_original_shape_cp(
-    image: np.ndarray,
-    logical_shape: np.ndarray,
-    original_shape: tuple[int, int],
-) -> np.ndarray:
-    """Restore a CP-resampled image to the original grid."""
-    from scipy import ndimage as ndi
-
-    row_coords, col_coords = np.mgrid[
-        0 : original_shape[0], 0 : original_shape[1]
-    ].astype(float)
-    row_coords *= (
-        float(logical_shape[0] - 1) / float(original_shape[0] - 1)
-        if original_shape[0] > 1
-        else 0.0
-    )
-    col_coords *= (
-        float(logical_shape[1] - 1) / float(original_shape[1] - 1)
-        if original_shape[1] > 1
-        else 0.0
-    )
-    return ndi.map_coordinates(image, (row_coords, col_coords), order=1)
-
-
-def resample_from_cp_grid(
-    image: np.ndarray,
-    logical_shape: np.ndarray,
-    coordinate_scale: float,
-) -> np.ndarray:
-    """Sample an image with CellProfiler's ``numpy.mgrid`` coordinate grid."""
-    from scipy import ndimage as ndi
-
-    row_coords, col_coords = np.mgrid[
-        0 : logical_shape[0], 0 : logical_shape[1]
-    ].astype(float)
-    row_coords *= float(coordinate_scale)
-    col_coords *= float(coordinate_scale)
-    return ndi.map_coordinates(image, (row_coords, col_coords), order=1)
-
-
-def resample_between_cp_grids(
-    image: np.ndarray,
-    source_logical_shape: np.ndarray,
-    target_logical_shape: np.ndarray,
-) -> np.ndarray:
-    """Sample one CP logical grid onto another CP logical grid."""
-    from scipy import ndimage as ndi
-
-    row_coords, col_coords = np.mgrid[
-        0 : target_logical_shape[0], 0 : target_logical_shape[1]
-    ].astype(float)
-    row_coords *= (
-        float(source_logical_shape[0] - 1) / float(target_logical_shape[0] - 1)
-        if target_logical_shape[0] > 1
-        else 0.0
-    )
-    col_coords *= (
-        float(source_logical_shape[1] - 1) / float(target_logical_shape[1] - 1)
-        if target_logical_shape[1] > 1
-        else 0.0
-    )
-    return ndi.map_coordinates(image, (row_coords, col_coords), order=1)
-
-
 @numpy(contract=ProcessingContract.PURE_2D)
 def measure_granularity(
     image: np.ndarray,
@@ -1546,7 +1568,7 @@ def measure_granularity(
     background_subsample_size: float = 0.25,
     element_radius: int = 10,
     spectrum_length: int = 16,
-) -> tuple[np.ndarray, DataclassMeasurementColumnarRows]:
+) -> tuple[np.ndarray, ImageGranularityMeasurementRows]:
     """Measure granularity spectrum of an image."""
     series = GranularityImageSeriesRequest(
         image=image,
@@ -1567,10 +1589,7 @@ def measure_granularity(
         gs_values.append(gs)
     return (
         image,
-        DataclassMeasurementColumnarRows(
-            (_granularity_measurement(gs_values),),
-            row_type=GranularityMeasurement,
-        ),
+        ImageGranularityMeasurementRows(gs_values=np.asarray(gs_values).reshape(1, -1)),
     )
 
 
@@ -1596,8 +1615,8 @@ def measure_granularity_objects(
         return (
             image,
             ObjectGranularityMeasurementRows(
-                np.empty(0, dtype=np.int32),
-                np.empty((0, GRANULARITY_SPECTRUM_LENGTH), dtype=np.float64),
+                object_ids=np.empty(0, dtype=np.int32),
+                gs_values=np.empty((0, spectrum_length), dtype=np.float64),
             ),
         )
     series = GranularityImageSeriesRequest(
@@ -1616,7 +1635,12 @@ def measure_granularity_objects(
         subsample_size=subsample_size,
         spectrum_length=spectrum_length,
     )
-    return (image, ObjectGranularityMeasurementRows(object_range, gs_per_object))
+    return (
+        image,
+        ObjectGranularityMeasurementRows(
+            object_ids=object_range, gs_values=gs_per_object
+        ),
+    )
 
 
 def measure_granularity_objects_batch(
@@ -1703,15 +1727,15 @@ def _prepare_granularity_backend() -> None:
 
 
 __all__ = [
-    "GRANULARITY_IMAGE_SERIES_CACHE",
-    "GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES",
+    "GranularityImageSeriesCache",
     "GRANULARITY_SPECTRUM_LENGTH",
+    "GranularitySamplingGrid",
     "GranularityImageSeries",
     "GranularityImageSeriesRequest",
-    "GranularityMeasurement",
+    "GranularitySpectrumMeasurementRows",
+    "ImageGranularityMeasurementRows",
     "GranularitySpectrumDescriptor",
     "GranularitySpectrumDescriptorDeclaration",
-    "ObjectGranularityMeasurement",
     "ObjectGranularityMeasurementRows",
     "OpenCVGranularityReconstructionBackendStrategy",
     "background_corrected_pixels",

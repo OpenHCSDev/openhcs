@@ -176,12 +176,14 @@ def _stored_measurements_record(
         ),
     )
     return StoredRuntimeValue(
-        value,
-        RuntimeArtifactLocation(
-            path=f"results/{axis_id}_Measurements_step1.csv",
-            backend="disk",
-        ),
-    )
+               key=value.key,
+               data=value.data,
+               materialization_source_metadata=value.materialization_source_metadata,
+               location=RuntimeArtifactLocation(
+                   path=f"results/{axis_id}_Measurements_step1.csv",
+                   backend="disk",
+               ),
+           )
 
 
 def _table_export_expectation() -> RuntimeExportExpectation:

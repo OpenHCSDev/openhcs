@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -21,7 +23,9 @@ from openhcs.core.artifacts import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    InputImageSetContextSourceRelation,
     InputGroupLineageSourceRelation,
+    InputObjectMeasurementSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
@@ -47,7 +51,6 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
     artifact_producers_for_outputs,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
@@ -157,7 +160,6 @@ def _compiler_contracts(
         ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
         resolved_steps: list[FunctionStep] = []
         step_states: dict[int, ObjectState] = {}
-        snapshots: list[StepSnapshot] = []
         for index, step in enumerate(steps):
             step_state = ObjectState(
                 step,
@@ -169,13 +171,6 @@ def _compiler_contracts(
             assert isinstance(resolved_step, FunctionStep)
             resolved_steps.append(resolved_step)
             step_states[index] = step_state
-            snapshots.append(
-                StepSnapshot(
-                    index=index,
-                    scope_id=step_state.scope_id,
-                    step=resolved_step,
-                )
-            )
 
         context = ProcessingContext(
             step_plans={
@@ -191,31 +186,33 @@ def _compiler_contracts(
         )
         session = CompilationSession.from_context(
             context=context,
-            steps=resolved_steps,
             orchestrator=SimpleNamespace(
                 pipeline_config=pipeline_state.to_object(),
             ),
             global_config=global_config,
-            step_state_map=step_states,
-            snapshots=tuple(snapshots),
+            pipeline=ResolvedPipelineDefinition(
+                steps=resolved_steps,
+                step_scope_ids={
+                    index: state.scope_id for index, state in step_states.items()
+                },
+                step_provenance={index: {} for index, state in step_states.items()},
+            ),
         )
-        provider = PipelineInvocationContractProviderAuthority.provider_for_session(
-            session,
+        provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
+            session.pipeline,
         )
         contracts: list[CallableContract] = []
-        for snapshot in snapshots:
-            invocations = tuple(
-                normalize_function_pattern(snapshot.step.func).iter_items()
-            )
+        for index, snapshot in enumerate(resolved_steps):
+            invocations = tuple(normalize_function_pattern(snapshot.func).iter_items())
             assert len(invocations) == 1
             plan = provider(
                 invocations[0],
                 ArtifactDeclarationStepContext(
-                    step_name=snapshot.step.name,
-                    step_index=snapshot.index,
-                    source_bindings=snapshot.step.source_bindings,
-                    group_by=snapshot.step.processing_config.group_by,
-                    input_source=snapshot.step.processing_config.input_source,
+                    step_name=snapshot.name,
+                    step_index=index,
+                    source_bindings=snapshot.source_bindings,
+                    group_by=snapshot.processing_config.group_by,
+                    input_source=snapshot.processing_config.input_source,
                 ),
             )
             assert plan is not None
@@ -444,6 +441,59 @@ def test_measurement_output_separates_provenance_from_invocation_group_scope() -
     assert output.source_stack_scope_sources() == ()
 
 
+def test_object_measurement_context_uses_only_selected_image_inputs() -> None:
+    available = ArtifactSpecCollection(
+        (
+            ArtifactSpec.output("DNA", ImageArtifactType),
+            ArtifactSpec.output("Actin", ImageArtifactType),
+            ArtifactSpec.output("Unselected", ImageArtifactType),
+            ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType),
+            ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+        )
+    )
+    contract = _callable_contract(
+        _module(
+            3,
+            "MeasureObjectIntensity",
+            {
+                "Select images to measure": "DNA,Actin",
+                "Select objects to measure": "Nuclei,Cells",
+            },
+        ),
+        step_index=2,
+        available_artifacts=available,
+        main_flow_artifacts=ArtifactSpecCollection(()),
+    )
+    images = contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+    objects = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert tuple(spec.name for spec in images) == ("DNA", "Actin")
+    assert tuple(spec.name for spec in objects) == ("Nuclei", "Cells")
+    for spec in objects:
+        assert spec.source_context_sources() == tuple(image.ref() for image in images)
+        assert spec.relations == tuple(
+            InputImageSetContextSourceRelation(image.ref()) for image in images
+        )
+        assert spec.group_scope_sources() == ()
+        assert spec.source_stack_scope_sources() == ()
+        assert spec.stack_broadcast_sources() == ()
+
+
+def test_object_only_measurement_does_not_inherit_visible_image_context() -> None:
+    contract = _callable_contract(
+        _module(3, "MeasureObjectSizeShape", {"Select objects to measure": "Cells"}),
+        step_index=2,
+        available_artifacts=ArtifactSpecCollection(
+            (
+                ArtifactSpec.input("DNA", ImageArtifactType),
+                ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+            )
+        ),
+        main_flow_artifacts=ArtifactSpecCollection(()),
+    )
+    (objects,) = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert objects.source_context_sources() == ()
+
+
 def test_prior_measurement_selects_its_declared_producer_group_scope() -> None:
     green = ArtifactSpec.input("OrigGreen", ImageArtifactType)
     blue = ArtifactSpec.input("OrigBlue", ImageArtifactType)
@@ -514,8 +564,73 @@ def test_prior_measurement_selects_its_declared_producer_group_scope() -> None:
         MeasurementsArtifactType,
     )
     assert measurement_input.relations == (
+        InputObjectMeasurementSourceRelation(
+            ArtifactSpec.input(nuclei.name, ObjectLabelsArtifactType).ref()
+        ),
         InputGroupLineageSourceRelation(green.ref()),
     )
+
+
+def test_calculate_math_retains_measurement_subjects_across_producer_channels() -> None:
+    from openhcs.core.artifacts import ArtifactInputProjectionPlan
+    from openhcs.core.component_group_scope import ComponentGroupScope
+
+    image = ArtifactSpec.input("CorrProtein", ImageArtifactType)
+    objects = tuple(
+        ArtifactSpec.output(name, ObjectLabelsArtifactType)
+        for name in ("Nuclei", "Cells")
+    )
+    measurements = ArtifactSpec.output(
+        "intensity",
+        MeasurementsArtifactType,
+        measurement_feature_owner=MeasureObjectIntensityModule,
+        relations=(
+            GroupLineageSourceRelation(image.ref()),
+            *(
+                ObjectMeasurementSubjectRelation(
+                    spec.for_plan_type(ArtifactInputPlan).ref()
+                )
+                for spec in objects
+            ),
+        ),
+    )
+    contract = _callable_contract(
+        _module(8, "CalculateMath", {
+            "Name the output measurement": "Ratio",
+            "Operation": "Divide",
+            "Select the numerator objects": "Nuclei",
+            "Select the numerator measurement": "Intensity_MeanIntensity_CorrProtein",
+            "Select the denominator objects": "Cells",
+            "Select the denominator measurement": "Intensity_MeanIntensity_CorrProtein",
+        }),
+        step_index=7,
+        available_artifacts=ArtifactSpecCollection((image, *objects, measurements)),
+        main_flow_artifacts=ArtifactSpecCollection((image,)),
+        available_artifact_producers=artifact_producers_for_outputs(
+            (measurements,),
+            groups=("2", "1"),
+            invocation_keys=(FunctionInvocationKey(
+                "measure_object_intensity", DEFAULT_GROUP_KEY, 0
+            ),),
+        ),
+    )
+    (measurement_input,) = contract.artifact_inputs.of_artifact_type(
+        MeasurementsArtifactType
+    )
+    assert tuple(
+        relation.source.name for relation in measurement_input.relations
+        if isinstance(relation, InputObjectMeasurementSourceRelation)
+    ) == ("Nuclei", "Cells")
+    storage = ArtifactInputPlan(
+        name=measurements.name,
+        path="/memory/intensity.pkl",
+        artifact_type=MeasurementsArtifactType,
+        group_keys=("2", "1"),
+        group_component=AllComponents.CHANNEL,
+    )
+    assert ArtifactInputProjectionPlan.declared_producer_selection_scope(
+        measurement_input, storage
+    ) == ComponentGroupScope.from_raw(("2", "1"), component=AllComponents.CHANNEL)
 
 
 def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:
@@ -564,20 +679,29 @@ def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:
     assert identify_contract.artifact_outputs.names_of_artifact_type(
         ObjectLabelsArtifactType
     ) == ("Nuclei",)
+    from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
+        PrimaryObjectDiagnosticPlanes,
+    )
+
+    identify_objects = (
+        identify_contract.artifact_outputs.require_by_name_and_artifact_type(
+            "Nuclei", ObjectLabelsArtifactType
+        )
+    )
     assert identify_contract.artifact_outputs.names() == (
         "IdentifyPrimaryObjects_1_measurements",
         "Nuclei",
+        *(
+            spec.name
+            for spec in PrimaryObjectDiagnosticPlanes.artifact_specs(
+                source_image=source_image, objects=identify_objects
+            )
+        ),
     )
     identify_measurement = (
         identify_contract.artifact_outputs.require_by_name_and_artifact_type(
             "IdentifyPrimaryObjects_1_measurements",
             MeasurementsArtifactType,
-        )
-    )
-    identify_objects = (
-        identify_contract.artifact_outputs.require_by_name_and_artifact_type(
-            "Nuclei",
-            ObjectLabelsArtifactType,
         )
     )
     source_ref = ArtifactSpec.input("OrigBlue", ImageArtifactType).ref()
@@ -1315,6 +1439,9 @@ def test_object_output_lineage_uses_unique_object_input_among_other_artifacts() 
         main_flow_artifacts=ArtifactSpecCollection(()),
     )
 
+    assert tuple(spec.ref() for spec in contract.invocation_domain_inputs) == (
+        guides.ref(),
+    )
     (output,) = contract.artifact_outputs.of_artifact_type(ObjectLabelsArtifactType)
     assert output.relations == (SourceStackLineageSourceRelation(source=guides.ref()),)
     (measurements,) = contract.artifact_outputs.of_artifact_type(
@@ -1550,6 +1677,9 @@ def test_unguided_grid_output_uses_current_main_flow_image_lineage() -> None:
     assert tuple(spec.ref() for spec in contract.artifact_inputs) == (
         current_image.ref(),
         grid.ref().for_plan_type(ArtifactInputPlan),
+    )
+    assert tuple(spec.ref() for spec in contract.invocation_domain_inputs) == (
+        current_image.ref(),
     )
     (output,) = contract.artifact_outputs.of_artifact_type(ObjectLabelsArtifactType)
     assert output.relations == (

@@ -67,6 +67,54 @@ def test_source_provenance_preserves_plane_positions_before_axis_deduplication()
     assert axis == (plane_identities[0],)
 
 
+def test_plane_coordinate_reads_preserve_runtime_scope_and_scalar_fallback() -> None:
+    provenance = SourceImageProvenance(
+        source_path="/input/fallback.tif",
+        source_component_metadata={
+            "well": "A01", "site": "99", "channel": "9", "timepoint": "3",
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes((
+            SourceImageProvenanceContributor(
+                SourceImageIdentity(component_metadata={"site": "88"}),
+                source_image_name="Ancestor",
+            ),
+            RuntimeSourceImageProvenancePlane(
+                SourceImageIdentity(component_metadata={"site": "1", "channel": "1"}),
+                contributors=(SourceImageProvenanceContributor(
+                    SourceImageIdentity(component_metadata={"site": "77"}),
+                    source_image_name="DNA",
+                ),),
+            ),
+            RuntimeSourceImageProvenancePlane(
+                SourceImageIdentity(component_metadata={"site": "2", "channel": "2"}),
+            ),
+        )),
+    )
+    assert dict(provenance.component_metadata_for_plane(0)) == {
+        "well": "A01", "site": "1", "channel": "1", "timepoint": "3",
+    }
+    assert provenance.varying_plane_component_values(tuple(AllComponents)) == {
+        "site": ("1", "2"), "channel": ("1", "2"),
+    }
+    assert provenance.require_common_component_values(
+        (AllComponents.WELL, AllComponents.TIMEPOINT)
+    ) == ((AllComponents.WELL, "A01"), (AllComponents.TIMEPOINT, "3"))
+    with pytest.raises(ValueError, match="'site' is not fixed"):
+        provenance.require_common_component_values((AllComponents.SITE,))
+    identities = provenance.image_set_plane_identities(
+        SourceImageSetIdentityPolicy(frozenset((AllComponents.CHANNEL,)))
+    )
+    assert len(identities) == 2
+    assert tuple(next(iter(value)).components for value in identities) == (
+        (("site", "1"), ("timepoint", "3"), ("well", "A01")),
+        (("site", "2"), ("timepoint", "3"), ("well", "A01")),
+    )
+    provenance.source_identity.component_metadata = {"well": "B02", "timepoint": "4"}
+    assert provenance.require_common_component_values(
+        (AllComponents.WELL, AllComponents.TIMEPOINT)
+    ) == ((AllComponents.WELL, "B02"), (AllComponents.TIMEPOINT, "4"))
+
+
 def test_source_provenance_axis_retains_distinct_image_sets() -> None:
     provenance = SourceImageProvenance(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -320,3 +368,35 @@ def test_declared_source_projection_validates_runtime_plane_cardinality() -> Non
             payload,
             "OrigER",
         )
+
+
+def test_removed_runtime_axis_retains_distinct_current_named_sources() -> None:
+    original = SourceImageIdentity("/site1.tif", {"site": "1"})
+    repeated = SourceImageIdentity("/previous.tif", {"site": "1"})
+    repeated.path = original.path
+    distinct = SourceImageIdentity("/site2.tif", {"site": "2"})
+    planes = SourceImageProvenancePlanes(
+        (
+            RuntimeSourceImageProvenancePlane(original, source_image_name="DNA"),
+            RuntimeSourceImageProvenancePlane(repeated, source_image_name="DNA"),
+            RuntimeSourceImageProvenancePlane(distinct, source_image_name="DNA"),
+            RuntimeSourceImageProvenancePlane(original, source_image_name="RNA"),
+        )
+    )
+    contributors = planes.as_contributors()
+    assert tuple(plane.path for plane in contributors.planes) == (
+        "/site1.tif", "/site2.tif", "/site1.tif"
+    )
+    provenance = SourceImageProvenance.stack(
+        (SourceImageProvenance(source_image_provenance_planes=contributors),)
+    )
+    with pytest.raises(ValueError, match="exactly one identity.*found 2"):
+        provenance.for_source_image("DNA")
+    assert provenance.for_source_image("RNA").source_image_provenance_planes.paths == (
+        "/site1.tif",
+    )
+
+    repeated.component_metadata = {"site": "changed"}
+    assert planes.as_contributors().contributor_count == 4
+    unknown = RuntimeSourceImageProvenancePlane(source_image_name="Unknown")
+    assert SourceImageProvenancePlanes((unknown, unknown)).as_contributors().contributor_count == 2

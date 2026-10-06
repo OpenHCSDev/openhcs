@@ -18,26 +18,7 @@ array support.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 2. Separate UI, execution and viewer processes
-
-![Task coordination and selected-output streaming across process boundaries.](../figures/slas/process_architecture.png){width=5.3in}
-
-The illustrated deployment uses multiple processes. The UI process hosts the
-editors and MCP bridge and submits requests to a separate ZMQ execution server.
-The server prepares the function catalog, compiles workflows and coordinates
-execution. Worker processes execute prepared tasks on compatible CPU/GPU array
-backends and retain the named results produced during execution. Progress returns
-through the server to the UI. Workers read image sources, save configured
-outputs and stream selected images and ROIs to separate napari or Fiji processes.
-Each viewer owns its interactive display. Arrows distinguish task/status traffic
-(blue) from image/result flow (green). Worker and viewer counts are configurable;
-single-worker inline and threaded execution are also supported.
-
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-## Supplementary Figure 3. Compiler preparation
+## Supplementary Figure 2. Compiler preparation
 
 ![From an editable workflow to prepared execution.](../figures/slas/compiler_preparation.png){width=5.3in}
 
@@ -55,7 +36,7 @@ run during execution.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 4. Connected outputs support saving and inspection
+## Supplementary Figure 3. Connected outputs support saving and inspection
 
 ![Named results link saved images, object outlines, measurements and viewer selection.](../figures/slas/outputs_and_inspection.png){width=5.3in}
 
@@ -72,7 +53,7 @@ saved measurements, while native feature rows support viewer selection.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 5. Custom functions enter the shared workflow
+## Supplementary Figure 4. Custom functions enter the shared workflow
 
 ![A registered Python function appears in the editor with matching controls and catalog parameters.](../figures/slas/custom_function_extension.png){width=5.3in}
 
@@ -87,7 +68,7 @@ the complete source and captures accompany the figure.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 6. Historical single-sample timing observations
+## Supplementary Figure 5. Historical single-sample timing observations
 
 ![Native command and prepared execution timings with different boundaries.](../figures/slas/figure2_historical_timings.png){width=6in}
 
@@ -105,7 +86,7 @@ Supplementary Data 1.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 7. Held-out results from prospectively authored workflows
+## Supplementary Figure 6. Held-out results from prospectively authored workflows
 
 ![Held-out segmentation, boundary and translocation results from three public assays.](../figures/slas/independent_agent_validation.png){width=6in}
 
@@ -124,16 +105,170 @@ manual segmentation truth.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 8. Per-workflow throughput and memory measurements
+## Supplementary Figure 7. Per-workflow throughput and memory measurements
 
-![Per-workflow measurements underlying Figure 5.](../figures/slas/figure2_benchmarks_by_workflow.png){width=6in}
+![Historical per-workflow throughput and memory measurements.](../figures/slas/figure2_benchmarks_by_workflow.png){width=6in}
 
 The rows are the 30 imported CellProfiler workflows, ordered by median measured
 throughput. \(A) Completed repeated-image assignments per execution second for
 two, three and four workers, with four assignments queued per worker. The color
 scale is logarithmic. \(B) Peak process-tree RAM for one, two, three, four, six
-and eight assignments per worker with four workers. Figure 5 summarizes these
-same observations with individual points, interquartile ranges and medians.
+and eight assignments per worker with four workers. These panels retain the individual historical observations.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 8. Bright-object separation
+
+![Matched assay evidence.](../figures/slas/h001_assay_review.png){width=6in}
+
+The scored autonomous result repairs an elongated-body split. Whole-image object F1 increases from 0.929 to 0.944 against the notebook-derived computational reference, which is not manual biological annotation. Raw windows are 8–152 and 8–248, gamma 1. Native captures retain their original crop, presentation and scientific pixels. Source identities and pipelines are linked in Supplementary Data 8.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 9. Volumetric localisation and body separation
+
+![Matched assay evidence.](../figures/slas/h002_assay_review.png){width=6in}
+
+Upper: raw, initial labels, repaired labels and combined view at Z index 36. Local seed suppression removes an internal body split while retaining its neighbour. Lower: native XY, XZ and YZ body-centre views from a separate autonomous author. Postfreeze matching of the upper-row run recovers all 15 manual centres within 20 voxels; annotation coverage is not exhaustive. Lobed-body identity and complete volume boundaries remain uncertain. Native captures retain their original crop, presentation and scientific pixels. Source identities and pipelines are linked in Supplementary Data 8.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 10. Retinal soma localisation
+
+![Matched assay evidence.](../figures/slas/retina_assay_review.png){width=6in}
+
+Upper: matched raw, initial and repaired outlines at neighbouring bodies and the acquisition border. Lower: raw and candidate support from assisted development. Useful soma localisation is possible despite acquisition noise; faint profiles and crowded boundaries remain uncertain. Original windows are 0–42 and 0–55, gamma 1. The independent autonomous and assisted examples are not a single continuous trial or manual-count accuracy assessment. Native captures retain their original crop, presentation and scientific pixels. Source identities and pipelines are linked in Supplementary Data 8.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 11. Paired nuclear and cell-body analysis
+
+![Matched assay evidence.](../figures/slas/h003_assay_review.png){width=6in}
+
+Upper: matched DNA, actin, seeded territories and combined outlines following autonomous nuclear repair. Lower: separate nuclear and body-support triplets, with an unsupported seed-only candidate as a negative witness. These are independent authors. Nuclear separation and supported cell-body extent are distinct decisions. Original windows are 0–255/0–60 (upper) and 0–151/0–104 (lower), gamma 1. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0. Native captures retain their original crop, presentation and scientific pixels. Source identities and pipelines are linked in Supplementary Data 8.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 12. Neurite main-shaft recovery
+
+![Matched assay evidence.](../figures/slas/h004_assay_review.png){width=6in}
+
+Upper: matched process-channel raw image and the initial autonomous shaft-focused result. Raw window 0–12, gamma 1, exposes processes by saturating bright somata. Lower: an independent autonomous author recovers strong raw-supported junction support while retaining a quiet negative control; raw window 0–80, gamma 1. Main-shaft recovery is sufficient for the demonstrated outgrowth analysis. Later revisions adding uncertain fine twigs are not used as the representative result. Faint protrusions and neuron-specific crossing ownership remain limitations; neither row is a ground-truth accuracy comparison. Native captures retain their original crop, presentation and scientific pixels. Source identities and pipelines are linked in Supplementary Data 8.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 13. A familiar CellProfiler pipeline expressed as OpenHCS steps
+
+![CellProfiler modules, imported function steps and named-object relationships.](../figures/slas/cellprofiler_translation.png){width=5.3in}
+
+\(A) The public ExampleCometAssay pipeline maps image loading to source bindings and processing to 12 function steps. Rows align original modules and imported functions; multiplicity marks repeated calls. Spreadsheet export runs plate-wide. (B) MeasureObjectSizeShape applies the same function to Comet, CometHead and CometTail within one step. (C) Masking the comet with its head, with inversion enabled, defines CometTail. The diagram is derived from the source pipeline and importer; function identities, parameters and counts are checked against its retained mapping.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 14. Image and object inspection in Fiji and napari
+
+![Recorded image and ROI inspection in two viewers.](../figures/slas/inspectable_results.png){width=5.5in}
+
+\(A) Fiji displays a single NeuronCyto II field 1 nuclear plane with nine corresponding native ROI Manager entries. (B) A separate three-plane napari demonstration shows segmented objects, a selected ROI-list entry and the displayed channel/Z coordinates. Its accompanying recording shows selection navigating between planes. These are retained viewer demonstrations, separate from the unattended analysis in Figure 3; their segmentation outputs are not compared with each other. Details enlarge the ROI entries and a nuclear outline in A, and the selected object, highlighted list entry and coordinates in B. The full captures and checksum records are retained in the gallery archive.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 15. Independent BBBC039 authors on the same 200 fields
+
+![Paired field F1 and pooled precision, recall and F1 for two independent authors.](../figures/slas/bbbc039_independent_repeat.png){width=6in}
+
+\(A) Each point compares final object F1 on the same field for the earlier
+author and an independent repeat. The dashed line marks equal scores. All
+200 fields are included: blue points are annotated fields, and the three orange
+annotation-empty fields coincide at the origin. (B) Pooled precision, recall
+and F1 against the same 23,615 reference
+instances, using intersection over union at least 0.5. The repeat matched
+20,207 objects with 1,164 excess predictions and 3,408 misses; the earlier
+author matched 20,521 with 1,153 excess predictions and 3,094 misses.
+The repeat's F1 was 0.898 versus 0.906 earlier. Its field F1 reached at least
+0.90 in 133 fields, while eleven remained below 0.80. Each author used its own
+method and settings; this is not a controlled test of a skill change, a paired
+first/final repair, or unseen-image generalization. Reference answers were used
+only for postfreeze scoring and were not supplied to either author. Exact
+field scores, reference hashes and original lifecycle records are retained in
+the [repeat evaluation](../../figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json)
+and Supplementary Data 8.
+
+
+## Supplementary Figure 16. Matched single-core amortization
+
+![Execution, total and nonexecution time per assignment at actual single-core workload sizes.](../figures/slas/matched_postexport_20261006/single-core-amortization/measured_single_core_amortization.png){width=6in}
+
+The three selected workflows retain the prior single-sample execution frontier
+(Vitra), total-time frontier (illumination correction Example 3) and representative
+3D monolayer workflow. Each engine used one worker and one numerical thread.
+Points are actual medians over three measured repetitions after warmup at 1, 9
+and 16 repeated assignments of one biological source sample. Connecting lines
+join observations; they do not predict other assignment counts. Nonexecution
+is the difference between the declared total and execution clocks. OpenHCS total
+includes compilation and client coordination; native total excludes one-time
+pipeline loading and JVM initialization. Endpoint, library and kernel readiness
+and post-run scientific comparison are outside both clocks. All observations
+passed the declared-output comparisons on source revision `56c3da776`.
+
+## Supplementary Figure 17. Matched workload comparisons across worker counts
+
+![Nine assignments: execution on one and three workers.](../figures/slas/matched_postexport_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
+
+![Nine assignments: total on one and three workers.](../figures/slas/matched_postexport_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
+
+![Sixteen assignments: execution on one and four workers.](../figures/slas/matched_postexport_20261006/matched-sixteen-execution/measured_execution_seconds.png){width=6in}
+
+![Sixteen assignments: total on one and four workers.](../figures/slas/matched_postexport_20261006/matched-sixteen-total/measured_total_seconds.png){width=6in}
+
+The same three-workflow cohort and source revision as Supplementary Figure 16
+are used. Each condition completed warmup and three measured repetitions with
+no declared-output differences. Native parallel durations are actual simultaneous
+shard makespans, validated against a complete serial batch; they are not estimated
+from separate runs. OpenHCS execution includes the complete server job and plate
+exports. The Average category is an arithmetic summary of workflow bars.
+
+For the same assignment count, execution efficiency is the one-worker median
+divided by the worker count times the parallel median. OpenHCS efficiencies for
+Vitra, illumination and 3D were 64.3%, 59.5% and 71.1% at three workers, and 55.3%,
+62.4% and 69.4% at four workers. These observations do not establish near-linear
+scaling. The four-worker execution speedups over native CellProfiler were 1.93-,
+2.22- and 4.14-fold, respectively, so the single-sample minimum speedup does not
+apply to every parallel condition. Exact timings, native baselines, inventories
+and provenance accompany the [matched checkpoint](../../benchmark/results/matched_postexport_20261006/README.md).
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Table 1. Reusable libraries and their roles
+
+| Library | Role in OpenHCS |
+| --- | --- |
+| [metaclass-registry](https://github.com/OpenHCSDev/metaclass-registry) | Discovers classes implementing a shared interface and makes them available for selection. |
+| [python-introspect](https://github.com/OpenHCSDev/python-introspect) | Reads a function's parameters, types, defaults and documentation. |
+| [ObjectState](https://github.com/OpenHCSDev/objectstate) | Tracks editable settings and resolves shared defaults and local overrides. |
+| [pyqt-reactive](https://github.com/OpenHCSDev/pyqt-reactive) | Generates parameter controls and updates them as settings change. |
+| [pycodify](https://github.com/OpenHCSDev/pycodify) | Generates editable Python representations and manages their imports. |
+| [ArrayBridge](https://github.com/OpenHCSDev/arraybridge) | Converts arrays between supported libraries and manages their computational resources. |
+| [PolyStore](https://github.com/OpenHCSDev/PolyStore) | Reads, writes and streams data through supported storage interfaces. |
+| [ZMQRuntime](https://github.com/OpenHCSDev/zmqruntime) | Coordinates communication, startup, shutdown and progress between processes. |
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -203,12 +338,15 @@ translocation overlay compared alongside its SQLite values.
 
 The [observations](../../benchmark/results/official30_unified_value_comparison_20260916/observations.csv),
 [phase timings](../../benchmark/results/official30_unified_value_comparison_20260916/phase_timing.csv),
-[summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
-and [run environment](../../benchmark/results/official30_unified_value_comparison_20260916/run_environment.json)
-retain the result and exact candidate source identities. The candidate used
-OpenHCS 0.8.5 current source on Python 3.12.3, NumPy 2.1.3 and SciPy 1.18.1.
-The selected native references used CellProfiler 4.2.8.1 on Python 3.9.25,
-NumPy 1.24.4 and SciPy 1.9.0.
+and [summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
+retain the comparison results. The original observations identify the candidate
+as OpenHCS 0.8.5 and retain endpoint, executable and submitted-pipeline provenance.
+The full run-environment and suite-metadata records were not retained in this
+archive; its exact candidate source commit and Python, NumPy and SciPy versions
+cannot be established from those observations. The selected native references'
+original dependency environments are likewise not established by this bundle.
+Environment identities from later matched runs do not supply this missing
+historical provenance.
 
 ### Five-workflow image and object-label exports
 
@@ -317,7 +455,7 @@ These sums are not equivalent cold-start or end-to-end analysis intervals.
 The many-well projection multiplies the native command duration, including its
 startup, by well count; it does not measure native persistent-worker throughput.
 Original CSV field names, including `median_speedup`, remain unchanged as
-historical record labels. Supplementary Figure 6 presents them as phase-time ratios.
+historical record labels. Supplementary Figure 5 presents them as phase-time ratios.
 
 The collector also supports cached reference results and can substitute the
 configured timeout when a successful cached native reference lacks execution
@@ -325,12 +463,12 @@ timing. The summary's `n=1` counts comparison observations, not necessarily fres
 timed executions. This policy could account for a timeout-valued row, but the
 retained summary alone does not establish which path produced it.
 
-The [timing source audit](../review/slas-panel-20260910/TIMING_BOUNDARY_AUDIT.md)
-identifies the exact code locations and reproduction commands. The committed
-source establishes these timer definitions; the original run environment and
-per-run phase traces still need recovery to establish the executed snapshot.
-A new matched comparison would time the same work on both systems, separately
-for cold-start and repeated prepared execution, with repeated observations.
+The committed source establishes these timer definitions. The separate timing
+source audit document is not retained in this archive; the original run
+environment and per-run phase traces still need recovery to establish the
+executed snapshot. The subsequent matched comparison in Figure 4 uses separately
+declared execution and total intervals with three measured observations per
+engine; it does not reconstruct the missing historical timing provenance.
 
 ## Supplementary Data 2. Archived CellProfiler coverage
 
@@ -351,7 +489,7 @@ current-version compatibility matrix.
 - [Two-, three- and four-worker queue-depth conditions](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_2c3c4c.csv).
 - [Four-worker conditions with six and eight wells per worker](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_4c_6wpc_8wpc.csv).
 
-Figure 5A uses the measured two-, three- and four-worker rows, with four repeated-image
+The historical throughput analysis uses the measured two-, three- and four-worker rows, with four repeated-image
 assignments per worker, for all 30 workflows. The runtime schedules each assignment
 as a well; these are repeated inputs, not independent biological replicates.
 Each row reports completion of every assignment. Throughput is completed
@@ -366,14 +504,14 @@ establish throughput for every output-saving policy. The historical rows do not
 retain the exact executed source revision, compiled plans, output inventories or
 worker-process event traces. At the May presentation-source commit
 `f58bca4e9`, `ExportToDatabase` was explicitly a pass-through stub rather than
-the later SQLite exporter. It is therefore not defensible to read Figure 5 as
+the later SQLite exporter. It is therefore not defensible to read Supplementary Figure 7 as
 current output-complete throughput or to infer actual worker-process counts
 solely from the configured worker labels.
 
 The separate [current-API four-mode readiness probe](../../benchmark/results/paper_config_new_api_probe_20260923/translocation_four_modes_fork/README.md)
 ran one Translocation workflow with its explicit TIFF, SQLite and CPA properties
 outputs and verified one, two, three and four active worker PIDs from progress
-events. It is not pooled into Figure 5: it covers only one workflow, includes
+events. It is not pooled into Supplementary Figure 7: it covers only one workflow, includes
 different output work, and uses the ordinary completed-server timing boundary.
 
 The separate [matched genuine-well Translocation pilot](../../benchmark/results/matched_batch_concurrency_fork_20260923/README.md)
@@ -383,7 +521,7 @@ value differences. Native invocation-to-completion makespans were 5.27--5.59 s;
 OpenHCS completed-server jobs were 16.08--16.75 s, including 11.33--11.65 s
 of plate-scoped SQLite export. The native processes persisted across observations,
 while OpenHCS created workers per job. This one-workflow, different-lifecycle
-pilot is not pooled into Figure 5 and does not establish general comparative
+pilot is not pooled into Supplementary Figure 7 and does not establish general comparative
 throughput.
 
 A second [matched BBBC022 advanced-segmentation pilot](../../benchmark/results/matched_bbbc022_20260923_rc5/README.md)
@@ -397,7 +535,7 @@ makespan was 206.459 s, versus a 189.933 s OpenHCS completed-server job. The
 native process startup and OpenHCS compilation were excluded, but the job
 boundaries and process lifecycles still differ. This single timed repetition
 is retained as a matched-concurrency diagnostic, not a cross-system speedup
-claim or a Figure 5 input.
+claim or a Supplementary Figure 7 input.
 
 Each row retains its workflow, worker count, assignment count, completed-assignment
 count, execution and total time, memory, status and serial CellProfiler projection.
@@ -414,7 +552,7 @@ output hashes. Exact plotted observations accompany the figure as separate CSVs.
 Run `python paper/figures/build_slas_benchmark.py` in the project environment to
 regenerate them without rerunning the experiments.
 
-The benchmark is Figure 5 in the expanded manuscript. Existing artifact
+The historical per-workflow measurements are shown in Supplementary Figure 7. Existing artifact
 filenames retain their original identifiers so links do not depend on editorial
 renumbering.
 
@@ -437,22 +575,25 @@ catalog-refresh and selector-lifetime fixes recorded there. It demonstrates
 registration and editor integration; the example function was not run on the
 analysis dataset.
 
-The [visual storyboard](../review/FIGURE_STORYBOARD.md) identifies the purpose
-and source of each main figure. The
+The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
-the retained Fiji/napari panels. Figure 2 instead uses fresh matching captures
-from one development-checkout session. Its
+the retained Fiji/napari panels. Figure 2 panels A, C and D use matching captures
+from one OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
-Both sets of captures are distinct from the original unattended agent run.
+Panel B is a separate OpenHCS 0.8.7 native capture of the ZeroMQ server browser
+on an isolated display; its [original MCP receipt](../figures/slas/authoring_server_browser_verified_capture_provenance.json)
+records the unmodified widget image and checksum. The browser lists observed
+endpoints; the status ticks alone do not establish client/server version compatibility.
+These captures are distinct from the original unattended agent run.
 
 `paper/figures/build_slas_visual_story.py` checks the published media hashes and
-records any UI-detail crop rectangles before assembling Figures 1, 2 and 6.
+records any UI-detail crop rectangles before assembling Figures 1 and 2 and Supplementary Figure 14.
 `paper/figures/build_slas_agent.py` additionally derives the two displayed step
 labels from the original saved pipeline, without importing or executing it.
 
-Figure 4 aligns the public ExampleCometAssay pipeline with its imported OpenHCS
+Supplementary Figure 13 aligns the public ExampleCometAssay pipeline with its imported OpenHCS
 steps. `paper/figures/build_slas_cellprofiler.py` derives the module sequence,
 function names, repetitions and named-object parameters from the source pipeline
 and current importer. The [translation receipt](../figures/slas/cellprofiler_translation_provenance.json)
@@ -639,14 +780,113 @@ prediction manifests and the common corpus manifest by SHA-256. The
 the deterministic partitions, image normalization and evaluation definitions;
 the preparation manifest records the downloaded source identities.
 
-Supplementary Figure 7 is regenerated by
+Supplementary Figure 6 is regenerated by
 [`build_slas_independent_validation.py`](../figures/build_slas_independent_validation.py)
 from the three score receipts. Its
 [plot data](../figures/slas/independent_agent_validation_plot_data.csv) and
 [provenance receipt](../figures/slas/independent_agent_validation_provenance.json)
 retain the plotted rows and source/output hashes.
 
+## Supplementary Data 8. Autonomous analysis evidence
+
+Supplementary Figures 8–12 group native views by assay. Main Figures 10 and 11
+show compartment analysis and the personal neurite mosaic. Reference evaluation
+follows pipeline selection; examples lacking exhaustive annotations do not
+receive an accuracy percentage.
+
+- [Bright-object analysis](task_only_analysis/h001-fresh25-qualified-review.rst).
+- [Volume localisation](task_only_analysis/h002-fresh23-paired-localisation.rst).
+- [Paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst).
+- [Retinal soma localisation](task_only_analysis/retinal-fresh26-qualified-completion.rst).
+- [Personal nine-field mosaic](task_only_analysis/p001-allchannel25-qualified-completion.rst).
+- [Independent field-by-field laboratory neurite analysis](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst), with frozen pipeline and output identities, sampled raw/path review and remaining limitations.
+- [Public translocation assay](task_only_analysis/bbbc013-fresh23-qualified-completion.rst).
+- [Public neurite analysis](task_only_analysis/h004-fresh20-qualified-completion.rst).
+
+The [frozen nine-field pipeline source](task_only_analysis/pipelines/p001-fresh13.py)
+is supplied unchanged, with SHA256
+`8b9a70c205103ec9d1600b0592cfb9481bf989e449f049aee176803069f34203`.
+It retains the recorded output root and viewer endpoint; for reproduction,
+relocate only input/output destinations and use the source-document MCP
+validation, compilation and execution workflow with the recorded installation.
+Do not execute the file as an alternative analysis route. The input manifest
+and interpretation limits are identified in the linked review.
+
+The following source files are also supplied byte-for-byte from the authors'
+selected frozen attempts. Their run identities and original hashes remain in
+the linked analysis records; no candidate was reselected using reference scores.
+
+| Analysis and run | Selected attempt | Frozen pipeline |
+|---|---|---|
+| Bright objects, fresh25 | REPAIR02 | [Source](task_only_analysis/pipelines/h001-fresh25.py) |
+| Volume localisation, fresh23 | REPAIR05 | [Source](task_only_analysis/pipelines/h002-fresh23.py) |
+| DNA/actin, fresh26 | REPAIR03 | [Source](task_only_analysis/pipelines/h003-fresh26.py) |
+| Retinal somata, fresh26 | repair03 | [Source](task_only_analysis/pipelines/retina-fresh26.py) |
+| Public neurites, fresh20 | repair03 | [Source](task_only_analysis/pipelines/h004-fresh20.py) |
+| Translocation, fresh23 | FULL_S08 | [Source](task_only_analysis/pipelines/bbbc013-fresh23.py) |
+| BBBC039, fresh612 | final_full200 | [Source](task_only_analysis/pipelines/bbbc039-fresh612.py) |
+| BBBC039, fresh10 coverage | FULL200 | [Source](task_only_analysis/pipelines/bbbc039-fresh10.py) |
+| BBBC007, fresh26 | REPAIR05 | [Source](task_only_analysis/pipelines/bbbc007-fresh26.py) |
+
+The two BBBC039 sources correspond to the plotted full-200 result (pooled
+F1 0.906) and the independent coverage repeat (0.898), respectively. Both
+require the original [image metadata table](task_only_analysis/pipelines/bbbc039/source_manifest.csv);
+fresh10 also imports the supplied [source binding](task_only_analysis/pipelines/bbbc039/source_bindings.py).
+Relocate its original import directory and metadata location to these supplied
+files when reproducing the workflow. The binding's SHA256 is
+`fdbe5bd37084b6f03a10dd8617fb503e26dbc73e011cda655cb1b028a2597dcc`.
+It matches fresh10's original source-identity record and an identical copy in
+fresh612's frozen manifest, but is not directly listed in fresh10's final manifest.
+The BBBC007 source is the final REPAIR05 analysis of all 16 paired fields,
+not an earlier candidate; its relative `source_sets.csv` location refers to the
+supplied [paired-field metadata](task_only_analysis/pipelines/bbbc007/source_sets.csv).
+
+The volume pipeline also requires the original [centre-detection custom function](task_only_analysis/pipelines/h002-fresh23/custom_function.py).
+The translocation pipeline requires its original [compartment measurements](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_compartment_qc_v4.py),
+[assay statistics](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_assay_statistics_v1.py)
+and [dose-response summary](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_dose_response_v2.py)
+functions. Register these sources through MCP under their recorded function
+names before validating the corresponding pipeline. Reproduction also requires
+the recorded inputs, metadata and software version. Preserve scientific
+settings while relocating destinations and use an isolated viewer endpoint.
+These are frozen analysis artifacts, not additions to the processing library.
+The retinal and volume sources in this table correspond to Data 8's named
+trials, not the different trials illustrated in main Figures 7 and 9.
+
+The personal mosaic and explicitly labelled development examples retain assisted
+provenance; they are not counted as fresh unguided trials. Recovery of principal
+neurite shafts is the relevant illustrated result, not exhaustive filopodial
+tracing or definitive neuron ownership at crossings.
+
+Original attempts, unsuccessful candidates and delivery history remain in the
+linked records and the [archived evidence inventory](https://github.com/OpenHCSDev/openhcs/blob/7f318f36969cae281964a31f4f43899a45a9a8f3/paper/supplementary/README.md#supplementary-data-8-task-only-authoring-and-independent-repair).
+They are not additional experimental replicates.
+
+For NeuronCyto II image 1, the published manual-reference table contains eight
+traced-cell entries, without spatial identifiers or an exhaustive-coverage
+statement. The official testing archive contains the two source images but no
+manual spatial tracing files. Aggregate agreement therefore does not establish
+shaft recall, neuron ownership or calibrated length accuracy. The
+[reference audit](neuroncyto_reference_audit.md) retains the source-table
+checksums, image correspondence and interpretation. The manual-reference
+construction is described by [Ong et al. (2016)](https://doi.org/10.1002/cyto.a.22872).
+
 ## Software snapshots and evidence
+
+A further task-only BBBC007 author completed sixteen paired fields after
+self-directed repair, retaining 1,428 nuclear and seeded-cell IDs. Direct saved
+mask checks reconcile every reported area and same-ID nuclear containment.
+The [final-candidate record](task_only_analysis/bbbc007-fresh26-final-candidate.rst)
+separates this exploratory result from held-out accuracy and exact cell-boundary
+claims; a plausible residual merge and crowded-boundary uncertainty remain.
+
+A subsequent independent paired DNA/actin author recovered three crowded
+nuclear omissions and excluded two cell candidates with no growth beyond their
+nuclear seeds. Its final 56 nuclei and 54 retained cell regions have reconciled
+labels, areas and parent relationships. The
+[qualified completed repair](task_only_analysis/h003-fresh26-qualified-completion.rst)
+records independent matched-view review and full own-nucleus containment,
+without treating uncertain cell boundaries as a failure of useful localisation.
 
 | Evidence | Software identity | What the record establishes |
 |------------------------------|------------------------------|----------------------------------------|
@@ -656,13 +896,14 @@ retain the plotted rows and source/output hashes.
 | Five-workflow export extension | OpenHCS source `7ca8ecb8e`; Python 3.12.3, NumPy 2.1.3, SciPy 1.18.0 | Five fresh candidate executions; eight passing image or object-label comparisons; native and candidate environments retained |
 | Workflow regression tests | `7a7d21fee`; named test files unchanged from 0.8.5 | Successful unit-test job; representative authoring and validation cases |
 | Original unattended neurite run; Figure 3 | OpenHCS 0.7.13, `f1c1d9b670`; Codex 0.146.0, gpt-5.6-sol | Recorded construction, execution, saved outputs and viewer checks |
-| Later corrected neurite demonstration; Supplementary Figure 4 | OpenHCS 0.7.14; correction `0eb5f77c02` | Separately recorded corrected outputs and object-to-measurement links |
+| Later corrected neurite demonstration; Supplementary Figure 3 | OpenHCS 0.7.14; correction `0eb5f77c02` | Separately recorded corrected outputs and object-to-measurement links |
 | Parameter/code round trip; Figure 2 | OpenHCS 0.8.5 release commit `e867013a8` | Same-session code/field edits and matching native controls |
-| Comet Assay translation; Figure 4 | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
-| Custom-function registration; Supplementary Figure 5 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
-| Prospective agent-authored assays; Supplementary Figure 7 | OpenHCS 0.8.5 current-source trials on 15-16 September 2026; frozen source and score receipts retained | Three single-attempt pipelines frozen before held-out scoring; BBBC039/007 annotations and BBBC013 treatment response |
+| Comet Assay translation; Supplementary Figure 13 | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
+| Custom-function registration; Supplementary Figure 4 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
+| Prospective agent-authored assays; Supplementary Figure 6 | OpenHCS 0.8.5 current-source trials on 15-16 September 2026; frozen source and score receipts retained | Three single-attempt pipelines frozen before held-out scoring; BBBC039/007 annotations and BBBC013 treatment response |
+| Task-only authoring; Supplementary Data 8 | Separately qualified OpenHCS bundles; gpt-6.1-sol trials on 4 October 2026; original source, freeze and scorer identities in evaluation receipts | H001 first/final computational reference agreement; BBBC039 paired three-field repair and separate final full-200 reference agreement; no reference-score feedback |
 
 The full figure receipts retain source hashes and capture-specific changes.
 The custom-function example was registered and selected but not executed on
-the analysis dataset. Viewer demonstrations in Figure 6 are identified by the
+the analysis dataset. Viewer demonstrations in Supplementary Figure 14 are identified by the
 gallery record and remain separate from the original unattended evaluation.

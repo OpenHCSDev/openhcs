@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Self
 
+from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
+
 
 class ImageQaMeasure(Enum):
     """Measurements used to distinguish admission, continuity, and ownership."""
@@ -194,6 +196,30 @@ class ImageQaEvidenceRule(Enum):
         "reject a black, empty, stale, or mismatched capture when its active route, "
         "component values, or routed payload identity do not match the intended evidence"
     )
+    SPATIAL_PREPROCESSING_REGRESSION = (
+        "before tuning, choose distributed bright/dim, centre/edge and sparse/dense "
+        "witnesses. Distinguish additive background, multiplicative shading and "
+        "biology rather than fitting one crop. Compare raw, correction field or "
+        "denoising residual, processed image and result at identical coordinates. "
+        "Assess local gains and remote misses, merges, faint-signal loss and "
+        "unsupported background against the declared claim criteria, not aesthetics"
+    )
+    DEVELOPMENT_REPAIR_CONTINUATION = (
+        "a rejected development candidate is a preserved comparison checkpoint, not "
+        "a terminal analysis or accepted recipe. Select the next discriminating "
+        "repair from observed raw/intermediate failures, rerun under the existing "
+        "authorization and resource budget, and review a regression control. Stop "
+        "only at the declared budget or a concrete unresolved information, contract, "
+        "permission, or resource boundary; keep reference answers sealed"
+    )
+    AUTONOMY_INTERVENTION_PROVENANCE = (
+        "retain human biological hints, parameter corrections and per-candidate "
+        "coaching as interventions. Assisted development is not an uncoached "
+        "autonomous evaluation. For a fresh blind evaluation freeze the harness "
+        "and skill first, provide the task brief and authorized images without "
+        "worked answers or prior trial conclusions, and include failures and "
+        "abstentions in the evaluation rather than reporting selected successes"
+    )
     SPARSE_DIAGNOSTIC_LOCALIZATION = (
         "for a sparse diagnostic mask, use its viewer-reported exact nonzero bounds "
         "and bounded example coordinates to navigate to evidence before judging a "
@@ -230,12 +256,13 @@ class ImageQaEvidenceRule(Enum):
 class ReferenceEvidenceRule(Enum):
     """How external references constrain, but do not replace, spatial QA."""
 
-    COUNT_CONSTRAINS_ADMISSION = (
-        "compare detected and reference object counts before changing object admission"
+    COUNT_INFORMS_ADMISSION = (
+        "use reference counts to investigate admission, not as an exact-match "
+        "requirement for imperfect annotations"
     )
     COUNT_DOES_NOT_PROVE_IDENTITY = (
-        "treat count agreement as an admission constraint, not proof that the same "
-        "objects were detected"
+        "treat count agreement as diagnostic evidence, not proof that the same "
+        "objects were detected; count disagreement alone does not reject the analysis"
     )
     IDENTITY_REQUIRES_SPATIAL_CORRESPONDENCE = (
         "require coordinates, labels, or annotations before claiming object identity"
@@ -297,7 +324,8 @@ class SignalTransformConstraint(Enum):
     )
     ROOTED_RECOVERY = "require recovered signal-supported rooted continuity rather than aggregate growth"
     FRAGMENTATION_CONTROL = (
-        "reject gains accompanied by unsupported background or topology fragmentation"
+        "assess gains alongside unsupported background or topology fragmentation "
+        "against the declared claim criteria"
     )
 
 
@@ -491,6 +519,10 @@ class ResidualStructureObservation:
 
 class ImageAnalysisQaPolicy:
     """Canonical text projection of typed diagnostic-gate declarations."""
+
+    claim_scope_target = KnowledgeBaseDocumentTarget(
+        "openhcs_autonomous_analysis_strategy", "scope-conclusions-to-the-evidence"
+    )
 
     @classmethod
     def repair_guidance(cls) -> str:

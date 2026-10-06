@@ -1,0 +1,14 @@
+{
+  "generator_sha256": "2e7d4ec1c9a3cf47e8f30788262b520bdf3d4fef0cc49c4bb2bbe4e4019e62ef",
+  "source_sha256": {
+    "paper/figures/slas/retina_fresh16_repair.png": "582fc7f615372ba12c1fa2dbc009e2b8ed1d218e94d8b5363abcd2420dda5c74",
+    "paper/figures/slas/retinal_development_repair.png": "176a6675a410c6a16a52111db5d641715f9b24c3304cc6271ca6cf068818f443"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "retina_assay_review.png": "73ed4391d2c7d3384d19ec3823d9abbf85113a3a470b714829789e1ded86030a",
+    "retina_assay_review.pdf": "e7b45bb0d3ab422b12a719a42b46698c0eb1460546f8ef01fd20a9b94143b2d5",
+    "retina_assay_review.svg": "0394cbdd2c66dbae4dfafb014e78df21650d6dd443716835c2975a8c3869c1f6"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

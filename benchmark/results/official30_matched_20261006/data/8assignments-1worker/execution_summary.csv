@@ -1,0 +1,4 @@
+case_name,assay_category,module_category,n,equivalent_count,median_native_execution_seconds,median_openhcs_execution_seconds,median_native_total_phase_seconds,median_openhcs_total_phase_seconds,median_native_peak_memory_mb,median_openhcs_peak_memory_mb,min_parity_accuracy,speedup_target,median_speedup,median_total_phase_speedup,meets_execution_speedup_target,meets_total_phase_speedup_target
+ExampleVitra,,,3,3,21.16772723570466,10.078319549560547,21.16877904580906,10.507523955777287,,,1.0,2.0,2.100323087754015,2.0146305766136234,True,True
+ExampleIlluminationCorrection_Example3,,,3,3,3.3974440242163837,1.4376895427703857,3.3984017283655703,1.858028972055763,,,1.0,2.0,2.3631277290016373,1.829035918963904,True,False
+cp_tutorial_3d_monolayer,,,3,3,118.58742282073945,24.234790086746216,118.58820295985788,26.424583374056965,,,1.0,2.0,4.893272126404504,4.487798398981949,True,True

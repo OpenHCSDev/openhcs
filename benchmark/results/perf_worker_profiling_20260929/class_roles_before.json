@@ -1,0 +1,108 @@
+{
+  "source_revision": "3032958ac-before-worker-profile-fix",
+  "module_count": 699,
+  "original_class_count": 5050,
+  "projected_count": 5038,
+  "classes": [
+    {
+      "path": "openhcs/core/orchestrator/worker_profiling.py",
+      "line": 16,
+      "name": "WorkerProfilingPolicy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.orchestrator.worker_profiling.WorkerProfilingPolicy",
+      "bases": [
+        "ABC"
+      ],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "profile"
+      ],
+      "abstract_methods": [
+        "profile"
+      ],
+      "is_abstract": true,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/orchestrator/worker_profiling.py",
+      "line": 34,
+      "name": "DisabledWorkerProfilingPolicy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.orchestrator.worker_profiling.DisabledWorkerProfilingPolicy",
+      "bases": [
+        "WorkerProfilingPolicy"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.orchestrator.worker_profiling.WorkerProfilingPolicy"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "profile"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/orchestrator/worker_profiling.py",
+      "line": 51,
+      "name": "CProfileWorkerProfilingPolicy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.orchestrator.worker_profiling.CProfileWorkerProfilingPolicy",
+      "bases": [
+        "WorkerProfilingPolicy"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.orchestrator.worker_profiling.WorkerProfilingPolicy"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "from_environment",
+        "profile",
+        "profile_filename",
+        "filename_component"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/utils/environment.py",
+      "line": 19,
+      "name": "OpenHCSProcessEnvironment",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.utils.environment.OpenHCSProcessEnvironment",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "numba_cache_path",
+        "current_numba_cache_path",
+        "child_process_environment_keys",
+        "flag_enabled",
+        "cpu_only_mode",
+        "gpu_imports_disabled",
+        "enable_cpu_only_mode",
+        "project_dependency_gpu_import_policy",
+        "headless_mode",
+        "use_threading_mode"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    }
+  ]
+}

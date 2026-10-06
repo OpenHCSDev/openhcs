@@ -695,6 +695,33 @@ def test_concatenated_measurement_rows_preserve_structural_missing_cells() -> No
     )
 
 
+def test_declared_wide_admission_preserves_features_before_absent_object_column() -> None:
+    from openhcs.core.equivalence.policy import DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+
+    rows = MeasurementSparseColumnarRows.from_rows(
+        ({"slice_index": 1, "contrast": 0.25, "entropy": 0.75},),
+        fields=(
+            FieldSpec("slice_index", int),
+            FieldSpec("contrast", float),
+            FieldSpec("entropy", float),
+            FieldSpec("object_label", int),
+        ),
+    )
+    accumulator = WideMeasurementRowAccumulator(
+        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+    )
+    accumulator.add_declared_rows(
+        rows,
+        DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        default_subject="Image",
+        default_scope=MeasurementScope.IMAGE,
+    )
+
+    assert accumulator.row_mappings_by_subject()["Image"] == (
+        {"slice_index": 1, "contrast": 0.25, "entropy": 0.75},
+    )
+
+
 def test_long_form_projection_omits_structurally_missing_qualifiers() -> None:
     base_fields = (
         FieldSpec("slice_index", int),
@@ -753,6 +780,35 @@ def test_long_form_projection_omits_structurally_missing_qualifiers() -> None:
     )
 
 
+def test_object_scoped_long_form_projection_rejects_conflicting_values() -> None:
+    rows = _ColumnOnlyMeasurementRows(
+        {
+            "slice_index": (1, 1),
+            "object_label": (7, 7),
+            "feature_name": ("intensity", "intensity"),
+            "result_value": (4.0, 5.0),
+        },
+        fields=(
+            FieldSpec("slice_index", int),
+            FieldSpec("object_label", int),
+            FieldSpec("feature_name", str),
+            FieldSpec("result_value", float),
+        ),
+    )
+    accumulator = WideMeasurementRowAccumulator(
+        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+    )
+
+    accumulator.add(
+        rows,
+        lambda feature, _qualifiers: feature,
+        default_subject="Cells",
+        default_scope=MeasurementScope.OBJECT,
+    )
+    with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
+        accumulator.columnar_rows_by_subject()
+
+
 def test_wide_measurement_projection_uses_row_owned_scope_for_artifact_table() -> None:
     accumulator = WideMeasurementRowAccumulator(
         DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
@@ -799,3 +855,32 @@ def test_wide_measurement_projection_uses_row_owned_scope_for_artifact_table() -
             "Intensity_IntegratedIntensity_PH3": 9.0,
         },
     )
+
+
+@pytest.mark.parametrize("layout", ["identity", "wide", "long"])
+def test_measurement_row_contract_owns_output_identity_without_renumbering(layout):
+    from openhcs.interop.cellprofiler.measurement_dialect import CELLPROFILER_MEASUREMENT_DIALECT
+
+    columns = {"slice_index": (1, 1), "object_label": (2, 17)}
+    if layout == "wide":
+        columns["Area"] = (3.0, 4.0)
+    elif layout == "long":
+        columns.update(feature_name=("Area", "Area"), result_value=(3.0, 4.0))
+    rows = MeasurementSparseColumnarRows(
+        columns,
+        fields=tuple(FieldSpec(name, str if name == "feature_name" else float)
+                     for name in columns),
+    )
+    for contract, output_name in (
+        (DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT, "object_label"),
+        (CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract, "object_number"),
+    ):
+        accumulator = WideMeasurementRowAccumulator(contract)
+        accumulator.add(
+            rows, lambda feature, qualifiers: feature,
+            default_subject="Objects", default_scope=MeasurementScope.OBJECT,
+        )
+        projected = accumulator.row_mappings_by_subject()["Objects"]
+        assert tuple(row[output_name] for row in projected) == (2, 17)
+        assert all(("object_label" if output_name == "object_number" else "object_number")
+                   not in row for row in projected)

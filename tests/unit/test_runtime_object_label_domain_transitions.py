@@ -112,3 +112,89 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
         mode=ImagePayloadMetadataCompositionMode.BUNDLE,
     )
     assert composed.source_provenance.represented_source_image_names == ("MembFinal",)
+
+
+@pytest.mark.parametrize("axis", [RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING])
+@pytest.mark.parametrize("plane_count", [1, 2])
+def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
+    monkeypatch, axis, plane_count
+):
+    from openhcs.core.runtime_object_labels import (
+        ObjectLabelRepresentation, SparseIJVObjectLabelStorageStrategy,
+    )
+    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+    first = SparseIJVLabelRows(np.asarray([[0, 1, 1], [0, 1, 2]], dtype=np.int32))
+    planes = (first,) if plane_count == 1 else (
+        first, SparseIJVLabelRows(np.asarray([[1, 0, 3]], dtype=np.int32)),
+    )
+    labels = ObjectLabelSet(
+        name="OverlappingObjects",
+        variant_data=ObjectLabelVariantData(SparseIJVLabelRows.from_slices(planes)),
+        representation=ObjectLabelRepresentation.SPARSE_IJV,
+        domain=ObjectLabelDomain(
+            declared_object_id_domains=((1, 2),) if plane_count == 1 else ((1, 2), (3,)),
+            scope=ObjectLabelDomainScope.PLANE,
+        ),
+        plane_axis=axis,
+    )
+    def reject_dense(*args, **kwargs):
+        raise AssertionError("Slice projection must preserve sparse overlap")
+    monkeypatch.setattr(SparseIJVObjectLabelStorageStrategy, "dense_data", reject_dense)
+    preserved = RuntimePlaneAxisValueProjection.preserve(
+        axis=axis, axis_size=plane_count,
+    )
+    projected = RuntimeSliceProjection.value_for_slice(labels, preserved.selected_plane(0))
+    assert projected.plane_axis is None
+    assert projected.domain.declared_object_ids == (1, 2)
+    np.testing.assert_array_equal(projected.labels.as_array(), first.as_array())
+    assert labels.plane_axis is axis
+    with pytest.raises(ValueError, match="cardinality mismatch"):
+        RuntimeSliceProjection.value_for_slice(
+            labels,
+            RuntimePlaneAxisValueProjection.from_selected_plane(
+                axis=axis, axis_size=plane_count + 1, plane_index=0,
+            ),
+        )
+    with pytest.raises(ValueError, match="plane_index must be within"):
+        RuntimeSliceProjection.value_for_slice(labels, preserved.selected_plane(plane_count))
+    with pytest.raises(ValueError, match="sparse label storage carries"):
+        labels.with_variants(
+            ObjectLabelVariantData(SparseIJVLabelRows.from_slices((*planes, first))),
+        )
+
+
+@pytest.mark.parametrize("second_start,expected_layers", [(3, 2), (5, 1)])
+def test_sparse_rendering_layers_preserve_whole_objects(second_start, expected_layers):
+    from openhcs.core.runtime_object_labels import (
+        ObjectLabelRepresentation, ObjectLabelStorageStrategy,
+    )
+    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+
+    rows = SparseIJVLabelRows(np.asarray(
+        [(y, x, label) for label, start in ((1, 1), (2_000_000_000, second_start))
+         for y in range(start, start + 4) for x in range(start, start + 4)],
+        dtype=np.int32,
+    ))
+    value = ObjectLabelSet(
+        name="Objects", variant_data=ObjectLabelVariantData(rows),
+        representation=ObjectLabelRepresentation.SPARSE_IJV,
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(10, 10)),
+    )
+    layers = ObjectLabelStorageStrategy.for_value(value).rendering_layers(
+        value, source_spatial_shape_yx=None,
+    )
+    assert len(layers) == expected_layers
+    for label in (1, 2_000_000_000):
+        occurrences = [np.argwhere(layer == label) for layer in layers]
+        assert sum(bool(len(points)) for points in occurrences) == 1
+        points = next(points for points in occurrences if len(points))
+        np.testing.assert_array_equal(points, rows.as_array()[rows.as_array()[:, 2] == label, :2])
+    dense = np.asarray([[0, 1], [2, 0]], dtype=np.int32)
+    dense_layers = ObjectLabelStorageStrategy.for_value(dense).rendering_layers(
+        dense, source_spatial_shape_yx=None,
+    )
+    assert len(dense_layers) == 1 and dense_layers[0] is dense

@@ -376,6 +376,26 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
         parser.add_argument("--max-memory-mb", type=float)
         parser.add_argument("--execution-port", type=int)
         parser.add_argument(
+            "--reuse-execution-server",
+            action=argparse.BooleanOptionalAction,
+            default=True,
+            help=(
+                "Keep one ready client-owned server across observations (default). "
+                "Pipeline total_seconds includes outcome delivery and excludes "
+                "server startup/shutdown, benchmark diagnostics, and RSS "
+                "observer setup/teardown. "
+                "Use --no-reuse-execution-server for cold-server diagnostics."
+            ),
+        )
+        parser.add_argument(
+            "--native-summary-csv",
+            type=Path,
+            help=(
+                "Fresh comparison summary.csv used to populate native "
+                "CellProfiler baselines and projected speedups."
+            ),
+        )
+        parser.add_argument(
             "--resume",
             action="store_true",
             help=(
@@ -396,6 +416,7 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
             WELL_THROUGHPUT_ROWS_CSV,
             WellThroughputBenchmarkPlan,
             WellThroughputPreset,
+            native_execution_baselines_from_summary_csv,
             read_well_throughput_csv,
             run_well_throughput_suite,
             well_throughput_start_method_from_manifest,
@@ -415,6 +436,23 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
             args.manifest,
             requested_names=tuple(args.case_names or ()),
         )
+        native_execution_baselines = (
+            native_execution_baselines_from_summary_csv(args.native_summary_csv)
+            if args.native_summary_csv is not None
+            else {}
+        )
+        if args.native_summary_csv is not None:
+            missing_native_baselines = sorted(
+                case.name
+                for case in case_catalog.cases
+                if case.name not in native_execution_baselines
+            )
+            if missing_native_baselines:
+                raise ValueError(
+                    f"Native summary CSV {args.native_summary_csv} has no usable "
+                    "execution baseline for selected cases: "
+                    f"{missing_native_baselines!r}."
+                )
         plan = WellThroughputBenchmarkPlan.from_requested_modes(
             presets=tuple(WellThroughputPreset(value) for value in args.preset or ()),
             well_counts=tuple(args.well_count or ()),
@@ -437,6 +475,11 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
                             ),
                             "modes": plan.modes,
                             "start_method": start_method.value,
+                            "server_lifecycle": (
+                                "reused-per-sweep"
+                                if args.reuse_execution_server
+                                else "fresh-per-observation"
+                            ),
                             "warnings": case_catalog.warnings,
                         }
                     ),
@@ -474,6 +517,8 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
             existing_results=existing_results,
             max_memory_mb=args.max_memory_mb,
             execution_port=args.execution_port,
+            reuse_execution_server=args.reuse_execution_server,
+            native_execution_baselines=native_execution_baselines,
         )
         print(f"rows={len(rows)}")
         print(f"results={rows_path}")
@@ -737,6 +782,49 @@ class PlotBenchmarkCommand(BenchmarkCliCommand):
         return 0
 
 
+class PlotMeasuredBenchmarkCommand(BenchmarkCliCommand):
+    """Plot qualified matched summaries with measured native time per mode."""
+
+    command_name = "plot-measured"
+    help_text = "Plot measured CP/OH execution or total batch comparisons."
+    sort_order = 32
+
+    def configure(
+        self, subparsers: argparse._SubParsersAction
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument(
+            "--summary-source",
+            action="append",
+            required=True,
+            help="MODE_LABEL=qualified_summary.csv; repeat for measured well/worker modes.",
+        )
+        parser.add_argument("--scope", choices=("execution", "total", "amortization"), required=True)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        configure_headless_cpu_benchmark_runtime(args.log_level)
+        from benchmark.reports.cppipe_figures import (
+            MeasuredBatchSummarySource,
+            generate_measured_batch_figures,
+            parse_summary_source,
+        )
+
+        sources = tuple(parse_summary_source(value) for value in args.summary_source)
+        outputs = generate_measured_batch_figures(
+            tuple(
+                MeasuredBatchSummarySource(source.label, source.path)
+                for source in sources
+            ),
+            scope=args.scope,
+            output_dir=args.output_dir,
+        )
+        print(f"figures={args.output_dir}")
+        print(f"outputs={len(outputs)}")
+        return 0
+
+
 class PlotWellThroughputPresentationCommand(BenchmarkCliCommand):
     """Plot the official30 parity/core/wells-per-core presentation pack."""
 
@@ -766,34 +854,12 @@ class PlotWellThroughputPresentationCommand(BenchmarkCliCommand):
                 "the presentation pack."
             ),
         )
-        parser.add_argument(
-            "--module-coverage-manifest",
-            type=Path,
-            default=Path("benchmark/manifests/official30_portable_axis1.json"),
-            help=(
-                "Manifest used to generate module coverage artifacts when "
-                "--module-coverage-semantic-families-csv is absent."
-            ),
-        )
         parser.add_argument("--output-dir", type=Path, required=True)
         return parser
 
     def run(self, args: argparse.Namespace) -> int:
         configure_headless_cpu_benchmark_runtime(args.log_level)
         semantic_families_csv = args.module_coverage_semantic_families_csv
-        if semantic_families_csv is None and args.module_coverage_manifest.exists():
-            from benchmark.cellprofiler_comparison import (
-                MODULE_COVERAGE_SEMANTIC_FAMILIES_CSV,
-                write_module_coverage_artifacts,
-            )
-
-            write_module_coverage_artifacts(
-                args.output_dir,
-                manifest_path=args.module_coverage_manifest,
-            )
-            semantic_families_csv = (
-                args.output_dir / MODULE_COVERAGE_SEMANTIC_FAMILIES_CSV
-            )
         from benchmark.well_throughput_scaling import (
             WellThroughputPresentationReport,
             WellThroughputPresentationSources,

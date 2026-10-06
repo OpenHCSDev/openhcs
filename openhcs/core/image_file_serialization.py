@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from abc import abstractmethod
+from dataclasses import dataclass, replace
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, ClassVar, Sequence
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Sequence
 
 import numpy as np
+from arraybridge import MemoryType, detect_memory_type
 from metaclass_registry import AutoRegisterMeta
+from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
 from openhcs.constants.constants import FileFormat
+from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
+from openhcs.core.image_quantization_numba import quantize_image_uint8
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -19,6 +24,9 @@ from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_metadata,
 )
+
+if TYPE_CHECKING:
+    from openhcs.core.processing_preparation import PreparationOperation
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +54,26 @@ class SourceImagePixelSemantics:
         if axis is None:
             return None
         shape = tuple(int(value) for value in np.shape(image_payload_data(payload)))
+        return self._validated_channel_axis_for_shape(axis, shape)
+
+    def image_shape_yx_for_shape(
+        self,
+        shape: tuple[int, ...],
+    ) -> tuple[int, int] | None:
+        """Project format-declared channel bands without inferring image axes."""
+
+        axis = self.channel_axis
+        if axis is not None:
+            self._validated_channel_axis_for_shape(axis, shape)
+            normalized = axis if axis >= 0 else len(shape) + axis
+            shape = shape[:normalized] + shape[normalized + 1 :]
+        return shape if len(shape) == 2 else None
+
+    def _validated_channel_axis_for_shape(
+        self,
+        axis: int,
+        shape: tuple[int, ...],
+    ) -> int:
         normalized = axis if axis >= 0 else len(shape) + axis
         if normalized < 0 or normalized >= len(shape):
             raise ValueError(
@@ -68,6 +96,62 @@ class ImageFileSourceMetadata:
     source_dtype: Any | None = None
     intensity_scale: float | None = None
     pixel_semantics: SourceImagePixelSemantics = SourceImagePixelSemantics()
+    image_shape_yx: tuple[int, int] | None = None
+    source_frame_shape: tuple[int, ...] | None = ()
+
+    def __post_init__(self) -> None:
+        if self.image_shape_yx is not None:
+            if len(self.image_shape_yx) != 2 or any(
+                not isinstance(value, int) or isinstance(value, bool) or value <= 0
+                for value in self.image_shape_yx
+            ):
+                raise ValueError(
+                    "Image-file YX shape requires two positive integer dimensions."
+                )
+            object.__setattr__(self, "image_shape_yx", tuple(self.image_shape_yx))
+        if self.source_frame_shape is not None:
+            if any(
+                not isinstance(value, int) or isinstance(value, bool) or value <= 0
+                for value in self.source_frame_shape
+            ):
+                raise ValueError(
+                    "Image-file frame shape requires positive integer dimensions."
+                )
+            object.__setattr__(
+                self, "source_frame_shape", tuple(self.source_frame_shape)
+            )
+
+    def frame_for_source_indices(self, indices: tuple[int, ...]) -> int:
+        """Map explicitly selected leading source axes to a container frame."""
+
+        if not indices:
+            return 0
+        if self.source_frame_shape is None or len(indices) != len(
+            self.source_frame_shape
+        ):
+            raise ValueError(
+                "Source selection has no declared complete container-frame mapping."
+            )
+        frame = 0
+        for index, size in zip(indices, self.source_frame_shape, strict=True):
+            if (
+                not isinstance(index, int)
+                or isinstance(index, bool)
+                or not 0 <= index < size
+            ):
+                raise ValueError(
+                    f"Source frame index {index!r} is outside dimension {size}."
+                )
+            frame = frame * size + index
+        return frame
+
+    def require_image_geometry(self) -> tuple[Any, int, int]:
+        """Require complete format-declared dtype and physical image dimensions."""
+
+        if self.image_shape_yx is None or self.source_dtype is None:
+            raise ValueError("Image-file header does not declare image dtype and YX geometry.")
+        height, width = self.image_shape_yx
+        return self.source_dtype, height, width
 
     def project_image_metadata(
         self, metadata: ImagePayloadMetadata, *, values_preserved: bool
@@ -77,7 +161,8 @@ class ImageFileSourceMetadata:
             raise ValueError("Saved image metadata requires an actual native dtype.")
         native_scale_governs = self.intensity_scale is not None or not values_preserved
         if not values_preserved:
-            metadata = metadata.without_unit_interval_intensity_scale().replace_fields(
+            metadata = metadata.replace_fields(
+                unit_interval_intensity=None,
                 physical_border_edges_yx=None,
                 mask_defines_border=None,
             )
@@ -106,7 +191,31 @@ class ImageFileSourceMetadata:
         )
 
 
-class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
+@dataclass(frozen=True, slots=True)
+class ImageFileRevision:
+    """Physical file identity and timestamps determining header reuse."""
+
+    path: Path
+    device: int
+    inode: int
+    size: int
+    modified_ns: int
+    changed_ns: int
+
+    @classmethod
+    def from_path(cls, path: Path) -> "ImageFileRevision":
+        stat = path.stat()
+        return cls(
+            path=path,
+            device=stat.st_dev,
+            inode=stat.st_ino,
+            size=stat.st_size,
+            modified_ns=stat.st_mtime_ns,
+            changed_ns=stat.st_ctime_ns,
+        )
+
+
+class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegisterMeta):
     """Nominal owner of image-file source and serialization semantics."""
 
     __registry_key__ = "format_key"
@@ -114,6 +223,16 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     format_key: ClassVar[str | None] = None
     suffixes: ClassVar[tuple[str, ...]] = ()
     browser_file_format: ClassVar[FileFormat] = FileFormat.TIFF
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        """Derive serialization substrates from the pixel-conversion owner."""
+        return ImagePayloadUint8Strategy.cache_preparation_operations()
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for operation in cls.cache_preparation_operations():
+            operation.prepare()
 
     @classmethod
     def matches_path(cls, path: str | Path) -> bool:
@@ -146,9 +265,52 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
             f"No image serialization format is registered for suffix {suffix!r}."
         )
 
-    @abstractmethod
     def prepare(self, payload: Any) -> Any:
-        """Return a payload suitable for this file format."""
+        """Project runtime pixels onto the host before format-specific encoding."""
+        pixels = image_payload_data(payload)
+        host_pixels = MemoryType(detect_memory_type(pixels)).to_numpy(pixels)
+        host_payload = image_payload_metadata(payload).payload_with(host_pixels)
+        return self.prepare_host_payload(host_payload)
+
+    @abstractmethod
+    def prepare_host_payload(self, payload: Any) -> Any:
+        """Encode host pixels while respecting this format's image semantics."""
+
+    def storage_config(
+        self, payload: Any, configured: TiffConfig | None
+    ) -> TiffConfig | None:
+        """Non-TIFF formats retain their existing backend writer configuration."""
+        return None
+
+    @classmethod
+    def storage_write_batches(
+        cls,
+        payloads: Sequence[Any],
+        paths: Sequence[str | Path],
+        configured: TiffConfig | None,
+    ) -> tuple[tuple[tuple[int, ...], TiffConfig | None], ...]:
+        """Batch compatible declared image codecs without changing output order."""
+        if len(payloads) != len(paths):
+            raise ValueError("Image storage payload/path cardinality mismatch.")
+        batches = []
+        for index, (payload, path) in enumerate(zip(payloads, paths, strict=True)):
+            config = (
+                cls.require_path(path).storage_config(
+                    payload,
+                    (
+                        configured
+                        if configured is not None and configured.applies_to_path(path)
+                        else None
+                    ),
+                )
+                if cls.is_image_path(path)
+                else None
+            )
+            if batches and batches[-1][1] == config:
+                batches[-1][0].append(index)
+            else:
+                batches.append(([index], config))
+        return tuple((tuple(indices), config) for indices, config in batches)
 
     def read(self, path: str | Path) -> np.ndarray:
         """Read pixels through this exact registered image-file format."""
@@ -171,18 +333,43 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
             return ImageFileSourceMetadata()
 
     def require_source_metadata(self, path: Path) -> ImageFileSourceMetadata:
+        """Read or reuse complete header facts for the current file revision."""
+
+        return self._source_metadata_for_revision(
+            ImageFileRevision.from_path(path),
+            self._read_source_metadata,
+        )
+
+    @staticmethod
+    @lru_cache(maxsize=4096)
+    def _source_metadata_for_revision(
+        revision: ImageFileRevision,
+        reader: Callable[[Path], ImageFileSourceMetadata],
+    ) -> ImageFileSourceMetadata:
+        """Cache successful immutable headers; exceptions retain read semantics."""
+
+        return reader(revision.path)
+
+    @classmethod
+    def _read_source_metadata(cls, path: Path) -> ImageFileSourceMetadata:
         """Read complete format-owned header metadata or fail closed."""
 
         import imageio.v3 as iio
 
-        dtype = iio.improps(path).dtype
+        properties = iio.improps(path)
+        dtype = properties.dtype
+        pixel_semantics = cls.require_pixel_semantics(path)
+        shape = tuple(properties.shape)
         return ImageFileSourceMetadata(
             source_dtype=dtype,
             intensity_scale=(
-                self.declared_intensity_scale(path)
+                cls.declared_intensity_scale(path)
                 or image_intensity_scale_for_dtype(dtype)
             ),
-            pixel_semantics=self.require_pixel_semantics(path),
+            pixel_semantics=pixel_semantics,
+            image_shape_yx=pixel_semantics.image_shape_yx_for_shape(
+                tuple(int(value) for value in shape)
+            ),
         )
 
     def preserves_pixel_values(self, source_dtype: Any) -> bool:
@@ -207,7 +394,8 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
         del path
         return False
 
-    def declared_intensity_scale(self, path: Path) -> float | None:
+    @classmethod
+    def declared_intensity_scale(cls, path: Path) -> float | None:
         """Return a container-declared intensity scale when the format has one."""
         del path
         return None
@@ -224,7 +412,8 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
             )
             return SourceImagePixelSemantics()
 
-    def require_pixel_semantics(self, path: Path) -> SourceImagePixelSemantics:
+    @classmethod
+    def require_pixel_semantics(cls, path: Path) -> SourceImagePixelSemantics:
         """Read complete pixel-band header semantics or fail closed."""
 
         from PIL import Image
@@ -247,7 +436,7 @@ class NumpyImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
 
     def read(self, path: str | Path) -> np.ndarray:
@@ -257,10 +446,18 @@ class NumpyImageFileFormat(ImageFileFormat):
         np.save(path, self.prepare(payload), allow_pickle=False)
 
     def source_metadata(self, path: Path) -> ImageFileSourceMetadata:
+        """NumPy source reads retain their strict failure policy."""
+
+        return self.require_source_metadata(path)
+
+    @classmethod
+    def _read_source_metadata(cls, path: Path) -> ImageFileSourceMetadata:
         array = np.load(path, mmap_mode="r", allow_pickle=False)
         return ImageFileSourceMetadata(
             source_dtype=array.dtype,
             intensity_scale=image_intensity_scale_for_dtype(array.dtype),
+            image_shape_yx=tuple(array.shape) if array.ndim == 2 else None,
+            source_frame_shape=() if array.ndim == 2 else None,
         )
 
 
@@ -274,8 +471,57 @@ class TiffImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
+
+    def storage_config(
+        self, payload: Any, configured: TiffConfig | None
+    ) -> TiffConfig | None:
+        metadata = image_payload_metadata(payload)
+        if metadata.persists_whole_image():
+            axes = list("ZYX")
+        elif metadata.plane_axis is not None:
+            # Q is a container frame, not a guessed physical Z/channel axis.
+            # Its exact OpenHCS component domain remains in source projection.
+            axes = list("QYX")
+        else:
+            return configured
+        data = image_payload_data(payload)
+        channel_axis = metadata.normalized_source_channel_axis(data)
+        planarconfig = None
+        photometric = TiffPhotometric.MINISBLACK
+        if channel_axis is not None:
+            if channel_axis < 0:
+                channel_axis += data.ndim
+            if channel_axis not in (data.ndim - 1, data.ndim - 3):
+                raise ValueError(
+                    "Intrinsic TIFF channels must be contiguous or planar before Y/X."
+                )
+            axes.insert(channel_axis, "S")
+            planarconfig = (
+                TiffPlanarConfig.CONTIG
+                if channel_axis == data.ndim - 1
+                else TiffPlanarConfig.SEPARATE
+            )
+            photometric = TiffPhotometric.RGB
+        if len(axes) != data.ndim:
+            raise ValueError(
+                "TIFF pixels must retain exactly their declared plane, Y/X and channel axes."
+            )
+        return replace(
+            configured if configured is not None else TiffConfig(),
+            photometric=photometric,
+            axes="".join(axes),
+            planarconfig=planarconfig,
+        )
+
+    def write(self, path: str | Path, payload: Any) -> None:
+        config = self.storage_config(payload, None)
+        if config is None:
+            return super().write(path, payload)
+        import tifffile
+
+        tifffile.imwrite(path, self.prepare(payload), **config.tifffile_write_kwargs())
 
     def requires_plane_store_decoder(self, path: Path) -> bool:
         import tifffile
@@ -283,7 +529,8 @@ class TiffImageFileFormat(ImageFileFormat):
         with tifffile.TiffFile(path) as tif:
             return bool(tif.is_ome)
 
-    def require_source_metadata(self, path: Path) -> ImageFileSourceMetadata:
+    @classmethod
+    def _read_source_metadata(cls, path: Path) -> ImageFileSourceMetadata:
         """Read complete TIFF header semantics through one container context."""
 
         import tifffile
@@ -292,7 +539,19 @@ class TiffImageFileFormat(ImageFileFormat):
         with tif:
             series = tif.series[0]
             dtype = series.dtype
-            declared_scale = self._declared_intensity_scale_from_page(tif.pages[0])
+            declared_scale = cls._declared_intensity_scale_from_page(tif.pages[0])
+            image_shape_yx = (
+                int(tif.pages[0].imagelength),
+                int(tif.pages[0].imagewidth),
+            )
+            spatial_axis = series.axes.find("Y")
+            frame_shape = tuple(int(value) for value in series.shape[:spatial_axis])
+            if (
+                spatial_axis < 0
+                or "S" in series.axes[:spatial_axis]
+                or len(series.pages) != np.prod(frame_shape)
+            ):
+                frame_shape = None
             sample_axis = series.axes.find("S")
             sample_count = int(series.shape[sample_axis]) if sample_axis >= 0 else None
             pixel_semantics = SourceImagePixelSemantics()
@@ -307,13 +566,16 @@ class TiffImageFileFormat(ImageFileFormat):
             source_dtype=dtype,
             intensity_scale=(declared_scale or image_intensity_scale_for_dtype(dtype)),
             pixel_semantics=pixel_semantics,
+            image_shape_yx=image_shape_yx,
+            source_frame_shape=frame_shape,
         )
 
-    def declared_intensity_scale(self, path: Path) -> float | None:
+    @classmethod
+    def declared_intensity_scale(cls, path: Path) -> float | None:
         import tifffile
 
         with tifffile.TiffFile(path) as tif:
-            return self._declared_intensity_scale_from_page(tif.pages[0])
+            return cls._declared_intensity_scale_from_page(tif.pages[0])
 
     @staticmethod
     def _declared_intensity_scale_from_page(page: Any) -> float | None:
@@ -334,7 +596,7 @@ class EightBitRasterImageFileFormat(ImageFileFormat):
     format_key = None
     suffixes = ()
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_as_uint8(require_single_image_payload(payload))
 
     def preserves_pixel_values(self, source_dtype: Any) -> bool:
@@ -370,7 +632,7 @@ class PngImageFileFormat(ImageFileFormat):
     format_key = "png"
     suffixes = (".png",)
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         array = require_single_image_payload(payload)
         if array.dtype == np.uint8 or array.dtype == np.uint16:
             return array
@@ -382,10 +644,19 @@ class PngImageFileFormat(ImageFileFormat):
 
 class ImagePayloadUint8Strategy(
     NominalTypeStrategyFamilyMixin,
-    ABC,
+    CompilerPreparedAutoRegisterFamily,
     metaclass=AutoRegisterMeta,
 ):
     """Nominal family for dtype-specific uint8 image conversion."""
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for strategy in cls.registered_strategy_types():
+            strategy.prepare_substrate()
+
+    @classmethod
+    def prepare_substrate(cls) -> None:
+        """Native NumPy conversions require no compiled numerical substrate."""
 
     @classmethod
     def for_dtype(cls, dtype: Any) -> "ImagePayloadUint8Strategy":
@@ -425,10 +696,53 @@ class NumericImagePayloadUint8Strategy(ImagePayloadUint8Strategy):
 
     def prepare(self, array: np.ndarray) -> np.ndarray:
         values = _uint8_conversion_values(array)
-        if _is_unit_interval(values):
-            values = values * _scale_value(values, 255.0)
-        sanitized = np.nan_to_num(values, nan=0.0, posinf=255.0, neginf=0.0)
-        return np.rint(np.clip(sanitized, 0.0, 255.0)).astype(np.uint8)
+        scale = _is_unit_interval(values)
+        # Own the working pixels before reusing them through each conversion phase.
+        working = values.copy(order="K") if values.dtype == array.dtype else values
+        if scale:
+            np.multiply(working, _scale_value(working, 255.0), out=working)
+        np.nan_to_num(working, copy=False, nan=0.0, posinf=255.0, neginf=0.0)
+        np.clip(working, 0.0, 255.0, out=working)
+        np.rint(working, out=working)
+        return working.astype(np.uint8)
+
+
+class CompiledFloatImagePayloadUint8Strategy(NumericImagePayloadUint8Strategy):
+    """Quantize plain NumPy pixels without floating working-pixel copies.
+
+    The public payload conversion admits NumPy pixels with ``np.asarray``.
+    Direct ``NumericImagePayloadUint8Strategy.prepare`` calls retain their NumPy
+    hook behavior. Dtype-specific extensions replace the corresponding leaf in
+    the existing nominal registry.
+    """
+
+    value_type = None
+    value_type_label = None
+
+    @classmethod
+    def prepare_substrate(cls) -> None:
+        scalar_type = cls.value_type
+        for writeable in (True, False):
+            values = np.asarray((0.0, 0.5, 1.0), dtype=scalar_type)
+            values.flags.writeable = writeable
+            quantize_image_uint8(
+                values, np.empty(values.shape, dtype=np.uint8), scalar_type(255.0)
+            )
+
+    def prepare(self, array: np.ndarray) -> np.ndarray:
+        # Normalize byte order only when demanded by the typed kernel ABI.
+        values = np.asarray(array, dtype=array.dtype.type).ravel(order="K")
+        output = np.empty_like(array, dtype=np.uint8, order="K")
+        quantize_image_uint8(values, output.ravel(order="K"), array.dtype.type(255.0))
+        return output
+
+
+class Float32ImagePayloadUint8Strategy(CompiledFloatImagePayloadUint8Strategy):
+    value_type = np.float32
+
+
+class Float64ImagePayloadUint8Strategy(CompiledFloatImagePayloadUint8Strategy):
+    value_type = np.float64
 
 
 def image_file_source_metadata(path: Path | None) -> ImageFileSourceMetadata:

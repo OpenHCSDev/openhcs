@@ -1,0 +1,308 @@
+{
+  "parity": [
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-0-main-20260930",
+      "label": "main",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-0-main-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/BF_cells_on_grid.csv",
+          "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+        }
+      ],
+      "exact_label_images": 0
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-1-candidate-20260930",
+      "label": "candidate",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-0-main-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/BF_cells_on_grid.csv",
+          "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+        }
+      ],
+      "exact_label_images": 0
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-2-candidate-20260930",
+      "label": "candidate",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-0-main-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/BF_cells_on_grid.csv",
+          "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+        }
+      ],
+      "exact_label_images": 0
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-3-main-20260930",
+      "label": "main",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-0-main-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/BF_cells_on_grid.csv",
+          "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+        }
+      ],
+      "exact_label_images": 0
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-execution-owner-diagnostic-production-ExampleImagingFlowCytometryObjectsInGrid-20260930",
+      "label": "execution-owner",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-0-main-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/BF_cells_on_grid.csv",
+          "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+        }
+      ],
+      "exact_label_images": 0
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-boundary-diagnostic-production-ExampleImagingFlowCytometryObjectsInGrid-20260930",
+      "label": "plate-boundary",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-ExampleImagingFlowCytometryObjectsInGrid-0-main-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/BF_cells_on_grid.csv",
+          "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+        }
+      ],
+      "exact_label_images": 0
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-cp_tutorial_3d_monolayer-0-main-20260930",
+      "label": "main",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-transport-full-candidate-20260929/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "path": "results/3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "path": "results/3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "path": "results/3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "path": "results/3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "path": "results/3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-cp_tutorial_3d_monolayer-1-candidate-20260930",
+      "label": "candidate",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-transport-full-candidate-20260929/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "path": "results/3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "path": "results/3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "path": "results/3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "path": "results/3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "path": "results/3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-cp_tutorial_3d_monolayer-2-candidate-20260930",
+      "label": "candidate",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-transport-full-candidate-20260929/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "path": "results/3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "path": "results/3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "path": "results/3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "path": "results/3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "path": "results/3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-measurement-runtime-public-cp_tutorial_3d_monolayer-3-main-20260930",
+      "label": "main",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-transport-full-candidate-20260929/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "path": "results/3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "path": "results/3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "path": "results/3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "path": "results/3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "path": "results/3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-execution-owner-diagnostic-production-cp_tutorial_3d_monolayer-20260930",
+      "label": "execution-owner",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-transport-full-candidate-20260929/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "path": "results/3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "path": "results/3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "path": "results/3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "path": "results/3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "path": "results/3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-boundary-diagnostic-production-cp_tutorial_3d_monolayer-20260930",
+      "label": "plate-boundary",
+      "control": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-transport-full-candidate-20260929/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+      "byte_exact_csvs": [
+        {
+          "path": "results/3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "path": "results/3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "path": "results/3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "path": "results/3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "path": "results/3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "path": "results/3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    }
+  ],
+  "means": {
+    "ExampleImagingFlowCytometryObjectsInGrid": {
+      "main": {
+        "compile_seconds": 1.7246606349945068,
+        "execute_seconds": 18.285399436950684,
+        "total_seconds": 20.772463601781055
+      },
+      "candidate": {
+        "compile_seconds": 1.7278814315795898,
+        "execute_seconds": 20.32276690006256,
+        "total_seconds": 22.77059645927511
+      }
+    },
+    "cp_tutorial_3d_monolayer": {
+      "main": {
+        "compile_seconds": 1.7805291414260864,
+        "execute_seconds": 8.578970074653625,
+        "total_seconds": 11.104258916340768
+      },
+      "candidate": {
+        "compile_seconds": 1.778443694114685,
+        "execute_seconds": 8.467295527458191,
+        "total_seconds": 10.936539251590148
+      }
+    }
+  },
+  "public_observations": 8,
+  "limits": "Unprofiled CPU5 sequential ABBA, shared current dependency pins and warmed declared kernel cache; mandatory readiness preparation precedes pipeline clocks. Server startup/shutdown excluded. 1w_1t selects InlineWorkerExecutorResources; fork is configured for multiworker processes. ImagingFlow has one requested combined spreadsheet and no persisted label outputs; 3D compares all six complete spreadsheets and120 persisted labels. Diagnostics are timing attribution only. No native CP/scaling refresh or whole-goal completion is claimed."
+}

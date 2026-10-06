@@ -1,0 +1,291 @@
+Existing audit ParsedModule/Repository per-module AST queries; no detector or dynamic binding proof
+openhcs/agent/capabilities.py 174 ImportFrom from openhcs.agent.dto.viewer import ViewerWindowPolylineMeasurementRequest, ViewerWindowPolylineMeasurementResult, ViewerWindowRegionMeasurementRequest, ViewerWindowRegionMeasurementResult, ViewerEndpointDiscoveryResult, ViewerWindowCloseRequest, ViewerWindowImageIntensityRequest, ViewerWindowImageIntensityResult, ViewerWindowImageSampleRequest, ViewerWindowImageSampleResult, ViewerWindowIntensityWindowRequest, ViewerWindowIntensityWindowResult, ViewerWindowLayerIsolationRequest, ViewerWindowLayerIsolationResult, ViewerWindowNavigationRequest, ViewerWindowNavigationResult, ViewerWindowPayloadRequest, ViewerWindowPayloadResult, ViewerWindowProbeResult, ViewerWindowRoiSummaryRequest, ViewerWindowRoiSummaryResult, ViewerWindowSnapshotRequest, ViewerWindowSnapshotResult, ViewerWindowStateRequest, ViewerWindowStateResult, ViewerWindowValidationRequest, ViewerWindowValidationSummaryResult, ViewerWindowViewportRequest, ViewerWindowViewportResult, ViewerWindowImageColorRequest, ViewerWindowImageColorResult, ViewerWindowNativePresentationRequest, ViewerWindowNativePresentationResult
+openhcs/agent/capabilities.py 3259 ClassDef ViewerNativePresentationCapability bases=['ViewerWindowCliConnectionCapability']
+openhcs/agent/capabilities.py 3273 Name ViewerNativePresentationCapability
+openhcs/agent/capabilities.py 3288 Name ViewerNativePresentationCapability
+openhcs/agent/capabilities.py 3304 Name ViewerNativePresentationCapability
+openhcs/agent/capabilities.py 3284 Name ViewerWindowViewportRequest
+openhcs/agent/dto/plate.py 20 ImportFrom from openhcs.core.config import NapariDisplayConfig
+openhcs/agent/dto/plate.py 397 Name NapariDisplayConfig
+openhcs/agent/dto/plate.py 416 Name NapariDisplayConfig
+openhcs/agent/dto/viewer.py 63 ImportFrom from openhcs.runtime.viewer_protocol import ViewerPayloadSummary, ViewerPayloadRecord, ViewerPayloadContent, ViewerProjectionRecord, ViewerShapeCoordinateBounds, ViewerControlField, ViewerControlResponseField, ViewerControlMessageType, OpenHCSViewerControlMessageType, ViewerProtocolStatus, ViewerImageColorControlOptions, ViewerNativeImageColorPresentation, ViewerNativeWindowControlOptions, ViewerNativeWindowState
+openhcs/agent/dto/viewer.py 414 ClassDef ViewerWindowPresentationRequest bases=['ViewerWindowControlRequest', 'ABC']
+openhcs/agent/dto/viewer.py 431 ClassDef ViewerWindowViewportRequest bases=['ViewerWindowPresentationRequest']
+openhcs/agent/dto/viewer.py 1296 ClassDef ViewerWindowPresentationResult bases=['ViewerWindowObservedErrorResultMixin', 'AgentResultEnvelope', 'ExecutionConnectionProjection']
+openhcs/agent/dto/viewer.py 431 Name ViewerWindowPresentationRequest
+openhcs/agent/dto/viewer.py 492 Name ViewerWindowPresentationRequest
+openhcs/agent/dto/viewer.py 518 Name ViewerWindowPresentationRequest
+openhcs/agent/dto/viewer.py 1238 Name ViewerProjectionRecord
+openhcs/agent/dto/viewer.py 1322 Name ViewerWindowPresentationResult
+openhcs/agent/dto/viewer.py 1330 Name ViewerWindowPresentationResult
+openhcs/agent/dto/viewer.py 1338 Name ViewerWindowPresentationResult
+openhcs/agent/dto/viewer.py 1487 Name ViewerProjectionRecord
+openhcs/agent/dto/viewer.py 1495 Name ViewerProjectionRecord
+openhcs/agent/dto/viewer.py 519 Name ViewerNativeWindowControlOptions
+openhcs/agent/dto/viewer.py 1333 Name ViewerNativeImageColorPresentation
+openhcs/agent/dto/viewer.py 1341 Name ViewerNativeWindowState
+openhcs/agent/dto/viewer.py 421 Name ViewerWindowPresentationResult
+openhcs/agent/dto/viewer.py 1334 Name ViewerNativeImageColorPresentation
+openhcs/agent/dto/viewer.py 1342 Name ViewerNativeWindowState
+openhcs/agent/dto/viewer.py 507 Name ViewerNativeImageColorPresentation
+openhcs/agent/dto/viewer.py 533 Name ViewerNativeWindowControlOptions
+openhcs/agent/services/plate_streaming_service.py 482 Attribute config_type(**values).with_display_config
+openhcs/agent/services/viewer_window_service.py 43 ImportFrom from openhcs.agent.dto.viewer import ViewerWindowPolylineMeasurementRequest, ViewerWindowPolylineMeasurementResult, ViewerWindowRegionMeasurementRequest, ViewerWindowRegionMeasurementResult, ViewerWindowCloseRequest, ViewerWindowControlRequest, ViewerWindowDescriptor, ViewerWindowImageIntensityRequest, ViewerWindowImageIntensityResult, ViewerWindowImageSampleRequest, ViewerWindowImageSampleResult, ViewerWindowImageSampleRecord, ViewerWindowIntensityPayloadIdentity, ViewerWindowIntensityWindowRequest, ViewerWindowIntensityWindowResult, ViewerWindowLayerIsolationRequest, ViewerWindowLayerIsolationResult, ViewerWindowLayerPayloads, ViewerWindowLayerState, ViewerWindowLayerValidationSummary, ViewerWindowLayerVisibilityRecord, ViewerWindowNavigationRequest, ViewerWindowNavigationResult, ViewerWindowPayloadRecord, ViewerWindowPayloadRequest, ViewerWindowPayloadResult, ViewerWindowProbeResult, ViewerWindowRoiSummaryRequest, ViewerWindowRoiSummaryResult, ViewerWindowRoiNumericStatistics, ViewerWindowRoiExample, ViewerWindowRoiPayloadSummary, ViewerWindowSnapshotRequest, ViewerWindowSnapshotResult, ViewerWindowStateRequest, ViewerWindowStateResult, ViewerWindowValidationCounters, ViewerWindowValidationErrorContext, ViewerWindowValidationPolicy, ViewerWindowValidationRequest, ViewerWindowValidationSummaryResult, ViewerWindowPresentationRequest, ViewerWindowPresentationResult, viewer_window_probe_from_state
+openhcs/agent/services/viewer_window_service.py 1030 FunctionDef presentation_control signature=self, request: ViewerWindowPresentationRequest
+openhcs/agent/services/viewer_window_service.py 1101 FunctionDef presentation_control signature=self, request: ViewerWindowPresentationRequest
+openhcs/agent/services/viewer_window_service.py 1170 FunctionDef _send_control_message signature=self, request: ViewerWindowControlRequest, message: Mapping[str, object]
+openhcs/agent/services/viewer_window_service.py 1402 Name ViewerWindowPresentationResult
+openhcs/agent/services/viewer_window_service.py 1030 Name ViewerWindowPresentationRequest
+openhcs/agent/services/viewer_window_service.py 1076 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1083 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1090 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1093 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1101 Name ViewerWindowPresentationRequest
+openhcs/agent/services/viewer_window_service.py 1102 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1115 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1124 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1146 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1151 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1162 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1401 Name ViewerWindowPresentationRequest
+openhcs/agent/services/viewer_window_service.py 1404 Attribute self._gateway.presentation_control
+openhcs/core/config.py 35 ImportFrom from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
+openhcs/core/config.py 257 ClassDef NapariDisplayConfig bases=['ViewerDisplayConfigABC', 'AnnotatedDataclassValidationMixin']
+openhcs/core/config.py 1147 ImportFrom from openhcs.core.streaming_config_factory import StreamingConfigBehaviorMixin, ViewerProcessLaunchConfig
+openhcs/core/config.py 258 Name ViewerDisplayConfigABC
+openhcs/core/config.py 386 Name NapariDisplayConfig
+openhcs/core/config.py 415 Name ViewerDisplayConfigABC
+openhcs/core/config.py 1157 Name StreamingConfigBehaviorMixin
+openhcs/core/config.py 1159 Name NapariDisplayConfig
+openhcs/core/config.py 1189 Name StreamingConfigBehaviorMixin
+openhcs/core/config.py 291 Name channel_mode
+openhcs/core/config.py 386 Name NapariDisplayConfig
+openhcs/core/config.py 447 Name channel_mode
+openhcs/core/config.py 323 Attribute self.channel_mode
+openhcs/core/config.py 485 Attribute self.channel_mode
+openhcs/core/steps/stream_component_semantics.py 13 ImportFrom from polystore.streaming.viewer_transport import DisplayComponentToken, DisplayModeToken, IndexedViewerStreamSourceMetadata, PathMappedViewerStreamSourceMetadata, ViewerStreamBackendKwargs, ViewerStreamMessageContext, ViewerStreamProducer, ViewerStreamSourceIdentity, ViewerStreamSourceMetadata, ViewerDisplayConfigABC
+openhcs/core/steps/stream_component_semantics.py 194 Name ViewerDisplayConfigABC
+openhcs/core/steps/stream_component_semantics.py 197 Name ViewerDisplayConfigABC
+openhcs/core/streaming_config_factory.py 13 ImportFrom from polystore.streaming.viewer_transport import ExplicitViewerTransportConfig, ViewerStreamBackendKwargs, ViewerStreamMessageContext, ViewerStreamProducer, ViewerStreamRequest, ViewerStreamSource, ViewerStreamSourceIdentity, ViewerStreamSourceMetadata, ViewerDisplayConfigABC
+openhcs/core/streaming_config_factory.py 160 ClassDef StreamingConfigBehaviorMixin bases=[]
+openhcs/core/streaming_config_factory.py 166 FunctionDef with_display_config signature=self, display: ViewerDisplayConfigABC | None
+openhcs/core/streaming_config_factory.py 166 Name ViewerDisplayConfigABC
+openhcs/mcp/dev_client_commands/viewer.py 13 ImportFrom from openhcs.agent.dto.viewer import VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT, ViewerWindowImageSampleRequest, ViewerWindowIntensityWindowRequest, ViewerWindowLayerIsolationRequest, ViewerWindowNavigationRequest, ViewerNativeViewportPresentation, ViewerWindowViewportRequest, ViewerWindowViewportResult, ViewerWindowPayloadRequest, ViewerWindowRoiSummaryRequest, ViewerWindowSnapshotRequest, ViewerWindowStateRequest, ViewerWindowValidationRequest
+openhcs/mcp/dev_client_commands/viewer.py 890 Name ViewerWindowViewportRequest
+openhcs/mcp/dev_client_renderers/viewer.py 182 Name viewport
+openhcs/mcp/dev_client_renderers/viewer.py 182 Name viewport
+openhcs/pyqt_gui/widgets/source_bindings_editor.py 1365 Attribute table.viewport
+openhcs/runtime/napari_streaming_handlers.py 22 ImportFrom from openhcs.core.config import NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 36 ImportFrom from openhcs.runtime.viewer_protocol import NapariLayerKind, ViewerComponentValueOrdering, ViewerSettlePhase, ViewerSettleProgress, ViewerNativeWindowGeometry, ViewerNativeWindowState
+openhcs/runtime/napari_streaming_handlers.py 56 ClassDef NapariNativeWindowPresentation bases=[]
+openhcs/runtime/napari_streaming_handlers.py 84 Name ViewerNativeWindowState
+openhcs/runtime/napari_streaming_handlers.py 262 Name NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 1111 Name NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 68 Name ViewerNativeWindowGeometry
+openhcs/runtime/napari_streaming_handlers.py 86 Name ViewerNativeWindowState
+openhcs/runtime/napari_streaming_handlers.py 272 Name NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 1111 Name NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 87 Name ViewerNativeWindowGeometry
+openhcs/runtime/napari_viewer_server.py 81 ImportFrom from openhcs.core.config import NapariDisplayConfig, NapariVariableSizeHandling
+openhcs/runtime/napari_viewer_server.py 92 ImportFrom from openhcs.runtime.napari_streaming_handlers import DimensionLabelMap, LayerData, LayerKwargValue, NapariAggregateAxisBindingAuthority, NapariAggregateAxisBindingSet, NapariAxisPresentation, NapariBatchProcessorStore, NapariComponentGroupStore, NapariDimensionLayerState, NapariImageLayerPresentationPolicy, NapariImagePayloadAxisLabelPolicy, NapariNativeWindowPresentation, NapariLayerBatchDebouncePolicy, NapariLayerHandle, NapariLayerRouteStateStore, NapariLayerSettlementState, NapariLayerUpdateAuthority, NapariPendingLayerUpdate, NapariShapeColorProjection, NapariShapeLayerPayload, NapariShapesLayerHandle, NapariStreamLayerAddress, NapariStreamLayerItem, NapariViewerLayerCreator, VisualMetadataField
+openhcs/runtime/napari_viewer_server.py 157 ImportFrom from openhcs.runtime.viewer_protocol import NapariLayerKind, NapariViewerServerRequest, OpenHCSViewerServerABC, OpenHCSViewerControlMessageType, ViewerBatchMessageType, ViewerBatchWireField, ViewerComponentValueOrdering, ViewerControlField, ViewerImageColorControlOptions, ViewerNativeImageColorPresentation, ViewerNativeWindowControlOptions, ViewerDeclaredWireValue, ViewerControlMessageType, ViewerControlReplyHeader, ViewerControlReplyPayload, ViewerControlResponseField, ViewerIntensityWindowField, ViewerDescriptorField, ViewerLayerField, ViewerLayerIsolationControlOptions, ViewerLayerIsolationField, ViewerNavigationControlOptions, ViewerPayloadField, ViewerPayloadProjectionOptions, ViewerPayloadSummaryField, ViewerPayloadSummary, ViewerArrayValueSummary, ViewerPayloadRecord, ViewerProtocolStatus, ViewerQtEnvironmentPolicy, ViewerSettlePhase, ViewerSettleProgress, ViewerStateControlOptions
+openhcs/runtime/napari_viewer_server.py 716 ClassDef NapariImagePayloadLayoutRole bases=['str', 'Enum']
+openhcs/runtime/napari_viewer_server.py 2561 ClassDef NapariControlMessageAction bases=['NapariMessageTypeBase']
+openhcs/runtime/napari_viewer_server.py 4918 ClassDef NapariPresentationControlMessageAction bases=['NapariControlMessageAction']
+openhcs/runtime/napari_viewer_server.py 2642 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 2680 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 2705 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 2735 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4618 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4649 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4681 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4918 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4950 Name NapariPresentationControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4964 Name NapariPresentationControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4983 Name NapariPresentationControlMessageAction
+openhcs/runtime/napari_viewer_server.py 5630 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 5729 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 5811 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 6151 FunctionDef raise_result_selection_surface signature=self
+openhcs/runtime/napari_viewer_server.py 414 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 528 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 807 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 1693 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 4985 Name ViewerNativeWindowControlOptions
+openhcs/runtime/napari_viewer_server.py 808 Name NapariImagePayloadLayoutRole
+openhcs/runtime/napari_viewer_server.py 535 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 648 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 4980 Name ViewerNativeImageColorPresentation
+openhcs/runtime/napari_viewer_server.py 4989 Name NapariNativeWindowPresentation
+openhcs/runtime/napari_viewer_server.py 6389 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 6405 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 989 Name NapariImagePayloadLayoutRole
+openhcs/runtime/napari_viewer_server.py 1285 Name NapariImagePayloadLayoutRole
+openhcs/runtime/napari_viewer_server.py 1349 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 5500 Attribute server.raise_result_selection_surface
+openhcs/runtime/napari_viewer_server.py 6050 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 6325 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 6157 Name NapariNativeWindowPresentation
+openhcs/runtime/napari_viewer_server.py 6383 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 439 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 6095 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 6304 Name NapariControlMessageAction
+openhcs/runtime/viewer_component_system.py 28 ImportFrom from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
+openhcs/runtime/viewer_component_system.py 159 Name ViewerDisplayConfigABC
+openhcs/runtime/viewer_protocol.py 169 ClassDef ViewerProjectionRecord bases=['ViewerDeclaredWireValue']
+openhcs/runtime/viewer_protocol.py 222 ClassDef ViewerNativeImageColorPresentation bases=['ViewerProjectionRecord']
+openhcs/runtime/viewer_protocol.py 236 ClassDef ViewerNativeWindowGeometry bases=['ViewerProjectionRecord']
+openhcs/runtime/viewer_protocol.py 246 ClassDef ViewerNativeWindowControlOptions bases=['ViewerProjectionRecord']
+openhcs/runtime/viewer_protocol.py 261 ClassDef ViewerNativeWindowState bases=['ViewerProjectionRecord']
+openhcs/runtime/viewer_protocol.py 99 ImportFrom from openhcs.runtime.napari_streaming_handlers import NapariNativeWindowPresentation
+openhcs/runtime/viewer_protocol.py 222 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 230 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 236 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 246 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 261 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 272 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 299 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 308 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 328 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 346 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 442 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 216 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 232 Name ViewerNativeImageColorPresentation
+openhcs/runtime/viewer_protocol.py 262 Name ViewerNativeWindowGeometry
+openhcs/runtime/viewer_protocol.py 217 Name ViewerProjectionRecord
+openhcs/runtime/viewer_protocol.py 249 Name ViewerNativeWindowGeometry
+openhcs/runtime/viewer_protocol.py 252 Name NapariNativeWindowPresentation
+ROOT /home/ts/wt/openhcs-knowledge-declaration-source-376-20261001 6967c0ea42850666d87d9d367cb39d430abab7c3 PARSED 703 OMISSIONS []
+src/polystore/streaming/viewer_transport.py 37 ClassDef ViewerDisplayConfigABC bases=['ABC']
+src/polystore/streaming/viewer_transport.py 434 Name ViewerDisplayConfigABC
+src/polystore/streaming/viewer_transport.py 483 Name ViewerDisplayConfigABC
+src/polystore/streaming/viewer_transport.py 494 Name ViewerDisplayConfigABC
+ROOT /home/ts/code/projects/openhcs/external/PolyStore 0efe67fdd14985bf90cee6e0f0c4735d41d265d1 PARSED 26 OMISSIONS []
+ROOT /home/ts/code/projects/openhcs/external/zmqruntime 1d3b32f4fcead23d5d2079c975eb2ae7646a1478 PARSED 32 OMISSIONS []
+ROOT /home/ts/code/projects/openhcs/external/python-introspect 5bb79d5edb7250083a09ab77b2d9177e3ba202ab PARSED 12 OMISSIONS []
+src/pyqt_reactive/animation/flash_mixin.py 409 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1128 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1181 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1639 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2167 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 3001 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 409 Attribute widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1128 Attribute tree.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1129 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1181 Attribute list_widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1182 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1639 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1642 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2167 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_mixin.py 3001 Attribute widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 3002 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 3565 Attribute target.table.viewport
+src/pyqt_reactive/animation/flash_mixin.py 411 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1099 Attribute target.table.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1131 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1197 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1640 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1640 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2168 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2168 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2171 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2172 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 412 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 413 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 415 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 416 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1083 Attribute table.viewport
+src/pyqt_reactive/animation/flash_mixin.py 3009 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 3020 Attribute element.delegate_widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 2168 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 543 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 485 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 543 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 544 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 544 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 545 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 546 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 486 Attribute scroll_area.viewport
+src/pyqt_reactive/core/reorderable_list_widget.py 46 Attribute self.viewport
+src/pyqt_reactive/services/widget_tree_projection.py 1218 Name viewport
+src/pyqt_reactive/services/widget_tree_projection.py 1218 Attribute view.viewport
+src/pyqt_reactive/services/widget_tree_projection.py 1219 Name viewport
+src/pyqt_reactive/services/widget_tree_projection.py 1222 Name viewport
+src/pyqt_reactive/widgets/log_viewer.py 1034 Attribute parent.viewport
+src/pyqt_reactive/widgets/log_viewer.py 701 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/log_viewer.py 1035 Attribute parent.viewport
+src/pyqt_reactive/widgets/log_viewer.py 1180 Attribute self.viewport
+src/pyqt_reactive/widgets/log_viewer.py 2876 Attribute self.log_view.viewport
+src/pyqt_reactive/widgets/log_viewer.py 1424 Attribute self.viewport
+src/pyqt_reactive/widgets/log_viewer.py 2848 Attribute self.log_view.viewport
+src/pyqt_reactive/widgets/shared/column_filter_widget.py 529 Attribute self.presentation_control
+src/pyqt_reactive/widgets/shared/column_filter_widget.py 536 Attribute self.presentation_control
+src/pyqt_reactive/widgets/shared/column_filter_widget.py 533 Attribute self.presentation_control
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 413 Attribute tree.viewport
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 429 Attribute self._tree_for_dirty.viewport
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 398 Attribute tree.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 488 Attribute view.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 106 Attribute view.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 174 Attribute parent.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 544 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 461 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 525 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 98 Attribute status_scroll.viewport
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 127 Attribute status_scroll.viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 105 Name viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 105 Attribute self.viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Name viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 88 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 153 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 194 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 111 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 126 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 197 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 454 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 457 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 479 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 517 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 523 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 526 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 530 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 549 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 89 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 101 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 135 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 155 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 204 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 440 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 476 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 497 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 501 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 522 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 532 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 95 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 96 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 154 Attribute self._owner.scroll_area.viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 423 Attribute self.scroll_area.viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 451 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 483 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 484 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 503 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 136 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 207 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 504 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 510 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 527 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 540 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 544 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 97 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 506 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 509 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 512 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 515 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 535 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 513 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 507 Name viewport
+src/pyqt_reactive/widgets/structural_table.py 105 Attribute self.table.viewport
+src/pyqt_reactive/widgets/structural_table.py 98 Attribute self.table.viewport
+ROOT /home/ts/wt/pyqt-reactive-render-complete-snapshot-20261001 ad4948775ab81180a354d4b793d17ee5ddff3972 PARSED 193 OMISSIONS []

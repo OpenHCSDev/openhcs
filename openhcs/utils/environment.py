@@ -22,8 +22,11 @@ class OpenHCSProcessEnvironment:
     cpu_only_key = "OPENHCS_CPU_ONLY"
     headless_key = "OPENHCS_HEADLESS"
     numba_cache_key = "NUMBA_CACHE_DIR"
+    worker_profile_directory_key = "OPENHCS_WORKER_PROFILE_DIR"
+    numba_sys_monitoring_key = "NUMBA_ENABLE_SYS_MONITORING"
     subprocess_no_gpu_key = "OPENHCS_SUBPROCESS_NO_GPU"
     polystore_subprocess_no_gpu_key = "POLYSTORE_SUBPROCESS_NO_GPU"
+    jax_platforms_key = "JAX_PLATFORMS"
     use_threading_key = "OPENHCS_USE_THREADING"
 
     @staticmethod
@@ -48,11 +51,20 @@ class OpenHCSProcessEnvironment:
     def child_process_environment_keys(cls) -> tuple[str, ...]:
         """Return mode selectors required for semantic parity in child processes."""
 
+        from polystore.imagej_distribution import (
+            FijiArchiveDistribution,
+            ImageJArchiveDownloadPolicy,
+        )
+
         return (
             cls.cpu_only_key,
             cls.headless_key,
             cls.numba_cache_key,
             cls.use_threading_key,
+            cls.worker_profile_directory_key,
+            cls.numba_sys_monitoring_key,
+            FijiArchiveDistribution.cache_root_environment_key,
+            ImageJArchiveDownloadPolicy.allow_download_environment_key,
         )
 
     @staticmethod
@@ -108,6 +120,28 @@ class OpenHCSProcessEnvironment:
         if cls.gpu_imports_disabled(values):
             values[cls.subprocess_no_gpu_key] = "1"
             values[cls.polystore_subprocess_no_gpu_key] = "1"
+        if cls.cpu_only_mode(values):
+            values[cls.jax_platforms_key] = "cpu"
+
+    @classmethod
+    def worker_profile_directory(
+        cls,
+        environment: Mapping[str, str] | None = None,
+    ) -> Path | None:
+        """Return the activated worker-profile output directory."""
+        values = os.environ if environment is None else environment
+        profile_directory = values.get(cls.worker_profile_directory_key)
+        return Path(profile_directory) if profile_directory else None
+
+    @classmethod
+    def project_numba_worker_profiling_policy(
+        cls,
+        environment: MutableMapping[str, str] | None = None,
+    ) -> None:
+        """Activate kernel profiling before Numba constructs its dispatchers."""
+        values = os.environ if environment is None else environment
+        if cls.worker_profile_directory(values) is not None:
+            values[cls.numba_sys_monitoring_key] = "1"
 
     @classmethod
     def headless_mode(

@@ -10,7 +10,8 @@ import threading
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from zmqruntime.messages import ImageTransferIdentity
 from typing import ClassVar, TypeAlias
 
 import numpy as np
@@ -30,6 +31,7 @@ from zmqruntime.viewer_protocol import ViewerWireField
 from openhcs.core.config import FijiDisplayConfig
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
     FijiMacroExecutionResponse,
@@ -51,11 +53,13 @@ from openhcs.runtime.viewer_component_system import (
 from openhcs.runtime.viewer_protocol import (
     FijiPayloadKind,
     OpenHCSViewerServerABC,
+    OpenHCSViewerControlMessageType,
     ViewerBatchContextWireField,
     ViewerBatchMessageType,
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
     ViewerControlMessageType,
+    ViewerControlField,
     ViewerControlReplyHeader,
     ViewerControlReplyPayload,
     ViewerControlResponseField,
@@ -249,7 +253,11 @@ class FijiImagePayload:
 
     data: np.ndarray
     metadata: Mapping[str, ComponentValue]
-    image_id: str | None = None
+    transfer: ImageTransferIdentity | None = None
+
+    @property
+    def image_id(self) -> str | None:
+        return None if self.transfer is None else self.transfer.image_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -257,12 +265,13 @@ class FijiWireItem(WindowProjectionPayloadProvider):
     """Nominal Fiji stream item with all raw wire-key semantics localized."""
 
     payload: dict[str, FijiWireValue]
+    transfer: ImageTransferIdentity | None = field(default=None, kw_only=True)
 
     @classmethod
     def from_payload(cls, payload: FijiWireValue) -> "FijiWireItem":
         if not isinstance(payload, Mapping):
             raise TypeError("Fiji batch item must be a mapping.")
-        return cls(dict(payload))
+        return cls(dict(payload), transfer=ImageTransferIdentity.from_item(payload))
 
     @classmethod
     def from_payloads(cls, payloads: Sequence[FijiWireValue]) -> list["FijiWireItem"]:
@@ -284,10 +293,7 @@ class FijiWireItem(WindowProjectionPayloadProvider):
 
     @property
     def image_id(self) -> str | None:
-        value = self.payload.get("image_id")
-        if value is None:
-            return None
-        return str(value)
+        return None if self.transfer is None else self.transfer.image_id
 
     @property
     def metadata(self) -> Mapping[str, ComponentValue]:
@@ -329,7 +335,7 @@ class FijiWireItem(WindowProjectionPayloadProvider):
         copied.pop("shm_name", None)
         copied.pop("shape", None)
         copied.pop("dtype", None)
-        return FijiWireItem(copied)
+        return replace(self, payload=copied)
 
     def image_payload(self) -> FijiImagePayload | None:
         if "data" not in self.payload:
@@ -337,7 +343,7 @@ class FijiWireItem(WindowProjectionPayloadProvider):
         return FijiImagePayload(
             data=self.data,
             metadata=self.metadata,
-            image_id=self.image_id,
+            transfer=self.transfer,
         )
 
     @property
@@ -718,7 +724,7 @@ class FijiImageStackBuilder:
 class FijiSharedMemoryItemCopier:
     """Copy shared-memory Fiji image payloads into local process memory."""
 
-    send_error_ack: Callable[[str, str], None]
+    send_error_ack: Callable[[ImageTransferIdentity | None, str], None]
 
     def copy(self, items: Sequence[FijiWireItem]) -> list[FijiWireItem]:
         copied_items = []
@@ -745,8 +751,7 @@ class FijiSharedMemoryItemCopier:
                     shared_memory_spec.name,
                     error,
                 )
-                if item.image_id is not None:
-                    self.send_error_ack(item.image_id, str(error))
+                self.send_error_ack(item.transfer, str(error))
         return copied_items
 
 
@@ -1216,6 +1221,9 @@ class FijiControlRequestContext:
     windows: FijiWindowRegistry
     imagej_runtime: object
     settlement: FijiBatchSettlementState
+    process_launch: ViewerProcessLaunchConfig = field(
+        default_factory=ViewerProcessLaunchConfig
+    )
 
 
 class FijiControlMessagePlan(ABC, metaclass=AutoRegisterMeta):
@@ -1306,6 +1314,25 @@ class FijiClearStateControlPlan(FijiControlMessagePlan):
                 response_type="clear_state_ack",
                 message="Dimension values cleared",
             ),
+        )
+
+
+class FijiProcessLaunchControlPlan(FijiControlMessagePlan):
+    """Project the server-owned launch declaration through the common boundary."""
+
+    wire_value = OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value
+
+    def response(
+        self, context: FijiControlRequestContext, payload: object | None
+    ) -> FijiControlMessageResponse:
+        return FijiControlMessageResponse(
+            ViewerControlReplyHeader(
+                ViewerProtocolStatus.SUCCESS, response_type="process_launch_ack"
+            ),
+            fields={
+                ViewerControlField.PROCESS_LAUNCH.value:
+                    context.process_launch.to_wire_mapping(),
+            },
         )
 
 
@@ -1705,8 +1732,8 @@ class FijiBatchProcessingAuthority:
     ) -> list[FijiWireItem]:
         """Copy shared-memory item payloads before acknowledging the sender."""
         return FijiSharedMemoryItemCopier(
-            lambda image_id, error: self.server._send_ack(
-                image_id,
+            lambda transfer, error: self.server.send_ack(
+                transfer,
                 status=_ACK_ERROR,
                 error=error,
             )
@@ -1969,7 +1996,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         super().__init__(
             launch_config.port,
             viewer_type=ViewerType.FIJI.wire_value,
-            host="*",
+            host=launch_config.process_launch.listen_host,
             log_file_path=launch_config.log_file_path,
             data_socket_type=zmq.REP,
             transport_mode=launch_config.transport_mode,
@@ -1982,20 +2009,6 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         self._shutdown_requested = False
         self.windows = FijiWindowRegistry()
         self.batch_processor = FijiBatchProcessingAuthority(self)
-
-    def _setup_ack_socket(self):
-        """Setup PUSH socket for sending acknowledgments."""
-        super()._setup_ack_socket()
-
-    def _send_ack(self, image_id: str, status: str = "success", error: str = None):
-        """Send acknowledgment that an image was processed.
-
-        Args:
-            image_id: UUID of the processed image
-            status: 'success' or 'error'
-            error: Error message if status='error'
-        """
-        self.send_ack(image_id, status=status, error=error)
 
     def _wait_for_swing_ui_ready(self, timeout: float = 5.0) -> bool:
         """Wait for Java Swing UI to be fully initialized.
@@ -2128,6 +2141,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
                 self.windows,
                 self.ij,
                 self.batch_processor.settlement,
+                self.launch_config.process_launch,
             )
         ).response_for(message)
         if response.shutdown_requested:
@@ -2945,8 +2959,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
 
         # Send acknowledgments
         for image in all_images:
-            if image_id := image.image_id:
-                self._send_ack(image_id, status=_ACK_SUCCESS)
+            self.send_ack(image.transfer, status=_ACK_SUCCESS)
 
     def request_shutdown(self):
         """Request graceful shutdown."""
@@ -2969,7 +2982,7 @@ class FijiImagePayloadHandler(FijiPayloadHandler):
             elif item.shared_memory is not None:
                 loaded = request.server.load_images_from_shared_memory(
                     [item.payload],
-                    error_callback=request.server._send_ack,
+                    error_callback=request.server.send_ack,
                 )
                 image_data_list.extend(
                     payload
@@ -3080,8 +3093,7 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
         for roi_item in request.items:
             rois_encoded = roi_item.rois
             if not rois_encoded:
-                if image_id := roi_item.image_id:
-                    request.server._send_ack(image_id, status=_ACK_SUCCESS)
+                request.server.send_ack(roi_item.transfer, status=_ACK_SUCCESS)
                 continue
 
             metadata = roi_item.metadata
@@ -3120,8 +3132,7 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
                 if request.work_unit_completed is not None:
                     request.work_unit_completed()
 
-            if image_id := roi_item.image_id:
-                request.server._send_ack(image_id, status=_ACK_SUCCESS)
+            request.server.send_ack(roi_item.transfer, status=_ACK_SUCCESS)
 
         if not roi_manager.isVisible():
             self.roi_manager_provider.show(roi_manager)
@@ -3139,6 +3150,7 @@ def fiji_viewer_server_process(
     display_enabled: bool = True,
     transport_mode: TransportMode = TransportMode.IPC,
     zmq_config: ZMQConfig | None = None,
+    listen_host: str = "127.0.0.1",
 ):
     """
     Fiji viewer server process function.
@@ -3152,6 +3164,7 @@ def fiji_viewer_server_process(
         log_file_path: Path to log file (for client discovery via ping/pong)
         transport_mode: ZMQ transport mode (IPC or TCP)
         zmq_config: ZMQ configuration object (optional, uses default if None)
+        listen_host: Explicit TCP bind interface; defaults to local-only
     """
     server = None
     try:
@@ -3166,6 +3179,7 @@ def fiji_viewer_server_process(
                 display_enabled=display_enabled,
                 transport_mode=transport_mode,
                 zmq_config=zmq_config,
+                process_launch=ViewerProcessLaunchConfig(listen_host=listen_host),
             )
         )
 

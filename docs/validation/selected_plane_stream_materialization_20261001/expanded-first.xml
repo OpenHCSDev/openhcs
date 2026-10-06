@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="49" time="3.464" timestamp="2026-10-01T15:41:43.663104-04:00" hostname="desktop"><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_public_selected_checkpoint_materializes_and_streams_without_storage_axes[runtime_slice]" time="0.106" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_public_selected_checkpoint_materializes_and_streams_without_storage_axes[source_binding]" time="0.004" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices0-channel]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices0-site]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices0-z_index]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices0-timepoint]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices1-channel]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices1-site]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices1-z_index]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_selection_contract_keeps_exact_source_order_without_channel_inference[indices1-timepoint]" time="0.001" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks" time="0.002" /><testcase classname="tests.unit.test_selected_plane_stream_materialization" name="test_all_public_declared_outputs_persist_with_selected_qa_streams" time="0.005"><failure message="TypeError: Artifact 'neurite_outgrowth_summary' expected ArtifactPayloadShape.TABLE measurements payload, got DataclassMeasurementColumnarRows.">tmp_path = PosixPath('/home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/storage_cleanup_20261001/selected-plane-expanded-first-scratch/test_all_public_declared_outpu0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f156f931580&gt;
+viewer_ack_return_route = AckReturnRoute(url='tcp://127.0.0.1:8111', incarnation='00000000-0000-0000-0000-000000000001', owner=ProcessIdentity(pid=2102496, create_time=1790883697.73))
+
+    def test_all_public_declared_outputs_persist_with_selected_qa_streams(tmp_path, monkeypatch, viewer_ack_return_route):
+        source = _source_stack(RuntimePlaneAxis.SOURCE_BINDING)
+        projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2)
+        labels = np.zeros((2, 7, 8), dtype=np.int32)
+        labels[1, 2:5, 3:6] = 1
+        label_payload = SourceImageObjectLabelBuildRequest(image=source, labels=labels, plane_projection=projection).payload()
+        summary = NeuriteOutgrowthSummary(**{field.name: 0 for field in fields(NeuriteOutgrowthSummary)})
+        cell = NeuriteOutgrowthCellResult(1, 1, 0.0, 0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 0.0, False)
+        selected = ImageFunctionOutputContextStrategy().contextualize(
+            source, SelectedPlaneImageOutput((labels[1] &gt; 0).astype(np.uint8)[None], (1,)), None, projection,
+        )
+        graph = SpatialGraph(
+            name="neurite_morphology", nodes=(SpatialGraphNode(1, (3, 4), features=(("label", 1),)),),
+            edges=(), coordinate_spacing=(1.3556, 1.3556), source_plane_index=1,
+            source_provenance=image_payload_metadata(selected).source_provenance,
+        )
+        values = (
+            DataclassMeasurementColumnarRows((summary,), row_type=NeuriteOutgrowthSummary),
+            DataclassMeasurementColumnarRows((cell,), row_type=NeuriteOutgrowthCellResult),
+            label_payload, label_payload, label_payload, label_payload,
+            selected, selected, selected, selected, selected, graph,
+        )
+        specs = CallableContract.from_callable(neurite_outgrowth_metaxpress).artifact_outputs
+        plans = tuple(
+            ArtifactOutputPlan(
+                name=spec.name, path=str(tmp_path / "runtime" / f"{spec.name}.pkl"), artifact_type=spec.artifact_type,
+                materialization=spec.materialization, viewer_streaming=spec.viewer_streaming,
+                sidecar_role=spec.sidecar_role, relations=spec.relations,
+            )
+            for spec in specs
+        )
+        viewer = NapariStreamingBackend()
+        filemanager = FileManager({"disk": DiskStorageBackend(), "napari_stream": viewer})
+        context = _context(filemanager)
+        plan = replace(
+            _plan(plans[0], streaming_configs={"napari_stream": streaming_config_stub()}),
+            artifact_outputs={output.ref(): output for output in plans},
+            analysis_results_dir=str(tmp_path / "analysis"), output_dir=tmp_path / "images",
+        )
+        for output, value in zip(plans, values, strict=True):
+            context.runtime_value_store.record(
+&gt;               RuntimeValue.normalize(output, value, axis_id="A01"), path=output.path, backend="memory",
+            )
+
+tests/unit/test_selected_plane_stream_materialization.py:208: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/runtime_artifact_values.py:165: in normalize
+    return cls.normalize_for_execution_scope(
+openhcs/core/runtime_artifact_values.py:218: in normalize_for_execution_scope
+    return runtime_value.validated_for_output_plan(
+openhcs/core/runtime_artifact_values.py:259: in validated_for_output_plan
+    self.artifact_type.validate_runtime_payload(output_plan.name, self.data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class 'openhcs.core.artifacts.MeasurementsArtifactType'&gt;
+name = 'neurite_outgrowth_summary'
+data = DataclassMeasurementColumnarRows(rows=(NeuriteOutgrowthSummary(neurite_channel_index=0, cell_body_channel_index=0, nuc...idual_fraction=0),), row_type=&lt;class 'openhcs.processing.backends.analysis.neurite_outgrowth.NeuriteOutgrowthSummary'&gt;)
+
+    @classmethod
+    def validate_runtime_payload(
+        cls,
+        name: str,
+        data: object,
+    ) -&gt; None:
+        """Validate one nominal payload against this artifact type."""
+    
+        from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
+    
+        if isinstance(data, RuntimeSliceAlignedValueSet):
+            invalid = tuple(
+                type(value).__name__
+                for value in (
+                    data.value_for_slice(index) for index in range(data.slice_count)
+                )
+                if not cls.accepts_runtime_payload(value)
+            )
+            if not invalid:
+                return
+            raise TypeError(
+                f"Artifact {name!r} expected slice-aligned {cls.description()}, "
+                f"got invalid values {invalid!r}."
+            )
+        if cls.accepts_runtime_payload(data):
+            if isinstance(data, NamedArtifactPayload):
+                data.validate_artifact_name(name)
+            return
+&gt;       raise TypeError(
+            f"Artifact {name!r} expected {cls.description()}, "
+            f"got {type(data).__name__}."
+        )
+E       TypeError: Artifact 'neurite_outgrowth_summary' expected ArtifactPayloadShape.TABLE measurements payload, got DataclassMeasurementColumnarRows.
+
+openhcs/core/artifacts.py:299: TypeError</failure></testcase><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_rejects_invalid_indices[indices0]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_rejects_invalid_indices[indices1]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_rejects_invalid_indices[indices2]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_rejects_invalid_indices[indices3]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_rejects_invalid_indices[indices4]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_requires_one_plane_per_index[shape0]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_requires_one_plane_per_index[shape1]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_requires_one_plane_per_index[shape2]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_requires_complete_projection[None]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_requires_complete_projection[0]" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_rejects_out_of_range_source_plane" time="0.001" /><testcase classname="tests.unit.test_projected_image_output" name="test_selected_output_array_interop_and_conversion_preserve_selection" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity" time="0.002" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_streaming_domain_requires_bound_execution" time="0.002" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_viewer_component_metadata_projector_keeps_only_declared_axes" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_source_component_metadata_items_project_viewer_metadata_by_index" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_viewer_component_metadata_projector_requires_source_metadata" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_route_metadata_excludes_payload_local_plane_component" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_source_declared_domains_reuse_route_component_projection[1_0]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_source_declared_domains_reuse_route_component_projection[1_1]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_source_declared_domains_reuse_route_component_projection[A01]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_stream_image_metadata_projects_exact_source_spatial_domain_in_band" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.SITE-runtime_slice]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.SITE-source_binding]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.CHANNEL-runtime_slice]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.CHANNEL-source_binding]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.Z_INDEX-runtime_slice]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.Z_INDEX-source_binding]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.TIMEPOINT-runtime_slice]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.TIMEPOINT-source_binding]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.WELL-runtime_slice]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_image_plane_domain_does_not_require_artifact_storage_axes[AllComponents.WELL-source_binding]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain" time="0.002" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_plane_domain_rejects_multiple_varying_components[storage_components0]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_retained_plane_domain_rejects_multiple_varying_components[storage_components1]" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_singleton_plane_projection_remains_exactly_compiler_owned" time="0.001" /><testcase classname="tests.unit.test_stream_component_semantics" name="test_singleton_plane_projection_rejects_ambiguous_compiler_components" time="0.001" /></testsuite></testsuites>

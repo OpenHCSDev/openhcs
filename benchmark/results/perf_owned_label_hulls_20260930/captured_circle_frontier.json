@@ -1,0 +1,1571 @@
+{
+  "requests": [
+    {
+      "seconds": 0.006456991191953421,
+      "shape": [
+        32,
+        32
+      ],
+      "objects": 1,
+      "saved": null
+    },
+    {
+      "seconds": 0.0005830377340316772,
+      "shape": [
+        64,
+        64
+      ],
+      "objects": 2,
+      "saved": null
+    },
+    {
+      "seconds": 0.18892244901508093,
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "saved": "circle_1.pkl"
+    },
+    {
+      "seconds": 0.09115079371258616,
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 495,
+      "saved": "circle_2.pkl"
+    },
+    {
+      "seconds": 0.15450343722477555,
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "saved": null
+    },
+    {
+      "seconds": 0.20147270383313298,
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "saved": "circle_3.pkl"
+    },
+    {
+      "seconds": 0.27226437721401453,
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "saved": "circle_4.pkl"
+    },
+    {
+      "seconds": 0.08879393618553877,
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "saved": "circle_5.pkl"
+    }
+  ],
+  "phases": [
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 5.813967436552048e-05,
+      "shape": [
+        32,
+        32
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.004413302056491375,
+      "shape": [
+        32,
+        32
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.0015527140349149704,
+      "shape": [
+        2
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.4370459616184235e-06,
+      "shape": [
+        2
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.473592758178711e-05,
+      "shape": [
+        2
+      ]
+    },
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 5.3620897233486176e-05,
+      "shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.00016007106751203537,
+      "shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.0691887736320496e-06,
+      "shape": [
+        4
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.6433186829090118e-06,
+      "shape": [
+        4
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.2592023015022278e-05,
+      "shape": [
+        4
+      ]
+    },
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 0.10796742513775826,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.06189114972949028,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00012087821960449219,
+      "shape": [
+        13294
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00010460708290338516,
+      "shape": [
+        13294
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0008058268576860428,
+      "shape": [
+        13294
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00011074822396039963,
+      "shape": [
+        13159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00010771164670586586,
+      "shape": [
+        13159
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0008194632828235626,
+      "shape": [
+        13159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00011231191456317902,
+      "shape": [
+        12032
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00010404596105217934,
+      "shape": [
+        12032
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0007438207976520061,
+      "shape": [
+        12032
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.659297600388527e-05,
+      "shape": [
+        9764
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.49100761115551e-05,
+      "shape": [
+        9764
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0006126337684690952,
+      "shape": [
+        9764
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 6.26477412879467e-05,
+      "shape": [
+        6821
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 6.479164585471153e-05,
+      "shape": [
+        6821
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00041157472878694534,
+      "shape": [
+        6821
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.903405740857124e-05,
+      "shape": [
+        4254
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.685988485813141e-05,
+      "shape": [
+        4254
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0002649589441716671,
+      "shape": [
+        4254
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.336408942937851e-05,
+      "shape": [
+        2252
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.026790753006935e-05,
+      "shape": [
+        2252
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0001498917117714882,
+      "shape": [
+        2252
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.034000888466835e-05,
+      "shape": [
+        728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 7.884111255407333e-06,
+      "shape": [
+        728
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 5.8209989219903946e-05,
+      "shape": [
+        728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.630310624837875e-06,
+      "shape": [
+        162
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.2461248338222504e-06,
+      "shape": [
+        162
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 3.0026771128177643e-05,
+      "shape": [
+        162
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.766734153032303e-06,
+      "shape": [
+        21
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.843087375164032e-06,
+      "shape": [
+        21
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.4567358195781708e-05,
+      "shape": [
+        21
+      ]
+    },
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 0.06562704592943192,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.018546978943049908,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.599662497639656e-05,
+      "shape": [
+        3788
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.409385681152344e-05,
+      "shape": [
+        3788
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00023157615214586258,
+      "shape": [
+        3788
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.760075196623802e-05,
+      "shape": [
+        3728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.398396074771881e-05,
+      "shape": [
+        3728
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00021834112703800201,
+      "shape": [
+        3728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.372272476553917e-05,
+      "shape": [
+        3353
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.289198502898216e-05,
+      "shape": [
+        3353
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00019708089530467987,
+      "shape": [
+        3353
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.7671921998262405e-05,
+      "shape": [
+        2712
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.720113843679428e-05,
+      "shape": [
+        2712
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0001613842323422432,
+      "shape": [
+        2712
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.2351741790771484e-05,
+      "shape": [
+        2100
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.045789733529091e-05,
+      "shape": [
+        2100
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0001294943504035473,
+      "shape": [
+        2100
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.4547724276781082e-05,
+      "shape": [
+        1188
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.2303236871957779e-05,
+      "shape": [
+        1188
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 7.843784987926483e-05,
+      "shape": [
+        1188
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.827075362205505e-06,
+      "shape": [
+        525
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 6.542075425386429e-06,
+      "shape": [
+        525
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 4.477472975850105e-05,
+      "shape": [
+        525
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.139969289302826e-06,
+      "shape": [
+        159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.335997462272644e-06,
+      "shape": [
+        159
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.8904061764478683e-05,
+      "shape": [
+        159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.627035766839981e-06,
+      "shape": [
+        31
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.884065568447113e-06,
+      "shape": [
+        31
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.2994354367256165e-05,
+      "shape": [
+        31
+      ]
+    },
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 0.06777256587520242,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.061194838024675846,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00013618683442473412,
+      "shape": [
+        13294
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00010856473818421364,
+      "shape": [
+        13294
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0008109370246529579,
+      "shape": [
+        13294
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00011816294863820076,
+      "shape": [
+        13159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00011196080595254898,
+      "shape": [
+        13159
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0008415947668254375,
+      "shape": [
+        13159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00011145975440740585,
+      "shape": [
+        12032
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00011374428868293762,
+      "shape": [
+        12032
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0007599908858537674,
+      "shape": [
+        12032
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.732406422495842e-05,
+      "shape": [
+        9764
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 9.224424138665199e-05,
+      "shape": [
+        9764
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0006268001161515713,
+      "shape": [
+        9764
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.45789909362793e-05,
+      "shape": [
+        6821
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 6.072362884879112e-05,
+      "shape": [
+        6821
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0004186490550637245,
+      "shape": [
+        6821
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.132790490984917e-05,
+      "shape": [
+        4254
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.7400983273983e-05,
+      "shape": [
+        4254
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0002653500996530056,
+      "shape": [
+        4254
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.3813994377851486e-05,
+      "shape": [
+        2252
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.7872156351804733e-05,
+      "shape": [
+        2252
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0001742779277265072,
+      "shape": [
+        2252
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.0881107300519943e-05,
+      "shape": [
+        728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.275732398033142e-06,
+      "shape": [
+        728
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 5.8860983699560165e-05,
+      "shape": [
+        728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.420297384262085e-06,
+      "shape": [
+        162
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.1660310924053192e-06,
+      "shape": [
+        162
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.978602424263954e-05,
+      "shape": [
+        162
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.4961849451065063e-06,
+      "shape": [
+        21
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.6330741345882416e-06,
+      "shape": [
+        21
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.3233704268932343e-05,
+      "shape": [
+        21
+      ]
+    },
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 0.1709244130179286,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.019624738954007626,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.6176835894584656e-05,
+      "shape": [
+        3788
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.44347208738327e-05,
+      "shape": [
+        3788
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0002252240665256977,
+      "shape": [
+        3788
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.747083246707916e-05,
+      "shape": [
+        3728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.4324824810028076e-05,
+      "shape": [
+        3728
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00022063590586185455,
+      "shape": [
+        3728
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.4003984183073044e-05,
+      "shape": [
+        3353
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.2520852982997894e-05,
+      "shape": [
+        3353
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00020489608868956566,
+      "shape": [
+        3353
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.7731992304325104e-05,
+      "shape": [
+        2712
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.603931352496147e-05,
+      "shape": [
+        2712
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00016112299636006355,
+      "shape": [
+        2712
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.3174099624156952e-05,
+      "shape": [
+        2100
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.06679105758667e-05,
+      "shape": [
+        2100
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00012833112850785255,
+      "shape": [
+        2100
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.4848075807094574e-05,
+      "shape": [
+        1188
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.3014767318964005e-05,
+      "shape": [
+        1188
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 7.794704288244247e-05,
+      "shape": [
+        1188
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.204951882362366e-06,
+      "shape": [
+        525
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 7.65407457947731e-06,
+      "shape": [
+        525
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 4.547601565718651e-05,
+      "shape": [
+        525
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.0691887736320496e-06,
+      "shape": [
+        159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.1259842216968536e-06,
+      "shape": [
+        159
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.891477197408676e-05,
+      "shape": [
+        159
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.55718657374382e-06,
+      "shape": [
+        31
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.8826685845851898e-06,
+      "shape": [
+        31
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.3715198040008545e-05,
+      "shape": [
+        31
+      ]
+    },
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 0.12931106239557266,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.10280758794397116,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00015253713354468346,
+      "shape": [
+        21508
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00013742875307798386,
+      "shape": [
+        21508
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.001288335770368576,
+      "shape": [
+        21508
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00014975201338529587,
+      "shape": [
+        21508
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00014223763719201088,
+      "shape": [
+        21508
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0013443520292639732,
+      "shape": [
+        21508
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.0001527681015431881,
+      "shape": [
+        21216
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00014991173520684242,
+      "shape": [
+        21216
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0013462752103805542,
+      "shape": [
+        21216
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00014230841770768166,
+      "shape": [
+        19102
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00013914192095398903,
+      "shape": [
+        19102
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00117554422467947,
+      "shape": [
+        19102
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00012028729543089867,
+      "shape": [
+        15936
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 0.00012229988351464272,
+      "shape": [
+        15936
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0009880210272967815,
+      "shape": [
+        15936
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 9.835511445999146e-05,
+      "shape": [
+        12804
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 9.486917406320572e-05,
+      "shape": [
+        12804
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0008017797954380512,
+      "shape": [
+        12804
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 7.158517837524414e-05,
+      "shape": [
+        9095
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 6.790691986680031e-05,
+      "shape": [
+        9095
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.000555036123842001,
+      "shape": [
+        9095
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.1167251765728e-05,
+      "shape": [
+        4752
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.602774813771248e-05,
+      "shape": [
+        4752
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00028414512053132057,
+      "shape": [
+        4752
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.100791946053505e-05,
+      "shape": [
+        2462
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.0829029381275177e-05,
+      "shape": [
+        2462
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.00015256693586707115,
+      "shape": [
+        2462
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.0279007256031036e-05,
+      "shape": [
+        781
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 7.644295692443848e-06,
+      "shape": [
+        781
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 6.197718903422356e-05,
+      "shape": [
+        781
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 6.251037120819092e-06,
+      "shape": [
+        230
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.016794264316559e-06,
+      "shape": [
+        230
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 3.226008266210556e-05,
+      "shape": [
+        230
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.1280873119831085e-06,
+      "shape": [
+        50
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.2049061954021454e-06,
+      "shape": [
+        50
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.5548040866851807e-05,
+      "shape": [
+        50
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.647059202194214e-06,
+      "shape": [
+        25
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.884065568447113e-06,
+      "shape": [
+        25
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 4.973309114575386e-05,
+      "shape": [
+        25
+      ]
+    },
+    {
+      "boundary": "compact_requested_labels",
+      "seconds": 0.04643791727721691,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "ordered_convex_hull",
+      "seconds": 0.029268039856106043,
+      "shape": [
+        1650,
+        1650
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.7147350162267685e-05,
+      "shape": [
+        6211
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.3241772800683975e-05,
+      "shape": [
+        6211
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0003673722967505455,
+      "shape": [
+        6211
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.327118560671806e-05,
+      "shape": [
+        6211
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.4143758714199066e-05,
+      "shape": [
+        6211
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0003620521165430546,
+      "shape": [
+        6211
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.0134025514125824e-05,
+      "shape": [
+        6135
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.9584079533815384e-05,
+      "shape": [
+        6135
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0003465129993855953,
+      "shape": [
+        6135
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.503503441810608e-05,
+      "shape": [
+        5286
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.181917756795883e-05,
+      "shape": [
+        5286
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0003047441132366657,
+      "shape": [
+        5286
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.043709486722946e-05,
+      "shape": [
+        4540
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.724033012986183e-05,
+      "shape": [
+        4540
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0002575349062681198,
+      "shape": [
+        4540
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.1019095331430435e-05,
+      "shape": [
+        3418
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.8392765671014786e-05,
+      "shape": [
+        3418
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.000195216853171587,
+      "shape": [
+        3418
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.304278314113617e-05,
+      "shape": [
+        2422
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.008676528930664e-05,
+      "shape": [
+        2422
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 0.0001429487019777298,
+      "shape": [
+        2422
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.429673284292221e-05,
+      "shape": [
+        1250
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.8926337361335754e-05,
+      "shape": [
+        1250
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 7.980968803167343e-05,
+      "shape": [
+        1250
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 8.015427738428116e-06,
+      "shape": [
+        539
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 6.021000444889069e-06,
+      "shape": [
+        539
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 4.446413367986679e-05,
+      "shape": [
+        539
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 5.651265382766724e-06,
+      "shape": [
+        223
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.827270120382309e-06,
+      "shape": [
+        223
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 4.13781963288784e-05,
+      "shape": [
+        223
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 4.678033292293549e-06,
+      "shape": [
+        76
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 2.304092049598694e-06,
+      "shape": [
+        76
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.565840259194374e-05,
+      "shape": [
+        76
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 3.5068951547145844e-06,
+      "shape": [
+        26
+      ]
+    },
+    {
+      "boundary": "reference_arccos",
+      "seconds": 1.684296876192093e-06,
+      "shape": [
+        26
+      ]
+    },
+    {
+      "boundary": "grouped_minimum_positions",
+      "seconds": 2.2351741790771484e-05,
+      "shape": [
+        26
+      ]
+    }
+  ]
+}

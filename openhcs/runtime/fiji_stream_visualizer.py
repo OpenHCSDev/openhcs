@@ -65,6 +65,7 @@ class FijiStreamVisualizer(ManagedViewerLifecycleMixin):
         ).append(
             DetachedViewerPythonExpression.symbol("transport_mode"),
             DetachedViewerPythonExpression.symbol("OPENHCS_ZMQ_CONFIG"),
+            DetachedViewerPythonExpression.literal(self.process_launch.listen_host),
         )
 
     def start_viewer(self, async_mode: bool = False) -> None:

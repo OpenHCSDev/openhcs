@@ -71,9 +71,11 @@ class GenericValidator(Generic[T]):
             config: ComponentConfiguration for validation rules
         """
         self.config = config
-        logger.debug(
-            f"GenericValidator initialized for components: {[c.value for c in config.all_components]}"
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "GenericValidator initialized for components: %s",
+                [c.value for c in config.all_components],
+            )
 
     def validate_step(
         self,
@@ -94,14 +96,19 @@ class GenericValidator(Generic[T]):
         Returns:
             ValidationResult indicating success or failure
         """
+        from openhcs.core.function_patterns import NormalizedFunctionPattern
+
         try:
             # 1. Validate component combination
             self.config.validate_combination(variable_components, group_by)
 
             # 2. Validate dict pattern requirements
-            if isinstance(func_pattern, dict) and (
-                group_by is None or group_by.value is None
-            ):
+            grouped = (
+                func_pattern.is_grouped
+                if isinstance(func_pattern, NormalizedFunctionPattern)
+                else isinstance(func_pattern, dict)
+            )
+            if grouped and (group_by is None or group_by.value is None):
                 return ValidationResult(
                     is_valid=False,
                     error_message=(
@@ -158,13 +165,19 @@ class GenericValidator(Generic[T]):
         Returns:
             ValidationResult indicating success or failure
         """
+        from openhcs.core.function_patterns import NormalizedFunctionPattern
+
         try:
             # Use enum objects directly - orchestrator now accepts VariableComponents
             available_keys = orchestrator.get_component_keys(group_by)
             available_keys_set = set(str(key) for key in available_keys)
 
             # Check each dict key against available keys
-            pattern_keys = list(func_pattern.keys())
+            pattern_keys = (
+                func_pattern.source_group_keys
+                if isinstance(func_pattern, NormalizedFunctionPattern)
+                else tuple(func_pattern)
+            )
             pattern_keys_set = set(str(key) for key in pattern_keys)
 
             # Try direct string match first

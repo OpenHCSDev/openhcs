@@ -1,0 +1,48 @@
+{
+  "returncode": 0,
+  "diagnostic_admission": true,
+  "public_rows": [
+    {
+      "case_name": "cp_tutorial_3d_monolayer",
+      "mode_name": "1w_1t",
+      "worker_count": "1",
+      "well_count": "1",
+      "compile_seconds": "1.5337145328521729",
+      "prepare_seconds": "0.0",
+      "execute_seconds": "8.276516675949097",
+      "total_seconds": "10.606972666922957",
+      "wells_per_second": "0.12082377637272465",
+      "successful_wells": "1",
+      "native_single_sample_execution_seconds": "",
+      "projected_native_execution_seconds": "",
+      "projected_execution_speedup": "",
+      "peak_memory_mb": "1692.34375",
+      "status": "success",
+      "memory_limit_mb": "",
+      "error_message": "",
+      "execution_route": "ordinary-zmq-outcomes-v1",
+      "server_lifecycle": "reused-per-sweep",
+      "run_input_sha256": "7f66dd478c9a56033495f056335a0eaadb9fd5facd953b504f0e1f8f7eaa57d5"
+    }
+  ],
+  "regions": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-baseline-v1/regions/region-1677824-140643152090816-0001.json",
+      "sha256": "d4cf4157156de4e7a41949e36ee4daed69665ea7b8c6e2ddf5b00613300b6e5a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-baseline-v1/regions/region-1677824-140643152090816-0002.json",
+      "sha256": "eda84c30eb19709e0fc37a35550a0e5a8e27e97ddd818e9296904203cd9e9e0b"
+    }
+  ],
+  "root_sequence_complete": true,
+  "actual_index_calls": 0,
+  "actual_declared_calls": 211,
+  "retained_json_bytes": 38057,
+  "generated_output_bytes": 18163301,
+  "public_log_bytes": 538,
+  "profiler_artifacts_absent": true,
+  "source_env_native_input_freeze": "PASS",
+  "science": "NOT_RUN: original full saved-output126file/schema/discrete/numerical/nativeinput witness separate gate. No exclusions or missing outputs waived.",
+  "scope": "One source-pinned whole ordinary3D Monolayer1w1t candidate falsification with24 unchanged coarse nominal hooks: inherited23 plus actual MeasurementFeatureValueIndex index classmethod. cProfile and runtime profiler OFF, no captures/percell hooks. Existing defaultOUTCOMES/memory observers/READY clocks unchanged. Same-thread nested exclusive clocks exclude query from its real ancestors; worker independent roots are not added to parent waits. Nearordinary diagnostic only; wrapper overhead remains, no scale factors/causal performance promotion. Full saved126file (6CSV120TIFF) science/native source witness independently required."
+}

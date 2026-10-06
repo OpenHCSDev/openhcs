@@ -1,0 +1,9 @@
+{
+  "extension": "/home/ts/wt/openhcs-custom-function-admission-20260929/openhcs/processing/backends/cellprofiler/_granularity_reconstruct.abi3.so",
+  "bytes": 45440,
+  "sha256": "f0627903f263f701fc50736a934ee1b727ddcf4cbd97375f9933cf1c9182c091",
+  "cpp_sha256": "8aa0257600f694648979079ab824cfa706756e40418ae4d5362721f2d091b995",
+  "python": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "build": "setup.py build_ext --inplace --parallel 1 with owned build-temp/build-lib",
+  "scope": "source-tree build/import; installed225 already has its own compiled extension; no install, dependency download or registry bypass"
+}

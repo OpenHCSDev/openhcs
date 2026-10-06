@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from pathlib import Path
+import inspect
 
 import numpy as np
 import pytest
 import skimage.measure
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -22,10 +26,37 @@ from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
+    ShapeMeasurementBackendStrategy,
     ShapeObjectFeatureValueTable,
     measure_object_size_shape,
     measure_object_size_shape_feature_arrays,
 )
+
+
+@pytest.fixture(scope="module", autouse=True)
+def prepared_shape_backends() -> None:
+    ShapeMeasurementBackendStrategy.prepare_registered_family()
+
+
+@pytest.mark.parametrize(
+    ("revision", "advanced", "expected"),
+    ((1, None, False), (2, None, False), (1, "Yes", True), (3, "Yes", True), (3, "No", False)),
+)
+def test_shape_module_retains_native_legacy_advanced_default(
+    revision: int, advanced: str | None, expected: bool,
+) -> None:
+    settings = [ModuleSetting("Select objects to measure", "Nuclei")]
+    if advanced is not None:
+        settings.append(ModuleSetting("Calculate the advanced features?", advanced))
+    module = ModuleBlock(
+        "MeasureObjectSizeShape", 1, setting_records=settings,
+        metadata={"variable_revision_number": revision},
+    )
+    bound = MeasureObjectSizeShapeModule.bind_settings(
+        module, binder=SettingsBinder(source_root=Path(".")),
+    )
+    assert bound.kwargs["calculate_advanced"] is expected
+    assert inspect.signature(measure_object_size_shape).parameters["calculate_advanced"].default is True
 
 
 def _assert_rows_strict(
@@ -64,7 +95,7 @@ def _generic_shape_rows(
     table = ShapeObjectFeatureValueTable.from_feature_arrays(
         feature_values,
         measured_labels,
-        object_domain=range(1, int(labels.max(initial=0)) + 1),
+        object_domain=tuple(int(value) for value in np.unique(labels[labels > 0])),
     )
     return ObjectFeatureValueTable.rows(table)
 
@@ -97,7 +128,7 @@ def test_all_enabled_2d_shape_vectors_match_generic_row_projection() -> None:
     )
 
     assert tuple(field.name for field in actual_rows.fields) == field_names
-    assert actual_rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    assert actual_rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert tuple(field.dtype for field in actual_rows.fields[:2]) == (int, int)
     assert all(field.dtype is float for field in actual_rows.fields[2:])
     _assert_rows_strict(actual_rows, expected_rows, field_names)
@@ -184,7 +215,9 @@ def test_nonempty_stacked_shape_vectors_and_surface_areas_match_oracles() -> Non
     np.testing.assert_allclose(
         [row["SurfaceArea"] for row in actual_rows],
         expected_surface_areas,
-        rtol=0.0,
+        # Binary cube aggregation uses the approved CellProfiler tolerance.
+        # Float32 mesh translation/reduction can differ by a few micro-units.
+        rtol=1e-6,
         atol=1e-6,
     )
 
@@ -209,7 +242,7 @@ def test_empty_stacked_shape_preserves_declared_metadata_and_dtypes() -> None:
     )
 
     assert len(rows) == 0
-    assert rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert tuple(field.name for field in rows.fields) == field_names
     assert tuple(field.dtype for field in rows.fields[:2]) == (int, int)
     assert all(field.dtype is float for field in rows.fields[2:])
@@ -243,7 +276,7 @@ def test_sparse_high_id_shape_preserves_label_domain_and_row_identity() -> None:
     )
 
     assert len(rows) == 1
-    assert rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert rows[0][MeasurementRowAxisField.OBJECT_LABEL.value] == 892
     assert rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 4.0
     assert (
@@ -252,3 +285,121 @@ def test_sparse_high_id_shape_preserves_label_domain_and_row_identity() -> None:
     assert (
         rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Y.value] == 2.5
     )
+
+
+@pytest.mark.parametrize("shape", ((1, 6, 9), (5, 9, 11), (5, 9, 4096)))
+@pytest.mark.parametrize("readonly", (False, True))
+def test_prepared_3d_cohort_matches_reference_at_boundaries_and_offsets(
+    shape: tuple[int, int, int],
+    readonly: bool,
+) -> None:
+    labels = np.zeros(shape, dtype=np.int32)
+    labels[:, 1:5, -6:-1] = 892
+    labels[0, :2, :2] = 19
+    labels[:2, 2:3, -4:-3] = 0
+    original = labels.copy()
+    labels.setflags(write=not readonly)
+    backend = ShapeMeasurementBackendStrategy.for_memory_type()
+    spacing = (2.75, 0.65, 0.65)
+    expected, expected_ids = ShapeMeasurementBackendStrategy.feature_arrays_3d(
+        backend, labels, calculate_advanced=False, spacing=spacing
+    )
+    actual, actual_ids = backend.feature_arrays_3d(
+        labels, calculate_advanced=False, spacing=spacing
+    )
+    assert set(actual) == set(expected)
+    assert actual_ids.dtype == expected_ids.dtype
+    np.testing.assert_array_equal(actual_ids, expected_ids)
+    for key in expected:
+        np.testing.assert_allclose(actual[key], expected[key], atol=1e-6, rtol=1e-6)
+    np.testing.assert_array_equal(labels, original)
+
+
+def test_direct_unprepared_3d_call_retains_reference_behavior(monkeypatch) -> None:
+    labels = np.zeros((4, 6, 8), dtype=np.int32)
+    labels[1:3, 1:4, 2:6] = 5
+    backend = ShapeMeasurementBackendStrategy.for_memory_type()
+    expected, expected_ids = ShapeMeasurementBackendStrategy.feature_arrays_3d(
+        backend, labels, calculate_advanced=False, spacing=(1.0, 1.0, 1.0)
+    )
+    monkeypatch.setattr(
+        ShapeMeasurementBackendStrategy, "_unit_surface_triangles", None
+    )
+    actual, actual_ids = measure_object_size_shape_feature_arrays(
+        labels, calculate_advanced=False, calculate_zernikes=False
+    )
+    np.testing.assert_array_equal(actual_ids, expected_ids)
+    for key in expected:
+        np.testing.assert_array_equal(actual[key], expected[key])
+
+
+def test_local_moment_capacity_depends_on_extent_not_global_offset() -> None:
+    backend = ShapeMeasurementBackendStrategy.for_memory_type()
+    distant = np.asarray(
+        [[10**12, 10**12, 10**12, 10**12 + 5, 10**12 + 7, 10**12 + 9]], dtype=np.int64
+    )
+    assert backend._local_moments_fit_int64(np.asarray([100]), distant)
+    oversized = np.asarray([[0, 0, 0, 2_000_000_001, 1, 1]], dtype=np.int64)
+    assert backend._local_moments_fit_int64(np.asarray([2]), oversized)
+    assert not backend._local_moments_fit_int64(np.asarray([3]), oversized)
+
+
+def test_prepared_3d_advanced_solidity_and_kernel_signatures_match_reference() -> None:
+    from openhcs.processing.backends.cellprofiler.shape import (
+        _label_bounds_counts_3d_numba,
+        _label_local_moments_surface_euler_3d_numba,
+    )
+
+    kernels = (
+        _label_bounds_counts_3d_numba,
+        _label_local_moments_surface_euler_3d_numba,
+    )
+    signatures = tuple(tuple(kernel.signatures) for kernel in kernels)
+    labels = np.zeros((7, 18, 20), dtype=np.int32)
+    labels[1:5, 2:9, 3:11] = 1
+    labels[2:6, 10:16, 12:18] = 3
+    labels[2:4, 12:14, 12:15] = 0
+    backend = ShapeMeasurementBackendStrategy.for_memory_type()
+    for writable in (True, False):
+        labels.setflags(write=writable)
+        expected, expected_ids = ShapeMeasurementBackendStrategy.feature_arrays_3d(
+            backend, labels, calculate_advanced=True, spacing=(1.0, 1.0, 1.0)
+        )
+        actual, actual_ids = backend.feature_arrays_3d(
+            labels, calculate_advanced=True, spacing=(1.0, 1.0, 1.0)
+        )
+        np.testing.assert_array_equal(actual_ids, expected_ids)
+        for key in expected:
+            np.testing.assert_allclose(actual[key], expected[key], atol=1e-6, rtol=1e-6)
+    assert signatures == tuple(tuple(kernel.signatures) for kernel in kernels)
+
+
+def test_sparse_shape_vectors_preserve_native_compact_and_label_domains() -> None:
+    # Native CP analyze_objects: props/radii are compact; Feret uses label IDs.
+    labels = np.zeros((17, 23), dtype=np.int32)
+    labels[2:7, 3:9] = 1
+    labels[10:15, 15:21] = 4
+    original = labels.copy()
+    payload = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(declared_object_ids=tuple(range(1, 7))),
+    )
+    _, rows = measure_object_size_shape(
+        np.zeros(labels.shape), payload,
+        calculate_advanced=False, calculate_zernikes=False,
+    )
+    expected = {
+        "Center_X": (5.5, 17.5, np.nan, np.nan, np.nan, np.nan),
+        "Center_Y": (4.0, 12.0, np.nan, np.nan, np.nan, np.nan),
+        "MaximumRadius": (3.0, 3.0, 0.0, 0.0, np.nan, np.nan),
+        "MeanRadius": (44 / 30, 44 / 30, 0.0, 0.0, np.nan, np.nan),
+        "MedianRadius": (1.0, 1.0, 0.0, 0.0, np.nan, np.nan),
+        "MinFeretDiameter": (4.0, 0.0, 0.0, 4.0, np.nan, np.nan),
+        "MaxFeretDiameter": (np.sqrt(41), 0.0, 0.0, np.sqrt(41), np.nan, np.nan),
+    }
+    for field, values in expected.items():
+        np.testing.assert_allclose(
+            [row[field] for row in rows], values,
+            rtol=1e-12, atol=1e-12, equal_nan=True,
+        )
+    np.testing.assert_array_equal(labels, original)

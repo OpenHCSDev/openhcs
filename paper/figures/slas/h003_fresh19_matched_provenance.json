@@ -1,0 +1,142 @@
+{
+  "generator_sha256": "8115e7941da1fb738edb34c2ebbfff1f086bc999e4048404aed6fb30f1beac23",
+  "source_sha256": {
+    "paper/figures/build_slas_h003_fresh19.py": "29bf2f481c5b1d3e63e4d30ed4627c151f3de58dbf1d7db62b2c70c0fa131bfd",
+    "paper/figures/slas/h003_fresh19_sources/reviewed-qa-index.json": "f7fd255419c99f0d98f097dc4ceadb42c1f7ce7ab79fe455a0f33329c19d4060",
+    "figure-collection-20261004/H003-FRESH19-INDEPENDENT-REVIEW.rst": "8f810056953fcf2c808bdfdb541791582ccf307f2ae3110169b947ebf99f97bb",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215006704714Z_napari_6017_OpenHCS_Napari_Visualization.png": "97629d1e212c51a5ea2f742d985e7502a042b0726e75c0c05a4637a16629e1d5",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215008478966Z_napari_6017_OpenHCS_Napari_Visualization.png": "7df6783173c419130e0df95b2fd86a3b9ae5e02fa34eb05eb7ae35bc1bea1dc0",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215010108191Z_napari_6017_OpenHCS_Napari_Visualization.png": "62e6a11f95106317ed8d05cb93f44a02a80b20913aabf19320dd9f41c43e99e5",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215013382022Z_napari_6017_OpenHCS_Napari_Visualization.png": "caed6c21b83c5de570527e8f52be26c71531fa6fc3a80c24c3f84e922254f667",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215015086399Z_napari_6017_OpenHCS_Napari_Visualization.png": "eb76647ca5f3c936abb033b2a62fa7f3796fd1b0775d2a63f22beb60effba9ba",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215016798995Z_napari_6017_OpenHCS_Napari_Visualization.png": "49511f6572339fb10fab602aa96aab0f355bc97d235a89f479bdfb1c596af806",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215427774779Z_napari_6017_OpenHCS_Napari_Visualization.png": "d975b87f9b2cf4185dbdcc482b663535c57427c784c6dcd4e20e4f1c76d4789b",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215428275423Z_napari_6017_OpenHCS_Napari_Visualization.png": "212b3b6ecebea52fdfaf2b05fc3dce6b268bb07ee229d7c702e1357830504637",
+    "paper/figures/slas/h003_fresh19_sources/20261005T215428995261Z_napari_6017_OpenHCS_Napari_Visualization.png": "a7a8728b39019e51ca611d866cac4b14caa60e9fe1ca6e2dc758874bd38de384"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215006704714Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215008478966Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215010108191Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215013382022Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215015086399Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215016798995Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215427774779Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215428275423Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_sources/20261005T215428995261Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        452
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    }
+  ],
+  "output_sha256": {
+    "h003_fresh19_matched.png": "af9234786b4103d75a57226ec5dab0e19000b5530a34eceb0285ebf7f7251a3f",
+    "h003_fresh19_matched.pdf": "dec4030a4d42ad901c0262efbb621282d5627a35a1f9a595a5b463163e9da3b6",
+    "h003_fresh19_matched.svg": "e5619dc75cb77771bd72f874464f87dbb4010894b2bbeda3eca39d2f93337bfd"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

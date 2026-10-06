@@ -17,18 +17,21 @@ from collections.abc import Callable, Mapping, Sequence, Sized
 from dataclasses import dataclass, field, is_dataclass, replace
 from functools import lru_cache, singledispatch
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 import numpy as np
 import pandas as pd
 from metaclass_registry import AutoRegisterMeta
-from polystore.config import TiffConfig, tiff_write_batches
+from polystore.config import TiffConfig
 from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
+    ViewerDisplayConfigABC,
 )
 from zmqruntime.viewer_protocol import ViewerWireValue
 
+from openhcs.core.source_path_identity import source_path_identity
 from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.artifacts import ArtifactMaterializationPayload
 from openhcs.core.component_set import ComponentSet
@@ -71,10 +74,16 @@ from openhcs.core.source_matching import (
     source_component_metadata_value,
     source_metadata_value,
 )
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.steps.function_output_identity import (
+    FunctionOutputIdentity,
+)
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
+    StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
+    StreamScopedDisplayConfig,
 )
 from openhcs.processing.materialization.constants import (
     MaterializationFormat,
@@ -87,6 +96,7 @@ from openhcs.processing.materialization.options import (
     ImageFileOptions,
     JsonOptions,
     MaterializedFilenameIdentity,
+    PointROIOptions,
     ROIOptions,
     SourceOptions,
     SpatialGraphROIOptions,
@@ -193,8 +203,18 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
                     **({"tiff_config": config} if config is not None else {}),
                 },
             )
-            for indices, config in tiff_write_batches(
-                tuple(output.path for output in outputs), self.tiff_config
+            for indices, config in ImageFileFormat.storage_write_batches(
+                tuple(
+                    (
+                        output.metadata.attach_to(output.content)
+                        if output.metadata is not None
+                        and ImageFileFormat.is_image_path(output.path)
+                        else output.content
+                    )
+                    for output in outputs
+                ),
+                tuple(output.path for output in outputs),
+                self.tiff_config,
             )
         )
 
@@ -271,6 +291,7 @@ class Output:
     content: MaterializationValue
     metadata: ImagePayloadMetadata | None = None
     variable_components: tuple[AllComponents, ...] = ()
+    image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None
 
     @classmethod
     def from_metadata(
@@ -299,8 +320,41 @@ class Output:
         return self.source_identity.component_metadata
 
     @property
+    def viewer_source_identity(self) -> SourceImageIdentity | None:
+        """Return the address of this rendered stream item, not its domain."""
+        return self.source_identity
+
+    def stream_source_metadata_items(
+        self, fallback_source_identity: SourceImageIdentity | None,
+    ) -> StreamSourceComponentMetadataItems:
+        """Observe sources from the actual rendered output's declared planes."""
+        if self.metadata is not None:
+            return StreamSourceComponentMetadataItems.from_image_metadata(
+                self.metadata, fallback_source_identity=fallback_source_identity,
+            )
+        return StreamSourceComponentMetadataItems.from_values(
+            (fallback_source_identity.component_metadata
+             if fallback_source_identity is not None else None,)
+        )
+
+    def viewer_item_fields(self) -> dict[str, ViewerWireValue]:
+        return StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+            self.metadata, self.variable_components,
+        )
+
+    @property
     def viewer_stream_requires_source_metadata(self) -> bool:
         return True
+
+    def viewer_display_config(
+        self, base: ViewerDisplayConfigABC
+    ) -> ViewerDisplayConfigABC:
+        """Project display scope from this output's own optional source payload."""
+        if self.metadata is None:
+            return base
+        return StreamScopedDisplayConfig.for_source_provenance(
+            base, self.metadata.source_provenance
+        )
 
     def require_text_content(self) -> str:
         """Return declared text content or reject a non-text output."""
@@ -343,6 +397,60 @@ class Output:
 
 
 @dataclass(frozen=True)
+class ROIOutput(Output):
+    """A rendered ROI carries a geometric domain, not an image pixel axis."""
+
+    @property
+    def source_component_domain(self) -> tuple[SourceComponentMetadata, ...] | None:
+        from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
+        if self.metadata is None:
+            return None
+        return ROIArchiveSourceMetadata.source_component_domain(self.content, self.metadata)
+
+    @property
+    def viewer_source_identity(self) -> SourceImageIdentity | None:
+        domain = self.source_component_domain
+        if domain is None:
+            return super().viewer_source_identity
+        identity = self.source_identity
+        return SourceImageIdentity(
+            path=identity.path if identity is not None else None,
+            component_metadata=domain[0],
+        )
+
+    def stream_source_metadata_items(
+        self, fallback_source_identity: SourceImageIdentity | None,
+    ) -> StreamSourceComponentMetadataItems:
+        domain = self.source_component_domain
+        if domain is None:
+            return super().stream_source_metadata_items(fallback_source_identity)
+        return StreamSourceComponentMetadataItems.from_values(domain)
+
+    def viewer_item_fields(self) -> dict[str, ViewerWireValue]:
+        from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
+        return ROIArchiveSourceMetadata.stream_item_fields(
+            self.content, self.metadata, super().viewer_item_fields(),
+        )
+
+
+@dataclass(frozen=True)
+class PointROIOutput(ROIOutput):
+    """A point archive's represented source domain is geometric, not pixel planes."""
+
+    @property
+    def source_component_domain(self) -> tuple[SourceComponentMetadata, ...]:
+        from openhcs.core.roi_point_metadata import ROIFractionalZ
+
+        if self.metadata is None:
+            raise ValueError("Point ROI output requires exact source metadata.")
+        domain = ROIFractionalZ.source_component_domain(self.content, self.metadata)
+        if domain is None:
+            raise ValueError("Point ROI output requires fractional-Z metadata.")
+        return domain
+
+@dataclass(frozen=True)
 class TextOutput(Output):
     """Materialization output whose canonical payload is text."""
 
@@ -363,8 +471,18 @@ class Utf8TextOutput(Output):
     content: bytes
 
     @classmethod
-    def from_text(cls, *, path: str, content: str) -> Utf8TextOutput:
-        return cls(path=path, content=content.encode("utf-8"))
+    def from_text(
+        cls,
+        *,
+        path: str,
+        content: str,
+        image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None,
+    ) -> Utf8TextOutput:
+        return cls(
+            path=path,
+            content=content.encode("utf-8"),
+            image_numbers_by_axis=image_numbers_by_axis,
+        )
 
     @property
     def viewer_stream_requires_source_metadata(self) -> bool:
@@ -826,7 +944,9 @@ class SourcePathSourceStemResolutionPolicy(ComponentMetadataSourceStemResolution
         filename_identity: SourceImageIdentity | None,
     ) -> str:
         del authority, filename_identity
-        return _cached_path_stem(metadata.source_provenance.scalar_source_identity.path)
+        return source_path_identity(
+            metadata.source_provenance.scalar_source_identity.path
+        ).stem
 
 
 @dataclass(frozen=True, slots=True)
@@ -913,20 +1033,14 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
             and self.parsed_components_match_metadata(parsed, component_metadata)
         )
 
-    @staticmethod
-    def path_parse_extensions(metadata: ImagePayloadMetadata) -> tuple[str, ...]:
+    def path_parse_extensions(self, metadata: ImagePayloadMetadata) -> tuple[str, ...]:
         source_identity = metadata.source_provenance.scalar_source_identity
-        component_metadata = source_identity.component_metadata
-        if component_metadata is not None and "extension" in component_metadata:
-            return (str(component_metadata["extension"]),)
-
-        source_path = source_identity.path
-        if source_path is None:
-            return ()
-        suffixes = "".join(Path(source_path).suffixes)
-        if not suffixes:
-            return ()
-        return (suffixes,)
+        extension = source_identity.filename_extension
+        if extension is None:
+            extension = source_identity.with_parsed_path_components(
+                self.parser
+            ).filename_extension
+        return () if extension is None else (extension,)
 
     @staticmethod
     def parsed_components_match_metadata(
@@ -1008,7 +1122,7 @@ class ROIMaterializationArchiveIdentity:
             return None
         source_path = self.source_identity.path
         if source_path:
-            return _cached_path_stem(source_path)
+            return source_path_identity(source_path).stem
         return None
 
     @property
@@ -1303,6 +1417,47 @@ class MaterializationInput:
             ),
         )
 
+    @classmethod
+    def from_image_value(
+        cls,
+        value: MaterializationValue,
+        options: SourceOptions,
+    ) -> "MaterializationInput":
+        """Preserve intrinsic images while projecting ordinary runtime planes."""
+        unprojected = cls.from_value(value, options)
+        items = []
+        for image in unprojected.items:
+            if image.metadata.persists_whole_image():
+                items.append(image)
+            else:
+                items.extend(
+                    MaterializationInputItem(
+                        value=item.value,
+                        source_description=item.source_description,
+                        runtime_plane_metadata=item.runtime_plane_metadata,
+                    )
+                    for item in (
+                        RuntimeProjectionSourceIdentityRequirement.OPTIONAL
+                    ).project_payload_items(
+                        RuntimeProjectionSourceIdentityRequest(
+                            value=image.value,
+                            source_description=image.source_description,
+                            plane_projection=(
+                                image.value.declared_plane_projection()
+                                if isinstance(image.value, ObjectLabelValue)
+                                else None
+                            ),
+                        )
+                    )
+                )
+        return replace(
+            unprojected,
+            items=tuple(items),
+            source_plane_projection=SourcePlaneProjectionContract.from_payloads(
+                tuple(item.value for item in unprojected.items)
+            ),
+        )
+
     @property
     def data(self) -> MaterializationValue:
         data_items = [item.data for item in self.items]
@@ -1393,19 +1548,6 @@ class PathHelper:
             self.parent
             / f"{self.primary_output_basename(options)}{pattern.format(index=index)}"
         )
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_stem(path: str) -> str:
-    """Return the filename stem for a frequently reused materialization path."""
-    return Path(path).stem
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_parent(path: str) -> str:
-    """Return the parent directory for a materialization output path."""
-
-    return str(Path(path).parent)
 
 
 @lru_cache(maxsize=65536)
@@ -1541,14 +1683,26 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         self,
         output: Output,
     ) -> dict:
-        output_fields = self._output_fields(output)
+        projected_outputs = self.projected_outputs((output,))
+        if len(projected_outputs) != 1 or projected_outputs[0] is not output:
+            raise ValueError("Projected viewer materialization requires batch saving.")
+        output_fields = self._output_fields(projected_outputs[0])
         if output_fields is None:
             return self.values.to_kwargs()
-        component_metadata, item_fields = output_fields
-        return self.values.with_single_item_source(
+        component_metadata, item_fields, display_config = output_fields
+        return self._stream_kwargs(display_config, item_fields).with_single_item_source(
             component_metadata,
             item_fields,
         ).to_kwargs()
+
+    def _stream_kwargs(
+        self,
+        display_config: ViewerDisplayConfigABC,
+        item_fields: Mapping[str, ViewerWireValue],
+    ) -> ViewerStreamBackendKwargs:
+        """Apply one source-owned display scope to the original typed request."""
+        request = self.values.with_item_fields(item_fields).stream_request
+        return ViewerStreamBackendKwargs(replace(request, display_config=display_config))
 
     def filemanager_batches(
         self,
@@ -1557,31 +1711,33 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         grouped: list[
             tuple[
                 dict[str, ViewerWireValue],
+                ViewerDisplayConfigABC,
                 list[Output],
                 list[dict[str, MaterializationValue]],
             ]
         ] = []
         unprojected_outputs: list[Output] = []
-        for output in outputs:
+        for output in self.projected_outputs(outputs):
             output_fields = self._output_fields(output)
             if output_fields is None:
                 unprojected_outputs.append(output)
                 continue
-            component_metadata, item_fields = output_fields
+            component_metadata, item_fields, display_config = output_fields
             group = next(
-                (candidate for candidate in grouped if candidate[0] == item_fields),
+                (candidate for candidate in grouped
+                 if candidate[0] == item_fields and candidate[1] == display_config),
                 None,
             )
             if group is None:
-                group = (item_fields, [], [])
+                group = (item_fields, display_config, [], [])
                 grouped.append(group)
-            group[1].append(output)
-            group[2].append(component_metadata)
+            group[2].append(output)
+            group[3].append(component_metadata)
 
         batches: list[tuple[tuple[Output, ...], dict]] = []
         if unprojected_outputs:
             batches.append((tuple(unprojected_outputs), self.values.to_kwargs()))
-        for item_fields, batch_outputs, component_metadata in grouped:
+        for item_fields, display_config, batch_outputs, component_metadata in grouped:
             metadata_by_path = dict(
                 zip(
                     (output.path for output in batch_outputs),
@@ -1593,7 +1749,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 raise ValueError(
                     "Viewer materialization batch requires unique output paths."
                 )
-            stream_request = self.values.with_item_fields(item_fields).stream_request
+            stream_request = self._stream_kwargs(display_config, item_fields).stream_request
             stream_request = replace(
                 stream_request,
                 source=replace(
@@ -1611,11 +1767,55 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             )
         return tuple(batches)
 
+    def projected_outputs(self, outputs: Sequence[Output]) -> tuple[Output, ...]:
+        """Derive stream items without changing persisted aggregate outputs."""
+        result: list[Output] = []
+        display_semantics = self.values.stream_request.display_semantics
+        parser = self.values.stream_request.source.identity.microscope_handler.parser
+        for output in outputs:
+            if output.metadata is None:
+                result.append(output)
+                continue
+            items = StreamImagePayloadMetadataProjector.payload_items_for_display(
+                output.content,
+                metadata=output.metadata,
+                plane_components=output.variable_components,
+                component_modes=display_semantics.component_modes,
+                source_description=output.path,
+            )
+            if len(items) == 1 and items[0].value is output.content:
+                result.append(output)
+                continue
+            output_path = Path(output.path)
+            for item in items:
+                identity = FunctionOutputIdentity.from_metadata(
+                    parser,
+                    item.metadata,
+                    fallback_identity_path=output.path,
+                )
+                if identity is None:
+                    raise ValueError("Projected viewer output requires a filename identity.")
+                identity = replace(identity, extension=output_path.suffix)
+                filename = identity.with_filename_qualifier(output_path.stem).filename(parser)
+                result.append(
+                    replace(
+                        output,
+                        path=str(output_path.parent / filename),
+                        content=item.data,
+                        metadata=item.metadata,
+                    )
+                )
+        return tuple(result)
+
     def _output_fields(
         self,
         output: Output,
-    ) -> tuple[dict[str, MaterializationValue], dict[str, ViewerWireValue]] | None:
-        source_identity = output.source_identity
+    ) -> tuple[
+        dict[str, MaterializationValue],
+        dict[str, ViewerWireValue],
+        ViewerDisplayConfigABC,
+    ] | None:
+        source_identity = output.viewer_source_identity
         if source_identity is not None:
             source_identity = source_identity.with_parsed_path_components(
                 self.values.stream_request.source.identity.microscope_handler.parser
@@ -1630,18 +1830,15 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 "Viewer stream materialization requires output metadata with "
                 "source_component_metadata."
             )
-        item_fields = (
-            StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-                output.metadata,
-                output.variable_components,
-            )
+        item_fields = output.viewer_item_fields()
+        display_config = output.viewer_display_config(
+            self.values.stream_request.display_config
         )
-        display_semantics = self.values.stream_request.display_semantics
         projected_metadata = StreamViewerComponentMetadataProjector.for_item_fields(
-            display_semantics.component_order,
+            display_config.COMPONENT_ORDER,
             item_fields,
         ).project_required(index=0, metadata=component_metadata)
-        return projected_metadata, item_fields
+        return projected_metadata, item_fields, display_config
 
 
 EMPTY_BACKEND_CALL_KWARGS = RawBackendKwargs()
@@ -1666,7 +1863,8 @@ class BackendSaver:
     def save_all(
         self,
         outputs: Sequence[Output],
-    ) -> None:
+    ) -> Mapping[str, tuple[Output, ...]]:
+        saved_outputs: dict[str, tuple[Output, ...]] = {}
         for backend in self.backends:
             backend_instance = self.filemanager._get_backend(backend)
             output_acceptance = tuple(
@@ -1696,6 +1894,7 @@ class BackendSaver:
                 kwargs_payload = self.backend_kwargs[backend]
             else:
                 kwargs_payload = EMPTY_BACKEND_CALL_KWARGS
+            written_outputs: list[Output] = []
             for batch_outputs, kwargs in kwargs_payload.filemanager_batches(
                 supported_outputs
             ):
@@ -1705,12 +1904,17 @@ class BackendSaver:
                     backend,
                     **kwargs,
                 )
+                written_outputs.extend(batch_outputs)
+            saved_outputs[backend] = tuple(written_outputs)
+        return saved_outputs
 
     def _prepare_path(self, backend: str, backend_instance, path: str) -> None:
         if not backend_instance.requires_filesystem_validation:
             return
 
-        self.filemanager.ensure_directory(_cached_path_parent(path), backend)
+        self.filemanager.ensure_directory(
+            str(source_path_identity(path).parent), backend
+        )
 
         if not self.filemanager.exists(path, backend):
             return
@@ -1737,6 +1941,25 @@ class MaterializationContext:
     source_paths: tuple[str, ...] = ()
     pipeline_position: int | None = None
     output_plan: ArtifactOutputPlan | None = None
+    materialization_spec: MaterializationSpec | None = None
+
+    def named_source_filename(
+        self, metadata: ImagePayloadMetadata, extension: str,
+    ) -> str | None:
+        """Name a retained image from the actual rendering purpose and role."""
+        if self.materialization_spec is None:
+            return None
+        qualifier = self.materialization_spec.filename_qualifier(self.output_plan)
+        if qualifier is None:
+            return None
+        parser = SourceStemAuthoritySelection.from_processing_context(self.context).required_parser()
+        identity = FunctionOutputIdentity.from_filename_metadata(parser, metadata)
+        if identity is None:
+            raise ValueError("Retained image output has no addressable source filename identity.")
+        identity = self.materialization_spec.filename_identity_for_output(
+            replace(identity, extension=extension), self.output_plan,
+        )
+        return identity.filename(parser)
 
     def paths(self, options: FileOutputOptions) -> PathHelper:
         return PathHelper(self.base_path, options)
@@ -2225,6 +2448,14 @@ def json_payload_mapping(value: dict) -> dict:
     return {key: JsonPayloadAuthority.jsonable(item) for key, item in value.items()}
 
 
+@json_payload_value.register(ColumnarRows)
+def json_payload_columnar_rows(value: ColumnarRows) -> list[dict]:
+    return [
+        {key: JsonPayloadAuthority.jsonable(item) for key, item in row.items()}
+        for row in value.iter_row_mappings()
+    ]
+
+
 @json_payload_value.register(list)
 def json_payload_list(value: list) -> list:
     return [JsonPayloadAuthority.jsonable(item) for item in value]
@@ -2435,9 +2666,14 @@ def _image_relative_output_path(
         options.relative_path_template,
     )
     expanded = _format_image_sequence_index(expanded, sequence_index)
+    relative_path = _normalized_relative_materialization_path(expanded)
+    scoped_relative_path = options.relative_path_scope.project(
+        relative_path,
+        context.context,
+    )
     return _relative_materialization_output_path(
         context.base_path,
-        _normalized_relative_materialization_path(expanded),
+        _normalized_relative_materialization_path(str(scoped_relative_path)),
     )
 
 
@@ -2472,7 +2708,7 @@ def write_image_file(
     context: MaterializationContext,
 ) -> list[Output]:
     """Write image payloads through the nominal image serialization format."""
-    materialization_input = MaterializationInput.from_runtime_slice_projected_value(
+    materialization_input = MaterializationInput.from_image_value(
         data,
         options,
     )
@@ -2503,32 +2739,25 @@ def write_image_file(
         options.filename_identity is MaterializedFilenameIdentity.ARTIFACT_NAME
         or paths.source_identity_base_path(options) is not None
     )
-    outputs = tuple(
-        (
-            (
-                _image_relative_output_path(
-                    item.value,
-                    options,
-                    context,
-                    sequence_index=sequence_index,
-                )
-                if options.relative_path_template is not None
-                else (
-                    paths.primary_output_path(options)
-                    if preserves_planned_path
-                    else str(
-                        paths.parent
-                        / (
-                            source_stem_authority.required_source_stem(item.metadata)
-                            + options.primary_output_suffix
-                        )
+    outputs = []
+    for sequence_index, item in enumerate(projected_items, start=1):
+        if options.relative_path_template is not None:
+            path = _image_relative_output_path(
+                item.value, options, context, sequence_index=sequence_index,
+            )
+        elif preserves_planned_path:
+            path = paths.primary_output_path(options)
+        else:
+            filename = context.named_source_filename(item.metadata, options.primary_output_suffix)
+            if filename is None:
+                filename = (
+                    source_stem_authority.required_source_stem(
+                        item.metadata, context.artifact_filename_identity,
                     )
+                    + options.primary_output_suffix
                 )
-            ),
-            item,
-        )
-        for sequence_index, item in enumerate(projected_items, start=1)
-    )
+            path = str(paths.parent / filename)
+        outputs.append((path, item))
     output_paths = tuple(path for path, _item in outputs)
     if len(set(output_paths)) != len(output_paths):
         raise ValueError(
@@ -2554,6 +2783,9 @@ def _file_bundle_outputs(
 
     outputs: list[Output] = []
     normalized_paths: set[PurePosixPath] = set()
+    step_outputs = (
+        context.context.runtime_step_outputs if context.context is not None else None
+    )
     for relative_value, content in data.items():
         relative_path = _normalized_relative_materialization_path(relative_value)
         if relative_path in normalized_paths:
@@ -2565,13 +2797,23 @@ def _file_bundle_outputs(
             context.base_path,
             relative_path,
         )
+        image_numbers = (
+            step_outputs.image_numbers_by_export_path.get(Path(relative_value))
+            if step_outputs is not None
+            else None
+        )
         if isinstance(content, str):
             output = Utf8TextOutput.from_text(
                 path=output_path,
                 content=content,
+                image_numbers_by_axis=image_numbers,
             )
         elif isinstance(content, bytes):
-            output = Output(path=output_path, content=content)
+            output = Output(
+                path=output_path,
+                content=content,
+                image_numbers_by_axis=image_numbers,
+            )
         else:
             raise TypeError("File bundle values must be str or bytes.")
         outputs.append(output)
@@ -2942,6 +3184,7 @@ def _write_roi_zip(
     ctx: MaterializationContext,
 ) -> list[Output]:
     from polystore.roi import extract_rois_from_labeled_mask
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
     request = ROIMaterializationTargetRequest.from_context(data, options, ctx)
     materialization_input = request.materialization_input
@@ -3017,20 +3260,19 @@ def _write_roi_zip(
                         source_component_metadata=source_identity.component_metadata,
                     ).with_missing_from(item_metadata.source_provenance)
                 )
+            item_metadata = item_metadata.replace_fields(
+                source_spatial_domain=source_domain_authority.domain_for_target(target)
+            )
             outs.append(
-                Output(
+                ROIOutput(
                     path=target.archive.path,
-                    content=target_rois,
-                    metadata=item_metadata.replace_fields(
-                        source_spatial_domain=(
-                            source_domain_authority.domain_for_target(target)
-                        ),
-                    ),
+                    content=ROIArchiveSourceMetadata.bind(target_rois, item_metadata),
+                    metadata=item_metadata,
                 )
             )
 
     summary = (
-        f"Segmentation ROIs: {total_roi_count} cells\n"
+        f"Segmentation ROIs: {total_roi_count} parent labels\n"
         "Spatial dimensions: 2D\n"
         f"Projected source planes: {len(materialization_input.items)}\n"
     )
@@ -3104,6 +3346,8 @@ def _write_spatial_graph_swc(
         )
     graph.require_directed_forest()
 
+    physical_spacing = graph.coordinate_spacing.require_physical_coordinates()
+
     outgoing = {node.node_id: [] for node in graph.nodes}
     for edge in graph.edges:
         outgoing[edge.source.node_id].append(edge)
@@ -3123,7 +3367,7 @@ def _write_spatial_graph_swc(
         nonlocal next_sample_id
         sample_id = next_sample_id
         next_sample_id += 1
-        x, y, z = _swc_xyz(coordinates, graph.coordinate_spacing)
+        x, y, z = _swc_xyz(coordinates, physical_spacing)
         rows.append(
             f"{sample_id} {sample_type} {x:.9g} {y:.9g} {z:.9g} "
             f"{radius:.9g} {parent_sample_id}"
@@ -3173,6 +3417,100 @@ def _write_spatial_graph_swc(
     ]
 
 
+@writer_for(PointROIOptions, MaterializationFormat.ROI_ZIP)
+def _write_point_roi_zip(
+    data: MaterializationValue,
+    options: PointROIOptions,
+    ctx: MaterializationContext,
+) -> list[Output]:
+    """Write 3D measurement centres through the native ROI ZIP backend."""
+    from math import isfinite
+    from polystore.roi import PointShape, ROI
+    from openhcs.core.roi_point_metadata import ROIFractionalZ
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.runtime_measurements import MeasurementTable
+
+    payload = MaterializationInput.from_value(data, options).data
+    if not isinstance(payload, MeasurementTable):
+        raise TypeError("PointROIOptions requires a MeasurementTable payload.")
+    id_field = payload.subject.object_id_field
+    if id_field is None:
+        raise ValueError("PointROIOptions requires an object-measurement subject.")
+    features = (options.z_feature, options.y_feature, options.x_feature)
+    if payload.measurement_feature_owner is not None:
+        foreign = [
+            feature.value
+            for feature in features
+            if not payload.measurement_feature_owner.owns_measurement_feature_name(
+                feature.value
+            )
+        ]
+        if foreign:
+            raise ValueError(
+                f"Point coordinate features are not owned by the table: {foreign!r}."
+            )
+    coordinate_fields = tuple(
+        feature.measurement_row_field_name for feature in features
+    )
+    missing = {id_field, *coordinate_fields} - {field.name for field in payload.fields}
+    if missing:
+        raise ValueError(f"Point measurement fields are missing: {sorted(missing)!r}.")
+    provenance = payload.source_provenance.with_common_scalar_identity_from_planes()
+    source_planes = provenance.source_image_provenance_planes
+    if provenance.source_path is None and (
+        not source_planes.has_values
+        or any(path is None for path in source_planes.paths)
+    ):
+        raise ValueError(
+            "Point ROI ZIP requires a source-image path or exact paths for every "
+            "source plane."
+        )
+    rois: list[ROI] = []
+    seen_labels: set[int] = set()
+    for row in payload.iter_row_mappings():
+        label = row[id_field]
+        if (
+            isinstance(label, bool)
+            or not isinstance(label, (int, np.integer))
+            or label <= 0
+        ):
+            raise ValueError("Point ROI object labels must be positive integers.")
+        if int(label) in seen_labels:
+            raise ValueError(f"Duplicate point ROI object label: {label!r}.")
+        seen_labels.add(int(label))
+        coordinates: list[float] = []
+        for field_name in coordinate_fields:
+            value = row[field_name]
+            if isinstance(value, bool) or not isinstance(
+                value, (int, float, np.number)
+            ):
+                raise ValueError(f"Point coordinate {field_name!r} must be numeric.")
+            coordinate = float(value)
+            if not isfinite(coordinate):
+                raise ValueError(f"Point coordinate {field_name!r} must be finite.")
+            coordinates.append(coordinate)
+        z, y, x = coordinates
+        rois.append(
+            ROIFractionalZ(z).bind(
+                ROI(
+                    shapes=[PointShape(y=y, x=x)],
+                    metadata={**row, "label": int(label)},
+                )
+            )
+        )
+    if not rois:
+        raise ValueError("Point ROI ZIP requires at least one measured object.")
+    metadata = ImagePayloadMetadata(source_provenance=provenance)
+    output = PointROIOutput(
+        path=ctx.paths(options).primary_output_path(options),
+        content=ROIArchiveSourceMetadata.bind(rois, metadata),
+        metadata=metadata,
+    )
+    # Admit the domain before any persistence or publication uses this output.
+    output.source_component_domain
+    return [output]
+
+
 @writer_for(
     SpatialGraphROIOptions,
     MaterializationFormat.ROI_ZIP,
@@ -3186,6 +3524,8 @@ def _write_spatial_graph_roi_zip(
 
     from polystore.roi import ROI, PolylineShape
 
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
     materialization_input = MaterializationInput.from_value(data, options)
     graph = materialization_input.data
     if not isinstance(graph, SpatialGraph):
@@ -3194,6 +3534,10 @@ def _write_spatial_graph_roi_zip(
             f"got {type(graph).__name__}."
         )
 
+    source_metadata = ImagePayloadMetadata(
+        source_provenance=graph.source_provenance,
+        source_voxel_spacing=graph.source_voxel_spacing,
+    )
     rois = []
     for edge in graph.edges:
         coordinates = np.asarray(edge.coordinates, dtype=float)
@@ -3235,7 +3579,8 @@ def _write_spatial_graph_roi_zip(
     return [
         Output(
             path=ctx.paths(options).primary_output_path(options),
-            content=rois,
+            content=ROIArchiveSourceMetadata.bind(rois, source_metadata),
+            metadata=source_metadata,
         )
     ]
 
@@ -3301,12 +3646,7 @@ def image_file_emits_variable_component_planes(
         or _image_template_uses_sequence_index(options.relative_path_template)
     ):
         return False
-    return (
-        len(
-            MaterializationInput.from_runtime_slice_projected_value(data, options).items
-        )
-        > 1
-    )
+    return len(MaterializationInput.from_image_value(data, options).items) > 1
 
 
 @materialization_emits_variable_component_planes.register(ROIOptions)
@@ -3516,8 +3856,8 @@ class RuntimePlaneStackAxisMetadataProjection:
             source_path=self.artifact_source_identity.path,
             source_component_metadata=self.artifact_source_identity.component_metadata,
         )
-        return metadata.with_source_provenance(
-            metadata.source_provenance.with_missing_from(artifact_provenance)
+        return metadata.with_source_context_from(
+            ImagePayloadMetadata(source_provenance=artifact_provenance)
         )
 
     def ordered_axes(self) -> tuple[str, ...]:
@@ -3901,6 +4241,10 @@ class MaterializationSpec(ArtifactMaterializationPayload):
         """Explicit materialization specs are externally observed exports."""
         return True
 
+    def filename_qualifier(self, output_plan: ArtifactOutputPlan | None) -> str | None:
+        """Preserve the source filenames authored by an explicit export."""
+        return None
+
     def participates_in_persistent_materialization(self) -> bool:
         """Explicit materialization specs write to configured persistent targets."""
         return True
@@ -4035,28 +4379,70 @@ class AllowedBackendsAuthority:
             )
 
 
-def _materialization_output_groups(
-    spec: MaterializationSpec,
-    data: MaterializationValue,
-    context: MaterializationContext,
-    *,
-    output_path_filter: Callable[[Path], bool] | None = None,
-) -> tuple[tuple[WriterSpec, tuple[Output, ...]], ...]:
-    """Render requested outputs through each writer's declared path projection."""
+@dataclass(frozen=True)
+class SavedMaterializationOutputs:
+    """Backend-indexed outputs from completed saves, independent of artifact kind."""
 
-    return tuple(
-        (
-            writer,
-            tuple(
-                output.with_source_identity_fallback(
-                    context.artifact_source_identity
-                ).with_variable_components(context.variable_components)
-                for output in writer.outputs(data, options, context, output_path_filter)
-            ),
+    outputs_by_backend: Mapping[str, tuple[Output, ...]]
+
+    def outputs_for_backend(self, backend: str) -> tuple[Output, ...]:
+        return self.outputs_by_backend.get(backend, ())
+
+
+@dataclass(frozen=True)
+class MaterializationBatch:
+    """One rendered writer batch shared by saving and immediate publication."""
+
+    context: MaterializationContext
+    output_groups: tuple[tuple[WriterSpec, tuple[Output, ...]], ...]
+    primary: int
+
+    @classmethod
+    def render(
+        cls,
+        spec: MaterializationSpec,
+        data: MaterializationValue,
+        context: MaterializationContext,
+        *,
+        output_path_filter: Callable[[Path], bool] | None = None,
+    ) -> MaterializationBatch:
+        context = replace(context, materialization_spec=spec)
+        groups = tuple(
+            (
+                writer,
+                tuple(
+                    output.with_source_identity_fallback(
+                        context.artifact_source_identity
+                    ).with_variable_components(context.variable_components)
+                    for output in writer.outputs(
+                        data, options, context, output_path_filter
+                    )
+                ),
+            )
+            for options in spec.outputs
+            for writer in (_WRITERS_BY_OPTIONS[options.__class__],)
         )
-        for options in spec.outputs
-        for writer in (_WRITERS_BY_OPTIONS[options.__class__],)
-    )
+        return cls(context=context, output_groups=groups, primary=spec.primary)
+
+    @property
+    def outputs(self) -> tuple[Output, ...]:
+        return tuple(
+            output for _writer, outputs in self.output_groups for output in outputs
+        )
+
+    @property
+    def primary_path(self) -> str:
+        writer, outputs = self.output_groups[self.primary]
+        return writer.primary_path(list(outputs))
+
+    def save(self) -> SavedMaterializationOutputs:
+        """Return only outputs accepted and successfully saved by each backend."""
+        saved: dict[str, tuple[Output, ...]] = {}
+        saver = self.context.saver
+        for _writer, outputs in self.output_groups:
+            for backend, saved_outputs in saver.save_all(outputs).items():
+                saved[backend] = (*saved.get(backend, ()), *saved_outputs)
+        return SavedMaterializationOutputs(MappingProxyType(saved))
 
 
 def materialization_outputs(
@@ -4096,19 +4482,15 @@ def materialization_outputs(
         pipeline_position=pipeline_position,
         output_plan=output_plan,
     )
-    return tuple(
-        output
-        for _writer, outputs in _materialization_output_groups(
-            spec,
-            data,
-            materialization_context,
-            output_path_filter=output_path_filter,
-        )
-        for output in outputs
-    )
+    return MaterializationBatch.render(
+        spec,
+        data,
+        materialization_context,
+        output_path_filter=output_path_filter,
+    ).outputs
 
 
-def materialize(
+def prepare_materialization(
     spec: MaterializationSpec,
     data: MaterializationValue,
     path: str,
@@ -4124,8 +4506,8 @@ def materialize(
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
     output_plan: ArtifactOutputPlan | None = None,
-) -> str:
-    """Materialize data to one or more backends."""
+) -> MaterializationBatch:
+    """Prepare one exact batch for saving and immediate publication."""
 
     normalized_backends = BackendSequenceAuthority.normalize(backends)
     AllowedBackendsAuthority.validate(spec, normalized_backends)
@@ -4151,11 +4533,42 @@ def materialize(
         output_plan=output_plan,
     )
 
-    primary_path = ""
+    return MaterializationBatch.render(spec, data, ctx)
 
-    for i, (writer, outs) in enumerate(_materialization_output_groups(spec, data, ctx)):
-        ctx.saver.save_all(outs)
-        if i == spec.primary:
-            primary_path = writer.primary_path(list(outs))
 
-    return primary_path
+def materialize(
+    spec: MaterializationSpec,
+    data: MaterializationValue,
+    path: str,
+    filemanager: FileManager,
+    backends: Sequence[str] | str,
+    backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
+    context: ProcessingContext | None = None,
+    extra_inputs: dict | None = None,
+    *,
+    artifact_source_identity: SourceImageIdentity | None = None,
+    artifact_filename_identity: SourceImageIdentity | None = None,
+    variable_components: Sequence[VariableComponents] = (),
+    source_paths: Sequence[str] = (),
+    pipeline_position: int | None = None,
+    output_plan: ArtifactOutputPlan | None = None,
+) -> str:
+    """Materialize data and return the primary path derived from its writer batch."""
+    batch = prepare_materialization(
+        spec,
+        data,
+        path,
+        filemanager,
+        backends,
+        backend_kwargs,
+        context=context,
+        extra_inputs=extra_inputs,
+        artifact_source_identity=artifact_source_identity,
+        artifact_filename_identity=artifact_filename_identity,
+        variable_components=variable_components,
+        source_paths=source_paths,
+        pipeline_position=pipeline_position,
+        output_plan=output_plan,
+    )
+    batch.save()
+    return batch.primary_path

@@ -450,6 +450,35 @@ def test_openhcs_registry_cache_invalidates_when_scanned_modules_change(
     assert "cellprofiler_identify_primary_objects" in functions
 
 
+def test_openhcs_registry_valid_cache_skips_full_module_scan(
+    tmp_path, monkeypatch
+) -> None:
+    cache_path = tmp_path / "openhcs_function_metadata.json"
+    discovery = OpenHCSRegistry()
+    discovery._cache_path = cache_path
+    discovery.MODULES_TO_SCAN = ["openhcs.processing.backends.cellprofiler"]
+    expected = discovery.load_or_discover_functions()
+
+    cached = OpenHCSRegistry()
+    cached._cache_path = cache_path
+    cached.MODULES_TO_SCAN = ["openhcs.processing.backends.cellprofiler"]
+
+    def unexpected_scan():
+        raise AssertionError("Valid OpenHCS cache imported the full module inventory")
+
+    monkeypatch.setattr(cached, "get_modules_to_scan", unexpected_scan)
+    assert cached.is_available_for_catalog()
+    actual = cached.load_or_discover_functions()
+    assert {
+        name: (metadata.import_identity, metadata.contract, metadata.get_memory_type())
+        for name, metadata in actual.items()
+    } == {
+        name: (metadata.import_identity, metadata.contract, metadata.get_memory_type())
+        for name, metadata in expected.items()
+    }
+    assert "cellprofiler_identify_primary_objects" in actual
+
+
 def test_openhcs_registry_cache_identity_includes_memory_import_policy(
     tmp_path,
     monkeypatch,
@@ -940,7 +969,7 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
     )
     assert type(
         RadialDistributionBackendStrategy.for_memory_type(MemoryType.NUMPY)
-    ) is (NativeNumpyRadialDistributionBackendStrategy)
+    ) is (NumbaNumpyRadialDistributionBackendStrategy)
     assert (
         type(
             RadialDistributionBackendStrategy.for_memory_type(
@@ -3293,15 +3322,15 @@ def test_zernike_label_geometry_cache_reuses_equal_label_values() -> None:
     labels[2:6, 2:6] = 1
     labels[7:10, 7:11] = 2
     object_ids = np.array([1, 2], dtype=np.int32)
-    zernike._ZERNIKE_LABEL_GEOMETRY_CACHE.clear()
+    zernike.ZernikeLabelGeometryCache.process_cache().clear()
     strategy = zernike.LegacyFastNumpyShapeZernikeBackendStrategy()
 
     first = strategy.zernike_label_geometry(labels, object_ids)
     second = strategy.zernike_label_geometry(labels.copy(), object_ids.copy())
 
     assert second is first
-    assert len(zernike._ZERNIKE_LABEL_GEOMETRY_CACHE) == 1
-    zernike._ZERNIKE_LABEL_GEOMETRY_CACHE.clear()
+    assert len(zernike.ZernikeLabelGeometryCache.process_cache().entries) == 1
+    zernike.ZernikeLabelGeometryCache.process_cache().clear()
 
 
 def test_zernike_numba_provider_is_not_registered_until_pure() -> None:

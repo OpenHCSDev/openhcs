@@ -264,6 +264,12 @@ class RuntimeImageNumberOffset:
                 key: self.normalized_reference_value(field_name, nested_value)
                 for key, nested_value in value.items()
             }
+        return self.normalized_image_number(value)
+
+    def normalized_image_number(self, value: object) -> object:
+        """Project a schema-declared external image number into the local domain."""
+        if self.value == 0:
+            return value
         numeric_value = runtime_numeric_text_value(str(value))
         if numeric_value is None:
             return value
@@ -1101,7 +1107,14 @@ class RuntimeMeasurementRowMapping:
     def object_name(self) -> str | None:
         return cast(str | None, self.declared_value(MeasurementRowObjectName))
 
-    def object_label(self) -> int | None:
+    def object_label(self, *, object_id_field: str | None = None) -> int | None:
+        """Resolve the declared object identity before generic row-axis aliases."""
+        if object_id_field is not None:
+            return MeasurementRowObjectLabel.value_from_row(
+                self.row,
+                normalized_fields=self.normalized_fields,
+                object_id_field=object_id_field,
+            )
         return cast(int | None, self.declared_value(MeasurementRowObjectLabel))
 
     def object_identity_value(
@@ -1195,7 +1208,16 @@ class RuntimeObjectMeasurementRowIdentity:
         axis_key: str | None,
         policy: RuntimeEquivalencePolicy,
     ) -> "RuntimeObjectMeasurementRowIdentity | None":
-        object_label = row.object_label()
+        selected_field = (
+            policy.measurement_dialect.row_identity_contract.selected_object_identity_field(
+                row.normalized_field_names
+            )
+        )
+        object_label = row.object_label(
+            object_id_field=(
+                None if selected_field is None else row.normalized_fields[selected_field]
+            )
+        )
         if object_label is None:
             return None
         return cls(

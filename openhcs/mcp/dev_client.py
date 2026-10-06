@@ -9,7 +9,8 @@ import os
 import shlex
 import sys
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass
 from typing import TextIO
 
@@ -108,6 +109,7 @@ class McpDevClient:
         initialize_timeout_seconds: float = DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
         server_stderr: TextIO | None = None,
         use_resident_server: bool | None = None,
+        stdin_context: Callable[[], AbstractContextManager[None]] = nullcontext,
     ) -> None:
         self.server_spec = McpDevServerSpec(
             python_executable,
@@ -133,6 +135,7 @@ class McpDevClient:
         self._session = McpDevStdioSession(self.server_spec, self._server_stderr)
         self._session_cm = None
         self._use_resident_server = use_resident_server
+        self._stdin_context = stdin_context
         self._session_started = False
         self._closed = False
 
@@ -168,6 +171,7 @@ class McpDevClient:
         command_spec: McpDevCommandSpec,
         args: argparse.Namespace,
     ) -> McpDevToolBatchResponse | McpDevToolListResponse:
+        command_spec.prepare_input(args, stdin_context=self._stdin_context)
         prepared_calls = command_spec.calls_from_args(args)
         for call in prepared_calls:
             call.require_surface_profile(self.server_spec.surface_profile)
@@ -203,11 +207,11 @@ class McpDevClient:
                 server_stderr_tail=captured_server_stderr_tail(self._server_stderr),
             )
         payload = require_json_object_payload(to_jsonable(response))
-        returncode = 0 if args.allow_error_payloads else int(_command_failed(payload))
+        returncode = 0 if args.allow_error_payloads else int(response.has_errors())
         return McpDevCommandExecution(
             argv=normalized_argv,
             payload=payload,
-            rendered_output=command_spec.render_response(payload, args),
+            rendered_output=command_spec.render_result(response, args),
             returncode=returncode,
             server_stderr_tail=captured_server_stderr_tail(self._server_stderr),
         )
@@ -356,7 +360,9 @@ def _add_common_options(
 
 
 def _calls_from_args(args: argparse.Namespace) -> tuple[McpDevToolCall, ...]:
-    return McpDevCommandSpec.for_name(args.command).calls_from_args(args)
+    command_spec = McpDevCommandSpec.for_name(args.command)
+    command_spec.prepare_input(args)
+    return command_spec.calls_from_args(args)
 
 
 def write_stdout(text: str) -> bool:
@@ -396,12 +402,46 @@ def _persistent_command_argv(
     return (*prefix, *command_argv)
 
 
+@contextmanager
+def _persistent_shell_terminal(
+    stdin: TextIO,
+) -> Iterator[Callable[[], AbstractContextManager[None]]]:
+    """Own terminal mode for the whole session, including queued commands."""
+    if os.name != "posix":
+        yield nullcontext
+        return
+    # input() uses this standard editor's native hook, not canonical line assembly.
+    import readline  # noqa: F401
+    import termios
+    import tty
+
+    descriptor = stdin.fileno()
+    original_mode = termios.tcgetattr(descriptor)
+
+    @contextmanager
+    def source_input() -> Iterator[None]:
+        # Preserve the existing stdin-source EOF and exact-byte semantics.
+        # Re-enter command mode immediately after preparation, not after a tool.
+        termios.tcsetattr(descriptor, termios.TCSANOW, original_mode)
+        try:
+            yield
+        finally:
+            tty.setcbreak(descriptor, termios.TCSANOW)
+
+    try:
+        # TCSANOW preserves input already queued; TCSAFLUSH would discard it.
+        tty.setcbreak(descriptor, termios.TCSANOW)
+        yield source_input
+    finally:
+        termios.tcsetattr(descriptor, termios.TCSANOW, original_mode)
+
+
 def _run_persistent_shell(
     args: argparse.Namespace,
     *,
-    stdin=None,
-    stdout=None,
-    stderr=None,
+    stdin: TextIO | None = None,
+    stdout: TextIO | None = None,
+    stderr: TextIO | None = None,
 ) -> int:
     """Run line-oriented commands through one initialized current-source server."""
     stdin = sys.stdin if stdin is None else stdin
@@ -413,7 +453,10 @@ def _run_persistent_shell(
     profile = LocalCapabilitySurfaceProfile.for_name(args.surface)
 
     try:
-        with McpDevClient(
+        with (
+            _persistent_shell_terminal(stdin)
+            if interactive else nullcontext(nullcontext)
+        ) as stdin_context, McpDevClient(
             args.python,
             surface_profile=profile,
             initialize_timeout_seconds=max(
@@ -421,13 +464,19 @@ def _run_persistent_shell(
                 DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
             ),
             use_resident_server=getattr(args, "resident_server", True),
+            stdin_context=stdin_context,
         ) as client:
             while True:
                 if command_lines is None:
-                    if interactive and not args.no_prompt:
-                        stdout.write("openhcs-mcp-dev> ")
-                        stdout.flush()
-                    command_line = stdin.readline()
+                    if interactive:
+                        try:
+                            command_line = input(
+                                "" if args.no_prompt else "openhcs-mcp-dev> "
+                            ) + "\n"
+                        except EOFError:
+                            break
+                    else:
+                        command_line = stdin.readline()
                     if command_line == "":
                         break
                 else:
@@ -482,16 +531,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _run_persistent_shell(args)
         command_spec = McpDevCommandSpec.for_name(args.command)
         try:
-            payload = require_json_object_payload(
-                to_jsonable(asyncio.run(_run_async(args)))
-            )
+            response = asyncio.run(_run_async(args))
         except McpDevCliUsageError as exc:
             parser.error(str(exc))
-        if not write_stdout(command_spec.render_response(payload, args)):
+        if not write_stdout(command_spec.render_result(response, args)):
             return 0
         if args.allow_error_payloads:
             return 0
-        return 1 if _command_failed(payload) else 0
+        return int(response.has_errors())
     finally:
         logging.disable(disabled_level)
         registry_logger.setLevel(registry_level)

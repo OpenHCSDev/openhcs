@@ -16,7 +16,10 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileInventory,
     PlateResultFileRecord,
 )
-from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+from openhcs.microscopes.microscope_interfaces import (
+    AnalysisResultDirectory,
+    MicroscopeImagePathParser,
+)
 from openhcs.pyqt_gui.widgets.image_browser import (
     ImageBrowserFilterController,
     ImageBrowserWidget,
@@ -145,7 +148,7 @@ class _InventoryMetadataHandler:
         )
 
 
-class _InventoryMicroscopeHandler:
+class _InventoryMicroscopeHandler(MicroscopeImagePathParser):
     def __init__(self, handler_result_dir: Path) -> None:
         self.metadata_handler = _InventoryMetadataHandler(handler_result_dir)
         self.parser = _InventoryParser()
@@ -388,8 +391,7 @@ def test_plate_file_inventory_from_handler_matches_browser_file_shape(
 
     inventory = PlateFileInventory.from_handler(
         plate_path=plate_root,
-        metadata_handler=_InventoryMetadataHandler(handler_result_dir),
-        parser=_InventoryParser(),
+        handler=_InventoryMicroscopeHandler(handler_result_dir),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backend="disk",
         path_config=config.path_planning_config,
@@ -427,8 +429,7 @@ def test_plate_file_inventory_query_returns_unified_browser_records(
 
     inventory = PlateFileInventory.from_handler(
         plate_path=plate_root,
-        metadata_handler=_InventoryMetadataHandler(handler_result_dir),
-        parser=_InventoryParser(),
+        handler=_InventoryMicroscopeHandler(handler_result_dir),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backend="disk",
         all_subdirs=True,

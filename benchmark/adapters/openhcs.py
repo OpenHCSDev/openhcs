@@ -478,7 +478,10 @@ class OpenHCSAdapter(ToolAdapter):
         executed_axes = tuple(observation.records_by_axis)
         csv_output_count = len(observation.exports.table_outputs)
         execution_output_snapshot = (
-            RuntimeOutputSnapshot.from_artifact_execution_observation(observation)
+            RuntimeOutputSnapshot.from_artifact_execution_observation(
+                observation,
+                source_workspaces=output_roots,
+            )
         )
         image_output_count = len(execution_output_snapshot.images)
         equivalence_reference = request.equivalence_reference_output_dir
@@ -521,7 +524,9 @@ class OpenHCSAdapter(ToolAdapter):
                     (
                         *equivalence_report.differences,
                         *database_export_report.differences,
-                    )
+                    ),
+                    equivalence_report.compared_output_files
+                    | database_export_report.compared_output_files,
                 )
             if not equivalence_report.is_equivalent:
                 equivalence_failure_message = (

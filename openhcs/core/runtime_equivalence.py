@@ -35,8 +35,8 @@ from openhcs.core.artifacts import (
     ArtifactTypeStrategyMatchMixin,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
-    SpatialGridArtifactType,
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.measurement_row_materialization import (
@@ -69,6 +69,8 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_relationships import (
+    ObjectInstanceKey,
+    ObjectInstanceRelationship,
     ObjectRelationship,
 )
 from openhcs.core.equivalence.policy import (
@@ -120,7 +122,6 @@ from openhcs.core.equivalence.measurement_facts import (
     RuntimeRowProjectionRecord,
     record_measurement_facts,
     runtime_measurement_fact_counter,
-    spatial_grid_measurement_facts,
 )
 from openhcs.core.equivalence.measurement_features import (
     RuntimeMeasurementDescriptorSemantics,
@@ -141,6 +142,7 @@ from openhcs.core.equivalence.object_label_measurements import (
 from openhcs.core.equivalence.relationships import (
     RelationshipAggregateFeatureSemantics,
     RelationshipMeasurementSemantics,
+    ExportedRelationshipMeasurementSemantics,
     RuntimeObjectRelationshipIdentity,
     RuntimeScopedMeasurementTable,
     object_measurement_values_by_label,
@@ -633,13 +635,15 @@ class RuntimeMeasurementObservationAxis:
     def accept_measurement_table(
         self,
         record: StoredRuntimeValue,
+        dialect: RuntimeMeasurementDialect,
     ) -> None:
-        self.measurement_tables.append(
+        self.measurement_tables.extend(
             RuntimeScopedMeasurementTable(
-                cast(MeasurementTable, record.value.data),
-                record_identity=record.path,
+                table,
+                record_identity=record.location.path,
                 execution_scope=record.key.scope,
             )
+            for table in record.key.artifact_type.measurement_tables(record, dialect)
         )
 
     def accept_object_label_record(self, record: StoredRuntimeValue) -> None:
@@ -651,7 +655,7 @@ class RuntimeMeasurementObservationAxis:
         record: StoredRuntimeValue,
     ) -> None:
         """Record a relationship artifact observed on this axis."""
-        relationship = cast(ObjectRelationship, record.value.data)
+        relationship = cast(ObjectRelationship, record.data)
         relationship_identity = RuntimeObjectRelationshipIdentity.from_relationship(
             relationship
         )
@@ -872,13 +876,6 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
         counter = runtime_measurement_fact_counter(self.measurement_fact_counts, key)
         self.measurement_fact_counter_object_cache[cache_key] = (key, counter)
         return counter
-
-    def record_spatial_grid(self, record: StoredRuntimeValue) -> None:
-        record_measurement_facts(
-            self.measurement_fact_counts,
-            spatial_grid_measurement_facts(record.value, self.policy),
-            required_keys=self.required_measurement_keys,
-        )
 
     def project_recorded_row_fact_counts(self) -> RuntimeMeasurementFactCounterMap:
         """Finalize projected row facts without artifact-owned completions."""
@@ -1368,27 +1365,12 @@ class RuntimeMeasurementObservationRecordHandler(
         """Record one runtime artifact into measurement-observation state."""
 
 
-class SpatialGridObservationRecordHandler(RuntimeMeasurementObservationRecordHandler):
-    """Record spatial-grid artifacts as direct measurement facts."""
-
-    artifact_type = SpatialGridArtifactType
-
-    def record(
-        self,
-        state: RuntimeMeasurementProjectionState,
-        axis_observation: RuntimeMeasurementObservationAxis,
-        record: StoredRuntimeValue,
-    ) -> None:
-        del axis_observation
-        state.record_spatial_grid(record)
-
-
 class MeasurementTableObservationRecordHandler(
     RuntimeMeasurementObservationRecordHandler
 ):
     """Collect measurement-table artifacts for one canonical axis projection."""
 
-    artifact_type = MeasurementsArtifactType
+    artifact_type = MeasurementBearingArtifactType
 
     def record(
         self,
@@ -1396,8 +1378,9 @@ class MeasurementTableObservationRecordHandler(
         axis_observation: RuntimeMeasurementObservationAxis,
         record: StoredRuntimeValue,
     ) -> None:
-        del state
-        axis_observation.accept_measurement_table(record)
+        axis_observation.accept_measurement_table(
+            record, state.policy.measurement_dialect
+        )
 
 
 class ObjectLabelsObservationRecordHandler(RuntimeMeasurementObservationRecordHandler):
@@ -1708,7 +1691,7 @@ RuntimeMeasurementFeatureCachePayload = tuple[
     str | None,
 ]
 RuntimeCellSignatureCachePayload = tuple[str, str]
-RuntimeMeasurementSnapshotCachePayload = tuple[
+RuntimeMeasurementFactCachePayload = tuple[
     tuple[
         RuntimeMeasurementFeatureCachePayload,
         tuple[tuple[RuntimeCellSignatureCachePayload, int], ...],
@@ -1717,11 +1700,24 @@ RuntimeMeasurementSnapshotCachePayload = tuple[
 ]
 
 
+RuntimeRelationshipCorrelationCachePayload = tuple[
+    tuple[RuntimeMeasurementFeatureCachePayload, tuple[tuple[tuple[int, int | None], tuple[int, int | None]], ...], int | None],
+    ...,
+]
+RuntimeMeasurementSnapshotCachePayload = tuple[
+    RuntimeMeasurementFactCachePayload,
+    RuntimeRelationshipCorrelationCachePayload | None,
+]
+
+
 @dataclass(slots=True)
 class RuntimeMeasurementSnapshot:
     """Semantic measurement facts independent of table layout."""
 
     measurement_fact_counts: RuntimeMeasurementFactCounterMapping
+    correlated_relationships: (
+        Mapping[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship] | None
+    ) = None
 
     @classmethod
     def from_output_snapshot(
@@ -1736,18 +1732,29 @@ class RuntimeMeasurementSnapshot:
             policy=policy,
             known_source_names=known_source_names,
         )
-        state.record_measurement_tables(
-            tuple(
-                RuntimeScopedMeasurementTable(measurement_table)
-                for table in snapshot.tables
-                for measurement_table in table.measurement_tables(
-                    policy.measurement_dialect
-                )
-            ),
-            None,
+        tables = tuple(
+            RuntimeScopedMeasurementTable(measurement_table)
+            for table in ExportedRelationshipMeasurementSemantics.validated_output_tables(
+                snapshot.tables, policy
+            )
+            for measurement_table in table.measurement_tables(
+                policy.measurement_dialect
+            )
         )
+        image_offset = RuntimeImageNumberOffset.from_runtime_rows(
+            row for table in tables for row in table.table.rows.iter_row_mappings()
+        )
+        correlations = (
+            ExportedRelationshipMeasurementSemantics.correlated_object_relationships(
+                tables, image_offset
+            )
+        )
+        state.record_measurement_tables(tables, None)
         state.required_measurement_keys = frozenset(state.explicit_measurement_keys)
-        return cls(measurement_fact_counts=state.project_measurement_fact_counts())
+        return cls(
+            measurement_fact_counts=state.project_measurement_fact_counts(),
+            correlated_relationships=correlations,
+        )
 
     @classmethod
     def from_artifact_execution_observation(
@@ -1779,48 +1786,110 @@ class RuntimeMeasurementSnapshot:
             }
         )
 
+        if self.correlated_relationships is not None:
+            self.correlated_relationships = MappingProxyType(
+                dict(self.correlated_relationships)
+            )
+
     @property
     def is_empty(self) -> bool:
         return not self.measurement_fact_counts
 
-    def to_cache_payload(
+    def required_relationship_correlations(
         self,
-    ) -> RuntimeMeasurementSnapshotCachePayload:
-        """Return a stable semantic cache payload for repeated equivalence checks."""
-        return tuple(
+    ) -> Mapping[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship]:
+        """Admit this snapshot for a full saved comparison, not value-only scope."""
+        if self.correlated_relationships is None:
+            raise RuntimeError(
+                "Matched saved output inventory requires known relationship correlations."
+            )
+        return self.correlated_relationships
+
+    def relationship_differences(
+        self,
+        candidate: (
+            Mapping[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship] | None
+        ),
+    ) -> tuple[RuntimeEquivalenceDifference, ...]:
+        """Compare saved correlations; None denotes the typed value-only scope."""
+        if self.correlated_relationships is None or candidate is None:
+            return ()
+        if self.correlated_relationships == candidate:
+            return ()
+        return (
+            RuntimeEquivalenceDifference(
+                RuntimeEquivalenceDifferenceKind.MEASUREMENT_CONTENT,
+                "directed relationship endpoint/image correlations differ",
+            ),
+        )
+
+    def to_cache_payload(self) -> RuntimeMeasurementSnapshotCachePayload:
+        """Transport numeric facts and known/unknown relationship evidence together."""
+        facts = tuple(
             (
                 feature.to_cache_payload(),
                 tuple(
                     (value.to_cache_payload(), int(count))
                     for value, count in sorted(
-                        values.items(),
-                        key=lambda item: item[0].sort_key,
+                        values.items(), key=lambda item: item[0].sort_key
                     )
                 ),
             )
             for feature, values in sorted(
-                self.measurement_fact_counts.items(),
-                key=lambda item: item[0].sort_key,
+                self.measurement_fact_counts.items(), key=lambda item: item[0].sort_key
             )
         )
+        relationships = None
+        if self.correlated_relationships is not None:
+            relationships = tuple(
+                (
+                    key.to_cache_payload(),
+                    tuple(
+                        (
+                            (source.object_id, source.slice_index),
+                            (target.object_id, target.slice_index),
+                        )
+                        for source, target in zip(
+                            value.source_keys, value.target_keys, strict=True
+                        )
+                    ),
+                    value.slice_count,
+                )
+                for key, value in sorted(
+                    self.correlated_relationships.items(),
+                    key=lambda item: item[0].sort_key,
+                )
+            )
+        return facts, relationships
 
     @classmethod
     def from_cache_payload(
-        cls,
-        payload: RuntimeMeasurementSnapshotCachePayload,
+        cls, payload: RuntimeMeasurementSnapshotCachePayload
     ) -> "RuntimeMeasurementSnapshot":
-        """Rebuild a semantic measurement snapshot from cache payload data."""
-        measurement_fact_counts: RuntimeMeasurementFactCounterMap = {}
-        for feature_payload, values_payload in payload:  # type: ignore[union-attr]
-            counter: Counter[RuntimeCellSignature] = Counter()
-            for value_payload, count in values_payload:
-                counter[RuntimeCellSignature.from_cache_payload(value_payload)] = int(
-                    count
+        """Restore the same evidence scope, retaining every directed endpoint pair."""
+        fact_payload, relationship_payload = payload
+        facts = {
+            RuntimeMeasurementFeatureKey.from_cache_payload(feature): Counter(
+                {
+                    RuntimeCellSignature.from_cache_payload(value): count
+                    for value, count in values
+                }
+            )
+            for feature, values in fact_payload
+        }
+        relationships = None
+        if relationship_payload is not None:
+            relationships = {
+                RuntimeMeasurementFeatureKey.from_cache_payload(
+                    key
+                ): ObjectInstanceRelationship(
+                    tuple(ObjectInstanceKey(*source) for source, _target in pairs),
+                    tuple(ObjectInstanceKey(*target) for _source, target in pairs),
+                    slice_count,
                 )
-            measurement_fact_counts[
-                RuntimeMeasurementFeatureKey.from_cache_payload(feature_payload)
-            ] = counter
-        return cls(measurement_fact_counts=measurement_fact_counts)
+                for key, pairs, slice_count in relationship_payload
+            }
+        return cls(facts, relationships)
 
 
 @dataclass(slots=True)
@@ -1881,9 +1950,18 @@ def runtime_measurement_equivalence(
     *,
     policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
 ) -> RuntimeEquivalenceReport:
-    """Compare precomputed semantic measurement snapshots."""
+    """Compare measurement facts and any jointly supplied saved edge correlations.
+
+    Typed artifact snapshots retain their value-only scope when global saved
+    image numbering is unavailable. Full saved qualification must use the
+    known correlation evidence produced by ``from_output_snapshot`` on both
+    sides; an UNKNOWN typed projection is not such a qualification.
+    """
     return RuntimeEquivalenceReport(
-        differences=_measurement_differences(reference, candidate, policy)
+        differences=(
+            *_measurement_differences(reference, candidate, policy),
+            *reference.relationship_differences(candidate.correlated_relationships),
+        )
     )
 
 
@@ -3122,7 +3200,7 @@ def _measurement_source_names_from_artifact_execution(
         for record in records:
             if record.key.artifact_type is not MeasurementsArtifactType:
                 continue
-            table = cast(MeasurementTable, record.value.data)
+            table = cast(MeasurementTable, record.data)
             if table.source_image_name is not None:
                 source_names.update(_source_name_aliases(table.source_image_name))
             for row in iter_measurement_rows((table,)):

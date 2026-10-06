@@ -1,0 +1,99 @@
+{
+  "case": "ExampleUntangleWormsBrightField",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "e6c59a4ba0d3bd98e64d64af13dbe058a7bad820048798e603f47c15c14ceaec",
+  "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "WT_orig.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWormsBrightField/images/WT_orig.png",
+      "size_bytes": 837905,
+      "sha256": "391ad10b5d3e387d36851b515ccd289c420379965619c547bb3a473d18e9ea7f"
+    },
+    {
+      "path": "fat_orig.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWormsBrightField/images/fat_orig.png",
+      "size_bytes": 822292,
+      "sha256": "dc5f4a93cd5156baa5ab468729f62c8cf908f34b52b0e6a96a6035a8cb5b66b8"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleUntangleWormsBrightField/native_report.json",
+  "native_reference_report_sha256": "44948a986fe697022bef2537849a1c7f9fe94072bfe199c22c6bd07a5b07a3d4",
+  "native_reference_source_commit": "65bc037274d2b769943139a858723999690e9a26",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleUntangleWormsBrightField/native_report.json",
+      "sha256": "44948a986fe697022bef2537849a1c7f9fe94072bfe199c22c6bd07a5b07a3d4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleUntangleWormsBrightField/native_request.json",
+      "sha256": "909f642d2913049169d7397efbbe58f45a377d703727e296faf6bd3568e179ee"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleUntangleWormsBrightField/pilot_provenance.json",
+      "sha256": "064e48044375bdcbf955d624e5971d726c7550afa8331330e3ed2119ec82b58a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/-1/NonOverlappingWorms.csv",
+      "sha256": "9ade92229325f64cf9d2f2d404ac8654a04199721b054922f47e05be5028ad2e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/0/NonOverlappingWorms.csv",
+      "sha256": "9ade92229325f64cf9d2f2d404ac8654a04199721b054922f47e05be5028ad2e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/1/NonOverlappingWorms.csv",
+      "sha256": "9ade92229325f64cf9d2f2d404ac8654a04199721b054922f47e05be5028ad2e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/2/NonOverlappingWorms.csv",
+      "sha256": "9ade92229325f64cf9d2f2d404ac8654a04199721b054922f47e05be5028ad2e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "699d439b828ca3e0706a789521015dfc79ae6fd8192e4c37ae9c147b39dd2f85"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native_preparation/native_cellprofiler_headless/ExampleUntangleWormsBrightField.cppipe",
+      "sha256": "cffb98c4f763a7656fc149d06edd2533f436416ab84810f8138fd9640fccc6bb"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "WT_orig.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWormsBrightField/images/WT_orig.png",
+      "size_bytes": 837905,
+      "sha256": "391ad10b5d3e387d36851b515ccd289c420379965619c547bb3a473d18e9ea7f"
+    },
+    {
+      "path": "fat_orig.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWormsBrightField/images/fat_orig.png",
+      "size_bytes": 822292,
+      "sha256": "dc5f4a93cd5156baa5ab468729f62c8cf908f34b52b0e6a96a6035a8cb5b66b8"
+    }
+  ]
+}

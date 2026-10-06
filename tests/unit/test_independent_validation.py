@@ -24,6 +24,8 @@ from benchmark.validation.corpus import (
     verify_frozen_pipeline,
 )
 from benchmark.validation.references import (
+    Bbbc007ManualOutlineReference,
+    closed_outline_interiors,
     decode_bbbc007_outline,
     decode_bbbc039_mask,
 )
@@ -307,12 +309,12 @@ def test_instance_metrics_detect_split_and_merge():
 
 
 def test_bbbc007_outline_decoder_and_published_two_pixel_boundary_metric(tmp_path):
-    outline = np.ones((20, 20), dtype=np.uint8)
-    outline[3:17, 3] = 0
-    outline[3:17, 16] = 0
-    outline[3, 3:17] = 0
-    outline[16, 3:17] = 0
-    outline[3:17, 10] = 0
+    outline = np.zeros((20, 20), dtype=bool)
+    outline[3:17, 3] = True
+    outline[3:17, 16] = True
+    outline[3, 3:17] = True
+    outline[16, 3:17] = True
+    outline[3:17, 10] = True
     path = tmp_path / "outline.tif"
     iio.imwrite(path, outline)
 
@@ -322,7 +324,7 @@ def test_bbbc007_outline_decoder_and_published_two_pixel_boundary_metric(tmp_pat
     predicted[4:16, 10:16] = 2
     metrics = boundary_segmentation_metrics(
         predicted,
-        reference,
+        Bbbc007ManualOutlineReference().load_boundary(path),
         source_set_id="A01_1",
         channel="ACTIN",
     )
@@ -331,6 +333,45 @@ def test_bbbc007_outline_decoder_and_published_two_pixel_boundary_metric(tmp_pat
     assert metrics.relevant_predicted_boundary_pixels > 0
     assert metrics.relevant_boundary_within_two_pixels == pytest.approx(1.0)
     assert metrics.boundary_f1_within_two_pixels > 0.9
+
+
+@pytest.mark.parametrize("dtype,value", [(bool, True), (np.uint8, 255)])
+def test_outline_polarity_and_open_frame_regions_are_not_repaired(tmp_path, dtype, value):
+    outline = np.zeros((20, 20), dtype=dtype)
+    outline[3:17, 3] = value
+    outline[3:17, 16] = value
+    outline[3, 3:17] = value
+    outline[16, 3:17] = value
+    outline[3:17, 10] = value
+    path = tmp_path / "official-polarity.tif"
+    iio.imwrite(path, outline)
+    decoded = decode_bbbc007_outline(path)
+    assert decoded.max() == 2
+    assert not np.any(decoded[outline != 0])
+    assert np.count_nonzero(decoded) == 12 * (6 + 5)
+    outline[3, 6] = 0  # First interior leaks into exterior; second remains closed.
+    regions, excluded = closed_outline_interiors(outline)
+    assert regions.max() == 1 and not regions[5, 5] and regions[5, 12]
+    assert excluded == 1
+    assert np.array_equal(outline != 0, Bbbc007ManualOutlineReference().load_boundary(path)) is False
+    frame_cut = outline[8:, :]
+    assert closed_outline_interiors(frame_cut)[0].max() == 0
+
+
+def test_boundary_score_uses_open_strokes_and_excludes_image_frame():
+    predicted = np.ones((12, 12), dtype=np.int32)
+    predicted[:, 6:] = 2
+    strokes = np.zeros_like(predicted, dtype=bool)
+    strokes[:, 5:7] = True  # Open stroke: no enclosed instance labels exist.
+    assert closed_outline_interiors(strokes)[0].max() == 0
+    metrics = boundary_segmentation_metrics(predicted, strokes, source_set_id="open", channel="ACTIN")
+    assert metrics.relevant_predicted_boundary_pixels == 20
+    assert metrics.relevant_boundary_within_two_pixels == 1
+    assert metrics.correspondence == "nearest_union_of_manual_outline_strokes"
+    with pytest.raises(ValueError, match="boolean stroke"):
+        boundary_segmentation_metrics(predicted, predicted, source_set_id="bad", channel="ACTIN")
+    with pytest.raises(ValueError, match="empty"):
+        boundary_segmentation_metrics(predicted, np.zeros_like(strokes), source_set_id="empty", channel="ACTIN")
 
 
 def test_assay_statistics_use_declared_control_roles_and_replicated_doses():

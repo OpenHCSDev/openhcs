@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,11 +16,6 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeExecutionObservation,
-)
-from openhcs.core.runtime_stores import StoredRuntimeValue
-from openhcs.core.steps.function_artifact_materialization import (
-    RuntimeArtifactMaterialization,
-    runtime_artifact_materializations_from_records,
 )
 from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     AnalysisSummaryWriter,
@@ -35,6 +29,12 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.steps.function_artifact_materialization import (
+        MaterializedRuntimeArtifact,
+        RuntimeArtifactMaterialization,
+    )
+    from openhcs.processing.materialization.core import Output
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +65,156 @@ class RuntimeAnalysisConsolidationInputs:
         self,
     ) -> Mapping[Path, tuple[RuntimeAnalysisTableOutput, ...]]:
         return {directory: group.outputs for directory, group in self.groups.items()}
+
+    @classmethod
+    def from_saved_outputs(
+        cls,
+        context: ProcessingContext,
+        plan: CompiledStepPlan,
+        saved: MaterializedRuntimeArtifact,
+    ) -> RuntimeAnalysisConsolidationInputs | None:
+        """Project the writer's actual saved CSV content without rendering again."""
+        if not plan.runtime_artifact_materialization.has_persistent_target:
+            return None
+        backend = plan.runtime_artifact_materialization.require_persistent_backend()
+        return cls._from_table_contents(
+            context, plan, saved.materialization,
+            (
+                (Path(output.path), output.require_text_content())
+                for output in saved.outputs_for_backend(backend)
+                if analysis_file_path_is_included(
+                    Path(output.path),
+                    analysis_consolidation_config=context.analysis_consolidation_config,
+                )
+            ),
+        )
+
+    @classmethod
+    def from_reused_outputs(
+        cls,
+        context: ProcessingContext,
+        plan: CompiledStepPlan,
+        materialization: RuntimeArtifactMaterialization,
+        outputs: tuple[Output, ...],
+    ) -> RuntimeAnalysisConsolidationInputs | None:
+        """Read exact historical CSV text for explicitly reused debug outputs."""
+        if not plan.runtime_artifact_materialization.has_persistent_target:
+            return None
+        backend = plan.runtime_artifact_materialization.require_persistent_backend()
+        return cls._from_table_contents(
+            context, plan, materialization,
+            (
+                (Path(output.path), context.filemanager.load_text(output.path, backend))
+                for output in outputs
+                if analysis_file_path_is_included(
+                    Path(output.path),
+                    analysis_consolidation_config=context.analysis_consolidation_config,
+                )
+            ),
+        )
+
+    @classmethod
+    def _from_table_contents(
+        cls,
+        context: ProcessingContext,
+        plan: CompiledStepPlan,
+        materialization: RuntimeArtifactMaterialization,
+        contents: Iterable[tuple[Path, str]],
+    ) -> RuntimeAnalysisConsolidationInputs | None:
+        """Bind table identity and destinations from this one materialization."""
+        if (
+            not materialization.spec.participates_in_runtime_export_observation()
+            or not context.analysis_consolidation_config.enabled
+        ):
+            return None
+        backend = plan.runtime_artifact_materialization.require_persistent_backend()
+        destination = RuntimeAnalysisSummaryDestination(
+            backend=backend, images_dir=plan.artifact_images_dir,
+        )
+        output_groups: dict[
+            tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
+        ] = {}
+        for output_path, content in contents:
+            output_groups.setdefault((output_path.parent, destination), []).append(
+                runtime_analysis_table_output(
+                    materialization,
+                    output_path=output_path,
+                    csv_content=content,
+                    pipeline_position=plan.pipeline_position,
+                )
+            )
+        return cls._from_groups(
+            output_groups,
+            {RuntimeAnalysisSummaryDestination(backend, str(plan.output_dir))},
+        )
+
+    @classmethod
+    def combine(
+        cls,
+        inputs: Iterable[RuntimeAnalysisConsolidationInputs | None],
+    ) -> RuntimeAnalysisConsolidationInputs | None:
+        """Combine actual rendered projections without revisiting their payloads."""
+        output_groups: dict[
+            tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
+        ] = {}
+        destinations: set[RuntimeAnalysisSummaryDestination] = set()
+        seen_paths: set[tuple[str, Path]] = set()
+        for item in inputs:
+            if item is None:
+                continue
+            destinations.add(item.destination)
+            for directory, group in item.groups.items():
+                for output in group.outputs:
+                    identity = (group.destination.backend, output.path)
+                    if identity in seen_paths:
+                        continue
+                    seen_paths.add(identity)
+                    output_groups.setdefault((directory, group.destination), []).append(output)
+        return cls._from_groups(output_groups, destinations)
+
+    @classmethod
+    def from_observations(
+        cls,
+        compiled_contexts: Mapping[str, ProcessingContext],
+        observations: tuple[RuntimeExecutionObservation, ...],
+    ) -> RuntimeAnalysisConsolidationInputs | None:
+        """Admit execution contexts and combine their actual rendered outputs."""
+        inputs = []
+        for observation in observations:
+            for context_observation in observation.contexts:
+                if context_observation.context_key not in compiled_contexts:
+                    raise KeyError(
+                        "Runtime observation references unknown compiled context "
+                        f"{context_observation.context_key!r}."
+                    )
+                inputs.append(context_observation.outputs.analysis_inputs)
+        return cls.combine(inputs)
+
+    @classmethod
+    def _from_groups(
+        cls,
+        output_groups: Mapping[
+            tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
+        ],
+        destinations: set[RuntimeAnalysisSummaryDestination],
+    ) -> RuntimeAnalysisConsolidationInputs | None:
+        """Admit the single compiled summary destination for projected tables."""
+        if not output_groups:
+            return None
+        if len(destinations) != 1:
+            raise RuntimeError(
+                "Analysis outputs do not share one compiled main-flow summary destination: "
+                f"{sorted(destinations, key=lambda value: (value.backend, value.images_dir))!r}."
+            )
+        return cls(
+            groups={
+                directory: RuntimeAnalysisDirectoryInputs(
+                    outputs=tuple(outputs), destination=destination,
+                )
+                for (directory, destination), outputs in output_groups.items()
+            },
+            destination=next(iter(destinations)),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,7 +274,7 @@ def consolidate_analysis_outputs(
     runtime_observations = tuple(
         result.runtime_observation for result in execution_results.values()
     ) + (plate_runtime_observation,)
-    consolidation_inputs = execution_analysis_outputs(
+    consolidation_inputs = RuntimeAnalysisConsolidationInputs.from_observations(
         compiled_contexts,
         runtime_observations,
     )
@@ -162,100 +312,6 @@ def consolidate_analysis_outputs(
     logger.info(
         "CONSOLIDATION: %d directories consolidated",
         len(successful_dirs),
-    )
-
-
-def execution_analysis_outputs(
-    compiled_contexts: Mapping[str, ProcessingContext],
-    runtime_observations: tuple[RuntimeExecutionObservation, ...],
-) -> RuntimeAnalysisConsolidationInputs | None:
-    """Group exact CSV content and its compiled persistent destination."""
-
-    records_by_context: dict[str, list[StoredRuntimeValue]] = {}
-    for observation in runtime_observations:
-        for context_observation in observation.contexts:
-            if context_observation.context_key not in compiled_contexts:
-                raise KeyError(
-                    "Runtime observation references unknown compiled context "
-                    f"{context_observation.context_key!r}."
-                )
-            records_by_context.setdefault(
-                context_observation.context_key,
-                [],
-            ).extend(context_observation.records)
-
-    output_groups: dict[
-        tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
-    ] = {}
-    destinations: set[RuntimeAnalysisSummaryDestination] = set()
-    seen_paths: set[tuple[str, Path]] = set()
-    for context_key, records in records_by_context.items():
-        context = compiled_contexts[context_key]
-        current_records = tuple(records)
-        for step_plan in context.step_plans.values():
-            if not step_plan.runtime_artifact_materialization.has_persistent_target:
-                continue
-            for materialization in runtime_artifact_materializations_from_records(
-                step_plan,
-                context,
-                current_records,
-            ):
-                if (
-                    not materialization.spec.participates_in_runtime_export_observation()
-                ):
-                    continue
-                backend = (
-                    step_plan.runtime_artifact_materialization.require_persistent_backend()
-                )
-                destination = RuntimeAnalysisSummaryDestination(
-                    backend=backend,
-                    images_dir=step_plan.artifact_images_dir,
-                )
-                for output in materialization.outputs(
-                    step_plan,
-                    context,
-                    output_path_filter=partial(
-                        analysis_file_path_is_included,
-                        analysis_consolidation_config=context.analysis_consolidation_config,
-                    ),
-                ):
-                    output_path = Path(output.path)
-                    if (backend, output_path) in seen_paths:
-                        continue
-                    seen_paths.add((backend, output_path))
-                    destinations.add(
-                        RuntimeAnalysisSummaryDestination(
-                            backend=backend,
-                            images_dir=str(step_plan.output_dir),
-                        )
-                    )
-                    output_groups.setdefault(
-                        (output_path.parent, destination), []
-                    ).append(
-                        runtime_analysis_table_output(
-                            materialization,
-                            output_path=output_path,
-                            csv_content=output.require_text_content(),
-                            pipeline_position=step_plan.pipeline_position,
-                        )
-                    )
-
-    if not output_groups:
-        return None
-    if len(destinations) != 1:
-        raise RuntimeError(
-            "Analysis outputs do not share one compiled main-flow summary destination: "
-            f"{sorted(destinations, key=lambda value: (value.backend, value.images_dir))!r}."
-        )
-    return RuntimeAnalysisConsolidationInputs(
-        groups={
-            results_directory: RuntimeAnalysisDirectoryInputs(
-                outputs=tuple(outputs),
-                destination=destination,
-            )
-            for (results_directory, destination), outputs in output_groups.items()
-        },
-        destination=destinations.pop(),
     )
 
 

@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import inspect
 import re
+import threading
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
+from concurrent.futures import CancelledError
+from dataclasses import dataclass, replace
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pyqt_reactive.services.parameter_help_service import docstring_info_for_target
+from pyqt_reactive.services.help_document import HelpDocument
+from pyqt_reactive.services.parameter_help_service import (
+    dataclass_type_from_annotation,
+    docstring_info_for_target,
+)
 from python_introspect import (
+    UnifiedParameterAnalyzer,
     enum_import_path,
     enum_input_values,
     enum_member_names,
@@ -25,8 +33,12 @@ from openhcs.agent.dto.functions import (
     DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
     CellProfilerArtifactBindingSummary,
     CellProfilerModuleDeclarationSummary,
+    CustomFunctionRegistrationDestination,
+    CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    CustomFunctionRegistrationHandle,
+    CustomFunctionRegistrationObservation,
     FunctionArtifactSpec,
     FunctionCatalogEntry,
     FunctionCatalogPage,
@@ -37,6 +49,7 @@ from openhcs.agent.dto.functions import (
     catalog_page,
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -222,7 +235,7 @@ class CatalogFilterText:
             (CatalogSearchRank.SUMMARY_CONTAINS, entry.summary or ""),
             (
                 CatalogSearchRank.DOC_CONTAINS,
-                _detail_doc(metadata.func, metadata.doc) or "",
+                PARAMETER_DOCUMENTATION_POLICY.detail_doc(metadata.func, metadata.doc) or "",
             ),
         ):
             score = self._text_score(value)
@@ -317,6 +330,7 @@ class CatalogSearchProjection:
     metadata: FunctionMetadata
     entry: FunctionCatalogEntry
     parameters: tuple[FunctionParameterSpec, ...]
+    compact_entry: FunctionCatalogEntry
 
 
 class ParameterDocumentationPolicy:
@@ -325,6 +339,43 @@ class ParameterDocumentationPolicy:
     variadic_kinds = frozenset(
         {inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD}
     )
+
+    def detail_doc(
+        self,
+        func: Callable,
+        metadata_doc: str | None,
+        contract: CallableContract | None = None,
+    ) -> str | None:
+        """Project authored prose from the original semantic callable owner.
+
+        Runtime decorators can document controls that a host declaration removes.
+        Their copied prose is not the public contract. Added parameter help stays
+        on the final signature's typed parameter projection; request bindings
+        remain semantic boundaries rather than being unwrapped to implementations.
+        """
+        callable_contract = contract or CallableContract.from_callable(func)
+        doc = inspect.getdoc(callable_contract.resolve_raw_runtime_callable())
+        if doc is not None:
+            return doc
+        if metadata_doc is not None and metadata_doc.strip():
+            return metadata_doc
+        return None
+
+    def summary(
+        self,
+        func: Callable,
+        metadata_doc: str | None,
+        view: SummaryView,
+        contract: CallableContract | None = None,
+    ) -> str | None:
+        doc = self.detail_doc(func, metadata_doc, contract)
+        if doc is None:
+            return None
+        for line in doc.splitlines():
+            stripped = line.strip()
+            if stripped:
+                return _bounded_summary(stripped, view)
+        return None
 
     def should_document(
         self,
@@ -340,13 +391,9 @@ class ParameterDocumentationPolicy:
             return False
         return parameter.kind not in self.variadic_kinds
 
-    def display_signature(
-        self,
-        func: Callable,
-        display_name: str,
-        view: SignatureView,
-        contract: CallableContract | None = None,
-    ) -> str:
+    def visible_signature(
+        self, func: Callable, contract: CallableContract | None = None
+    ) -> inspect.Signature:
         sig = inspect.signature(func)
         supplied_by = self.supplied_by(func, contract)
         hidden_names = parameter_exclusions(func)
@@ -360,6 +407,13 @@ class ParameterDocumentationPolicy:
                 and supplied_by.get(name) is FunctionParameterSource.AGENT
             )
         )
+        return sig.replace(parameters=visible_parameters)
+
+    @staticmethod
+    def render_signature(
+        signature: inspect.Signature, display_name: str, view: SignatureView
+    ) -> str:
+        visible_parameters = tuple(signature.parameters.values())
         if view.compact and len(visible_parameters) > view.parameter_limit:
             parameter_names = ", ".join(
                 (
@@ -368,8 +422,7 @@ class ParameterDocumentationPolicy:
                 )
             )
             return f"{display_name}({parameter_names}, ...)"
-        visible_signature = sig.replace(parameters=visible_parameters)
-        return f"{display_name}{visible_signature}"
+        return f"{display_name}{signature}"
 
     def parameter_specs(
         self, func: Callable, contract: CallableContract | None = None
@@ -377,6 +430,7 @@ class ParameterDocumentationPolicy:
         sig = inspect.signature(func)
         supplied_by = self.supplied_by(func, contract)
         authored_descriptions = docstring_info_for_target(func).parameters or {}
+        analyzed_parameters = UnifiedParameterAnalyzer.analyze(func)
         specs = []
         for name, parameter in sig.parameters.items():
             if not self.should_document(name, parameter):
@@ -393,6 +447,11 @@ class ParameterDocumentationPolicy:
                     description=self.parameter_description(
                         authored_descriptions.get(name),
                         supplier,
+                        annotation=(
+                            analyzed_parameters[name].param_type
+                            if name in analyzed_parameters
+                            else parameter.annotation
+                        ),
                     ),
                     enum_import_path=enum_import_path(parameter.annotation),
                     enum_members=enum_member_names(parameter.annotation),
@@ -404,10 +463,15 @@ class ParameterDocumentationPolicy:
     def agent_parameter_names(
         self, func: Callable, contract: CallableContract | None = None
     ) -> tuple[str, ...]:
+        from openhcs.core.invocation_artifacts import (
+            PipelineInvocationContractProviderAuthority,
+        )
+
+        contract = contract or CallableContract.from_callable(func)
         sig = inspect.signature(func)
         supplied_by = self.supplied_by(func, contract)
         hidden_names = parameter_exclusions(func)
-        return tuple(
+        ordinary = tuple(
             (
                 name
                 for name, parameter in sig.parameters.items()
@@ -415,6 +479,17 @@ class ParameterDocumentationPolicy:
                 and supplied_by[name] is FunctionParameterSource.AGENT
             )
         )
+        runtime_names = (
+            contract.runtime_owned_parameter_names
+            | hidden_names
+            | {contract.primary_input_parameter_name}
+        )
+        compile_only = tuple(
+            name
+            for name in PipelineInvocationContractProviderAuthority.compile_time_parameter_names(contract)
+            if name not in runtime_names
+        )
+        return tuple(dict.fromkeys((*ordinary, *compile_only)))
 
     def supplied_by(
         self, func: Callable, contract: CallableContract | None = None
@@ -458,7 +533,18 @@ class ParameterDocumentationPolicy:
         self,
         authored_description: str | None,
         supplier: FunctionParameterSource,
+        *,
+        annotation: object = inspect.Parameter.empty,
     ) -> str | None:
+        """Compose declaration-owned field help with callable/runtime prose."""
+        declaration = dataclass_type_from_annotation(annotation)
+        if declaration is not None:
+            document = HelpDocument.from_docstring_info(
+                docstring_info_for_target(declaration)
+            ).bounded()
+            authored_description = "\n\n".join(
+                part for part in (authored_description, document.content) if part
+            )
         runtime_description = supplier.runtime_description
         if authored_description and runtime_description:
             return f"{authored_description.rstrip()} {runtime_description}"
@@ -471,12 +557,58 @@ PARAMETER_DOCUMENTATION_POLICY = ParameterDocumentationPolicy()
 class FunctionCatalogServiceABC(ABC):
     """Callable-catalog authority consumed by agent authoring services."""
 
+    def __init__(self) -> None:
+        self._state_lock = threading.RLock()
+
+    def prepare(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare the authoritative catalog through this service's transport."""
+
+        self.prepare_projections(
+            status_callback=status_callback, cancellation=cancellation
+        )
+
+    @abstractmethod
+    def projections_current(self) -> bool:
+        """Whether the owned public projections match their current authority."""
+
+    def prepare_projections(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare both public views against the implementation's authority."""
+        while True:
+            for signature_view in SignatureView:
+                if cancellation is not None and cancellation.requested():
+                    raise CancelledError
+                self.catalog(
+                    compact_signatures=signature_view.compact,
+                    status_callback=status_callback,
+                    cancellation=cancellation,
+                )
+            if cancellation is not None and cancellation.requested():
+                raise CancelledError
+            if self.projections_current():
+                return
+
     @abstractmethod
     def register_custom_function(
         self,
         request: CustomFunctionRegistrationRequest,
     ) -> CustomFunctionRegistrationResult:
         """Register one custom declaration through this catalog authority."""
+
+    @abstractmethod
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        """Observe exact existing publication/persistence without evaluating source."""
 
     @abstractmethod
     def search(
@@ -531,19 +663,66 @@ class FunctionCatalogServiceABC(ABC):
 class FunctionCatalogService(FunctionCatalogServiceABC):
     """Expose registered OpenHCS processing callables through stable IDs."""
 
-    def __init__(self) -> None:
+    def prepare(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare metadata in the owned registry child, including cached catalogs."""
+
+        RegistryService.prepare_persistent_catalog(
+            status_callback=status_callback,
+            cancellation=cancellation,
+        )
+        self.prepare_projections(
+            status_callback=status_callback, cancellation=cancellation
+        )
+
+    def projections_current(self) -> bool:
+        """Derive readiness from the original registry and cached public views."""
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        with self._state_lock:
+            metadata = self._projection_metadata
+            if metadata is None or self._projections is None:
+                return False
+        if metadata != RegistryService.cached_metadata_snapshot():
+            return False
+        manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+        return (
+            manager.source_revision() == CustomFunctionRuntimeRegistry.source_revision()
+        )
+
+    def __init__(self, path_policy: AgentPathPolicy | None = None) -> None:
+        super().__init__()
+        self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._projection_metadata: dict[str, FunctionMetadata] | None = None
-        self._projections: dict[
-            tuple[SignatureView, SummaryView],
-            tuple[CatalogSearchProjection, ...],
-        ] = {}
+        self._projections: tuple[CatalogSearchProjection, ...] | None = None
 
     def register_custom_function(
         self, request: CustomFunctionRegistrationRequest
     ) -> CustomFunctionRegistrationResult:
-        manager = custom_function_manager.CustomFunctionManager()
+        request = request.admitted(request.admission_policy or self._path_policy)
+        # Caller admission cannot enlarge this server's own policy.
+        request.admitted(self._path_policy)
+        server_identity = request.require_server_identity()
+        manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+        if request.persist and manager.storage_dir.resolve(strict=False) != Path(request.storage_dir).resolve(strict=False):
+            raise ValueError(
+                f"Selected endpoint owns custom storage {manager.storage_dir}, "
+                f"not requested {request.storage_dir}; no source was evaluated."
+            )
+        def admit_write(path: Path) -> Path:
+            self._path_policy.assert_writable(path)
+            return request.admission_policy.assert_writable(path)
+
         registered_functions = manager.register_from_code(
-            request.source_code, persist=request.persist
+            request.source_code, persist=request.persist,
+            expected_function_name=request.function_name,
+            write_admission=admit_write,
         )
         function_ids = self.function_ids_for_callables(tuple(registered_functions))
         entries = tuple(
@@ -578,6 +757,53 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                     f"Call openhcs_describe_function(function_id={function_id!r}), then use openhcs_add_function_step or draft-pipeline-step."
                     for function_id in function_ids
                 )
+            ),
+            connection=request.connection,
+            server_identity=server_identity,
+            observation_handle=CustomFunctionRegistrationHandle.from_request(request),
+        )
+
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        from openhcs.agent.dto.common import AgentWarning
+        from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
+
+        handle.require_current_owner()
+        published = CustomFunctionRuntimeRegistry.published_sources_for_content(
+            handle.content_sha256, function_name=handle.function_name,
+        )
+        persisted = None
+        warnings = ()
+        if handle.persist:
+            manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+            if handle.require_storage_dir().resolve(strict=False) != manager.storage_dir.resolve(strict=False):
+                raise ValueError("Registration observation reached a different native source store.")
+            source = handle.require_named_source()
+            self._path_policy.assert_readable_location(manager.source_path_for_name(manager.storage_dir, source.function_name))
+            try:
+                manager.require_source(source)
+            except (OSError, RuntimeError) as error:
+                warnings = (AgentWarning("registration_source_not_observed", str(error),
+                    "Missing/changed current source is not proof of no original mutation; do not replay."),)
+            else:
+                persisted = source
+        return CustomFunctionRegistrationObservation(
+            schema_version=SCHEMA_VERSION, handle=handle, published_sources=published,
+            persisted_source=persisted, warnings=warnings,
+        )
+
+    def custom_function_registration_destination(
+        self, request: CustomFunctionRegistrationDestinationRequest
+    ) -> CustomFunctionRegistrationDestination:
+        """Project the native store without construction, source execution or IO."""
+        manager_type = custom_function_manager.CustomFunctionManager
+        storage_dir = manager_type.default_storage_directory()
+        return CustomFunctionRegistrationDestination(
+            storage_dir=str(storage_dir),
+            source_file_path=(
+                str(manager_type.source_path_for_name(storage_dir, request.function_name))
+                if request.function_name is not None else None
             ),
         )
 
@@ -644,23 +870,20 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         """Return ranked entries selected from the authoritative registry."""
         query_filter = CatalogFilterText.from_request(query)
         library_filter = CatalogFilterText.from_request(library)
-        signature_view = (
-            SignatureView.COMPACT if compact_signatures else SignatureView.FULL
-        )
-        summary_view = SummaryView.COMPACT if compact_signatures else SummaryView.FULL
         metadata_by_id = self._all_metadata(
             status_callback=status_callback,
             cancellation=cancellation,
         )
         projections = self._search_projections(
             metadata_by_id,
-            signature_view=signature_view,
-            summary_view=summary_view,
             status_callback=status_callback,
+            cancellation=cancellation,
         )
         candidates = []
+        catalog_entries = []
         for projection in projections:
-            entry = projection.entry
+            entry = projection.compact_entry if compact_signatures else projection.entry
+            catalog_entries.append(entry)
             if not library_filter.accepts_library_or_tag(
                 entry.library,
                 entry.backend_tags,
@@ -682,48 +905,64 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                 )
             )
         )
-        return tuple(projection.entry for projection in projections), matching_entries
+        return tuple(catalog_entries), matching_entries
 
     def _search_projections(
         self,
         metadata_by_id: dict[str, FunctionMetadata],
         *,
-        signature_view: SignatureView,
-        summary_view: SummaryView,
         status_callback: Callable[[str], None] | None,
+        cancellation: OperationCancellation | None = None,
     ) -> tuple[CatalogSearchProjection, ...]:
         """Project a registry revision once and reuse it across text queries."""
 
-        if metadata_by_id is not self._projection_metadata:
-            self._projection_metadata = metadata_by_id
-            self._projections.clear()
-        cache_key = (signature_view, summary_view)
-        cached = self._projections.get(cache_key)
-        if cached is not None:
-            return cached
+        with self._state_lock:
+            if metadata_by_id is not self._projection_metadata:
+                self._projection_metadata = metadata_by_id
+                self._projections = None
+            cached = self._projections
+            if cached is not None:
+                return cached
         if status_callback is not None:
             status_callback("Projecting function metadata for the execution endpoint")
         projections = []
         for function_id, metadata in sorted(metadata_by_id.items()):
+            if cancellation is not None and cancellation.requested():
+                raise CancelledError
             contract = CallableContract.from_callable(metadata.func)
+            signature = PARAMETER_DOCUMENTATION_POLICY.visible_signature(
+                metadata.func, contract
+            )
+            entry = self._entry(
+                function_id, metadata, SignatureView.FULL, SummaryView.FULL,
+                contract=contract, visible_signature=signature,
+            )
             projections.append(
                 CatalogSearchProjection(
                     metadata=metadata,
-                    entry=self._entry(
-                        function_id,
-                        metadata,
-                        signature_view,
-                        summary_view,
-                        contract=contract,
-                    ),
+                    entry=entry,
                     parameters=PARAMETER_DOCUMENTATION_POLICY.parameter_specs(
                         metadata.func,
                         contract,
                     ),
+                    compact_entry=replace(
+                        entry,
+                        signature=PARAMETER_DOCUMENTATION_POLICY.render_signature(
+                            signature, entry.name, SignatureView.COMPACT
+                        ),
+                        summary=(
+                            None if entry.summary is None
+                            else _bounded_summary(entry.summary, SummaryView.COMPACT)
+                        ),
+                    ),
                 )
             )
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError
         projected = tuple(projections)
-        self._projections[cache_key] = projected
+        with self._state_lock:
+            if metadata_by_id is self._projection_metadata:
+                self._projections = projected
         return projected
 
     def get(
@@ -739,7 +978,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         # Owner resolution completes any declaration-projected callable help
         # before this immutable detail snapshot is assembled.
         runtime_contract = _runtime_contract_summary(func, contract)
-        doc = _detail_doc(func, metadata.doc)
+        doc = PARAMETER_DOCUMENTATION_POLICY.detail_doc(func, metadata.doc, contract)
         bounded_doc, doc_truncated, effective_max_doc_chars = _bounded_detail_doc(
             doc, max_doc_chars=max_doc_chars
         )
@@ -773,15 +1012,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         if not requested_import_path:
             return None
         for function_id, metadata in sorted(self._all_metadata().items()):
-            entry = self._entry(
-                function_id,
-                metadata,
-                signature_view=(
-                    SignatureView.COMPACT if compact_signature else SignatureView.FULL
-                ),
-                summary_view=SummaryView.COMPACT,
-            )
-            if requested_import_path in _import_path_candidates(entry, metadata):
+            if requested_import_path in _import_path_candidates(function_id, metadata):
                 return self.get(
                     function_id,
                     max_doc_chars=max_doc_chars,
@@ -881,15 +1112,22 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         signature_view: SignatureView = SignatureView.FULL,
         summary_view: SummaryView = SummaryView.FULL,
         contract: CallableContract | None = None,
+        visible_signature: inspect.Signature | None = None,
     ) -> FunctionCatalogEntry:
         name = _metadata_display_name(function_id, metadata)
         module = _metadata_module(metadata)
         library = metadata.get_registry_name()
         callable_contract = contract or CallableContract.from_callable(metadata.func)
-        signature = PARAMETER_DOCUMENTATION_POLICY.display_signature(
-            metadata.func, name, signature_view, callable_contract
+        if visible_signature is None:
+            visible_signature = PARAMETER_DOCUMENTATION_POLICY.visible_signature(
+                metadata.func, callable_contract
+            )
+        signature = PARAMETER_DOCUMENTATION_POLICY.render_signature(
+            visible_signature, name, signature_view
         )
-        summary = _summary(metadata.func, metadata.doc, summary_view)
+        summary = PARAMETER_DOCUMENTATION_POLICY.summary(
+            metadata.func, metadata.doc, summary_view, callable_contract
+        )
         tags = metadata.tags
         backend_tags: tuple[str, ...]
         if tags is None:
@@ -924,17 +1162,6 @@ def _format_default(default) -> str | None:
     return repr(default)
 
 
-def _summary(func: Callable, metadata_doc: str | None, view: SummaryView) -> str | None:
-    doc = _detail_doc(func, metadata_doc)
-    if doc is None:
-        return None
-    for line in doc.splitlines():
-        stripped = line.strip()
-        if stripped:
-            return _bounded_summary(stripped, view)
-    return None
-
-
 def _bounded_summary(text: str, view: SummaryView) -> str:
     if not view.compact:
         return text
@@ -950,18 +1177,19 @@ def _import_path(module: str, name: str) -> str:
 
 
 def _import_path_candidates(
-    entry: FunctionCatalogEntry, metadata: FunctionMetadata
+    function_id: str, metadata: FunctionMetadata
 ) -> frozenset[str]:
     func = metadata.func
+    module = _metadata_module(metadata)
     return frozenset(
         (
             candidate
             for candidate in (
-                entry.import_path,
+                _import_path(module, _metadata_display_name(function_id, metadata)),
                 _import_path(func.__module__, func.__name__),
                 _import_path(func.__module__, func.__qualname__),
-                _import_path(entry.module, func.__name__),
-                _import_path(entry.module, func.__qualname__),
+                _import_path(module, func.__name__),
+                _import_path(module, func.__qualname__),
             )
             if candidate
         )
@@ -1081,7 +1309,7 @@ def _cellprofiler_artifact_binding_summary(
         direction="input" if plan_type is ArtifactInputPlan else "output",
         kind=binding.require_artifact_type().require_value(),
         setting_names=setting_names(binding.setting_name),
-        parameter_name=binding.parameter_name,
+        parameter_name=binding.require_parameter_name(),
         runtime_parameter_name=binding.runtime_parameter_name,
         repeated=binding.repeated,
     )
@@ -1098,7 +1326,7 @@ def _source_binding_rule(
     contract: CallableContract,
 ) -> str | None:
     if cellprofiler_module is not None:
-        return "CellProfiler exact artifact names are resolved from the module declaration, concrete FunctionStep groups, and compile-time setting identities. Callable-level artifact arrays can therefore be empty before compilation; inspect the module artifact_bindings here and the compiled artifact plan for exact names."
+        return "CellProfiler exact artifact names are resolved from the module declaration, concrete FunctionStep groups, and compile-time setting identities. Callable-level artifact arrays can therefore be empty before compilation; inspect the module artifact_bindings here and the compiled artifact plan for exact names. Author selectors in FunctionStep func kwargs using each binding's parameter_name; for repeated bindings, use a tuple of exact artifact names (a one-element tuple selects one producer). These compile-time selectors are consumed by the declaration, not passed to the callable. runtime_parameter_name is runtime-owned: do not pass labels or other runtime payloads as function kwargs. When multiple label producers are available, select the exact intended output name; omission remains ambiguous and fails closed."
     if contract.artifact_inputs:
         return "Artifact input bindings are resolved from canonical CallableContract artifact_inputs during compilation."
     return None
@@ -1145,15 +1373,6 @@ def _enum_member_name(value: Enum | None) -> str | None:
     if value is None:
         return None
     return value.name
-
-
-def _detail_doc(func: Callable, metadata_doc: str | None) -> str | None:
-    inspect_doc = inspect.getdoc(func)
-    if inspect_doc is not None:
-        return inspect_doc
-    if metadata_doc is not None and metadata_doc.strip():
-        return metadata_doc
-    return None
 
 
 def _bounded_detail_doc(

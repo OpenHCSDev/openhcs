@@ -1,0 +1,326 @@
+{
+  "status": "PASS",
+  "source_head": "cc4461bc8a58c90c2ae13a5dd3870a67e1d8fc0a",
+  "origin_main": "2df0918353b47fa07d19fe4b6cc8b52b5e4c1695",
+  "science_path": "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/strict-science.json",
+  "science_sha256": "df61eca666cd741f238d96b6f7fd2c22b10c14dc577b64a381969a36a0bb5906",
+  "source_freeze_path": "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/source-freeze.json",
+  "source_freeze_sha256": "24b4277094722d66ffe6bcccdbb3f543d197463c6a3990c9e764c9390affccda",
+  "source_environment_sha256": "d51ddede016d054acbc7abde82a533bca07a2a39d41c85939c2acf3f35b8cc68",
+  "dependency_heads": {
+    "external/ObjectState": "9fb5b7eeea96f3b7bb0579de30718bbcc0018823",
+    "external/python-introspect": "ed1e4eb15f7a0bf8315274d3e47858fa2b4372bb",
+    "external/arraybridge": "1e53d03d9f468322a1c085c8be29485fb139caf2",
+    "external/metaclass-registry": "393a7e03003cdc56df9013f932ed4f26e632d77a",
+    "external/zmqruntime": "be67b58f2e2fc31cba1b829842934df101ef8320",
+    "external/pycodify": "108a8edbf25de258168756bac22c7572f018fa90",
+    "external/PolyStore": "89deeef3662eabb11bc520fad9acd976698636bd",
+    "external/pyqt-reactive": "b64ed2eca96fcdad29ba90beb545caa669a4d3d8"
+  },
+  "actual_import_dependency_heads": {
+    "external/ObjectState": "9fb5b7eeea96f3b7bb0579de30718bbcc0018823",
+    "external/PolyStore": "89deeef3662eabb11bc520fad9acd976698636bd",
+    "external/arraybridge": "1e53d03d9f468322a1c085c8be29485fb139caf2",
+    "external/metaclass-registry": "393a7e03003cdc56df9013f932ed4f26e632d77a",
+    "external/pycodify": "108a8edbf25de258168756bac22c7572f018fa90",
+    "external/pyqt-reactive": "b64ed2eca96fcdad29ba90beb545caa669a4d3d8",
+    "external/python-introspect": "ed1e4eb15f7a0bf8315274d3e47858fa2b4372bb",
+    "external/zmqruntime": "be67b58f2e2fc31cba1b829842934df101ef8320"
+  },
+  "ordered_source_ref_counts": {
+    "cp_tutorial_3d_monolayer": 180,
+    "ExampleSpeckles": 2,
+    "cp_tutorial_beginner_segmentation_final": 10
+  },
+  "comparisons": [
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        6
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        3,
+        3
+      ],
+      "ordinary_receipt_sha256": "e1cf139b74e09476f5e4c936a508d9fe99cbe965b97776f1ce3ca5f5a2507fe0"
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        6
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        3,
+        3
+      ],
+      "ordinary_receipt_sha256": "e1cf139b74e09476f5e4c936a508d9fe99cbe965b97776f1ce3ca5f5a2507fe0"
+    },
+    {
+      "case": "ExampleSpeckles",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        3,
+        3
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        1,
+        1
+      ],
+      "ordinary_receipt_sha256": "1697be961417fe7f3cb150c3a11a9980000ed321a8f72d391430c15b0a925dad"
+    },
+    {
+      "case": "ExampleSpeckles",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        3,
+        3
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        1,
+        1
+      ],
+      "ordinary_receipt_sha256": "1697be961417fe7f3cb150c3a11a9980000ed321a8f72d391430c15b0a925dad"
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        7
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        5,
+        5
+      ],
+      "ordinary_receipt_sha256": "602950243a8bc371cb49c817579d41c3b0e9ebebd95478fd9af97c60aab763d8"
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        7
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        5,
+        5
+      ],
+      "ordinary_receipt_sha256": "602950243a8bc371cb49c817579d41c3b0e9ebebd95478fd9af97c60aab763d8"
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "ordinary_repeat": 1,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        6
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        3,
+        3
+      ],
+      "ordinary_receipt_sha256": "48112dba84d49dd5117a9d0c0d6e6feaeaa6740dc7add4e839f62e74787b5409"
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "ordinary_repeat": 1,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        6
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        3,
+        3
+      ],
+      "ordinary_receipt_sha256": "48112dba84d49dd5117a9d0c0d6e6feaeaa6740dc7add4e839f62e74787b5409"
+    },
+    {
+      "case": "ExampleSpeckles",
+      "ordinary_repeat": 1,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        3,
+        3
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        1,
+        1
+      ],
+      "ordinary_receipt_sha256": "88b61cca321772ff009f4357af086651719ca62d8e26723f93623cebadd76ea9"
+    },
+    {
+      "case": "ExampleSpeckles",
+      "ordinary_repeat": 1,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        3,
+        3
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        1,
+        1
+      ],
+      "ordinary_receipt_sha256": "88b61cca321772ff009f4357af086651719ca62d8e26723f93623cebadd76ea9"
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "ordinary_repeat": 1,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        7
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        5,
+        5
+      ],
+      "ordinary_receipt_sha256": "3ed28b56c0952842a268e36d843c9a2b1a8ca662669268b688a6d7e395600ac8"
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "ordinary_repeat": 1,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        7
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        5,
+        5
+      ],
+      "ordinary_receipt_sha256": "3ed28b56c0952842a268e36d843c9a2b1a8ca662669268b688a6d7e395600ac8"
+    }
+  ],
+  "scope": "Both ordinary observations versus both native measured observations; full strict files/values/correlation policy; descriptive two-repeat clocks, not full30 acceptance."
+}

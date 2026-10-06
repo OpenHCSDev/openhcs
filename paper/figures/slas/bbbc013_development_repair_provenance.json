@@ -1,0 +1,14 @@
+{
+  "scope": "Selected matched native views from BBBC013_DEV02_94 same-author development; not BBBC013_REPEAT94, fresh autonomous success or accepted full-plate translocation analysis.",
+  "output_sha256": {
+    "bbbc013_development_repair.png": "3f926de8b3b076d6292f74cf54481edc968b720b3e34e449babd600da582dee8",
+    "bbbc013_development_repair.svg": "53e13febcea98fd328514bbaae45ff2ad7ab44f73ccc737d5235bb134d6adeb6"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/bbbc013-development-source-proof.json": "eb0f92e67e09f2e67e4087cf9cecb82c018acdb7ea33d3951b3d0aee6c1b8047",
+    "paper/supplementary/task_only_analysis/bbbc013-development-render-receipt.json": "bd0787847cf14ff296cc42ba32ce42a8806a8bb5b6e933968d05305440985265"
+  },
+  "rendering": "Nine complete original PNG byte streams embedded unchanged; identical native-canvas bounds [297,28,1250,448]. Existing rsvg-convert produces the PNG; no recolouring, physical scale bar or new scientific execution.",
+  "attribution": "Ilya Ravkin, BBBC013v1 via Broad Bioimage Benchmark Collection, CC BY 3.0. OpenHCS-derived overlays, display windows and screenshot cropping/scaling are adaptations.",
+  "limits": "H12 local before/after admission repair; A01 and corrected D06 rows are after-only controls. Nuclear support does not prove compartment ownership or translocation measurement accuracy; colours are not cross-attempt identities."
+}

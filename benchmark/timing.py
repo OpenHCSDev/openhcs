@@ -6,7 +6,7 @@ import csv
 import io
 import json
 import time
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from enum import StrEnum, auto
@@ -52,9 +52,18 @@ class BenchmarkPhase(StrEnum):
             BenchmarkPhase.SERVER_PIPELINE_JOB,
         }
 
+    @property
+    def is_benchmark_validation(self) -> bool:
+        """Whether this work checks a run rather than operating either tool."""
+        return self in {
+            BenchmarkPhase.VALIDATE_RUNTIME,
+            BenchmarkPhase.SNAPSHOT_OUTPUTS,
+            BenchmarkPhase.COMPARE_EQUIVALENCE,
+        }
+
 
 def additive_phase_total_seconds(phase_seconds: Mapping[str, float]) -> float | None:
-    """Sum only disjoint benchmark phases, never nested runtime observations."""
+    """Sum disjoint tool-operation phases, excluding benchmark validation."""
     additive: list[float] = []
     for phase_name, seconds in phase_seconds.items():
         try:
@@ -63,7 +72,7 @@ def additive_phase_total_seconds(phase_seconds: Mapping[str, float]) -> float | 
             raise ValueError(f"Unknown benchmark phase: {phase_name!r}.") from exc
         if not isfinite(seconds) or seconds < 0:
             raise ValueError(f"Invalid benchmark phase duration: {phase_name!r}.")
-        if not phase.is_nested_runtime_observation:
+        if not phase.is_nested_runtime_observation and not phase.is_benchmark_validation:
             additive.append(seconds)
     return sum(additive) if additive else None
 
@@ -102,6 +111,15 @@ class PhaseTimingRecord:
     phase: BenchmarkPhase
     seconds: float
     cached: bool = False
+
+    @staticmethod
+    def seconds_by_phase(records: Iterable["PhaseTimingRecord"]) -> dict[str, float]:
+        """Aggregate every observed interval, including repeated submit/wait phases."""
+        seconds: dict[str, float] = {}
+        for record in records:
+            phase_name = record.phase.name
+            seconds[phase_name] = seconds.get(phase_name, 0.0) + record.seconds
+        return seconds
 
     def as_payload(self) -> dict[str, object]:
         """Return a JSON/CSV-stable record payload."""

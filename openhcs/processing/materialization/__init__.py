@@ -6,11 +6,14 @@ from openhcs.processing.materialization.constants import (
 )
 from openhcs.processing.materialization.core import (
     BackendSaver,
+    MaterializationBatch,
     MaterializationContext,
     MaterializationSpec,
     Output,
+    SavedMaterializationOutputs,
     PathHelper,
     materialize,
+    prepare_materialization,
     materialization_outputs,
     registered_materialization_option_types,
     tabular_field_names_from_materialization,
@@ -22,11 +25,21 @@ from openhcs.processing.materialization.options import (
     ImageFileOptions,
     JsonOptions,
     MaterializedFilenameIdentity,
+    PointROIOptions,
     ROIOptions,
     SpatialGraphROIOptions,
     SWCOptions,
     TextOptions,
     TiffStackOptions,
+)
+from openhcs.processing.materialization.path_scopes import (
+    ExecutionAxisMaterializationRelativePathScope,
+    MaterializationRelativePathScope,
+    SharedMaterializationRelativePathScope,
+)
+from openhcs.processing.materialization.persistence import (
+    StreamingOnlyMaterializationSpec,
+    TerminalMaterializationSpec,
 )
 from openhcs.processing.materialization.presets import (
     csv_dataclass_materializer,
@@ -45,11 +58,16 @@ __all__ = [
     "MaterializationFormat",
     "WriteMode",
     "MaterializationSpec",
+    "TerminalMaterializationSpec",
+    "StreamingOnlyMaterializationSpec",
+    "MaterializationBatch",
     "MaterializationContext",
     "Output",
+    "SavedMaterializationOutputs",
     "PathHelper",
     "BackendSaver",
     "materialize",
+    "prepare_materialization",
     "materialization_outputs",
     "registered_materialization_option_types",
     "FileOutputOptions",
@@ -58,6 +76,7 @@ __all__ = [
     "MaterializedFilenameIdentity",
     "CsvOptions",
     "JsonOptions",
+    "PointROIOptions",
     "ROIOptions",
     "SpatialGraphROIOptions",
     "SWCOptions",
@@ -74,4 +93,7 @@ __all__ = [
     "tiff_stack",
     "text_only",
     "tabular_field_names_from_materialization",
+    "MaterializationRelativePathScope",
+    "SharedMaterializationRelativePathScope",
+    "ExecutionAxisMaterializationRelativePathScope",
 ]

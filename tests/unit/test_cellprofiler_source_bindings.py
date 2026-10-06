@@ -21,9 +21,10 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
+    ImageMetadataPayload,
+    ImagePayloadMetadata,
     image_payload_data,
     image_payload_metadata,
 )
@@ -843,9 +844,8 @@ def test_names_and_types_contributes_payload_loading_semantics(
     multiband_data = np.zeros((5, 6, 2), dtype=np.float32)
     multiband_path = tmp_path / "multiband.tiff"
     tifffile.imwrite(multiband_path, multiband_data)
-    multiband = apply_source_binding_payload(
+    multiband = color.apply_loaded_payload(
         tifffile.imread(multiband_path),
-        color,
         ImagePayloadSourceMetadataContext(
             SourceImageIdentity(str(multiband_path)),
         ),
@@ -853,12 +853,20 @@ def test_names_and_types_contributes_payload_loading_semantics(
     multiband_metadata = image_payload_metadata(multiband)
     assert multiband_metadata.source_channel_axis == -1
     assert multiband_metadata.source_spatial_shape_yx == (5, 6)
-    grayscale = apply_source_binding_payload(
+    grayscale = color.apply_loaded_payload(
         np.zeros((512, 512), dtype=np.uint8),
-        color,
         None,
     )
     assert image_payload_metadata(grayscale).source_channel_axis is None
+    grayscale = color.apply_loaded_payload(
+        ImageMetadataPayload(
+            np.zeros((512, 512), dtype=np.uint8),
+            ImagePayloadMetadata(source_channel_axis=-1),
+        ),
+        ImagePayloadSourceMetadataContext(SourceImageIdentity("grayscale.tif")),
+    )
+    assert image_payload_metadata(grayscale).source_channel_axis is None
+    assert image_payload_metadata(grayscale).source_spatial_shape_yx == (512, 512)
     assert mask.artifact_kind is ImageArtifactType
     assert mask.load_as_mask is True
     assert objects.artifact_kind is ObjectLabelsArtifactType
@@ -882,7 +890,7 @@ def test_monochrome_source_normalizes_before_collapsing_rgb_channels() -> None:
         source_channel_counts=frozenset((3, 4)),
     )
 
-    observed = apply_source_binding_payload(rgb, binding, None)
+    observed = binding.apply_loaded_payload(rgb, None)
     expected = codes.astype(np.float32) / np.float32(255)
 
     np.testing.assert_array_equal(image_payload_data(observed), expected)
@@ -909,7 +917,7 @@ def test_monochrome_source_uses_rgb_luminance_for_distinct_channels() -> None:
         source_channel_counts=frozenset((3, 4)),
     )
 
-    observed = apply_source_binding_payload(rgb, binding, None)
+    observed = binding.apply_loaded_payload(rgb, None)
     expected = rgb2gray(rgb.astype(np.float32) / np.float32(255))
 
     np.testing.assert_array_equal(image_payload_data(observed), expected)
@@ -952,6 +960,9 @@ def test_names_and_types_contributes_3d_axis_and_voxel_spacing() -> None:
 
     config = _fold_setup_modules(module)
 
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    assert isinstance(config.source_spatial_domain, VolumeSourceSpatialDomain)
     assert config.source_stack_components == (AllComponents.Z_INDEX,)
     assert config.source_voxel_spacing.values_zyx == (2.0, 1.0, 0.5)
     assert config.source_voxel_spacing.unit is SourceVoxelSpacingUnit.RELATIVE
@@ -1052,3 +1063,21 @@ def test_setup_fold_is_source_ordered_and_uses_module_registry() -> None:
         CellProfilerModule.require_module(module.name).emits_function_step() is False
         for module in (images, names, groups)
     )
+
+
+@pytest.mark.parametrize("dtype,foreground", [(np.uint8, 255), (np.uint16, 65535), (np.float32, 0.25)])
+def test_declared_binary_source_preserves_foreground_through_cp_normalization(dtype, foreground):
+    from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
+    from openhcs.processing.backends.cellprofiler.image_geometry import binary_mask_plane
+    from openhcs.core.runtime_image_values import image_payload_data
+
+    raw = np.asarray([[0, foreground], [foreground, 0]], dtype=dtype)
+    context = ImagePayloadSourceMetadataContext(SourceImageIdentity('/input/mask.tif'))
+    loaded = NamedSourceBinding(alias='Mask', load_as_mask=True).apply_loaded_payload(raw, context)
+    source_metadata = image_payload_metadata(loaded)
+    normalized = normalize_cellprofiler_image_payload(loaded)
+    np.testing.assert_array_equal(image_payload_data(normalized), raw != 0)
+    np.testing.assert_array_equal(binary_mask_plane(normalized), raw != 0)
+    assert source_metadata.unit_interval_intensity.scale == 1
+    assert image_payload_metadata(normalized).source_provenance == source_metadata.source_provenance
+    assert source_metadata.source_path == '/input/mask.tif'

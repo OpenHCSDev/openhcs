@@ -4,6 +4,7 @@ import pytest
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats_adapter import (
     BioFormatsDatasetAmbiguityError,
     BioFormatsImage,
@@ -44,7 +45,7 @@ def _image(
             ),
         ),
         channel_names=tuple(f"Channel {channel}" for channel in range(1, size_c + 1)),
-        pixel_size=0.65,
+        source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
         reader="npy",
     )
 
@@ -217,7 +218,7 @@ def test_store_metadata_rejects_incomplete_planes(tmp_path: Path) -> None:
                 planes=(BioFormatsPlane(c=1, z=1, t=1, index=0),),
             ),
             channel_names=("DAPI", "GFP"),
-            pixel_size=0.65,
+            source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
         )
 
 

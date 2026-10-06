@@ -1,0 +1,98 @@
+{
+  "generator_sha256": "8115e7941da1fb738edb34c2ebbfff1f086bc999e4048404aed6fb30f1beac23",
+  "source_sha256": {
+    "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst": "6ef4dc1a8f79379c19d5309cc77e133aa8d11da971470e70511830b780cefb72",
+    "paper/figures/slas/retina_fresh16_sources/nw-raw.png": "d38ca5c3901a95fad0e4006859d7a374f4a048b9f320648d875717900202bf4b",
+    "paper/figures/slas/retina_fresh16_sources/nw-first.png": "1112cafcd58ae2e09e15d409b7233dd9987177801a915cd91d287f0061f75666",
+    "paper/figures/slas/retina_fresh16_sources/nw-final.png": "5879f9e9a4614e3213c3ee9f8b0d2c36e47c9c39b48fb9fcbccad2ac7c1fc25a",
+    "paper/figures/slas/retina_fresh16_sources/edge-raw.png": "02d93495f1d2f1203057d80a070fccf56401b0555ae287c3aadb2d2574b1aedd",
+    "paper/figures/slas/retina_fresh16_sources/edge-first.png": "4f362d4e21101729331ca72299d3443463f0a729a9f9294c1cd40eb105e5b21b",
+    "paper/figures/slas/retina_fresh16_sources/edge-final.png": "b5e15304b0a3c5a62dd884f6c70f814ef1ca1363449201a6f3a88ecdea9768ff"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-raw.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-first.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-final.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/edge-raw.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/edge-first.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/edge-final.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    }
+  ],
+  "output_sha256": {
+    "retina_fresh16_repair.png": "582fc7f615372ba12c1fa2dbc009e2b8ed1d218e94d8b5363abcd2420dda5c74",
+    "retina_fresh16_repair.pdf": "047aa05e9a4dc2134b59b761280c7fe34728f5092a0c712fa0a197d2f554230d",
+    "retina_fresh16_repair.svg": "b575d015abba08cb373d8ccba741ea59c159fb477f3ca881561743543eeb682f"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

@@ -1,21 +1,48 @@
 from pathlib import Path
 
+import numpy as np
+import tifffile
+from polystore.bioformats_storage import BioFormatsPlaneRef
+from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.plate import (
     PlateFileStreamRequest,
+    PlatePathInspectionRequest,
 )
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionContext
+from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.constants.constants import FileFormat
+from openhcs.constants.constants import Backend, FileFormat
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
+    PlateFileRecord,
     PlateFileKind,
     PlateImageRecord,
     PlateResultFileRecord,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
+from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.processing.materialization import (
+    MaterializationSpec,
+    PointROIOptions,
+    materialize,
+)
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
@@ -30,6 +57,83 @@ class FakeHandler:
     def get_primary_backend(self, plate_path, filemanager):
         del plate_path, filemanager
         return "disk"
+
+
+def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp_path):
+    from types import SimpleNamespace
+    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.plate_image_inventory import PlateImageInventory
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
+    from openhcs.core.source_image_provenance import (
+        SourceImageIdentity, SourceImageProvenance, SourceImageProvenanceContributor,
+    )
+    from openhcs.core.source_projection import SourceArtifactProjection
+    from openhcs.core.source_metadata import SourceVoxelSpacing
+    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionBuilder
+    from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
+    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
+    filename = "A01_s001_w1_z001_t001.tif"
+    pixels = np.concatenate((
+        np.full((4, 6), 11, dtype=np.uint16),
+        np.full((4, 6), 13, dtype=np.uint16),
+    ), axis=1)
+    tifffile.imwrite(tmp_path / filename, pixels)
+    components = {"well": "A01", "channel": "1", "z_index": "1", "timepoint": "1"}
+    contributors = tuple(
+        SourceImageProvenanceContributor(
+            SourceImageIdentity(
+                str(tmp_path / f"original-s{site}.tif"),
+                {**components, "site": site},
+            ),
+        ) for site in ("1", "3")
+    )
+    metadata = ImagePayloadMetadata(
+        source_provenance=SourceImageProvenance(
+            source_component_metadata=components,
+            source_image_provenance_planes=SourceImageProvenancePlanes(contributors),
+        ),
+        source_voxel_spacing=SourceVoxelSpacing((0.25, 0.5)),
+    )
+    ref = SourcePixelRef(backend="disk", backend_address=filename)
+    source = SourceArtifactProjection(
+        address=None, ref=ref, source_alias="Signal", artifact_kind=ImageArtifactType,
+        source_metadata=components, image_metadata=metadata,
+        execution_scope=RuntimeExecutionAxisScope.from_raw(
+            "A01", component="channel", value="1",
+            fixed_component_values=(("z_index", "1"), ("timepoint", "1")),
+        ),
+    )
+    builder = VirtualWorkspaceSourceProjectionBuilder(tmp_path)
+    builder.record_workspace_source_path(filename, ref)
+    builder.record_source_metadata(filename, components)
+    builder.ingest_source_projections(VirtualWorkspaceSourceProjectionEntries({filename: source}))
+    filemanager = FileManager({"disk": DiskStorageBackend()})
+    handler = SimpleNamespace(parse_image_path=SourceSchemaFilenameParser().parse_filename)
+    record = PlateImageInventory._record(
+        plate_path=tmp_path, image_file=filename, handler=handler,
+        projection=builder.projection(), filemanager=filemanager, backend="disk",
+    )
+    assert "site" not in record.metadata
+    context = PlateInspectionContext(
+        plate_path=tmp_path, filemanager=filemanager, handler=handler, parser=None,
+    )
+    projection = PlateStreamingService._inventory_source_projection(
+        (PlateFileRecord.from_image(record),), context,
+    )
+    stream_source = ViewerStreamingSource(
+        plate_path=tmp_path, filemanager=filemanager, microscope_handler=handler,
+    )
+    actual = stream_source.load_image(
+        filename, "disk", source_projection=projection, component_metadata=record.metadata,
+    )
+    np.testing.assert_array_equal(image_payload_data(actual), pixels)
+    actual_metadata = image_payload_metadata(actual)
+    assert "site" not in actual_metadata.source_component_metadata
+    assert actual_metadata.plane_axis is None
+    assert actual_metadata.source_voxel_spacing.values_zyx == (0.25, 0.5)
+    assert actual_metadata.source_provenance.source_image_provenance_planes == metadata.source_provenance.source_image_provenance_planes
 
 
 class FakeInspectionService:
@@ -61,6 +165,14 @@ class FakeInspectionService:
         self.inventory_contexts.append(context)
         self.inventory_kinds.append(kind)
         return self.inventory, ()
+
+    def resolve_readable_path(self, path):
+        self.resolve_requests.append(path)
+        return Path(path)
+
+    def result_directory_inventory(self, path):
+        assert path == self.inventory.plate_path
+        return self.inventory
 
 
 class FakeViewer:
@@ -309,6 +421,192 @@ def test_plate_streaming_service_streams_virtual_image_path(monkeypatch):
     }
     assert result.status_messages == ("streamed image",)
     assert result.resolved_records[0].virtual_path == "A01_s001_w1_z001_t001.tif"
+
+
+def test_plate_streaming_service_preserves_inventory_source_refs_for_each_plane(
+    monkeypatch,
+):
+    plate = Path("/plate")
+    records = tuple(
+        PlateImageRecord(
+            virtual_path=f"virtual_z{z}.tif",
+            full_virtual_path=str(plate / f"virtual_z{z}.tif"),
+            backend=Backend.BIOFORMATS.value,
+            source_path="/plate/image.ome.tif",
+            metadata={"well": "A01", "z_index": z},
+            source_ref=SourcePixelRef(
+                backend=Backend.BIOFORMATS.value,
+                backend_address=BioFormatsPlaneRef(
+                    source_path=Path("image.ome.tif"),
+                    series_index=0,
+                    plane_index=z - 1,
+                ).to_backend_address(),
+            ),
+        )
+        for z in (1, 2)
+    )
+    inventory = PlateFileInventory(
+        plate_path=plate, image_records=records, result_records=()
+    )
+    captured = {}
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service."
+        "StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_kwargs: FakeViewer(),
+    )
+
+    def fake_stream_images(self, request):
+        del self
+        captured["request"] = request
+
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingService.stream_images",
+        fake_stream_images,
+    )
+
+    result = plate_streaming_service(FakeInspectionService(inventory)).stream_files(
+        PlateFileStreamRequest(plate_path=str(plate), kind=PlateFileKind.IMAGE, limit=2)
+    )
+
+    assert result.errors == ()
+    projection = captured["request"].source_projection
+    assert projection is not None
+    for record in records:
+        lookup = VirtualWorkspacePathLookup.from_paths(
+            record.virtual_path, record.full_virtual_path
+        )
+        assert projection.source_ref_for(lookup) == record.source_ref
+        assert (
+            projection.source_metadata_for(lookup)["z_index"]
+            == record.metadata["z_index"]
+        )
+
+
+def test_inventory_source_projection_loads_exact_ome_stack_planes(tmp_path):
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    pixels = np.stack(
+        [np.full((8, 8), value, dtype=np.uint16) for value in (11, 22, 33, 44)]
+    )
+    pixels[2, 1:3, 3:5] = 2048
+    tifffile.imwrite(
+        plate / "image.ome.tif", pixels, ome=True, metadata={"axes": "ZYX"}
+    )
+    inspection = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        )
+    )
+    context, errors, _warnings = inspection.open_context(
+        PlatePathInspectionRequest(plate_path=str(plate))
+    )
+    assert errors == ()
+    assert context is not None
+    inventory, _warnings = inspection.file_inventory(context, kind=PlateFileKind.IMAGE)
+    records = inventory.file_records(kinds=(PlateFileKind.IMAGE,))
+    assert len(records) == 4
+    projection = PlateStreamingService._inventory_source_projection(records, context)
+    assert projection is not None
+    source = ViewerStreamingSource(
+        filemanager=context.filemanager,
+        microscope_handler=context.handler,
+        plate_path=str(plate),
+    )
+    for index, record in enumerate(records):
+        image = source.load_image(
+            record.streamable_image_path,
+            record.source_ref.backend,
+            source_projection=projection,
+            component_metadata=record.metadata,
+        )
+        np.testing.assert_array_equal(image_payload_data(image), pixels[index])
+        assert record.metadata["z_index"] == str(index + 1)
+
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_path=records[0].full_virtual_path,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(record.full_virtual_path for record in records),
+            component_metadata=tuple(
+                {
+                    component: record.metadata[component]
+                    for component in ("well", "site", "channel", "z_index", "timepoint")
+                }
+                for record in records
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    features = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=features.CENTER_Z,
+                y_feature=features.CENTER_Y,
+                x_feature=features.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    assert Path(archive).exists()
+
+
+def test_inventory_source_projection_loads_exact_ordinary_tiff(tmp_path):
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    pixels = np.arange(64, dtype=np.uint16).reshape(8, 8)
+    physical_path = plate / "A01_s001_w1_z001_t001.tif"
+    tifffile.imwrite(physical_path, pixels)
+    inspection = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        )
+    )
+    context, errors, _warnings = inspection.open_context(
+        PlatePathInspectionRequest(plate_path=str(plate))
+    )
+    assert errors == ()
+    assert context is not None
+    inventory, _warnings = inspection.file_inventory(context, kind=PlateFileKind.IMAGE)
+    (record,) = inventory.file_records(kinds=(PlateFileKind.IMAGE,))
+    assert record.streamable_image_path != physical_path.name
+    assert record.source_path == str(physical_path)
+    projection = PlateStreamingService._inventory_source_projection((record,), context)
+    assert projection is not None
+    source = ViewerStreamingSource(
+        filemanager=context.filemanager,
+        microscope_handler=context.handler,
+        plate_path=str(plate),
+    )
+    image = source.load_image(
+        record.streamable_image_path,
+        record.source_ref.backend,
+        source_projection=projection,
+        component_metadata=record.metadata,
+    )
+    np.testing.assert_array_equal(image_payload_data(image), pixels)
 
 
 def test_plate_streaming_service_rejects_non_roi_result_files(monkeypatch):
@@ -617,8 +915,74 @@ def test_plate_streaming_service_uses_context_plate_for_output_roi_stream(monkey
     assert inspection_service.inventory_contexts[0].plate_path == Path("/plate_openhcs")
     assert inspection_service.inventory_kinds == [None]
     assert captured == {
-        "stream_plate_path": Path("/plate_openhcs"),
+        "stream_plate_path": Path("/plate"),
         "roi_filenames": (roi_full_path,),
         "component_metadata_by_path": {},
     }
     assert result.status_messages == ("streamed output rois",)
+
+
+def test_explicit_result_route_keeps_source_context_and_requires_native_binding(
+    monkeypatch,
+):
+    path = "/retained/misleading_A01_w2.roi.zip"
+    inventory = PlateFileInventory(
+        plate_path=Path("/retained"),
+        image_records=(),
+        result_records=(
+            PlateResultFileRecord(
+                relative_path="misleading_A01_w2.roi.zip",
+                full_path=path,
+                file_format=FileFormat.ROI,
+                metadata={},
+            ),
+        ),
+    )
+    inspection = FakeInspectionService(inventory)
+    captured = {}
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_kwargs: FakeViewer(),
+    )
+
+    def capture(self, request):
+        captured["source"] = self.source.plate_path
+        captured["request"] = request
+
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingService.stream_rois",
+        capture,
+    )
+    request = PlateFileStreamRequest.from_fields(
+        plate_path="/actual_source",
+        result_directory="/retained",
+        kind="result",
+        file_paths=["misleading_A01_w2.roi.zip"],
+    )
+    assert request.as_tool_arguments()["result_directory"] == "/retained"
+    result = plate_streaming_service(inspection).stream_files(request)
+    assert result.errors == ()
+    assert inspection.inventory_contexts == []
+    assert captured["source"] == Path("/actual_source")
+    assert captured["request"].require_source_metadata is True
+    assert captured["request"].roi_filenames == (path,)
+
+
+def test_explicit_result_route_rejects_acquisition_selection_before_launch(monkeypatch):
+    import pytest
+
+    inspection = FakeInspectionService(PlateFileInventory(Path("/retained"), (), ()))
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_kwargs: pytest.fail("Invalid selection must not launch a viewer"),
+    )
+    result = plate_streaming_service(inspection).stream_files(
+        PlateFileStreamRequest.from_fields(
+            plate_path="/actual_source",
+            result_directory="/retained",
+            kind="result",
+            well="A01",
+        )
+    )
+    assert result.errors
+    assert "no acquisition-component filter" in result.errors[0].message

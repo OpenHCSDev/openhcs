@@ -64,7 +64,7 @@ def test_phase_timing_rejects_unknown_persisted_phase() -> None:
         )
 
 
-def test_additive_total_excludes_overlapping_server_and_progress_windows() -> None:
+def test_additive_total_excludes_nested_windows_and_benchmark_validation() -> None:
     assert (
         additive_phase_total_seconds(
             {
@@ -74,10 +74,12 @@ def test_additive_total_excludes_overlapping_server_and_progress_windows() -> No
                 BenchmarkPhase.EXECUTE_OPENHCS.name: 10.0,
                 BenchmarkPhase.SERVER_COMPILATION_JOB.name: 15.0,
                 BenchmarkPhase.SERVER_PIPELINE_JOB.name: 10.0,
+                BenchmarkPhase.VALIDATE_RUNTIME.name: 3.0,
+                BenchmarkPhase.SNAPSHOT_OUTPUTS.name: 4.0,
                 BenchmarkPhase.COMPARE_EQUIVALENCE.name: 2.0,
             }
         )
-        == 28.0
+        == 26.0
     )
     assert (
         additive_phase_total_seconds({BenchmarkPhase.SERVER_PIPELINE_JOB.name: 10.0})

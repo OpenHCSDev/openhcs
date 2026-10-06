@@ -1,0 +1,16 @@
+{
+  "cli_seconds": 59.15950101194903,
+  "returncode": 0,
+  "command": [
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "/home/ts/code/projects/openhcs-compile-perf/scripts/benchmark_cppipe_well_throughput.py",
+    "--manifest",
+    "/home/ts/code/projects/openhcs-compile-perf/benchmark/manifests/official30_portable_axis1.json",
+    "--output-dir",
+    "/home/ts/code/projects/openhcs-benchmark-runs/perf-server-startup-cold-1w-r2-20260930",
+    "--mode",
+    "1w_1t",
+    "--case",
+    "ExampleImagingFlowCytometryObjectsInGrid"
+  ]
+}

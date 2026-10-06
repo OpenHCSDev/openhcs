@@ -1,0 +1,1242 @@
+{
+  "candidate_source": "399820539",
+  "candidate_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-saveimages-binding-installed-frontier-20260930/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+  "saved_successful_control_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-transport-full-candidate-20260929/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+  "comparison": "No ignored CSV fields; complete file bytes and all saved label pixels/dtypes/shapes match",
+  "csv_count": 6,
+  "label_image_count": 120,
+  "csv": [
+    {
+      "name": "3d_monolayer_Cells.csv",
+      "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d",
+      "byte_identical": true
+    },
+    {
+      "name": "3d_monolayer_Image.csv",
+      "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+      "byte_identical": true
+    },
+    {
+      "name": "3d_monolayer_Nuclei.csv",
+      "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c",
+      "byte_identical": true
+    },
+    {
+      "name": "3d_monolayer_downsizedNuclei.csv",
+      "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08",
+      "byte_identical": true
+    },
+    {
+      "name": "3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0",
+      "byte_identical": true
+    },
+    {
+      "name": "3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c",
+      "byte_identical": true
+    }
+  ],
+  "images": [
+    {
+      "name": "W001_s001_w0_z001_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z002_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z003_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z004_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z005_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z006_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z007_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z008_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z009_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z010_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z011_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z012_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z013_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z014_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z015_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z016_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z017_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z018_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z019_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "c50ea679c0eec63febf279fa27e6a44ff84382706b7afb1f6780dbbdcbdbef2e",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z020_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "cc1e452cb173f03b79b4f87092974fc9f9e8b9b956d068fc96ab86d5bf793116",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z021_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "f0eae503eee0b13fa0578adb804fd9b97151ebed215729087833ff0c06269efd",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z022_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "0ec6a3d00b632eb01dc7aa530512e0ce3a5428892e08ef3fcd8290bb64ef33ea",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z023_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "1efccf39aef19919207717549b7fc09d2781818469a772c8b77006762efec9f4",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z024_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "48fa1fc67955fb6630eb2275c428a67c4ba1d33e962efe7bd9c82c8cedd20d8c",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z025_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "358cce7481b764031d3e355d405bdcdfecbb97d77cdd1c6f0a34a4e5fb2e2059",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z026_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "ea8939f6ccb5ae9b11f4c2a4695c21114a010ade8b9e31ad80c10ae62d87982c",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z027_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "97220f9b96ff2d872c7c8fc782ef1b97056287e20456df8b8f9df956eb28d9af",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z028_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "d2dfdd5a02dfc34eb4b602baabf47adb9ced46823fc377b187e514373dceaa85",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z029_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "dc1435cb81df0b12c7cbcce7ab946f9971bcb76e2cb89e4a3f019dac7c330175",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z030_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "11cf7a88b5f6d4c29e8a2b2bbb4b0ab668f6ad1ed15c44fc714473f5c73535fb",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z031_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "7645275cbfd634cff6e583412e6413b4be910f4054715b984928dd8469e55ce9",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z032_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "08b6d944f9321a70550d5b65373f07fcb7bd13a94c9c046d3d6de0e9c07644e3",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z033_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "8cd696ad89a05bdf6fb064592e4bd40b5ca582038642e01d7d95251d9475fdab",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z034_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "9a2c301dc4a5287eefe6b9a9ba4bd32e7a8825ee627f5e46ffadb2b69d382f79",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z035_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "c11c5f9fddf8043143c9b45787fe8827f7dcdc72aeb65a3784b3d441e4642786",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z036_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "29839df6b419217c753cb2b6f39e2e9a898b30513d621596ecae56602d5855cc",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z037_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "b65c5f4c9c6d9d4c7135c319c38be834d7ab4fd06b881cdf5eb400fe409a5a1b",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z038_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "8dea966ca6e3048fe9c613cddcfbeb91f74ed36187e90a0c85b4bb0b34e29c56",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z039_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "ea4e7908ea21713cb87049be73f08426e53866f304c204d01427f38b47b697f2",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z040_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "5af1e57ad0c5cbc55ecadec344d248641b9a84f40bc687a914d772e45874ff2f",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z041_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "66bf5caf9f64dd55a6ce4b7cd6e58166f2e0b3d4bbc2e11c53af51632839fe3b",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z042_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "6246a23a17ac8673d688f55e299e5af71c3f6030da47fd3a6d47301d31dadcde",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z043_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "6bef4035b976db80c61c196b809214c2bceb21a148005e99526a92d93c78385c",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z044_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "70810291b64c637b604363ab69154343ba4b7e8274f22a911b372d3d2ddb6191",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z045_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "c36dd07085d193dfcc4337e86400125ab2aff703651eb1a9ed8658bad5420f60",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z046_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "acafee0da6604f923271b52f6c3fc15cb3410f0bd63aa9bd55b03cbeb20139a1",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z047_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "da7c330a327f3f54998a6427656571c6bef4d6da0dd8d957c00d9e3edb72eda8",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z048_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "0374bfc4e4dba92b42759b93a2cee9e61132843f304a39195ae09ac42854856f",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z049_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "4e311eb768168fe62fe5c07edfeb6205adee2ed0e9a223e05ea5f1208ae54adb",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z050_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "18c4370e6c7a8158bfb868a500a6531dffb77eaa5241c55c5db31f508c8ea8e8",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z051_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "1191a76b833f6accb8f69853f33c49e82982c9e6b0ed5d9f858a26f21d890b74",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z052_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "f3655825fbcd2eb48f09b8ad55c163b06029024f9f226a5db15a96abe0730cd7",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z053_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "09107a471998c29dbc1abc98c207bd559f9c2d17df5c8bced6818bbbe25cbed1",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z054_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "d750f50fa99d77370b203f274020be57f1d19e941bac93d8e07f523ee665cb42",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z055_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z056_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z057_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z058_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z059_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w0_z060_t001_CellsLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z001_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z002_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z003_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z004_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z005_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z006_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z007_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z008_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z009_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z010_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z011_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z012_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z013_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z014_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z015_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z016_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z017_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z018_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "e6efce7c38d04ef8c8f73e1b8cba26951386cda4beb751dbdd018c5d6d3ad1de",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z019_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "9ebc5feb171088758054ce46c1f9819b53d24d48d79f7869d3a0bb5c2dd12c8e",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z020_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "5251c4e2fc1ac395a52db89ce4c119f0c01a072dc146ef7a0bdd0317631bf671",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z021_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "d234179b54f214d182880ec015a0a1b92f0a929e078c211a52f65710bb926d90",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z022_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "ffe60e451fe382d191dcd778c83027abb7dfb1992108538bdcfb9e1dcabdae29",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z023_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "e4bd4fb6b8644679ef7597b9b92bf0bae82b35547437d2ca0b2aad89f6ca510f",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z024_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "3a4092808ab7f81506b77dda455049af2d42d3a0aeb4f2925ef71df71dc597e6",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z025_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "d61185fe153c75fb83062f50cde5ec75432c9e362d0d9c3c243c33830d508771",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z026_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "f20de98e5e79e03dee0ed8a32801d7e4bd8c90a4a38e87c9acb22a2950e2c610",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z027_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "ce3edd7951372cdbe4093999d207390ab134d61b7234f981df4cec1d417a18c4",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z028_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "856b28a1f98a6421fb85b04dbf1d4b0cffcb5a6b26de8a1a9c20f93ea7a77282",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z029_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "8dd6d6d8432015bf1fec1eb51792da8ace5877e71231eb2dbd26d4a1c08c5326",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z030_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "38676d62d9cd607d07c6f07211ed64677cf8a47546182a03385a40f4b017f7a3",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z031_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "b4e55f9aea85fbc6c339d09b5a981b0df8a89eb2e6ce399c740655b6edcfc0ed",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z032_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "0d14aa0bd960bac879d487e91aad3ac08e0ee26706a913a13d27aa83f941f916",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z033_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "8d865dbd226210ee2a9b8917a9deb1087831d55def06e61074467dadc071a25d",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z034_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "ac42b1ba8cfd9699f19df341199bfc424507043f781bf64a6908148e1a03e30d",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z035_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "dbafe377ed251f038a7b3b4a6e996fe2457878f55aed0a736bf89438f9fe6f06",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z036_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "8f53239e2f613fc170556d05ffa8e6e4b7fd607f45d21333db7d4d56123b39f7",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z037_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "2ebfa988337ddcc44fb62b9f877fcf09245a14e9b494a4b9b6ea9cafbca2894a",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z038_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "b152e4f47132f1c3d3d6b06768714ced21ed0c4aee2ac59c20246e1fe7ac5c54",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z039_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "07973c29cc699e23a895cfc2f65cc07f8454ad7b95c05c43fe976b899ba97a37",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z040_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "800ed6ee9796fa504847e883d2dcc2aef6391c7ae9eaf0ffd571a28e09deb786",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z041_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "434bdf859ad48e513d82d6be3b7c4e1acf8d95529a5e6ba202cdbab23769badc",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z042_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "190e4afea97229b8a59869bb1737f5387ba4c5a3ef9829acac4918c556d41200",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z043_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "b859a396a42c861548595acb2417fe546d7036908aab260e55512560203f2330",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z044_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "3ace8a1f7ba8826ba08ab994467a41c0ea8694e7cf14524d533e4358f4729b62",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z045_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "dee1e09315aebdd26ee40fa8910fdbaddc2fc9a9166f8308e3e270ccc7797470",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z046_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "210cb6775bbf020ff7d4be27d1c40c4b1c175044d96035f8050e9af2ef8fac2b",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z047_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "6b242f33e4860c1c042f1e3f81a2ba955c2b62cce740798953258435f7586426",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z048_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "66d5321f6807adcce0582a8dc6ccfabe1ed64abd43700b56843ce18a85e8c46e",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z049_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "e683ef9706963d06f2ca88b1e87a9e7e856b0f026160c1c20452f7dd7be944f1",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z050_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "239f60b32ca857fc0342dbef827ca3b299a850b1f7c261f6181c403bdea5bf6d",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z051_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "be3425e37fc93f627b08e8da13f012a811fc3ce76a750ec7409741aec486cad6",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z052_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "f600c99cac26892c5ee63e8003b58f4549060c1e6f1fd4623cc21c68274fc0a3",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z053_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "f835de4f73a2a56deb8dcd4d88772973cd66addf5a71286c53d957dfa368d8c0",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z054_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "08634dffd5ef8c7da229e2e6fd1861ee57ad5050f922a3064448764e9a4aba0b",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z055_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "795e746116b2b05d6d5a145d181bbd8e05389f9cf048f338320d25ede5e4bb05",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z056_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "2316737ee48f585c85827b967371e55d32bbd21938794e77d60d25f53b07d7a7",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z057_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "caf77ad11c8f86793b14d9368b43e5c5071505dd93265e62c26ba3da4f9b97e0",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z058_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "1e983c726d42e3465d6f51f6955c2c5d9e0ce3a669b52f54abc76a7f84fcf021",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z059_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "d8a7d4bf6ae7a50d69f3b72f7e41f8b0d0904ee26b63a4c5a89c41a2947b0b88",
+      "pixels_identical": true
+    },
+    {
+      "name": "W001_s001_w2_z060_t001_NucleiLabels.tiff",
+      "shape": [
+        256,
+        256
+      ],
+      "dtype": "uint16",
+      "pixel_sha256": "5a8adaf7c56835162d94a14799d357550b42f52a4ca25a869cd01ae74b0d9a7b",
+      "pixels_identical": true
+    }
+  ]
+}

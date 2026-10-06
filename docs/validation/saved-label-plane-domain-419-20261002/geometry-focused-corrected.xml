@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="10" time="20.532" timestamp="2026-10-01T23:04:25.412680-04:00" hostname="desktop"><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_original_artifact_admission_and_full_stack_shape_keep_2d_planes[runtime_slice]" time="18.844"><failure message="assert (6.0, nan, na...nan, nan, ...) == (6.0, 12.0)&#10;  &#10;  At index 1 diff: nan != 12.0&#10;  Left contains 133 more items, first extra item: nan&#10;  Use -v to get more diff">axis = &lt;RuntimePlaneAxis.RUNTIME_SLICE: 'runtime_slice'&gt;
+
+    @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+    def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
+        labels = np.zeros((2, 8, 9), dtype=np.int32)
+        labels[0, 1:3, 2:5] = 29
+        labels[1, 2:5, 3:7] = 106
+        source = _source(labels, axis=axis)
+        source_bytes = labels.tobytes()
+        spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
+        value = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
+            RuntimeArtifactInputRequest(spec=spec, value=source)
+        )
+        assert value.domain.scope is ObjectLabelDomainScope.PLANE
+        assert value.plane_axis is axis
+        assert value.domain.declared_object_id_domains == ((29,), (106,))
+        assert value.source_provenance.identity() == source.metadata.source_provenance.identity()
+        planes = value.measurement_planes()
+        assert tuple(plane.labels.shape for plane in planes) == ((8, 9), (8, 9))
+        for index, plane in enumerate(planes):
+            np.testing.assert_array_equal(plane.labels, labels[index])
+            assert plane.parent_image_source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
+    
+        contract = CallableContract.from_callable(measure_object_size_shape)
+        _image, rows = CellProfilerFunctionContractExecutor().execute(
+            contract, contract.resolve_canonical_raw_callable(), source,
+            {"labels": value, "calculate_advanced": False, "calculate_zernikes": False},
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+        area = MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value
+&gt;       assert tuple(row[area] for row in rows) == (6.0, 12.0)
+E       assert (6.0, nan, na...nan, nan, ...) == (6.0, 12.0)
+E         
+E         At index 1 diff: nan != 12.0
+E         Left contains 133 more items, first extra item: nan
+E         Use -v to get more diff
+
+tests/unit/test_saved_source_label_plane_domain.py:65: AssertionError</failure></testcase><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_original_artifact_admission_and_full_stack_shape_keep_2d_planes[source_binding]" time="0.012"><failure message="assert (6.0, nan, na...nan, nan, ...) == (6.0, 12.0)&#10;  &#10;  At index 1 diff: nan != 12.0&#10;  Left contains 133 more items, first extra item: nan&#10;  Use -v to get more diff">axis = &lt;RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'&gt;
+
+    @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+    def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
+        labels = np.zeros((2, 8, 9), dtype=np.int32)
+        labels[0, 1:3, 2:5] = 29
+        labels[1, 2:5, 3:7] = 106
+        source = _source(labels, axis=axis)
+        source_bytes = labels.tobytes()
+        spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
+        value = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
+            RuntimeArtifactInputRequest(spec=spec, value=source)
+        )
+        assert value.domain.scope is ObjectLabelDomainScope.PLANE
+        assert value.plane_axis is axis
+        assert value.domain.declared_object_id_domains == ((29,), (106,))
+        assert value.source_provenance.identity() == source.metadata.source_provenance.identity()
+        planes = value.measurement_planes()
+        assert tuple(plane.labels.shape for plane in planes) == ((8, 9), (8, 9))
+        for index, plane in enumerate(planes):
+            np.testing.assert_array_equal(plane.labels, labels[index])
+            assert plane.parent_image_source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
+    
+        contract = CallableContract.from_callable(measure_object_size_shape)
+        _image, rows = CellProfilerFunctionContractExecutor().execute(
+            contract, contract.resolve_canonical_raw_callable(), source,
+            {"labels": value, "calculate_advanced": False, "calculate_zernikes": False},
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+        area = MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value
+&gt;       assert tuple(row[area] for row in rows) == (6.0, 12.0)
+E       assert (6.0, nan, na...nan, nan, ...) == (6.0, 12.0)
+E         
+E         At index 1 diff: nan != 12.0
+E         Left contains 133 more items, first extra item: nan
+E         Use -v to get more diff
+
+tests/unit/test_saved_source_label_plane_domain.py:65: AssertionError</failure></testcase><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_singleton_runtime_slice_is_not_a_physical_volume" time="0.001" /><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_undeclared_volume_and_explicit_payload_override_are_not_guessed_planar" time="0.003" /><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_declared_axis_rejects_missing_or_conflicting_cardinality[0]" time="0.001" /><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_declared_axis_rejects_missing_or_conflicting_cardinality[1]" time="0.000" /><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_declared_axis_rejects_missing_or_conflicting_cardinality[3]" time="0.000" /><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_declared_axis_rejects_payload_wide_ids_and_mismatched_label_geometry" time="0.001" /><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_explicit_projection_conflicting_with_source_declaration_is_rejected" time="0.000" /><testcase classname="tests.unit.test_saved_source_label_plane_domain" name="test_new_calibrated_leaf_executes_cooperative_admission_and_plane_building" time="0.001" /></testsuite></testsuites>

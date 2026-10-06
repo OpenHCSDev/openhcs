@@ -1,0 +1,713 @@
+{
+  "scope": "Frozen H002_FRESH10_89 independent task-only development on a released single-channel volume. Final-only native witnesses; no held-out scoring, causal skill effect or complete biological census.",
+  "author_output": "/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh10-89-20261005/H002_FRESH10_89/author-workspace/output",
+  "source_shape_zyx": [
+    60,
+    256,
+    256
+  ],
+  "source_sha256": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
+  "pipeline_sha256": "8ff23d2bc88146334cee3a5abef10818019f22a68caad0dd0c08179118810e9f",
+  "callable_sha256": "651ea77039f0692ed71f87eb85cd0a8ee23473eb5bcf566e02963ef8cc2eff7d",
+  "report_sha256": "122d01a0abae4738095838745d69113780ca9f063cf20f76a7ff5ef191c491e8",
+  "qa_audit_sha256": "445c14051ed4dd0b9513b5784937f894b846dfa8ca8622a4c57e94a3d33b48ed",
+  "centre_csv_sha256": "ae89addf8e689cbd17f32a371f9ea346e1966a801f3bbda328934c988ef6655a",
+  "centre_csv_rows": 22,
+  "units": "Zero-based voxel-index coordinates. Physical calibration is unverified; no micrometre claim.",
+  "captures": {
+    "final-circle": {
+      "raw": {
+        "capture_receipt": "output/receipts/0165.json",
+        "state_receipt": "output/receipts/0164.json",
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-circle-raw/20261005T024749674437Z_napari_6023_OpenHCS_Napari_Visualization.png",
+          "sha256": "57ff7714200d6e811eb11b73b06ab30df8b1acb20f05d6e3c62e17b1dbea2aca",
+          "size_bytes": 130752,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-circle-raw/20261005T024749674437Z_napari_6023_OpenHCS_Napari_Visualization.png"
+        },
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            31,
+            0,
+            0,
+            127,
+            127
+          ]
+        },
+        "snapshot_native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            31,
+            0,
+            0,
+            127,
+            127
+          ]
+        },
+        "native_viewport": {
+          "center": [
+            0,
+            200,
+            175
+          ],
+          "zoom": 4
+        },
+        "visible_routes": [
+          "origin_manual_kind_manual_projection_selected_images_d01bc56302894515ab5711d86dc243006e7a0d26077ce6f5a7064e6c5d975d4c"
+        ],
+        "visible_titles": [
+          "selected_images"
+        ],
+        "raw_intensity": [
+          {
+            "contrast_limits": [
+              901,
+              27267
+            ],
+            "gamma": 1
+          }
+        ],
+        "point_sources": [
+          "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip"
+        ],
+        "point_row_counts": [
+          22
+        ],
+        "retained_path": "paper/figures/slas/h002_fresh10_final_circle_raw.png"
+      },
+      "combined": {
+        "capture_receipt": "output/receipts/0171.json",
+        "state_receipt": "output/receipts/0170.json",
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-circle-combined/20261005T024750664430Z_napari_6023_OpenHCS_Napari_Visualization.png",
+          "sha256": "c12f7a9ebbdcc9c4ce84dc0a60c35ee186f8792392f34ce86319163edc0997a4",
+          "size_bytes": 136311,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-circle-combined/20261005T024750664430Z_napari_6023_OpenHCS_Napari_Visualization.png"
+        },
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            31,
+            0,
+            0,
+            127,
+            127
+          ]
+        },
+        "snapshot_native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            31,
+            0,
+            0,
+            127,
+            127
+          ]
+        },
+        "native_viewport": {
+          "center": [
+            0,
+            200,
+            175
+          ],
+          "zoom": 4
+        },
+        "visible_routes": [
+          "origin_manual_kind_manual_projection_selected_images_d01bc56302894515ab5711d86dc243006e7a0d26077ce6f5a7064e6c5d975d4c",
+          "origin_manual_kind_manual_projection_results_image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip_points"
+        ],
+        "visible_titles": [
+          "selected_images",
+          "results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip points"
+        ],
+        "raw_intensity": [
+          {
+            "contrast_limits": [
+              901,
+              27267
+            ],
+            "gamma": 1
+          }
+        ],
+        "point_sources": [
+          "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip"
+        ],
+        "point_row_counts": [
+          22
+        ],
+        "retained_path": "paper/figures/slas/h002_fresh10_final_circle_combined.png"
+      }
+    },
+    "final-xz-y157": {
+      "raw": {
+        "capture_receipt": "output/receipts/0248.json",
+        "state_receipt": "output/receipts/0247.json",
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-xz-y157-raw/20261005T025611371714Z_napari_6023_OpenHCS_Napari_Visualization.png",
+          "sha256": "2a85f5c9835bc322f1bef4ce06b70b4f788752de8d00da43e33a770fff762f87",
+          "size_bytes": 103432,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-xz-y157-raw/20261005T025611371714Z_napari_6023_OpenHCS_Napari_Visualization.png"
+        },
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            5,
+            2,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            34,
+            0,
+            0,
+            157,
+            127
+          ]
+        },
+        "snapshot_native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            5,
+            2,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            34,
+            0,
+            0,
+            157,
+            127
+          ]
+        },
+        "native_viewport": {
+          "center": [
+            0,
+            30,
+            127.5
+          ],
+          "zoom": 3
+        },
+        "visible_routes": [
+          "origin_manual_kind_manual_projection_selected_images_d01bc56302894515ab5711d86dc243006e7a0d26077ce6f5a7064e6c5d975d4c"
+        ],
+        "visible_titles": [
+          "selected_images"
+        ],
+        "raw_intensity": [
+          {
+            "contrast_limits": [
+              711,
+              27219
+            ],
+            "gamma": 1
+          }
+        ],
+        "point_sources": [
+          "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip"
+        ],
+        "point_row_counts": [
+          22
+        ],
+        "retained_path": "paper/figures/slas/h002_fresh10_final_xz_y157_raw.png"
+      },
+      "combined": {
+        "capture_receipt": "output/receipts/0254.json",
+        "state_receipt": "output/receipts/0253.json",
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-xz-y157-combined/20261005T025615719462Z_napari_6023_OpenHCS_Napari_Visualization.png",
+          "sha256": "0ad8616b07463281f28bbeb5ede920e8a7da09834ca715e955b491419d92bb06",
+          "size_bytes": 109104,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-xz-y157-combined/20261005T025615719462Z_napari_6023_OpenHCS_Napari_Visualization.png"
+        },
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            5,
+            2,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            34,
+            0,
+            0,
+            157,
+            127
+          ]
+        },
+        "snapshot_native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            5,
+            2,
+            6
+          ],
+          "point": [
+            0,
+            0,
+            34,
+            0,
+            0,
+            157,
+            127
+          ]
+        },
+        "native_viewport": {
+          "center": [
+            0,
+            30,
+            127.5
+          ],
+          "zoom": 3
+        },
+        "visible_routes": [
+          "origin_manual_kind_manual_projection_selected_images_d01bc56302894515ab5711d86dc243006e7a0d26077ce6f5a7064e6c5d975d4c",
+          "origin_manual_kind_manual_projection_results_image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip_points"
+        ],
+        "visible_titles": [
+          "selected_images",
+          "results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip points"
+        ],
+        "raw_intensity": [
+          {
+            "contrast_limits": [
+              711,
+              27219
+            ],
+            "gamma": 1
+          }
+        ],
+        "point_sources": [
+          "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip"
+        ],
+        "point_row_counts": [
+          22
+        ],
+        "retained_path": "paper/figures/slas/h002_fresh10_final_xz_y157_combined.png"
+      }
+    },
+    "final-bright-yz-x54": {
+      "raw": {
+        "capture_receipt": "output/receipts/0269.json",
+        "state_receipt": "output/receipts/0268.json",
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-bright-yz-x54-raw/20261005T025858436001Z_napari_6023_OpenHCS_Napari_Visualization.png",
+          "sha256": "d01795ac3cb575f70fbc2d8c709773f111f0f0430c0419d211f538bd39ce503f",
+          "size_bytes": 99579,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-bright-yz-x54-raw/20261005T025858436001Z_napari_6023_OpenHCS_Napari_Visualization.png"
+        },
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "y"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            6,
+            2,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            40,
+            0,
+            0,
+            157,
+            54
+          ]
+        },
+        "snapshot_native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "y"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            6,
+            2,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            40,
+            0,
+            0,
+            157,
+            54
+          ]
+        },
+        "native_viewport": {
+          "center": [
+            0,
+            30,
+            87
+          ],
+          "zoom": 4
+        },
+        "visible_routes": [
+          "origin_manual_kind_manual_projection_selected_images_d01bc56302894515ab5711d86dc243006e7a0d26077ce6f5a7064e6c5d975d4c"
+        ],
+        "visible_titles": [
+          "selected_images"
+        ],
+        "raw_intensity": [
+          {
+            "contrast_limits": [
+              901,
+              53727
+            ],
+            "gamma": 1
+          }
+        ],
+        "point_sources": [
+          "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip"
+        ],
+        "point_row_counts": [
+          22
+        ],
+        "retained_path": "paper/figures/slas/h002_fresh10_final_bright_yz_x54_raw.png"
+      },
+      "combined": {
+        "capture_receipt": "output/receipts/0275.json",
+        "state_receipt": "output/receipts/0274.json",
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-bright-yz-x54-combined/20261005T025900076029Z_napari_6023_OpenHCS_Napari_Visualization.png",
+          "sha256": "4939179dbc271265aff52d28a0dd17ca57e1eb5624878fc21fa865a29bf28c6b",
+          "size_bytes": 104822,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/qa/final-bright-yz-x54-combined/20261005T025900076029Z_napari_6023_OpenHCS_Napari_Visualization.png"
+        },
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "y"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            6,
+            2,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            40,
+            0,
+            0,
+            157,
+            54
+          ]
+        },
+        "snapshot_native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            974,
+            446
+          ],
+          "displayed_axes": [
+            "z_index",
+            "y"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            3,
+            4,
+            6,
+            2,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            40,
+            0,
+            0,
+            157,
+            54
+          ]
+        },
+        "native_viewport": {
+          "center": [
+            0,
+            30,
+            87
+          ],
+          "zoom": 4
+        },
+        "visible_routes": [
+          "origin_manual_kind_manual_projection_selected_images_d01bc56302894515ab5711d86dc243006e7a0d26077ce6f5a7064e6c5d975d4c",
+          "origin_manual_kind_manual_projection_results_image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip_points"
+        ],
+        "visible_titles": [
+          "selected_images",
+          "results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip points"
+        ],
+        "raw_intensity": [
+          {
+            "contrast_limits": [
+              901,
+              53727
+            ],
+            "gamma": 1
+          }
+        ],
+        "point_sources": [
+          "/run/media/ts/hdd/openhcs-science/next-h002-fresh10-89-20261005/H002_FRESH10_89/attempt04/staged-input_whole3d_spacing/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_points.roi.zip"
+        ],
+        "point_row_counts": [
+          22
+        ],
+        "retained_path": "paper/figures/slas/h002_fresh10_final_bright_yz_x54_combined.png"
+      }
+    }
+  },
+  "crops_xywh": {
+    "final-circle": [
+      610,
+      100,
+      350,
+      260
+    ],
+    "final-xz-y157": [
+      600,
+      160,
+      350,
+      190
+    ],
+    "final-bright-yz-x54": [
+      620,
+      180,
+      350,
+      190
+    ]
+  },
+  "rendering": "Original full screenshots copied byte-for-byte, clipped/scaled in SVG and rendered by existing rsvg-convert. No retouching, recolouring, regenerated scientific arrays or new analysis. Native selected points retain yellow selection rings in XZ and YZ; ordinary XY point is green. Point visibility is slice-local, not a census of all objects intersecting that section.",
+  "limits": "Ordinary local body association and ambiguous multi-lobed identity are separate observations. The author abstained from accepting a global biological nucleus count while retaining useful repairs; 22 is algorithmic. A centre can legitimately lie between lobes. These final-only panels do not independently prove the first-to-final repair or resolve cluster identity."
+}

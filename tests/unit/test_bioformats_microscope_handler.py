@@ -163,7 +163,8 @@ def test_bioformats_structured_refs_project_inside_pattern_runtime(
     )
     authority = VirtualWorkspaceSourceProjectionAuthority(
         plate_path=tmp_path,
-        metadata_handlers=(OpenHCSMetadataHandler(filemanager),),
+        metadata_handler=OpenHCSMetadataHandler(filemanager),
+        filemanager=filemanager,
         cache=VirtualWorkspaceSourceProjectionCache(),
     )
 

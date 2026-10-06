@@ -31,9 +31,6 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCompositionMode,
-)
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
     CellProfilerSourceImagePair,
@@ -299,19 +296,6 @@ class CellProfilerObjectMeasurementRowPolicy(
         """Return row-level source ownership for one measurement image."""
         if measurement_row_source_names_required(measurement_images):
             return measurement_image.source_image_name
-        return None
-
-    def source_metadata_composition_mode(
-        self, measurement_images: tuple[CellProfilerMeasurementImage, ...]
-    ) -> ImagePayloadMetadataCompositionMode | None:
-        """Return source metadata topology for this policy's measurement rows."""
-        if any(
-            (
-                self.row_source_owner(measurement_image, measurement_images) is not None
-                for measurement_image in measurement_images
-            )
-        ):
-            return ImagePayloadMetadataCompositionMode.STACK
         return None
 
     def row_ownership(

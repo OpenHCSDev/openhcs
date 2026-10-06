@@ -1,0 +1,77 @@
+{
+  "author_run": "H002_FRESH15_89",
+  "tier": "Parent postfreeze reference comparison after original author exit and exact native/viewer closure; no scientific rerun or author feedback",
+  "coordinate_order": "z,y,x",
+  "distance_unit": "unscaled_voxels",
+  "primary_threshold_voxels": 30,
+  "sensitivity_thresholds_voxels": [10, 20, 40],
+  "reference_completeness": "Not established as exhaustive; unmatched predictions are not proven spurious biological objects",
+  "reference_source_commit": "68845a1afaf53bf601958a3fa7d86f3cf8a43219",
+  "inputs": [
+    {
+      "path": "/home/ts/code/projects/openhcs/benchmark/score_point_centres.py",
+      "sha256": "a80eecefc791dd755444892cde5816df8c6a6bad15b9dd350fadfd23d6156af8"
+    },
+    {
+      "path": "/home/ts/.local/share/openhcs-blind-evaluation/haase_cells3d_20260927/cells3d_annotations.csv",
+      "sha256": "572f71b8770b4190cc6806000bde6a4e118f0c17d758faef0a7a5d0e4fbaa81f"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_centres_step0_details.csv",
+      "sha256": "19ad71607d72e86d28d35a2418ac48c74ac6985a38d69d6235e38ad6d7076c37"
+    }
+  ],
+  "prediction_columns": ["center_z", "center_y", "center_x"],
+  "reference_columns": ["axis-0", "axis-1", "axis-2"],
+  "acquisition_sha256": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
+  "evaluation_python": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+  "scores": {
+    "10": {
+      "reference_points": 15, "predicted_points": 26,
+      "true_positives": 14, "false_positives": 12, "false_negatives": 1,
+      "signed_count_error": 11,
+      "precision": 0.5384615384615384, "recall": 0.9333333333333333,
+      "f1": 0.6829268292682926,
+      "mean_localisation_error_voxels": 4.390142533439361,
+      "max_localisation_error_voxels": 7.065207006000694,
+      "ambiguous_reference_points": 0, "ambiguous_prediction_points": 0
+    },
+    "20": {
+      "reference_points": 15, "predicted_points": 26,
+      "true_positives": 15, "false_positives": 11, "false_negatives": 0,
+      "signed_count_error": 11,
+      "precision": 0.5769230769230769, "recall": 1.0,
+      "f1": 0.7317073170731707,
+      "mean_localisation_error_voxels": 4.795056778116108,
+      "max_localisation_error_voxels": 10.463856203590584,
+      "ambiguous_reference_points": 0, "ambiguous_prediction_points": 0
+    },
+    "30": {
+      "reference_points": 15, "predicted_points": 26,
+      "true_positives": 15, "false_positives": 11, "false_negatives": 0,
+      "signed_count_error": 11,
+      "precision": 0.5769230769230769, "recall": 1.0,
+      "f1": 0.7317073170731707,
+      "mean_localisation_error_voxels": 4.795056778116108,
+      "max_localisation_error_voxels": 10.463856203590584,
+      "ambiguous_reference_points": 1, "ambiguous_prediction_points": 0
+    },
+    "40": {
+      "reference_points": 15, "predicted_points": 26,
+      "true_positives": 15, "false_positives": 11, "false_negatives": 0,
+      "signed_count_error": 11,
+      "precision": 0.5769230769230769, "recall": 1.0,
+      "f1": 0.7317073170731707,
+      "mean_localisation_error_voxels": 4.795056778116108,
+      "max_localisation_error_voxels": 10.463856203590584,
+      "ambiguous_reference_points": 2, "ambiguous_prediction_points": 0
+    }
+  },
+  "metric_interpretation": "Scorer false_positives denotes predictions unmatched to this incomplete reference; precision/F1 do not establish biological detection accuracy",
+  "limits": [
+    "Unscaled voxel distances; anisotropic source not physically calibrated",
+    "Centre correspondence, not mask-boundary or whole-volume census accuracy",
+    "Final technical attempt only; no first-versus-final score gain inferred",
+    "Previous independent run matched the same 15/15 at30 and14/15 at10; no improved reference recall claimed"
+  ]
+}

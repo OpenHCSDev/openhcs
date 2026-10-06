@@ -1,0 +1,12 @@
+{
+  "openhcs_runtime_commit": "87b992c389ce94ce9413de9265ab1f16408d1feb",
+  "working_changes": "Native benchmark evidence bridge only; OpenHCS production runtime matches this main commit.",
+  "runtime_diff": "",
+  "zmqruntime_commit": "0f9e840a9ed526f0a2b87a660393f5b7c34fc9eb",
+  "input_digest_count": 12,
+  "native_controller_limit": "Original 16w controller return code unobserved; original four worker reports recovered; each report was emitted after pipeline EXIT_STATUS Complete and expected image-set counts.",
+  "openhcs_scope": "Server pipeline execution includes worker launch/result transfer and plate export. Total includes fresh server startup/compilation/outcome retrieval/shutdown, excludes prior persistent-registry/kernel warming and source staging.",
+  "native_scope": "Warm invocation through measurements close includes pipeline analysis/export, excludes interpreter/Java startup, full-batch warmup, final Java shutdown.",
+  "sample_count_per_point": 1,
+  "synthetic_repeated_pixels": true
+}

@@ -1,19 +1,18 @@
 """Shared CellProfiler color literal semantics."""
 
 from __future__ import annotations
-from openhcs.core.artifacts import ArtifactInputPlan
 
 import re
-
-from openhcs.interop.cellprofiler.setting_names import normalized_symbol_name
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar
-from metaclass_registry import AutoRegisterMeta
+
 import numpy as np
 from matplotlib.colors import CSS4_COLORS, to_rgb
+from metaclass_registry import AutoRegisterMeta
+
 from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -21,42 +20,45 @@ from openhcs.core.aligned_image_payload import (
     pack_aligned_image_outputs,
 )
 from openhcs.core.artifacts import (
+    ArtifactInputPlan,
     ArtifactSpecCollection,
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
     ImageArtifactType,
 )
 from openhcs.core.callable_contract import (
+    PrimaryImageCarrierTransition,
     PrimaryImageCarrierRequirement,
+    declares_primary_image_carrier_transition,
     requires_primary_image_carrier,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
     required_variable_components,
 )
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisValueProjection,
-)
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
     with_image_payload_data,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-from openhcs.interop.cellprofiler.module_settings import (
-    BoundModuleSettings,
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
 )
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
+)
+from openhcs.interop.cellprofiler.module_settings import (
+    BoundModuleSettings,
 )
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
+    normalized_symbol_name,
     optional_setting_value,
     repeating_setting_blocks,
     required_setting_value,
@@ -70,19 +72,63 @@ from openhcs.interop.cellprofiler.settings_binder import (
     normalize_cellprofiler_setting_name,
     parse_cellprofiler_bool,
 )
+from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
     from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
+    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 
+class ColorToGrayScalarOutputProjection(ABC):
+    """Own whether a scalar output selects a source channel or derives from all."""
+
+    @abstractmethod
+    def project(
+        self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
+    ) -> RuntimeArrayData: ...
+
+
+class SelectedColorChannelProjection(ColorToGrayScalarOutputProjection):
+    def project(
+        self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
+    ) -> RuntimeArrayData:
+        return image_payload_metadata(image).project_channel_payload(
+            source_payload=image,
+            source_data=image_payload_data(image),
+            channel_index=channel_index,
+            channel_data=output,
+            channel_axis=-1,
+        )
+
+
+class DerivedColorChannelProjection(ColorToGrayScalarOutputProjection):
+    def project(
+        self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
+    ) -> RuntimeArrayData:
+        del channel_index
+        return with_image_payload_data(
+            image, output,
+            metadata=image_payload_metadata(image).without_source_channel_axis(),
+        )
+
+
 class ImageChannelType(Enum):
-    RGB = "rgb"
-    HSV = "hsv"
-    CHANNELS = "channels"
+    def __new__(cls, value: str, projection: type[ColorToGrayScalarOutputProjection]):
+        member = object.__new__(cls)
+        member._value_ = value
+        member._scalar_output_projection = projection()
+        return member
+
+    RGB = ("rgb", SelectedColorChannelProjection)
+    HSV = ("hsv", DerivedColorChannelProjection)
+    CHANNELS = ("channels", SelectedColorChannelProjection)
+
+    @property
+    def scalar_output_projection(self) -> ColorToGrayScalarOutputProjection:
+        return self._scalar_output_projection
 
 
 class ColorToGrayMode(Enum):
@@ -794,7 +840,9 @@ class GrayToColorModule(
             )
         channels = cls.indexed_channels(scheme)
         if not any(
-            channel.channel_parameter in explicit_kwargs for channel in channels
+            channel.channel_parameter in explicit_kwargs
+            or channel.image_binding.require_parameter_name() in explicit_kwargs
+            for channel in channels
         ):
             return super().module_blocks_for_invocation(
                 invocation=invocation,
@@ -803,10 +851,12 @@ class GrayToColorModule(
 
         reconstructed_kwargs = dict(explicit_kwargs)
         for channel in channels:
-            if explicit_kwargs.get(channel.channel_parameter, -1) < 0:
-                reconstructed_kwargs[channel.image_binding.require_parameter_name()] = (
-                    None
-                )
+            selector = channel.image_binding.require_parameter_name()
+            if (
+                selector not in explicit_kwargs
+                and explicit_kwargs.get(channel.channel_parameter, -1) < 0
+            ):
+                reconstructed_kwargs[selector] = None
         blocks, consumed = super().module_blocks_for_invocation(
             invocation=replace(
                 invocation,
@@ -816,6 +866,21 @@ class GrayToColorModule(
         )
         explicit_names = frozenset(explicit_kwargs)
         return blocks, tuple(name for name in consumed if name in explicit_names)
+
+    @classmethod
+    def authoring_default_kwargs(cls, module, *, authored_kwargs):
+        """Use the existing setting projection for named channel defaults."""
+        from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+
+        inherited = super().authoring_default_kwargs(
+            module, authored_kwargs=authored_kwargs,
+        )
+        if not any(
+            binding.require_parameter_name() in authored_kwargs
+            for binding in cls.declared_artifact_bindings(plan_type=ArtifactInputPlan)
+        ):
+            return inherited
+        return {**inherited, **cls._gray_to_color_kwargs(module, SettingsBinder())}
 
     @dataclass(frozen=True, slots=True)
     class StackChannel:
@@ -1470,11 +1535,14 @@ class CompositeGrayToColorRunner(GrayToColorSchemeRunner):
         return self.final_rgb(rgb_image, request)
 
 
+@declares_primary_image_carrier_transition(
+    PrimaryImageCarrierTransition.CREATE_SOURCE_CHANNEL_AXIS,
+)
 @required_variable_components(VariableComponents.CHANNEL)
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def gray_to_color(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     color_scheme: GrayToColorModule.Scheme = GrayToColorModule.Scheme.RGB,
     rescale_intensity: bool = True,
     red_channel: int = -1,
@@ -1573,7 +1641,7 @@ def gray_to_color(
 )
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def color_to_gray(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     mode: ColorToGrayMode = ColorToGrayMode.SPLIT,
     image_type: ImageChannelType = ImageChannelType.RGB,
     channel_indices: tuple[int, ...] = ColorToGrayModule.default_channel_indices,
@@ -1593,28 +1661,19 @@ def color_to_gray(
             output,
             metadata=color_to_gray_combine_output_metadata(image),
         )
-    image_data = image_payload_data(image)
     outputs = split_color_to_gray(image, image_type, channel_indices)
-    if image_type is ImageChannelType.RGB:
-        return pack_aligned_image_outputs(
-            tuple(
-                image_payload_metadata(image).project_channel_payload(
-                    source_payload=image,
-                    source_data=image_data,
-                    channel_index=channel_index,
-                    channel_data=output,
-                    channel_axis=-1,
-                )
-                for channel_index, output in zip(channel_indices, outputs, strict=True)
-            )
-        )
     return pack_aligned_image_outputs(
-        tuple(with_image_payload_data(image, output) for output in outputs)
+        tuple(
+            image_type.scalar_output_projection.project(
+                image, channel_index=channel_index, output=output,
+            )
+            for channel_index, output in zip(channel_indices, outputs, strict=True)
+        )
     )
 
 
 def _invert_for_printing_channels(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     input_mode: InvertInputMode,
     use_red_input: bool,
@@ -1656,7 +1715,7 @@ def _invert_for_printing_channels(
 
 
 def _invert_for_printing_result(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     input_mode: InvertInputMode,
     use_red_input: bool,
@@ -1738,7 +1797,7 @@ def _invert_for_printing_result(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1774,7 +1833,7 @@ def invert_for_printing(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing_grayscale(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1817,7 +1876,7 @@ def invert_for_printing_grayscale(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing_without_output(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1856,7 +1915,7 @@ def invert_for_printing_without_output(
 
 
 def combine_color_to_gray(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     channel_indices: tuple[int, ...],
     contributions: tuple[float, ...],
 ) -> np.ndarray:
@@ -1865,14 +1924,27 @@ def combine_color_to_gray(
     color_stack = nhwc_color_stack(image)
     channels = np.asarray(channel_indices, dtype=int)
     weights = np.asarray(contributions, dtype=float) / float(sum(contributions))
-    result = np.sum(
-        color_stack[..., channels] * weights[np.newaxis, np.newaxis, np.newaxis, :],
-        axis=3,
-    )
+    # Admit every index before numerical work, without copying the full color cube.
+    selected_pixel = color_stack[:1, :1, :1, channels]
+    if color_stack.shape[:-1] == (1, 1, 1):
+        # Here the selected channel axis is contiguous: retain NumPy's reduction
+        # order, which can differ from streaming for more than eight channels.
+        result = np.sum(selected_pixel * weights, axis=3)
+    else:
+        result = np.zeros(
+            color_stack.shape[:-1],
+            dtype=np.result_type(color_stack.dtype, weights.dtype),
+        )
+        product = np.empty_like(result)
+        for channel, weight in zip(channels, weights, strict=True):
+            np.multiply(
+                color_stack[..., channel], weight, dtype=result.dtype, out=product
+            )
+            np.add(result, product, out=result)
     return restore_color_to_gray_shape(image, result)
 
 
-def color_to_gray_combine_output_metadata(image: np.ndarray):
+def color_to_gray_combine_output_metadata(image: RuntimeArrayData):
     """Return metadata for a color-to-grayscale semantic collapse."""
     return (
         image_payload_metadata(image)
@@ -1882,7 +1954,7 @@ def color_to_gray_combine_output_metadata(image: np.ndarray):
 
 
 def split_color_to_gray(
-    image: np.ndarray, image_type: ImageChannelType, channel_indices: tuple[int, ...]
+    image: RuntimeArrayData, image_type: ImageChannelType, channel_indices: tuple[int, ...]
 ) -> tuple[np.ndarray, ...]:
     color_stack = nhwc_color_stack(image).astype(np.float32)
     source_stack = (
@@ -1908,7 +1980,7 @@ def color_to_gray_channel(color_stack: np.ndarray, channel_index: int) -> np.nda
     return color_stack[..., channel_index]
 
 
-def nhwc_color_stack(image: np.ndarray) -> np.ndarray:
+def nhwc_color_stack(image: RuntimeArrayData) -> np.ndarray:
     """Return NHWC pixels from explicitly declared image layout metadata."""
     image_data = np.asarray(image_payload_data(image))
     metadata = image_payload_metadata(image)
@@ -1939,7 +2011,7 @@ def nhwc_color_stack(image: np.ndarray) -> np.ndarray:
     return channel_last
 
 
-def restore_color_to_gray_shape(original: np.ndarray, stack: np.ndarray) -> np.ndarray:
+def restore_color_to_gray_shape(original: RuntimeArrayData, stack: np.ndarray) -> np.ndarray:
     metadata = image_payload_metadata(original)
     if metadata.is_declared_source_channel_plane(original):
         if stack.shape[0] != 1:
@@ -1997,7 +2069,7 @@ def rgb_to_hsv_stack(rgb_stack: np.ndarray) -> np.ndarray:
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def unmix_colors(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     stain_names: Sequence[StainType] = (),
     custom_absorbances: Sequence[Sequence[float] | None] = (),
     stain1: StainType = StainType.HEMATOXYLIN,

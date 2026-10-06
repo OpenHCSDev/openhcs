@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+import weakref
 
 import pytest
 
@@ -25,24 +26,22 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.runtime_artifact_queries import (
     RuntimeArtifactQueryContext,
-    MeasurementLabelSliceFeatureBatchQueryCache,
     MeasurementLabelSliceFeatureBatchQuery,
     MeasurementLabelSliceFeatureQuery,
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
     measurement_table_axis_values,
     measurement_row_mapping,
     runtime_measurement_tables_for_object,
     runtime_relationship,
 )
 from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
     MeasurementAxisValueProjection,
     MeasurementFeatureQuery,
+    RuntimeObjectLabelMeasurementQuery,
+    RuntimeObjectLabelMeasurementQueryCache,
     MeasurementFeatureValueIndex,
-    MeasurementObjectFeatureAxisBatchQueryCache,
     MeasurementObjectFeatureVectorBatchQuery,
-    MeasurementTableObjectFeatureSemantics,
-    MeasurementTableObjectFeatureSemanticsCache,
     matching_measurement_field,
     measurement_feature_candidates,
     ordered_measurement_feature_candidates,
@@ -51,7 +50,6 @@ from openhcs.core.measurement_feature_queries import (
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
-    MeasurementRowMappingCache,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -91,6 +89,71 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.core.runtime_artifact_values import RuntimeValue
 
 AXIS_ID = "A01"
+
+
+@pytest.mark.parametrize("batched", (False, True))
+def test_opaque_feature_qualifier_projects_post_callback_object_identity(batched):
+    import numpy as np
+
+    columns = {
+        "object_label": [1, 2, 3],
+        "updated_label": [7, 8, 9],
+        "value": [3.0, 4.0, MEASUREMENT_SPARSE_CELL],
+    }
+    table = MeasurementTable(
+        name="MutableIdentity",
+        rows=MeasurementSparseColumnarRows(
+            columns,
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("updated_label", int),
+                FieldSpec("value", float),
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_label"),
+    )
+    qualified = []
+
+    def qualify(value):
+        qualified.append(value)
+        table.subject = MeasurementSubject(
+            MeasurementScope.OBJECT, "Cells", "updated_label"
+        )
+        if len(qualified) % 2 == 0:
+            first_label = 10 if len(qualified) == 2 else 30
+            columns["updated_label"] = [first_label, first_label + 10, 99]
+        return True
+
+    query = MeasurementFeatureQuery("value", "Cells")
+    row_mask = np.asarray([True, False, False])
+    if batched:
+        indexes = [
+            axes[None]["Cells"]
+            for _, axes in ColumnarMeasurementTableSchema.from_table(
+                table
+            ).feature_value_indexes(
+                table,
+                {"first": query, "second": query},
+                {"first": {"Cells": "Cells"}, "second": {"Cells": "Cells"}},
+                index_type=MeasurementFeatureValueIndex,
+                row_masks={None: row_mask},
+                measurement_value_qualifier=qualify,
+            )
+        ]
+    else:
+        indexes = [
+            MeasurementFeatureValueIndex.from_columnar_table_by_object(
+                table,
+                query,
+                {"Cells": "Cells"},
+                row_mask=row_mask,
+                measurement_value_qualifier=qualify,
+            )["Cells"]
+            for _ in range(2)
+        ]
+
+    assert qualified == [3.0, 4.0, 3.0, 4.0]
+    assert [index.values_by_label for index in indexes] == [{10: 3.0}, {30: 3.0}]
 
 
 @pytest.mark.parametrize(
@@ -214,7 +277,6 @@ def test_runtime_measurement_query_matches_schema_and_row_object_subjects() -> N
 
 
 def test_measurement_row_mapping_accepts_slotted_dataclasses() -> None:
-    MeasurementRowMappingCache.process_cache().entries.clear()
     row = MeasurementRow(object_name="Nuclei", object_label=1)
     mapping = measurement_row_mapping(row)
 
@@ -233,15 +295,24 @@ def test_measurement_row_mapping_accepts_slotted_dataclasses() -> None:
     }
 
 
-def test_measurement_row_mapping_cache_reuses_dataclass_rows() -> None:
-    cache = MeasurementRowMappingCache.process_cache()
-    cache.entries.clear()
-    row = MeasurementRow(object_name="Nuclei", object_label=1)
+def test_measurement_row_mapping_observes_current_dataclass_with_independent_values() -> (
+    None
+):
+    @dataclass(slots=True)
+    class MutableMeasurementRow:
+        object_name: str
+        values: list[float]
 
+    row = MutableMeasurementRow(object_name="Nuclei", values=[0.5])
     first = measurement_row_mapping(row)
+    row.object_name = "Cells"
+    row.values[0] = 7.5
     second = measurement_row_mapping(row)
 
-    assert first is second
+    assert first == {"object_name": "Nuclei", "values": [0.5]}
+    assert second == {"object_name": "Cells", "values": [7.5]}
+    second["values"][0] = 9.5
+    assert row.values == [7.5]
 
 
 def test_projected_columnar_rows_preserve_none_values() -> None:
@@ -636,9 +707,9 @@ def test_measurement_feature_query_uses_table_object_id_field() -> None:
     assert values.tolist() == [10.0, 20.0]
 
 
-def test_measurement_table_semantics_cache_reuses_table_identity() -> None:
-    cache = MeasurementTableObjectFeatureSemanticsCache.process_cache()
-    cache.entries.clear()
+def test_measurement_table_semantics_observes_current_row_and_subject_declarations() -> (
+    None
+):
     table = MeasurementTable(
         name="ObjectMeasurements",
         rows=MeasurementSparseColumnarRows.from_rows(
@@ -655,12 +726,22 @@ def test_measurement_table_semantics_cache_reuses_table_identity() -> None:
         subject=MeasurementSubject(MeasurementScope.ARTIFACT, "ObjectMeasurements"),
     )
 
-    first = MeasurementTableObjectFeatureSemantics.from_table(table)
-    second = MeasurementTableObjectFeatureSemantics.from_table(table)
+    first_schema = ColumnarMeasurementTableSchema.from_table(table)
+    first = (first_schema.object_names(table), first_schema.feature_names(table))
+    table.rows = MeasurementSparseColumnarRows(
+        {**table.rows.columns, "object_name": ("Nuclei", "Nuclei")},
+        fields=table.rows.fields,
+    )
+    second_schema = ColumnarMeasurementTableSchema.from_table(table)
+    second = (second_schema.object_names(table), second_schema.feature_names(table))
+    table.subject = MeasurementSubject(MeasurementScope.OBJECT, "SelectedObjects")
+    third_schema = ColumnarMeasurementTableSchema.from_table(table)
+    third = (third_schema.object_names(table), third_schema.feature_names(table))
 
-    assert first is second
-    assert first.object_names == ("Cells",)
-    assert "area" in first.feature_names
+    assert first[0] == ("Cells",)
+    assert second[0] == ("Nuclei",)
+    assert third[0] == ("SelectedObjects",)
+    assert "area" in first[1] == second[1] == third[1]
 
 
 def test_measurement_feature_candidates_match_cellprofiler_compact_metric_names() -> (
@@ -960,42 +1041,23 @@ def test_batch_label_slice_measurement_lookup_scans_each_axis_once(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     np = pytest.importorskip("numpy")
-    MeasurementLabelSliceFeatureBatchQueryCache.process_cache().entries.clear()
-    MeasurementObjectFeatureAxisBatchQueryCache.process_cache().entries.clear()
-    table_scans: list[tuple[int, int | None, tuple[str, ...]]] = []
-    original_table_value_indexes = (
-        MeasurementObjectFeatureVectorBatchQuery.table_value_indexes
-    )
+    table_scans: list[tuple[int, tuple[int, ...], tuple[str, ...]]] = []
+    original_feature_indexes = ColumnarMeasurementTableSchema.feature_value_indexes
 
-    def counted_table_value_indexes(
-        query: MeasurementObjectFeatureVectorBatchQuery,
-        table: MeasurementTable,
-        table_query: MeasurementFeatureQuery,
-        table_object_names: tuple[str, ...],
-        query_objects_by_requested_object: Mapping[str, str | None],
-        *,
-        projection: MeasurementAxisValueProjection | None = None,
-    ) -> dict[str, MeasurementFeatureValueIndex]:
+    def counted_feature_indexes(schema, table, queries, objects_by_feature, **kwargs):
         table_scans.append(
             (
                 id(table),
-                None if projection is None else projection.value,
-                table_object_names,
+                tuple(kwargs["row_masks"]),
+                tuple(next(iter(objects_by_feature.values()))),
             )
         )
-        return original_table_value_indexes(
-            query,
-            table,
-            table_query,
-            table_object_names,
-            query_objects_by_requested_object,
-            projection=projection,
+        yield from original_feature_indexes(
+            schema, table, queries, objects_by_feature, **kwargs
         )
 
     monkeypatch.setattr(
-        MeasurementObjectFeatureVectorBatchQuery,
-        "table_value_indexes",
-        counted_table_value_indexes,
+        ColumnarMeasurementTableSchema, "feature_value_indexes", counted_feature_indexes
     )
     cell_labels = object_labels(
         np.array(
@@ -1082,9 +1144,8 @@ def test_batch_label_slice_measurement_lookup_scans_each_axis_once(
         [1.5],
         [1.9],
     )
-    assert [(table_id, axis) for table_id, axis, _ in table_scans] == [
-        (id(table), 0),
-        (id(table), 1),
+    assert [(table_id, axes) for table_id, axes, _ in table_scans] == [
+        (id(table), (0, 1)),
     ]
     assert all(
         set(object_names) == {"Cells", "Nuclei"} for _, _, object_names in table_scans
@@ -1158,10 +1219,8 @@ def test_label_slice_measurement_lookup_preserves_producer_runtime_slice_axis() 
     assert tuple(value.tolist() for value in values) == ([0.25], [0.0])
 
 
-def test_axis_batch_cache_rebuilds_partial_object_axes() -> None:
+def test_axis_batch_observes_current_values_across_complete_object_axes() -> None:
     np = pytest.importorskip("numpy")
-    cache = MeasurementObjectFeatureAxisBatchQueryCache.process_cache()
-    cache.entries.clear()
     table = MeasurementTable(
         name="IntensityMeasurements",
         rows=MeasurementProjectedColumnarRows(
@@ -1194,17 +1253,11 @@ def test_axis_batch_cache_rebuilds_partial_object_axes() -> None:
         dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
     )
     table_map = {"Nuclei": (table,)}
-    cache.store_value(
-        batch_query.axis_cache_key(table_map, MeasurementRowAxisField.SLICE_INDEX),
-        (
-            batch_query.table_owners(table_map),
-            {
-                0: {"Nuclei": ({1: 1.0, 2: 2.0}, [])},
-                1: {},
-                2: {},
-            },
-        ),
+    initial = batch_query.value_indexes_by_axis(
+        table_map, MeasurementRowAxisField.SLICE_INDEX
     )
+    assert initial[2]["Nuclei"][0] == {1: 5.0, 2: 6.0}
+    table.rows.columns["mean_intensity"] = (1.0, 2.0, 3.0, 4.0, 7.0, 8.0)
     labels = object_labels(
         np.array(
             (
@@ -1229,7 +1282,7 @@ def test_axis_batch_cache_rebuilds_partial_object_axes() -> None:
     assert tuple(value.tolist() for value in values) == (
         [1.0, 2.0],
         [3.0, 4.0],
-        [5.0, 6.0],
+        [7.0, 8.0],
     )
 
 
@@ -1352,9 +1405,13 @@ def test_row_sequence_feature_semantics_ignore_stale_partition_fields() -> None:
         subject=MeasurementSubject(MeasurementScope.OBJECT, "Objects2"),
     )
 
-    semantics = MeasurementTableObjectFeatureSemantics.from_table(table)
+    semantics_schema = ColumnarMeasurementTableSchema.from_table(table)
+    semantics = (
+        semantics_schema.object_names(table),
+        semantics_schema.feature_names(table),
+    )
 
-    assert "Children_Objects2_Count" not in semantics.feature_names
+    assert "Children_Objects2_Count" not in semantics[1]
 
 
 def test_measurement_table_axis_query_projects_sequence_rows() -> None:
@@ -1386,9 +1443,9 @@ def test_measurement_table_axis_query_projects_sequence_rows() -> None:
     assert projected.rows.row_mappings() == (
         {"slice_index": 1, "object_label": 1, "area": 20.0},
     )
-    assert MeasurementTableObjectFeatureSemantics.from_table(
+    assert ColumnarMeasurementTableSchema.from_table(table).feature_names(
         table
-    ).feature_names == frozenset({"area"})
+    ) == frozenset({"area"})
 
 
 def test_measurement_table_union_preserves_compatible_schema() -> None:
@@ -1416,7 +1473,7 @@ def test_measurement_table_union_preserves_compatible_schema() -> None:
         subject=subject,
     )
 
-    union = MeasurementTableUnion("CellMeasurements", (first, second)).as_table()
+    union = MeasurementTable.join("CellMeasurements", (first, second))
 
     assert union.rows.fields == (FieldSpec("cell_id", int), FieldSpec("area", float))
     assert union.subject.object_name == "Cells"
@@ -1446,7 +1503,7 @@ def test_measurement_table_union_composes_ordered_source_provenance() -> None:
         for index, path in enumerate(paths, start=1)
     )
 
-    union = MeasurementTableUnion("CellMeasurements", tables).as_table()
+    union = MeasurementTable.join("CellMeasurements", tables)
 
     assert union.rows.row_mappings() == (
         {"cell_id": 1, "area": 10.0},
@@ -1504,19 +1561,17 @@ def test_measurement_table_union_bundles_sources_per_declared_runtime_slice() ->
         for channel in (1, 2)
     )
 
-    metadata = MeasurementTableUnion("quality_metrics", tables).source_metadata()
+    provenance = MeasurementTable.joined_source_provenance("quality_metrics", tables)
 
-    assert metadata.source_provenance.source_plane_count == 2
+    assert provenance.source_plane_count == 2
     assert tuple(
-        metadata.source_provenance.for_source_plane(index).source_component_metadata[
-            "site"
-        ]
+        provenance.for_source_plane(index).source_component_metadata["site"]
         for index in range(2)
     ) == ("1", "2")
     assert tuple(
         tuple(
             contributor.path
-            for contributor in metadata.source_provenance.for_source_plane(
+            for contributor in provenance.for_source_plane(
                 index
             ).source_image_provenance_planes.contributors
         )
@@ -1524,6 +1579,31 @@ def test_measurement_table_union_bundles_sources_per_declared_runtime_slice() ->
     ) == (
         ("/plate/A01_s001_w1.tif", "/plate/A01_s001_w2.tif"),
         ("/plate/A01_s002_w1.tif", "/plate/A01_s002_w2.tif"),
+    )
+
+    # A later export reads the tables' current provenance, not the prior join epoch.
+    first = tables[0]
+    first.source_provenance = (
+        first.source_provenance.with_source_image_provenance_planes(
+            SourceImageProvenancePlanes.from_components(
+                paths=("/changed/site-1.tif", "/changed/site-2.tif"),
+                component_metadata=(
+                    {"well": "A01", "site": "1"},
+                    {"well": "A01", "site": "2"},
+                ),
+            )
+        )
+    )
+    current = MeasurementTable.joined_source_provenance("quality_metrics", tables)
+    assert (
+        current.for_source_plane(0).source_image_provenance_planes.contributors[0].path
+        == "/changed/site-1.tif"
+    )
+    assert (
+        provenance.for_source_plane(0)
+        .source_image_provenance_planes.contributors[0]
+        .path
+        == "/plate/A01_s001_w1.tif"
     )
 
 
@@ -1541,8 +1621,8 @@ def test_measurement_table_union_accepts_axisless_payload_domain() -> None:
     )
 
     assert (
-        MeasurementTableUnion("CellMeasurements", (table,)).row_axis_domain(
-            MeasurementRowAxisField.SLICE_INDEX
+        MeasurementTable.shared_row_axis_domain(
+            "CellMeasurements", (table,), MeasurementRowAxisField.SLICE_INDEX
         )
         is None
     )
@@ -1568,11 +1648,8 @@ def test_measurement_table_union_preserves_payload_rows_in_axis_declaring_table(
         subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "cell_id"),
     )
 
-    assert MeasurementTableUnion(
-        "CellMeasurements",
-        (table,),
-    ).row_axis_domain(
-        MeasurementRowAxisField.SLICE_INDEX
+    assert MeasurementTable.shared_row_axis_domain(
+        "CellMeasurements", (table,), MeasurementRowAxisField.SLICE_INDEX
     ) == (0,)
 
 
@@ -1607,8 +1684,8 @@ def test_measurement_table_union_rejects_mixed_slice_domains() -> None:
         ValueError,
         match="mixes declared and axisless 'slice_index' row domains",
     ):
-        MeasurementTableUnion("CellMeasurements", tables).row_axis_domain(
-            MeasurementRowAxisField.SLICE_INDEX
+        MeasurementTable.shared_row_axis_domain(
+            "CellMeasurements", tables, MeasurementRowAxisField.SLICE_INDEX
         )
 
 
@@ -1640,7 +1717,7 @@ def test_measurement_table_union_drops_incompatible_schema_facts() -> None:
         ValueError,
         match="require one exact nominal subject",
     ):
-        MeasurementTableUnion("MixedMeasurements", (first, second)).as_table()
+        MeasurementTable.join("MixedMeasurements", (first, second))
 
 
 def test_measurement_table_axis_query_projects_table_sequences() -> None:
@@ -1788,3 +1865,126 @@ def _record_native(
         path=f"/memory/{native_value.name}.pkl",
         backend="memory",
     )
+
+
+def test_batch_measurement_queries_release_owners_and_observe_store_replacement() -> (
+    None
+):
+    np = pytest.importorskip("numpy")
+
+    def run_query_epoch():
+        store = RuntimeValueStore()
+        pixels = {
+            name: np.ones((2, 32, 32), dtype=np.int32) for name in ("Cells", "Nuclei")
+        }
+        labels = {
+            name: object_labels(value, declared_object_id_domains=((1,), (1,)))
+            for name, value in pixels.items()
+        }
+        feature_values = np.asarray([0.5, 0.9, 1.5, 1.9])
+        table = MeasurementTable(
+            name="MixedShapeMeasurements",
+            rows=MeasurementSparseColumnarRows(
+                {
+                    "slice_index": np.asarray([0, 1, 0, 1]),
+                    "object_name": np.asarray(["Cells", "Cells", "Nuclei", "Nuclei"]),
+                    "object_label": np.ones(4, dtype=np.int32),
+                    "FormFactor": feature_values,
+                },
+                fields=(
+                    FieldSpec("slice_index", int),
+                    FieldSpec("object_name", str),
+                    FieldSpec("object_label", int),
+                    FieldSpec("FormFactor", float),
+                ),
+            ),
+            subject=MeasurementSubject(
+                MeasurementScope.ARTIFACT, "MixedShapeMeasurements"
+            ),
+        )
+        plan = ArtifactOutputPlan(
+            name=table.name,
+            path="/memory/measurements",
+            artifact_type=MeasurementsArtifactType,
+        )
+        store.record(
+            RuntimeValue.normalize(plan, table, axis_id=AXIS_ID),
+            path=plan.path,
+            backend="memory",
+        )
+        query = MeasurementLabelSliceFeatureBatchQuery(
+            measurement_tables=(table,),
+            feature_name="AreaShape_FormFactor",
+            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            row_axis=MeasurementRowAxisField.SLICE_INDEX,
+            plane_projector=RuntimePlaneProjection.stack(2),
+            labels_by_object=labels,
+        )
+        vectors = query.values_by_object()
+        assert vectors["Cells"][0].tolist() == [0.5]
+        owned_cache = store.query_cache(RuntimeObjectLabelMeasurementQueryCache)
+        owned_cache.store_value(
+            RuntimeObjectLabelMeasurementQuery(
+                axis_id=AXIS_ID,
+                group_key=None,
+                object_name="Cells",
+                feature_name="AreaShape_FormFactor",
+                label_domain=(1,),
+                label_plane_domains=((1,), (1,)),
+            ),
+            vectors["Cells"],
+        )
+        feature_values[0] = 7.5
+        store.replace(
+            RuntimeValue.normalize(plan, table, axis_id=AXIS_ID),
+            path=plan.path,
+            backend="memory",
+        )
+        assert not owned_cache.entries
+        assert query.values_by_object()["Cells"][0].tolist() == [7.5]
+        references = tuple(weakref.ref(value) for value in pixels.values()) + (
+            weakref.ref(feature_values),
+        )
+        store.clear()
+        assert not owned_cache.entries
+        assert len(store) == 0
+        return references
+
+    assert all(reference() is None for reference in run_query_epoch())
+
+
+def test_declared_non_absent_query_observes_labels_after_each_scalar_conversion():
+    labels = [1, 2]
+    conversions = []
+
+    class UpdatingNumericText(str):
+        def __float__(self):
+            conversions.append(self)
+            labels[:] = [10 * len(conversions), 20 * len(conversions)]
+            return float(str(self))
+
+    table = MeasurementTable(
+        name="MutableNumericCells",
+        rows=MeasurementSparseColumnarRows(
+            {
+                "object_label": labels,
+                "value": [UpdatingNumericText("3"), UpdatingNumericText("4")],
+            },
+            fields=(FieldSpec("object_label", int), FieldSpec("value", float)),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells"),
+    )
+    query = MeasurementFeatureQuery("value", "Cells")
+    indexes = [
+        axes[None]["Cells"].values_by_label
+        for _, axes in ColumnarMeasurementTableSchema.from_table(
+            table
+        ).non_absent_feature_value_indexes(
+            table,
+            {"first": query, "second": query},
+            {"first": {"Cells": "Cells"}, "second": {"Cells": "Cells"}},
+            index_type=MeasurementFeatureValueIndex,
+        )
+    ]
+    assert indexes == [{20: 3.0, 40: 4.0}, {40: 3.0, 80: 4.0}]
+    assert conversions == ["3", "4", "3", "4"]

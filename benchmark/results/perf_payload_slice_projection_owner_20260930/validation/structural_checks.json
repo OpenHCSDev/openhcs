@@ -1,0 +1,187 @@
+{
+  "base_revision": "2b7969f700c33eb7f73f891d975afd1efc0628bb",
+  "head_revision": "3d23d960275b43d03395d86c2e63d3bc85098a2a",
+  "paths": [
+    "openhcs/core/aligned_image_payload.py",
+    "openhcs/core/runtime_image_values.py",
+    "openhcs/processing/backends/cellprofiler/colocalization.py"
+  ],
+  "metric_count": 5140,
+  "increases": {},
+  "decreases": {
+    "ForeignAbsenceProbe:openhcs/core/aligned_image_payload.py": -1
+  },
+  "census": {
+    "source_revision": "3d23d960275b43d03395d86c2e63d3bc85098a2a",
+    "module_count": 702,
+    "original_class_count": 5121,
+    "projected_count": 5109
+  },
+  "census_sha256": "b9dc9a698db49ac36cd306435b80ba4125ae17ae1a63282195c63237e97664df",
+  "OPEN": [
+    {
+      "path": "openhcs/components/framework.py",
+      "line": 198,
+      "name": "_ComponentTemplate",
+      "lexical_scope": [
+        "ComponentConfigurationFactory",
+        "create_openhcs_default_configuration"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 481,
+      "name": "_EventBridge",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 485,
+      "name": "_StartupWindow",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 612,
+      "name": "_StartupWindowPresentation",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/mcp/http.py",
+      "line": 76,
+      "name": "OpenHCSHostedFastMCP",
+      "lexical_scope": [
+        "create_hosted_fastmcp_type"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+      "line": 107,
+      "name": "_RegistrationCNN_torch",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+      "line": 102,
+      "name": "_ClientDisconnected",
+      "lexical_scope": [
+        "ExecutionSubmissionService",
+        "start_completion_poller"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2618,
+      "name": "DimensionScrollbarListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.AdjustmentListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2696,
+      "name": "WindowCloseListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.WindowListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 3064,
+      "name": "FijiUiWorkUnit",
+      "lexical_scope": [
+        "FijiRoiManagerProvider",
+        "invoke_on_event_dispatch_thread"
+      ],
+      "decorators": [
+        "JImplements('java.lang.Runnable')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/import_utils.py",
+      "line": 67,
+      "name": "Placeholder",
+      "lexical_scope": [
+        "create_placeholder_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/pipeline_migration.py",
+      "line": 358,
+      "name": "MigratingGroupBy",
+      "lexical_scope": [
+        "LegacyGroupByUnpickler",
+        "_create_migrating_groupby_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    }
+  ],
+  "projector": [
+    {
+      "path": "openhcs/core/runtime_image_values.py",
+      "line": 1451,
+      "name": "ImagePayloadSliceProjector",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.runtime_image_values.ImagePayloadSliceProjector",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "payloads_for_slices",
+        "_masks_for_slices",
+        "payload_for_slice",
+        "mask_for_slice",
+        "_mask_for_projected_slice"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    }
+  ],
+  "source_sha256": {
+    "openhcs/core/aligned_image_payload.py": "f03bd0d1e04bd131d9a573e14550e887768b3984f39562faf522b1b5ae9571c7",
+    "openhcs/core/runtime_image_values.py": "f5bedceb53b365dafd32dafa73269a9195305f835c160be715d632c50c116782",
+    "openhcs/processing/backends/cellprofiler/colocalization.py": "7107b9e350fb6ebb6e2c9f526978f0b7af994bc399d2d8bdf0ae8681280f9c21"
+  },
+  "proof_limits": "Scoped source metrics and exact authored NRA transactions; no full native arbitrary-program equivalence proof. All original OPEN class rows retained."
+}

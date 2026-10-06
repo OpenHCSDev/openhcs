@@ -1,0 +1,19 @@
+Running as unit: dewey-441-terminal-controls-20261002.scope; invocation ID: a4496751bb9345b7b9d32e0eab3409c6
+..ROI_STREAM_TERMINAL 0 12.062202876957599 idle10 token 2
+ROI_STREAM_TERMINAL 1 0.027890792000107467 idle10 token 3
+ROI_STREAM_TERMINAL 2 0.03540694899857044 idle10 token 4
+......................
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+24 passed, 2 deselected, 2 warnings in 18.70s
+BOUNDED_SOURCE peak_aggregate_rss_kib=337156 elapsed_seconds=19.750 returncode=0 reason=None

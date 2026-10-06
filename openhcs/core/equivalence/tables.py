@@ -8,6 +8,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from openhcs.core.equivalence.cells import (
     RuntimeCellSignature,
@@ -18,6 +19,7 @@ from openhcs.core.equivalence.cells import (
 from openhcs.core.equivalence.policy import (
     DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
     RuntimeEquivalencePolicy,
+    RuntimeMeasurementDialect,
     normalize_runtime_identifier,
 )
 from openhcs.core.measurement_row_materialization import (
@@ -33,10 +35,14 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
+    MeasurementScalarLiteral,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
+
+if TYPE_CHECKING:
+    from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
 
 MEASUREMENT_IDENTITY_FIELDS = frozenset(
     {
@@ -77,6 +83,105 @@ class RuntimeTableSnapshot:
     header: tuple[str, ...]
     rows: tuple[tuple[str, ...], ...]
     column_context: tuple[str | None, ...] = ()
+
+    def for_image_numbers(
+        self,
+        image_numbers: tuple[int, ...],
+        *,
+        dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        image_identity_fields: tuple[str, ...] | None = None,
+        image_number_domain: tuple[int, ...] | None = None,
+        image_number_offset: RuntimeImageNumberOffset | None = None,
+    ) -> "RuntimeTableSnapshot":
+        """Derive a local comparison domain without modifying saved table IDs."""
+        allowed = frozenset(image_numbers)
+        if not allowed or any(number < 1 for number in allowed):
+            raise ValueError(
+                "Table image-number projections require positive identities."
+            )
+        domain = None if image_number_domain is None else frozenset(image_number_domain)
+        if domain is not None and (
+            len(domain) != len(image_number_domain) or not allowed <= domain
+        ):
+            raise ValueError(
+                "Export image numbers must have one declared execution owner."
+            )
+        declared = (
+            dialect.row_identity_contract.selected_image_identity_fields(
+                frozenset(normalize_runtime_identifier(name) for name in self.header)
+            )
+            if image_identity_fields is None
+            else frozenset(
+                normalize_runtime_identifier(name) for name in image_identity_fields
+            )
+        )
+        indexes = tuple(
+            index
+            for index, name in enumerate(self.header)
+            if normalize_runtime_identifier(name) in declared
+        )
+        present = frozenset(
+            normalize_runtime_identifier(self.header[index]) for index in indexes
+        )
+        if present != declared:
+            raise ValueError(
+                f"Table {self.path} lacks its declared image identity fields."
+            )
+        if not indexes:
+            return self
+        rows = []
+        for row in self.rows:
+            numbers = tuple(
+                MeasurementScalarLiteral(row[index]).integer_value for index in indexes
+            )
+            if any(number is None or number < 1 for number in numbers):
+                raise ValueError(
+                    f"Table {self.path} has a nonpositive or nonintegral image identity."
+                )
+            if domain is not None and not set(numbers) <= domain:
+                raise ValueError(
+                    f"Table {self.path} contains an unowned image identity."
+                )
+            selected = tuple(number in allowed for number in numbers)
+            if any(selected) and not all(selected):
+                raise ValueError(
+                    f"Table {self.path} relates different execution image domains."
+                )
+            if all(selected):
+                rows.append(
+                    row
+                    if image_number_offset is None
+                    else tuple(
+                        (
+                            str(image_number_offset.normalized_image_number(value))
+                            if index in indexes
+                            else value
+                        )
+                        for index, value in enumerate(row)
+                    )
+                )
+        return RuntimeTableSnapshot(
+            self.path,
+            self.header,
+            tuple(rows),
+            self.column_context,
+        )
+
+    def required_rows(self) -> tuple[tuple[str, ...], ...]:
+        """Admit actual rows when a consumer needs a determining declaration."""
+        if not self.rows:
+            raise ValueError(f"Runtime table {self.path} has no determining declaration rows.")
+        return self.rows
+
+    @property
+    def participates_in_comparison(self) -> bool:
+        """Compare output tables except the engine's Experiment key/value receipt."""
+        if normalize_runtime_identifier(self.path.stem) != "experiment":
+            return True
+        normalized_header = frozenset(
+            normalize_runtime_identifier(column) for column in self.header
+        )
+        return normalized_header != frozenset(("key", "value"))
 
     @classmethod
     def from_csv(cls, path: Path) -> "RuntimeTableSnapshot":

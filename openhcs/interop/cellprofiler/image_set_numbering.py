@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Sequence
+from pathlib import Path
+from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.context.processing_context import ProcessingContext
 from dataclasses import dataclass, field
 
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -31,6 +37,33 @@ class CellProfilerImageSetNumbering:
         init=False,
     )
 
+    def observe_export_paths(
+        self,
+        context: "ProcessingContext",
+        paths: Sequence[str],
+    ) -> None:
+        """Bind actual exporter numbering to its relative bundle paths."""
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        # Direct rendering has no active execution observer. Actual FunctionSteps
+        # retain their derived export ownership until materialization completes.
+        if context.runtime_step_outputs is None:
+            return
+        numbers: dict[str, list[int]] = {}
+        for (axis_id, _source_identity), number in self._numbers.items():
+            numbers.setdefault(axis_id, []).append(number)
+        by_axis = MappingProxyType(
+            {axis_id: tuple(values) for axis_id, values in numbers.items()}
+        )
+        context.record_runtime_step_outputs(
+            StepExecutionObservation(
+                MappingProxyType({}),
+                image_numbers_by_export_path=MappingProxyType(
+                    {Path(path): by_axis for path in paths}
+                ),
+            )
+        )
+
     def for_source_slices(
         self,
         *,
@@ -43,18 +76,38 @@ class CellProfilerImageSetNumbering:
 
         return {
             slice_index: self._numbers.setdefault(
-                (
-                    scope.axis_id,
-                    self._source_identity(
-                        provenance,
-                        slice_index,
-                        owner=owner,
-                    ),
-                ),
+                self._source_key(scope, provenance, slice_index, owner=owner),
                 len(self._numbers) + 1,
             )
             for slice_index in slice_indices
         }
+
+    def existing_number_for_source_slice(
+        self,
+        *,
+        scope: RuntimeExecutionAxisScope,
+        provenance: SourceImageProvenance,
+        slice_index: int,
+        owner: str,
+    ) -> int | None:
+        """Find an executed image set without admitting an unused source occurrence."""
+
+        return self._numbers.get(
+            self._source_key(scope, provenance, slice_index, owner=owner)
+        )
+
+    def _source_key(
+        self,
+        scope: RuntimeExecutionAxisScope,
+        provenance: SourceImageProvenance,
+        slice_index: int,
+        *,
+        owner: str,
+    ) -> tuple[str, SourceImageSetIdentity]:
+        return (
+            scope.axis_id,
+            self._source_identity(provenance, slice_index, owner=owner),
+        )
 
     def for_source_slice(
         self,
@@ -86,7 +139,7 @@ class CellProfilerImageSetNumbering:
         image_numbers_by_slice = self.for_source_slices(
             scope=scope,
             provenance=table.source_provenance,
-            slice_indices=projection.present_axis_values(slice_axis.value),
+            slice_indices=self.source_slices_for_measurement_table(table),
             owner=table.name,
         )
         axisless_image_number = None
@@ -96,12 +149,7 @@ class CellProfilerImageSetNumbering:
             ) or (0,)
             source_image_numbers = tuple(
                 dict.fromkeys(
-                    self.for_source_slices(
-                        scope=scope,
-                        provenance=table.source_provenance,
-                        slice_indices=source_plane_indices,
-                        owner=table.name,
-                    ).values()
+                    image_numbers_by_slice[index] for index in source_plane_indices
                 )
             )
             if (
@@ -124,6 +172,26 @@ class CellProfilerImageSetNumbering:
             image_numbers_by_slice,
             axisless_value=axisless_image_number,
         )
+
+    @staticmethod
+    def source_slices_for_measurement_table(
+        table: MeasurementTable,
+    ) -> tuple[int, ...]:
+        """Return exactly the slices represented by this producer's row scope.
+
+        Axisless rows consume their declared source stack, not a guessed plate
+        grid. Preserve explicit row order before additional source planes.
+        """
+        projection = MeasurementRowsAxisProjection.from_rows(table.rows)
+        indices = projection.present_axis_values(
+            MeasurementRowAxisField.SLICE_INDEX.value
+        )
+        if not projection.has_axisless_rows(MeasurementRowAxisField.SLICE_INDEX):
+            return indices
+        source_indices = (
+            tuple(range(table.source_provenance.source_plane_count)) or (0,)
+        )
+        return tuple(dict.fromkeys((*indices, *source_indices)))
 
     def _source_identity(
         self,

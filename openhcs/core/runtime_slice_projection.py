@@ -6,7 +6,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import ClassVar, TypeAlias, cast, overload
+from functools import lru_cache
+from typing import Any, ClassVar, TypeAlias, cast, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -14,7 +15,11 @@ from arraybridge.decorators import DtypeConversionConfig
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import VariableComponents
-from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle
+from openhcs.core.aligned_image_payload import (
+    ImagePayloadSliceStack,
+    AlignedImageStackKwargResolver,
+    ImageOutputBundle,
+)
 from openhcs.core.measurement_row_materialization import MeasurementRowsAxisProjection
 from openhcs.core.registry_strategies import (
     EnumKeyedStrategyMixin,
@@ -23,11 +28,11 @@ from openhcs.core.registry_strategies import (
 from openhcs.core.runtime_array_values import RuntimeArrayData, is_array_payload
 from openhcs.core.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
 )
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
+    ImagePayloadMetadataCarrier,
     MaskedImagePayload,
     image_payload_data,
     image_payload_geometry,
@@ -76,7 +81,7 @@ RuntimeProjectionData: TypeAlias = (
     | SparseIJVLabelRows
     | ObjectLabelSet
     | ObjectLabelPayload
-    | AlignedImageStack
+    | ImagePayloadSliceStack
     | RuntimeSliceAlignedValueSet
     | RuntimeSliceProjectableValue
     | RuntimePlaneAxisValueProjection
@@ -405,6 +410,54 @@ class RuntimeSliceProjectionStrategy(
             f"{type(value).__name__}."
         )
 
+    @classmethod
+    def aligned_kwarg_member(cls) -> type | tuple[type, ...] | None:
+        """Derive aligned participation from this class's operation implementation."""
+        return (
+            None
+            if cls.resolve_aligned_kwarg
+            is RuntimeSliceProjectionStrategy.resolve_aligned_kwarg
+            else cls.value_type
+        )
+
+    @classmethod
+    def aligned_strategy_members(
+        cls,
+    ) -> Iterable[
+        tuple[type[RuntimeSliceProjectionStrategy], type | tuple[type, ...] | None]
+    ]:
+        """Project aligned operation ownership from the single nominal family."""
+        for strategy_type in cls.registered_strategy_types():
+            yield strategy_type, strategy_type.aligned_kwarg_member()
+
+    @classmethod
+    def aligned_kwarg_value(
+        cls, value: Any, resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        """Apply aligned semantics without declaring unknown values projectable."""
+        strategies = cls.strategy_types_for_aligned_kwarg_type(type(value))
+        if not strategies:
+            return value
+        return strategies[0]().resolve_aligned_kwarg(value, resolver)
+
+    @classmethod
+    @lru_cache(maxsize=None)
+    def strategy_types_for_aligned_kwarg_type(
+        cls,
+        value_type: type,
+    ) -> tuple[type[RuntimeSliceProjectionStrategy], ...]:
+        """Cache the aligned view under the same nominal registry mutation contract."""
+        return cls.order_nominal_strategy_members(
+            value_type, cls.aligned_strategy_members(),
+        )
+
+    def resolve_aligned_kwarg(
+        self, value: Any, resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        """Preserve families with no declared aligned-argument operation."""
+        del resolver
+        return value
+
     def value_for_slice(
         self,
         value: RuntimeProjectionData,
@@ -419,6 +472,10 @@ class RuntimeSliceProjectionStrategy(
         context: RuntimePlaneAxisValueProjection,
     ) -> RuntimeProjectionData:
         del context
+        return value
+
+    def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
+        """Preserve values already in their callable's whole-stack domain."""
         return value
 
     def slice_count_for_value(
@@ -462,6 +519,21 @@ class ImagePayloadRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy)
 
     value_type = (ImageMetadataPayload, MaskedImagePayload)
 
+    @classmethod
+    def aligned_kwarg_member(cls) -> type | tuple[type, ...] | None:
+        return (
+            ImagePayloadMetadataCarrier
+            if cls.value_type is ImagePayloadRuntimeSliceProjectionStrategy.value_type
+            else cls.value_type
+        )
+
+    def resolve_aligned_kwarg(
+        self,
+        value: Any,
+        resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        return resolver.resolve_source_spatial_value(value)
+
     def slice_count_for_value(
         self,
         value: RuntimeProjectionData,
@@ -501,18 +573,30 @@ class ImagePayloadRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy)
         )
 
 
-class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
-    """Project an aligned image stack through its declared outer or inner axis."""
+class ImagePayloadSliceStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
+    """Project either stack composition through its declared outer or inner axis."""
 
-    value_type = AlignedImageStack
+    value_type = ImagePayloadSliceStack
+
+    def resolve_aligned_kwarg(
+        self,
+        value: Any,
+        resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        return resolver.resolve(
+            self.value_for_slice(value, resolver.projection_axis)
+        )
+
+    def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
+        return cast(ImagePayloadSliceStack, value).compose()
 
     def value_for_slice(
         self,
         value: RuntimeProjectionData,
         context: RuntimePlaneAxisValueProjection,
     ) -> RuntimeProjectionData:
-        aligned = cast(AlignedImageStack, value)
-        if context.axis is RuntimePlaneAxis.RUNTIME_SLICE:
+        aligned = cast(ImagePayloadSliceStack, value)
+        if context.axis is aligned.composition_metadata_mode.plane_axis:
             return aligned.aligned_slice(
                 context.require_plane_index(),
                 context.axis_size,
@@ -536,10 +620,12 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         self,
         value: RuntimeProjectionData,
     ) -> int | None:
-        return len(cast(AlignedImageStack, value).slices)
+        return cast(ImagePayloadSliceStack, value).runtime_slice_count
 
 
-class ImageOutputBundleRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
+class ImageOutputBundleRuntimeSliceProjectionStrategy(
+    ImagePayloadSliceStackRuntimeSliceProjectionStrategy
+):
     """Project each named output through its shared declared runtime axis."""
 
     value_type = ImageOutputBundle
@@ -635,6 +721,21 @@ class RuntimeSliceAlignedValueProjectionStrategy(
 
     value_type = RuntimeSliceAlignedValueSet
 
+    def resolve_aligned_kwarg(
+        self,
+        value: Any,
+        resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        if not isinstance(value, RuntimeSliceAlignedValueSet):
+            raise TypeError(
+                "Aligned kwarg resolution requires "
+                "RuntimeSliceAlignedValueSet."
+            )
+        return value.value_for_aligned_slice(
+            resolver.projection_axis.require_plane_index(),
+            resolver.projection_axis.axis_size,
+        )
+
     def value_for_slice(
         self,
         value: RuntimeProjectionData,
@@ -696,8 +797,8 @@ class MeasurementTableRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrat
 
     @staticmethod
     def row_axis_domain(table: MeasurementTable) -> tuple[int, ...] | None:
-        return MeasurementTableUnion(table.name, (table,)).row_axis_domain(
-            MeasurementRowAxisField.SLICE_INDEX
+        return MeasurementTable.shared_row_axis_domain(
+            table.name, (table,), MeasurementRowAxisField.SLICE_INDEX
         )
 
 
@@ -724,6 +825,16 @@ class RuntimeSliceProjectableValueProjectionStrategy(
     """Projection strategy for values that implement the runtime-slice hook."""
 
     value_type = RuntimeSliceProjectableValue
+
+    def resolve_aligned_kwarg(
+        self,
+        value: Any,
+        resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        return RuntimeSliceProjection.value_for_slice(
+            value,
+            resolver.projection_axis,
+        )
 
     def value_for_slice(
         self,
@@ -789,6 +900,31 @@ class ObjectLabelValueRuntimeSliceProjectionStrategy(
 
     value_type = ObjectLabelValue
 
+    def resolve_aligned_kwarg(
+        self,
+        value: Any,
+        resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        if not isinstance(value, ObjectLabelValue):
+            raise TypeError(
+                "Object-label aligned kwarg resolution requires ObjectLabelValue."
+            )
+        slice_count = value.runtime_slice_plane_count()
+        if slice_count is not None:
+            if slice_count != resolver.projection_axis.axis_size:
+                raise ValueError(
+                    "Runtime-slice object-label cardinality must exactly match the "
+                    f"declared projection axis: {slice_count} != "
+                    f"{resolver.projection_axis.axis_size}."
+                )
+            projected = RuntimeSliceProjection.value_for_slice(
+                value,
+                resolver.projection_axis,
+            )
+        else:
+            projected = value
+        return resolver.resolve_source_spatial_value(projected)
+
     def slice_count_for_value(
         self,
         value: RuntimeProjectionData,
@@ -828,23 +964,29 @@ class ObjectLabelValueRuntimeSliceProjectionStrategy(
                 "Object-label source provenance must be absent or exactly match "
                 f"the declared plane axis: {source_plane_count} != {context.axis_size}."
             )
-        dense_labels = object_label_dense_array(labels)
-        context.validate_shape(
-            dense_labels.shape,
-            value_name="Object-label payload",
-        )
         plane_index = context.require_plane_index()
-        context.validate_plane_index(plane_index, dense_labels.shape)
-        return labels.with_source_plane_measurement_labels(
-            dense_labels[plane_index],
-            plane_index,
-        )
+        return labels.project_source_plane(plane_index)
 
 
 class SequenceRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
     """Projection strategy for tuple/list containers."""
 
     value_type = (tuple, list)
+
+    @classmethod
+    def aligned_kwarg_member(cls) -> type | tuple[type, ...] | None:
+        return (
+            tuple
+            if cls.value_type is SequenceRuntimeSliceProjectionStrategy.value_type
+            else cls.value_type
+        )
+
+    def resolve_aligned_kwarg(
+        self,
+        value: Any,
+        resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        return tuple(resolver.resolve(item) for item in value)
 
     def value_for_slice(
         self,
@@ -880,6 +1022,18 @@ class SequenceRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
 
 class RuntimeSliceProjection:
     """SSOT for runtime-slice count and value projection."""
+
+    @classmethod
+    def full_stack_value(cls, value: RuntimeProjectionData) -> RuntimeProjectionData:
+        """Materialize declared alignment; preserve opaque whole-stack arguments."""
+        strategy = RuntimeSliceProjectionStrategy.for_nominal_value(value)
+        return value if strategy is None else strategy.full_stack_value(value)
+
+    @classmethod
+    def full_stack_kwargs(
+        cls, kwargs: Mapping[str, RuntimeProjectionData]
+    ) -> dict[str, RuntimeProjectionData]:
+        return {name: cls.full_stack_value(value) for name, value in kwargs.items()}
 
     @classmethod
     def preserved_context_for_value(

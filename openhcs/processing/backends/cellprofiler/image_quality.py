@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
@@ -80,9 +82,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
@@ -678,7 +678,7 @@ class MeasureImageQualityModule(
 
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 @dataclass(frozen=True)
@@ -752,10 +752,13 @@ class ImageQualityThresholdMetrics(ImageQualityMeasurementRecord):
     result_value: float = 0.0
 
 
-_RADIAL_SPECTRUM_GEOMETRY_CACHE: OrderedDict[
-    tuple[int, int], _RadialSpectrumGeometry
-] = OrderedDict()
-_RADIAL_SPECTRUM_GEOMETRY_CACHE_MAX_ENTRIES = 16
+@dataclass
+class RadialSpectrumGeometryCache(
+    RegisteredProcessLocalBoundedCache[tuple[int, int], _RadialSpectrumGeometry]
+):
+    """Process-local numerical geometry with shared bounded storage."""
+
+    max_entries: int = 16
 
 
 class ImageQualityBackendStrategy(
@@ -1302,9 +1305,8 @@ def _radial_power_spectrum_numpy(
 
 def _radial_spectrum_geometry(shape: tuple[int, int]) -> _RadialSpectrumGeometry:
     key = (int(shape[0]), int(shape[1]))
-    geometry = _RADIAL_SPECTRUM_GEOMETRY_CACHE.get(key)
+    geometry = RadialSpectrumGeometryCache.process_cache().cached_value(key)
     if geometry is not None:
-        _RADIAL_SPECTRUM_GEOMETRY_CACHE.move_to_end(key)
         return geometry
     height, width = key
     row2 = np.arange(height).reshape((height, 1)) ** 2
@@ -1317,13 +1319,7 @@ def _radial_spectrum_geometry(shape: tuple[int, int]) -> _RadialSpectrumGeometry
         radii=np.floor(np.sqrt(radii2)).astype(int) + 1,
         labels=np.arange(2, int(np.floor(max_width)), dtype=int),
     )
-    _RADIAL_SPECTRUM_GEOMETRY_CACHE[key] = geometry
-    _RADIAL_SPECTRUM_GEOMETRY_CACHE.move_to_end(key)
-    while (
-        len(_RADIAL_SPECTRUM_GEOMETRY_CACHE)
-        > _RADIAL_SPECTRUM_GEOMETRY_CACHE_MAX_ENTRIES
-    ):
-        _RADIAL_SPECTRUM_GEOMETRY_CACHE.popitem(last=False)
+    RadialSpectrumGeometryCache.process_cache().store_value(key, geometry)
     return geometry
 
 
@@ -1570,7 +1566,7 @@ def _haralick_h3_numba(image: np.ndarray, scale: int) -> float:
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def measure_image_quality(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     include_scaling: bool = True,
     calculate_blur: bool = True,
     calculate_saturation: bool = True,

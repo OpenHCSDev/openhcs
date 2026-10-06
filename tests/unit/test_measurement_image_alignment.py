@@ -9,9 +9,8 @@ from openhcs.core.aligned_image_payload import (
     ImageOutputBundle,
 )
 from openhcs.core.measurement_image_alignment import (
+    MeasurementImageLabelAlignmentRequest,
     MeasurementImageAlignmentSource,
-    MeasurementImageLabelAlignmentStrategy,
-    MeasurementLabelSourceAlignmentStrategy,
     PreparedMeasurementObjectLabels,
 )
 from openhcs.core.measurement_image_alignment import (
@@ -105,9 +104,7 @@ def test_source_reference_requires_exact_shape_after_domain_selection() -> None:
     source = _MeasurementImageSource(np.ones((4, 5), dtype=np.float32))
 
     with pytest.raises(ValueError, match="incompatible declared domains"):
-        MeasurementImageLabelAlignmentStrategy.align(
-            source.alignment_request(labels=np.ones((3, 5), dtype=np.int32))
-        )
+        source.alignment_request(labels=np.ones((3, 5), dtype=np.int32)).aligned().image
 
 
 @pytest.mark.parametrize(
@@ -123,9 +120,7 @@ def test_source_reference_does_not_infer_singleton_or_color_projection(
     source = _MeasurementImageSource(image)
 
     with pytest.raises(ValueError, match="incompatible declared domains"):
-        MeasurementImageLabelAlignmentStrategy.align(
-            source.alignment_request(labels=np.ones((4, 5), dtype=np.int32))
-        )
+        source.alignment_request(labels=np.ones((4, 5), dtype=np.int32)).aligned().image
 
 
 def test_payload_scoped_labels_consume_declared_singleton_runtime_image_plane() -> None:
@@ -142,9 +137,7 @@ def test_payload_scoped_labels_consume_declared_singleton_runtime_image_plane() 
     )
     source = _MeasurementImageSource(image)
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
-        source.object_label_alignment_request(labels)
-    )
+    aligned = source.object_label_alignment_request(labels).aligned().image
 
     assert isinstance(aligned, np.ndarray)
     assert aligned.shape == (4, 5)
@@ -164,9 +157,7 @@ def test_payload_scoped_labels_preserve_declared_runtime_volume() -> None:
     )
     source = _MeasurementImageSource(image)
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
-        source.object_label_alignment_request(labels)
-    )
+    aligned = source.object_label_alignment_request(labels).aligned().image
 
     assert aligned is image
 
@@ -186,9 +177,7 @@ def test_payload_scoped_labels_reject_mismatched_declared_runtime_volume() -> No
     source = _MeasurementImageSource(image)
 
     with pytest.raises(ValueError, match="incompatible declared domains"):
-        MeasurementImageLabelAlignmentStrategy.align(
-            source.object_label_alignment_request(labels)
-        )
+        source.object_label_alignment_request(labels).aligned().image
 
 
 def test_payload_scoped_labels_reject_non_runtime_image_plane_axis() -> None:
@@ -206,9 +195,7 @@ def test_payload_scoped_labels_reject_non_runtime_image_plane_axis() -> None:
     source = _MeasurementImageSource(image)
 
     with pytest.raises(ValueError, match="incompatible declared domains"):
-        MeasurementImageLabelAlignmentStrategy.align(
-            source.object_label_alignment_request(labels)
-        )
+        source.object_label_alignment_request(labels).aligned().image
 
 
 def test_object_reference_requires_nominal_label_payload() -> None:
@@ -218,9 +205,7 @@ def test_object_reference_requires_nominal_label_payload() -> None:
     )
 
     with pytest.raises(ValueError, match="requires an ObjectLabelValue"):
-        MeasurementImageLabelAlignmentStrategy.align(
-            source.alignment_request(labels=np.ones((4, 5), dtype=np.int32))
-        )
+        source.alignment_request(labels=np.ones((4, 5), dtype=np.int32)).aligned().image
 
 
 def test_object_reference_uses_declared_source_spatial_adapter() -> None:
@@ -237,9 +222,7 @@ def test_object_reference_uses_declared_source_spatial_adapter() -> None:
         reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
     )
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
-        source.object_label_alignment_request(labels)
-    )
+    aligned = source.object_label_alignment_request(labels).aligned().image
 
     np.testing.assert_array_equal(aligned, image[1:3, 1:3])
 
@@ -273,9 +256,7 @@ def test_object_reference_preserves_nominal_image_payload_context() -> None:
         reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
     )
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
-        source.object_label_alignment_request(labels)
-    )
+    aligned = source.object_label_alignment_request(labels).aligned().image
 
     assert isinstance(aligned, ImageMetadataPayload)
     assert aligned.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
@@ -472,9 +453,7 @@ def test_aligned_image_stack_requires_declared_runtime_slice_labels() -> None:
     source = _MeasurementImageSource(image)
 
     with pytest.raises(ValueError, match="declared plane-scoped runtime-slice axis"):
-        MeasurementImageLabelAlignmentStrategy.align(
-            source.alignment_request(labels=np.ones((4, 5), dtype=np.int32))
-        )
+        source.alignment_request(labels=np.ones((4, 5), dtype=np.int32)).aligned().image
 
 
 def test_singleton_aligned_image_stack_accepts_payload_scoped_labels() -> None:
@@ -483,7 +462,7 @@ def test_singleton_aligned_image_stack_accepts_payload_scoped_labels() -> None:
         variant_data=ObjectLabelVariantData(labels=np.ones((4, 5), dtype=np.int32))
     )
 
-    aligned = MeasurementLabelSourceAlignmentStrategy.align(
+    aligned = MeasurementImageLabelAlignmentRequest.labels_for_image(
         image,
         labels,
         label_payload=labels,
@@ -513,9 +492,7 @@ def test_aligned_image_stack_accepts_nominal_runtime_slice_payload() -> None:
     )
     source = _MeasurementImageSource(image)
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
-        source.object_label_alignment_request(labels)
-    )
+    aligned = source.object_label_alignment_request(labels).aligned().image
 
     assert aligned is image
 
@@ -553,9 +530,7 @@ def test_aligned_image_stack_preserves_sparse_runtime_slice_payload() -> None:
     )
     source = _MeasurementImageSource(image)
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
-        source.object_label_alignment_request(labels)
-    )
+    aligned = source.object_label_alignment_request(labels).aligned().image
 
     assert aligned is image
 
@@ -604,9 +579,7 @@ def test_named_image_output_bundle_broadcasts_one_label_domain() -> None:
     labels = np.ones((4, 5), dtype=np.int32)
     source = _MeasurementImageSource(image)
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
-        source.alignment_request(labels=labels)
-    )
+    aligned = source.alignment_request(labels=labels).aligned().image
 
     assert aligned is image
 
@@ -625,11 +598,13 @@ def test_runtime_slice_aligned_values_require_matching_aligned_image() -> None:
         )
     )
 
-    assert MeasurementLabelSourceAlignmentStrategy.align(image, labels) is labels
+    assert (
+        MeasurementImageLabelAlignmentRequest.labels_for_image(image, labels) is labels
+    )
 
     mismatched = RuntimeSliceAlignedValues((labels.slices[0],))
     with pytest.raises(ValueError, match="must match the aligned image count"):
-        MeasurementLabelSourceAlignmentStrategy.align(image, mismatched)
+        MeasurementImageLabelAlignmentRequest.labels_for_image(image, mismatched)
 
 
 def test_object_reference_replaces_unrelated_aligned_image_stack() -> None:
@@ -661,6 +636,6 @@ def test_equal_label_planes_are_not_collapsed() -> None:
     plane = np.arange(20, dtype=np.int32).reshape(4, 5)
     labels = np.stack((plane, plane))
 
-    aligned = MeasurementLabelSourceAlignmentStrategy.align(image, labels)
+    aligned = MeasurementImageLabelAlignmentRequest.labels_for_image(image, labels)
 
     assert aligned is labels

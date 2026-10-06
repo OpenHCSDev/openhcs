@@ -1,0 +1,375 @@
+{
+  "case": "cp_tutorial_advanced_segmentation_final",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "9a428ed4606db6247b7b7d57fc3fdf3d9d85c75b8ede0afc5a6333b956a649fe",
+  "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "20585/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "size_bytes": 726371,
+      "sha256": "be75b70f9d35622e1eebf317e76b02ed1385a8478cecd598ba07908a832e9602"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "size_bytes": 726369,
+      "sha256": "40f90411806af81dc2045a6cb619e3e209c09e035d5e2b1b67c81381c6924932"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "size_bytes": 726369,
+      "sha256": "b5fcd9e3c4d2d20afea0ae1bc6f20ad3d4b7adad516b93a069307b413d8e9df2"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "size_bytes": 726375,
+      "sha256": "a9405ee89ab70b5aa76ecf839080e08ab0d3237ca802523d219f647d0d8b5aa1"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "size_bytes": 726369,
+      "sha256": "24783f8f392c3cea53c192f1b4ad6a183d94de016841bfa6f53c8301a91c34a8"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "size_bytes": 726355,
+      "sha256": "c39d85fae59389f755ef01b1b9bc088a18b76fc93a51abc747d7ff756191c684"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "size_bytes": 726353,
+      "sha256": "b8e787c71de2148dce9711945b221ef0d2b4adc7f855960cdae8d4a5daf56b10"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "size_bytes": 726353,
+      "sha256": "34c43330524ebfda8f950f8c21868c6c046d33812f312b795e4071641821b669"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "size_bytes": 726359,
+      "sha256": "dee297e8aeb5ed24ca125317fdc1e4596faaa00c13919124f91badba9231f2d6"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "size_bytes": 726353,
+      "sha256": "a34c3e7701f38f812909d57d1876d187ee416952805360c3a6f022a945e5314c"
+    },
+    {
+      "path": "20585_AE.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input/20585_AE.csv",
+      "size_bytes": 1532,
+      "sha256": "ab9d2b00918475708d82dbec128a4914ce159dd8becdaf583054ff4838a4f3ac"
+    },
+    {
+      "path": "20585_IllumER.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumER.npy",
+      "size_bytes": 1447760,
+      "sha256": "248c3a0d62fa1be2958525e982707a93c98543eeba27f956d2ffd2eed92347e5"
+    },
+    {
+      "path": "20585_IllumHoechst.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumHoechst.npy",
+      "size_bytes": 1447760,
+      "sha256": "8c58aecfdc3709043f0def041e60b7f0b20bd6d0c999679b09f23ce8f3878b7a"
+    },
+    {
+      "path": "20585_IllumMito.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumMito.npy",
+      "size_bytes": 1447760,
+      "sha256": "6824ac71182fb1a49ca6bd936a105c28aa071a17e7a7f1dd27ff9daa776b4aee"
+    },
+    {
+      "path": "20585_IllumPh_golgi.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumPh_golgi.npy",
+      "size_bytes": 1447760,
+      "sha256": "77edb3a27b7cb1d2c829b96e231f278d227b4b326efab9178335bf1b70e63c76"
+    },
+    {
+      "path": "20585_IllumSyto.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumSyto.npy",
+      "size_bytes": 1447760,
+      "sha256": "195317f99bde79a1ca4e024becc7a445337540f3c3830ac37287a3827b50e02a"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/native_report.json",
+  "native_reference_report_sha256": "3b411d6ec8471dd4784a163cc3a049a78f730c5dcaa3b1dc63af14442892bb91",
+  "native_reference_source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022.db",
+      "sha256": "5a225c816cc3cb126c4f5b34028819f0f730d846b0189af8deabe092c46d3641"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022_Cells.properties",
+      "sha256": "5e4709729f18c55c94cd5758b8195a104d94d5bbda8635d787647436d510a2a7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022_Cytoplasm.properties",
+      "sha256": "7150c3c43d47bd60d22d4d42d480ab2e4adcf08cd4f90302b2f53a729dc3f6c2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022_Mitochondria.properties",
+      "sha256": "b03cb2f1d94123d3e23bbbc9248c0f984ad10d16e513bfa911f05efbcf990a98"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022_MitochondriaChildObjects.properties",
+      "sha256": "9f4a03e244591a86e6bda2a094843bcfeee31833d89492e0bd87079030a64bf3"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022_Nuclei.properties",
+      "sha256": "dba0cb1c1d7e948aa9d635654c09c49c3191b81b7856824f142117cb2b139a4e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022_Nucleoli.properties",
+      "sha256": "57d507e476b4dbbe8b4b7f6a38a3564b8bbac1ef2b9de3b2c85381523a0ed349"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/-1/BBBC022_NucleoliChildObjects.properties",
+      "sha256": "ca66fa87eaec718b0c1f42aa62d6b8e9aa995782ce82ffdc1786eb19fb5646f0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022.db",
+      "sha256": "c0d07c8b22f0c1247d34a5f05f2e6f1c72e5992cc5239bf32f23ec2e78ee4165"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022_Cells.properties",
+      "sha256": "068ebcd15fc0855c2574e92847f2f1205c21ff1bcaed3e64939696223ac499f0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022_Cytoplasm.properties",
+      "sha256": "da95b651217ddc38d85f5495fbc8f9216c5423599713d24b038760c85efb4d86"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022_Mitochondria.properties",
+      "sha256": "b495a473f410e4a83d8c79de3a7ce4953ce4ee3db96211b13805561e4ac6f486"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022_MitochondriaChildObjects.properties",
+      "sha256": "4d4c6d40d6695a4c96f6b0ac9d506f59a189c7618820774a3f4fe3fcebf74129"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022_Nuclei.properties",
+      "sha256": "df4d7c10c97e38ba46835943cc305a850c07a3fe7a522deeb72a19666a785905"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022_Nucleoli.properties",
+      "sha256": "e8fd3f0c742240a0d325b0e82fd32c90e3d1446f60db2282955aee03a44a0811"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/0/BBBC022_NucleoliChildObjects.properties",
+      "sha256": "38b7c1859c3d8322582c09c4825e55ec50a42e39ae7d3212a877cbe166130057"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022.db",
+      "sha256": "3e824ea022b785a355d4828dc53679567bfac8f979b8d3a539c841bfd89b6272"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022_Cells.properties",
+      "sha256": "107750fba9bb6c9c96ab1623685e8bbae30a7a661fae854dd8d69dff63291ab2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022_Cytoplasm.properties",
+      "sha256": "bb76b092d97ed51592d5b7d40ef63cb7825cf451d95f004674bdfc336eb89d32"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022_Mitochondria.properties",
+      "sha256": "a18770de349366eb5f257c20a50cbf9c66bf72aade73f3f3a956f43d2bf568c0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022_MitochondriaChildObjects.properties",
+      "sha256": "7d2c57d65113bfaccce30d4ac28badfbb6ca66cdfcc9c5d5fbb8badfc7786769"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022_Nuclei.properties",
+      "sha256": "dc3f7d20ebecc3a4d8a88caa74a5a234c5e1f6b05dc006c92fa9779925ca102c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022_Nucleoli.properties",
+      "sha256": "f4b9e01f19000b52a75a3aa8a56e9437813bb11b78d87ed45ff8b286904c2967"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/1/BBBC022_NucleoliChildObjects.properties",
+      "sha256": "9fdaa25b69e82233287de4695f6d52c0b935613f7a3e88b5eda117d9ac23642e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022.db",
+      "sha256": "643e2fe48349dc37b6b29a0591d5685925095156d368451cee7f1e6166277e13"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022_Cells.properties",
+      "sha256": "60f7625e56ea245f547eca8aff53c1199eb78279018d1025bba2f977b970b176"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022_Cytoplasm.properties",
+      "sha256": "459286cea2b51bba37763d9622455a6974d8dfe5be69f03bf4b90f5e39cfe656"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022_Mitochondria.properties",
+      "sha256": "8bc5b42325455cf073974c19eb0252c0d12358bb5779f04d3e91011f9df7c95f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022_MitochondriaChildObjects.properties",
+      "sha256": "892daad75677bf4d7e1248661464efa13a6370f692c2b1640fad4b2d44577d4c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022_Nuclei.properties",
+      "sha256": "ce3e08472358b30778059b3c4e6ca7dd594ee0f52e599fd025e8e2918de21968"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022_Nucleoli.properties",
+      "sha256": "5e1952171309691872c3cf6f7eb0c20ac45b37e3ce0fabe0bb27a77ab29da6cc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native/2/BBBC022_NucleoliChildObjects.properties",
+      "sha256": "88bad5e71222df599c99fbb6124f24619ad4ea906f35894316faec5f8d5334b8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+      "sha256": "cf77de35d244d264a64e87b37bd5da3871c64b227c8f297b2be39d87d315f582"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/native_report.json",
+      "sha256": "3b411d6ec8471dd4784a163cc3a049a78f730c5dcaa3b1dc63af14442892bb91"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/native_request.json",
+      "sha256": "a976326a1ae22341785c5905eb8b2d118f21a43d1ca4b917a27107447ca5cd63"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/pilot_provenance.json",
+      "sha256": "8486448215bdf88daa7566f803f637fce43ad0aef08d10b2dc66367a4e3f8b1f"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "20585/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "size_bytes": 726371,
+      "sha256": "be75b70f9d35622e1eebf317e76b02ed1385a8478cecd598ba07908a832e9602"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "size_bytes": 726369,
+      "sha256": "40f90411806af81dc2045a6cb619e3e209c09e035d5e2b1b67c81381c6924932"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "size_bytes": 726369,
+      "sha256": "b5fcd9e3c4d2d20afea0ae1bc6f20ad3d4b7adad516b93a069307b413d8e9df2"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "size_bytes": 726375,
+      "sha256": "a9405ee89ab70b5aa76ecf839080e08ab0d3237ca802523d219f647d0d8b5aa1"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "size_bytes": 726369,
+      "sha256": "24783f8f392c3cea53c192f1b4ad6a183d94de016841bfa6f53c8301a91c34a8"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "size_bytes": 726355,
+      "sha256": "c39d85fae59389f755ef01b1b9bc088a18b76fc93a51abc747d7ff756191c684"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "size_bytes": 726353,
+      "sha256": "b8e787c71de2148dce9711945b221ef0d2b4adc7f855960cdae8d4a5daf56b10"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "size_bytes": 726353,
+      "sha256": "34c43330524ebfda8f950f8c21868c6c046d33812f312b795e4071641821b669"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "size_bytes": 726359,
+      "sha256": "dee297e8aeb5ed24ca125317fdc1e4596faaa00c13919124f91badba9231f2d6"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "size_bytes": 726353,
+      "sha256": "a34c3e7701f38f812909d57d1876d187ee416952805360c3a6f022a945e5314c"
+    },
+    {
+      "path": "20585_AE.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input/20585_AE.csv",
+      "size_bytes": 1532,
+      "sha256": "ab9d2b00918475708d82dbec128a4914ce159dd8becdaf583054ff4838a4f3ac"
+    },
+    {
+      "path": "20585_IllumER.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumER.npy",
+      "size_bytes": 1447760,
+      "sha256": "248c3a0d62fa1be2958525e982707a93c98543eeba27f956d2ffd2eed92347e5"
+    },
+    {
+      "path": "20585_IllumHoechst.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumHoechst.npy",
+      "size_bytes": 1447760,
+      "sha256": "8c58aecfdc3709043f0def041e60b7f0b20bd6d0c999679b09f23ce8f3878b7a"
+    },
+    {
+      "path": "20585_IllumMito.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumMito.npy",
+      "size_bytes": 1447760,
+      "sha256": "6824ac71182fb1a49ca6bd936a105c28aa071a17e7a7f1dd27ff9daa776b4aee"
+    },
+    {
+      "path": "20585_IllumPh_golgi.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumPh_golgi.npy",
+      "size_bytes": 1447760,
+      "sha256": "77edb3a27b7cb1d2c829b96e231f278d227b4b326efab9178335bf1b70e63c76"
+    },
+    {
+      "path": "20585_IllumSyto.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumSyto.npy",
+      "size_bytes": 1447760,
+      "sha256": "195317f99bde79a1ca4e024becc7a445337540f3c3830ac37287a3827b50e02a"
+    }
+  ]
+}

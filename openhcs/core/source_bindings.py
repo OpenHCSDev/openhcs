@@ -10,7 +10,7 @@ import tempfile
 import urllib.request
 from abc import ABC, abstractmethod
 from collections.abc import Hashable, Iterable, Mapping, Sequence
-from dataclasses import InitVar, dataclass, field, replace
+from dataclasses import dataclass, field, replace
 from dataclasses import fields as dataclass_fields
 from enum import Enum
 from functools import lru_cache
@@ -37,45 +37,30 @@ from openhcs.core.component_set import ComponentSet
 from openhcs.core.components.validation import convert_enum_by_value
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
-    SourceMetadataIdentityItems,
-    SourceMetadataIdentityProjection,
+    SourceMetadataFields,
+    ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
     SourceMetadataScalar,
     SourceMetadataValue,
     SourceVoxelSpacing,
     source_metadata_dict,
     source_metadata_scalar,
 )
-from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.xdg_paths import get_openhcs_cache_dir
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
 if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.step_dependencies import StepInputDependency
+    from openhcs.core.runtime_array_values import RuntimeArrayData
+    from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source_image_provenance import SourceImageProvenance
 
-SourceMetadataIdentity = tuple[tuple[str, SourceMetadataIdentityItems], ...]
 SOURCE_ALIAS_PART_SEPARATOR = "__"
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"
 SourceBindingValue = TypeVar("SourceBindingValue")
-
-
-@dataclass(frozen=True, slots=True)
-class SourceBindingRuntimeContextProcessIdentity:
-    """Hash-stable semantic identity for process-local source caches."""
-
-    source_order_identity: tuple[Hashable, ...]
-    source_metadata_identity: SourceMetadataIdentity
-    _hash: int = field(init=False, repr=False, compare=False)
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "_hash",
-            hash((self.source_order_identity, self.source_metadata_identity)),
-        )
-
-    def __hash__(self) -> int:
-        return self._hash
 
 
 class SourceBindingPlanMeta(EnableableMeta, AutoRegisterMeta):
@@ -703,6 +688,52 @@ class SourceSelector:
             ),
         )
 
+    def path_filters_match(self, identities: tuple[str, ...]) -> bool:
+        """Match store-owned path provenance, without guessing decoded identity."""
+        from openhcs.core.source_matching import source_filters_match
+
+        return any(source_filters_match(path, self.filters) for path in identities)
+
+    def metadata_candidates_match(
+        self,
+        candidates: Iterable[SourceMetadataMapping],
+    ) -> bool:
+        """Match declared coordinates in store or current-payload metadata."""
+        from openhcs.core.source_matching import (
+            semantic_source_metadata_value,
+            source_component_metadata_values,
+            source_metadata_values_equal,
+        )
+
+        candidates = tuple(candidates)
+        return all(
+            any(
+                source_metadata_values_equal(value, selector.value)
+                for metadata in candidates
+                for value in source_component_metadata_values(metadata, selector.component)
+            )
+            for selector in self.components
+        ) and all(
+            any(
+                value is not None and source_metadata_values_equal(value, selector.value)
+                for metadata in candidates
+                for value in (semantic_source_metadata_value(metadata, selector.field),)
+            )
+            for selector in self.metadata
+        )
+
+    def matches_provenance(self, provenance: SourceImageProvenance) -> bool:
+        """Apply the same selectors to identities carried by current pixels."""
+        identities = provenance.represented_source_identities
+        return (
+            (not self.filters or self.path_filters_match(
+                tuple(identity.path for identity in identities if identity.path is not None)
+            ))
+            and self.metadata_candidates_match(
+                tuple(identity.component_metadata or {} for identity in identities)
+            )
+        )
+
 
 def source_alias_measurement_names(alias: str) -> tuple[str, ...]:
     """Return measurement source-name tokens represented by a source alias."""
@@ -862,7 +893,8 @@ class NamedSourceBinding(SourceAssignmentBase):
     """Name selected image planes and their optional component identity.
 
     ``alias`` is the source name presented to pipeline functions and user
-    interfaces. The selected planes retain their exact store-backed pixel identity.
+    interfaces. ``origin`` selects current-step pixels or original store pixels;
+    both retain their declared acquisition provenance.
     ``component_identity`` authoritatively assigns biological coordinates after
     selector resolution, replacing coordinates merely inferred by a source store.
     """
@@ -954,6 +986,26 @@ class NamedSourceBinding(SourceAssignmentBase):
         object.__setattr__(self, "source_channel_axis", source_channel_axis)
         object.__setattr__(self, "source_channel_counts", source_channel_counts)
 
+    def physical_path_matches(
+        self,
+        source_root: Path,
+        source_path: str | Path,
+        path_identities: tuple[str, ...],
+    ) -> bool:
+        """Admit one physical source using exact identity and path provenance.
+
+        Companion identities may satisfy selector filters, but do not replace
+        the exact source URI. Metadata/components require subsequent decoding.
+        """
+        if self.explicit_source is not None:
+            explicit_path = Path(self.explicit_source.resolved(source_root).uri)
+            candidate_path = Path(source_path)
+            if not candidate_path.is_absolute():
+                candidate_path = source_root / candidate_path
+            if candidate_path.resolve() != explicit_path.resolve():
+                return False
+        return self.selector.path_filters_match(path_identities)
+
     def source_channel_axis_for_shape(
         self,
         shape: tuple[int, ...],
@@ -1012,6 +1064,135 @@ class NamedSourceBinding(SourceAssignmentBase):
             required=self.required,
         )
 
+    def apply_loaded_payload(
+        self,
+        payload: RuntimeArrayData,
+        source_context: ImagePayloadSourceMetadataContext | None,
+    ) -> RuntimeArrayData:
+        """Apply this declaration to one freshly loaded source payload."""
+        import numpy as np
+
+        from openhcs.core.runtime_image_values import (
+            ImagePayloadMetadata,
+            ImageUnitIntervalIntensityMetadata,
+            image_payload_data,
+            image_payload_mask,
+            image_payload_metadata,
+        )
+
+        if source_context is None:
+            existing = image_payload_metadata(payload)
+            metadata = (
+                existing
+                if existing.has_values
+                else ImagePayloadMetadata.for_array_payload(payload)
+            )
+        else:
+            # The physical context needs the declared channel axis before it
+            # admits source geometry. It resolves this binding's axis once.
+            metadata = source_context.metadata(payload, source_binding=self)
+        metadata = metadata.replace_fields(
+            source_provenance=metadata.source_provenance.with_source_image_names(
+                (self.alias,)
+            )
+        )
+        if source_context is None:
+            metadata = metadata.replace_fields(
+                source_channel_axis=self.source_channel_axis_for_shape(
+                    np.shape(image_payload_data(payload)),
+                    observed_axis=metadata.source_channel_axis,
+                ),
+            )
+        metadata.normalized_source_channel_axis(payload)
+
+        data, source_channel_axis = self.artifact_kind.normalize_source_payload(
+            image_payload_data(payload),
+            metadata.source_channel_axis,
+        )
+        if self.load_as_monochrome and source_channel_axis is not None:
+            data = self._monochrome_source_data(data, source_channel_axis, metadata)
+            source_channel_axis = None
+            metadata = metadata.replace_fields(
+                unit_interval_intensity=ImageUnitIntervalIntensityMetadata(),
+            )
+        if self.load_as_mask:
+            data = np.asarray(data, dtype=bool)
+            metadata = metadata.replace_fields(
+                unit_interval_intensity=ImageUnitIntervalIntensityMetadata(scale=1),
+            )
+
+        metadata = metadata.replace_fields(source_channel_axis=source_channel_axis)
+        return metadata.payload_with(data, image_payload_mask(payload))
+
+    def project_step_input_payload(self, payload: RuntimeArrayData) -> RuntimeArrayData:
+        """Select current pixels by provenance, then assign this binding's name.
+
+        An existing alias selects its represented current planes before applying
+        selectors. A new alias names the selector's current-plane selection.
+        Neither case reloads original pixels.
+        """
+        from openhcs.core.runtime_image_values import image_payload_metadata
+
+        metadata = image_payload_metadata(payload)
+        provenance = metadata.source_provenance
+        if not provenance.has_values:
+            raise ValueError(f"STEP_INPUT binding {self.alias!r} requires source provenance.")
+
+        if not provenance.source_plane_count:
+            if not self.selector.matches_provenance(provenance):
+                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+            selected = payload
+        else:
+            named_planes = provenance.source_plane_selection(self.alias)
+            candidate_planes = (
+                range(provenance.source_plane_count)
+                if named_planes is None else named_planes
+            )
+            selection = tuple(
+                index for index in candidate_planes
+                if self.selector.matches_provenance(provenance.for_source_plane(index))
+            )
+            if not selection:
+                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+            selected = metadata.project_source_planes(payload, selection)
+        return self.apply_loaded_payload(selected, source_context=None)
+
+    @property
+    def requires_current_pixels(self) -> bool:
+        """Whether this source projects the actual current main-flow pixels."""
+        return (
+            self.origin is SourceBindingOrigin.STEP_INPUT
+            and self.projection_role is SourceProjectionRole.PRIMARY_PLANE
+        )
+
+    @staticmethod
+    def _monochrome_source_data(
+        data: RuntimeArrayData,
+        channel_axis: int,
+        metadata: ImagePayloadMetadata,
+    ) -> RuntimeArrayData:
+        """Convert declared RGB channels using the source intensity domain."""
+        import numpy as np
+
+        from openhcs.core.runtime_image_values import (
+            image_payload_data,
+            normalize_image_payload_intensity,
+        )
+
+        normalized = normalize_image_payload_intensity(
+            metadata.payload_with(data),
+            dtype=np.float32,
+        )
+        rgb = np.moveaxis(
+            np.asarray(image_payload_data(normalized)), channel_axis, -1
+        )[..., :3]
+        if np.all(rgb == rgb[..., :1]):
+            return np.ascontiguousarray(rgb[..., 0])
+
+        from skimage.color import rgb2gray
+
+        return rgb2gray(rgb)
+
     def component_values(
         self,
         component: AllComponents,
@@ -1020,21 +1201,9 @@ class NamedSourceBinding(SourceAssignmentBase):
     ) -> tuple[str, ...]:
         """Return declared or workspace-realized values for one component axis."""
 
-        identity_values = tuple(
-            selector.value
-            for selector in self.component_identity
-            if selector.component is component
-        )
-        if identity_values:
-            return identity_values
-
-        selector_values = tuple(
-            selector.value
-            for selector in self.selector.components
-            if selector.component is component
-        )
-        if selector_values:
-            return selector_values
+        declared_values = self._declared_component_values(component)
+        if declared_values:
+            return declared_values
 
         if realized_source_metadata is None:
             return ()
@@ -1047,6 +1216,49 @@ class NamedSourceBinding(SourceAssignmentBase):
                 continue
             values.extend(source_component_metadata_values(metadata, component))
         return tuple(dict.fromkeys(values))
+
+    def _declared_component_values(
+        self, component: AllComponents
+    ) -> tuple[str, ...]:
+        """Resolve exact identity values before selector-derived coordinates."""
+        for declarations in (self.component_identity, self.selector.components):
+            values = tuple(
+                selector.value
+                for selector in declarations
+                if selector.component is component
+            )
+            if values:
+                return values
+        return ()
+
+    def component_domains(
+        self,
+        *,
+        realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
+    ) -> Mapping[AllComponents, tuple[str, ...]]:
+        """Admit all component domains from the same matched source records."""
+        domains = {
+            component: values
+            for component in AllComponents
+            for values in (self._declared_component_values(component),)
+            if values
+        }
+        if realized_source_metadata is None or len(domains) == len(AllComponents):
+            return domains
+        realized: dict[AllComponents, list[str]] = {}
+        for metadata in realized_source_metadata:
+            if not self.matches_realized_source_metadata(metadata):
+                continue
+            for component, values in SourceMetadataFields.component_domains(
+                metadata
+            ).items():
+                if component not in domains:
+                    realized.setdefault(component, []).extend(values)
+        domains.update(
+            (component, tuple(dict.fromkeys(values)))
+            for component, values in realized.items()
+        )
+        return domains
 
     def matches_realized_source_metadata(
         self,
@@ -1063,27 +1275,7 @@ class NamedSourceBinding(SourceAssignmentBase):
         if normalized_alias is not None:
             return str(normalized_alias) == self.alias
 
-        from openhcs.core.source_matching import (
-            semantic_source_metadata_value,
-            source_component_metadata_values,
-            source_metadata_values_equal,
-        )
-
-        return all(
-            any(
-                source_metadata_values_equal(value, selector.value)
-                for value in source_component_metadata_values(
-                    metadata,
-                    selector.component,
-                )
-            )
-            for selector in self.selector.components
-        ) and all(
-            (value := semantic_source_metadata_value(metadata, selector.field))
-            is not None
-            and source_metadata_values_equal(value, selector.value)
-            for selector in self.selector.metadata
-        )
+        return self.selector.metadata_candidates_match((metadata,))
 
     def input_plan(
         self,
@@ -1138,6 +1330,7 @@ class SourceBindingDeclarationsMixin:
 
     bindings: tuple[NamedSourceBinding, ...] | None
     source_stack_components: tuple[AllComponents, ...]
+    source_spatial_domain: SourceSpatialDomain
 
     @property
     def binding_declarations(self) -> tuple[NamedSourceBinding, ...]:
@@ -1697,6 +1890,11 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     source_stack_components: tuple[AllComponents, ...] = ()
     """Ordered plate components that form one logical source image stack."""
 
+    source_spatial_domain: SourceSpatialDomain = field(
+        default_factory=SourceSpatialDomain
+    )
+    """Declared intrinsic image dimensions, independent of stack transport."""
+
     grouping_metadata_fields: tuple[str, ...] = ()
     """Metadata field names used to partition matched sources into execution groups."""
 
@@ -1830,6 +2028,36 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
 
         return tuple(self.source_filters or ())
 
+    def source_path_filters_match(self, identities: tuple[str, ...]) -> bool:
+        """Match the declared source universe against physical path identities."""
+        from openhcs.core.source_matching import source_filters_match
+
+        return any(
+            source_filters_match(identity, self.source_filter_declarations)
+            for identity in identities
+        )
+
+    def discovery_path_matches(self, root: Path, path: Path) -> bool:
+        """Apply known physical-path selections before decoding a source store.
+
+        Metadata and component selectors still belong to plane projection. An
+        unrestricted binding keeps discovery unrestricted, not just the first
+        filtered alias. All matching uses the existing source-filter owners.
+        """
+        root = root.resolve(strict=False)
+        resolved = path.resolve(strict=False)
+        identities = (resolved.as_posix(),)
+        if root.is_file():
+            identities = (resolved.name, *identities)
+        elif resolved.is_relative_to(root):
+            identities = (resolved.relative_to(root).as_posix(), *identities)
+        if not self.source_path_filters_match(identities):
+            return False
+        return not self.binding_declarations or any(
+            binding.physical_path_matches(root, resolved, identities)
+            for binding in self.binding_declarations
+        )
+
     def declaration_identity(self) -> str:
         """Return a stable identity for this complete source declaration."""
 
@@ -1936,31 +2164,25 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
         if realized_source_metadata is None:
             return declared_fields
 
+        return self.metadata_fields_for_literal_types(
+            SourceMetadataFields.literal_field_types(realized_source_metadata)
+        )
+
+    def metadata_fields_for_literal_types(
+        self, field_types: Mapping[str, type[object] | None]
+    ) -> tuple[FieldSpec, ...]:
+        """Overlay this declaration on one admitted cohort's literal schema."""
+        declared_fields = tuple(self.metadata_fields or ())
         excluded_names = frozenset(
             join.imported_metadata_field
             for table in self.imported_metadata_tables
             for join in table.joins
         )
         declared_names = frozenset(field.name for field in declared_fields)
-        values_by_name: dict[str, list[SourceMetadataScalar]] = {}
-        for metadata in realized_source_metadata:
-            for field_name, value in SourceMetadataRoleView(metadata).original_items():
-                if (
-                    field_name not in declared_names
-                    and field_name not in excluded_names
-                ):
-                    values_by_name.setdefault(field_name, []).append(value)
-
         realized_fields = tuple(
-            FieldSpec(
-                field_name,
-                next(iter(value_types)) if len(value_types) == 1 else None,
-                required=False,
-            )
-            for field_name, values in values_by_name.items()
-            for value_types in (
-                frozenset(type(value) for value in values if value is not None),
-            )
+            FieldSpec(name, dtype, required=False)
+            for name, dtype in field_types.items()
+            if name not in declared_names and name not in excluded_names
         )
         return FieldSpec.merge_exact(
             (declared_fields, realized_fields),
@@ -2012,17 +2234,17 @@ class StepSourceBindingsConfig(
 
 
 def source_binding_group_keys_for_group_by(
-    source_bindings: StepSourceBindingsConfig,
+    source_bindings: SourceBindingDeclarationsMixin,
     group_by: GroupBy,
     *,
     realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
 ) -> tuple[str, ...]:
     """Return ordered binding component values for the grouping component."""
 
-    if not isinstance(source_bindings, StepSourceBindingsConfig):
+    if not isinstance(source_bindings, SourceBindingDeclarationsMixin):
         raise TypeError(
             "source_binding_group_keys_for_group_by requires "
-            f"StepSourceBindingsConfig, got {type(source_bindings).__name__}."
+            f"SourceBindingDeclarationsMixin, got {type(source_bindings).__name__}."
         )
     resolved_group_by = group_by if isinstance(group_by, GroupBy) else GroupBy(group_by)
     if resolved_group_by.value is None:
@@ -2084,6 +2306,9 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
     registry_key: ClassVar[str] = "compiled"
     bindings: tuple[NamedSourceBinding, ...] = ()
     source_stack_components: tuple[AllComponents, ...] = ()
+    source_spatial_domain: SourceSpatialDomain = field(
+        default_factory=SourceSpatialDomain
+    )
 
     @classmethod
     def empty(cls) -> CompiledSourceBindingPlan:
@@ -2094,6 +2319,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         cls,
         config: StepSourceBindingsConfig,
         *,
+        selected_bindings: tuple[NamedSourceBinding, ...] | None = None,
         realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
     ) -> CompiledSourceBindingPlan:
         if not isinstance(config, StepSourceBindingsConfig):
@@ -2102,14 +2328,53 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
                 f"StepSourceBindingsConfig, got {type(config).__name__}."
             )
         return cls(
-            bindings=config.binding_declarations,
+            bindings=(
+                config.binding_declarations
+                if selected_bindings is None else selected_bindings
+            ),
             metadata_rules=config.metadata_rule_declarations,
             match_plan=config.match_plan,
             metadata_fields=config.metadata_fields_for_realized_source_metadata(
                 realized_source_metadata
             ),
             source_stack_components=config.source_stack_components,
+            source_spatial_domain=config.source_spatial_domain,
         )
+
+    @classmethod
+    def from_contracts(
+        cls,
+        config: StepSourceBindingsConfig,
+        contracts: Iterable[CallableContract],
+        main_input_dependency: StepInputDependency,
+        available_artifacts: ArtifactSpecCollection,
+    ) -> CompiledSourceBindingPlan:
+        """Admit exact source routing at the declaration's compilation epoch."""
+        contracts = tuple(contracts)
+        implicit_specs = (
+            tuple(binding.input_spec() for binding in config.primary_plane_bindings)
+            if main_input_dependency.uses_pipeline_start_anchors()
+            and any(contract.accepts_implicit_main_flow_input for contract in contracts)
+            else ()
+        )
+        source_specs = tuple(dict.fromkeys((
+            *implicit_specs,
+            *(
+                spec
+                for contract in contracts
+                for spec in contract.artifact_inputs
+                if config.declares_artifact_ref(spec.ref())
+                or available_artifacts.by_name_and_artifact_type(
+                    spec.name, spec.artifact_type
+                ) is not None
+            ),
+        )))
+        if not source_specs:
+            return cls.empty()
+        bindings = config.bindings_for_artifact_specs(source_specs, available_artifacts)
+        if not bindings:
+            return cls.empty()
+        return cls.from_config(config, selected_bindings=bindings)
 
     def __post_init__(self) -> None:
         bindings = normalize_source_binding_values(
@@ -2144,22 +2409,25 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         group_key: str | None,
         main_flow_refs: tuple[ArtifactSpecRef, ...] | None,
     ) -> "CompiledSourceBindingPlan | None":
-        """Project exact source declarations for one main-flow execution scope."""
+        """Project the image argument separately from invocation dispatch.
 
-        component_plan = (
-            self
-            if group_key is None
-            else self.for_component_group(component, group_key)
-        )
+        Explicit input refs declare every image consumed by the invocation.
+        A grouped object cohort does not reduce that image roster to the cohort's
+        channel. Implicit image arguments still follow component dispatch.
+        """
+
         if main_flow_refs == ():
             return None
         if main_flow_refs is None:
-            return component_plan
+            return (
+                self
+                if not self.has_primary_content or group_key is None
+                else self.for_component_group(component, group_key)
+            )
         declared_main_flow_plan = self.for_artifact_refs(main_flow_refs)
         if not declared_main_flow_plan.binding_declarations:
             return None
-        compatible_plan = component_plan.for_artifact_refs(main_flow_refs)
-        return compatible_plan if compatible_plan.binding_declarations else None
+        return declared_main_flow_plan
 
     def __reduce__(
         self,
@@ -2171,6 +2439,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             SourceBindingMatchPlan | None,
             tuple[FieldSpec, ...],
             tuple[AllComponents, ...],
+            SourceSpatialDomain,
         ],
     ]:
         """Serialize source-binding plan state for multiprocessing."""
@@ -2182,6 +2451,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
                 self.match_plan,
                 self.metadata_fields,
                 self.source_stack_components,
+                self.source_spatial_domain,
             ),
         )
 
@@ -2203,6 +2473,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         match_plan: SourceBindingMatchPlan | None,
         metadata_fields: tuple[FieldSpec, ...],
         source_stack_components: tuple[AllComponents, ...],
+        source_spatial_domain: SourceSpatialDomain,
     ) -> CompiledSourceBindingPlan:
         return cls(
             bindings=bindings,
@@ -2210,6 +2481,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             match_plan=match_plan,
             metadata_fields=metadata_fields,
             source_stack_components=source_stack_components,
+            source_spatial_domain=source_spatial_domain,
         )
 
 
@@ -2218,7 +2490,6 @@ class CompiledSourceUniversePlan:
     """Frozen source-file universe decisions for one compiled step."""
 
     requires_step_input_selector_resolution: bool = False
-    requires_full_pipeline_source_universe: bool = False
     uses_pipeline_start_binding_origin: bool = False
 
     @classmethod
@@ -2241,7 +2512,6 @@ class CompiledSourceUniversePlan:
             requires_step_input_selector_resolution=(
                 source_binding_plan.requires_step_input_selector_resolution
             ),
-            requires_full_pipeline_source_universe=False,
             uses_pipeline_start_binding_origin=uses_pipeline_start_binding_origin,
         )
 
@@ -2304,378 +2574,11 @@ class SourceBindingRuntimeMetadataNormalizer:
     def normalized(self) -> Mapping[str, SourceMetadataMapping]:
         return MappingProxyType(
             {
-                str(path): MappingProxyType(
-                    {
-                        str(key): self.normalized_value(value)
-                        for key, value in source_metadata_dict(metadata).items()
-                    }
+                str(path): ResolvedSourceMetadataRecord.normalized_mapping(
+                    source_metadata_dict(metadata)
                 )
                 for path, metadata in self.source_metadata_by_path.items()
             }
-        )
-
-    @classmethod
-    def normalized_value(cls, value: SourceMetadataValue) -> SourceMetadataValue:
-        if isinstance(value, Mapping):
-            return MappingProxyType(
-                {
-                    str(key): cls.normalized_scalar(nested_value)
-                    for key, nested_value in value.items()
-                }
-            )
-        return cls.normalized_scalar(value)
-
-    @staticmethod
-    def normalized_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
-        return source_metadata_scalar(value)
-
-
-@dataclass(frozen=True)
-class SourceBindingRuntimeContext:
-    """Execution-local file universe for selector-bearing source bindings."""
-
-    step_input_files: tuple[str, ...] = ()
-    current_step_input_files: tuple[str, ...] = ()
-    current_image_files: tuple[str, ...] = ()
-    step_input_dir: str | None = None
-    step_input_source_backend: str | None = None
-    step_input_storage_backend: str | None = None
-    step_input_source_paths: Mapping[str, str] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
-    source_metadata_by_path: Mapping[str, SourceMetadataMapping] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
-    pipeline_input_files: tuple[str, ...] = ()
-    pipeline_source_candidate_files: tuple[str, ...] = ()
-    pipeline_input_backend: str | None = None
-    source_metadata_is_normalized: InitVar[bool] = False
-    _source_metadata_identity: SourceMetadataIdentity | None = field(
-        default=None,
-        init=False,
-        repr=False,
-        compare=False,
-    )
-    _pipeline_input_files_identity: tuple[str, ...] | None = field(
-        default=None,
-        init=False,
-        repr=False,
-        compare=False,
-    )
-    _source_order_identity: tuple[Hashable, ...] | None = field(
-        default=None,
-        init=False,
-        repr=False,
-        compare=False,
-    )
-    _process_semantic_identity: SourceBindingRuntimeContextProcessIdentity | None = (
-        field(
-            default=None,
-            init=False,
-            repr=False,
-            compare=False,
-        )
-    )
-    _virtual_source_paths_by_identity: Mapping[str, tuple[str, ...]] | None = field(
-        default=None,
-        init=False,
-        repr=False,
-        compare=False,
-    )
-    _source_metadata_by_runtime_lookup_key: (
-        Mapping[
-            str,
-            SourceMetadataMapping,
-        ]
-        | None
-    ) = field(
-        default=None,
-        init=False,
-        repr=False,
-        compare=False,
-    )
-
-    @classmethod
-    def empty(cls) -> SourceBindingRuntimeContext:
-        return cls()
-
-    def __post_init__(
-        self,
-        source_metadata_is_normalized: bool,
-    ) -> None:
-        object.__setattr__(self, "step_input_files", tuple(self.step_input_files))
-        object.__setattr__(
-            self,
-            "current_step_input_files",
-            tuple(self.current_step_input_files or self.step_input_files),
-        )
-        object.__setattr__(
-            self,
-            "current_image_files",
-            tuple(self.current_image_files or self.current_step_input_files),
-        )
-        if self.step_input_dir is not None:
-            object.__setattr__(self, "step_input_dir", str(self.step_input_dir))
-        if self.step_input_source_backend is not None:
-            object.__setattr__(
-                self,
-                "step_input_source_backend",
-                str(self.step_input_source_backend),
-            )
-        if self.step_input_storage_backend is not None:
-            object.__setattr__(
-                self,
-                "step_input_storage_backend",
-                str(self.step_input_storage_backend),
-            )
-        step_input_source_paths = self.step_input_source_paths
-        if not isinstance(step_input_source_paths, MappingProxyType):
-            step_input_source_paths = MappingProxyType(
-                {
-                    str(path): str(source)
-                    for path, source in step_input_source_paths.items()
-                }
-            )
-        object.__setattr__(self, "step_input_source_paths", step_input_source_paths)
-
-        if source_metadata_is_normalized:
-            if not isinstance(self.source_metadata_by_path, MappingProxyType):
-                raise TypeError(
-                    "Normalized SourceBindingRuntimeContext metadata must be "
-                    "MappingProxyType."
-                )
-        else:
-            object.__setattr__(
-                self,
-                "source_metadata_by_path",
-                SourceBindingRuntimeMetadataNormalizer(
-                    self.source_metadata_by_path
-                ).normalized(),
-            )
-        object.__setattr__(
-            self,
-            "pipeline_input_files",
-            tuple(self.pipeline_input_files),
-        )
-        object.__setattr__(
-            self,
-            "pipeline_source_candidate_files",
-            tuple(
-                self.pipeline_source_candidate_files
-                or self.pipeline_input_files
-                or self.step_input_files
-            ),
-        )
-        if self.pipeline_input_backend is not None:
-            object.__setattr__(
-                self,
-                "pipeline_input_backend",
-                str(self.pipeline_input_backend),
-            )
-
-    @property
-    def source_metadata_identity(
-        self,
-    ) -> SourceMetadataIdentity:
-        """Stable identity for the complete source-metadata universe."""
-
-        cached = self._source_metadata_identity
-        if cached is None:
-            cached = tuple(
-                (path, SourceMetadataIdentityProjection(metadata).items())
-                for path, metadata in sorted(self.source_metadata_by_path.items())
-            )
-            object.__setattr__(self, "_source_metadata_identity", cached)
-        return cached
-
-    @property
-    def process_semantic_identity(self) -> SourceBindingRuntimeContextProcessIdentity:
-        """Return the source context identity used by process-local caches."""
-        cached = self._process_semantic_identity
-        if cached is None:
-            cached = SourceBindingRuntimeContextProcessIdentity(
-                source_order_identity=self.source_order_identity,
-                source_metadata_identity=self.source_metadata_identity,
-            )
-            object.__setattr__(self, "_process_semantic_identity", cached)
-        return cached
-
-    @property
-    def source_metadata_by_runtime_lookup_key(
-        self,
-    ) -> Mapping[str, SourceMetadataMapping]:
-        """Return source metadata indexed by every runtime path spelling."""
-        cached = self._source_metadata_by_runtime_lookup_key
-        if cached is None:
-            indexed: dict[str, SourceMetadataMapping] = {}
-            for path, metadata in self.source_metadata_by_path.items():
-                for key in _source_runtime_path_lookup_keys(
-                    str(path),
-                    self.step_input_dir,
-                ):
-                    indexed.setdefault(key, metadata)
-                indexed.setdefault(_source_runtime_native_path(str(path)), metadata)
-            cached = MappingProxyType(indexed)
-            object.__setattr__(
-                self,
-                "_source_metadata_by_runtime_lookup_key",
-                cached,
-            )
-        return cached
-
-    def source_metadata_for_runtime_path(
-        self,
-        path: str,
-    ) -> SourceMetadataMapping | None:
-        """Return source metadata for one runtime path spelling, if known."""
-        lookup = self.source_metadata_by_runtime_lookup_key
-        for key in _source_runtime_path_lookup_keys(str(path), self.step_input_dir):
-            metadata = lookup.get(key)
-            if metadata is not None:
-                return metadata
-        return lookup.get(_source_runtime_native_path(str(path)))
-
-    @property
-    def pipeline_input_files_identity(self) -> tuple[str, ...]:
-        """Return sorted pipeline input files for source-order cache identities."""
-        cached = self._pipeline_input_files_identity
-        if cached is None:
-            cached = tuple(sorted(self.pipeline_input_files))
-            object.__setattr__(self, "_pipeline_input_files_identity", cached)
-        return cached
-
-    @property
-    def source_order_identity(self) -> tuple[Hashable, ...]:
-        """Return source-order mapping identity shared by runtime source caches."""
-        cached = self._source_order_identity
-        if cached is None:
-            cached = (
-                self.step_input_dir,
-                tuple(sorted(self.pipeline_source_candidate_files)),
-                tuple(sorted(self.step_input_source_paths.items())),
-                tuple(sorted(self.virtual_source_paths_by_identity.items())),
-            )
-            object.__setattr__(self, "_source_order_identity", cached)
-        return cached
-
-    @property
-    def virtual_source_paths_by_identity(self) -> Mapping[str, tuple[str, ...]]:
-        """Return virtual source paths grouped by normalized physical identity."""
-
-        cached = self._virtual_source_paths_by_identity
-        if cached is None:
-            grouped: dict[str, list[str]] = {}
-            for virtual_path, source_path in self.step_input_source_paths.items():
-                for identity in self.source_path_identities(source_path):
-                    paths = grouped.get(identity)
-                    if paths is None:
-                        grouped[identity] = [virtual_path]
-                        continue
-                    paths.append(virtual_path)
-            cached = MappingProxyType(
-                {
-                    identity: tuple(dict.fromkeys(paths))
-                    for identity, paths in grouped.items()
-                }
-            )
-            object.__setattr__(self, "_virtual_source_paths_by_identity", cached)
-        return cached
-
-    @staticmethod
-    @lru_cache(maxsize=8192)
-    def source_path_identities(source_path: str) -> tuple[str, ...]:
-        """Return path identities for stored and resolved source-path spellings."""
-        path = Path(source_path)
-        return tuple(
-            dict.fromkeys(
-                (
-                    source_path_identity_key(source_path),
-                    source_path_identity_key(str(path.resolve(strict=False))),
-                )
-            )
-        )
-
-    def path_spellings(self, paths: Sequence[str]) -> tuple[str, ...]:
-        """Return virtual and physical spellings represented by selected paths."""
-
-        selected: list[str] = []
-        for path in paths:
-            selected.append(str(path))
-            mapped = self.step_input_source_paths.get(str(path))
-            if mapped is not None:
-                selected.append(mapped)
-            for identity in self.source_path_identities(str(path)):
-                selected.extend(self.virtual_source_paths_by_identity.get(identity, ()))
-        return tuple(dict.fromkeys(selected))
-
-    def metadata_identity_for_paths(
-        self,
-        paths: tuple[str, ...],
-    ) -> SourceMetadataIdentity:
-        """Return the stable metadata identity for a selected source subset."""
-
-        identity: list[tuple[str, SourceMetadataIdentityItems]] = []
-        for path in paths:
-            if path in self.source_metadata_by_path:
-                metadata = SourceMetadataIdentityProjection(
-                    self.source_metadata_by_path[path]
-                ).items()
-            else:
-                metadata = ()
-            identity.append((path, metadata))
-        return tuple(identity)
-
-    def source_candidate_file_universes(self) -> tuple[tuple[str, ...], ...]:
-        """Return distinct non-empty file universes that may be source-parsed."""
-        return tuple(
-            dict.fromkeys(
-                files
-                for files in (
-                    self.step_input_files,
-                    self.current_step_input_files,
-                    self.pipeline_source_candidate_files,
-                )
-                if files
-            )
-        )
-
-    def __reduce__(
-        self,
-    ) -> tuple[
-        object,
-        tuple[
-            tuple[str, ...],
-            tuple[str, ...],
-            tuple[str, ...],
-            str | None,
-            str | None,
-            str | None,
-            dict[str, str],
-            dict[str, dict[str, SourceMetadataValue]],
-            tuple[str, ...],
-            tuple[str, ...],
-            str | None,
-        ],
-    ]:
-        """Serialize mappingproxy-backed provenance as a plain dict."""
-        return (
-            self.__class__,
-            (
-                self.step_input_files,
-                self.current_step_input_files,
-                self.current_image_files,
-                self.step_input_dir,
-                self.step_input_source_backend,
-                self.step_input_storage_backend,
-                dict(self.step_input_source_paths),
-                {
-                    path: source_metadata_dict(metadata)
-                    for path, metadata in self.source_metadata_by_path.items()
-                },
-                self.pipeline_input_files,
-                self.pipeline_source_candidate_files,
-                self.pipeline_input_backend,
-            ),
         )
 
 

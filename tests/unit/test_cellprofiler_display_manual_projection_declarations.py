@@ -329,7 +329,7 @@ def test_histogram_float_range_reconstructs_as_one_cellprofiler_setting_row() ->
     assert consumed == ()
     assert len(blocks) == 1
     range_rows = tuple(
-        record.value
+        record
         for record in blocks[0].setting_records
         if record.name == "Minimum/maximum values for the X-axis"
     )

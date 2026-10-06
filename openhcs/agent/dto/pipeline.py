@@ -5,7 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-from openhcs.agent.dto.common import AgentResultEnvelope, JsonObject
+from openhcs.agent.dto.common import (
+    AgentResultEnvelope,
+    JsonObject,
+    JsonValue as JsonValue,
+)
 from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.functions import FunctionIdentity
 

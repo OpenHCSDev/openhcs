@@ -1,0 +1,148 @@
+{
+  "R0": {
+    "base": "a2858341a30675688b13ababdca50bdeb6a1503a",
+    "head": "cf1f5a4025d8de5c5adbe94a98854965e0cc4d93",
+    "metric_count": 5126,
+    "positive_deltas": {}
+  },
+  "R1": "Full committed parent/dependency source context, 3020 projections per revision; selected header production module: before=[], after=[], increased=[]; original log retained.",
+  "census": {
+    "source_revision": "eea9c52633c0d45e35d240e224118d87412ee823",
+    "module_count": 702,
+    "original_class_count": 5121,
+    "projected_count": 5109
+  },
+  "OPEN_original_classes": [
+    {
+      "path": "openhcs/components/framework.py",
+      "line": 198,
+      "name": "_ComponentTemplate",
+      "lexical_scope": [
+        "ComponentConfigurationFactory",
+        "create_openhcs_default_configuration"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 481,
+      "name": "_EventBridge",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 485,
+      "name": "_StartupWindow",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 612,
+      "name": "_StartupWindowPresentation",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/mcp/http.py",
+      "line": 76,
+      "name": "OpenHCSHostedFastMCP",
+      "lexical_scope": [
+        "create_hosted_fastmcp_type"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+      "line": 107,
+      "name": "_RegistrationCNN_torch",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+      "line": 102,
+      "name": "_ClientDisconnected",
+      "lexical_scope": [
+        "ExecutionSubmissionService",
+        "start_completion_poller"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2618,
+      "name": "DimensionScrollbarListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.AdjustmentListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2696,
+      "name": "WindowCloseListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.WindowListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 3064,
+      "name": "FijiUiWorkUnit",
+      "lexical_scope": [
+        "FijiRoiManagerProvider",
+        "invoke_on_event_dispatch_thread"
+      ],
+      "decorators": [
+        "JImplements('java.lang.Runnable')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/import_utils.py",
+      "line": 67,
+      "name": "Placeholder",
+      "lexical_scope": [
+        "create_placeholder_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/pipeline_migration.py",
+      "line": 358,
+      "name": "MigratingGroupBy",
+      "lexical_scope": [
+        "LegacyGroupByUnpickler",
+        "_create_migrating_groupby_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    }
+  ],
+  "coverage_limits": "Complete original OpenHCS+setup.py census; dependency-inclusive R1 context. R1 is a scoped policy scan of two configured detectors, not a complete detector/semantic proof. Authored exact NRA transaction is syntax/revision checked; behavior is executed native and consumer evidence."
+}

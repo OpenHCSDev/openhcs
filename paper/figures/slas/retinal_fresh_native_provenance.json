@@ -1,0 +1,23 @@
+{
+  "scope": "Independent fresh task-only R0010_FRESH09_96 candidate10: whole field and two regional controls from one final 102-instance result.",
+  "output_sha256": {
+    "retinal_fresh_native.svg": "57dc5a96558cf7a8c3c7d48d523a134f07c91bcc9af0237ef9d3d108578e3b68",
+    "retinal_fresh_native.png": "93d7a85de7c0d64bb4cacd9f680f3bef6de1058312cc9a56e9b763b9d676efcc",
+    "retinal_fresh09_detail.svg": "1a11635e7c3279deb70088325f312a88865a89862d55ceebf38cfb636c3e9063",
+    "retinal_fresh09_detail.png": "7089620d0fc1c0c903032d9647fcda15db63f86e79001dd79600c5a88720b25e"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/retinal-fresh09-native-source-proof.json": "1495de558b538f7e04a8a3fae311cafec5af253e1bcbca733098772b3106cf80",
+    "paper/figures/slas/retinal_fresh_sources/c10-nw-outline.png": "29f9b046d5c4e7eb2ec8fa1fd147794a03b9deba1bdb096bfc55377c422c4604",
+    "paper/figures/slas/retinal_fresh_sources/c10-nw-raw.png": "5194f9149b26d812aa26a6a9d2911b7156b53611aec5ad5ef496993ef3b87138",
+    "paper/figures/slas/retinal_fresh_sources/c10-overview-outline.png": "69354cda3b3c54da63c99973313d7ec62e386813be147a7a86158384d94087b5",
+    "paper/figures/slas/retinal_fresh_sources/c10-overview-raw.png": "6b96975c9904db26b760793b5adad4c022a3249619a44289af5139f7d534b268",
+    "paper/figures/slas/retinal_fresh_sources/c10-se-outline.png": "e5555ec6be84fc5839452dc00e01a8dde9ce1b63f98066ddc872bd0e9385da19",
+    "paper/figures/slas/retinal_fresh_sources/c10-se-raw.png": "f20ae6f6a8a82c200caade473f7306db8ce55c8eb0c2b2c97b3f2dfd096088b9",
+    "paper/figures/slas/retinal_fresh_sources/c10-ne-raw.png": "756e48ab44c39c70bc22368ea04fa4022b2784df8f967c09105a02dcde279a92",
+    "paper/figures/slas/retinal_fresh_sources/c10-ne-labels.png": "314daba62ca03a77d556af3a19ec9258051bf20287628c80e4e802c98ecd18e8",
+    "paper/figures/slas/retinal_fresh_sources/c10-ne-outline.png": "233f52ed64f3894b6382ae02738f04e8e719e8fcb0c00ab512e4ed2b9e1f124c"
+  },
+  "rendering": "Original screenshots copied byte-for-byte, clipped/scaled by native SVG and rendered with existing rsvg-convert. No scientific execution, relabeling, pixel retouching or new contrast adjustment during figure preparation.",
+  "limits": "Northwest pair stays separated (label probes 30 and 35); southeast continuous envelope has one instance (both probes 97). Diffuse/lobed regions remain uncertain. No manual-reference accuracy or complete biological cell census follows."
+}

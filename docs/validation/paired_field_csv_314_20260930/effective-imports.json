@@ -1,0 +1,24 @@
+{
+  "python": "3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]",
+  "imports": {
+    "openhcs": "/home/ts/wt/openhcs-paired-field-csv-314-20260930/openhcs/__init__.py",
+    "polystore": "/home/ts/wt/openhcs-custom-function-admission-20260929/external/PolyStore/src/polystore/__init__.py",
+    "metaclass_registry": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/metaclass_registry/__init__.py",
+    "python_introspect": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/python_introspect/__init__.py",
+    "objectstate": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/objectstate/__init__.py",
+    "arraybridge": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/arraybridge/__init__.py",
+    "pycodify": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pycodify/__init__.py"
+  },
+  "versions": {
+    "openhcs": "0.8.6",
+    "polystore": "0.2.19",
+    "metaclass-registry": "0.2.1",
+    "python-introspect": "0.1.14",
+    "objectstate": "1.1.8",
+    "arraybridge": "0.3.4",
+    "pycodify": "0.1.3",
+    "numpy": "2.1.3",
+    "scipy": "1.18.1",
+    "scikit-image": "0.25.2"
+  }
+}

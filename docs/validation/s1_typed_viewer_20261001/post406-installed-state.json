@@ -1,0 +1,953 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "active_dimension_label_route": "origin_manual_kind_manual_projection_selected_images_70d8e1a6171395a89aa7cc1f64ef09ba84f499498b26486d6f3508f40657a4ed",
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ],
+          "component_group_count": 4,
+          "component_item_count": 5,
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5992,
+            "transport_mode": "tcp"
+          },
+          "current_step": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            511,
+            511
+          ],
+          "errors": [],
+          "layer_count": 4,
+          "layers": [
+            {
+              "axis_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 2,
+              "component_values": [
+                {
+                  "channel": 1,
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 1
+                },
+                {
+                  "channel": 2,
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 1
+                }
+              ],
+              "component_values_truncated": false,
+              "data_shape": [
+                1,
+                2,
+                1,
+                1,
+                1,
+                1024,
+                1024
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 2,
+              "labels": {
+                "channel": [
+                  "Ch 1",
+                  "Ch 2"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  141.0,
+                  450.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.3556,
+                  1.3556
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [
+                {
+                  "components": {
+                    "channel": 1,
+                    "site": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    "z_index": 1
+                  },
+                  "data_type": "image",
+                  "dtype": "uint16",
+                  "max": 65535,
+                  "min": 502,
+                  "nonzero_coordinate_omission_reason": "nonzero count exceeds bounded coordinate projection limit 65536",
+                  "nonzero_count": 1048576,
+                  "path": "A01_s001_w1_z001_t001.tif",
+                  "payload_type": "ndarray",
+                  "shape": [
+                    1024,
+                    1024
+                  ],
+                  "size": 1048576,
+                  "source_spatial_shape_yx": [
+                    1024,
+                    1024
+                  ],
+                  "spatial_origin_yx": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "components": {
+                    "channel": 2,
+                    "site": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    "z_index": 1
+                  },
+                  "data_type": "image",
+                  "dtype": "uint16",
+                  "max": 65535,
+                  "min": 39,
+                  "nonzero_coordinate_omission_reason": "nonzero count exceeds bounded coordinate projection limit 65536",
+                  "nonzero_count": 1048576,
+                  "path": "A01_s001_w2_z001_t001.tif",
+                  "payload_type": "ndarray",
+                  "shape": [
+                    1024,
+                    1024
+                  ],
+                  "size": 1048576,
+                  "source_spatial_shape_yx": [
+                    1024,
+                    1024
+                  ],
+                  "spatial_origin_yx": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "payload_summaries_truncated": false,
+              "payload_summary_count": 2,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "manual",
+                  "output_key": "selected_images",
+                  "output_kind": "manual",
+                  "pipeline_position": null,
+                  "projection_key": "selected_images_70d8e1a6171395a89aa7cc1f64ef09ba84f499498b26486d6f3508f40657a4ed",
+                  "step_name": null,
+                  "step_scope_id": null
+                }
+              ],
+              "route_key": "origin_manual_kind_manual_projection_selected_images_70d8e1a6171395a89aa7cc1f64ef09ba84f499498b26486d6f3508f40657a4ed",
+              "routed_component_coordinates": [
+                [
+                  1
+                ],
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": true,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "selected_images",
+              "visible": true
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [
+                {
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 1
+                }
+              ],
+              "component_values_truncated": false,
+              "data_shape": [
+                1,
+                2,
+                1,
+                1,
+                1,
+                1024,
+                1024
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch 1",
+                  "Ch 2"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0.0,
+                  191.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.3556,
+                  1.3556
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [
+                {
+                  "aggregate_component_values": {
+                    "channel": [
+                      1,
+                      2
+                    ]
+                  },
+                  "components": {
+                    "site": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    "z_index": 1
+                  },
+                  "data_type": "image",
+                  "dtype": "int32",
+                  "max": 191,
+                  "min": 0,
+                  "nonzero_count": 15620,
+                  "nonzero_example_coordinates": [
+                    [
+                      0,
+                      0,
+                      426
+                    ],
+                    [
+                      0,
+                      65,
+                      685
+                    ],
+                    [
+                      0,
+                      101,
+                      839
+                    ],
+                    [
+                      0,
+                      154,
+                      21
+                    ],
+                    [
+                      0,
+                      228,
+                      358
+                    ],
+                    [
+                      0,
+                      299,
+                      567
+                    ],
+                    [
+                      0,
+                      398,
+                      407
+                    ],
+                    [
+                      0,
+                      472,
+                      197
+                    ],
+                    [
+                      0,
+                      591,
+                      461
+                    ],
+                    [
+                      0,
+                      665,
+                      916
+                    ],
+                    [
+                      0,
+                      741,
+                      242
+                    ],
+                    [
+                      0,
+                      819,
+                      410
+                    ],
+                    [
+                      0,
+                      867,
+                      753
+                    ],
+                    [
+                      0,
+                      950,
+                      792
+                    ],
+                    [
+                      0,
+                      989,
+                      170
+                    ],
+                    [
+                      0,
+                      1023,
+                      496
+                    ]
+                  ],
+                  "nonzero_max_coordinate": [
+                    0,
+                    1023,
+                    1023
+                  ],
+                  "nonzero_min_coordinate": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "path": "results/A01_site-1_z_index-1_timepoint-1_nuclei_step0.labels.tif",
+                  "payload_type": "ndarray",
+                  "shape": [
+                    2,
+                    1024,
+                    1024
+                  ],
+                  "size": 2097152,
+                  "source_spatial_shape_yx": [
+                    1024,
+                    1024
+                  ],
+                  "spatial_origin_yx": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "payload_summaries_truncated": false,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "manual",
+                  "output_key": "selected_images",
+                  "output_kind": "manual",
+                  "pipeline_position": null,
+                  "projection_key": "selected_images_b0d22fa7ff7e7df3df6e8d1167f6c0441d6ef585d2106cefb5d2640453e77d46",
+                  "step_name": null,
+                  "step_scope_id": null
+                }
+              ],
+              "route_key": "origin_manual_kind_manual_projection_selected_images_b0d22fa7ff7e7df3df6e8d1167f6c0441d6ef585d2106cefb5d2640453e77d46_scalar_stack",
+              "routed_component_coordinates": [
+                [
+                  1
+                ],
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "selected_images image stack",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [
+                {
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 1
+                }
+              ],
+              "component_values_truncated": false,
+              "data_shape": [
+                1,
+                2,
+                1,
+                1,
+                1,
+                1024,
+                1024
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch 1",
+                  "Ch 2"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0.0,
+                  156.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.3556,
+                  1.3556
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [
+                {
+                  "aggregate_component_values": {
+                    "channel": [
+                      1,
+                      2
+                    ]
+                  },
+                  "components": {
+                    "site": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    "z_index": 1
+                  },
+                  "data_type": "image",
+                  "dtype": "int32",
+                  "max": 156,
+                  "min": 0,
+                  "nonzero_count": 32557,
+                  "nonzero_example_coordinates": [
+                    [
+                      1,
+                      0,
+                      420
+                    ],
+                    [
+                      1,
+                      83,
+                      960
+                    ],
+                    [
+                      1,
+                      129,
+                      725
+                    ],
+                    [
+                      1,
+                      250,
+                      741
+                    ],
+                    [
+                      1,
+                      346,
+                      432
+                    ],
+                    [
+                      1,
+                      414,
+                      637
+                    ],
+                    [
+                      1,
+                      474,
+                      203
+                    ],
+                    [
+                      1,
+                      592,
+                      60
+                    ],
+                    [
+                      1,
+                      666,
+                      936
+                    ],
+                    [
+                      1,
+                      735,
+                      240
+                    ],
+                    [
+                      1,
+                      797,
+                      360
+                    ],
+                    [
+                      1,
+                      856,
+                      580
+                    ],
+                    [
+                      1,
+                      897,
+                      394
+                    ],
+                    [
+                      1,
+                      971,
+                      481
+                    ],
+                    [
+                      1,
+                      993,
+                      488
+                    ],
+                    [
+                      1,
+                      1023,
+                      695
+                    ]
+                  ],
+                  "nonzero_max_coordinate": [
+                    1,
+                    1023,
+                    1023
+                  ],
+                  "nonzero_min_coordinate": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "path": "results/A01_site-1_z_index-1_timepoint-1_cell_bodies_step0.labels.tif",
+                  "payload_type": "ndarray",
+                  "shape": [
+                    2,
+                    1024,
+                    1024
+                  ],
+                  "size": 2097152,
+                  "source_spatial_shape_yx": [
+                    1024,
+                    1024
+                  ],
+                  "spatial_origin_yx": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "payload_summaries_truncated": false,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "manual",
+                  "output_key": "selected_images",
+                  "output_kind": "manual",
+                  "pipeline_position": null,
+                  "projection_key": "selected_images_040a3fe1465e126dbe109b435b7daf8e62ea5980f27a268bce762d1d85fe24f0",
+                  "step_name": null,
+                  "step_scope_id": null
+                }
+              ],
+              "route_key": "origin_manual_kind_manual_projection_selected_images_040a3fe1465e126dbe109b435b7daf8e62ea5980f27a268bce762d1d85fe24f0_scalar_stack",
+              "routed_component_coordinates": [
+                [
+                  1
+                ],
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "selected_images image stack [selected_images]",
+              "visible": false
+            },
+            {
+              "axis_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [
+                0
+              ],
+              "component_value_count": 1,
+              "component_values": [
+                {
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 1
+                }
+              ],
+              "component_values_truncated": false,
+              "data_shape": [
+                1,
+                2,
+                1,
+                1,
+                1,
+                1024,
+                1024
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {
+                "channel": [
+                  "Ch 1",
+                  "Ch 2"
+                ]
+              },
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  0.0,
+                  156.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.3556,
+                  1.3556
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [
+                {
+                  "aggregate_component_values": {
+                    "channel": [
+                      1,
+                      2
+                    ]
+                  },
+                  "components": {
+                    "site": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    "z_index": 1
+                  },
+                  "data_type": "image",
+                  "dtype": "int32",
+                  "max": 156,
+                  "min": 0,
+                  "nonzero_coordinate_omission_reason": "nonzero count exceeds bounded coordinate projection limit 65536",
+                  "nonzero_count": 69893,
+                  "path": "results/A01_site-1_z_index-1_timepoint-1_neurons_step0.labels.tif",
+                  "payload_type": "ndarray",
+                  "shape": [
+                    2,
+                    1024,
+                    1024
+                  ],
+                  "size": 2097152,
+                  "source_spatial_shape_yx": [
+                    1024,
+                    1024
+                  ],
+                  "spatial_origin_yx": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "payload_summaries_truncated": false,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "manual",
+                  "output_key": "selected_images",
+                  "output_kind": "manual",
+                  "pipeline_position": null,
+                  "projection_key": "selected_images_037fb558914baa8724dd8f95cda6516484c0696280125dab2974f56829567101",
+                  "step_name": null,
+                  "step_scope_id": null
+                }
+              ],
+              "route_key": "origin_manual_kind_manual_projection_selected_images_037fb558914baa8724dd8f95cda6516484c0696280125dab2974f56829567101_scalar_stack",
+              "routed_component_coordinates": [
+                [
+                  1
+                ],
+                [
+                  2
+                ]
+              ],
+              "routed_component_values": {
+                "channel": [
+                  1,
+                  2
+                ]
+              },
+              "scalar_labels": [
+                "Site 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [
+                "channel"
+              ],
+              "title": "selected_images image stack [selected_images]",
+              "visible": false
+            }
+          ],
+          "native_dimensions": {
+            "camera_angles": [
+              0.0,
+              0.0,
+              90.0
+            ],
+            "canvas_size": [
+              962,
+              442
+            ],
+            "displayed_axes": [
+              "y",
+              "x"
+            ],
+            "ndisplay": 2,
+            "order": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "point": [
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              692.7116,
+              692.7116
+            ]
+          },
+          "native_viewport": {
+            "center": [
+              0.0,
+              264.342,
+              1043.812
+            ],
+            "zoom": 5.0
+          },
+          "observed": true,
+          "response": {},
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "viewer_ndim": 7,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_get_viewer_window_state"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

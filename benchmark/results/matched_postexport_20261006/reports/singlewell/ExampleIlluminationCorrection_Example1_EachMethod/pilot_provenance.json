@@ -1,0 +1,87 @@
+{
+  "case": "ExampleIlluminationCorrection_Example1_EachMethod",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "3879f7d442034a3603f4dabe44ba4a542d831156494fff0d4e37b64cbf2161ad",
+  "driver_sha256": "d4c82795712e99c0e9c012e554d9e9c913bca4f1a6231a9cfaecd62dd6a021bf",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "AS_09047_050428030001_O14f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "968ea530f2a3aab735664fff7936ebc4e406a7112fd84b89d92431ba27178c96"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleIlluminationCorrection_Example1_EachMethod/native_report.json",
+  "native_reference_report_sha256": "a73bea817ce8baf81697b8373b19381b5f3bac7d066547670429ea2ca90ba100",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleIlluminationCorrection_Example1_EachMethod/native_report.json",
+      "sha256": "a73bea817ce8baf81697b8373b19381b5f3bac7d066547670429ea2ca90ba100"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleIlluminationCorrection_Example1_EachMethod/native_request.json",
+      "sha256": "a788fc46b509822851420e286497fff7c0d8a4cad26136ced03a3dcdac631da1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleIlluminationCorrection_Example1_EachMethod/pilot_provenance.json",
+      "sha256": "db75e7c5fc7daa7c2e1114b1beee4c5365861c76877d33ece9e76c0fc8a74da0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_EachMethod/native/-1/reference_image__CorrGreen.npy",
+      "sha256": "3c17148f0fad16738a23af55ac4e41692e6c2906808a7d83823331702b1b4f46"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_EachMethod/native/0/reference_image__CorrGreen.npy",
+      "sha256": "3c17148f0fad16738a23af55ac4e41692e6c2906808a7d83823331702b1b4f46"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_EachMethod/native/1/reference_image__CorrGreen.npy",
+      "sha256": "3c17148f0fad16738a23af55ac4e41692e6c2906808a7d83823331702b1b4f46"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_EachMethod/native/2/reference_image__CorrGreen.npy",
+      "sha256": "3c17148f0fad16738a23af55ac4e41692e6c2906808a7d83823331702b1b4f46"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_EachMethod/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "730871fddd9fd941ae38a6c34109f9818c219179599b65d686c92f7963d06d0f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_EachMethod/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example1_EachMethod.cppipe",
+      "sha256": "dcb0a89a77ae43e66f643f71c11a5bcb8949664ac27ffbf040a5f3a86ed478ac"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "AS_09047_050428030001_O14f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "968ea530f2a3aab735664fff7936ebc4e406a7112fd84b89d92431ba27178c96"
+    }
+  ]
+}

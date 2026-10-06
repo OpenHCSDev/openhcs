@@ -1,0 +1,5 @@
+# Raw receipts are preserved in the reviewed tar.gz, byte-for-byte.
+*.log
+*.xml
+*.json
+*.stderr

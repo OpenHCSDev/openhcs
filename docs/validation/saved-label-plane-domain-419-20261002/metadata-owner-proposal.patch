@@ -1,0 +1,38 @@
+diff --git a/openhcs/core/runtime_image_values.py b/openhcs/core/runtime_image_values.py
+--- a/openhcs/core/runtime_image_values.py
++++ b/openhcs/core/runtime_image_values.py
+@@ -137,6 +137,16 @@ class ImagePayloadMetadata(
+             if member.metadata.get(ViewerWireField.IMAGE_METADATA, False)
+         )
+ 
++    def preserved_plane_projection(self) -> RuntimePlaneAxisValueProjection | None:
++        """Retain this payload's exact declared non-spatial leading axis."""
++        if self.plane_axis is None:
++            return None
++        return RuntimePlaneAxisValueProjection.preserve(
++            axis=self.plane_axis,
++            axis_size=self.source_provenance.source_plane_count,
++            source_aliases=self.source_image_names,
++        )
++
+     def singleton_plane_projection(self) -> RuntimePlaneAxisValueProjection | None:
+         """Select a declared leading axis only with one exact runtime source plane."""
+         plane_count = self.source_provenance.source_plane_count
+diff --git a/openhcs/core/runtime_object_label_building.py b/openhcs/core/runtime_object_label_building.py
+--- a/openhcs/core/runtime_object_label_building.py
++++ b/openhcs/core/runtime_object_label_building.py
+@@ -130,12 +130,8 @@ class SourceImageObjectLabelBuildRequest:
+             )
+         projection = self.plane_projection
+         metadata = self.metadata
+-        if metadata.plane_axis is not None:
+-            declared_projection = RuntimePlaneAxisValueProjection.preserve(
+-                axis=metadata.plane_axis,
+-                axis_size=metadata.source_provenance.source_plane_count,
+-                source_aliases=metadata.source_image_names,
+-            )
++        declared_projection = metadata.preserved_plane_projection()
++        if declared_projection is not None:
+             if projection is None:
+                 projection = declared_projection
+             elif (

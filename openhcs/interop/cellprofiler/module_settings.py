@@ -1,6 +1,8 @@
 """Nominal settings authorities for CellProfiler modules."""
 
 from __future__ import annotations
+
+import inspect
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
@@ -14,13 +16,7 @@ from typing import (
     get_origin,
     get_type_hints,
 )
-from openhcs.interop.cellprofiler.settings_binder import (
-    SettingToKeywordBinding,
-    coerce_cellprofiler_enum,
-)
-from openhcs.interop.cellprofiler_setting_normalization import (
-    normalize_cellprofiler_setting_name,
-)
+
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     setting_name_matches,
@@ -28,8 +24,16 @@ from openhcs.interop.cellprofiler.setting_names import (
     setting_values,
     split_symbol_names,
 )
+from openhcs.interop.cellprofiler.settings_binder import (
+    SettingToKeywordBinding,
+    coerce_cellprofiler_enum,
+)
+from openhcs.interop.cellprofiler_setting_normalization import (
+    normalize_cellprofiler_setting_name,
+)
 
 if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
@@ -174,6 +178,45 @@ def _coerce_callable_enum_kwarg(value: Any, enum_type: type[Enum]) -> Any:
 class CellProfilerModuleSettings:
     setting_bindings: ClassVar[tuple["SettingToKeywordBinding", ...]] = ()
     ignored_settings: ClassVar[tuple[str | "SettingNameFamily", ...]] = ()
+
+    @classmethod
+    def compile_time_parameter_names(
+        cls, contract: "CallableContract",
+    ) -> tuple[str, ...]:
+        """Derive compile-only kwargs from the exact setting/ABI declarations."""
+        signature = inspect.signature(cls.require_callable(contract.function_name))
+        return tuple(
+            binding.require_parameter_name()
+            for binding in cls.declared_setting_bindings()
+            if binding.declares_artifact
+            or binding.require_parameter_name() not in signature.parameters
+        )
+
+    @classmethod
+    def normalize_authoring_kwargs(
+        cls, contract: "CallableContract", kwargs: Mapping[str, object],
+    ) -> dict[str, object]:
+        """Keep authored choices and project defaults through declaration hooks."""
+        if not any(
+            name in kwargs for name in cls.compile_time_parameter_names(contract)
+        ):
+            return dict(kwargs)
+        module = cls._module_block_from_setting_records(tuple(
+            record
+            for binding in cls.declared_setting_bindings()
+            for record in binding.records_from_kwargs(kwargs)
+        ))
+        return {
+            **cls.authoring_default_kwargs(module, authored_kwargs=kwargs),
+            **kwargs,
+        }
+
+    @classmethod
+    def authoring_default_kwargs(
+        cls, module: "ModuleBlock", *, authored_kwargs: Mapping[str, object],
+    ) -> Mapping[str, object]:
+        """Concrete declarations may derive defaults from their setting rows."""
+        return {}
 
     @classmethod
     def declared_setting_bindings(cls) -> tuple[SettingToKeywordBinding, ...]:

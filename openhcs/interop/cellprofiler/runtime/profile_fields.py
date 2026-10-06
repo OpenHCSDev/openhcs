@@ -4,18 +4,20 @@ from __future__ import annotations
 
 import numpy as np
 
+from openhcs.core.runtime_profile import RuntimeProfileFieldValue
 from openhcs.core.image_shapes import ArrayShape
 from openhcs.core.artifacts import ArtifactSpec
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
+    ObjectLabelStorageStrategy,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_image_values import (
     image_payload_data,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerMeasurementImage
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
-    RuntimeProfileFieldValue,
 )
 
 
@@ -73,8 +75,23 @@ def dense_label_argument_stage_profile_fields(
 def cellprofiler_profile_payload_fields(
     prefix: str,
     value: RuntimeCallableArgument,
-) -> dict[str, RuntimeCallableArgument]:
+) -> dict[str, RuntimeProfileFieldValue]:
     """Return cheap payload shape/size fields for CellProfiler runtime profiling."""
+    if isinstance(value, RuntimeArrayPayload):
+        # Structured array owners declare geometry without materializing pixels.
+        shape = (
+            ObjectLabelStorageStrategy.for_value(value).label_shape(value)
+            if isinstance(value, ObjectLabelValue)
+            else tuple(value.shape)
+        )
+        return {
+            f"{prefix}_type": type(value).__name__,
+            f"{prefix}_shape": shape,
+            f"{prefix}_nbytes": (
+                None if shape is None
+                else int(np.prod(shape)) * np.dtype(value.dtype).itemsize
+            ),
+        }
     data = image_payload_data(value)
     data_array = data if isinstance(data, np.ndarray) else None
     return {
@@ -86,14 +103,14 @@ def cellprofiler_profile_payload_fields(
 
 def object_label_artifact_profile_fields(
     value: ObjectLabelValue,
-) -> dict[str, RuntimeCallableArgument]:
+) -> dict[str, RuntimeProfileFieldValue]:
     """Return object-label artifact fields for runtime adapter profiling."""
     source_component_metadata = None
     if value.source_component_metadata is not None:
         source_component_metadata = dict(value.source_component_metadata)
     domain = value.domain
     return {
-        "label_shape": ArrayShape.shape_for(value.labels),
+        "label_shape": ObjectLabelStorageStrategy.for_value(value).label_shape(value),
         "declared_object_count": domain.declared_object_count,
         "declared_object_ids": len(domain.declared_object_ids),
         "declared_object_id_domains": len(domain.declared_object_id_domains),

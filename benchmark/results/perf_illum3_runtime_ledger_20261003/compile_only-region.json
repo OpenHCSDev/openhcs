@@ -1,0 +1,430 @@
+{
+  "pid": 2078682,
+  "thread": 140361443509952,
+  "region": "ZMQExecutionServer._execute_with_orchestrator",
+  "root_dimensions": "{\"case\": \"ExampleIlluminationCorrection_Example3\", \"compile_artifact_id\": null, \"execution_id\": \"78250d97-e324-4dbd-a014-62f28444b8a3\", \"kind\": \"compile_only\", \"plate\": \"/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images\"}",
+  "seconds": 0.5882621230557561,
+  "revision": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "source": "/home/ts/code/projects/openhcs-shared-runtime-plumbing",
+  "stats": {
+    "ObjectState._compute_resolved_snapshot": {
+      "owner": "ObjectState._compute_resolved_snapshot",
+      "dimensions": "",
+      "phase": "compiler_config:_compute_resolved_snapshot",
+      "calls": 46,
+      "inclusive": 0.2531436877325177,
+      "exclusive": 0.2531436877325177
+    },
+    "ObjectState.__init__": {
+      "owner": "ObjectState.__init__",
+      "dimensions": "",
+      "phase": "compiler_config:__init__",
+      "calls": 23,
+      "inclusive": 0.35587291372939944,
+      "exclusive": 0.10272922599688172
+    },
+    "ObjectState._reconstruct_from_resolved": {
+      "owner": "ObjectState._reconstruct_from_resolved",
+      "dimensions": "",
+      "phase": "compiler_config:_reconstruct_from_resolved",
+      "calls": 343,
+      "inclusive": 0.05295955156907439,
+      "exclusive": 0.027533238753676414
+    },
+    "ObjectState.to_saved_resolved_object": {
+      "owner": "ObjectState.to_saved_resolved_object",
+      "dimensions": "",
+      "phase": "compiler_config:to_saved_resolved_object",
+      "calls": 21,
+      "inclusive": 0.027600623667240143,
+      "exclusive": 6.738491356372833e-05
+    },
+    "PipelineOrchestrator.get_effective_config": {
+      "owner": "PipelineOrchestrator.get_effective_config",
+      "dimensions": "",
+      "phase": "compiler_config:get_effective_config",
+      "calls": 10,
+      "inclusive": 0.19238800555467606,
+      "exclusive": 8.529284968972206e-05
+    },
+    "PipelineOrchestrator.create_context": {
+      "owner": "PipelineOrchestrator.create_context",
+      "dimensions": "",
+      "phase": "compiler_config:create_context",
+      "calls": 3,
+      "inclusive": 0.04923866596072912,
+      "exclusive": 0.0002901456318795681
+    },
+    "ZMQExecutionServer._initialize_orchestrator": {
+      "owner": "ZMQExecutionServer._initialize_orchestrator",
+      "dimensions": "",
+      "phase": "_initialize_orchestrator",
+      "calls": 1,
+      "inclusive": 0.1088466951623559,
+      "exclusive": 0.003273043315857649
+    },
+    "PipelineCompiler._axis_values_to_process": {
+      "owner": "PipelineCompiler._axis_values_to_process",
+      "dimensions": "",
+      "phase": "compiler_config:_axis_values_to_process",
+      "calls": 1,
+      "inclusive": 0.014383771922439337,
+      "exclusive": 7.574260234832764e-05
+    },
+    "PipelineCompiler._register_and_resolve_pipeline_once": {
+      "owner": "PipelineCompiler._register_and_resolve_pipeline_once",
+      "dimensions": "",
+      "phase": "compiler_config:_register_and_resolve_pipeline_once",
+      "calls": 1,
+      "inclusive": 0.19153947802260518,
+      "exclusive": 0.0021261521615087986
+    },
+    "PipelineCompiler._capture_pipeline_config": {
+      "owner": "PipelineCompiler._capture_pipeline_config",
+      "dimensions": "",
+      "phase": "compiler_config:_capture_pipeline_config",
+      "calls": 1,
+      "inclusive": 0.0017600241117179394,
+      "exclusive": 2.52528116106987e-06
+    },
+    "PipelineCompiler._resolve_global_step_axis_filters": {
+      "owner": "PipelineCompiler._resolve_global_step_axis_filters",
+      "dimensions": "",
+      "phase": "compiler_config:_resolve_global_step_axis_filters",
+      "calls": 1,
+      "inclusive": 0.013955585192888975,
+      "exclusive": 0.00047726836055517197
+    },
+    "AxisCompilationRequest.context_for": {
+      "owner": "AxisCompilationRequest.context_for",
+      "dimensions": "",
+      "phase": "compiler_config:context_for",
+      "calls": 1,
+      "inclusive": 0.018960938788950443,
+      "exclusive": 0.00017500855028629303
+    },
+    "CompilationSession.from_context": {
+      "owner": "CompilationSession.from_context",
+      "dimensions": "",
+      "phase": "compiler_config:from_context",
+      "calls": 1,
+      "inclusive": 1.70818530023098e-05,
+      "exclusive": 1.70818530023098e-05
+    },
+    "PipelineCompiler._configure_input_conversion_if_needed": {
+      "owner": "PipelineCompiler._configure_input_conversion_if_needed",
+      "dimensions": "",
+      "phase": "compiler_config:_configure_input_conversion_if_needed",
+      "calls": 1,
+      "inclusive": 0.013350545894354582,
+      "exclusive": 4.2282044887542725e-06
+    },
+    "PipelineCompiler.initialize_step_plans_for_context": {
+      "owner": "PipelineCompiler.initialize_step_plans_for_context",
+      "dimensions": "",
+      "phase": "compiler_config:initialize_step_plans_for_context",
+      "calls": 1,
+      "inclusive": 0.14918227866292,
+      "exclusive": 0.1358146509155631
+    },
+    "PipelineCompiler.declare_zarr_stores": {
+      "owner": "PipelineCompiler.declare_zarr_stores",
+      "dimensions": "",
+      "phase": "compiler_config:declare_zarr_stores",
+      "calls": 1,
+      "inclusive": 0.013443371281027794,
+      "exclusive": 4.089716821908951e-05
+    },
+    "PipelineCompiler._finalize_compilation": {
+      "owner": "PipelineCompiler._finalize_compilation",
+      "dimensions": "",
+      "phase": "compiler_config:_finalize_compilation",
+      "calls": 1,
+      "inclusive": 0.013896864838898182,
+      "exclusive": 0.00011343369260430336
+    },
+    "PipelineCompiler.compile_pipelines": {
+      "owner": "PipelineCompiler.compile_pipelines",
+      "dimensions": "",
+      "phase": "compiler_config:compile_pipelines",
+      "calls": 1,
+      "inclusive": 0.437725986354053,
+      "exclusive": 0.02060367353260517
+    },
+    "ZMQExecutionServer._execute_with_orchestrator | {\"case\": \"ExampleIlluminationCorrection_Example3\", \"compile_artifact_id\": null, \"execution_id\": \"78250d97-e324-4dbd-a014-62f28444b8a3\", \"kind\": \"compile_only\", \"plate\": \"/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images\"}": {
+      "owner": "ZMQExecutionServer._execute_with_orchestrator",
+      "dimensions": "{\"case\": \"ExampleIlluminationCorrection_Example3\", \"compile_artifact_id\": null, \"execution_id\": \"78250d97-e324-4dbd-a014-62f28444b8a3\", \"kind\": \"compile_only\", \"plate\": \"/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images\"}",
+      "phase": "_execute_with_orchestrator",
+      "calls": 1,
+      "inclusive": 0.5882621230557561,
+      "exclusive": 0.04168944153934717
+    }
+  },
+  "hooks_installed": [
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "__init__",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "_compute_resolved_snapshot",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "_reconstruct_from_resolved",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "to_saved_resolved_object",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "stack_image_payload_context",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "unstack_image_payload_context",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.measurement_feature_queries",
+      "owner": "MeasurementFeatureValueIndex",
+      "method": "from_columnar_table_by_object",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.core.virtual_workspace_metadata",
+      "owner": "AtomicMetadataWriter",
+      "method": "publish_source_projection_metadata",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "get",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "store",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "",
+      "method": "finalize_function_step_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "OpenHCSMetadataWriter",
+      "method": "finalize_completed_plate",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "RuntimeArtifactMetadataTarget",
+      "method": "reconciliation_targets",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "FunctionCoreExecutor",
+      "method": "execute",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_load_input_stack",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_validate_and_unstack",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_save_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.pipeline.compilation_session",
+      "owner": "CompilationSession",
+      "method": "from_context",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "compile_pipelines",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_register_and_resolve_pipeline_once",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "initialize_step_plans_for_context",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_capture_pipeline_config",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_resolve_global_step_axis_filters",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_configure_input_conversion_if_needed",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "declare_zarr_stores",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_finalize_compilation",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_axis_values_to_process",
+      "descriptor_kind": "staticmethod"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "AxisCompilationRequest",
+      "method": "context_for",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.processing.backends.lib_registry.unified_registry",
+      "owner": "RuntimeCallableInvocation",
+      "method": "call",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.analysis_consolidation",
+      "owner": "",
+      "method": "consolidate_analysis_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.worker_execution",
+      "owner": "",
+      "method": "execute_worker_lane",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.orchestrator",
+      "owner": "PipelineOrchestrator",
+      "method": "create_context",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.orchestrator",
+      "owner": "PipelineOrchestrator",
+      "method": "get_effective_config",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_execute_with_orchestrator",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_initialize_orchestrator",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_export_runtime_observation",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.function_contract_execution",
+      "owner": "CellProfilerFunctionContractExecutor",
+      "method": "execute",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.measurement_execution_support",
+      "owner": "ObjectMeasurementOutputRecorder",
+      "method": "record",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.output_recording",
+      "owner": "CellProfilerOutputRecorder",
+      "method": "record_module_outputs",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "__call__",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "_image_request",
+      "descriptor_kind": "function"
+    }
+  ],
+  "profiling_enabled": false,
+  "runtime_profiling_enabled": false,
+  "diagnostic_errors": [],
+  "captures": false,
+  "root_started_monotonic_ns": 3816282952668134,
+  "root_ended_monotonic_ns": 3816283540961927,
+  "numba_events": {
+    "installed": true,
+    "counts": {},
+    "record_count": 0,
+    "pending_record_count": 0,
+    "flushed_record_count": 0,
+    "refused_records": 0,
+    "errors": [],
+    "error_count": 0,
+    "record_bytes": 0,
+    "cap": 262144
+  },
+  "scope": "coarse same-run nested exclusive timing partition on the exact source revision recorded in this region. Diagnostic wrappers, no scientific or memory-observer substitutions. Not accepted performance comparison. Declared callable boundary includes filtering/decorated processing/metadata; not pure numerical kernels. Both existing profilers are disabled. These wrappers still add diagnostic overhead; no scaling to uninstrumented clocks or causal performance claims. Compiler/state boundaries and query boundary are nested under actual parents and excluded from parent-exclusive elapsed. This is a NEW 41-hook diagnostic version; inherited 24 boundary labels remain, site bytes are changed. ObjectState is verified against the actual source dependency path, not assumed inside the OpenHCS package."
+}

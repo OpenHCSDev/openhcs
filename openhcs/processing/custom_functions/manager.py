@@ -15,7 +15,6 @@ Architecture:
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
 import tempfile
@@ -25,7 +24,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from arraybridge import MemoryType
 
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.xdg_paths import get_data_file_path
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.processing.custom_functions.runtime_registry import (
@@ -61,14 +60,24 @@ class CustomFunctionInfo:
     Attributes:
         name: Function name
         file_path: Path to source .py file
-        memory_type: Memory type (numpy, cupy, etc.)
-        doc: Function docstring
+        contract: Original callable contract, also owning scope and memory type
     """
 
     name: str
     file_path: Path
-    memory_type: str
-    doc: str
+    contract: CallableContract
+
+    @property
+    def memory_type(self) -> str | None:
+        return self.contract.input_memory_type
+
+    @property
+    def doc(self) -> str:
+        return self.contract.func.__doc__ or ""
+
+    @property
+    def backend_label(self) -> str:
+        return self.memory_type or self.contract.execution_scope.value
 
 
 class CustomFunctionManager:
@@ -85,7 +94,7 @@ class CustomFunctionManager:
     def require_source(self, expected: CustomFunctionSource) -> None:
         """Reject a persisted declaration whose actual source bytes changed."""
         current = self._snapshot_source(
-            self.storage_dir / f"{expected.function_name}.py"
+            self.source_path_for_name(self.storage_dir, expected.function_name)
         )
         if current is None or current.source != expected:
             raise RuntimeError(
@@ -93,10 +102,24 @@ class CustomFunctionManager:
                 "recompile the pipeline."
             )
 
-    def __init__(self):
+    storage_subdirectory = "custom_functions"
+
+    @classmethod
+    def default_storage_directory(cls) -> Path:
+        """Resolve the native store without creating or migrating any files."""
+        return get_data_file_path(cls.storage_subdirectory, create=False)
+
+    @staticmethod
+    def source_path_for_name(storage_dir: Path, function_name: str) -> Path:
+        """Own source naming for both admission and actual persistence."""
+        if not function_name.isidentifier() or function_name.startswith("_"):
+            raise ValidationError("Custom function name must be a public Python identifier.")
+        return storage_dir / f"{function_name}.py"
+
+    def __init__(self, *, create_storage: bool = True):
         """Initialize manager and create storage directory if needed."""
-        self.storage_dir: Path = get_data_file_path("custom_functions")
-        if not self.storage_dir.exists():
+        self.storage_dir: Path = self.default_storage_directory()
+        if create_storage and not self.storage_dir.exists():
             self.storage_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Created custom functions directory: {self.storage_dir}")
 
@@ -107,6 +130,8 @@ class CustomFunctionManager:
         *,
         clear_caches: bool = True,
         emit_signal: bool = True,
+        expected_function_name: str | None = None,
+        write_admission: Callable[[Path], Path] | None = None,
     ) -> list[Callable]:
         """
         Validate and register the single declaration owned by this source.
@@ -127,12 +152,26 @@ class CustomFunctionManager:
             ValueError: If no valid functions found
             RuntimeError: If function registration fails
         """
+        if persist and write_admission is not None:
+            if expected_function_name is None:
+                raise ValueError("Write admission requires an explicit custom function name.")
+            write_admission(self.storage_dir)
+            write_admission(self.source_path_for_name(self.storage_dir, expected_function_name))
         metadata = self._prepare_source(code)
+        if expected_function_name is not None and metadata.original_name != expected_function_name:
+            raise ValidationError(
+                f"Prepared declaration {metadata.original_name!r} does not match "
+                f"admitted function {expected_function_name!r}."
+            )
         lifetime = CustomFunctionLifetime.from_persist(persist)
         with CustomFunctionRuntimeRegistry.lifecycle():
             CustomFunctionRuntimeRegistry.ensure_can_publish(metadata)
             if persist:
                 source_path = self.source_path_for_function(metadata.func)
+                if write_admission is not None:
+                    write_admission(self.storage_dir)
+                    write_admission(source_path)
+                self.storage_dir.mkdir(parents=True, exist_ok=True)
                 if source_path.exists():
                     raise ValueError(
                         f"Custom function '{metadata.original_name}' already exists; "
@@ -160,7 +199,7 @@ class CustomFunctionManager:
 
     def source_path_for_function(self, func: Callable) -> Path:
         """Return the persisted source path used for a registered function."""
-        return self.storage_dir / f"{func.__name__}.py"
+        return self.source_path_for_name(self.storage_dir, func.__name__)
 
     def source_revision(self) -> CustomFunctionSourceRevision:
         """Return a content-derived revision of all persisted declarations."""
@@ -168,7 +207,7 @@ class CustomFunctionManager:
         sources = tuple(
             CustomFunctionSource(
                 function_name=source_path.stem,
-                content_sha256=hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                content_sha256=CustomFunctionSource.content_digest(source_path.read_bytes()),
             )
             for source_path in sorted(self.storage_dir.glob("*.py"))
         )
@@ -243,7 +282,7 @@ class CustomFunctionManager:
         Returns:
             Number of functions registered from the persisted file.
         """
-        file_path: Path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
         snapshot = self._snapshot_source(file_path)
         if snapshot is None:
             return 0
@@ -295,7 +334,7 @@ class CustomFunctionManager:
         Returns:
             True if function file was deleted, False if not found
         """
-        file_path: Path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
 
         with CustomFunctionRuntimeRegistry.lifecycle():
             if not file_path.exists():
@@ -329,17 +368,11 @@ class CustomFunctionManager:
             try:
                 metadata = self._prepare_source(py_file.read_text(encoding="utf-8"))
                 contract = CallableContract.from_callable(metadata.func)
-                if contract.input_memory_type is None:
-                    raise ValidationError(
-                        f"Custom function '{metadata.original_name}' does not "
-                        "declare an input memory type."
-                    )
                 functions.append(
                     CustomFunctionInfo(
                         name=metadata.original_name,
                         file_path=py_file,
-                        memory_type=contract.input_memory_type,
-                        doc=metadata.func.__doc__ or "",
+                        contract=contract,
                     )
                 )
 
@@ -362,7 +395,7 @@ class CustomFunctionManager:
         Raises:
             ValueError: If function file not found
         """
-        file_path: Path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
 
         if not file_path.exists():
             raise ValueError(f"Custom function '{func_name}' not found")
@@ -389,7 +422,7 @@ class CustomFunctionManager:
             ValidationError: If new code is invalid
             OSError: If file operations fail
         """
-        old_file_path = self.storage_dir / f"{old_name}.py"
+        old_file_path = self.source_path_for_name(self.storage_dir, old_name)
         old_snapshot = self._snapshot_source(old_file_path)
         if old_snapshot is None:
             raise ValueError(f"Custom function '{old_name}' not found")
@@ -401,7 +434,7 @@ class CustomFunctionManager:
         else:
             metadata = self._prepare_source(new_code)
         new_name = metadata.original_name
-        new_file_path = self.storage_dir / f"{new_name}.py"
+        new_file_path = self.source_path_for_name(self.storage_dir, new_name)
         temp_path = self._write_temporary_source(new_code)
         try:
             with CustomFunctionRuntimeRegistry.lifecycle():
@@ -456,6 +489,8 @@ class CustomFunctionManager:
     ) -> "FunctionMetadata":
         """Validate and project one source without mutating runtime or disk state."""
 
+        from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
+
         validation_result = validate_code(code)
         if not validation_result.is_valid:
             raise ValidationError(
@@ -470,21 +505,14 @@ class CustomFunctionManager:
 
         declared_names = set(validation_result.function_names)
         declarations = [
-            (obj, CallableMetadata.from_callable(obj))
+            obj
             for name, obj in namespace.items()
             if name in declared_names and not name.startswith("_") and callable(obj)
         ]
         declarations = [
-            (declaration, metadata)
-            for declaration, metadata in declarations
-            if any(
-                memory_type is not None
-                for memory_type in (
-                    metadata.input_memory_type,
-                    metadata.output_memory_type,
-                    metadata.execution_memory_type,
-                )
-            )
+            declaration
+            for declaration in declarations
+            if OpenHCSRegistry.declared_callable_contract(declaration) is not None
         ]
         if len(declarations) != 1:
             raise ValidationError(
@@ -492,7 +520,7 @@ class CustomFunctionManager:
                 f"processing function; found {len(declarations)}."
             )
 
-        declaration, _metadata = declarations[0]
+        declaration = declarations[0]
         self._check_name_collision(declaration.__name__)
         function_validation = validate_function(declaration)
         if not function_validation.is_valid:
@@ -502,7 +530,7 @@ class CustomFunctionManager:
             )
         source = CustomFunctionSource(
             function_name=declaration.__name__,
-            content_sha256=hashlib.sha256(code.encode("utf-8")).hexdigest(),
+            content_sha256=CustomFunctionSource.content_digest(code.encode("utf-8")),
         )
         CustomFunctionSourceNamespace(source, namespace).bind(declaration)
         try:
@@ -541,7 +569,7 @@ class CustomFunctionManager:
             func_name: Name of function (used as filename)
             code: Python source code
         """
-        file_path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
         temp_path = self._write_temporary_source(code)
         try:
             os.replace(temp_path, file_path)
@@ -568,7 +596,7 @@ class CustomFunctionManager:
         return CustomFunctionSourceSnapshot(
             source=CustomFunctionSource(
                 function_name=source_path.stem,
-                content_sha256=hashlib.sha256(source_bytes).hexdigest(),
+                content_sha256=CustomFunctionSource.content_digest(source_bytes),
             ),
             code=code,
         )

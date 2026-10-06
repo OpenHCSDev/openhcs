@@ -22,6 +22,16 @@ def main() -> int:
             "The run refuses to attach to an existing server."
         ),
     )
+    parser.add_argument(
+        "--reuse-execution-server",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Keep one ready client-owned server across observations (default). "
+            "Pipeline total_seconds excludes server startup and shutdown. "
+            "Use --no-reuse-execution-server for cold-server diagnostics."
+        ),
+    )
     parser.add_argument("--case", action="append", dest="case_names")
     parser.add_argument("--wells", type=int, action="append")
     parser.add_argument("--workers", type=int, action="append")
@@ -152,6 +162,7 @@ def main() -> int:
         rerun_missing_memory=args.rerun_missing_memory,
         max_memory_mb=args.max_memory_mb,
         execution_port=args.execution_port,
+        reuse_execution_server=args.reuse_execution_server,
     )
     print(f"observations={len(results)}")
     print(f"csv={csv_path}")
@@ -175,7 +186,7 @@ def main() -> int:
         print(f"figures={figures_output_dir}")
         for output in figure_outputs:
             print(output)
-    return 0
+    return int(any(not result.is_successful() for result in results))
 
 
 def _parse_observation_key(raw_value: str):

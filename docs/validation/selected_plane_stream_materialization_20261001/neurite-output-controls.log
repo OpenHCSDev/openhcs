@@ -1,0 +1,1351 @@
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so e1e0517b3706e6f6e8de126e8c3758c3a6bbf0ca024782b795fcb27d509f3e3e
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so 9f873070c3e136dd78109a55570852981e989c1d21e3452ce214bbaa753b7308
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/function_patterns.py
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/pipeline/path_planner.py
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/steps/function_runtime.py
+....FFFF......................FFFFFFFF..FF.FF............FFFFF.......... [ 49%]
+........................................................................ [ 98%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+_____ test_independent_neuronal_cell_body_counter_has_no_neurite_contract ______
+
+    def test_independent_neuronal_cell_body_counter_has_no_neurite_contract():
+        image = np.zeros((2, 128, 128), dtype=np.uint16)
+        rows, columns = disk((64, 64), 12, shape=image.shape[1:])
+        image[0, rows, columns] = 1200
+        rows, columns = disk((64, 64), 6, shape=image.shape[1:])
+        image[1, rows, columns] = 1400
+    
+>       result = _cell_body_count_implementation()(
+            image,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0,
+                minimum_area=100.0,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            nuclear_stain=MetaXpressNuclearSettings(
+                channel_index=1,
+                approx_min_width=6.0,
+                approx_max_width=20.0,
+                intensity_above_local_background=200.0,
+            ),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:326: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:639: in count_neuronal_cell_bodies_metaxpress
+    cell_body_payload = _identify_nuclear_seeded_cell_bodies_cellprofiler(
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1269: in _identify_nuclear_seeded_cell_bodies_cellprofiler
+    seed_payload_template = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_____ test_independent_counter_propagates_nuclear_seed_through_soma_signal _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f00f976de80>
+
+    def test_independent_counter_propagates_nuclear_seed_through_soma_signal(monkeypatch):
+        image = np.zeros((2, 128, 128), dtype=np.uint16)
+        image[0, 50:62, 40:46] = 1200
+        image[0, 50:62, 47:53] = 1200
+        rows, columns = disk((56, 46), 5, shape=image.shape[1:])
+        image[1, rows, columns] = 1400
+        calls = []
+    
+        def propagated_secondary(body_image, *, primary_labels, **kwargs):
+            calls.append((body_image, primary_labels, kwargs))
+            propagated = np.zeros(body_image.shape, dtype=np.int32)
+            propagated[50:62, 40:53] = 1
+            return body_image, primary_labels.with_replacement_labels(propagated)
+    
+        monkeypatch.setattr(
+            "openhcs.processing.backends.analysis.neurite_outgrowth.identify_secondary_objects",
+            propagated_secondary,
+        )
+>       result = _cell_body_count_implementation()(
+            image,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0,
+                minimum_area=100.0,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            nuclear_stain=MetaXpressNuclearSettings(
+                channel_index=1,
+                approx_min_width=6.0,
+                approx_max_width=20.0,
+                intensity_above_local_background=200.0,
+            ),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:379: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:639: in count_neuronal_cell_bodies_metaxpress
+    cell_body_payload = _identify_nuclear_seeded_cell_bodies_cellprofiler(
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1269: in _identify_nuclear_seeded_cell_bodies_cellprofiler
+    seed_payload_template = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_______ test_topology_metrics_and_significant_threshold_is_scoring_only ________
+
+    def test_topology_metrics_and_significant_threshold_is_scoring_only():
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
+>       low_threshold = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(20.0),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:404: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+____________ test_unrooted_crossing_arm_is_not_reported_as_a_branch ____________
+
+    def test_unrooted_crossing_arm_is_not_reported_as_a_branch():
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(crossing=True))
+>       _, summary_rows, cell_rows, _, neurite_labels, _, _, _, *_ = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:446: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+________ test_neurite_morphology_is_soma_rooted_feature_bearing_forest _________
+
+    def test_neurite_morphology_is_soma_rooted_feature_bearing_forest():
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
+    
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:777: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+________ test_cell_lengths_measure_the_published_owned_paths[0.5-False] ________
+
+branched = False, pixel_size = 0.5
+
+    @pytest.mark.parametrize("branched", [False, True])
+    @pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
+    def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=branched))
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0 * pixel_size,
+                minimum_area=100.0 * pixel_size**2,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            outgrowth=MetaXpressOutgrowthSettings(
+                maximum_width=3.0 * pixel_size,
+                intensity_above_local_background=100.0,
+                minimum_cell_growth_to_log_as_significant=20.0,
+            ),
+            pixel_size=pixel_size,
+        )
+
+tests/unit/test_neurite_outgrowth.py:828: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=15.0, minimum_area=25.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 0.5
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+________ test_cell_lengths_measure_the_published_owned_paths[0.5-True] _________
+
+branched = True, pixel_size = 0.5
+
+    @pytest.mark.parametrize("branched", [False, True])
+    @pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
+    def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=branched))
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0 * pixel_size,
+                minimum_area=100.0 * pixel_size**2,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            outgrowth=MetaXpressOutgrowthSettings(
+                maximum_width=3.0 * pixel_size,
+                intensity_above_local_background=100.0,
+                minimum_cell_growth_to_log_as_significant=20.0,
+            ),
+            pixel_size=pixel_size,
+        )
+
+tests/unit/test_neurite_outgrowth.py:828: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=15.0, minimum_area=25.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 0.5
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+________ test_cell_lengths_measure_the_published_owned_paths[1.0-False] ________
+
+branched = False, pixel_size = 1.0
+
+    @pytest.mark.parametrize("branched", [False, True])
+    @pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
+    def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=branched))
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0 * pixel_size,
+                minimum_area=100.0 * pixel_size**2,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            outgrowth=MetaXpressOutgrowthSettings(
+                maximum_width=3.0 * pixel_size,
+                intensity_above_local_background=100.0,
+                minimum_cell_growth_to_log_as_significant=20.0,
+            ),
+            pixel_size=pixel_size,
+        )
+
+tests/unit/test_neurite_outgrowth.py:828: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+________ test_cell_lengths_measure_the_published_owned_paths[1.0-True] _________
+
+branched = True, pixel_size = 1.0
+
+    @pytest.mark.parametrize("branched", [False, True])
+    @pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
+    def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=branched))
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0 * pixel_size,
+                minimum_area=100.0 * pixel_size**2,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            outgrowth=MetaXpressOutgrowthSettings(
+                maximum_width=3.0 * pixel_size,
+                intensity_above_local_background=100.0,
+                minimum_cell_growth_to_log_as_significant=20.0,
+            ),
+            pixel_size=pixel_size,
+        )
+
+tests/unit/test_neurite_outgrowth.py:828: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+______ test_cell_lengths_measure_the_published_owned_paths[1.3556-False] _______
+
+branched = False, pixel_size = 1.3556
+
+    @pytest.mark.parametrize("branched", [False, True])
+    @pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
+    def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=branched))
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0 * pixel_size,
+                minimum_area=100.0 * pixel_size**2,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            outgrowth=MetaXpressOutgrowthSettings(
+                maximum_width=3.0 * pixel_size,
+                intensity_above_local_background=100.0,
+                minimum_cell_growth_to_log_as_significant=20.0,
+            ),
+            pixel_size=pixel_size,
+        )
+
+tests/unit/test_neurite_outgrowth.py:828: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=40.668, minimum_area=183.76513599999998, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.3556
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_______ test_cell_lengths_measure_the_published_owned_paths[1.3556-True] _______
+
+branched = True, pixel_size = 1.3556
+
+    @pytest.mark.parametrize("branched", [False, True])
+    @pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
+    def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=branched))
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=30.0 * pixel_size,
+                minimum_area=100.0 * pixel_size**2,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            outgrowth=MetaXpressOutgrowthSettings(
+                maximum_width=3.0 * pixel_size,
+                intensity_above_local_background=100.0,
+                minimum_cell_growth_to_log_as_significant=20.0,
+            ),
+            pixel_size=pixel_size,
+        )
+
+tests/unit/test_neurite_outgrowth.py:828: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=40.668, minimum_area=183.76513599999998, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.3556
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_________ test_neurite_morphology_provenance_selects_the_neurite_plane _________
+
+    def test_neurite_morphology_provenance_selects_the_neurite_plane():
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
+    
+>       morphology = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )[-1]
+
+tests/unit/test_neurite_outgrowth.py:869: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+___ test_disconnected_neurites_are_absent_from_owned_output_and_measurements ___
+
+    def test_disconnected_neurites_are_absent_from_owned_output_and_measurements():
+        baseline_image = _with_separate_body_channel(_draw_fluorescent_neuron())
+        image = baseline_image.copy()
+        rows, columns = line(20, 50, 20, 110)
+        image[1, rows, columns] = 700
+    
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:992: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_________ test_explicit_body_nuclear_and_neurite_channels_are_aligned __________
+
+    def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
+        neurite_image = _draw_fluorescent_neuron()[0]
+        body_image = np.zeros_like(neurite_image)
+        rows, columns = disk((64, 20), 9, shape=body_image.shape)
+        body_image[rows, columns] = 1000
+        nucleus_image = np.zeros_like(neurite_image)
+        rows, columns = disk((64, 20), 5, shape=nucleus_image.shape)
+        nucleus_image[rows, columns] = 1200
+        image = np.stack((nucleus_image, body_image, neurite_image))
+    
+        (
+            _,
+            summary_rows,
+            cell_rows,
+            cell_bodies,
+            neurite_labels,
+            neurons,
+            nuclei,
+            candidate_mask,
+            unrooted_residual,
+            secondary_ownership,
+            topology_dropped_trace,
+            topology_added_trace,
+            morphology,
+>       ) = _implementation()(
+            image,
+            neurite_channel_index=2,
+            cell_body=_cell_body_settings(channel_index=1),
+            outgrowth=_outgrowth_settings(),
+            use_nuclear_stain=True,
+            nuclear_stain=MetaXpressNuclearSettings(
+                channel_index=0,
+                approx_min_width=6.0,
+                approx_max_width=14.0,
+                intensity_above_local_background=200.0,
+            ),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1038: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=1)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+____ test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces _____
+
+    def test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces():
+        image = np.zeros((2, 128, 128), dtype=np.uint16)
+        for center in ((64, 20), (20, 75)):
+            rr, cc = disk(center, 9, shape=image.shape[1:])
+            image[:, rr, cc] = 1000
+        for start, end in (((64, 28), (64, 115)), ((28, 75), (115, 75))):
+            rr, cc = line(*start, *end)
+            image[1, rr, cc] = 700
+    
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1182: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+______________ test_final_neurons_project_rooted_trace_ownership _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f00f8c2d190>
+
+    def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
+    
+        def broad_secondary_ownership(source_image, primary_labels, **_kwargs):
+            del primary_labels
+            return np.ones(source_image.shape, dtype=np.int32)
+    
+        monkeypatch.setattr(
+            "openhcs.processing.backends.analysis.neurite_outgrowth."
+            "_identify_secondary_owner_regions_cellprofiler",
+            broad_secondary_ownership,
+        )
+    
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_____________ test_transmission_mode_detects_dark_cell_and_neurite _____________
+
+    def test_transmission_mode_detects_dark_cell_and_neurite():
+        fluorescence = _draw_fluorescent_neuron()[0]
+        transmission = np.full(fluorescence.shape, 2000, dtype=np.uint16)
+        transmission[fluorescence > 0] = 500
+    
+>       _, summary_rows, cell_rows, _, _, _, _, *_ = _implementation()(
+            transmission[None, ...],
+            illumination=NeuriteIllumination.TRANSMISSION,
+            cell_body=_cell_body_settings(),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1355: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[2000, 2000, 2000, ..., 2000, 2000, 2000],
+       [2000, 2000, 2000, ..., 2000, 2000, 2000],
+       [2000, 2000...00],
+       [2000, 2000, 2000, ..., 2000, 2000, 2000],
+       [2000, 2000, 2000, ..., 2000, 2000, 2000]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=None)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_____ test_cell_rows_do_not_remeasure_owned_paths_with_cp_seed_propagation _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f00f861e870>
+
+    def test_cell_rows_do_not_remeasure_owned_paths_with_cp_seed_propagation(monkeypatch):
+        image = _with_separate_body_channel(_draw_fluorescent_neuron())
+    
+        def forbidden_remeasurement(*args, **kwargs):
+            raise AssertionError(
+                "Final owned topology must not be reassigned by seed propagation"
+            )
+    
+        monkeypatch.setattr(
+            "openhcs.processing.backends.cellprofiler.skeleton.measure_object_skeleton",
+            forbidden_remeasurement,
+        )
+>       _, summary_rows, cell_rows, _, _, _, _, *_ = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=MetaXpressCellBodySettings(
+                approximate_max_width=40.0,
+                minimum_area=40.0,
+                intensity_above_local_background=100.0,
+                channel_index=0,
+            ),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1380: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=40.0, minimum_area=40.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_____ test_explicit_same_body_channel_remains_valid_and_bounds_are_checked _____
+
+    def test_explicit_same_body_channel_remains_valid_and_bounds_are_checked():
+        image = _draw_fluorescent_neuron()
+>       result = _implementation()(
+            image,
+            neurite_channel_index=0,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1408: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+_________________ test_body_and_nuclear_channel_may_be_shared __________________
+
+    def test_body_and_nuclear_channel_may_be_shared():
+        neurite_image = _draw_fluorescent_neuron()[0]
+        body_and_nucleus = np.zeros_like(neurite_image)
+        rows, columns = disk((64, 20), 9, shape=body_and_nucleus.shape)
+        body_and_nucleus[rows, columns] = 1200
+        image = np.stack((body_and_nucleus, neurite_image))
+    
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            use_nuclear_stain=True,
+            nuclear_stain=MetaXpressNuclearSettings(
+                channel_index=0,
+                approx_min_width=6.0,
+                approx_max_width=20.0,
+                intensity_above_local_background=200.0,
+            ),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1432: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+___ test_nuclear_body_mode_rejects_non_neuronal_dapi_seed_and_unowned_signal ___
+
+    def test_nuclear_body_mode_rejects_non_neuronal_dapi_seed_and_unowned_signal():
+        image = np.zeros((2, 160, 160), dtype=np.uint16)
+        for center in ((80, 25), (35, 105)):
+            rows, columns = disk(center, 9, shape=image.shape[1:])
+            image[0, rows, columns] = 1200
+    
+        rows, columns = disk((80, 25), 9, shape=image.shape[1:])
+        image[1, rows, columns] = 1200
+        rows, columns = line(80, 33, 80, 130)
+        image[1, rows, columns] = 700
+        rows, columns = line(35, 123, 35, 150)
+        image[1, rows, columns] = 900
+    
+>       result = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=_cell_body_settings(channel_index=0),
+            outgrowth=_outgrowth_settings(),
+            use_nuclear_stain=True,
+            nuclear_stain=MetaXpressNuclearSettings(
+                channel_index=0,
+                approx_min_width=6.0,
+                approx_max_width=20.0,
+                intensity_above_local_background=200.0,
+            ),
+            pixel_size=1.0,
+        )
+
+tests/unit/test_neurite_outgrowth.py:1465: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/analysis/neurite_outgrowth.py:847: in neurite_outgrowth_metaxpress
+    cell_body_payload = _identify_cell_bodies_cellprofiler(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = array([[0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+settings = MetaXpressCellBodySettings(approximate_max_width=30.0, minimum_area=100.0, intensity_above_local_background=100.0, channel_index=0)
+pixel_size_um = 1.0
+
+    def _identify_cell_bodies_cellprofiler(
+        image: np.ndarray,
+        settings: MetaXpressCellBodySettings,
+        pixel_size_um: float,
+        *,
+        bright_objects: bool,
+        nuclei_labels: np.ndarray | None = None,
+    ):
+        """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
+    
+        maximum_width_px = settings.approximate_max_width / pixel_size_um
+        minimum_area_px = settings.minimum_area / pixel_size_um**2
+>       _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+            _cellprofiler_foreground_image(image, bright_objects=bright_objects),
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
+                adaptive_window_size=_cellprofiler_adaptive_window(
+                    maximum_width_px,
+                    image.shape,
+                ),
+            ),
+        )
+E       ValueError: too many values to unpack (expected 3)
+
+openhcs/processing/backends/analysis/neurite_outgrowth.py:1211: ValueError
+- generated xml file: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/docs/validation/selected_plane_stream_materialization_20261001/neurite-output-controls.xml -
+=========================== short test summary info ============================
+FAILED tests/unit/test_neurite_outgrowth.py::test_independent_neuronal_cell_body_counter_has_no_neurite_contract
+FAILED tests/unit/test_neurite_outgrowth.py::test_independent_counter_propagates_nuclear_seed_through_soma_signal
+FAILED tests/unit/test_neurite_outgrowth.py::test_topology_metrics_and_significant_threshold_is_scoring_only
+FAILED tests/unit/test_neurite_outgrowth.py::test_unrooted_crossing_arm_is_not_reported_as_a_branch
+FAILED tests/unit/test_neurite_outgrowth.py::test_neurite_morphology_is_soma_rooted_feature_bearing_forest
+FAILED tests/unit/test_neurite_outgrowth.py::test_cell_lengths_measure_the_published_owned_paths[0.5-False]
+FAILED tests/unit/test_neurite_outgrowth.py::test_cell_lengths_measure_the_published_owned_paths[0.5-True]
+FAILED tests/unit/test_neurite_outgrowth.py::test_cell_lengths_measure_the_published_owned_paths[1.0-False]
+FAILED tests/unit/test_neurite_outgrowth.py::test_cell_lengths_measure_the_published_owned_paths[1.0-True]
+FAILED tests/unit/test_neurite_outgrowth.py::test_cell_lengths_measure_the_published_owned_paths[1.3556-False]
+FAILED tests/unit/test_neurite_outgrowth.py::test_cell_lengths_measure_the_published_owned_paths[1.3556-True]
+FAILED tests/unit/test_neurite_outgrowth.py::test_neurite_morphology_provenance_selects_the_neurite_plane
+FAILED tests/unit/test_neurite_outgrowth.py::test_disconnected_neurites_are_absent_from_owned_output_and_measurements
+FAILED tests/unit/test_neurite_outgrowth.py::test_explicit_body_nuclear_and_neurite_channels_are_aligned
+FAILED tests/unit/test_neurite_outgrowth.py::test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces
+FAILED tests/unit/test_neurite_outgrowth.py::test_final_neurons_project_rooted_trace_ownership
+FAILED tests/unit/test_neurite_outgrowth.py::test_transmission_mode_detects_dark_cell_and_neurite
+FAILED tests/unit/test_neurite_outgrowth.py::test_cell_rows_do_not_remeasure_owned_paths_with_cp_seed_propagation
+FAILED tests/unit/test_neurite_outgrowth.py::test_explicit_same_body_channel_remains_valid_and_bounds_are_checked
+FAILED tests/unit/test_neurite_outgrowth.py::test_body_and_nuclear_channel_may_be_shared
+FAILED tests/unit/test_neurite_outgrowth.py::test_nuclear_body_mode_rejects_non_neuronal_dapi_seed_and_unowned_signal
+21 failed, 125 passed in 25.54s

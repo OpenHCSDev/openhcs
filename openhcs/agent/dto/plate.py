@@ -17,6 +17,7 @@ from openhcs.agent.dto.common import (
 )
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.constants.constants import AllComponents
+from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -317,6 +318,7 @@ class PlateFileQueryRequest:
     """Query image/result files exposed by a local plate inventory."""
 
     plate_path: str
+    result_directory: str | None = None
     microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
     pattern_format: str | None = None
     kind: PlateFileKind | None = PlateFileKind.IMAGE
@@ -333,6 +335,7 @@ class PlateFileQueryRequest:
         cls,
         *,
         plate_path: str,
+        result_directory: str | None = None,
         microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
@@ -346,6 +349,7 @@ class PlateFileQueryRequest:
     ) -> "PlateFileQueryRequest":
         return cls(
             plate_path=plate_path,
+            result_directory=result_directory,
             microscope_type=microscope_type,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
@@ -361,6 +365,7 @@ class PlateFileQueryRequest:
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "plate_path": self.plate_path,
+            "result_directory": self.result_directory,
             "microscope_type": self.microscope_type,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
@@ -379,6 +384,7 @@ class PlateFileStreamRequest:
     """Stream image or ROI files exposed by a local plate inventory to a viewer."""
 
     plate_path: str
+    result_directory: str | None = None
     context_plate_path: str | None = None
     file_paths: tuple[str, ...] = ()
     microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
@@ -388,6 +394,7 @@ class PlateFileStreamRequest:
     well: str | None = None
     limit: int = 1
     viewer_config_key: str = ViewerType.NAPARI.config_key
+    display_config: NapariDisplayConfig | None = None
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
     fresh_viewer: bool = False
     source_receipt: AgentResourceRef | None = None
@@ -397,6 +404,7 @@ class PlateFileStreamRequest:
         cls,
         *,
         plate_path: str,
+        result_directory: str | None = None,
         file_paths: list[str] | None = None,
         microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
         pattern_format: str | None = None,
@@ -405,6 +413,7 @@ class PlateFileStreamRequest:
         well: str | None = None,
         limit: int = 1,
         viewer_config_key: str = ViewerType.NAPARI.config_key,
+        display_config: NapariDisplayConfig | None = None,
         host: str = "localhost",
         port: int | None = None,
         transport_mode: TransportMode | None = None,
@@ -414,6 +423,7 @@ class PlateFileStreamRequest:
     ) -> "PlateFileStreamRequest":
         return cls(
             plate_path=plate_path,
+            result_directory=result_directory,
             file_paths=tuple(file_paths or ()),
             microscope_type=microscope_type,
             pattern_format=pattern_format,
@@ -422,6 +432,7 @@ class PlateFileStreamRequest:
             well=well,
             limit=limit,
             viewer_config_key=viewer_config_key,
+            display_config=display_config,
             connection=ExecutionConnectionSpec(
                 host=host,
                 port=port,
@@ -435,6 +446,7 @@ class PlateFileStreamRequest:
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "plate_path": self.plate_path,
+            "result_directory": self.result_directory,
             "file_paths": list(self.file_paths) if self.file_paths else None,
             "microscope_type": self.microscope_type,
             "pattern_format": self.pattern_format,
@@ -443,6 +455,7 @@ class PlateFileStreamRequest:
             "well": self.well,
             "limit": self.limit,
             "viewer_config_key": self.viewer_config_key,
+            "display_config": to_jsonable(self.display_config),
             **self.connection.tool_arguments(),
             "fresh_viewer": self.fresh_viewer,
             "source_receipt": (
@@ -983,6 +996,7 @@ class PlateFileQueryResult(AgentResultEnvelope):
     """Bounded plate file query result."""
 
     plate_path: str
+    result_directory: str | None = None
     requested_microscope_type: str
     detected_microscope_type: str | None = None
     handler_class: str | None = None

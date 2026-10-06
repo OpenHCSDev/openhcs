@@ -1,0 +1,61 @@
+{
+  "startup_seconds": 0.9386949227191508,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/native_tmp"
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs",
+    "expected_image_sets": 1,
+    "repetitions": 2,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/-1",
+      "image_set_count": 1,
+      "invocation_seconds": 1.3667851807549596,
+      "pre_first_module_seconds": 0.2952348357066512,
+      "first_module_through_post_run_seconds": 1.0715503450483084,
+      "invocation_started_monotonic_seconds": 3808405.732912145,
+      "first_module_started_monotonic_seconds": 3808406.028146981,
+      "completed_monotonic_seconds": 3808407.099697326
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0",
+      "image_set_count": 1,
+      "invocation_seconds": 0.6704615103080869,
+      "pre_first_module_seconds": 0.07343892008066177,
+      "first_module_through_post_run_seconds": 0.5970225902274251,
+      "invocation_started_monotonic_seconds": 3808407.099707816,
+      "first_module_started_monotonic_seconds": 3808407.173146736,
+      "completed_monotonic_seconds": 3808407.770169326
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1",
+      "image_set_count": 1,
+      "invocation_seconds": 0.7205826421268284,
+      "pre_first_module_seconds": 0.06369220139458776,
+      "first_module_through_post_run_seconds": 0.6568904407322407,
+      "invocation_started_monotonic_seconds": 3808407.770178504,
+      "first_module_started_monotonic_seconds": 3808407.833870705,
+      "completed_monotonic_seconds": 3808408.490761146
+    }
+  ]
+}

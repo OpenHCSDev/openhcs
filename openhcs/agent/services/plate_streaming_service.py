@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
+from functools import partial
 from pathlib import Path
+
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
 )
 from polystore.streaming.viewer_transport import ViewerStreamProducer
-from zmqruntime.viewer_protocol import ViewerSourceSpatialDomainPayload
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -38,6 +40,7 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.constants import AllComponents, Backend
 from openhcs.core.config import StreamingConfig
 from openhcs.core.plate_image_inventory import (
+    PlateFileKind,
     PlateFileInventoryQuery,
     PlateFileRecord,
 )
@@ -54,6 +57,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionBuilder,
 )
 from openhcs.core.viewer_streaming_service import (
+    FullWindowImageStreamingRequest,
     ImageStreamingRequest,
     RoiStreamingRequest,
     StreamingService,
@@ -86,10 +90,12 @@ class PlateStreamingService:
         *,
         ui_bridge_connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
     ) -> PlateFileStreamResult:
+        self._report_progress("Resolving viewer launch context")
         launch_context = self._ui_bridge_service.viewer_launch_context(
             ui_bridge_connection
         )
         context_plate_path = request.context_plate_path or request.plate_path
+        self._report_progress("Resolving physical plate source context")
         context, errors, warnings = self._plate_inspection_service.open_context(
             PlatePathInspectionRequest(
                 plate_path=context_plate_path,
@@ -133,6 +139,18 @@ class PlateStreamingService:
 
         config = None
         connection = request.connection
+        result = PlateFileStreamResult(
+            schema_version=SCHEMA_VERSION,
+            plate_path=str(inventory_plate_path),
+            requested_microscope_type=request.microscope_type,
+            detected_microscope_type=context.microscope_type,
+            handler_class=type(context.handler).__name__,
+            parser_class=None if context.parser is None else type(context.parser).__name__,
+            viewer_config_key=request.viewer_config_key,
+            connection=connection,
+            requested_paths=request.file_paths,
+            warnings=warnings,
+        )
         try:
             stream_context = replace(context, plate_path=inventory_plate_path)
             config = self._streaming_config(request)
@@ -143,12 +161,29 @@ class PlateStreamingService:
                 transport_mode=config.transport_mode,
                 persistent=config.persistent,
             )
-            inventory, inventory_warnings = (
-                self._plate_inspection_service.file_inventory(
-                    stream_context,
-                    kind=None if request.file_paths else request.kind,
+            result = replace(result, viewer_type=config.viewer_type, connection=connection)
+            if request.result_directory is not None:
+                if request.kind is not PlateFileKind.RESULT or request.well is not None:
+                    raise ValueError(
+                        "Explicit result-directory streaming requires kind='result' "
+                        "and no acquisition-component filter."
+                    )
+                result_path = self._plate_inspection_service.resolve_readable_path(
+                    request.result_directory
                 )
-            )
+                self._report_progress("Resolving retained result inventory")
+                inventory = self._plate_inspection_service.result_directory_inventory(
+                    result_path
+                )
+                inventory_warnings = context.warnings
+            else:
+                self._report_progress("Resolving plate file inventory")
+                inventory, inventory_warnings = (
+                    self._plate_inspection_service.file_inventory(
+                        stream_context,
+                        kind=None if request.file_paths else request.kind,
+                    )
+                )
             resolved_records = self._resolve_records(request, inventory)
             (
                 image_paths,
@@ -156,6 +191,15 @@ class PlateStreamingService:
                 roi_component_metadata_by_path,
                 skipped_records,
             ) = self._streamable_paths(resolved_records)
+            if (
+                request.result_directory is not None
+                and image_paths
+                and request.source_receipt is None
+            ):
+                raise ValueError(
+                    "Explicit result images require an exact source receipt; "
+                    "artifact filenames do not establish source identity."
+                )
             all_warnings = inventory_warnings
             if skipped_records:
                 all_warnings = (
@@ -169,21 +213,8 @@ class PlateStreamingService:
                     ),
                 )
             if not image_paths and not roi_paths:
-                return PlateFileStreamResult(
-                    schema_version=SCHEMA_VERSION,
-                    plate_path=str(stream_context.plate_path),
-                    requested_microscope_type=request.microscope_type,
-                    detected_microscope_type=context.microscope_type,
-                    handler_class=type(context.handler).__name__,
-                    parser_class=(
-                        None
-                        if context.parser is None
-                        else type(context.parser).__name__
-                    ),
-                    viewer_config_key=request.viewer_config_key,
-                    viewer_type=config.viewer_type,
-                    connection=connection,
-                    requested_paths=request.file_paths,
+                return replace(
+                    result,
                     resolved_records=self._record_summaries(resolved_records),
                     skipped_records=self._record_summaries(skipped_records),
                     errors=(
@@ -201,10 +232,21 @@ class PlateStreamingService:
             read_backend = stream_context.handler.get_primary_backend(
                 stream_context.plate_path, stream_context.filemanager
             )
-            source_projection, producer = self._receipt_source_projection(
-                request, resolved_records, stream_context
-            )
+            if request.result_directory is not None:
+                read_backend = Backend.DISK.value
+            if request.source_receipt is None:
+                image_request_type = ImageStreamingRequest
+                source_projection = self._inventory_source_projection(
+                    resolved_records, stream_context
+                )
+                producer = None
+            else:
+                image_request_type = FullWindowImageStreamingRequest
+                source_projection, producer = self._receipt_source_projection(
+                    request, resolved_records, stream_context
+                )
 
+            self._report_progress("Checking managed viewer lifecycle and readiness")
             viewer = StreamingViewerLifecycle.get_or_create_visualizer(
                 filemanager=stream_context.filemanager,
                 config=config,
@@ -212,19 +254,21 @@ class PlateStreamingService:
                 ready_timeout=30.0,
                 launch_context=launch_context,
             )
+            self._report_progress("Managed viewer ready; preparing selected artifacts")
             streaming_service = StreamingService(
                 filemanager=stream_context.filemanager,
                 microscope_handler=stream_context.handler,
                 plate_path=stream_context.plate_path,
             )
             status_messages: list[str] = []
+            record_status = partial(self._record_stream_status, status_messages)
             if image_paths:
                 streaming_service.stream_images(
-                    ImageStreamingRequest(
+                    image_request_type(
                         viewer=viewer,
                         config=config,
-                        status_callback=status_messages.append,
-                        error_callback=status_messages.append,
+                        status_callback=record_status,
+                        error_callback=record_status,
                         filenames=image_paths,
                         read_backend=read_backend,
                         source_projection=source_projection,
@@ -240,48 +284,34 @@ class PlateStreamingService:
                     for record in resolved_records
                     if record.streamable_roi_path is not None
                 )
-                streaming_service.stream_rois(
+                roi_streaming_service = StreamingService(
+                    filemanager=context.filemanager,
+                    microscope_handler=context.handler,
+                    plate_path=context.plate_path,
+                )
+                roi_streaming_service.stream_rois(
                     RoiStreamingRequest(
                         viewer=viewer,
                         config=config,
-                        status_callback=status_messages.append,
-                        error_callback=status_messages.append,
+                        status_callback=record_status,
+                        error_callback=record_status,
                         roi_filenames=roi_paths,
                         component_metadata_by_path=roi_component_metadata_by_path,
                         producer=roi_producer,
+                        require_source_metadata=request.result_directory is not None,
                     )
                 )
+            self._report_progress("Selected artifacts published and viewer settlement completed")
         except Exception as exc:
-            return PlateFileStreamResult(
-                schema_version=SCHEMA_VERSION,
-                plate_path=str(inventory_plate_path),
-                requested_microscope_type=request.microscope_type,
-                detected_microscope_type=context.microscope_type,
-                handler_class=type(context.handler).__name__,
-                parser_class=(
-                    None if context.parser is None else type(context.parser).__name__
-                ),
-                viewer_config_key=request.viewer_config_key,
+            return replace(
+                result,
                 viewer_type=None if config is None else config.viewer_type,
                 connection=connection,
-                requested_paths=request.file_paths,
                 errors=(self._stream_error(exc, plate_path=request.plate_path),),
-                warnings=warnings,
             )
 
-        return PlateFileStreamResult(
-            schema_version=SCHEMA_VERSION,
-            plate_path=str(inventory_plate_path),
-            requested_microscope_type=request.microscope_type,
-            detected_microscope_type=context.microscope_type,
-            handler_class=type(context.handler).__name__,
-            parser_class=(
-                None if context.parser is None else type(context.parser).__name__
-            ),
-            viewer_config_key=request.viewer_config_key,
-            viewer_type=config.viewer_type,
-            connection=connection,
-            requested_paths=request.file_paths,
+        return replace(
+            result,
             resolved_records=self._record_summaries(resolved_records),
             streamed_image_paths=image_paths,
             streamed_roi_paths=roi_paths,
@@ -289,6 +319,40 @@ class PlateStreamingService:
             status_messages=tuple(status_messages),
             warnings=all_warnings,
         )
+
+    @staticmethod
+    def _report_progress(message: str) -> None:
+        """Use the original request-local relay, without a viewer observer/store."""
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES, message,
+        ).publish()
+
+    def _record_stream_status(self, messages: list[str], message: str) -> None:
+        """Preserve the original receipt while relaying its core-owned stage."""
+        messages.append(message)
+        self._report_progress(message)
+
+    @staticmethod
+    def _inventory_source_projection(
+        records: tuple[PlateFileRecord, ...],
+        context: PlateInspectionContext,
+    ) -> VirtualWorkspaceSourceProjection | None:
+        """Carry inventory-owned physical image identities into viewer loading."""
+        builder = VirtualWorkspaceSourceProjectionBuilder(Path(context.plate_path))
+        projections = {}
+        for record in records:
+            image_path = record.streamable_image_path
+            if image_path is None or record.source_ref is None:
+                continue
+            builder.record_workspace_source_path(image_path, record.source_ref)
+            if record.metadata:
+                builder.record_source_metadata(image_path, record.metadata)
+            if record.source_projection is not None:
+                projections[image_path] = record.source_projection
+        builder.ingest_source_projections(
+            VirtualWorkspaceSourceProjectionEntries(projections)
+        )
+        return builder.projection() if builder.workspace_source_refs else None
 
     def _receipt_source_projection(
         self,
@@ -336,18 +400,16 @@ class PlateStreamingService:
             record, producer = state.image_payload_binding_for(image_path)
             producers.append(producer)
             plane_domain = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-                record.summary["aggregate_component_values"],
+                record.summary.require_plane_components(),
                 context="image receipt plane coordinates",
             )
             planes = SourceImageProvenancePlanes.from_component_domain(
                 path=image_path,
                 fixed_components=record.components,
                 aggregate_components=plane_domain.to_wire_mapping(),
-                plane_count=record.summary["shape"][0],
+                plane_count=record.summary.full_image_plane_count,
             )
-            domain = ViewerSourceSpatialDomainPayload.from_wire_mapping(
-                record.summary, source_label="image receipt"
-            )
+            domain = record.summary.source_domain
             first_components = planes.component_metadata[0]
             projection = SourcePlaneProjection(
                 address=OpenHCSPlaneAddress(
@@ -367,6 +429,7 @@ class PlateStreamingService:
                         origin_yx=domain.origin_yx,
                         source_shape_yx=domain.source_shape_yx,
                     ),
+                    source_voxel_spacing=record.summary.voxel_spacing,
                 ),
             )
             builder.record_workspace_source_path(image_path, projection.ref)
@@ -417,7 +480,7 @@ class PlateStreamingService:
             "enabled": True,
             **request.connection.specified_runtime_arguments(),
         }
-        return config_type(**values)
+        return config_type(**values).with_display_config(request.display_config)
 
     @classmethod
     def _resolve_records(

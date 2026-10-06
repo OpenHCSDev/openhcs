@@ -1,0 +1,1770 @@
+[
+  {
+    "phase": "body-center81",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center81",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center81/20261005T155858382763Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "b69c988bc60ea274d1e5c3c9b7b153274e8c9bd60c2b7c16dbd70d21959aa0e6",
+        "size_bytes": 239540,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center81/20261005T155858382763Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center81/20261005T155858382763Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "b69c988bc60ea274d1e5c3c9b7b153274e8c9bd60c2b7c16dbd70d21959aa0e6",
+          "size_bytes": 239540,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center81/20261005T155858382763Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 691582.361558025,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center81",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "body-center83",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center83",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center83/20261005T155955579480Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "fab32554bc281408a05682440c7856de70b846789064ba8a2a866d6fc52cda5a",
+        "size_bytes": 359100,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center83/20261005T155955579480Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center83/20261005T155955579480Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "fab32554bc281408a05682440c7856de70b846789064ba8a2a866d6fc52cda5a",
+          "size_bytes": 359100,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center83/20261005T155955579480Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 691639.688831356,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/body-center83",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "graph-center83",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/graph-center83",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/graph-center83/20261005T155958982978Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "68491530a143e158017d9abffbb3b23a1284d41de0228d14424686023fa7f736",
+        "size_bytes": 350792,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/graph-center83/20261005T155958982978Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/graph-center83/20261005T155958982978Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "68491530a143e158017d9abffbb3b23a1284d41de0228d14424686023fa7f736",
+          "size_bytes": 350792,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/graph-center83/20261005T155958982978Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 691643.024423129,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/graph-center83",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "seam-result96",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-result96",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-result96/20261005T160715033730Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "7e25c0ed0c23e9b7dba85b7861d69fb349966fd0446f279f8a513e98469ca537",
+        "size_bytes": 130540,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-result96/20261005T160715033730Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-result96/20261005T160715033730Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "7e25c0ed0c23e9b7dba85b7861d69fb349966fd0446f279f8a513e98469ca537",
+          "size_bytes": 130540,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-result96/20261005T160715033730Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692078.940948778,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-result96",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "seam-raw96",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-raw96",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-raw96/20261005T160718171370Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "0397b9ed06f498dbcdc9ce247dc013ae9a19bf21a4efba784659b3edfd275ccd",
+        "size_bytes": 245483,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-raw96/20261005T160718171370Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-raw96/20261005T160718171370Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "0397b9ed06f498dbcdc9ce247dc013ae9a19bf21a4efba784659b3edfd275ccd",
+          "size_bytes": 245483,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-raw96/20261005T160718171370Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692082.289087268,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-raw96",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "seam-combined96",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-combined96",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-combined96/20261005T160721683637Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "8d8892f135b3f3084d8a48c339f27c0489dff5d611f44215076825e0548f49bd",
+        "size_bytes": 299400,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-combined96/20261005T160721683637Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-combined96/20261005T160721683637Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "8d8892f135b3f3084d8a48c339f27c0489dff5d611f44215076825e0548f49bd",
+          "size_bytes": 299400,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-combined96/20261005T160721683637Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692085.729095897,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/seam-combined96",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "bottom-result97",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-result97",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-result97/20261005T160816945967Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "d4033e476819f55eb5b36da213bf55b8f09445a5a331ec6c9a49d5e8c395248a",
+        "size_bytes": 141472,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-result97/20261005T160816945967Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-result97/20261005T160816945967Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "d4033e476819f55eb5b36da213bf55b8f09445a5a331ec6c9a49d5e8c395248a",
+          "size_bytes": 141472,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-result97/20261005T160816945967Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692140.991465137,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-result97",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "bottom-raw97",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-raw97",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-raw97/20261005T160820208881Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "1f7a6b62908d7d21d7517651c1fae61d2cd20dd1e47509d5c18826a409e3ae7b",
+        "size_bytes": 264913,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-raw97/20261005T160820208881Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-raw97/20261005T160820208881Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "1f7a6b62908d7d21d7517651c1fae61d2cd20dd1e47509d5c18826a409e3ae7b",
+          "size_bytes": 264913,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-raw97/20261005T160820208881Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692144.326581658,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-raw97",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "bottom-combined97",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-combined97",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-combined97/20261005T160823711064Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "82fe9a3a2bfa658a22d1776ed06a04ed287a4318e3e0986021a4ac3f2fb57c9d",
+        "size_bytes": 330106,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-combined97/20261005T160823711064Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-combined97/20261005T160823711064Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "82fe9a3a2bfa658a22d1776ed06a04ed287a4318e3e0986021a4ac3f2fb57c9d",
+          "size_bytes": 330106,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-combined97/20261005T160823711064Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692147.661131601,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/bottom-combined97",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "border-result98",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-result98",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-result98/20261005T160901279952Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "a460be8bd8fe0c92ade667dec70ea4a1723ad68a868f63e3dccea0bd00781c2c",
+        "size_bytes": 117993,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-result98/20261005T160901279952Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-result98/20261005T160901279952Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "a460be8bd8fe0c92ade667dec70ea4a1723ad68a868f63e3dccea0bd00781c2c",
+          "size_bytes": 117993,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-result98/20261005T160901279952Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692185.304534388,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-result98",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "border-raw98",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-raw98",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-raw98/20261005T160904500361Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "a10f0dec2379aebee055df4ed64c80ceb299670ae0881d0ee54b9ca7a66159d2",
+        "size_bytes": 98915,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-raw98/20261005T160904500361Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-raw98/20261005T160904500361Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "a10f0dec2379aebee055df4ed64c80ceb299670ae0881d0ee54b9ca7a66159d2",
+          "size_bytes": 98915,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-raw98/20261005T160904500361Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692188.645022599,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-raw98",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "border-combined98",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-combined98",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-combined98/20261005T160907955067Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "f7a6af0f830e18b850ed0a2f0e692a8d018897ae7a621a203c0062d779df224b",
+        "size_bytes": 139693,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-combined98/20261005T160907955067Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-combined98/20261005T160907955067Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "f7a6af0f830e18b850ed0a2f0e692a8d018897ae7a621a203c0062d779df224b",
+          "size_bytes": 139693,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-combined98/20261005T160907955067Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692191.963476729,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/border-combined98",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "center-result100",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-result100",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-result100/20261005T161010260784Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "a82d7882d54235729afc42e47865959dac5bd706b0f588e31ac949e5628d6786",
+        "size_bytes": 142162,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-result100/20261005T161010260784Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            466
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-result100/20261005T161010260784Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "a82d7882d54235729afc42e47865959dac5bd706b0f588e31ac949e5628d6786",
+          "size_bytes": 142162,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-result100/20261005T161010260784Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692254.227978327,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-result100",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "center-raw100",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-raw100",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-raw100/20261005T161013463019Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "c3e005cc5cd13ae924ad4afe9634899a07f43b321df8caddda88225deaa4d386",
+        "size_bytes": 299264,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-raw100/20261005T161013463019Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-raw100/20261005T161013463019Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "c3e005cc5cd13ae924ad4afe9634899a07f43b321df8caddda88225deaa4d386",
+          "size_bytes": 299264,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-raw100/20261005T161013463019Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692257.555780883,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-raw100",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "center-combined100",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-combined100",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-combined100/20261005T161016875184Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "9c5f78d1a6c44fdca3b7641e5bf43576c1d89c65d702ffe0b982ef3e56de0442",
+        "size_bytes": 366971,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-combined100/20261005T161016875184Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            466
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-combined100/20261005T161016875184Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "9c5f78d1a6c44fdca3b7641e5bf43576c1d89c65d702ffe0b982ef3e56de0442",
+          "size_bytes": 366971,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-combined100/20261005T161016875184Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692260.892574862,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/center-combined100",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "final09-center-raw107",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-raw107",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-raw107/20261005T161648655814Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "07b1ad8d39f9c2cea32e737bc8c44ea247c23ea85fac892fa673aa7d33b1fb6e",
+        "size_bytes": 299192,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-raw107/20261005T161648655814Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            464
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-raw107/20261005T161648655814Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "07b1ad8d39f9c2cea32e737bc8c44ea247c23ea85fac892fa673aa7d33b1fb6e",
+          "size_bytes": 299192,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-raw107/20261005T161648655814Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692652.782596249,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-raw107",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  },
+  {
+    "phase": "final09-center-combined107",
+    "record": {
+      "capture_scope": "window",
+      "captured": true,
+      "connection": {
+        "host": "127.0.0.1",
+        "persistent": true,
+        "port": 6013,
+        "transport_mode": "tcp"
+      },
+      "errors": [],
+      "frame_condition": "immediate",
+      "height": 944,
+      "observation": null,
+      "observation_timeout_s": 2.5,
+      "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-combined107",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-combined107/20261005T161652190864Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "ce35a450affef0608351da62855c85ae60f2aad23f9c039da35bbb43ab5eb8c9",
+        "size_bytes": 367030,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-combined107/20261005T161652190864Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "response": {
+        "height": 944,
+        "native_dimensions": {
+          "camera_angles": [
+            0,
+            0,
+            90
+          ],
+          "canvas_size": [
+            953,
+            466
+          ],
+          "displayed_axes": [
+            "y",
+            "x"
+          ],
+          "ndisplay": 2,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "point": [
+            0,
+            0,
+            0,
+            0,
+            1943.2526,
+            1943.2526
+          ]
+        },
+        "observation": null,
+        "resource": {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-combined107/20261005T161652190864Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "ce35a450affef0608351da62855c85ae60f2aad23f9c039da35bbb43ab5eb8c9",
+          "size_bytes": 367030,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-combined107/20261005T161652190864Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        "snapshot": {
+          "capture_scope": "window",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 6013,
+            "transport_mode": "tcp"
+          },
+          "frame_condition": "immediate",
+          "include_response": true,
+          "observation_timeout_s": 2.5,
+          "operation_deadline": {
+            "expires_at": 692656.120780253,
+            "operation": "viewer control request",
+            "timeout_ms": 5000
+          },
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-p001-stitched-dev13-94-after-bbbc007-20261005/P001_STITCH_DEV13_94/qa/final09-center-combined107",
+          "timeout_ms": 5000
+        },
+        "status": "success",
+        "type": "screenshot_ack",
+        "viewer": {
+          "title": "OpenHCS Napari Visualization",
+          "type": "napari"
+        },
+        "width": 1440
+      },
+      "schema_version": "openhcs.agent.v1",
+      "viewer": {
+        "title": "OpenHCS Napari Visualization",
+        "viewer_type": "napari"
+      },
+      "warnings": [],
+      "width": 1440
+    }
+  }
+]

@@ -40,6 +40,7 @@ from pydantic import WithJsonSchema
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import dataclass_from_mapping
 from zmqruntime.config import TransportMode
+from zmqruntime.startup import EndpointStartupStatus
 
 import openhcs as openhcs_package
 from openhcs.agent.capabilities import (
@@ -78,7 +79,11 @@ from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
 )
-from openhcs.agent.dto.mcp import McpServerHealthResult
+from openhcs.agent.dto.mcp import (
+    McpServerHealthResult,
+    McpServerStaleErrorResult,
+    McpToolErrorResult,
+)
 from openhcs.agent.dto.ui_bridge import (
     UiBridgeConnectionRequest,
     UiBridgeConnectionSpec,
@@ -105,6 +110,7 @@ from openhcs.mcp.control_timeout import (
     McpUiBridgeTimeoutPolicy,
     McpViewerTimeoutPolicy,
 )
+from openhcs.mcp.execution import McpMainThreadDispatcher
 from openhcs.mcp.lifecycle import (
     McpProcessLifecycle,
     McpProcessRecoveryStatus,
@@ -445,29 +451,66 @@ async def _await_with_declared_progress(
     mcp_context,
     operation: Awaitable[object],
 ) -> object:
-    """Await one declared long operation while emitting MCP liveness progress."""
+    """Relay original endpoint statuses while awaiting one declared operation."""
 
     heartbeat_seconds = capability.progress_heartbeat_seconds
     if heartbeat_seconds is None:
         return await operation
-    elapsed_seconds = 0.0
     await _report_progress_if_available(
         mcp_context,
-        elapsed_seconds,
+        0.0,
         message=f"{capability.title}: started",
     )
-    task = asyncio.ensure_future(operation)
-    while True:
-        completed, _ = await asyncio.wait({task}, timeout=heartbeat_seconds)
-        if completed:
-            # An operation's own TimeoutError is terminal, not a heartbeat.
-            return task.result()
-        elapsed_seconds += heartbeat_seconds
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    statuses: asyncio.Queue[EndpointStartupStatus] = asyncio.Queue()
+    active = True
+
+    def publish(status: EndpointStartupStatus) -> None:
+        # A cancelled to_thread await cannot stop its worker. Late callbacks
+        # must not report into a terminal MCP request or a closed event loop.
+        if active:
+            loop.call_soon_threadsafe(statuses.put_nowait, status)
+
+    message = capability.title
+
+    async def report_status(status: EndpointStartupStatus) -> None:
+        nonlocal message
+        message = f"{capability.title}: {status.phase.value}: {status.message}"
         await _report_progress_if_available(
-            mcp_context,
-            elapsed_seconds,
-            message=f"{capability.title}: still running",
+            mcp_context, loop.time() - started, message=message
         )
+
+    with EndpointStartupStatus.callback_scope(publish):
+        task = asyncio.ensure_future(operation)
+        next_status = asyncio.create_task(statuses.get())
+        try:
+            while True:
+                completed, _ = await asyncio.wait(
+                    {task, next_status},
+                    timeout=heartbeat_seconds,
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                if next_status in completed:
+                    await report_status(next_status.result())
+                    next_status = asyncio.create_task(statuses.get())
+                if task in completed:
+                    # Flush already emitted terminal statuses before returning
+                    # the original result/error. No endpoint observation here.
+                    while not statuses.empty():
+                        await report_status(statuses.get_nowait())
+                    return task.result()
+                if not completed:
+                    await _report_progress_if_available(
+                        mcp_context,
+                        loop.time() - started,
+                        message=f"{message}: still running",
+                    )
+        finally:
+            active = False
+            next_status.cancel()
+            task.cancel()
+            await asyncio.gather(next_status, task, return_exceptions=True)
 
 
 async def _report_progress_if_available(
@@ -1944,7 +1987,7 @@ class McpViewerRequestToolBindingABC(ABC, metaclass=AutoRegisterMeta):
         default_overrides: Mapping[str, JsonValue] | None = None,
     ) -> tuple[Parameter, ...]:
         factory_signature = inspect_signature(factory)
-        factory_type_hints = get_type_hints(factory)
+        factory_type_hints = get_type_hints(factory, include_extras=True)
         resolved_default_overrides = default_overrides or {}
         return tuple(
             parameter.replace(
@@ -1977,7 +2020,7 @@ class McpViewerRequestToolBindingABC(ABC, metaclass=AutoRegisterMeta):
         """Return public non-connection parameters from a viewer request DTO."""
         factory = request_type.from_fields
         factory_signature = inspect_signature(factory)
-        factory_type_hints = get_type_hints(factory)
+        factory_type_hints = get_type_hints(factory, include_extras=True)
         control_fields = cls.viewer_control_field_names()
         return tuple(
             parameter.replace(annotation=factory_type_hints[parameter.name])
@@ -2133,6 +2176,7 @@ def build_server(
     capability_transport: CapabilityTransport = CapabilityTransport.LOCAL_STDIO,
     capability_surface_profile: LocalCapabilitySurfaceProfile | None = None,
     invocation_observer: McpInvocationObserver | None = None,
+    main_thread_dispatcher: McpMainThreadDispatcher | None = None,
 ):
     """Build the transport-neutral FastMCP surface without importing GUI services.
 
@@ -2151,6 +2195,11 @@ def build_server(
         fastmcp_factory = FastMCP
 
     ctx = context or create_agent_context()
+    dispatcher = (
+        main_thread_dispatcher
+        if main_thread_dispatcher is not None
+        else McpMainThreadDispatcher()
+    )
     capability_surface_selection = AgentCapabilitySurfaceSelection(
         transport=capability_transport,
         local_profile=(
@@ -2229,7 +2278,7 @@ def build_server(
                             return await fn(*args, **kwargs)
                         if capability.progress_worker_thread_safe:
                             return await asyncio.to_thread(fn, *args, **kwargs)
-                        return fn(*args, **kwargs)
+                        return await dispatcher.invoke(lambda: fn(*args, **kwargs))
 
                     try:
                         with _verbose_blocking_operation_diagnostics(capability):
@@ -2276,12 +2325,12 @@ def build_server(
             else:
 
                 @wraps(fn)
-                def guarded_tool(*args, **kwargs):
+                async def guarded_tool(*args, **kwargs):
                     stale = stale_result()
                     if stale is not None:
                         return stale
                     try:
-                        result = fn(*args, **kwargs)
+                        result = await dispatcher.invoke(lambda: fn(*args, **kwargs))
                         return project_success(result)
                     except Exception as exc:
                         return project_failure(exc)
@@ -2303,6 +2352,14 @@ def build_server(
                 meta=_mcp_tool_meta(capability),
                 structured_output=True,
             )(guarded_tool)
+            # Keep the SDK's declaration-generated model as the argument owner.
+            # Its default extra-ignore policy otherwise drops endpoint intent
+            # before our request DTO can reject an undeclared parameter.
+            registered_tool = server._tool_manager.get_tool(capability.name)
+            argument_model = registered_tool.fn_metadata.arg_model
+            argument_model.model_config["extra"] = "forbid"
+            argument_model.model_rebuild(force=True)
+            registered_tool.parameters = argument_model.model_json_schema(by_alias=True)
             return guarded_tool
 
         return decorator
@@ -2456,41 +2513,6 @@ def build_server(
         )
 
     return server
-
-
-@dataclass(frozen=True, slots=True)
-class McpToolErrorResult:
-    """Structured MCP boundary error returned instead of raising through transport."""
-
-    schema_version: str
-    ok: bool
-    tool: str
-    errors: tuple[AgentError, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class McpServerStaleErrorResult:
-    """Structured stale-process error with agent-actionable restart metadata."""
-
-    schema_version: str
-    ok: bool
-    tool: str
-    errors: tuple[AgentError, ...]
-    server_process_id: int
-    server_started_at_unix: float
-    stale_source_paths: tuple[str, ...]
-    recovery_reason: str
-    installation_pointer_path: str | None
-    installation_pointer_changed_since_import: bool
-    installation_pointer_available: bool | None
-    restart_required: bool
-    restart_command: tuple[str, ...]
-    restart_command_is_stable: bool
-    reconnect_required: bool
-    reconnect_owner: str | None
-    retry_after_reconnect: bool
-    automatic_recovery_on_reconnect: bool
-    restart_hint: str
 
 
 def _mcp_tool_result_contract(capability: AgentCapabilitySpec):

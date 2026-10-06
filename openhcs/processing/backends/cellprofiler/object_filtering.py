@@ -106,6 +106,9 @@ from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     ObjectLabelsInputBindingMixin,
     ObjectLabelsRuntimeParameter,
 )
+from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+)
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     CellProfilerObjectMeasurementVectorBinding,
 )
@@ -420,12 +423,19 @@ class FilterObjectsRuntimeInputPlan:
         return tuple(tables_by_identity.values())
 
 
-class FilterObjectsInputPolicy(ObjectLabelsInputBindingMixin):
+class FilterObjectsInputPolicy(
+    ObjectLabelsInputBindingMixin,
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+):
     """Bind ordered primary/additional object rows for FilterObjects."""
 
     supported_non_object_input_kinds = frozenset(
         {MeasurementsArtifactType, ObjectLineageArtifactType}
     )
+
+    @classmethod
+    def primary_image_domain_input_binding(cls) -> SettingToKeywordBinding:
+        return cls.input_binding
 
     @classmethod
     def bind_runtime_inputs(
@@ -2093,7 +2103,15 @@ def filter_objects(
     | tuple[
         np.ndarray,
         DataclassMeasurementColumnarRows,
-        np.ndarray | DirectedObjectRelationshipPayload,
+        ObjectLabelValue,
+        ObjectLabelValue,
+        DirectedObjectRelationshipPayload,
+        DirectedObjectRelationshipPayload,
+    ]
+    | tuple[
+        np.ndarray,
+        DataclassMeasurementColumnarRows,
+        ObjectLabelValue | DirectedObjectRelationshipPayload,
         ...,
     ]
 ):

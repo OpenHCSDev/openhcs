@@ -6,16 +6,27 @@ import hashlib
 import json
 from abc import ABC
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from enum import Enum
+from pathlib import Path
 from typing import Any, ClassVar, Generic, Self, TypeVar, cast
 
-from zmqruntime.messages import MessageFields, ResponseType
+from zmqruntime.config import TransportMode
+from zmqruntime.messages import MessageFields, ProcessIdentity, ResponseType
 from zmqruntime.startup import EndpointStartupStatus
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResultEnvelope
+from openhcs.agent.dto.common import (
+    SCHEMA_VERSION,
+    AgentError,
+    AgentDataclassCliRequest,
+    AgentResultEnvelope,
+)
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+from openhcs.agent.exceptions import AgentFacingErrorMixin
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts import ArtifactViewerStreaming
 from openhcs.core.function_reference import FunctionReference
+from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
 
 DEFAULT_FUNCTION_DETAIL_DOC_CHARS = 6_000
 
@@ -28,6 +39,11 @@ class FunctionCatalogControlMessageType(str, Enum):
     READ_DETAIL = "openhcs_function_detail_read"
     READ_REFERENCE = "openhcs_function_reference_read"
     REGISTER_CUSTOM = "openhcs_custom_function_register"
+    OBSERVE_CUSTOM_REGISTRATION = "openhcs_custom_function_registration_observe"
+    CUSTOM_REGISTRATION_DESTINATION = "openhcs_custom_function_registration_destination"
+    START_PREPARATION = "openhcs_function_catalog_prepare"
+    READ_PREPARATION = "openhcs_function_catalog_preparation_status"
+    CANCEL_PREPARATION = "openhcs_function_catalog_preparation_cancel"
 
 
 class FunctionCatalogControlField(str, Enum):
@@ -95,6 +111,147 @@ class FunctionSearchRequest(FunctionCatalogControlRequestABC):
 
 
 @dataclass(frozen=True, slots=True)
+class FunctionCatalogOperationHandle(AgentDataclassCliRequest):
+    """Incarnation authority shared by catalog lifecycle operations."""
+
+    connection: ExecutionConnectionSpec
+    server_identity: ProcessIdentity
+
+    def require_current_owner(self) -> None:
+        if self.server_identity != ProcessIdentity.current():
+            raise RuntimeError(
+                "Function catalog operation owner changed; handle is stale."
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationHandle(FunctionCatalogOperationHandle):
+    """The one preparation owner in this exact execution-server incarnation."""
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationHandle(FunctionCatalogOperationHandle):
+    """Content/owner proof for observing publication, not replay permission."""
+
+    content_sha256: str
+    function_name: str | None
+    persist: bool
+    storage_dir: str | None
+
+    @classmethod
+    def from_request(cls, request: CustomFunctionRegistrationRequest) -> Self:
+        return cls(
+            connection=request.connection, server_identity=request.require_selected_server_identity(),
+            content_sha256=CustomFunctionSource.content_digest(request.source_code.encode("utf-8")),
+            function_name=request.function_name, persist=request.persist,
+            storage_dir=request.storage_dir,
+        )
+
+    def require_named_source(self) -> CustomFunctionSource:
+        if self.function_name is None:
+            raise ValueError("Persisted registration observation requires its admitted name.")
+        return CustomFunctionSource(self.function_name, self.content_sha256)
+
+    def require_storage_dir(self) -> Path:
+        """Decode this handle's admitted source store once for native/path owners."""
+        if self.storage_dir is None:
+            raise ValueError("Persisted registration observation requires its admitted store.")
+        return Path(self.storage_dir)
+
+
+class CustomFunctionRegistrationObservationOutcome(str, Enum):
+    """Current canonical proofs; absence never establishes a failed mutation."""
+
+    NOT_OBSERVED = "not_observed"
+    PUBLISHED = "published"
+    PERSISTED_ONLY = "persisted_only"
+    REGISTERED = "registered"
+
+    @classmethod
+    def from_proofs(cls, *, published: bool, persisted: bool, persist: bool) -> Self:
+        if published:
+            return cls.REGISTERED if persisted or not persist else cls.PUBLISHED
+        return cls.PERSISTED_ONLY if persisted else cls.NOT_OBSERVED
+
+
+@dataclass(frozen=True, kw_only=True)
+class CustomFunctionRegistrationObservation(AgentResultEnvelope):
+    handle: CustomFunctionRegistrationHandle
+    published_sources: tuple[CustomFunctionSource, ...] = ()
+    persisted_source: CustomFunctionSource | None = None
+    outcome: CustomFunctionRegistrationObservationOutcome = field(init=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "outcome", CustomFunctionRegistrationObservationOutcome.from_proofs(
+            published=bool(self.published_sources), persisted=self.persisted_source is not None,
+            persist=self.handle.persist,
+        ))
+
+
+class FunctionCatalogPreparationOutcome(str, Enum):
+    NOT_STARTED = "not_started"
+    PENDING = "pending"
+    CANCELLING = "cancelling"
+    READY = "ready"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+    @property
+    def ready(self) -> bool:
+        return self is self.READY
+
+    @property
+    def terminal(self) -> bool:
+        return self in (self.READY, self.FAILED, self.CANCELLED)
+
+
+@dataclass(frozen=True, kw_only=True)
+class FunctionCatalogPreparationState(AgentResultEnvelope):
+    handle: FunctionCatalogPreparationHandle
+    outcome: FunctionCatalogPreparationOutcome
+    progress: EndpointStartupStatus
+
+    def require_ready(self) -> None:
+        if not self.outcome.ready:
+            raise FunctionCatalogNotReadyError(self)
+
+    def require_handle(self, expected: FunctionCatalogPreparationHandle) -> None:
+        if self.handle != expected:
+            raise RuntimeError(
+                "Function catalog preparation response changed owner/connection."
+            )
+
+
+class FunctionCatalogNotReadyError(AgentFacingErrorMixin, RuntimeError):
+    agent_error_code = "function_catalog_not_ready"
+    agent_error_hint = "Start/observe the same typed catalog preparation handle; no source was dispatched."
+
+    def __init__(self, state: FunctionCatalogPreparationState) -> None:
+        self.preparation = state
+        super().__init__(
+            f"Catalog preparation {state.handle!r} is {state.outcome.value}: {state.progress.message}. No source was dispatched."
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationStartRequest(FunctionCatalogControlRequestABC):
+    connection: ExecutionConnectionSpec
+    message_type = FunctionCatalogControlMessageType.START_PREPARATION
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationStatusRequest(FunctionCatalogControlRequestABC):
+    handle: FunctionCatalogPreparationHandle
+    message_type = FunctionCatalogControlMessageType.READ_PREPARATION
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationCancelRequest(FunctionCatalogControlRequestABC):
+    handle: FunctionCatalogPreparationHandle
+    message_type = FunctionCatalogControlMessageType.CANCEL_PREPARATION
+
+
+@dataclass(frozen=True, slots=True)
 class FunctionDetailRequest(FunctionIdentity):
     max_doc_chars: int | None = DEFAULT_FUNCTION_DETAIL_DOC_CHARS
     compact_signature: bool = True
@@ -114,8 +271,123 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
     source_code: str
     persist: bool = True
     compact_signature: bool = True
+    connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
+    function_name: str | None = None
+    storage_dir: str | None = None
+    admission_policy: AgentPathPolicy | None = field(default=None, repr=False, compare=False)
+    server_identity: ProcessIdentity | None = None
 
     message_type = FunctionCatalogControlMessageType.REGISTER_CUSTOM
+
+    @classmethod
+    def from_fields(
+        cls, *, source_code: str, persist: bool = True,
+        compact_signature: bool = True, function_name: str | None = None,
+        storage_dir: str | None = None, host: str = ExecutionConnectionSpec().host,
+        port: int | None = None, transport_mode: TransportMode | None = None,
+        persistent: bool = ExecutionConnectionSpec().persistent,
+    ) -> Self:
+        """Public boundary: callers cannot supply their own write authority."""
+        return cls(
+            source_code=source_code, persist=persist, compact_signature=compact_signature,
+            function_name=function_name, storage_dir=storage_dir,
+            connection=ExecutionConnectionSpec(
+                host=host, port=port, transport_mode=transport_mode, persistent=persistent,
+            ),
+        )
+
+    def admitted(self, policy: AgentPathPolicy) -> Self:
+        """Admit the exact destination before endpoint dispatch or source evaluation."""
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        self.connection.require_port("Custom function registration")
+        if self.persist:
+            if self.function_name is None or self.storage_dir is None:
+                raise ValueError("Persisted registration requires function_name and the endpoint's storage_dir.")
+            root = Path(self.storage_dir).expanduser()
+            if not root.is_absolute():
+                raise ValueError("Custom function storage_dir must be absolute.")
+            policy.assert_writable(root)
+            policy.assert_writable(CustomFunctionManager.source_path_for_name(root, self.function_name))
+        return replace(self, admission_policy=policy)
+
+    def require_selected_server_identity(self) -> ProcessIdentity:
+        """Project the admitted endpoint owner without claiming local execution.
+
+        Error recovery and observation handles are built in the caller too.
+        Their native identity must survive an uncertain source-bearing exchange;
+        projecting that identity is not admission to evaluate source here.
+        """
+        if self.server_identity is None:
+            raise ValueError("Custom registration has no admitted server identity.")
+        return self.server_identity
+
+    def require_server_identity(self) -> ProcessIdentity:
+        """Require the same native owner that supplied the admission destination."""
+        actual = ProcessIdentity.current()
+        if self.server_identity != actual:
+            raise ValueError(
+                f"Custom registration selected server {self.server_identity!r}, "
+                f"but reached {actual!r}; no source was evaluated."
+            )
+        return actual
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationDestinationRequest(FunctionCatalogControlRequestABC):
+    """Read the persistence owner's exact path without evaluating source."""
+
+    function_name: str | None = None
+    message_type = FunctionCatalogControlMessageType.CUSTOM_REGISTRATION_DESTINATION
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationObservationRequest(FunctionCatalogControlRequestABC):
+    handle: CustomFunctionRegistrationHandle
+    message_type = FunctionCatalogControlMessageType.OBSERVE_CUSTOM_REGISTRATION
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationDestination:
+    storage_dir: str
+    source_file_path: str | None
+    server_identity: ProcessIdentity = field(default_factory=ProcessIdentity.current)
+
+    def require_request(self, request: CustomFunctionRegistrationRequest) -> None:
+        """Reject a different native store before sending executable source."""
+        if not request.persist:
+            return
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        expected_root = Path(request.storage_dir).expanduser()
+        expected_file = CustomFunctionManager.source_path_for_name(
+            expected_root, request.function_name,
+        )
+        if (
+            Path(self.storage_dir).resolve(strict=False) != expected_root.resolve(strict=False)
+            or self.source_file_path is None
+            or Path(self.source_file_path).resolve(strict=False) != expected_file.resolve(strict=False)
+        ):
+            raise ValueError(
+                f"Selected endpoint owns custom storage {self.storage_dir}, "
+                f"source {self.source_file_path}, not requested {expected_file}; "
+                "no source was dispatched."
+            )
+
+    def require_result(
+        self, request: CustomFunctionRegistrationRequest,
+        result: CustomFunctionRegistrationResult,
+    ) -> None:
+        """Require the returned mutation receipt to identify the admitted owner."""
+        if result.server_identity != self.server_identity or result.connection != request.connection:
+            raise ValueError("Registration returned a different execution owner.")
+        if result.persisted != request.persist:
+            raise ValueError("Registration returned a different persistence policy.")
+        if request.persist and (
+            result.storage_dir != self.storage_dir
+            or result.source_file_paths != (self.source_file_path,)
+        ):
+            raise ValueError("Registration returned a different persistence destination.")
 
 
 class FunctionParameterSource(str, Enum):
@@ -231,7 +503,7 @@ class CellProfilerArtifactBindingSummary:
     direction: str
     kind: str
     setting_names: tuple[str, ...]
-    parameter_name: str | None = None
+    parameter_name: str
     runtime_parameter_name: str | None = None
     repeated: bool = False
 
@@ -390,6 +662,13 @@ class FunctionCatalogControlResponse(
         return self.value
 
 
+class FunctionCatalogPreparationStateControlResponse(
+    FunctionCatalogControlResponseBase[FunctionCatalogPreparationState]
+):
+    field = FunctionCatalogControlField.PREPARATION
+    value_type = FunctionCatalogPreparationState
+
+
 class FunctionCatalogPreparationStatus(str, Enum):
     """Control response state while endpoint catalog preparation is active."""
 
@@ -463,6 +742,27 @@ class CustomFunctionRegistrationResult(AgentResultEnvelope):
     source_file_paths: tuple[str, ...] = ()
     functions: tuple[FunctionCatalogEntry, ...] = ()
     next_steps: tuple[str, ...] = ()
+    connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
+    server_identity: ProcessIdentity | None = None
+    observation_handle: CustomFunctionRegistrationHandle | None = None
+
+    @classmethod
+    def uncertain(
+        cls, request: CustomFunctionRegistrationRequest, error: Exception,
+    ) -> Self:
+        """Preserve the actual cause and same-owner read-only recovery identity."""
+        handle = CustomFunctionRegistrationHandle.from_request(request)
+        cause = error.to_agent_error() if isinstance(error, AgentFacingErrorMixin) else AgentError.from_exception(
+            "custom_function_registration_uncertain", error,
+            hint="Preserve the original request. Observe this handle; do not replay registration. Absence is not proof of no mutation.",
+        )
+        return cls(
+            schema_version=SCHEMA_VERSION, persisted=request.persist,
+            storage_dir=request.storage_dir, connection=request.connection,
+            server_identity=request.server_identity, observation_handle=handle,
+            errors=(cause,),
+            next_steps=("Observe this observation_handle with openhcs_get_custom_function_registration_status; do not replay source.",),
+        )
 
 
 class CustomFunctionRegistrationControlResponse(
@@ -476,6 +776,24 @@ class CustomFunctionRegistrationControlResponse(
     @property
     def result(self) -> CustomFunctionRegistrationResult:
         return self.value
+
+
+class CustomFunctionRegistrationDestinationControlResponse(
+    FunctionCatalogControlResponseBase[CustomFunctionRegistrationDestination]
+):
+    field = FunctionCatalogControlField.RESULT
+    value_type = CustomFunctionRegistrationDestination
+
+    @property
+    def destination(self) -> CustomFunctionRegistrationDestination:
+        return self.value
+
+
+class CustomFunctionRegistrationObservationControlResponse(
+    FunctionCatalogControlResponseBase[CustomFunctionRegistrationObservation]
+):
+    field = FunctionCatalogControlField.RESULT
+    value_type = CustomFunctionRegistrationObservation
 
 
 def catalog_page(

@@ -1,0 +1,111 @@
+{
+  "case": "ExampleUntangleAndStraightenWorms",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "e95e55fa74b685a882ac625884d2e7d67a8d99b5b05fbaeb184678c15b58000b",
+  "driver_sha256": "d4c82795712e99c0e9c012e554d9e9c913bca4f1a6231a9cfaecd62dd6a021bf",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "size_bytes": 725978,
+      "sha256": "d11c3aa8ebfa68eb6cc6844c1e32540255fa40b38365b69ec73435546a9c7f25"
+    },
+    {
+      "path": "101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "size_bytes": 725953,
+      "sha256": "d41296747cc0a5ce9535d169ccc32e94399778616cb1fc0c326baf6d50f886b4"
+    },
+    {
+      "path": "101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "size_bytes": 725959,
+      "sha256": "0bcd92b613c40a21d9d4e909cef9b373b20d4b026da54710240916e0061fd83c"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/native_report.json",
+  "native_reference_report_sha256": "03fe6c7c658001768259672c4a9f58440ca2e86be946d4ca839ffe6f9612a520",
+  "native_reference_source_commit": "354be9f9ff71cc8f6f2bb89b21c92eeea12504c5",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/native_report.json",
+      "sha256": "03fe6c7c658001768259672c4a9f58440ca2e86be946d4ca839ffe6f9612a520"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/native_request.json",
+      "sha256": "038de3d380b4c7f164e80719e0ac526efa1f63654e90a5f70cd0f2aab2dbf609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/pilot_provenance.json",
+      "sha256": "b096fc2d8fc6e0e17db8589d5c1c207f304d26b9a7d2ce084a39594425eba5a9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/-1/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/0/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/1/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/2/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "0427f41525037dcd997d181aaad3025ad96d6feea44f5ce0de4a2f42bea9faba"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_preparation/native_cellprofiler_headless/ExampleUntangleAndStraightenWorms.cppipe",
+      "sha256": "bf1076e58498cedcec86edcc2154067dc6e84fbdc8cbb3f7622efe301a10a742"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "size_bytes": 725978,
+      "sha256": "d11c3aa8ebfa68eb6cc6844c1e32540255fa40b38365b69ec73435546a9c7f25"
+    },
+    {
+      "path": "101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "size_bytes": 725953,
+      "sha256": "d41296747cc0a5ce9535d169ccc32e94399778616cb1fc0c326baf6d50f886b4"
+    },
+    {
+      "path": "101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "size_bytes": 725959,
+      "sha256": "0bcd92b613c40a21d9d4e909cef9b373b20d4b026da54710240916e0061fd83c"
+    }
+  ]
+}

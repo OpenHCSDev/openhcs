@@ -1,0 +1,183 @@
+{
+  "case": "ExampleVitra",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "3d1335d9aa58a4cefb13fe41214d60a0f3491ab5fa6fe520fbd038ce50565b36",
+  "driver_sha256": "d4c82795712e99c0e9c012e554d9e9c913bca4f1a6231a9cfaecd62dd6a021bf",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "Channel 1-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 1-01-A-01-00.tif",
+      "size_bytes": 1426912,
+      "sha256": "0e8a20a42e86c5160188f2c1f897a370dde1b3280f67b1078552b027dac95a0e"
+    },
+    {
+      "path": "Channel 2-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 2-01-A-01-00.tif",
+      "size_bytes": 1426120,
+      "sha256": "b402b814586eeb5fa0f7bd211153652fba495b23f052dd87fea497a26ce6f617"
+    },
+    {
+      "path": "VitraChannel1ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel1ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "101cc785bc0d7bf66f7abfe96f155a154c23f271755f4d3a5c2a92457dc96227"
+    },
+    {
+      "path": "VitraChannel2ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel2ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "8df277e136903f2456b1f02c402f6a661342fd0831353aae523c5e2618445b7e"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleVitra/native_report.json",
+  "native_reference_report_sha256": "804ba4e4d0d893bc25f566991f5d7ebcdb7c2c725b36ebad36797ad688aa07be",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/ExampleVitra.cppipe",
+      "sha256": "3d1335d9aa58a4cefb13fe41214d60a0f3491ab5fa6fe520fbd038ce50565b36"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleVitra/native_report.json",
+      "sha256": "804ba4e4d0d893bc25f566991f5d7ebcdb7c2c725b36ebad36797ad688aa07be"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleVitra/native_request.json",
+      "sha256": "04cc1b6f4bec2d4d55bc2f17538d2c8c07b90a2ab9e32b5c90cf90a1c974b937"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleVitra/pilot_provenance.json",
+      "sha256": "2e25959e4a50efc46b3a2d91029b929f8a82efd95f02bcd23d6f8a97a00bc1f4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Image.csv",
+      "sha256": "34e280d97fdabfb63add8c5df342b6746ea36233dbaa4cb933b5d5442a1c8076"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Image.csv",
+      "sha256": "bd8534ded34f020d129b699d229f3f96aafe827e6d04be8815373048eedd759b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Image.csv",
+      "sha256": "e00b246db7d6960cb2196f87aead9b1b87e55eb552811ad1bb25a40539a82a57"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Image.csv",
+      "sha256": "14e1461746b3c319ab15b3e0ae12a105e94b97e85470556e109d6478ed3e9d43"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "Channel 1-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 1-01-A-01-00.tif",
+      "size_bytes": 1426912,
+      "sha256": "0e8a20a42e86c5160188f2c1f897a370dde1b3280f67b1078552b027dac95a0e"
+    },
+    {
+      "path": "Channel 2-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 2-01-A-01-00.tif",
+      "size_bytes": 1426120,
+      "sha256": "b402b814586eeb5fa0f7bd211153652fba495b23f052dd87fea497a26ce6f617"
+    },
+    {
+      "path": "VitraChannel1ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel1ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "101cc785bc0d7bf66f7abfe96f155a154c23f271755f4d3a5c2a92457dc96227"
+    },
+    {
+      "path": "VitraChannel2ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel2ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "8df277e136903f2456b1f02c402f6a661342fd0831353aae523c5e2618445b7e"
+    }
+  ]
+}

@@ -21,6 +21,7 @@ from openhcs.agent.capabilities import (
     LocalCapabilitySurfaceProfile,
     PipelineDraftCapability,
     PlatePathCapability,
+    ProgressAcknowledgedCapability,
     RuntimeServerCliConnectionCapability,
     UiBridgeCapability,
     ViewerWindowCliConnectionCapability,
@@ -40,6 +41,23 @@ def test_capability_registry_declares_schema_and_unique_names():
     assert len(names) == len(set(names))
 
 
+def test_manual_streaming_declares_viewer_side_effects_and_directory_request():
+    from openhcs.agent.capabilities import StreamPlateFilesToViewerCapability
+    from openhcs.agent.dto.plate import PlateFileStreamRequest
+    from inspect import signature
+
+    capability = next(
+        cap
+        for cap in get_capability_registry().capabilities
+        if cap.name == StreamPlateFilesToViewerCapability.name
+    )
+    assert not capability.read_only
+    assert capability.side_effects == ("launches_or_updates_managed_viewer",)
+    assert (
+        "result_directory" in signature(PlateFileStreamRequest.from_fields).parameters
+    )
+
+
 def test_source_session_capability_owns_progress_heartbeat_policy():
     capabilities = {
         capability.name: capability
@@ -56,11 +74,17 @@ def test_source_session_capability_owns_progress_heartbeat_policy():
     assert source_session.as_jsonable()["progress_worker_thread_safe"] is False
 
     function_search = capabilities["openhcs_search_functions"]
-    assert function_search.progress_heartbeat_seconds == 5.0
+    assert (
+        function_search.progress_heartbeat_seconds
+        == ProgressAcknowledgedCapability.progress_heartbeat_seconds
+    )
     assert function_search.progress_worker_thread_safe is True
 
     synthetic_plate = capabilities["openhcs_generate_synthetic_plate"]
-    assert synthetic_plate.progress_heartbeat_seconds == 5.0
+    assert (
+        synthetic_plate.progress_heartbeat_seconds
+        == ProgressAcknowledgedCapability.progress_heartbeat_seconds
+    )
     assert synthetic_plate.progress_worker_thread_safe is True
 
 

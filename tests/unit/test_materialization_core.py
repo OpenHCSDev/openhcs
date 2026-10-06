@@ -1,13 +1,18 @@
 import json
+from pathlib import Path
 from functools import partial
 from multiprocessing.shared_memory import SharedMemory
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 from polystore.base import DataSink
 from polystore.fiji_stream import FijiStreamingBackend
 from polystore.filemanager import FileManager
+from polystore.disk import DiskStorageBackend
 from polystore.memory import MemoryStorageBackend
+from polystore.roi import PointShape, load_rois_from_zip
+from polystore.roi_converters import NapariROIConverter
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.streaming import (
     StreamingBatchMessageBuilder,
@@ -17,6 +22,7 @@ from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
 )
+from polystore.streaming_constants import StreamingDataType
 from polystore.streaming.viewer_transport import (
     BatchViewerStreamSourceMetadata,
     ViewerDisplayConfigABC,
@@ -43,6 +49,22 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentValueDomainPayload,
+    ViewerLayerAxisProjection,
+)
+from openhcs.runtime.napari_streaming_handlers import (
+    NapariStreamLayerAddress,
+    NapariStreamLayerItem,
+)
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -63,6 +85,7 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenancePlanes,
@@ -80,6 +103,7 @@ from openhcs.processing.materialization import (
     JsonOptions,
     MaterializationSpec,
     MaterializedFilenameIdentity,
+    PointROIOptions,
     ROIOptions,
     TiffStackOptions,
     csv_only,
@@ -116,7 +140,7 @@ def _memory_materialize(spec, data, path, filemanager):
     )
 
 
-def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_pixels():
+def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_pixels(viewer_ack_return_route):
     labels = np.zeros((2, 8, 9), dtype=np.int32)
     labels[0, 2:4, 3:5] = 70001
     labels[1, 6, 7] = 2
@@ -187,6 +211,7 @@ def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_p
         batch = StreamingBatchMessageBuilder.build(
             backend,
             StreamingBatchMessageRequest(
+                return_route=viewer_ack_return_route,
                 data_list=[output.content],
                 file_paths=[output.path],
                 stream_request=request,
@@ -702,6 +727,290 @@ def test_csv_materialization_preserves_declared_fields_for_empty_rows() -> None:
 
     assert out == "/tmp/A01_measurements_details.csv"
     assert fm.load(out, "memory").splitlines()[0] == "object_label,area"
+
+
+@pytest.mark.unit
+def test_measurement_table_materializes_csv_and_json_without_losing_its_owner() -> None:
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            ({"object_label": 7, "z": 2.375, "y": 1.25, "x": 3.5},),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("z", float),
+                FieldSpec("y", float),
+                FieldSpec("x", float),
+            ),
+        ),
+        source_path="/source/image.ome.tif",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    fm = FileManager({"memory": MemoryStorageBackend()})
+
+    materialize(
+        MaterializationSpec(
+            CsvOptions(filename_suffix=".csv"),
+            JsonOptions(filename_suffix=".json"),
+        ),
+        data=table,
+        path="/tmp/centres",
+        filemanager=fm,
+        backends=["memory"],
+        backend_kwargs={},
+    )
+
+    assert fm.load("/tmp/centres.csv", "memory").splitlines() == [
+        "object_label,z,y,x",
+        "7,2.375,1.25,3.5",
+    ]
+    assert json.loads(fm.load("/tmp/centres.json", "memory")) == [
+        {"object_label": 7, "z": 2.375, "y": 1.25, "x": 3.5}
+    ]
+    assert table.source_path == "/source/image.ome.tif"
+    assert table.subject.object_id_field == "object_label"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("source_z_origin", (0, 10))
+def test_point_roi_materialization_native_reopen_preserves_fractional_z(
+    tmp_path,
+    source_z_origin,
+) -> None:
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_path="/source/image.ome.tif",
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/image.ome.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(source_z_origin, source_z_origin + 4)
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    feature = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=feature.CENTER_Z,
+                y_feature=feature.CENTER_Y,
+                x_feature=feature.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
+    assert archive == str(tmp_path / "centres_points.roi.zip")
+    assert len(rois) == 1
+    assert rois[0].metadata["label"] == 7
+    assert rois[0].metadata["object_label"] == 7
+    assert rois[0].metadata["response"] == 4.75
+    assert rois[0].shapes == [PointShape(y=1.25, x=3.5)]
+    assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(2.375)
+    metadata = ROIArchiveSourceMetadata.decode(rois)
+    assert metadata.source_path == "/source/image.ome.tif"
+    source_domain = ROIFractionalZ.source_component_domain(rois, metadata)
+    z_values = [plane["z_index"] for plane in source_domain]
+    assert z_values == list(range(source_z_origin, source_z_origin + 4))
+    viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    projection = ViewerLayerAxisProjection(
+        projected_axis_components=("z_index",),
+        component_values={"z_index": z_values},
+        routed_component_values={"z_index": z_values},
+        axis_offsets=(0,),
+    )
+    item = NapariStreamLayerItem(
+        data=NapariROIConverter.rois_to_shapes(rois),
+        producer=StreamProducerIdentity.pipeline_output(
+            output_kind="artifact", output_key="centres",
+            projection_key="centres", step_name="Synthetic Centres",
+            pipeline_position=0, step_scope_id="synthetic-centres",
+        ),
+        address=NapariStreamLayerAddress(
+            components=source_domain[0], path=archive,
+            stream_layer_data_type=StreamingDataType.POINTS,
+        ),
+        image_metadata=metadata,
+        plane_component_domain=ViewerComponentValueDomainPayload.from_wire_mapping(
+            {"z_index": z_values}, context="materialized point source domain",
+        ),
+    )
+    points, properties = viewer_server._build_nd_points([item], projection)
+    assert points.tolist() == [[2.375, 1.25, 3.5]]
+    assert properties["label"] == [7]
+    assert properties["object_label"] == [7]
+    assert properties["response"] == [4.75]
+    assert properties[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
+    from napari.layers import Points
+
+    native_layer = Points(points, properties=properties)
+    assert native_layer.features.loc[0, "response"] == 4.75
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("source_z_origin", (0, 10))
+@pytest.mark.parametrize("variable_components", ((), (VariableComponents.Z_INDEX,)))
+def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
+    tmp_path, source_z_origin, variable_components,
+):
+    labels = np.zeros((4, 5, 7), dtype=np.int32)
+    labels[0, 1:4, 2:5] = 7
+    labels[2, 1:4, 2:5] = 7
+    payload = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        plane_axis=None,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/volume.ome.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(source_z_origin, source_z_origin + 4)
+            ),
+        ),
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(5, 7)),
+        parent_image_source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65)),
+    )
+    archive = materialize(
+        MaterializationSpec(ROIOptions(min_area=0)),
+        data=payload, path=str(tmp_path / "volume"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"], variable_components=variable_components,
+    )
+    rois = load_rois_from_zip(Path(archive))
+    metadata = ROIArchiveSourceMetadata.decode(rois)
+    assert payload.plane_axis is None
+    assert metadata.plane_axis is (
+        RuntimePlaneAxis.RUNTIME_SLICE if variable_components else None
+    )
+    assert metadata.source_voxel_spacing.values_zyx == (2.0, 0.65, 0.65)
+    domain = ROIArchiveSourceMetadata.source_component_domain(rois, metadata)
+    z_values = tuple(range(source_z_origin, source_z_origin + 4))
+    assert tuple(plane["z_index"] for plane in domain) == z_values
+    assert [ROIPlaneMetadata(roi.metadata).indices() for roi in rois] == [(0,), (2,)]
+    fields = ROIArchiveSourceMetadata.stream_item_fields(rois, metadata, {})
+    assert fields[ViewerWireField.PLANE_COMPONENT_VALUES.value] == {
+        "z_index": tuple(str(value) for value in z_values),
+    }
+    # This geometric-domain projection never invents an image-plane field.
+    assert ViewerWireField.PLANE_AXIS.value not in fields
+    from openhcs.runtime.napari_streaming_handlers import (
+        NapariAggregateAxisBinding, NapariAggregateAxisBindingSet,
+        NapariShapeLayerPayload, NapariStreamLayerAddress, NapariStreamLayerItem,
+    )
+    from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
+    from polystore.streaming_constants import StreamingDataType
+    plane_domain = ViewerComponentValueDomainPayload.from_wire_mapping(
+        fields[ViewerWireField.PLANE_COMPONENT_VALUES.value], context="saved label ROI",
+    )
+    assert plane_domain.to_wire_mapping() == {"z_index": list(z_values)}
+
+    native = NapariShapeLayerPayload.build(
+        layer_items=[NapariStreamLayerItem(
+            data=NapariROIConverter.rois_to_shapes(rois),
+            producer=StreamProducerIdentity.fixed_output(
+                FixedStreamProducerIdentityKind.MANUAL, "volume_reopen",
+            ),
+            address=NapariStreamLayerAddress(domain[0], archive, StreamingDataType.SHAPES),
+            image_metadata=metadata,
+            plane_component_domain=plane_domain,
+        )],
+        axis_projection=ViewerLayerAxisProjection(
+            projected_axis_components=("z_index",),
+            component_values={"z_index": list(z_values)},
+            routed_component_values={"z_index": list(z_values)}, axis_offsets=(0,),
+        ),
+        aggregate_axis_bindings=NapariAggregateAxisBindingSet((
+            NapariAggregateAxisBinding("z_index", 0, z_values),
+        )),
+    )
+    assert native.ndim == 3
+    assert [np.unique(shape[:, 0]).tolist() for shape in native.data] == [[0], [2]]
+    assert native.features["label"] == [7, 7]
+    from napari.layers import Shapes
+    layer = Shapes(native.data, shape_type=native.shape_types, features=native.features)
+    assert layer.ndim == 3
+    assert layer.features["label"].tolist() == [7, 7]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("metadata", (
+    {"plane_indices": (4,), "plane_shape": (4,)},
+    {"plane_indices": (0,)},
+    {"plane_indices": (0, 1), "plane_shape": (4,)},
+))
+def test_roi_geometric_plane_metadata_rejects_invalid_projection(metadata):
+    with pytest.raises(ValueError):
+        ROIPlaneMetadata.common_shape((metadata,))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("source_path", "rows", "error"),
+    [
+        (None, ((7, 2.375, 1.25, 3.5),), "source-image path"),
+        ("/source/image.ome.tif", ((7, float("nan"), 1.25, 3.5),), "finite"),
+        ("/source/image.ome.tif", (), "at least one"),
+    ],
+)
+def test_point_roi_materialization_rejects_unreopenable_results(
+    tmp_path, source_path, rows, error
+) -> None:
+    fields = (
+        FieldSpec("object_label", int),
+        FieldSpec("center_z", float),
+        FieldSpec("center_y", float),
+        FieldSpec("center_x", float),
+    )
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            tuple(dict(zip((field.name for field in fields), row)) for row in rows),
+            fields=fields,
+        ),
+        source_path=source_path,
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    feature = ObjectCoreMeasurementFeature
+    with pytest.raises(ValueError, match=error):
+        materialize(
+            MaterializationSpec(
+                PointROIOptions(
+                    z_feature=feature.CENTER_Z,
+                    y_feature=feature.CENTER_Y,
+                    x_feature=feature.CENTER_X,
+                )
+            ),
+            data=table,
+            path=str(tmp_path / "invalid"),
+            filemanager=FileManager({"disk": DiskStorageBackend()}),
+            backends=["disk"],
+            backend_kwargs={},
+        )
+    assert not (tmp_path / "invalid_points.roi.zip").exists()
 
 
 @pytest.mark.unit
@@ -1352,7 +1661,7 @@ def test_roi_materialization_preserves_payload_scoped_volume_in_one_archive() ->
 
 
 @pytest.mark.unit
-def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance() -> None:
+def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance(viewer_ack_return_route) -> None:
     fm = _RecordingFileManager()
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=_two_plane_roi_labels()),
@@ -1402,6 +1711,7 @@ def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance() -> No
     streamed_item = StreamingBatchMessageBuilder.build(
         napari_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[roi_content],
             file_paths=[roi_path],
             stream_request=stream_request,
@@ -1482,7 +1792,9 @@ def test_roi_streaming_preserves_singleton_projected_source_metadata() -> None:
 
 
 @pytest.mark.unit
-def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> None:
+def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
+    viewer_ack_return_route,
+) -> None:
     fm = _RecordingFileManager()
     labels = np.zeros((1, 8, 8), dtype=np.int32)
     labels[0, 2:6, 3:7] = 1
@@ -1532,6 +1844,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> Non
     streamed_item = StreamingBatchMessageBuilder.build(
         napari_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[roi_content],
             file_paths=[roi_path],
             stream_request=stream_request,
@@ -1546,7 +1859,9 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> Non
 
 
 @pytest.mark.unit
-def test_generic_object_labels_feed_napari_and_fiji_roi_transports() -> None:
+def test_generic_object_labels_feed_napari_and_fiji_roi_transports(
+    viewer_ack_return_route,
+) -> None:
     fm = FileManager({"memory": MemoryStorageBackend()})
     labels = np.zeros((8, 8), dtype=np.int32)
     labels[2:6, 3:7] = 1
@@ -1567,6 +1882,7 @@ def test_generic_object_labels_feed_napari_and_fiji_roi_transports() -> None:
     napari_items = StreamingBatchMessageBuilder.build(
         napari_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[rois],
             file_paths=[roi_path],
             stream_request=stream_request,
@@ -1580,6 +1896,7 @@ def test_generic_object_labels_feed_napari_and_fiji_roi_transports() -> None:
     fiji_items = StreamingBatchMessageBuilder.build(
         fiji_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[rois],
             file_paths=[roi_path],
             stream_request=stream_request,
@@ -2230,3 +2547,149 @@ def test_roi_materialization_treats_non_spatial_label_payload_as_empty() -> None
 
     assert out == "/tmp/A01_Worms_step3_segmentation_summary.txt"
     assert "No ROIs extracted" in fm.load(out, "memory")
+
+
+@pytest.mark.parametrize("intrinsic", (False, True))
+def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
+    tmp_path, intrinsic
+):
+    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.processing.materialization.options import MaterializedFilenameIdentity
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.image_file_serialization import TiffImageFileFormat
+    from openhcs.core.runtime_image_values import (
+        image_payload_data, image_payload_mask, image_payload_metadata,
+    )
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+    from openhcs.core.source_projection import SourceArtifactProjection, SourcePixelRef
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceImagePayloadProjection,
+    )
+    from openhcs.core.virtual_workspace_metadata import (
+        VirtualWorkspaceSourceProjectionEntries,
+    )
+    from openhcs.processing.materialization import prepare_materialization
+    import tifffile
+
+    pixels = np.arange(3 * 4 * 5, dtype=np.uint16).reshape(3, 4, 5)
+    mask = pixels % 3 != 0
+    paths = tuple(f"/source/A01_s001_w2_z{z:03d}_t001.tif" for z in (1, 2, 3))
+    components = tuple(
+        {"well": "A01", "site": 1, "channel": 2, "z_index": z, "timepoint": 1}
+        for z in (1, 2, 3)
+    )
+    domain = (
+        VolumeSourceSpatialDomain(
+            source_depth=3, source_shape_yx=(4, 5), origin_yx=(0, 0)
+        )
+        if intrinsic
+        else SourceSpatialDomain(source_shape_yx=(4, 5), origin_yx=(0, 0))
+    )
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_spatial_domain=domain,
+        source_voxel_spacing=SourceVoxelSpacing((2.0, 1.0, 0.5)),
+        source_image_names=("DNA",),
+        source_component_metadata={
+            "well": "A01",
+            "site": 1,
+            "channel": 2,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=paths,
+            component_metadata=components,
+        ),
+    )
+    payload = metadata.payload_with(pixels, mask)
+    manager = FileManager({"disk": DiskStorageBackend()})
+    spec = MaterializationSpec(ImageFileOptions(
+        filename_suffix=".tif",
+        filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+    ))
+    batch = prepare_materialization(
+        spec,
+        payload,
+        str(tmp_path / "output"),
+        manager,
+        ("disk",),
+        context=_SourceSchemaProcessingContext(),
+        variable_components=(VariableComponents.Z_INDEX,),
+        artifact_filename_identity=SourceImageIdentity(
+            component_metadata={**components[0], "extension": ".tif"},
+        ),
+    )
+    batch.save()
+    assert len(batch.outputs) == (1 if intrinsic else 3)
+    if not intrinsic:
+        for index, output in enumerate(batch.outputs):
+            np.testing.assert_array_equal(tifffile.imread(output.path), pixels[index])
+        return
+
+    (output,) = batch.outputs
+    assert Path(output.path).name == "A01_s001_w2_z001_t001.tif"
+    assert image_payload_metadata(payload).source_component_metadata.get("z_index") is None
+    assert output.metadata.source_component_metadata.get("z_index") is None
+    assert output.metadata.source_provenance.source_plane_count == 3
+    np.testing.assert_array_equal(tifffile.imread(output.path), pixels)
+    saved_metadata = TiffImageFileFormat().persisted_metadata(
+        Path(output.path), payload
+    )
+    projection = SourceArtifactProjection(
+        address=SourceArtifactProjection.scalar_address_for_image_metadata(
+            saved_metadata
+        ),
+        ref=SourcePixelRef("disk", output.path),
+        source_alias="DNA",
+        artifact_kind=ImageArtifactType,
+        image_metadata=saved_metadata,
+        execution_scope=RuntimeExecutionAxisScope.from_raw(
+            "A01",
+            component="channel",
+            value="2",
+            fixed_component_values=(
+                (AllComponents.SITE, "1"),
+                (AllComponents.TIMEPOINT, "1"),
+            ),
+        ),
+    )
+    assert projection.address is None
+    entries = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((projection, "images/volume.tif"),)
+    )
+    document = {}
+    entries.merge_into_subdirectory(document)
+    decoded = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        json.loads(json.dumps(document))
+    )
+    restored = decoded.entries["images/volume.tif"]
+    assert restored.execution_scope == projection.execution_scope
+    assert isinstance(
+        restored.image_metadata.source_spatial_domain, VolumeSourceSpatialDomain
+    )
+    assert restored.image_metadata.source_spatial_domain.source_depth == 3
+    reloaded = VirtualWorkspaceImagePayloadProjection(
+        persisted_metadata=restored.image_metadata
+    ).apply(metadata.payload_with(tifffile.imread(output.path), mask.copy()))
+    for index in range(3):
+        physical_plane = SourcePixelRef(
+            "disk", output.path, source_axis_indices=(index,)
+        ).load(
+            {"disk": manager._get_backend("disk")},
+            base_path=tmp_path,
+        )
+        np.testing.assert_array_equal(physical_plane, pixels[index])
+        plane = RuntimeSliceProjection.value_for_slice(
+            reloaded,
+            RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
+            ).selected_plane(index),
+        )
+        np.testing.assert_array_equal(image_payload_data(plane), pixels[index])
+        np.testing.assert_array_equal(image_payload_mask(plane), mask[index])
+        assert plane.metadata.source_path == paths[index]
+        assert plane.metadata.source_component_metadata["z_index"] == index + 1
+        assert type(plane.metadata.source_spatial_domain) is SourceSpatialDomain
+        assert plane.metadata.source_voxel_spacing == metadata.source_voxel_spacing

@@ -1,0 +1,170 @@
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so 60ac32bcefe7d5799bcd033e549ad972fb30b85212373b1b8a9c886e02bed085
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so db6d46d06c3a35c8004375685c1787219a50ba229bf60a3d057fc25a5f826f62
+Source owner: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/function_patterns.py
+Source owner: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/pipeline/path_planner.py
+Source owner: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/steps/function_runtime.py
+......F.....                                                             [100%]
+=================================== FAILURES ===================================
+____________ test_mcp_stdio_bootstrap_failure_keeps_transport_open _____________
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 341, in from_call
+  |     result: TResult | None = func()
+  |                              ^^^^^^
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 242, in <lambda>
+  |     lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+  |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+  |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+  |     raise exception
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/threadexception.py", line 92, in pytest_runtest_call
+  |     yield from thread_exception_runtest_hook()
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/threadexception.py", line 68, in thread_exception_runtest_hook
+  |     yield
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/unraisableexception.py", line 95, in pytest_runtest_call
+  |     yield from unraisable_exception_runtest_hook()
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/unraisableexception.py", line 70, in unraisable_exception_runtest_hook
+  |     yield
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/logging.py", line 846, in pytest_runtest_call
+  |     yield from self._runtest_for(item, "call")
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/logging.py", line 829, in _runtest_for
+  |     yield
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/capture.py", line 898, in pytest_runtest_call
+  |     return (yield)
+  |             ^^^^^
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/skipping.py", line 257, in pytest_runtest_call
+  |     return (yield)
+  |             ^^^^^
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+  |     res = hook_impl.function(*args)
+  |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 174, in pytest_runtest_call
+  |     item.runtest()
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/python.py", line 1627, in runtest
+  |     self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+  |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+  |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+  |     raise exception
+  |   File "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+  |     res = hook_impl.function(*args)
+  |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/python.py", line 159, in pytest_pyfunc_call
+  |     result = testfunction(**testargs)
+  |              ^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/tests/unit/agent/test_mcp_server.py", line 15107, in test_mcp_stdio_bootstrap_failure_keeps_transport_open
+  |     health, failure = asyncio.run(call_stdio_server())
+  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py", line 194, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/tests/unit/agent/test_mcp_server.py", line 15094, in call_stdio_server
+  |     async with stdio_client(parameters) as (read_stream, write_stream):
+  |   File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/mcp/client/stdio/__init__.py", line 182, in stdio_client
+  |     async with (
+  |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 772, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/mcp/client/stdio/__init__.py", line 189, in stdio_client
+    |     yield read_stream, write_stream
+    |   File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/tests/unit/agent/test_mcp_server.py", line 15095, in call_stdio_server
+    |     async with ClientSession(read_stream, write_stream) as session:
+    |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 772, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/tests/unit/agent/test_mcp_server.py", line 15096, in call_stdio_server
+      |     await asyncio.wait_for(session.initialize(), timeout=5)
+      |   File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+      |     return await fut
+      |            ^^^^^^^^^
+      |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/mcp/client/session.py", line 183, in initialize
+      |     result = await self.send_request(
+      |              ^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 306, in send_request
+      |     raise McpError(response_or_error.error)
+      | mcp.shared.exceptions.McpError: Connection closed
+      +------------------------------------
+----------------------------- Captured stderr call -----------------------------
+Error in sitecustomize; set PYTHONVERBOSE for traceback:
+ModuleNotFoundError: No module named 'openhcs.core._tabular_native'
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/mcp/__main__.py", line 6, in <module>
+    main()
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/mcp/bootstrap.py", line 312, in main
+    from openhcs.agent.capabilities import LocalCapabilitySurfaceProfile
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/agent/capabilities.py", line 20, in <module>
+    from openhcs.agent.services.execution_session_service import ExecutionSessionService
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/agent/services/execution_session_service.py", line 31, in <module>
+    from openhcs.agent.dto.execution import (
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/agent/dto/execution.py", line 47, in <module>
+    from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/runtime/zmq_execution_signature.py", line 16, in <module>
+    from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/orchestrator/__init__.py", line 3, in <module>
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/orchestrator/orchestrator.py", line 21, in <module>
+    from openhcs.core.compiled_execution import CompiledExecutionBundle
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/compiled_execution.py", line 12, in <module>
+    from openhcs.core.context.processing_context import ProcessingContext
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/context/__init__.py", line 5, in <module>
+    from .processing_context import ProcessingContext
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/context/processing_context.py", line 32, in <module>
+    from openhcs.core.runtime_stores import RuntimeValueStore
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/runtime_stores.py", line 42, in <module>
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/runtime_slice_projection.py", line 18, in <module>
+    from openhcs.core.measurement_row_materialization import MeasurementRowsAxisProjection
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/measurement_row_materialization.py", line 23, in <module>
+    from openhcs.core._tabular_native import (
+ModuleNotFoundError: No module named 'openhcs.core._tabular_native'
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/agent/test_mcp_server.py::test_mcp_stdio_bootstrap_failure_keeps_transport_open
+1 failed, 11 passed, 286 deselected, 2 warnings in 7.65s
+BOUNDED_SOURCE peak_aggregate_rss_kib=421364 elapsed_seconds=10.711 returncode=1 reason=None

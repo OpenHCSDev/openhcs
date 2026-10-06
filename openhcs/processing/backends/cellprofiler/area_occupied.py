@@ -18,6 +18,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import (
+    CallableContract,
     KeywordRuntimeParameter,
     processing_prepare,
 )
@@ -77,8 +78,13 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     ModuleOwnedResultMeasurementRows,
 )
 from openhcs.interop.cellprofiler.runtime.object_input_policies import (
-    CellProfilerObjectInputPolicyMixin,
+    ObjectLabelsInputBindingMixin,
 )
+from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+)
+from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
+from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
@@ -152,10 +158,58 @@ class AreaOccupiedRowsRuntimeParameter(KeywordRuntimeParameter):
     parameter_default = ()
 
 
-class AreaOccupiedRuntimeInputPolicy(CellProfilerObjectInputPolicyMixin):
+class AreaOccupiedRuntimeInputPolicy(
+    ObjectLabelsInputBindingMixin,
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+):
     """Bind AreaOccupied row identities from the declared artifact contract."""
 
     binds_without_declared_inputs = True
+
+    @classmethod
+    def primary_image_domain_input_binding(cls) -> SettingToKeywordBinding:
+        return cls.objects_binding
+
+    @classmethod
+    def primary_image_inputs(
+        cls, contract: CallableContract, declared_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        """Binary operands retain their declared main-image domain."""
+        del cls, contract
+        return tuple(
+            spec for spec in declared_inputs
+            if spec.artifact_type is ImageArtifactType
+            and spec.parameter_name is None
+            and not spec.stack_broadcast_sources()
+        )
+
+    @classmethod
+    def primary_image_domain_specs(
+        cls, domain_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        """Each object operand owns its independent source-qualified row."""
+        if not domain_inputs:
+            raise ValueError(f"{cls.__name__} requires an object operand input.")
+        return domain_inputs
+
+    @classmethod
+    def invocation_domain_inputs(
+        cls, contract: CallableContract, declared_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        image_inputs = cls.primary_image_inputs(contract, declared_inputs)
+        return image_inputs or super().invocation_domain_inputs(contract, declared_inputs)
+
+    @classmethod
+    def project_invocation_image_request(
+        cls, *, image_request: CellProfilerImageRequest,
+        runtime_kwargs: RuntimeCallableKwargs,
+    ) -> CellProfilerImageRequest:
+        rows = runtime_kwargs[AreaOccupiedRowsRuntimeParameter.require_parameter_name()]
+        if any(row.operand is OperandChoice.BINARY_IMAGE for row in rows):
+            return image_request
+        return super().project_invocation_image_request(
+            image_request=image_request, runtime_kwargs=runtime_kwargs,
+        )
 
     @classmethod
     def bind_runtime_inputs(
@@ -728,7 +782,7 @@ class ObjectLabelsAreaOccupiedRequest:
     SliceIndexRuntimeParameter,
 )
 def measure_image_area_occupied(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     operand_choices: Sequence[OperandChoice] = (OperandChoice.BINARY_IMAGE,),
     area_occupied_rows: Sequence[AreaOccupiedRow] = (),

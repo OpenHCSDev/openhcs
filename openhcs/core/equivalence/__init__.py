@@ -56,7 +56,6 @@ from openhcs.core.equivalence.measurement_facts import (
     RuntimeRequiredMeasurementKeys,
     record_measurement_facts,
     runtime_measurement_fact_counter,
-    spatial_grid_measurement_facts,
 )
 from openhcs.core.equivalence.measurement_requirements import (
     RequiredRuntimeMeasurementProjection,

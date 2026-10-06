@@ -115,8 +115,13 @@ class SourceBindingsHandler(MicroscopeHandler):
         return [Backend.DISK]
 
     @classmethod
-    def detect(cls, plate_folder: Path, filemanager: FileManager) -> bool:
-        del plate_folder, filemanager
+    def detect(
+        cls,
+        plate_folder: Path,
+        filemanager: FileManager,
+        source_bindings_config: SourceBindingsConfig | None = None,
+    ) -> bool:
+        del plate_folder, filemanager, source_bindings_config
         return False
 
     def _replay_persisted_workspace(

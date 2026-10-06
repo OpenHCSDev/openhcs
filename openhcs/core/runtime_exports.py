@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
@@ -18,6 +18,7 @@ from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.processing.materialization import (
     CsvOptions,
     FileBundleOptions,
@@ -28,7 +29,7 @@ from openhcs.processing.materialization import (
 from openhcs.processing.materialization.core import materialization_is_empty
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,48 +112,52 @@ class RuntimeExportObservation:
     table_headers_by_path: Mapping[Path, tuple[str, ...]]
     table_row_counts_by_path: Mapping[Path, int]
     output_files: tuple[Path, ...] = ()
+    outputs: StepExecutionObservation = field(default_factory=StepExecutionObservation.empty)
 
     @classmethod
-    def from_execution_contexts(
+    def from_runtime_observations(
         cls,
-        execution_contexts: Mapping[str, ProcessingContext],
+        observations: Sequence[RuntimeExecutionObservation],
     ) -> RuntimeExportObservation:
-        """Read contract-owned export paths without retaining runtime values."""
-        from openhcs.core.steps.function_artifact_materialization import (
-            runtime_export_artifact_output_paths,
-        )
+        """Build exports from worker-projected paths without retaining values."""
 
+        outputs = StepExecutionObservation.combine(
+            context.outputs
+            for observation in observations
+            for context in observation.contexts
+        )
         return cls.from_output_paths(
-            tuple(
-                path
-                for context in execution_contexts.values()
-                for plan in context.step_plans.values()
-                if plan.owns_runtime_outputs
-                for path in runtime_export_artifact_output_paths(plan, context)
-            )
+            outputs.runtime_export_paths,
+            outputs=outputs,
         )
 
     @classmethod
     def from_output_root(
         cls,
         output_root: Path,
+        *,
+        outputs: StepExecutionObservation = StepExecutionObservation.empty(),
     ) -> "RuntimeExportObservation":
         """Build an export observation from one runtime output root."""
-        return cls.from_output_roots((Path(output_root),))
+        return cls.from_output_roots((Path(output_root),), outputs=outputs)
 
     @classmethod
     def from_output_roots(
         cls,
         output_roots: tuple[Path, ...],
+        *,
+        outputs: StepExecutionObservation = StepExecutionObservation.empty(),
     ) -> "RuntimeExportObservation":
         """Build an export observation from compiled runtime output roots."""
         roots = tuple(dict.fromkeys(Path(root) for root in output_roots))
-        return cls.from_output_paths(_output_files_from_roots(roots))
+        return cls.from_output_paths(_output_files_from_roots(roots), outputs=outputs)
 
     @classmethod
     def from_output_paths(
         cls,
         output_paths: Sequence[str | Path],
+        *,
+        outputs: StepExecutionObservation = StepExecutionObservation.empty(),
     ) -> "RuntimeExportObservation":
         """Build an export observation from exact contract-owned output paths."""
 
@@ -178,7 +183,24 @@ class RuntimeExportObservation:
             table_headers_by_path=_table_headers_by_path(table_outputs),
             table_row_counts_by_path=_table_row_counts_by_path(table_outputs),
             output_files=output_files,
+            outputs=outputs,
         )
+
+    def for_execution_axis(self, axis_id: str) -> "RuntimeExportObservation":
+        """Select files from actual artifact scope or exporter-owned numbering."""
+        scoped_paths = {
+            Path(location.path)
+            for address, locations in self.outputs.materialized_locations_by_address.items()
+            if address.key.scope.axis_id == axis_id
+            for location in locations
+        }
+        numbered = self.outputs.image_numbers_by_export_path
+        paths = tuple(
+            path
+            for path in self.output_files
+            if (axis_id in numbered[path] if path in numbered else path in scoped_paths)
+        )
+        return type(self).from_output_paths(paths, outputs=self.outputs)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "table_outputs", tuple(self.table_outputs))
@@ -205,7 +227,7 @@ class RuntimeExportObservation:
                 path
                 for records in runtime_records_by_axis.values()
                 for record in _table_runtime_records(records)
-                for path in matching_table_outputs(record, self.table_outputs)
+                for path in self.matching_table_outputs(record)
             )
         )
         return RuntimeExportObservation(
@@ -218,7 +240,13 @@ class RuntimeExportObservation:
                 path: self.table_row_counts_by_path[path] for path in table_outputs
             },
             output_files=self.output_files,
+            outputs=self.outputs,
         )
+
+    def matching_table_outputs(self, record: StoredRuntimeValue) -> tuple[Path, ...]:
+        """Match tables through the original saved-output address relation."""
+        owned_paths = frozenset(self.outputs.paths_for(record))
+        return tuple(path for path in self.table_outputs if path in owned_paths)
 
 
 def runtime_export_failures(
@@ -309,37 +337,6 @@ def _materialized_artifact_record_failures(
     )
 
 
-def matching_table_outputs(
-    record: StoredRuntimeValue,
-    table_outputs: tuple[Path, ...],
-) -> tuple[Path, ...]:
-    """Return table output files matching one runtime artifact record."""
-    return tuple(
-        path
-        for path in table_outputs
-        if table_output_matches_artifact(
-            path,
-            record.key.name,
-            axis_id=record.key.scope.axis_id,
-        )
-    )
-
-
-def table_output_matches_artifact(
-    path: Path,
-    artifact_name: str,
-    *,
-    axis_id: str | None = None,
-) -> bool:
-    """Return whether a materialized table filename belongs to an artifact."""
-    stem = path.stem
-    if f"_{artifact_name}_step" not in stem:
-        return False
-    if axis_id is None:
-        return True
-    return stem.startswith(f"{axis_id}_")
-
-
 def _table_artifact_failures(
     output_specs: tuple[ArtifactSpec, ...],
     observation: RuntimeExportObservation,
@@ -347,10 +344,7 @@ def _table_artifact_failures(
 ) -> tuple[str, ...]:
     failures: list[str] = []
     for record in _runtime_records_for_specs(output_specs, runtime_records_by_axis):
-        matching_outputs = matching_table_outputs(
-            record,
-            observation.table_outputs,
-        )
+        matching_outputs = observation.matching_table_outputs(record)
         if not matching_outputs:
             failures.append(
                 f"axis {record.key.scope.axis_id!r} produced table artifact "
@@ -393,7 +387,7 @@ def _file_bundle_failures(
 ) -> tuple[str, ...]:
     failures: list[str] = []
     for record in _runtime_records_for_specs(output_specs, runtime_records_by_axis):
-        payload = record.value.materialization_payload()
+        payload = record.materialization_payload()
         if type(payload) is not dict:
             failures.append(
                 f"materialized file-bundle artifact {record.key.name!r} has "
@@ -445,7 +439,7 @@ def _table_schema_field_failures(
     if record.key.artifact_type is not MeasurementsArtifactType:
         return ()
     expected_fields = tuple(
-        field.name for field in cast(MeasurementTable, record.value.data).rows.fields
+        field.name for field in cast(MeasurementTable, record.data).rows.fields
     )
     if not expected_fields:
         return ()
@@ -471,7 +465,7 @@ def _table_row_count_failures(
     table_outputs: tuple[Path, ...],
     row_counts_by_path: Mapping[Path, int],
 ) -> tuple[str, ...]:
-    if materialization_is_empty(record.value.materialization_payload()):
+    if materialization_is_empty(record.materialization_payload()):
         return ()
     return tuple(
         f"table output {path} has no data rows"

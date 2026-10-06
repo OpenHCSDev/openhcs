@@ -133,9 +133,9 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
 ):
     rows = MeasurementProjectedColumnarRows(
         {
-            "slice_index": (0,),
-            "source_image_name": ("IllumActinAvg",),
-            "mean_intensity": (0.25,),
+            "slice_index": (1, 0, 1),
+            "source_image_name": ("IllumActinAvg",) * 3,
+            "mean_intensity": (0.5, 0.25, 0.75),
         },
         fields=(
             FieldSpec("slice_index", int),
@@ -146,8 +146,11 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
     provenance = SourceImageProvenance(
         source_image_names=("IllumActin",),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            paths=("/input/A01_s1_w2.tif",),
-            component_metadata=({"well": "A01", "site": "1", "channel": "2"},),
+            paths=("/input/A01_s1_w2.tif", "/input/A01_s2_w2.tif"),
+            component_metadata=(
+                {"well": "A01", "site": "1", "channel": "2"},
+                {"well": "A01", "site": "2", "channel": "2"},
+            ),
         ),
     )
 
@@ -155,11 +158,27 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
 
     assert projected.row_mappings() == (
         {
+            "slice_index": 1,
+            "source_image_name": "IllumActinAvg",
+            "mean_intensity": 0.5,
+            "well": "A01",
+            "site": "2",
+            "channel": "2",
+        },
+        {
             "slice_index": 0,
             "source_image_name": "IllumActinAvg",
             "mean_intensity": 0.25,
             "well": "A01",
             "site": "1",
+            "channel": "2",
+        },
+        {
+            "slice_index": 1,
+            "source_image_name": "IllumActinAvg",
+            "mean_intensity": 0.75,
+            "well": "A01",
+            "site": "2",
             "channel": "2",
         },
     )
@@ -435,4 +454,132 @@ def test_sparse_rows_reject_columns_absent_from_declared_fields() -> None:
         MeasurementSparseColumnarRows.from_rows(
             ({"value": 1.0},),
             fields=(FieldSpec("other", float),),
+        )
+
+
+def test_dataclass_column_admission_owns_snapshot_and_releases_source_rows() -> None:
+    import gc
+    import weakref
+
+    from openhcs.core.runtime_tabular_values import measurement_row_mapping
+
+    @dataclass
+    class MutableMeasurementRow:
+        object_label: int
+        samples: list[float]
+
+    row = MutableMeasurementRow(1, [2.5])
+    row_ref = weakref.ref(row)
+    rows = DataclassMeasurementColumnarRows((row,))
+    admitted_samples = rows.column_values("samples")[0]
+    row.samples.append(7.5)
+    assert measurement_row_mapping(row)["samples"] == [2.5, 7.5]
+    assert admitted_samples == [2.5]
+    assert rows.row_mappings() == ({"object_label": 1, "samples": [2.5]},)
+
+    del rows, row
+    gc.collect()
+    assert row_ref() is None
+    assert admitted_samples == [2.5]
+
+
+def test_bounded_preview_is_live_but_explicit_column_admission_keeps_snapshot() -> None:
+    from openhcs.core.measurement_feature_queries import (
+        ColumnarMeasurementTableSchema,
+        MeasurementFeatureQuery,
+        MeasurementFeatureValueIndex,
+    )
+    from openhcs.core.progress.live_measurements import _columnar_row_preview
+    from openhcs.core.runtime_measurements import (
+        MeasurementScope,
+        MeasurementSubject,
+        MeasurementTable,
+    )
+
+    first = MeasurementProjectedColumnarRows(
+        {"object_label": np.array([1]), "area": np.array([1.0])},
+        fields=(FieldSpec("object_label", int), FieldSpec("area", float)),
+    )
+    second = MeasurementProjectedColumnarRows(
+        {"object_label": np.array([2]), "other": np.array([2.0])},
+        fields=(FieldSpec("object_label", int), FieldSpec("other", float)),
+    )
+    rows = ConcatenatedColumnarRows((first, second))
+    table = MeasurementTable(
+        name="Cells",
+        rows=rows,
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells"),
+    )
+    assert "area" in rows.columns
+    assert "absent" not in rows.columns
+    preview = _columnar_row_preview(rows, 1, 2)
+    assert preview.rows == ({"object_label": 1, "area": 1.0},)
+    first.columns["area"][0] = 7.0
+    query = MeasurementFeatureQuery("area", object_name="Cells")
+
+    def current_index():
+        return next(
+            ColumnarMeasurementTableSchema.from_table(
+                table
+            ).non_absent_feature_value_indexes(
+                table,
+                {"area": query},
+                {"area": {"Cells": "Cells"}},
+                index_type=MeasurementFeatureValueIndex,
+            )
+        )[1][None]["Cells"]
+
+    assert current_index().values_by_label == {1: 7.0}
+    whole_column = rows.column_values("area")
+    whole_column[1] = 9.0
+    first.columns["area"][0] = 11.0
+    assert current_index().values_by_label == {1: 7.0, 2: 9.0}
+    assert _columnar_row_preview(rows, 2, 2).rows == (
+        {"object_label": 1, "area": 7.0},
+        {"object_label": 2, "area": 9.0},
+    )
+
+
+def test_columnar_join_preserves_atomic_array_ragged_and_null_cells() -> None:
+    rows = MeasurementProjectedColumnarRows(
+        {
+            "object_label": (4, 9),
+            "array": (np.array([1, 2]), np.array([3, 4])),
+            "ragged": ([1], [2, 3]),
+            "nullable": (None, float("nan")),
+        },
+        fields=(
+            FieldSpec("object_label", int),
+            FieldSpec("array", np.ndarray),
+            FieldSpec("ragged", list),
+            FieldSpec("nullable", float),
+        ),
+    )
+    joined = MeasurementSparseColumnarRows.from_columnar_batches((rows, rows))
+    assert joined.row_count() == 2
+    assert joined.column_values("array").shape == (2,)
+    np.testing.assert_array_equal(joined.column_values("array")[0], [1, 2])
+    assert joined.column_values("ragged").tolist() == [[1], [2, 3]]
+    assert joined.column_values("nullable")[0] is None
+    assert np.isnan(joined.column_values("nullable")[1])
+
+
+def test_columnar_join_custom_equality_receives_atomic_cells_and_rejects_nan() -> None:
+    rows = MeasurementProjectedColumnarRows(
+        {"object_label": (4,), "value": (float("nan"),)},
+        fields=(FieldSpec("object_label", int), FieldSpec("value", float)),
+    )
+
+    def strict(left: object, right: object) -> bool:
+        assert not isinstance(left, np.ndarray)
+        assert not isinstance(right, np.ndarray)
+        return bool(left == right)
+
+    unique = MeasurementSparseColumnarRows.from_columnar_batches(
+        (rows,), values_equal=strict
+    )
+    assert np.isnan(unique.columns["value"][0])
+    with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
+        MeasurementSparseColumnarRows.from_columnar_batches(
+            (rows, rows), values_equal=strict
         )

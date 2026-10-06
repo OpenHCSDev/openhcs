@@ -10,6 +10,10 @@ import skimage.morphology
 
 import openhcs.processing.backends.cellprofiler.secondary as iso
 import openhcs.processing.backends.cellprofiler.secondary as ito
+from openhcs.core.runtime_relationships import (
+    DirectParentReferenceFeatureDeclaration,
+    DirectParentReferenceMeasurementFeature,
+)
 from openhcs.constants.constants import (
     AllComponents,
     Backend,
@@ -20,10 +24,10 @@ from openhcs.constants.constants import (
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
+    ProducedImageStack,
     ImageOutputBundle,
     ImagePayloadBundleContext,
     ImagePayloadExecutionMode,
-    ImagePayloadSliceProjector,
     aligned_image_stack_kwargs,
     compose_aligned_image_payload,
     pack_aligned_image_outputs,
@@ -51,6 +55,7 @@ from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableMetadata,
+    ImagePayloadConsumption,
     attach_callable_contract_metadata,
     runtime_image_execution_mode,
 )
@@ -61,10 +66,12 @@ from openhcs.core.component_group_scope import (
 from openhcs.core.config import DtypeConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
-from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
+from openhcs.core.function_patterns import (
+    InvocationArtifactInputEdgePlan,
+    MainFlowInputProjection,
+)
 from openhcs.core.measurement_image_alignment import (
-    MeasurementImageLabelAlignmentStrategy,
-    MeasurementLabelSourceAlignmentStrategy,
+    MeasurementImageLabelAlignmentRequest,
     PreparedMeasurementObjectLabels,
 )
 from openhcs.core.measurement_row_materialization import (
@@ -79,17 +86,17 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.runtime_adapters import RuntimeFunctionInvocationRequest
 from openhcs.core.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
     RuntimeArtifactQueryContext,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_image_values import (
+    ImagePayloadSliceProjector,
     ImageMetadataPayload,
     ImagePayloadMetadata,
+    ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
     image_payload_data,
     image_payload_mask,
@@ -163,9 +170,9 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     NamedSourceBinding,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_image_provenance import (
+    SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_matching import (
@@ -173,10 +180,11 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.core.steps.function_runtime import (
-    FunctionOutputContextStrategy,
-    PatternGroupData,
-    PatternGroupRuntime,
+    PatternGroupExecutionRequest,
 )
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
@@ -198,8 +206,6 @@ from openhcs.interop.cellprofiler.runtime.adapter import (
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
-    RuntimeArtifactInputRequest,
-    RuntimeArtifactTypeStrategy,
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
@@ -215,7 +221,6 @@ from openhcs.interop.cellprofiler.runtime.main_flow import (
 )
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     ObjectMeasurementOutputRecorder,
-    ObjectMeasurementOutputTimings,
     object_measurement_runtime_inputs,
 )
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
@@ -251,8 +256,6 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
-    DirectParentReferenceFeatureDeclaration,
-    DirectParentReferenceMeasurementFeature,
     RelationshipMeasurementRows,
 )
 from openhcs.processing.backends.cellprofiler.alignment import (
@@ -267,6 +270,7 @@ from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
 )
 from openhcs.processing.backends.cellprofiler.colocalization import (
+    ColocalizationMeasurements,
     MeasureColocalizationModule,
     ObjectColocalizationMeasurements,
 )
@@ -366,7 +370,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
     ShapeObjectMeasurementRows,
     _surface_area,
-    _surface_areas_3d_from_labels,
+    measure_object_size_shape_feature_arrays,
     measure_object_size_shape,
 )
 from openhcs.processing.backends.cellprofiler.structuring_elements import (
@@ -446,6 +450,37 @@ def _module_executor(
     assert executor.raw_func is module_type.require_callable(contract.function_name)
     return executor
 
+
+def test_compiled_image_request_does_not_repeat_authored_callable_preparation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = CellProfilerModule.require_module("Crop")
+    raw = module.require_callable()
+    source_spec = ArtifactSpec.input("Input", ImageArtifactType)
+    contract = _compiled_callable_contract(raw, artifact_inputs=(source_spec,))
+    image = np.full((4, 5), 0.25, dtype=np.float32)
+    adapter = _FakeCellProfilerRuntime(
+        {source_spec.name: image},
+        callable_contract=contract,
+        artifact_input_edges=(_artifact_input_edge_for_test(source_spec),),
+    )
+
+    def reject_authored_preparation(*args, **kwargs):
+        raise AssertionError("Runtime re-entered authored callable preparation")
+
+    monkeypatch.setattr(CallableContract, "from_callable", reject_authored_preparation)
+    monkeypatch.setattr(
+        module, "_install_callable_parameter_help", reject_authored_preparation
+    )
+    executor = CellProfilerModuleExecutor(raw, contract)
+    image_request = executor._image_request(
+        image, adapter,
+        module_type=executor.module_type(),
+        active_input_specs=contract.artifact_inputs.specs,
+    )
+
+    assert image_request.source_aliases == (source_spec.name,)
+    np.testing.assert_array_equal(image_payload_data(image_request.payload), image)
 
 def test_default_invocation_keeps_compiled_source_bindings_outside_anchor_group() -> (
     None
@@ -633,14 +668,8 @@ def test_output_recording_preserves_complete_callable_return_abi() -> None:
             ),
         ),
     )
-    image_request = CellProfilerImageRequest(
+    invocation = CellProfilerImageRequest(
         payload=stack,
-        source_image_name=None,
-        image_count=1,
-        plane_projection=projection,
-    )
-    invocation = RuntimeFunctionInvocationRequest(
-        image=stack,
         kwargs={},
         source_image_name=None,
         image_count=1,
@@ -649,7 +678,6 @@ def test_output_recording_preserves_complete_callable_return_abi() -> None:
 
     outputs = CellProfilerOutputRecorder.record_module_outputs(
         callable_contract=executor.callable_contract,
-        active_input_edges=(),
         adapter=_FakeCellProfilerRuntime({}),
         returned_values=MappingProxyType(
             {
@@ -659,7 +687,6 @@ def test_output_recording_preserves_complete_callable_return_abi() -> None:
         ),
         matched_outputs=(),
         invocation=invocation,
-        image_request=image_request,
         current_image=stack,
     )
 
@@ -950,12 +977,15 @@ def _measurement_image_for_labels(
         payload=image,
         reference_domain=reference_domain,
     )
-    return MeasurementImageLabelAlignmentStrategy.align(
+    return (
         source.alignment_request(
             labels=labels,
             label_payload=label_payload,
             plane_projector=plane_projector,
-        ).with_source_projected_image()
+        )
+        .with_source_projected_image()
+        .aligned()
+        .image
     )
 
 
@@ -1368,7 +1398,9 @@ def test_runtime_binding_uses_full_compiled_special_input_contract() -> None:
     np.testing.assert_array_equal(image_payload_data(topology_inputs[1]), 1.0)
 
 
-def test_image_artifact_resolution_uses_declared_artifact_alias() -> None:
+def test_image_artifact_resolution_uses_declared_artifact_alias(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     spec = ArtifactSpec.input("IllumStain1", ImageArtifactType)
     source = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -1376,24 +1408,32 @@ def test_image_artifact_resolution_uses_declared_artifact_alias() -> None:
         ),
         source_image_names=("OrigStain1",),
     ).payload_with(np.ones((4, 5), dtype=np.float32), None)
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeArtifactInputRequest(
-            spec=spec,
-            value=source,
-        )
+        spec=spec, value=source
     )
 
     metadata = image_payload_metadata(payload)
     assert metadata.source_image_names == ("IllumStain1",)
     assert metadata.source_image_provenance_planes.paths == ("/input/A01_s001_w1.tif",)
     assert (
-        RuntimeArtifactTypeStrategy.for_artifact_type(
+        CellProfilerOutputRecorder.for_artifact_type(
             ImageArtifactType
-        ).source_image_name(RuntimeArtifactInputRequest(spec=spec, value=source))
+        ).source_image_name(spec=spec, value=source)
         is None
     )
+    strategy = CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
+
+    def reject_second_resolution(*args, **kwargs):
+        raise AssertionError("Source-name projection resolved the image again")
+
+    monkeypatch.setattr(
+        type(strategy), "raw_runtime_input_value", reject_second_resolution
+    )
+    # The original name remains a contributor; the alias alone is not a
+    # unique represented source name.
+    assert strategy.source_image_name_from_value(payload) is None
 
 
 def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
@@ -1424,19 +1464,19 @@ def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(first_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        first_spec, RuntimeInputBindingRequest(
             adapter=adapter,
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(first_spec)
+        ).artifact_value_for_spec(first_spec)
     )
 
     np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
@@ -1469,23 +1509,23 @@ def test_single_main_flow_image_artifact_selects_declared_source_binding_plane()
         None,
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
@@ -1520,23 +1560,23 @@ def test_main_flow_image_artifact_projects_named_provenance_plane() -> None:
         None,
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        first_spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(first_spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(first_spec)
+        ).artifact_value_for_spec(first_spec)
     )
 
     np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
@@ -1565,23 +1605,23 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
         None,
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        first_spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(first_spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(first_spec)
+        ).artifact_value_for_spec(first_spec)
     )
 
     np.testing.assert_array_equal(
@@ -1590,7 +1630,9 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
     assert image_payload_metadata(payload).source_image_names == ("Stain1",)
 
 
-def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None:
+def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     original_spec = ArtifactSpec.input("OrigStain1", ImageArtifactType)
     illumination_spec = ArtifactSpec.input(
         "IllumStain1",
@@ -1633,7 +1675,7 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(original_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
             _artifact_input_edge_for_test(
                 illumination_spec,
@@ -1643,12 +1685,25 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None
     executor = _module_executor(contract)
     _activate_runtime_contract(executor.callable_contract, runtime)
 
+    strategy_type = type(
+        CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
+    )
+    resolve_image = strategy_type.raw_runtime_input_value
+    resolved_specs: list[ArtifactSpec] = []
+
+    def record_resolution(self, spec: ArtifactSpec, value):
+        resolved_specs.append(spec)
+        return resolve_image(self, spec, value)
+
+    monkeypatch.setattr(strategy_type, "raw_runtime_input_value", record_resolution)
+
     image_request = executor._image_request(
         current_image,
         runtime,
         module_type=CorrectIlluminationApplyModule,
         active_input_specs=contract.artifact_inputs.specs,
     )
+    assert resolved_specs == [original_spec]
     runtime_kwargs = executor._runtime_input_kwargs(
         runtime,
         current_image,
@@ -1659,6 +1714,57 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None
 
     assert image_payload_data(image_request.payload).shape == (4, 5)
     assert image_payload_data(runtime_kwargs["illumination_function"]).shape == (4, 5)
+
+
+def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload() -> None:
+    image_spec = ArtifactSpec.input("DeclaredImage", ImageArtifactType)
+    contract = _compiled_callable_contract(
+        CellProfilerModule.require_module("MeasureObjectIntensity").require_callable(),
+        artifact_inputs=(image_spec,),
+    )
+    contract = replace(
+        contract,
+        metadata=replace(
+            contract.metadata,
+            image_payload_consumption=ImagePayloadConsumption.COMPOSED,
+        ),
+    )
+    image = np.ones((4, 5), dtype=np.float32)
+    runtime = _FakeCellProfilerRuntime(
+        {image_spec.name: image},
+        artifact_input_edges=(_artifact_input_edge_for_test(image_spec),),
+    )
+    executor = _module_executor(contract)
+    _activate_runtime_contract(contract, runtime)
+    image_request = CellProfilerImageRequest(
+        payload=image,
+        source_image_name="RuntimeAlias",
+        source_aliases=("RuntimeAlias",),
+        image_count=1,
+        execution_mode=ImagePayloadExecutionMode.NATURAL,
+    )
+
+    (measurement_image,) = executor._measurement_image_inputs(
+        runtime,
+        image,
+        image_request,
+        image_inputs=(image_spec,),
+        module_type=MeasureObjectIntensityModule,
+    )
+
+    assert measurement_image.source_aliases == (image_spec.name,)
+    assert measurement_image.payload is image_request.payload
+    assert measurement_image.execution_mode is image_request.execution_mode
+    assert measurement_image.plane_projection is image_request.plane_projection
+    assert not measurement_image.align_to_labels
+    with pytest.raises(ValueError, match="requires a composed measurement image request"):
+        executor._measurement_image_inputs(
+            runtime,
+            image,
+            None,
+            image_inputs=(image_spec,),
+            module_type=MeasureObjectIntensityModule,
+        )
 
 
 def test_repeated_broadcast_inputs_consume_their_declared_source_group_axes() -> None:
@@ -1714,7 +1820,7 @@ def test_repeated_broadcast_inputs_consume_their_declared_source_group_axes() ->
             *(
                 replace(
                     _artifact_input_edge_for_test(spec, stored=False),
-                    consumes_main_flow=True,
+                    main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                 )
                 for spec in original_specs
             ),
@@ -1769,23 +1875,23 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     assert image_payload_data(payload).shape == (1, 4, 5)
@@ -1794,7 +1900,6 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
 
 
 def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
-    object_spec = ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType)
     objects = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(
@@ -1805,14 +1910,7 @@ def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
             paths=("/input/A01_s001_w1.tif",),
         ),
     )
-    request = RuntimeArtifactInputRequest(
-        spec=object_spec,
-        value=objects,
-    )
-
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
-        ObjectLabelsArtifactType
-    ).source_image_payload(request)
+    payload = ObjectLabelsArtifactType.source_image_payload_from_runtime_value(objects)
 
     assert payload is objects
     assert image_payload_metadata(payload).source_image_provenance_planes.paths == (
@@ -2511,7 +2609,7 @@ def test_track_objects_retained_image_uses_tracked_object_source_payload() -> No
             execution_mode=ImagePayloadExecutionMode.FULL_STACK,
         ),
         current_image=current_payload,
-        call_kwargs={},
+        kwargs={},
     )
 
     source_payload = _module_type_for_contract(
@@ -2675,7 +2773,7 @@ def test_object_label_output_source_preserves_matching_input_object_plane_contex
         spec=output,
         output_value=np.zeros((2, 4, 5), dtype=np.int32),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         current_image=current_image,
     )
 
@@ -2750,7 +2848,7 @@ def test_resize_objects_output_source_policy_uses_input_object_context() -> None
         spec=output,
         output_value=np.zeros((4, 5), dtype=np.int32),
         source_image_name="ReferenceImage",
-        call_kwargs={},
+        kwargs={},
         source_image_payload=image_payload,
         current_image=image_payload,
     )
@@ -2792,7 +2890,7 @@ def test_watershed_output_source_policy_uses_declared_image_as_parent() -> None:
         spec=output,
         output_value=np.zeros((3, 4, 5), dtype=np.int32),
         source_image_name="DNA",
-        call_kwargs={},
+        kwargs={},
         source_aliases=("DNA",),
         source_image_payload=image_payload,
         current_image=image_payload,
@@ -2829,7 +2927,8 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
         assert name == "Nuclei"
         return object_payload
 
-    def add_objects(name, labels, **kwargs):
+    def record_native_value(name, kind, labels, **kwargs):
+        assert kind is ObjectLabelsArtifactType
         recorded["name"] = name
         recorded["labels"] = labels
         recorded["kwargs"] = kwargs
@@ -2863,7 +2962,7 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
         ),
     )
     runtime.get_objects = get_objects
-    runtime.add_objects = add_objects
+    runtime._record_native_value = record_native_value
 
     output = _output_from_input("ResizedNuclei", "Nuclei")
     request = _cellprofiler_output_record_request(
@@ -2894,7 +2993,7 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
             domain=ObjectLabelDomain(declared_object_count=0),
         ),
         source_image_name="ReferenceImage",
-        call_kwargs={},
+        kwargs={},
         source_image_payload=image_payload,
         current_image=image_payload,
     )
@@ -2925,13 +3024,14 @@ def test_contextual_object_label_recorder_fills_missing_parent_spacing_from_decl
     )
     recorded: dict[str, object] = {}
 
-    def add_objects(name, labels, **kwargs):
+    def record_native_value(name, kind, labels, **kwargs):
+        assert kind is ObjectLabelsArtifactType
         recorded["name"] = name
         recorded["labels"] = labels
         recorded["kwargs"] = kwargs
 
     runtime = _FakeCellProfilerRuntime({"Memb": image_payload})
-    runtime.add_objects = add_objects
+    runtime._record_native_value = record_native_value
 
     output = _output_from_input(
         "Cells",
@@ -2956,7 +3056,7 @@ def test_contextual_object_label_recorder_fills_missing_parent_spacing_from_decl
         spec=output,
         output_value=output_labels,
         source_image_name="Memb",
-        call_kwargs={},
+        kwargs={},
         source_aliases=("Memb",),
         source_image_payload=image_payload,
         current_image=image_payload,
@@ -3036,7 +3136,7 @@ def test_measure_object_size_shape_record_builder_keeps_shape_features_unqualifi
             declared_field_names=("object_label", "Area"),
         ),
         source_image_name="BF_image",
-        call_kwargs={},
+        kwargs={},
         source_image_payload=ImagePayloadMetadata(
             source_path="/input/A01_s001_w1.tif"
         ).payload_with(np.zeros((3, 3), dtype=np.float32), None),
@@ -3098,7 +3198,7 @@ def test_object_output_measurements_derive_count_and_locations_from_output_label
                     ArtifactSpec.input("Mask", ImageArtifactType),
                     stored=False,
                 ),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(
@@ -3119,7 +3219,7 @@ def test_object_output_measurements_derive_count_and_locations_from_output_label
         source_image_name="Mask",
         source_image_payload=mask_payload,
         current_image=mask_payload,
-        call_kwargs={},
+        kwargs={},
     )
     CellProfilerOutputRecorder.for_artifact_type(ObjectLabelsArtifactType).record(
         replace(
@@ -3261,7 +3361,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(source_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(
@@ -3282,7 +3382,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
         source_image_name="Mask",
         source_image_payload=source_image,
         current_image=source_image,
-        call_kwargs={},
+        kwargs={},
     )
     adapter.add_objects(object_spec.name, labels)
 
@@ -3295,7 +3395,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
         artifact_type=MeasurementsArtifactType,
         axis_id="A01_s001",
     )
-    tables = tuple(cast(MeasurementTable, record.value.data) for record in records)
+    tables = tuple(cast(MeasurementTable, record.data) for record in records)
     assert len(tables) == 1
     table = tables[0]
     assert table.subject is not None
@@ -3379,7 +3479,7 @@ def test_object_label_output_source_payload_uses_primary_object_input() -> None:
         spec=output,
         output_value=np.zeros((2, 2), dtype=np.int32),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         source_image_payload=object(),
         current_image=None,
     )
@@ -3441,7 +3541,7 @@ def test_object_label_output_source_payload_uses_declared_primary_object_input()
         spec=output,
         output_value=np.zeros((2, 2), dtype=np.int32),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         source_image_payload=source_payload,
         current_image=current_image,
     )
@@ -3633,7 +3733,7 @@ def test_main_flow_strategy_rejects_mixed_artifact_types_in_either_order() -> No
 
     for outputs in (values, tuple(reversed(values))):
         with pytest.raises(TypeError, match="require one exact artifact type"):
-            RuntimeArtifactTypeStrategy.for_main_flow_outputs(outputs)
+            CellProfilerOutputRecorder.for_main_flow_outputs(outputs)
 
 
 def test_cellprofiler_adapter_preserves_object_label_source_component_metadata() -> (
@@ -3675,24 +3775,24 @@ def test_cellprofiler_adapter_preserves_object_label_source_component_metadata()
 
     record = adapter.add_objects("Nuclei", labels)
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.source_path == "/input/01_POS002_D.TIF"
-    assert dict(record.value.data.source_component_metadata) == {
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.source_path == "/input/01_POS002_D.TIF"
+    assert dict(record.data.source_component_metadata) == {
         "well": "01",
         "site": "POS002",
         "channel": "D",
     }
-    assert record.value.data.source_image_provenance_planes.paths == (
+    assert record.data.source_image_provenance_planes.paths == (
         "/input/01_POS002_D.TIF",
     )
     assert tuple(
         dict(metadata)
-        for metadata in record.value.data.source_image_provenance_planes.component_metadata
+        for metadata in record.data.source_image_provenance_planes.component_metadata
         if metadata is not None
     ) == (
         {"well": "01", "site": "POS002", "channel": "D"},
     )
-    assert filemanager.saved[0][0] is record.value.data
+    assert filemanager.saved[0][0] is record.data
 
 
 def test_default_row_policy_accepts_multi_source_image_row_ownership() -> None:
@@ -3870,13 +3970,10 @@ def test_object_measurement_output_recorder_completes_exact_columnar_rows() -> N
         ),
         row_policy=row_policy,
         module_type=MeasureObjectIntensityModule,
-        func=_synthetic_object_measurement_function,
-        adapter=cast(CellProfilerRuntimeAdapter, object()),
         measurement_images=(),
         object_inputs=(),
         image_measurement_rows=[],
         columnar_rows=[],
-        timings=ObjectMeasurementOutputTimings(),
     )
 
     completed = recorder.completed_measurement_rows(source_rows, payload)
@@ -3941,7 +4038,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
             tuple[ArtifactSpec, ArtifactOutputPlan], ...
         ] = (),
         source_bindings: tuple[NamedSourceBinding, ...] = (),
-        ordered_pipeline_image_paths: tuple[str, ...] = (),
         variable_components: tuple[VariableComponents, ...] = (),
         plane_projection: RuntimePlaneProjection = RuntimePlaneProjection.stack(),
         axis_scope: RuntimeExecutionAxisScope | None = None,
@@ -3956,11 +4052,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 value=None,
             )
         source_binding_plan = CompiledSourceBindingPlan(bindings=source_bindings)
-        source_binding_context = SourceBindingRuntimeContext(
-            step_input_files=ordered_pipeline_image_paths,
-            current_step_input_files=ordered_pipeline_image_paths,
-            pipeline_input_files=ordered_pipeline_image_paths,
-        )
         processing_context = SimpleNamespace(
             microscope_handler=SimpleNamespace(
                 parser=SimpleNamespace(semantic_identity=lambda: ()),
@@ -3983,7 +4074,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 artifact_inputs={edge.key: edge for edge in indexed_input_edges},
                 artifact_output_bindings=artifact_output_bindings,
                 source_binding_plan=source_binding_plan,
-                source_binding_context=source_binding_context,
                 microscope_handler=processing_context.microscope_handler,
                 variable_components=variable_components,
                 plane_projection=plane_projection,
@@ -4024,7 +4114,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                         table,
                     )
                 )
-        self.ordered_pipeline_image_paths = ordered_pipeline_image_paths
         self.measurements: list[MeasurementTable] = []
         self.objects: list[tuple[str, np.ndarray, dict[str, object]]] = []
         self.spatial_grids: dict[str, SpatialGrid] = {}
@@ -4141,7 +4230,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
             artifact_type=ObjectLabelsArtifactType,
             purpose="test object-label artifact",
         )
-        return cast(ObjectLabelSet, record.value.data)
+        return cast(ObjectLabelSet, record.data)
 
     def get_objects_across_groups(self, name: str) -> ObjectLabelSet:
         return self.runtime_objects[name]
@@ -4177,14 +4266,16 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
     ) -> None:
         self.measurements.append(table)
 
-    def add_objects(
+    def _record_native_value(
         self,
         name: str,
-        labels: object,
+        expected_kind: ArtifactType,
+        native_value: object,
         **kwargs: object,
-    ) -> object:
-        self.objects.append((name, labels, kwargs))
-        return super().add_objects(name, labels, **kwargs)
+    ) -> StoredRuntimeValue:
+        if expected_kind is ObjectLabelsArtifactType:
+            self.objects.append((name, native_value, kwargs))
+        return super()._record_native_value(name, expected_kind, native_value, **kwargs)
 
     def _seed_runtime_object(
         self,
@@ -4273,7 +4364,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
         record = super().add_spatial_grid(name, grid)
         self.spatial_grids[name] = cast(
             SpatialGrid | RuntimeSliceAlignedValues,
-            record.value.data,
+            record.data,
         )
         return record
 
@@ -4314,7 +4405,7 @@ def test_object_label_output_domain_scope_preserves_declared_source_stack() -> N
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(source_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(_artifact_output_plan(item) for item in ((output_spec,))),
@@ -4326,7 +4417,7 @@ def test_object_label_output_domain_scope_preserves_declared_source_stack() -> N
             source_image_name="Threshold",
         ),
         current_image=np.ones((3, 4, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     assert request.object_label_output_domain_scope() is None
@@ -4352,7 +4443,7 @@ def test_object_label_output_domain_scope_uses_declared_group_lineage() -> None:
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(source_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(_artifact_output_plan(item) for item in ((output_spec,))),
@@ -4364,7 +4455,7 @@ def test_object_label_output_domain_scope_uses_declared_group_lineage() -> None:
             source_image_name="Threshold",
         ),
         current_image=np.ones((3, 4, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     assert request.object_label_output_domain_scope() is ObjectLabelDomainScope.PAYLOAD
@@ -4845,10 +4936,10 @@ def test_object_row_binding_projects_the_current_runtime_plane() -> None:
     (
         pytest.param(
             RuntimePlaneProjection.stack(1),
-            (2, 2),
-            None,
-            False,
-            id="implicit-singleton-selection",
+            (1, 2, 2),
+            RuntimePlaneAxis.RUNTIME_SLICE,
+            True,
+            id="preserved-singleton-domain",
         ),
         pytest.param(
             RuntimePlaneProjection.selected(0, 1),
@@ -4905,6 +4996,18 @@ def test_object_row_binding_honors_authoritative_singleton_runtime_projection(
         object_label_dense_array(bound_labels),
         label_array if preserved else label_array[0],
     )
+    if preserved:
+        image = bound_labels.measurement_reference_image()
+        projection = bound_labels.declared_plane_projection()
+        assert projection is not None and projection.plane_index is None
+        measurement_values = RuntimeSliceAlignedValues((np.asarray([0.25]),))
+        projected = RuntimeSliceProjection.kwargs_for_slice(
+            {"object_labels": (bound_labels,), "measurement_values": measurement_values},
+            projection.selected_plane(0),
+        )
+        assert object_label_dense_array(projected["object_labels"][0]).shape == (2, 2)
+        np.testing.assert_array_equal(projected["measurement_values"], (0.25,))
+        assert image_payload_data(image).shape == (1, 2, 2)
 
 
 def test_object_row_binding_preserves_nominal_parameter_abi_without_domain() -> None:
@@ -6016,9 +6119,10 @@ def test_measure_object_size_shape_consumes_runtime_projected_label_plane() -> N
         calculate_zernikes=False,
     )
 
-    assert [row["object_label"] for row in rows] == [1, 2]
-    assert rows[0]["Area"] == 4.0
-    assert np.isnan(rows[1]["Area"])
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert [(row["slice_index"], row["object_label"], row["Area"]) for row in rows] == [
+        (0, 2, 4.0),
+    ]
 
 
 def test_pure_2d_slice_execution_injects_slice_index_for_declared_callables() -> None:
@@ -6437,7 +6541,7 @@ def test_measure_object_intensity_columnar_rows_use_declared_axis_domain() -> No
     assert [row["integrated_intensity"] for row in rows] == [10.0, 20.0]
 
 
-def test_measure_object_size_shape_rows_project_measured_sequence_to_cp_ordinals() -> (
+def test_measure_object_size_shape_rows_project_declared_label_domain_to_cp_ordinals() -> (
     None
 ):
     payload = ObjectLabelPayload(
@@ -6469,10 +6573,15 @@ def test_measure_object_size_shape_rows_project_measured_sequence_to_cp_ordinals
 
     assert [row["object_label"] for row in rows] == [1, 2, 3, 4, 5]
     assert rows[0]["Area"] == 10.0
-    assert rows[1]["Area"] == 30.0
-    assert rows[2]["Area"] == 50.0
-    assert np.isnan(rows[3].get("Area", np.nan))
-    assert np.isnan(rows[4].get("Area", np.nan))
+    assert np.isnan(rows[1]["Area"])
+    assert rows[2]["Area"] == 30.0
+    assert np.isnan(rows[3]["Area"])
+    assert rows[4]["Area"] == 50.0
+    np.testing.assert_array_equal(
+        [row["Center_X"] for row in rows],
+        [10.0, np.nan, 30.0, np.nan, 50.0],
+    )
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.ROW_ORDINAL
 
 
 def test_measure_object_size_shape_preserves_zero_valued_label_rows() -> None:
@@ -6575,7 +6684,7 @@ def test_measure_object_size_shape_preserves_complete_dense_label_domain_rows() 
 def test_object_measurement_modules_declare_their_cp_row_identity_policies() -> None:
     assert (
         MeasureObjectSizeShapeModule.runtime_object_measurement_row_policy().object_identity()
-        is MeasurementObjectRowIdentity.ROW_SEQUENCE
+        is MeasurementObjectRowIdentity.ROW_ORDINAL
     )
     assert (
         MeasureObjectIntensityDistributionModule.runtime_object_measurement_row_policy().object_identity()
@@ -6677,6 +6786,145 @@ def test_resolved_measurement_image_preserves_runtime_slice_projection() -> None
             source_aliases=("DNA",),
         )
     )
+
+
+@pytest.mark.parametrize("aliases", (("Process", "Nuclear"), ("Nuclear", "Process")))
+def test_multi_image_photometry_consumes_each_named_current_source(aliases):
+    from openhcs.processing.backends.cellprofiler.intensity import (
+        ObjectIntensityPreparedLabels,
+        object_intensity_backend,
+    )
+
+    images = {name: np.zeros((4, 5), dtype=np.uint8) for name in aliases}
+    images["Process"][1, 2] = 221
+    images["Nuclear"][2, 3] = 255
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=aliases,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(f"/synthetic/{name}.tif" for name in aliases),
+            component_metadata=tuple({"channel": str(index + 1)} for index in range(2)),
+        ),
+    ).payload_with(np.stack(tuple(images[name] for name in aliases)))
+    image_specs = tuple(ArtifactSpec.input(name, ImageArtifactType) for name in aliases)
+    contract = _compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(), artifact_inputs=image_specs,
+    )
+    executor = _module_executor(contract)
+    runtime = _FakeCellProfilerRuntime(
+        {}, callable_contract=contract,
+        source_bindings=tuple(NamedSourceBinding(alias=name) for name in aliases),
+        artifact_input_edges=tuple(_artifact_input_edge_for_test(spec, stored=False) for spec in image_specs),
+    )
+    measurement_images = executor._resolved_measurement_images(
+        image_specs, runtime, payload,
+        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+    )
+    labels = ObjectLabelSet(
+        name="Cells", variant_data=ObjectLabelVariantData(labels=np.ones((4, 5), dtype=np.int32)),
+        domain=ObjectLabelDomain(declared_object_count=1),
+    )
+    for source in measurement_images:
+        prepared = source.prepare_object_labels(labels, plane_projector=runtime)
+        image = image_payload_data(prepared.aligned_image)
+        np.testing.assert_allclose(image, images[source.source_image_name] / 255.0)
+        arrays = object_intensity_backend().measure_prepared(
+            image, ObjectIntensityPreparedLabels.from_source(prepared.completion_payload, prepared.measurement_labels),
+        )
+        expected = {"Process": (221 / 255.0, 1, 2), "Nuclear": (1.0, 2, 3)}[source.source_image_name]
+        np.testing.assert_allclose(arrays.max_intensity, (expected[0],))
+        np.testing.assert_allclose(arrays.max_intensity_y, (expected[1],))
+        np.testing.assert_allclose(arrays.max_intensity_x, (expected[2],))
+
+
+@pytest.mark.parametrize("aliases", (("Process",), ("Process", "Nuclear"), ("Nuclear", "Process"), ("Process", "Nuclear", "Third")))
+@pytest.mark.parametrize("slice_count", (1, 2))
+def test_registered_object_photometry_retains_each_source_at_each_slice(aliases, slice_count):
+    image_specs = tuple(ArtifactSpec.input(name, ImageArtifactType) for name in aliases)
+    object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    output_spec = ArtifactSpec.output("Photometry", MeasurementsArtifactType)
+    images = {}
+    for name in aliases:
+        value = {"Process": 100, "Nuclear": 200, "Third": 300}[name]
+        paths = tuple(f"/synthetic/{name}_z{index + 1}.tif" for index in range(slice_count))
+        fields = tuple({"well": "A01", "site": "1", "channel": str(value // 100),
+                        "z_index": str(index + 1), "pixel_size": 0.5}
+                       for index in range(slice_count))
+        metadata = ImagePayloadMetadata(
+            source_image_names=(name,),
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=paths, component_metadata=fields),
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE if slice_count > 1 else None,
+        )
+        shape = (slice_count, 4, 5) if slice_count > 1 else (4, 5)
+        images[name] = metadata.payload_with(np.full(shape, value, dtype=np.uint16))
+    label_shape = (slice_count, 4, 5) if slice_count > 1 else (4, 5)
+    labels = ObjectLabelSet(
+        name="Cells",
+        variant_data=ObjectLabelVariantData(labels=np.ones(label_shape, dtype=np.int32)),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE if slice_count > 1 else None,
+        domain=ObjectLabelDomain(
+            scope=ObjectLabelDomainScope.PLANE if slice_count > 1 else ObjectLabelDomainScope.PAYLOAD,
+            declared_object_id_domains=((1,),) * slice_count if slice_count > 1 else (),
+            declared_object_count=None if slice_count > 1 else 1,
+        ),
+    )
+    contract = _compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(),
+        artifact_inputs=(*image_specs, object_spec), artifact_outputs=(output_spec,),
+    )
+    runtime = _FakeCellProfilerRuntime(
+        images, objects={"Cells": labels}, callable_contract=contract,
+        artifact_input_edges=tuple(_artifact_input_edge_for_test(spec) for spec in (*image_specs, object_spec)),
+        artifact_output_bindings=((output_spec, _artifact_output_plan(output_spec)),),
+        plane_projection=RuntimePlaneProjection.stack(slice_count),
+    )
+    _run_module(_module_executor(contract), images[aliases[0]], cellprofiler_runtime=runtime)
+    assert len(runtime.measurements) == 1
+    table = runtime.measurements[0]
+    assert table.subject.object_name == "Cells"
+    assert set(table.source_provenance.represented_source_image_names) == set(aliases)
+    assert {row["slice_index"] for row in table.rows.iter_row_mappings()} == set(range(slice_count))
+    for name in aliases:
+        provenance = table.source_provenance.for_source_image(name)
+        assert provenance.source_image_provenance_planes.paths == tuple(
+            f"/synthetic/{name}_z{index + 1}.tif" for index in range(slice_count))
+        assert all(fields["pixel_size"] == 0.5 for fields in provenance.source_image_provenance_planes.component_metadata)
+        assert tuple(fields["z_index"] for fields in provenance.source_image_provenance_planes.component_metadata) == tuple(str(index + 1) for index in range(slice_count))
+        column = f"Intensity_MaxIntensity_{name}"
+        values = tuple(row[column] for row in table.rows.iter_row_mappings() if column in row)
+        np.testing.assert_allclose(values, ({"Process": 100, "Nuclear": 200, "Third": 300}[name] / 65535,) * slice_count)
+
+
+def test_aligned_measurement_provenance_uses_cooperative_source_hook():
+    calls = []
+
+    class DeclaredMeasurementSource(CellProfilerMeasurementImage):
+        @classmethod
+        def source_provenances(cls, payload):
+            calls.append(payload)
+            return super().source_provenances(payload)
+
+    sources = tuple(DeclaredMeasurementSource(
+        source_image_name=name,
+        payload=ImagePayloadMetadata(source_path=f"/{name}.tif", source_image_names=(name,)).payload_with(np.ones((2, 3))),
+    ) for name in ("First", "Independent"))
+    metadata = DeclaredMeasurementSource.aligned_source_metadata(sources)
+    assert calls == [source.payload for source in sources]
+    assert metadata.source_provenance.source_plane_count == 1
+    assert metadata.source_provenance.represented_source_image_names == ("First", "Independent")
+    assert metadata.source_provenance.for_source_image("Independent").source_image_provenance_planes.paths == ("/Independent.tif",)
+
+
+def test_aligned_measurement_provenance_rejects_unequal_and_empty_axes():
+    sources = tuple(CellProfilerMeasurementImage(
+        source_image_name="Image",
+        payload=AlignedImageStack(tuple(np.ones((2, 3)) for _ in range(count))),
+    ) for count in (1, 2))
+    with pytest.raises(ValueError, match="zip"):
+        CellProfilerMeasurementImage.aligned_source_metadata(sources)
+    with pytest.raises(ValueError, match="requires source images"):
+        CellProfilerMeasurementImage.aligned_source_metadata(())
 
 
 def test_object_intensity_measurement_image_batch_preserves_request_labels() -> None:
@@ -7212,7 +7460,7 @@ def test_measure_object_size_shape_orientation_uses_positive_inertia_tie() -> No
     assert rows[0]["Orientation"] == 45.0
 
 
-def test_measure_object_size_shape_zernikes_use_declared_row_ordinal_domain() -> None:
+def test_measure_object_size_shape_zernikes_use_declared_label_id_domain() -> None:
     image = np.ones((12, 12), dtype=np.float32)
     labels = np.zeros(image.shape, dtype=np.int32)
     labels[1:4, 1:4] = 1
@@ -7234,8 +7482,10 @@ def test_measure_object_size_shape_zernikes_use_declared_row_ordinal_domain() ->
     assert np.isfinite(rows[0]["Zernike_0_0"])
     assert np.isnan(rows[1]["Zernike_0_0"])
     assert np.isfinite(rows[2]["Zernike_0_0"])
-    assert rows[1]["Area"] == 16.0
-    assert np.isnan(rows[2]["Area"])
+    # Native Area/radius vectors use compact positions; Zernike/Feret retain label slots.
+    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, 16.0, np.nan])
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert [row["slice_index"] for row in rows] == [0, 0, 0]
     assert rows[1]["MaximumRadius"] > 0.0
     assert rows[2]["MaximumRadius"] == 0.0
     assert rows[1]["MinFeretDiameter"] == 0.0
@@ -7259,10 +7509,12 @@ def test_measure_object_size_shape_backend_emits_concrete_cp_index_domain() -> N
         dtype_config=DtypeConfig(),
     )
 
-    assert [row["object_label"] for row in rows] == [1, 2, 3]
-    assert rows[0]["Area"] == 9.0
-    assert rows[1]["Area"] == 16.0
-    assert np.isnan(rows[2]["Area"])
+    assert [row["object_label"] for row in rows] == [1, 2, 3, 4, 5]
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert [row["slice_index"] for row in rows] == [0] * 5
+    np.testing.assert_array_equal(
+        [row["Area"] for row in rows], [9.0, 16.0, np.nan, np.nan, np.nan]
+    )
 
 
 def test_measure_object_size_shape_uses_explicit_sparse_object_domain() -> None:
@@ -7843,6 +8095,8 @@ def test_cellprofiler_auxiliary_payload_stack_preserves_metadata() -> None:
         "numpy",
     )
 
+    assert isinstance(stacked, ProducedImageStack)
+    stacked = RuntimeSliceProjection.full_stack_value(stacked)
     assert isinstance(stacked, ImageMetadataPayload)
     assert image_payload_data(stacked).shape == (2, 1, 4, 5)
     assert (
@@ -7857,25 +8111,30 @@ def test_cellprofiler_image_aggregation_uses_nominal_image_payload_type() -> Non
         MemoryType.NUMPY.value,
     )
 
+    aggregated = RuntimeSliceProjection.full_stack_value(aggregated)
     assert image_payload_data(aggregated).shape == (1, 4, 5)
     assert image_payload_metadata(aggregated).plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
     )
 
 
-def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces() -> None:
+@pytest.mark.parametrize("owner", (AlignedImageStack, ImageOutputBundle))
+def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces(owner) -> None:
+    contexts = tuple(AlignedImageSliceContext.main_flow(name) for name in ("First", "Second"))
     outputs = (
-        AlignedImageStack(
+        owner(
             (
                 np.full((3, 4), 1.0, dtype=np.float32),
                 np.full((3, 4), 10.0, dtype=np.float32),
-            )
+            ),
+            slice_contexts=contexts,
         ),
-        AlignedImageStack(
+        owner(
             (
                 np.full((3, 4), 2.0, dtype=np.float32),
                 np.full((3, 4), 20.0, dtype=np.float32),
-            )
+            ),
+            slice_contexts=contexts,
         ),
     )
 
@@ -7884,14 +8143,14 @@ def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces() -> N
         MemoryType.NUMPY.value,
     )
 
-    assert isinstance(aggregated, AlignedImageStack)
+    assert type(aggregated) is owner
     assert len(aggregated.slices) == 2
     np.testing.assert_array_equal(
-        image_payload_data(aggregated.slices[0])[:, 0, 0],
+        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[0]))[:, 0, 0],
         np.asarray((1.0, 2.0)),
     )
     np.testing.assert_array_equal(
-        image_payload_data(aggregated.slices[1])[:, 0, 0],
+        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[1]))[:, 0, 0],
         np.asarray((10.0, 20.0)),
     )
 
@@ -8245,7 +8504,7 @@ def test_illumination_apply_projects_broadcast_input_to_selected_primary_site(
     result = CellProfilerFunctionContractExecutor().execute(
         contract,
         executor.raw_func,
-        invocation.image,
+        invocation.payload,
         invocation.kwargs,
         execution_mode=invocation.execution_mode,
         plane_projection=invocation.plane_projection,
@@ -8335,7 +8594,7 @@ def test_illumination_apply_image_output_uses_original_input_source_payload() ->
             source_aliases=("OrigMito", "IllumMito"),
             source_image_payload=stale_invocation_payload,
             current_image=np.zeros((2, 3, 4), dtype=np.float32),
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8437,7 +8696,7 @@ def test_image_output_projection_uses_exact_invocation_projection(
                 plane_projection=plane_projection,
             ),
             current_image=source_payload,
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8496,7 +8755,7 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
         artifact_input_edges=(_artifact_input_edge_for_test(object_spec),),
         artifact_output_bindings=((output_spec, output_plan),),
         variable_components=(VariableComponents.SITE,),
-        plane_projection=RuntimePlaneProjection.stack(plane_count=1),
+        plane_projection=RuntimePlaneProjection.selected(0, plane_count=1),
     )
     callable_contract = _compiled_callable_contract(
         MeasureObjectNeighborsModule.require_callable(),
@@ -8521,7 +8780,7 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
             plane_projection=None,
         ),
         current_image=current_image,
-        call_kwargs={},
+        kwargs={},
     )
 
     projected_source = MeasureObjectNeighborsModule.source_payload(request)
@@ -8604,7 +8863,7 @@ def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
                 execution_mode=ImagePayloadExecutionMode.FULL_STACK,
             ),
             current_image=source_payload,
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8679,7 +8938,7 @@ def test_illumination_apply_image_output_preserves_declared_stack_value() -> Non
             source_aliases=("OrigMito", "IllumMito"),
             source_image_payload=duplicate_output,
             current_image=np.zeros((5, 6), dtype=np.float32),
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8754,7 +9013,7 @@ def test_illumination_apply_image_output_preserves_singleton_volume_value() -> N
             source_aliases=("OrigMito", "IllumMito"),
             source_image_payload=singleton_output,
             current_image=np.zeros((5, 6), dtype=np.float32),
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -9027,6 +9286,7 @@ def test_object_label_measurement_images_bundle_source_metadata() -> None:
             paths=("/input/A01_s001_w1_z001_t001.tif",),
             component_metadata=(
                 {
+                    "extension": ".tif",
                     "well": "A01",
                     "site": "1",
                     "channel": "1",
@@ -9041,6 +9301,7 @@ def test_object_label_measurement_images_bundle_source_metadata() -> None:
             paths=("/input/A01_s001_w2_z001_t001.tif",),
             component_metadata=(
                 {
+                    "extension": ".tif",
                     "well": "A01",
                     "site": "1",
                     "channel": "2",
@@ -9199,6 +9460,13 @@ def test_measurement_images_flatten_aligned_runtime_slices_for_source_metadata()
         {"well": "A01", "site": "1"},
         {"well": "A01", "site": "2"},
     )
+    assert tuple(
+        tuple(contributor.path for contributor in plane.contributors)
+        for plane in metadata.source_image_provenance_planes.planes
+    ) == (
+        ("/plate/A01_s001_w1.tif", "/plate/A01_s001_w2.tif"),
+        ("/plate/A01_s002_w1.tif", "/plate/A01_s002_w2.tif"),
+    )
 
 
 def test_measurement_images_preserve_runtime_slice_axis_across_source_aliases() -> None:
@@ -9236,6 +9504,122 @@ def test_measurement_images_preserve_runtime_slice_axis_across_source_aliases() 
     assert metadata.source_image_provenance_planes.component_metadata[:2] == (
         {"well": "A01", "site": "1", "channel": "1"},
         {"well": "A01", "site": "2", "channel": "1"},
+    )
+
+
+@pytest.mark.parametrize(
+    ("incoming_axis", "mode", "expected_planes"),
+    (
+        (None, ImagePayloadMetadataCompositionMode.STACK, 2),
+        (None, ImagePayloadMetadataCompositionMode.BUNDLE, 1),
+        (RuntimePlaneAxis.RUNTIME_SLICE, ImagePayloadMetadataCompositionMode.STACK, 2),
+        (RuntimePlaneAxis.RUNTIME_SLICE, ImagePayloadMetadataCompositionMode.BUNDLE, 1),
+        (RuntimePlaneAxis.SOURCE_BINDING, ImagePayloadMetadataCompositionMode.STACK, 1),
+        (RuntimePlaneAxis.SOURCE_BINDING, ImagePayloadMetadataCompositionMode.BUNDLE, 2),
+    ),
+)
+def test_image_source_composition_preserves_only_compatible_incoming_topology(
+    incoming_axis, mode, expected_planes
+) -> None:
+    paths = ("/input/A01_s1_w1.tif", "/input/A01_s1_w2.tif")
+    metadata = ImagePayloadMetadata(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=paths,
+            component_metadata=({"channel": "1"}, {"channel": "2"}),
+        ),
+        plane_axis=incoming_axis,
+    )
+    payload = metadata.payload_with(np.zeros((2, 4, 5), dtype=np.float32))
+
+    composed = ImagePayloadMetadata.compose((payload,), mode=mode)
+
+    planes = composed.source_image_provenance_planes
+    assert planes.count == expected_planes
+    if expected_planes == 2:
+        assert planes.paths == paths
+    else:
+        assert tuple(contributor.path for contributor in planes.plane(0).contributors) == paths
+
+
+def test_measurement_source_composition_reads_dense_plane_facts_without_pixel_projection(
+    monkeypatch,
+) -> None:
+    paths = tuple(f"/input/A01_s1_w2_z{index + 1}.tif" for index in range(60))
+
+    def provenance(channel, alias):
+        return SourceImageProvenance(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=paths,
+                component_metadata=tuple(
+                    {
+                        "well": "A01",
+                        "site": "1",
+                        "channel": str(channel),
+                        "z_index": str(index + 1),
+                    }
+                    for index in range(60)
+                ),
+            ),
+            source_image_names=(alias,),
+        )
+
+    metadata = ImagePayloadMetadata(
+        source_provenance=provenance(2, "OrigBlue"),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    source = CellProfilerMeasurementImage(
+        source_image_name="OrigBlue",
+        payload=metadata.payload_with(np.zeros((60, 4, 5), dtype=np.float32)),
+    )
+
+    def reject_image_projection(*args, **kwargs):
+        raise AssertionError(
+            "Source facts must not require image or metadata projection"
+        )
+
+    monkeypatch.setattr(
+        RuntimeSliceProjection, "value_for_slice", reject_image_projection
+    )
+    monkeypatch.setattr(ImagePayloadMetadata, "compose", reject_image_projection)
+    monkeypatch.setattr(
+        ImagePayloadMetadata, "for_leading_source_plane", reject_image_projection
+    )
+
+    first = CellProfilerMeasurementImage.composed_source_metadata((source,))
+    assert first.source_image_provenance_planes.paths == paths
+    assert first.source_image_names == ("OrigBlue",) * 60
+    assert tuple(
+        values["z_index"]
+        for values in first.source_image_provenance_planes.component_metadata
+    ) == tuple(str(index + 1) for index in range(60))
+
+    metadata.source_provenance = provenance(3, "OrigGreen")
+    second = CellProfilerMeasurementImage.composed_source_metadata((source,))
+    assert second.source_image_names == ("OrigGreen",) * 60
+    assert second.source_component_metadata["channel"] == "3"
+    assert first.source_component_metadata["channel"] == "2"
+
+
+def test_measurement_source_composition_retains_authored_scalar_coordinates() -> None:
+    metadata = ImagePayloadMetadata(
+        source_component_metadata={"well": "A01"},
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/A01_s1_w2.tif",),
+            component_metadata=({"well": "A01", "site": "1", "channel": "2"},),
+        ),
+        source_image_names=("OrigBlue",),
+    )
+    source = CellProfilerMeasurementImage(
+        source_image_name="OrigBlue",
+        payload=metadata.payload_with(np.zeros((4, 5), dtype=np.float32)),
+    )
+
+    composed = CellProfilerMeasurementImage.composed_source_metadata((source,))
+
+    assert dict(composed.source_component_metadata) == {"well": "A01"}
+    assert composed.source_image_provenance_planes.paths == ("/input/A01_s1_w2.tif",)
+    assert composed.source_image_provenance_planes.component_metadata == (
+        {"well": "A01", "site": "1", "channel": "2"},
     )
 
 
@@ -9283,7 +9667,7 @@ def test_measurement_tables_compose_provenance_after_object_rows_clear_source() 
         ),
     )
 
-    combined = MeasurementTableUnion("Locations", tables).as_table()
+    combined = MeasurementTable.join("Locations", tables)
 
     assert all(table.source_image_name is None for table in tables)
     assert tuple(
@@ -9308,7 +9692,7 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
     )
     aligned = AlignedImageStack(slices=(dna_payload, rna_payload))
 
-    result = FunctionOutputContextStrategy.for_output_plan(None).contextualize(
+    result = ImageArtifactType.contextualize_output(
         dna_payload,
         aligned,
         None,
@@ -9320,18 +9704,21 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
 
 def _pattern_group_runtime_for_output_memory(
     output_memory_type: str,
-) -> PatternGroupRuntime:
-    runtime = object.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+) -> PatternGroupExecutionRequest:
+    context = ProcessingContext(axis_id="A01")
+    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    return PatternGroupExecutionRequest(
+        context=context,
+        compiled_group=compile_function_pattern(lambda image: image, {}, {}).default_group,
+        pattern_group_info="", component_index=0, component_count=1,
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="pattern output",
             step_type="FunctionStep",
             axis_id="A01",
             output_memory_type=output_memory_type,
-        )
+        ),
     )
-    return runtime
 
 
 def test_pattern_group_runtime_unstacks_aligned_image_stack_output():
@@ -9344,17 +9731,16 @@ def test_pattern_group_runtime_unstacks_aligned_image_stack_output():
         source_image_names=("OrigRNA",),
     ).payload_with(np.full((4, 5), 2, dtype=np.float32), None)
     aligned = AlignedImageStack(slices=(dna_payload, rna_payload))
-    loaded = PatternGroupData(
-        matching_files=["dna.tif", "rna.tif"],
-        main_data_stack=np.zeros((2, 4, 5), dtype=np.float32),
-    )
+    matching_files = ["dna.tif", "rna.tif"]
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._validate_and_unstack(aligned, loaded)
-
-    assert output == [dna_payload, rna_payload]
+    output = runtime._project_output_slices(aligned, matching_files)
+    stack_payload = aligned.copy_projected_output_stack(
+        output, memory_type="numpy", device_id=None,
+    )
+    assert [payload for payload, _context in output] == [dna_payload, rna_payload]
     assert image_payload_metadata(
-        output.stack_payload
+        stack_payload
     ).source_plane_intensity_scales == (65535, 65535)
 
 
@@ -9400,13 +9786,11 @@ def test_pattern_group_runtime_does_not_invent_nested_axes_from_image_rank():
         None,
     )
     aligned = AlignedImageStack(slices=(first_site, second_site))
-    loaded = PatternGroupData(
-        matching_files=["A01_s001_w2_z001_t001.tif"],
-        main_data_stack=np.zeros((4, 5), dtype=np.float32),
-    )
+    matching_files = ["A01_s001_w2_z001_t001.tif"]
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output_slices = runtime._validate_and_unstack(aligned, loaded)
+    projected = runtime._project_output_slices(aligned, matching_files)
+    output_slices = tuple(payload for payload, _context in projected)
 
     assert len(output_slices) == 2
     np.testing.assert_array_equal(image_payload_data(output_slices[0]), first_site.data)
@@ -9426,16 +9810,66 @@ def test_pattern_group_runtime_leaves_variable_shape_aligned_outputs_uncached():
     first = np.ones((4, 5), dtype=np.float32)
     second = np.ones((3, 4), dtype=np.float32)
     aligned = AlignedImageStack(slices=(first, second))
-    loaded = PatternGroupData(
-        matching_files=["first.tif", "second.tif"],
-        main_data_stack=np.zeros((2, 4, 5), dtype=np.float32),
-    )
+    matching_files = ["first.tif", "second.tif"]
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._validate_and_unstack(aligned, loaded)
+    output = runtime._project_output_slices(aligned, matching_files)
+    assert [payload for payload, _context in output] == [first, second]
+    assert aligned.copy_projected_output_stack(
+        output, memory_type="numpy", device_id=None,
+    ) is None
 
-    assert output == [first, second]
-    assert output.stack_payload is None
+
+def test_invocation_request_keeps_original_aliases_when_labels_change_image_domain(
+    monkeypatch,
+):
+    contract = _compiled_callable_contract(IdentifyTertiaryObjectsModule.require_callable())
+    executor = _module_executor(contract)
+    larger = ObjectLabelSet(
+        name="Larger",
+        variant_data=ObjectLabelVariantData(labels=np.ones((2, 3), dtype=np.int32)),
+    )
+    smaller = ObjectLabelSet(
+        name="Smaller",
+        variant_data=ObjectLabelVariantData(labels=np.ones((4, 5), dtype=np.int32)),
+    )
+    monkeypatch.setattr(
+        CellProfilerModuleExecutor,
+        "_runtime_input_kwargs",
+        lambda self, *args, **kwargs: {
+            "secondary_labels": larger,
+            "primary_labels": smaller,
+        },
+    )
+    original = CellProfilerImageRequest(
+        payload=np.zeros((6, 7), dtype=np.float32),
+        source_image_name="Carrier",
+        source_aliases=("CarrierA", "CarrierB"),
+        image_count=2,
+    )
+    marker = []
+    authored_kwargs = {"secondary_labels": "authored", "marker": marker}
+    invocation = executor._invocation_request(
+        image_request=original,
+        adapter=_FakeCellProfilerRuntime({}, callable_contract=contract),
+        current_image=original.payload,
+        kwargs=authored_kwargs,
+        module_type=IdentifyTertiaryObjectsModule,
+    )
+
+    assert isinstance(invocation, CellProfilerImageRequest)
+    assert invocation.source_aliases is original.source_aliases
+    assert invocation.source_image_name is None
+    assert invocation.image_count == 1
+    assert image_payload_data(invocation.payload).shape == (2, 3)
+    assert invocation.kwargs["secondary_labels"] is larger
+    assert invocation.kwargs["primary_labels"] is smaller
+    assert invocation.kwargs["marker"] is marker
+    assert authored_kwargs == {"secondary_labels": "authored", "marker": marker}
+    assert original.source_image_name == "Carrier"
+    assert original.image_count == 2
+    assert original.kwargs == {}
+    assert original.payload.shape == (6, 7)
 
 
 def test_cellprofiler_main_flow_output_preserves_input_source_planes():
@@ -9714,7 +10148,7 @@ def test_mask_objects_uses_object_labels_as_primary_execution_domain() -> None:
     module_type = MaskObjectsModule
     assert (
         module_type.primary_image_inputs(
-            mask_objects,
+            contract,
             contract.artifact_inputs,
         )
         == ()
@@ -11253,7 +11687,7 @@ def test_image_measurement_table_retains_exact_declared_current_image() -> None:
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name="OrigGreen",
         source_image_payload=np.zeros((4, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     module_type = _module_type_for_contract(executor.callable_contract)
@@ -11342,7 +11776,10 @@ def test_colocalization_object_row_policy_projects_source_pair_features() -> Non
     assert policy.table_source_image_name((measurement_image,), "DNA__ER__RNA") is None
 
 
-def test_colocalization_record_builder_derives_source_pair_table_identity() -> None:
+@pytest.mark.parametrize("channel_indexes", ((0, 1), (1, 0)))
+def test_colocalization_record_builder_derives_source_pair_table_identity(
+    channel_indexes: tuple[int, int],
+) -> None:
     def measure_colocalization(
         image: np.ndarray,
     ) -> tuple[np.ndarray, dict[str, float]]:
@@ -11375,25 +11812,35 @@ def test_colocalization_record_builder_derives_source_pair_table_identity() -> N
             adapter=None,
             spec=ArtifactSpec.output("Coloc", MeasurementsArtifactType),
             output_value=MeasurementSparseColumnarRows.from_rows(
-                ({"slice_index": 0, "correlation": 0.5, "manders_m1": 0.7},),
-                fields=(
-                    FieldSpec("slice_index", int),
-                    FieldSpec("correlation", float),
-                    FieldSpec("manders_m1", float),
+                (
+                    {
+                        **{
+                            field.name: 0.0
+                            for field in FieldSpec.from_dataclass_type(
+                                ColocalizationMeasurements
+                            )
+                        },
+                        "slice_index": 0,
+                        "correlation": 0.5,
+                        "manders_m1": 0.7,
+                    },
                 ),
+                fields=FieldSpec.from_dataclass_type(ColocalizationMeasurements),
             ),
-            call_kwargs={},
+            kwargs=dict(zip(("channel_1", "channel_2"), channel_indexes)),
             source_aliases=("DNA", "ER"),
         )
     )
 
-    assert table.rows.row_mappings() == (
-        {
-            "slice_index": 0,
-            "correlation": 0.5,
-            "manders_m1": 0.7,
-        },
-    )
+    (row,) = table.rows.row_mappings()
+    assert row["slice_index"] == 0
+    first, second = (("DNA", "ER")[index] for index in channel_indexes)
+    assert row[f"Correlation_Correlation_{first}_{second}"] == 0.5
+    assert row[f"Correlation_Manders_{first}_{second}"] == 0.7
+    assert row[f"Correlation_Slope_{first}_{second}"] == 0.0
+    assert "correlation" not in row
+    assert "costes_threshold_1" not in row
+    assert "costes_threshold_2" not in row
     assert (
         table.source_image_name == RuntimeMeasurementSourcePair("DNA", "ER").source_name
     )
@@ -11458,7 +11905,7 @@ def test_measure_object_neighbors_records_object_topology_without_image_source()
                 row_type=NeighborMeasurements,
             ),
             source_image_name="OrigBlue",
-            call_kwargs={
+            kwargs={
                 "distance_method": DistanceMethod.WITHIN,
                 "neighbor_distance": 4,
             },
@@ -11549,7 +11996,7 @@ def test_track_objects_record_builder_uses_nominal_image_table_ownership() -> No
                 )
             ),
             source_image_name="OrigColor",
-            call_kwargs={"pixel_radius": 50},
+            kwargs={"pixel_radius": 50},
         )
     )
 
@@ -11652,15 +12099,107 @@ def test_object_label_output_recorder_uses_output_label_domain() -> None:
             spec=_output_from_input("ExpandedObjects", "InputObjects"),
             output_value=output_payload,
             source_image_name=None,
-            call_kwargs={},
+            kwargs={},
         )
     )
 
     _name, recorded_payload, _kwargs = runtime.objects[0]
-    assert isinstance(recorded_payload, ObjectLabelPayload)
+    assert isinstance(recorded_payload, ObjectLabelSet)
     assert recorded_payload.domain.declared_object_count is None
     assert recorded_payload.domain.declared_object_ids == tuple(range(1, 5))
     np.testing.assert_array_equal(recorded_payload.labels, output_labels)
+
+
+@pytest.mark.parametrize("carrier_axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("module_name", (
+    "ExpandOrShrinkObjects", "DilateObjects", "ShrinkToObjectCenters",
+    "ClassifyObjectsSingleMeasurement",
+))
+def test_object_only_module_uses_label_planes_instead_of_carrier_axis(
+    carrier_axis, module_name,
+) -> None:
+    labels = np.zeros((2, 7, 7), dtype=np.int32)
+    labels[0, 2, 2] = 1
+    labels[1, 4, 4] = 4
+    input_payload = ObjectLabelSet(
+        name="InputObjects",
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(
+            declared_object_id_domains=((1,), (4,)),
+            scope=ObjectLabelDomainScope.PLANE,
+        ),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/site-1.tif", "/input/site-2.tif"),
+            component_metadata=({"site": "1"}, {"site": "2"}),
+        ),
+    )
+    input_spec = ArtifactSpec.input(
+        "InputObjects", ObjectLabelsArtifactType, parameter_name="labels"
+    )
+    runtime = _FakeCellProfilerRuntime(
+        {}, objects={"InputObjects": input_payload},
+        artifact_input_edges=(_artifact_input_edge_for_test(input_spec),),
+        plane_projection=RuntimePlaneProjection.stack(2),
+    )
+    output_spec = _output_from_input("ExpandedObjects", "InputObjects")
+    classification = module_name == "ClassifyObjectsSingleMeasurement"
+    measurement_spec = ArtifactSpec.output(
+        f"{module_name}_measurements", MeasurementsArtifactType,
+        relations=(ArtifactSpecRelation(
+            source=input_spec.ref() if classification else output_spec.ref()
+        ),),
+    )
+    executor = _module_executor(_compiled_callable_contract(
+        CellProfilerModule.require_module(module_name).require_callable(),
+        artifact_inputs=(input_spec,),
+        artifact_outputs=(measurement_spec,) if classification else (measurement_spec, output_spec),
+    ))
+    runtime.request = replace(runtime.request, artifact_outputs={
+        spec.ref(): _artifact_output_plan(spec)
+        for spec in executor.callable_contract.artifact_outputs
+    })
+    # The image only carries main flow; its three planes do not define the
+    # independent two-plane object domain.
+    carrier = ImagePayloadMetadata(plane_axis=carrier_axis).payload_with(
+        np.zeros((3, 7, 7), dtype=np.float32)
+    )
+    result = _run_module(
+        executor, carrier, cellprofiler_runtime=runtime,
+        dtype_config=DtypeConfig(),
+        **({
+            "measurement_values": RuntimeSliceAlignedValues(slices=(
+                np.array([0.25]), np.array([0.75, 0.75, 0.75, 0.75]),
+            )),
+            "bin_count": 2,
+        } if classification else {}),
+    )
+    assert result is carrier
+    if classification:
+        rows = tuple(runtime.measurements[0].rows.row_mappings())
+        feature = ClassifyObjectsSingleMeasurementModule.MeasurementFeatureTemplate.OBJECT_CLASS
+        first_bin = feature.feature_name(bin_name="Bin_1")
+        second_bin = feature.feature_name(bin_name="Bin_2")
+        classified = tuple(
+            (row["slice_index"], row["object_label"], row[first_bin], row[second_bin])
+            for row in rows
+            if row.get(first_bin, 0) or row.get(second_bin, 0)
+        )
+        assert classified == ((0, 1, 1, 0), (1, 4, 0, 1))
+        return
+    recorded = runtime.objects[0][1]
+    assert recorded.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert recorded.domain.declared_object_id_domains == ((1,), (4,))
+    assert (
+        recorded.source_image_provenance_planes
+        == input_payload.source_image_provenance_planes
+    )
+    expected = labels.copy()
+    if module_name != "ShrinkToObjectCenters":
+        for plane, coordinate, object_id in ((0, 2, 1), (1, 4, 4)):
+            expected[plane, coordinate - 1:coordinate + 2, coordinate] = object_id
+            expected[plane, coordinate, coordinate - 1:coordinate + 2] = object_id
+    np.testing.assert_array_equal(recorded.labels, expected)
 
 
 def test_expand_or_shrink_executor_preserves_declared_object_domain() -> None:
@@ -11816,7 +12355,7 @@ def test_align_measurement_builder_records_output_scoped_shifts() -> None:
             row_type=AlignShiftMeasurement,
         ),
         source_image_name="Stain1Raw__Stain2Raw",
-        call_kwargs={},
+        kwargs={},
     )
     _seed_align_output_provenance(
         request,
@@ -11888,7 +12427,7 @@ def test_align_measurement_builder_records_additional_output_shifts() -> None:
             row_type=AlignShiftMeasurement,
         ),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
     _seed_align_output_provenance(
         request,
@@ -11969,7 +12508,7 @@ def test_classification_rows_include_unclassified_objects() -> None:
                 classify_like(np.zeros((2, 2), dtype=np.float32))[1]
             ),
             source_image_name=None,
-            call_kwargs={},
+            kwargs={},
         )
     ).rows.row_mappings()
 
@@ -12088,7 +12627,7 @@ def test_untangle_measurement_object_names_use_compiled_relations(
             rows=MeasurementSparseColumnarRows.from_rows((), fields=()),
             subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
         ),
-        call_kwargs={},
+        kwargs={},
     )
 
     assert (
@@ -12150,7 +12689,7 @@ def test_untangle_object_measurements_do_not_inherit_input_image_identity() -> N
         ),
         source_image_name="WormObjectsBinary",
         source_image_payload=np.zeros((8, 8), dtype=np.uint8),
-        call_kwargs={"overlap_style": OverlapStyle.BOTH},
+        kwargs={"overlap_style": OverlapStyle.BOTH},
     )
 
     source_image_name = UntangleWormsModule.measurement_record_source_image_name(
@@ -12197,6 +12736,7 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
         source_aliases=(),
         payload=payload,
         reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
     )
 
     assert carrier.payload is payload
@@ -12204,10 +12744,46 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
     assert len(carrier.payload.slices) == 2
 
 
-def test_filterobjects_binds_selection_measurement_values_to_label_slices() -> None:
+@pytest.mark.parametrize(
+    "execution_mode",
+    (ImagePayloadExecutionMode.NATURAL, ImagePayloadExecutionMode.FULL_STACK),
+)
+def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
+    execution_mode: ImagePayloadExecutionMode,
+) -> None:
+    pixels = np.arange(20, dtype=np.float32).reshape(4, 5) / 20
+    mask = np.ones(pixels.shape, dtype=bool)
+    mask[0, 0] = False
+    metadata = ImagePayloadMetadata(
+        source_path="/inputs/source.tif",
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=pixels.shape),
+    )
+    stack = ProducedImageStack(
+        (metadata.payload_with(pixels, mask),),
+        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.ones(pixels.shape, dtype=np.int32)),
+    )
+    carrier = CellProfilerMeasurementImage(
+        source_image_name="Source", payload=stack,
+        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        execution_mode=execution_mode,
+    )
+    prepared = carrier.prepare_object_labels(labels)
+    np.testing.assert_array_equal(image_payload_data(prepared.aligned_image), pixels)
+    np.testing.assert_array_equal(image_payload_mask(prepared.aligned_image), mask)
+    assert image_payload_metadata(prepared.aligned_image).source_path == metadata.source_path
+    np.testing.assert_array_equal(prepared.measurement_labels, labels.labels)
+
+
+@pytest.mark.parametrize("carrier_axis", tuple(RuntimePlaneAxis))
+def test_filterobjects_binds_selection_measurement_values_to_label_slices(
+    carrier_axis,
+) -> None:
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-    ).payload_with(np.zeros((2, 6, 6), dtype=np.float32), None)
+        plane_axis=carrier_axis,
+    ).payload_with(np.zeros((3, 6, 6), dtype=np.float32), None)
     children = np.zeros((2, 6, 6), dtype=np.int32)
     children[:, 0:2, 0:2] = 1
     children[:, 3:5, 3:5] = 2
@@ -12283,8 +12859,12 @@ def test_filterobjects_binds_selection_measurement_values_to_label_slices() -> N
         ),
         measurements,
     )
-    cells_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
-    tiles_spec = ArtifactSpec.input("Tiles", ObjectLabelsArtifactType)
+    cells_spec = ArtifactSpec.input(
+        "Cells", ObjectLabelsArtifactType, parameter_name="object_labels"
+    )
+    tiles_spec = ArtifactSpec.input(
+        "Tiles", ObjectLabelsArtifactType, parameter_name="enclosing_object_labels"
+    )
     measurement_input_spec = ArtifactSpec.input(
         measurements.name,
         MeasurementsArtifactType,
@@ -12354,6 +12934,83 @@ def test_filterobjects_binds_selection_measurement_values_to_label_slices() -> N
     assert filtered_array[1, 3, 3] == 0
 
 
+@pytest.mark.parametrize("carrier_axis, binary_operand", (
+    (RuntimePlaneAxis.SOURCE_BINDING, False),
+    (RuntimePlaneAxis.RUNTIME_SLICE, False),
+    (RuntimePlaneAxis.RUNTIME_SLICE, True),
+))
+def test_area_occupied_rows_preserve_the_selected_domain(carrier_axis, binary_operand) -> None:
+    from openhcs.processing.backends.cellprofiler.area_occupied import OperandChoice
+
+    object_specs = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType, parameter_name="object_labels")
+        for name in ("Primary", "Other")
+    )
+    objects = {}
+    for name, areas in (("Primary", (1, 4)), ("Other", (2, 3))):
+        labels = np.zeros((2, 3, 3), dtype=np.int32)
+        for plane, area in enumerate(areas):
+            labels[plane].flat[:area] = 1
+        objects[name] = ObjectLabelSet(
+            name=name,
+            variant_data=ObjectLabelVariantData(labels=labels),
+            domain=ObjectLabelDomain(
+                declared_object_id_domains=((1,), (1,)),
+                scope=ObjectLabelDomainScope.PLANE,
+            ),
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        )
+    measurement_spec = ArtifactSpec.output(
+        "AreaMeasurements", MeasurementsArtifactType,
+        measurement_feature_owner=MeasureImageAreaOccupiedBinaryModule,
+        relations=tuple(ArtifactSpecRelation(source=spec.ref()) for spec in object_specs),
+    )
+    binary_spec = ArtifactSpec.input("Binary", ImageArtifactType)
+    input_specs = ((binary_spec,) if binary_operand else ()) + object_specs
+    contract = _compiled_callable_contract(
+        MeasureImageAreaOccupiedBinaryModule.require_callable(),
+        artifact_inputs=input_specs, artifact_outputs=(measurement_spec,),
+    )
+    assert contract.invocation_domain_inputs.specs == (
+        (binary_spec,) if binary_operand else object_specs
+    )
+    carrier_pixels = np.zeros((2 if binary_operand else 3, 3, 3), dtype=np.float32)
+    if binary_operand:
+        carrier_pixels[0].flat[:3] = 1
+        carrier_pixels[1].flat[:6] = 1
+    carrier = ImagePayloadMetadata(
+        plane_axis=carrier_axis,
+        source_image_names=("Binary",) if binary_operand else (),
+    ).payload_with(carrier_pixels)
+    runtime = _FakeCellProfilerRuntime(
+        {"Binary": carrier} if binary_operand else {}, objects=objects,
+        artifact_input_edges=tuple(_artifact_input_edge_for_test(spec) for spec in input_specs),
+        plane_projection=RuntimePlaneProjection.stack(2),
+    )
+    runtime.request = replace(runtime.request, artifact_outputs={
+        measurement_spec.ref(): _artifact_output_plan(measurement_spec),
+    })
+    result = _run_module(
+        _module_executor(contract), carrier, cellprofiler_runtime=runtime,
+        operand_choices=((OperandChoice.BINARY_IMAGE,) if binary_operand else ())
+        + (OperandChoice.OBJECTS, OperandChoice.OBJECTS),
+        dtype_config=DtypeConfig(),
+    )
+    assert result is carrier
+    rows = tuple(runtime.measurements[0].rows.row_mappings())
+    measured = tuple(
+        (row["slice_index"], row["source_image_name"],
+         row[f"AreaOccupied_AreaOccupied_{row['source_image_name']}"])
+        for row in rows
+    )
+    expected = ((0, "Primary", 1.0), (0, "Other", 2.0),
+                (1, "Primary", 4.0), (1, "Other", 3.0))
+    if binary_operand:
+        expected = ((0, "Binary", 3.0), *expected[:2],
+                    (1, "Binary", 6.0), *expected[2:])
+    assert measured == expected
+
+
 def test_relationship_measurements_preserve_pure_2d_slice_indices() -> None:
     parent_labels = np.zeros((2, 5, 5), dtype=np.int32)
     child_labels = np.zeros((2, 5, 5), dtype=np.int32)
@@ -12419,7 +13076,7 @@ def test_relationship_measurements_preserve_pure_2d_slice_indices() -> None:
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -12438,7 +13095,7 @@ def test_relationship_rows_use_exact_compiled_endpoint_plane(
 
     monkeypatch.setattr(
         RuntimeInputBindingRequest,
-        "artifact_request_for_spec",
+        "artifact_value_for_spec",
         reject_ref_reconstruction,
     )
     parent_labels = np.zeros((2, 5, 5), dtype=np.int32)
@@ -12498,7 +13155,7 @@ def test_relationship_rows_use_exact_compiled_endpoint_plane(
         spec=relationship_spec,
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, relationship_spec, payload)
@@ -12542,7 +13199,7 @@ def test_output_record_request_rejects_ref_equivalent_endpoint_reconstruction() 
         spec=relationship_spec,
         output_value=DirectedObjectRelationshipPayload(source_ids=(), target_ids=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
     ref_equivalent_spec = replace(endpoint_spec)
 
@@ -12583,7 +13240,7 @@ def test_output_record_request_rejects_ambiguous_exact_endpoint_occurrence() -> 
         spec=relationship_spec,
         output_value=DirectedObjectRelationshipPayload(source_ids=(), target_ids=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     with pytest.raises(RuntimeError, match="multiple exact compiled input edges"):
@@ -12674,7 +13331,7 @@ def test_relationship_rows_project_temporal_endpoints_to_their_declared_slices()
         output_value=payload,
         source_image_name=None,
         source_image_payload=np.zeros((2, 5, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, relationship_spec, payload)
@@ -12787,7 +13444,7 @@ def test_relationship_measurements_reject_singleton_label_domain_broadcast() -> 
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -12848,7 +13505,7 @@ def test_relationship_rows_use_declared_relationship_outputs_for_measurement_onl
         spec=measurement_spec,
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         declared_only_outputs=MappingProxyType({relationship_spec.ref(): payload}),
     )
 
@@ -12978,7 +13635,7 @@ def test_object_measurement_table_uses_provenance_without_image_ownership() -> N
                 "test-axis", component=None, value=None
             ),
         ),
-        call_kwargs={},
+        kwargs={},
     )
 
     empty_rows = MeasurementSparseColumnarRows.from_rows((), fields=())
@@ -13073,7 +13730,7 @@ def test_object_output_table_uses_provenance_without_image_ownership() -> None:
         source_image_name=None,
         source_image_payload=np.zeros((2, 5, 5), dtype=np.float32),
         adapter=runtime,
-        call_kwargs={},
+        kwargs={},
     )
 
     rows = MeasurementSparseColumnarRows.from_rows((), fields=())
@@ -13176,7 +13833,7 @@ def test_relate_objects_measurement_table_rejects_distinct_image_set_axes() -> N
                 "test-axis", component=None, value=None
             ),
         ),
-        call_kwargs={},
+        kwargs={},
     )
 
     with pytest.raises(ValueError, match="source image-set axis"):
@@ -13217,7 +13874,7 @@ def test_object_lineage_measurement_table_preserves_current_payload_metadata() -
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_payload=carrier,
         adapter=_FakeCellProfilerRuntime({}),
-        call_kwargs={},
+        kwargs={},
     )
 
     source_metadata = MaskObjectsModule.measurement_record_source_metadata(
@@ -13271,7 +13928,7 @@ def test_relationship_rows_do_not_slice_payload_scoped_3d_lineage_by_z_plane() -
         spec=relationship_spec,
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     CellProfilerOutputRecorder.for_artifact_type(ObjectLabelsArtifactType).record(
@@ -13357,7 +14014,7 @@ def test_object_lineage_transform_measurement_record_includes_parent_rows() -> N
         source_image_name="Carrier",
         source_image_payload=np.ones((2, 2), dtype=np.float32),
         current_image=np.ones((2, 2), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     payload = DirectedObjectRelationshipPayload(source_ids=(1, 2), target_ids=(1, 2))
@@ -13424,7 +14081,7 @@ def test_relateobjects_relationship_rows_project_distances_nominally() -> None:
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -13493,7 +14150,7 @@ def test_relateobjects_relationship_rows_project_parent_mean_distances() -> None
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={"calculate_per_parent_means": True},
+        kwargs={"calculate_per_parent_means": True},
     )
 
     _record_output(request, request.spec, payload)
@@ -13514,7 +14171,10 @@ def test_relateobjects_relationship_rows_project_parent_mean_distances() -> None
     assert "Mean_Children_Distance_Minimum_Parents" in mean_rows[0]
 
 
-def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() -> None:
+@pytest.mark.parametrize("conflicting_upstream", (False, True))
+def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane(
+    conflicting_upstream: bool,
+) -> None:
     source_paths = ("/source/site1.tif", "/source/site2.tif")
     source_metadata = (
         {"well": "A14", "site": "1", "channel": "3"},
@@ -13579,6 +14239,16 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
         )
         for site_index, values in enumerate(((0.2, 0.6, 99.0), (0.8, 1.0)))
     )
+    if conflicting_upstream:
+        first = scoped_tables[0]
+        changed_rows = MeasurementSparseColumnarRows(
+            columns={
+                **first.rows.columns,
+                colocalization_feature: (123.0, *first.rows.column_values(colocalization_feature)[1:]),
+            },
+            fields=first.rows.fields,
+        )
+        scoped_tables = (*scoped_tables, replace(first, rows=changed_rows))
     unrelated_table = MeasurementTable(
         name="Unrelated_measurements",
         rows=MeasurementSparseColumnarRows.from_rows(
@@ -13676,7 +14346,7 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={"calculate_per_parent_means": True},
+        kwargs={"calculate_per_parent_means": True},
     )
 
     _record_output(request, request.spec, payload)
@@ -13686,6 +14356,13 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
     child_spec = executor.callable_contract.artifact_inputs.by_ref(declaration.target)
     assert parent_spec is not None
     assert child_spec is not None
+    if conflicting_upstream:
+        with pytest.raises(ValueError, match="conflicting values"):
+            projector.parent_mean_upstream_measurement_rows(
+                parent_spec=parent_spec, child_spec=child_spec,
+                payload=runtime.relationships[0],
+            )
+        return
     rows = projector.parent_mean_upstream_measurement_rows(
         parent_spec=parent_spec,
         child_spec=child_spec,
@@ -13804,7 +14481,7 @@ def test_relateobjects_relationship_rows_project_distances_from_slice_measuremen
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -13904,19 +14581,40 @@ def test_define_grid_automatic_uses_integer_lowest_spot_origin() -> None:
 
 
 def test_spatial_grid_output_recorder_accepts_pure_2d_grid_sequence() -> None:
-    grid_spec = ArtifactSpec.output("Grid", SpatialGridArtifactType)
-    runtime = _FakeCellProfilerRuntime({})
+    source_spec = ArtifactSpec.input("SourceImage", ImageArtifactType)
+    grid_spec = ArtifactSpec.output(
+        "Grid",
+        SpatialGridArtifactType,
+        relations=(SourceStackLineageSourceRelation(source=source_spec.ref()),),
+    )
+    source_payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=(source_spec.name,),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/site1.tif", "/input/site2.tif"),
+            component_metadata=({"site": "1"}, {"site": "2"}),
+        ),
+    ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
+    runtime = _FakeCellProfilerRuntime({source_spec.name: source_payload})
     request = _cellprofiler_output_record_request(
         callable_contract=_compiled_callable_contract(
             CellProfilerModule.require_module("DefineGridManual").require_callable(),
-            artifact_inputs=(),
+            artifact_inputs=(source_spec,),
             artifact_outputs=(grid_spec,),
+        ),
+        artifact_input_edges=(_artifact_input_edge_for_test(source_spec),),
+        source=CellProfilerMeasurementImage(
+            source_image_name=source_spec.name,
+            payload=source_payload,
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2
+            ),
         ),
         output_plans=tuple(_artifact_output_plan(item) for item in ((grid_spec,))),
         adapter=runtime,
         spec=grid_spec,
         output_value=None,
-        call_kwargs={},
+        kwargs={},
     )
     grids = [
         SpatialGrid(
@@ -14235,13 +14933,22 @@ def test_identify_objects_in_grid_location_rows_preserve_empty_grid_slots() -> N
         spec=measurement_spec,
         output_value=stats,
         source_image_name=None,
-        call_kwargs={
+        kwargs={
             "topology_inputs": (grid, guide_labels),
             "shape_choice": "natural_shape_and_location",
         },
     )
     _record_output(request, object_spec, payload)
     table = measurement_table_for_module(request)
+
+    assert {
+        row["feature_name"]
+        for row in table.rows.iter_row_mappings()
+        if row.get("object_name") == "GridObjects"
+    } == {
+        CellProfilerObjectCoreMeasurementFeature.CENTER_X.value,
+        CellProfilerObjectCoreMeasurementFeature.CENTER_Y.value,
+    }
 
     by_key = {
         (
@@ -14358,7 +15065,7 @@ def test_identify_objects_in_grid_location_rows_use_slice_aligned_grid() -> None
         spec=measurement_spec,
         output_value=RuntimeSliceAlignedValues(tuple(output[1] for output in outputs)),
         source_image_name=None,
-        call_kwargs={
+        kwargs={
             "topology_inputs": (
                 RuntimeSliceAlignedValues((grid, grid)),
                 np.stack((first_guides, second_guides), axis=0),
@@ -15038,27 +15745,23 @@ def test_measurement_domain_alignment_projects_declared_source_axis() -> None:
             ),
         ).payload_with(image, None),
     )
-    aligned_labels = (
-        MeasurementLabelSourceAlignmentStrategy.align_request_labels_to_image_source(
-            measurement_image.alignment_request(
-                labels=label_planes,
-                label_payload=labels,
-                plane_projector=projector,
-            )
-        )
-    )
+    aligned_labels = measurement_image.alignment_request(
+        labels=label_planes,
+        label_payload=labels,
+        plane_projector=projector,
+    ).labels_in_image_source()
 
     np.testing.assert_array_equal(
         object_label_dense_array(aligned_labels),
         label_planes[1],
     )
     np.testing.assert_array_equal(
-        MeasurementImageLabelAlignmentStrategy.align(
-            measurement_image.alignment_request(
-                labels=aligned_labels,
-                plane_projector=projector,
-            )
-        ),
+        measurement_image.alignment_request(
+            labels=aligned_labels,
+            plane_projector=projector,
+        )
+        .aligned()
+        .image,
         image[1],
     )
 
@@ -15114,11 +15817,13 @@ def test_measurement_domain_source_axis_projection_preserves_image_payload_conte
         payload=payload,
     )
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
+    aligned = (
         measurement_image.alignment_request(
             labels=np.ones((4, 5), dtype=np.int32),
             plane_projector=Projector(),
         )
+        .aligned()
+        .image
     )
 
     assert isinstance(aligned, MaskedImagePayload)
@@ -15176,15 +15881,11 @@ def test_measurement_domain_alignment_projects_source_owned_object_labels() -> N
         source_aliases=("rawDNA", "rawGFP"),
         payload=image,
     )
-    aligned_labels = (
-        MeasurementLabelSourceAlignmentStrategy.align_request_labels_to_image_source(
-            measurement_image.alignment_request(
-                labels=labels,
-                label_payload=labels,
-                plane_projector=Projector(),
-            )
-        )
-    )
+    aligned_labels = measurement_image.alignment_request(
+        labels=labels,
+        label_payload=labels,
+        plane_projector=Projector(),
+    ).labels_in_image_source()
 
     assert isinstance(aligned_labels, ObjectLabelSet)
     np.testing.assert_array_equal(
@@ -15329,7 +16030,9 @@ def test_measurement_labels_preserve_stack_for_object_domain_alignment() -> None
     image = np.ones((1, 4, 5), dtype=np.float32)
     labels = np.arange(2 * 4 * 5, dtype=np.int32).reshape(2, 4, 5)
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(image, labels)
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
+        image, labels
+    )
 
     assert measurement_labels.shape == labels.shape
     np.testing.assert_array_equal(measurement_labels, labels)
@@ -15365,7 +16068,7 @@ def test_measurement_label_alignment_preserves_runtime_slice_payload_for_aligned
         ),
     )
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
         AlignedImageStack((first_image, second_image)),
         labels,
         label_payload=label_payload,
@@ -15390,7 +16093,7 @@ def test_measurement_label_alignment_preserves_runtime_slice_payload_for_dense_s
         ),
     )
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
         image,
         labels,
         label_payload=label_payload,
@@ -15484,7 +16187,9 @@ def test_measurement_labels_do_not_infer_broadcast_from_equal_planes() -> None:
     label_plane = np.arange(4 * 5, dtype=np.int32).reshape(4, 5)
     labels = np.stack((label_plane, label_plane))
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(image, labels)
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
+        image, labels
+    )
 
     assert measurement_labels.shape == labels.shape
     np.testing.assert_array_equal(measurement_labels, labels)
@@ -15741,7 +16446,9 @@ def test_measurement_labels_do_not_slice_site_stack_for_single_source_binding() 
     )
 
     del measurement_image
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(image, labels)
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
+        image, labels
+    )
 
     assert measurement_labels.shape == labels.shape
     np.testing.assert_array_equal(measurement_labels, labels)
@@ -15878,6 +16585,7 @@ def test_measurement_labels_do_not_project_runtime_slice_stack_for_aligned_measu
     )
     measurement_image = CellProfilerMeasurementImage(
         source_image_name="CropBlue__CropGreen",
+        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
         source_aliases=("CropBlue", "CropGreen"),
         payload=AlignedImageStack(
             tuple(
@@ -16272,14 +16980,14 @@ def test_object_label_payload_preserves_source_metadata_for_measurements() -> No
     )
     _activate_runtime_contract(executor.callable_contract, runtime)
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     np.testing.assert_array_equal(payload.labels, labels.labels)
@@ -16330,14 +17038,14 @@ def test_runtime_object_label_payload_ignores_measurement_image_as_selector() ->
     measurement_image = ImagePayloadMetadata(
         source_component_metadata={"well": "A01"},
     ).payload_with(image, None)
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=measurement_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     np.testing.assert_array_equal(payload.labels, labels.labels)
@@ -16381,14 +17089,14 @@ def test_full_stack_object_measurement_resolves_complete_label_artifact() -> Non
     )
     _activate_runtime_contract(executor.callable_contract, runtime)
 
-    label_payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    label_payload = CellProfilerOutputRecorder.for_artifact_type(
         object_spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        object_spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=image,
-        ).artifact_request_for_spec(object_spec)
+        ).artifact_value_for_spec(object_spec)
     )
     _, executable_labels, _, _, _, _, _ = object_measurement_runtime_inputs(
         object_label_execution=object_label_input_execution_mode_from_callable(
@@ -16461,14 +17169,14 @@ def test_object_label_payload_for_measurement_image_projects_source_spatial_crop
     )
     _activate_runtime_contract(executor.callable_contract, runtime)
 
-    label_payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    label_payload = CellProfilerOutputRecorder.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
     payload = (
         CellProfilerMeasurementImage(
@@ -17564,9 +18272,7 @@ def test_convert_objects_to_image_uses_declared_label_source_for_runtime_plane_d
         variable_components=(AllComponents.Z_INDEX,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
         output_plan,
@@ -17602,9 +18308,7 @@ def test_object_label_image_output_rejects_source_plane_count_drift() -> None:
         ValueError,
         match="source-plane provenance must match the declared runtime plane axis",
     ):
-        FunctionOutputContextStrategy.for_output_plan(
-            output_plan,
-        ).contextualize_from_projector(
+        (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
             label_payload,
             ImagePayloadMetadata().payload_with(
                 np.zeros(labels.shape, dtype=np.uint16)
@@ -17635,9 +18339,7 @@ def test_object_label_singleton_volume_output_declares_runtime_plane_axis() -> N
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
         output_plan,
@@ -17669,9 +18371,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
         output_plan,
@@ -17926,8 +18626,12 @@ def test_measure_object_size_shape_surface_areas_match_marching_cubes_oracle() -
         )
         expected.append(_surface_area(labels[bounds] == label_id))
 
+    features, measured_labels = measure_object_size_shape_feature_arrays(
+        labels, calculate_advanced=False, calculate_zernikes=False,
+    )
+    np.testing.assert_array_equal(measured_labels, label_ids)
     np.testing.assert_allclose(
-        _surface_areas_3d_from_labels(labels, label_ids),
+        features[MeasureObjectSizeShapeModule.MeasurementFeature.SURFACE_AREA.value],
         np.asarray(expected, dtype=np.float64),
         rtol=1e-6,
         atol=1e-5,
@@ -17971,3 +18675,258 @@ def test_object_measurement_execution_policy_keeps_declared_full_stack_for_2d_la
     )
 
     assert mode is ImagePayloadExecutionMode.FULL_STACK
+
+
+@pytest.mark.parametrize("image_count", (1, 2))
+def test_natural_object_measurement_resolves_one_roster_without_eager_composition(
+    monkeypatch, image_count
+) -> None:
+    image_specs = tuple(
+        ArtifactSpec.input(name, ImageArtifactType)
+        for name in ("DNA", "ER")[:image_count]
+    )
+    object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    measurement_spec = ArtifactSpec.output(
+        "MeasureObjectIntensity_roster", MeasurementsArtifactType
+    )
+    labels = ObjectLabelSet(
+        name="Cells",
+        variant_data=ObjectLabelVariantData(labels=np.ones((3, 4), dtype=np.int32)),
+        domain=ObjectLabelDomain(declared_object_ids=(1,)),
+    )
+    images = {
+        spec.name: ImagePayloadMetadata(
+            source_image_names=(f"Original{spec.name}",)
+        ).payload_with(np.full((3, 4), value, dtype=np.float32))
+        for spec, value in zip(image_specs, (1, 2)[:image_count], strict=True)
+    }
+    runtime = _FakeCellProfilerRuntime(
+        images,
+        {"Cells": labels},
+        artifact_input_edges=tuple(
+            _artifact_input_edge_for_test(spec)
+            for spec in (*image_specs, object_spec)
+        ),
+        artifact_output_bindings=(
+            (measurement_spec, _artifact_output_plan(measurement_spec)),
+        ),
+    )
+    contract = _compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(),
+        artifact_inputs=(*image_specs, object_spec),
+        artifact_outputs=(measurement_spec,),
+    )
+    executor = _module_executor(contract)
+    monkeypatch.setattr(
+        CellProfilerModuleExecutor,
+        "_image_request",
+        lambda *_args, **_kwargs: pytest.fail(
+            "NATURAL measurements do not compose the image roster"
+        ),
+    )
+    strategy_type = type(
+        CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
+    )
+    original_resolution = strategy_type.raw_runtime_input_value
+    resolutions = []
+
+    def resolve(self, spec, value):
+        resolutions.append(spec.name)
+        return original_resolution(self, spec, value)
+
+    monkeypatch.setattr(strategy_type, "raw_runtime_input_value", resolve)
+    policy_type = type(
+        MeasureObjectIntensityModule.runtime_object_measurement_row_policy()
+    )
+    original_table_name = policy_type.table_source_image_name
+    fallbacks = []
+
+    def table_name(self, measurement_images, source_image_name):
+        fallbacks.append(source_image_name)
+        return original_table_name(self, measurement_images, source_image_name)
+
+    monkeypatch.setattr(policy_type, "table_source_image_name", table_name)
+    current = np.zeros((3, 4), dtype=np.float32)
+    assert _run_module(executor, current, cellprofiler_runtime=runtime) is current
+    assert resolutions == ["DNA", "ER"][:image_count]
+    assert fallbacks == [None if image_count == 1 else "dna__er"]
+    table = next(
+        table for table in runtime.measurements
+        if table.subject == MeasurementSubject(MeasurementScope.OBJECT, "Cells")
+    )
+    rows = table.rows.row_mappings()
+    assert [
+        row[f"Intensity_IntegratedIntensity_{spec.name}"]
+        for row, spec in zip(rows, image_specs, strict=True)
+    ] == [12.0, 24.0][:image_count]
+
+
+def test_natural_measurement_fallback_preserves_selected_main_flow_plane(monkeypatch):
+    from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
+
+    image_spec = ArtifactSpec.input("DNA", ImageArtifactType)
+    object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    output_spec = ArtifactSpec.output("SelectedPlaneIntensity", MeasurementsArtifactType)
+    planes = tuple(
+        ImagePayloadMetadata(source_image_names=(name,)).payload_with(
+            np.ones((3, 4), dtype=np.float32)
+        ) for name in ("DNA", "ER")
+    )
+    image = ImagePayloadMetadata.compose(
+        planes, mode=ImagePayloadMetadataCompositionMode.STACK
+    ).payload_with(np.ones((2, 3, 4), dtype=np.float32))
+    labels = ObjectLabelSet(
+        name="Cells",
+        variant_data=ObjectLabelVariantData(labels=np.ones((2, 3, 4), dtype=np.int32)),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        domain=ObjectLabelDomain(
+            scope=ObjectLabelDomainScope.PLANE,
+            declared_object_id_domains=((1,), (1,)),
+        ),
+    )
+    runtime = _FakeCellProfilerRuntime(
+        {}, {"Cells": labels},
+        artifact_input_edges=(
+            replace(
+                _artifact_input_edge_for_test(image_spec, stored=False),
+                main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD,
+            ),
+            _artifact_input_edge_for_test(object_spec),
+        ),
+        artifact_output_bindings=((output_spec, _artifact_output_plan(output_spec)),),
+        plane_projection=RuntimePlaneProjection(plane_index=0, plane_count=2),
+    )
+    executor = _module_executor(_compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(),
+        artifact_inputs=(image_spec, object_spec), artifact_outputs=(output_spec,),
+    ))
+    _activate_runtime_contract(executor.callable_contract, runtime)
+    original_fallback = executor._image_request(
+        image, runtime, module_type=MeasureObjectIntensityModule,
+        active_input_specs=(image_spec, object_spec),
+    ).source_image_name
+    assert original_fallback == "DNA"
+    monkeypatch.setattr(
+        CellProfilerModuleExecutor, "_image_request",
+        lambda *_args, **_kwargs: pytest.fail("unused composed request"),
+    )
+    policy_type = type(MeasureObjectIntensityModule.runtime_object_measurement_row_policy())
+    original_table_name = policy_type.table_source_image_name
+    fallbacks = []
+    def table_name(self, measurement_images, source_image_name):
+        fallbacks.append(source_image_name)
+        return original_table_name(self, measurement_images, source_image_name)
+    monkeypatch.setattr(policy_type, "table_source_image_name", table_name)
+    assert _run_module(executor, image, cellprofiler_runtime=runtime) is image
+    assert fallbacks == [original_fallback]
+
+
+@pytest.mark.parametrize("batched", (False, True))
+def test_composed_measurement_roster_keeps_all_object_source_pairs(
+    monkeypatch, batched
+):
+    from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
+
+    image_specs = tuple(
+        ArtifactSpec.input(name, ImageArtifactType) for name in ("DNA", "ER", "RNA")
+    )
+    object_specs = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType)
+        for name in ("Cells", "Nuclei")
+    )
+    output = ArtifactSpec.output("PairMeasurements", MeasurementsArtifactType)
+    pixels = np.arange(1, 13, dtype=np.float32).reshape(3, 4) / 12
+    images = {
+        spec.name: ImagePayloadMetadata(source_image_names=(spec.name,)).payload_with(
+            pixels * scale
+        )
+        for spec, scale in zip(image_specs, (1.0, 0.5, 0.25), strict=True)
+    }
+    objects = {
+        spec.name: ObjectLabelSet(
+            name=spec.name,
+            variant_data=ObjectLabelVariantData(labels=np.ones((3, 4), dtype=np.int32)),
+            domain=ObjectLabelDomain(declared_object_ids=(1,)),
+        )
+        for spec in object_specs
+    }
+    contract = _compiled_callable_contract(
+        MeasureColocalizationModule.require_callable("measure_colocalization_objects"),
+        artifact_inputs=(*image_specs, *object_specs),
+        artifact_outputs=(output,),
+    )
+    batch_executor = contract.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
+    )
+    assert batch_executor is not None
+    batches = []
+
+    def execute_batch(func, requests, execute_one):
+        batches.append(
+            tuple(
+                (request.object_spec.name, request.batch_index, request.batch_count)
+                for request in requests
+            )
+        )
+        return batch_executor(func, requests, execute_one)
+
+    contract = replace(
+        contract,
+        runtime_batch_executors={
+            RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES: execute_batch
+        }
+        if batched
+        else {},
+    )
+    runtime = _FakeCellProfilerRuntime(
+        images,
+        objects,
+        artifact_input_edges=tuple(
+            _artifact_input_edge_for_test(spec)
+            for spec in (*image_specs, *object_specs)
+        ),
+        artifact_output_bindings=((output, _artifact_output_plan(output)),),
+    )
+    policy_type = type(
+        MeasureColocalizationModule.runtime_object_measurement_row_policy()
+    )
+    original_invocations = policy_type.invocations
+    source_rosters = []
+
+    def invocations(policy, measurement_image, kwargs):
+        source_rosters.append(measurement_image.source_aliases)
+        return original_invocations(policy, measurement_image, kwargs)
+
+    monkeypatch.setattr(policy_type, "invocations", invocations)
+    current = np.zeros((3, 4), dtype=np.float32)
+    assert (
+        _run_module(
+            _module_executor(contract),
+            current,
+            cellprofiler_runtime=runtime,
+            do_costes=False,
+            do_manders=False,
+            do_rwc=False,
+            do_overlap=False,
+        )
+        is current
+    )
+    assert source_rosters == [("DNA", "ER", "RNA")]
+    assert batches == (
+        [
+            tuple(
+                (name, index, 6)
+                for index, name in enumerate(("Cells",) * 3 + ("Nuclei",) * 3)
+            )
+        ]
+        if batched
+        else []
+    )
+    rows = tuple(
+        row for table in runtime.measurements for row in table.rows.iter_row_mappings()
+    )
+    for name in ("Cells", "Nuclei"):
+        owned = tuple(row for row in rows if row.get("object_name") == name)
+        assert len(owned) == 3
+        for row, pair in zip(owned, ("DNA_ER", "DNA_RNA", "ER_RNA"), strict=True):
+            assert row[f"Correlation_Correlation_{pair}"] == pytest.approx(1.0)

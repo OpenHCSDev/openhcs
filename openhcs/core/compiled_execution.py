@@ -121,7 +121,10 @@ class CompiledExecutionBundle:
 
     ``runtime_contexts`` preserve the rich in-process compiled state used for
     runtime facts and fork inheritance. ``transport_contexts`` are the
-    pickle-safe contexts submitted through worker queues.
+    pickle-safe plan snapshots derived at bundle construction and submitted
+    through worker queues. Runtime services and author configuration objects
+    retain their existing shared lifetimes; later runtime plan replacement does
+    not update this transport snapshot.
     """
 
     pipeline_definition: Sequence[AbstractStep]
@@ -149,15 +152,6 @@ class CompiledExecutionBundle:
 
         return any(
             plan.execution_scope.requires_parent_runtime_observation
-            or (
-                context.analysis_consolidation_config.enabled
-                and plan.runtime_artifact_materialization.has_persistent_target
-                and any(
-                    output.materialization is not None
-                    and output.materialization.participates_in_runtime_export_observation()
-                    for output in plan.artifact_outputs.values()
-                )
-            )
             for context in self.runtime_contexts.values()
             for plan in context.step_plans.values()
         )
@@ -171,8 +165,10 @@ class CompiledExecutionBundle:
         worker_assignments: Mapping[str, list[str]],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
     ) -> "CompiledExecutionBundle":
-        transport_contexts = resolve_lazy_configurations_for_serialization(
-            dict(runtime_contexts.items())
+        from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+
+        transport_contexts = FunctionStepTransportAuthority.normalize_contexts(
+            resolve_lazy_configurations_for_serialization(dict(runtime_contexts.items()))
         )
         return cls(
             pipeline_definition=pipeline_definition,
@@ -206,14 +202,10 @@ class CompiledExecutionBundle:
 
         from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 
-        transport_contexts = FunctionStepTransportAuthority.normalize_contexts(
-            dict(self.transport_contexts)
-        )
         return replace(
             self,
             pipeline_definition=FunctionStepTransportAuthority.normalize_pipeline(
                 list(self.pipeline_definition)
             ),
-            runtime_contexts=transport_contexts,
-            transport_contexts=transport_contexts,
+            runtime_contexts=self.transport_contexts,
         )

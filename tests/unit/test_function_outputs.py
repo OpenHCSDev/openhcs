@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from dataclasses import replace
 from types import SimpleNamespace
 
 import numpy as np
@@ -19,9 +20,12 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 from openhcs.constants.constants import AllComponents, Backend, VariableComponents
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
+    ArtifactOutputPlan,
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
+from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
@@ -30,12 +34,13 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import WellFilterMode
+from openhcs.core.config import AnalysisConsolidationConfig, TiffConfig, WellFilterMode
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
+    image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
@@ -49,22 +54,32 @@ from openhcs.core.source_metadata import (
     SOURCE_VOXEL_SPACING_FIELD,
     SOURCE_VOXEL_SPACING_UNIT_FIELD,
     SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
 )
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.step_dependencies import StepInputDependency
-from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
+from openhcs.core.steps.function_output_identity import (
+    FunctionOutputIdentity,
+    FunctionOutputPathRequest,
+)
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
     step_output_manifest,
 )
+from openhcs.core.steps.function_artifact_materialization import (
+    MaterializedRuntimeArtifact,
+    RuntimeArtifactMaterialization,
+)
+from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
 from openhcs.core.steps.function_outputs import (
     MaterializedImageOutputWriter,
     MemoryOutputWriter,
-    OpenHCSMetadataWriter,
-    ProducedMemoryPathsAuthority,
-    RuntimeArtifactMaterializationAuthority,
+    OpenHCSMetadataTarget,
+    MaterializedImageMetadataTarget,
+    RuntimeArtifactMetadataTarget,
     StreamOutputsAuthority,
+    StreamOutputBatch,
     finalize_function_step_outputs,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -73,13 +88,41 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerSurface,
 )
 from openhcs.core.virtual_workspace_metadata import (
+    AtomicMetadataWriter,
+    METADATA_CONFIG,
     FIELDS,
+    MetadataWriteError,
     VirtualWorkspaceSourceProjectionEntries,
 )
+from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 from openhcs.microscopes.microscope_interfaces import MetadataHandler
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization.core import Output
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    MaterializationSpec,
+    MaterializedFilenameIdentity,
+)
+
+
+def _publish_saved_step(context, plan, *, artifact_materializations=()):
+    """Exercise the receiving transaction with this step's actual saved facts."""
+    facts = OpenHCSMetadataTarget.observe_for_step(
+        context, plan, artifact_materializations=artifact_materializations
+    )
+    for metadata_path in dict.fromkeys(
+        METADATA_CONFIG.metadata_path(target.plate_root) for target in facts
+    ):
+        entries = {
+            target: value for target, value in facts.items()
+            if METADATA_CONFIG.metadata_path(target.plate_root) == metadata_path
+        }
+        AtomicMetadataWriter().reconcile_completed_plate(
+            metadata_path,
+            {target: context for target in entries if target.create_openhcs_metadata},
+            produced_entries_by_target=entries,
+        )
 
 
 @pytest.mark.parametrize("backend", [Backend.ZARR.value, "custom-array-store"])
@@ -113,16 +156,18 @@ def test_function_step_metadata_follows_runtime_artifact_persistence(
         (MaterializedImageOutputWriter, "write_if_needed", "materialized"),
         (StreamOutputsAuthority, "stream_outputs", "stream"),
         (
-            RuntimeArtifactMaterializationAuthority,
+            ArtifactMaterializationTargetPlan,
             "materialize",
             "runtime_artifacts",
         ),
-        (OpenHCSMetadataWriter, "write", "metadata"),
+        (OpenHCSMetadataTarget, "observe_for_step", "metadata"),
     ):
         monkeypatch.setattr(
             authority,
             method_name,
-            lambda _context, _plan, event=event: events.append(event),
+            lambda _context, _plan, event=event, **_kwargs: (
+                events.append(event), {} if event == "metadata" else ()
+            )[1],
         )
 
     finalize_function_step_outputs(context, plan)
@@ -323,6 +368,8 @@ def context_stub(filemanager, parser=None):
     context.input_dir = Path("/tmp/plate/images")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
+    context.tiff_config = TiffConfig()
+    context.analysis_consolidation_config = AnalysisConsolidationConfig()
     context.step_axis_filters = {}
     return context
 
@@ -409,30 +456,81 @@ def record_output_path(
     )
 
 
-def test_function_output_identity_preserves_non_axis_source_metadata() -> None:
+def test_memory_output_writer_materializes_preserved_source_at_current_destination(
+    tmp_path,
+):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    source_path = source_dir / "A01_s1_w1.tif"
+    original_pixels = np.full((4, 5), 7, dtype=np.uint16)
+    tifffile.imwrite(source_path, original_pixels)
+    memory_pixels = np.full((4, 5), 3, dtype=np.uint16)
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    filemanager.ensure_directory(source_dir, Backend.MEMORY.value)
+    filemanager.save(memory_pixels, str(source_path), Backend.MEMORY.value)
+    context = context_stub(filemanager)
+    source_plan = function_step_plan("Source", pipeline_position=0)
+    source_plan.output_dir = source_dir
+    record_output_path(context, source_plan, source_path)
+
+    plan = function_step_plan("Preserve image", pipeline_position=1)
+    plan.output_plate_root = str(tmp_path / "output_plate")
+    plan.output_dir = Path(plan.output_plate_root) / "images"
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(Path(plan.output_plate_root) / "results")
+    plan.write_backend = Backend.DISK.value
+    manifest = step_output_manifest(context)
+    (source_record,) = manifest.image_records_for(source_plan)
+    manifest.record_outputs(plan, (source_record.passed_through(plan),))
+
+    MemoryOutputWriter.write_if_needed(context, plan)
+
+    destination = plan.output_dir / source_path.name
+    np.testing.assert_array_equal(tifffile.imread(destination), memory_pixels)
+    np.testing.assert_array_equal(tifffile.imread(source_path), original_pixels)
+    np.testing.assert_array_equal(
+        filemanager.load(str(source_path), Backend.MEMORY.value), memory_pixels
+    )
+    (target,) = OpenHCSMetadataTarget.for_execution(context, plan)
+    assert target.produced_projection_entries(context, plan) is not None
+
+
+@pytest.mark.parametrize("source_extension", (None, ".czi"))
+def test_function_output_identity_preserves_non_axis_source_metadata(source_extension) -> None:
     identity = FunctionOutputIdentity(
         component_values={"channel": "2", "site": "1"},
         extension=".tif",
         source="test",
     )
 
-    metadata = identity.component_metadata(
-        {
+    source_metadata = {
             "Run": "Sequence1",
             "Specimen": "DrosophilaEmbryo",
             "ChannelNumber": "1",
             "OpenHCSOriginalSourceMetadata": {"FrameNumber": "0007"},
-        }
-    )
+    }
+    if source_extension is not None:
+        source_metadata["extension"] = source_extension
+    metadata = identity.component_metadata(source_metadata)
 
     assert metadata == {
         "Run": "Sequence1",
         "Specimen": "DrosophilaEmbryo",
         "channel": "2",
         "site": "1",
-        "extension": ".tif",
         "OpenHCSOriginalSourceMetadata": {"FrameNumber": "0007"},
+        **({"extension": source_extension} if source_extension is not None else {}),
     }
+    assert identity.filename_component_metadata() == {
+        "channel": "2", "site": "1", "extension": ".tif",
+    }
+    assert source_metadata["ChannelNumber"] == "1"
+    assert source_metadata.get("extension") == source_extension
 
 
 def test_step_output_manifest_prefers_main_dependency_over_auxiliary_artifact_inputs():
@@ -1353,7 +1451,39 @@ def test_image_persistence_skips_object_label_main_flow_payloads():
         ),
     )
 
-    assert ProducedMemoryPathsAuthority.paths(context, plan) == []
+    assert step_output_manifest(context).image_records_for(plan) == ()
+
+
+def test_metadata_target_family_discovers_new_declaration_without_consumer_edits(
+    tmp_path,
+):
+    registry = OpenHCSMetadataTarget.__registry__
+    original_keys = set(registry)
+    try:
+
+        class SupplementalImageMetadataTarget(OpenHCSMetadataTarget):
+            @classmethod
+            def from_plan(cls, plan):
+                return cls(
+                    output_dir=tmp_path,
+                    backend=Backend.DISK.value,
+                    plate_root=str(tmp_path),
+                    sub_dir="supplemental",
+                    results_dir=None,
+                )
+
+        plan = function_step_plan("memory-only")
+        plan.write_backend = Backend.MEMORY.value
+        context = context_stub(FileManagerStub({}))
+        (target,) = OpenHCSMetadataTarget.for_plan(plan)
+        assert type(target) is SupplementalImageMetadataTarget
+        assert OpenHCSMetadataTarget.for_execution(context, plan) == (
+            replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),
+        )
+        assert target.produced_projection_entries(context, plan).entries == {}
+    finally:
+        for key in set(registry) - original_keys:
+            del registry[key]
 
 
 def test_metadata_writer_skips_owner_without_image_outputs():
@@ -1373,7 +1503,7 @@ def test_metadata_writer_skips_owner_without_image_outputs():
         ),
     )
 
-    OpenHCSMetadataWriter.write(context, plan)
+    _publish_saved_step(context, plan)
 
 
 def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifact(
@@ -1417,7 +1547,7 @@ def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifac
     plan.create_openhcs_metadata = True
     record_output_path(context, plan, output_path)
 
-    OpenHCSMetadataWriter.write(context, plan)
+    _publish_saved_step(context, plan)
 
     subdirectory = json.loads(
         (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
@@ -1510,8 +1640,8 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
         str(path),
         Backend.MEMORY.value,
     )
-    OpenHCSMetadataWriter.write(context, plan)
-    OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
+    _publish_saved_step(context, plan)
+    OpenHCSMetadataTarget.finalize_completed_plate({"A01": context})
 
     subdirectory = json.loads(
         (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
@@ -1524,9 +1654,12 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     )
     assert "site" not in restored.source_component_metadata
     assert len(restored.source_provenance.represented_source_identities) == 2
-    assert record["address"]["site"] == "1"
+    assert record["address"] is None
+    assert record["execution_scope"]["fixed_component_values"] == [
+        ["channel", "1"], ["z_index", "1"], ["timepoint", "1"],
+    ]
     assert "site" not in record["source_metadata"]
-    assert subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]["site"] == "1"
+    assert "site" not in subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]
 
 
 def test_runtime_image_artifact_projects_persisted_source_binding(
@@ -1596,16 +1729,23 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
         ),
         outputs=lambda _plan, _context, **_kwargs: (output,),
     )
-    monkeypatch.setattr(
-        "openhcs.core.steps.function_outputs.runtime_artifact_materializations",
-        lambda _plan, _context: (materialization,),
+    saved_artifacts = (
+        MaterializedRuntimeArtifact(
+            outputs_by_backend={Backend.DISK.value: (output,)},
+            materialization=materialization,
+        ),
     )
 
-    target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
+    target = MaterializedImageMetadataTarget.from_plan(plan)
     assert target is not None
+    target = replace(target, artifact_materializations=saved_artifacts)
     [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
         context, plan
     )
+
+    artifact_target = RuntimeArtifactMetadataTarget.from_plan(plan)
+    assert artifact_target is not None
+    assert artifact_target.runtime_artifact_projection_paths(context, plan) == ()
 
     assert virtual_path == (
         "analysis_inputs/A49_s001_w2_z001_t001_neurite_candidate_mask.checkpoint.tif"
@@ -1615,7 +1755,10 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
     assert projection.image_metadata is not None
     assert projection.image_metadata.source_dtype == "uint8"
     assert projection.ref == SourcePixelRef(Backend.DISK.value, virtual_path)
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     assert structured is not None
     [record] = structured[FIELDS.SOURCE_PROJECTION]
     assert record["virtual_path"] == virtual_path
@@ -1709,13 +1852,23 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
         ),
         outputs=lambda _plan, _context, **_kwargs: (output,),
     )
-    monkeypatch.setattr(
-        "openhcs.core.steps.function_outputs.runtime_artifact_materializations",
-        lambda _plan, _context: (materialization,),
+    saved_artifacts = (
+        MaterializedRuntimeArtifact(
+            outputs_by_backend={Backend.DISK.value: (output,)},
+            materialization=materialization,
+        ),
     )
 
-    target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
+    output_plan = ArtifactOutputPlan(
+        name="neurite_outgrowth",
+        path="/memory/neurite_outgrowth.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        materialization=MaterializationSpec(ImageFileOptions()),
+    )
+    plan.artifact_outputs = {output_plan.ref(): output_plan}
+    target = RuntimeArtifactMetadataTarget.from_plan(plan)
     assert target is not None
+    target = replace(target, artifact_materializations=saved_artifacts)
     [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
         context, plan
     )
@@ -1735,7 +1888,10 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
         ]
         for index in range(2)
     ) == ("1", "2")
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     assert structured is not None
     [record] = structured[FIELDS.SOURCE_PROJECTION]
     assert record["artifact_kind"] == ObjectLabelsArtifactType.value
@@ -1847,7 +2003,7 @@ def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
         ),
     )
 
-    OpenHCSMetadataWriter.write(context, plan)
+    _publish_saved_step(context, plan)
 
     subdirectory = json.loads(
         (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
@@ -1869,6 +2025,170 @@ def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
     }
 
 
+@pytest.mark.parametrize("well", ("A01", "sample.v2", "image.ome.tif"))
+@pytest.mark.parametrize("extension", (".tif", ".ome.tif"))
+@pytest.mark.parametrize("z_values", ((1, 2, 3), (3, 1), (2,)))
+def test_produced_address_publication_never_parses_generated_filenames(
+    tmp_path, monkeypatch, well, extension, z_values
+):
+    """Bounded identity/image publication and durable reconciliation journey."""
+    plate_root = tmp_path / "plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    parser = SourceSchemaFilenameParser()
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    context = context_stub(filemanager, parser=parser)
+    context.metadata_cache = {
+        AllComponents.WELL: {well: None, "not-produced": None},
+        AllComponents.SITE: {"1": None},
+        AllComponents.CHANNEL: {"1": "DNA", "99": "not-produced"},
+        AllComponents.Z_INDEX: {"1": None, "2": None, "3": None, "99": None},
+        AllComponents.TIMEPOINT: {"1": None},
+    }
+    plan = function_step_plan("typed identity")
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.write_backend = Backend.DISK.value
+    plan.create_openhcs_metadata = True
+    context.step_plans = {plan.step_index: plan}
+    filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    records = []
+    paths = []
+    pixels = np.zeros((4, 5), dtype=np.uint16)
+    for z_index in z_values:
+        source_path = f"{well}_s001_w1_z{z_index:03d}_t001{extension}"
+        metadata = ImagePayloadMetadata(
+            source_path=source_path,
+            source_component_metadata={
+                "well": well,
+                "site": 1,
+                "channel": 1,
+                "z_index": z_index,
+                "timepoint": 1,
+            },
+            source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
+        )
+        identity = FunctionOutputIdentity.from_metadata(
+            parser, metadata
+        )
+        assert identity is not None
+        assert identity.extension == extension
+        identity = identity.with_filename_qualifier("centre_dots")
+        filename = identity.filename(parser)
+        assert filename == f"{well}_s001_w1_z{z_index:03d}_t001_centre_dots{extension}"
+        # Readback is an external boundary; publication below must not parse.
+        parsed = parser.parse_filename(filename)
+        assert parsed is not None
+        assert parsed.extension == extension
+        assert parsed.value_for(AllComponents.WELL) == well
+        path = output_dir / filename
+        tifffile.imwrite(path, pixels)
+        filemanager.save(
+            metadata.payload_with(pixels, None), str(path), Backend.MEMORY.value
+        )
+        records.append(
+            ProducedOutputSemantics.from_output(
+                plan,
+                path,
+                identity,
+                output_context=AlignedImageSliceContext.main_flow(
+                    output_key="centre_dots", artifact_kind=ImageArtifactType.value
+                ),
+                image_metadata=metadata,
+            )
+        )
+        paths.append(f"images/{filename}")
+    step_output_manifest(context).record_outputs(plan, records)
+
+    def reject_generated_path_parse(_filename):
+        raise AssertionError("Publication must consume the typed produced address.")
+
+    monkeypatch.setattr(parser, "parse_filename", reject_generated_path_parse)
+    _publish_saved_step(context, plan)
+    # Step memory is unavailable at final reconciliation. Durable projections
+    # must supply the same addresses, calibration and exact saved coverage.
+    for record in records:
+        filemanager.delete(record.output_path, Backend.MEMORY.value)
+    OpenHCSMetadataTarget.finalize_completed_plate({well: context})
+    subdirectory = json.loads((plate_root / "openhcs_metadata.json").read_text())[
+        FIELDS.SUBDIRECTORIES
+    ]["images"]
+    assert set(subdirectory[FIELDS.IMAGE_FILES]) == set(paths)
+    assert subdirectory["wells"] == {well: None}
+    assert subdirectory["channels"] == {"1": "DNA"}
+    assert set(subdirectory["z_indexes"]) == {str(z) for z in z_values}
+    assert subdirectory[FIELDS.PIXEL_SIZE] == 0.5
+    for record in subdirectory[FIELDS.SOURCE_PROJECTION]:
+        assert record["address"]["well"] == well
+        assert int(record["address"]["z_index"]) in z_values
+        restored = ImagePayloadMetadata.from_mapping(record["image_metadata"])
+        assert restored.source_dtype == "uint16"
+        assert restored.source_voxel_spacing.values_zyx == (0.5, 0.5)
+
+    metadata_path = plate_root / "openhcs_metadata.json"
+    previous_metadata = metadata_path.read_bytes()
+    unregistered = output_dir / "unowned_s001_w1_z001_t001.tif"
+    tifffile.imwrite(unregistered, pixels)
+    with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+        OpenHCSMetadataTarget.finalize_completed_plate({well: context})
+    assert metadata_path.read_bytes() == previous_metadata
+    unregistered.unlink()  # This fixture owns the synthetic file.
+
+    if len(paths) > 1:
+        removed = paths[0]
+        (plate_root / removed).unlink()
+        OpenHCSMetadataTarget.finalize_completed_plate({well: context})
+        reconciled = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][
+            "images"
+        ]
+        assert set(reconciled[FIELDS.IMAGE_FILES]) == set(paths[1:])
+        assert removed not in reconciled[FIELDS.WORKSPACE_MAPPING]
+        assert removed not in reconciled[FIELDS.SOURCE_METADATA]
+        assert {
+            record["virtual_path"] for record in reconciled[FIELDS.SOURCE_PROJECTION]
+        } == set(paths[1:])
+        assert set(reconciled["z_indexes"]) == {str(z) for z in z_values[1:]}
+
+
+@pytest.mark.parametrize("well", ("A01", "image.ome.tif"))
+@pytest.mark.parametrize("extension", (".tif", ".ome.tif"))
+def test_produced_stacked_dotted_identity_keeps_declared_extension(
+    tmp_path, well, extension
+):
+    parser = SourceSchemaFilenameParser()
+    source_paths = tuple(
+        f"/source/{well}_s001_w1_z{z:03d}_t001{extension}" for z in (3, 1, 2)
+    )
+    metadata = ImagePayloadMetadata(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=source_paths,
+        ),
+    )
+    request = FunctionOutputPathRequest(
+        parser=parser,
+        output_dir=tmp_path,
+        output_payload=metadata.payload_with(
+            np.zeros((3, 4, 5), dtype=np.uint16), None
+        ),
+        input_path=Path(source_paths[0]).name,
+        variable_components=(VariableComponents.Z_INDEX,),
+    )
+    identity = FunctionOutputIdentity.from_request(request)
+    assert identity.extension == extension
+    assert "z_index" not in identity.component_values
+    assert identity.filename_address.value_for(AllComponents.Z_INDEX) == "3"
+    assert identity.filename_address.value_for(AllComponents.WELL) == well
+    filename = identity.with_filename_qualifier("centre_dots").filename(parser)
+    assert filename == f"{well}_s001_w1_z003_t001_centre_dots{extension}"
+
+
 def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     tmp_path,
 ):
@@ -1883,6 +2203,9 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
 
     first_pixels = np.zeros((4, 5), dtype=np.uint16)
     ImageFileFormat.require_path(first_image).write(first_image, first_pixels)
+    # A concurrent axis can persist pixels before publishing its producer
+    # record. The first publication must not infer or discard that ownership.
+    ImageFileFormat.require_path(later_image).write(later_image, first_pixels)
 
     filemanager = FileManager(
         {
@@ -1910,14 +2233,11 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     owner_context.step_plans = {owner_plan.step_index: owner_plan}
     record_output_path(owner_context, owner_plan, str(first_image))
 
-    OpenHCSMetadataWriter.write(owner_context, owner_plan)
-    initial_metadata = json.loads(
-        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
-    )["subdirectories"]["images"]
-    assert initial_metadata["wells"] == {"A01": None}
+    first_facts = OpenHCSMetadataTarget.observe_for_step(owner_context, owner_plan)
+    assert not (plate_root / "openhcs_metadata.json").exists()
 
-    ImageFileFormat.require_path(later_image).write(later_image, first_pixels)
     follower_context = context_stub(filemanager)
+    follower_context.metadata_cache = owner_context.metadata_cache
     follower_plan = function_step_plan("final")
     follower_plan.axis_id = "B03"
     follower_plan.output_dir = images_dir
@@ -1926,8 +2246,24 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     follower_plan.analysis_results_dir = str(plate_root / "images_results")
     follower_plan.write_backend = Backend.DISK.value
     follower_context.step_plans = {follower_plan.step_index: follower_plan}
+    follower_plan.create_openhcs_metadata = True
+    filemanager.save(first_pixels, str(later_image), Backend.MEMORY.value)
+    record_output_path(follower_context, follower_plan, str(later_image))
+    later_facts = OpenHCSMetadataTarget.observe_for_step(follower_context, follower_plan)
+    combined_facts = {
+        target: VirtualWorkspaceSourceProjectionEntries.combine(
+            (first_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})),
+             later_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})))
+        )
+        for target in dict.fromkeys((*first_facts, *later_facts))
+    }
+    AtomicMetadataWriter().reconcile_completed_plate(
+        plate_root / "openhcs_metadata.json",
+        {target: owner_context for target in combined_facts},
+        produced_entries_by_target=combined_facts,
+    )
 
-    OpenHCSMetadataWriter.finalize_completed_plate(
+    OpenHCSMetadataTarget.finalize_completed_plate(
         {"A01": owner_context, "B03": follower_context}
     )
 
@@ -1955,6 +2291,595 @@ def test_completed_plate_metadata_skips_unmaterialized_output_target(tmp_path):
     plan.create_openhcs_metadata = True
     context.step_plans = {plan.step_index: plan}
 
-    OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
+    OpenHCSMetadataTarget.finalize_completed_plate({"A01": context})
 
     assert not (plate_root / "openhcs_metadata.json").exists()
+
+
+@pytest.mark.parametrize("contents", ["absent", "tables", "images"])
+def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, contents):
+    directory = tmp_path / "results"
+    if contents != "absent":
+        directory.mkdir()
+        if contents == "tables":
+            (directory / "measurements.csv").write_text("ObjectNumber,Area\n1,4\n")
+        else:
+            tifffile.imwrite(
+                directory / "A01_s001_w2_z001_t001.tif", np.ones((2, 2), dtype=np.uint8)
+            )
+    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    plan = function_step_plan("SaveImages")
+    plan.write_backend = Backend.MEMORY.value
+    plan.output_plate_root = str(tmp_path)
+    plan.output_dir = directory
+    plan.analysis_results_dir = str(directory)
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    output_plan = ArtifactOutputPlan(
+        name="SavedImage",
+        path="/memory/SavedImage.pkl",
+        artifact_type=ImageArtifactType,
+        materialization=MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".tif",
+                filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+            )
+        ),
+    )
+    plan.artifact_outputs = {output_plan.ref(): output_plan}
+    context.runtime_value_store = RuntimeValueStore()
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            output_plan,
+            ImageMetadataPayload(
+                np.ones((2, 2), dtype=np.uint8),
+                ImagePayloadMetadata(
+                    source_component_metadata={
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "2",
+                        "z_index": "1",
+                        "timepoint": "1",
+                    }
+                ),
+            ),
+            axis_id="A01",
+        ),
+        path=output_plan.path,
+        backend=Backend.MEMORY.value,
+    )
+    target = RuntimeArtifactMetadataTarget.from_plan(plan)
+    assert target is not None
+    assert target.output_dir == directory
+    saved_artifacts = ()
+    if contents == "images":
+        record = context.runtime_value_store.values()[0]
+        materialization = RuntimeArtifactMaterialization.from_record(
+            output_plan=output_plan,
+            record=record,
+            plan=plan,
+            context=context,
+        )
+        saved_artifacts = (
+            MaterializedRuntimeArtifact(
+                outputs_by_backend={
+                    Backend.DISK.value: (
+                        Output.from_metadata(
+                            path=str(directory / "A01_s001_w2_z001_t001.tif"),
+                            content=record.data,
+                            metadata=image_payload_metadata(record.data),
+                        ),
+                    )
+                },
+                materialization=materialization,
+            ),
+        )
+    selected = OpenHCSMetadataTarget.for_execution(
+        context, plan, artifact_materializations=saved_artifacts
+    )
+    if contents == "images":
+        assert selected == (replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),)
+    else:
+        assert selected == ()
+        plan.create_openhcs_metadata = True
+        _publish_saved_step(context, plan)
+        assert not (tmp_path / "openhcs_metadata.json").exists()
+    assert directory.exists() == (contents != "absent")
+
+
+@pytest.mark.parametrize("stray_image", [False, True])
+def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
+    tmp_path, stray_image
+):
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    context = context_stub(filemanager, parser=SourceSchemaFilenameParser())
+    context.runtime_value_store = RuntimeValueStore()
+    context.metadata_cache = {}
+    context.tiff_config = None
+    plan = function_step_plan("Declared image exports")
+    plan.streaming_configs = {}
+    plan.write_backend = Backend.MEMORY.value
+    plan.output_plate_root = str(tmp_path)
+    plan.output_dir = tmp_path / "images"
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(tmp_path / "results")
+    plan.create_openhcs_metadata = True
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    context.step_plans = {plan.step_index: plan}
+    components = {
+        "well": "A01",
+        "site": "1",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+    }
+    pixels = np.arange(20, dtype=np.uint16).reshape(4, 5)
+    payload = ImageMetadataPayload(
+        pixels,
+        ImagePayloadMetadata(
+            source_component_metadata=components,
+            source_dtype="uint16",
+        ),
+    )
+    for name, directory in (("Copy", "nested/copies"), ("Review", "review")):
+        output_plan = ArtifactOutputPlan(
+            name=name,
+            path=f"/memory/{name}.pkl",
+            artifact_type=ImageArtifactType,
+            materialization=MaterializationSpec(
+                ImageFileOptions(
+                    filename_suffix=".tif",
+                    filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+                    relative_path_template=f"{directory}/A01_s001_w2_z001_t001.tif",
+                )
+            ),
+        )
+        plan.artifact_outputs[output_plan.ref()] = output_plan
+        context.runtime_value_store.record(
+            RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
+            path=output_plan.path,
+            backend=Backend.MEMORY.value,
+        )
+    materializations = ArtifactMaterializationTargetPlan.materialize(
+        context, plan
+    )
+    _publish_saved_step(
+        context, plan, artifact_materializations=materializations
+    )
+    context.runtime_value_store.clear()
+    if stray_image:
+        tifffile.imwrite(tmp_path / "images/review/unowned.tif", pixels)
+        with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+            OpenHCSMetadataTarget.finalize_completed_plate({"A01": context})
+        return
+    OpenHCSMetadataTarget.finalize_completed_plate({"A01": context})
+    subdirectories = json.loads((tmp_path / "openhcs_metadata.json").read_text())[
+        FIELDS.SUBDIRECTORIES
+    ]
+    assert set(subdirectories) == {"images/nested/copies", "images/review"}
+    for directory, subdirectory in subdirectories.items():
+        path = f"{directory}/A01_s001_w2_z001_t001.tif"
+        assert subdirectory[FIELDS.IMAGE_FILES] == [path]
+        entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+            subdirectory
+        ).entries
+        assert set(entries) == {path}
+        projection = entries[path]
+        assert projection.component_value(AllComponents.CHANNEL) == "2"
+        assert projection.source_metadata["site"] == "1"
+        np.testing.assert_array_equal(tifffile.imread(tmp_path / path), pixels)
+
+
+@pytest.mark.parametrize("with_raster", [False, True])
+def test_actual_array_exports_only_publish_declared_raster_inventory(
+    tmp_path, with_raster
+):
+    """A saved NumPy array is an actual output, without being a raster inventory."""
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    context = context_stub(filemanager, parser=SourceSchemaFilenameParser())
+    context.runtime_value_store = RuntimeValueStore()
+    context.metadata_cache = {}
+    context.tiff_config = None
+    plan = function_step_plan("Independent array and raster exports")
+    plan.streaming_configs = {}
+    plan.write_backend = Backend.MEMORY.value
+    plan.output_plate_root = str(tmp_path)
+    plan.output_dir = tmp_path / "images"
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(tmp_path / "results")
+    plan.create_openhcs_metadata = True
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    context.step_plans = {plan.step_index: plan}
+    pixels = np.arange(20, dtype=np.float32).reshape(4, 5) / 7
+    payload = ImageMetadataPayload(
+        pixels,
+        ImagePayloadMetadata(
+            source_component_metadata={
+                "well": "A01",
+                "site": "1",
+                "channel": "2",
+                "z_index": "1",
+                "timepoint": "1",
+            },
+            source_dtype="float32",
+            source_voxel_spacing=SourceVoxelSpacing(
+                (0.65, 0.65), SourceVoxelSpacingUnit.MICROMETERS
+            ),
+        ),
+    )
+    declarations = [("NumericField", "exports/Illum.npy")]
+    if with_raster:
+        declarations.append(("RasterField", "exports/A01_s001_w2_z001_t001.tif"))
+    for name, relative_path in declarations:
+        output_plan = ArtifactOutputPlan(
+            name=name,
+            path=f"/memory/{name}.pkl",
+            artifact_type=ImageArtifactType,
+            materialization=MaterializationSpec(
+                ImageFileOptions(
+                    filename_suffix=Path(relative_path).suffix,
+                    relative_path_template=relative_path,
+                )
+            ),
+        )
+        plan.artifact_outputs[output_plan.ref()] = output_plan
+        context.runtime_value_store.record(
+            RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
+            path=output_plan.path,
+            backend=Backend.MEMORY.value,
+        )
+
+    materializations = ArtifactMaterializationTargetPlan.materialize(
+        context, plan
+    )
+    saved_outputs = tuple(
+        output
+        for artifact in materializations
+        for output in artifact.outputs_for_backend(Backend.DISK.value)
+    )
+    expected_paths = {
+        tmp_path / "images" / relative_path for _name, relative_path in declarations
+    }
+    assert {Path(output.path) for output in saved_outputs} == expected_paths
+    assert all(path.is_file() for path in expected_paths)
+    np.testing.assert_array_equal(
+        np.load(tmp_path / "images/exports/Illum.npy", allow_pickle=False), pixels
+    )
+    observed_locations = tuple(
+        location
+        for artifact in materializations
+        for locations in (
+            artifact.observation(plan, context).materialized_locations_by_address.values()
+        )
+        for location in locations
+    )
+    assert {Path(location.path) for location in observed_locations} == expected_paths
+
+    _publish_saved_step(
+        context, plan, artifact_materializations=materializations
+    )
+    context.runtime_value_store.clear()
+    OpenHCSMetadataTarget.finalize_completed_plate({"A01": context})
+    metadata_path = tmp_path / "openhcs_metadata.json"
+    subdirectories = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES]
+    assert set(subdirectories) == {"images/exports"}
+    subdirectory = subdirectories["images/exports"]
+    assert subdirectory[SourceProjectionMetadataSerializer.RESULTS_DIR_FIELD] == (
+        "images/exports"
+    )
+    if not with_raster:
+        assert subdirectory[FIELDS.IMAGE_FILES] == []
+        assert (
+            VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                subdirectory
+            ).entries
+            == {}
+        )
+        return
+    np.testing.assert_array_equal(
+        tifffile.imread(tmp_path / "images/exports/A01_s001_w2_z001_t001.tif"), pixels
+    )
+    assert subdirectory[FIELDS.IMAGE_FILES] == [
+        "images/exports/A01_s001_w2_z001_t001.tif"
+    ]
+    entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        subdirectory
+    ).entries
+    raster = entries["images/exports/A01_s001_w2_z001_t001.tif"]
+    assert raster.source_alias == "RasterField"
+    assert raster.image_metadata.source_voxel_spacing.values_zyx == (0.65, 0.65)
+    assert (
+        raster.image_metadata.source_voxel_spacing.native_coordinate_unit
+        == "micrometer"
+    )
+
+
+def _stream_batch_sources(projections):
+    plan = function_step_plan("StreamOwned")
+    arrays = [np.full((2, 3), index, dtype=np.float32) for index in range(len(projections))]
+    paths = [str(plan.output_dir / f"A01_s1_w{index}.tif") for index in range(len(projections))]
+    records = tuple(
+        ProducedOutputSemantics.from_output(
+            plan,
+            path,
+            FunctionOutputIdentity(
+                component_values={"well": "A01", "site": "1", "channel": str(index)},
+                extension=".tif",
+                source="stream source",
+            ),
+            output_context=AlignedImageSliceContext.main_flow(
+                output_key=f"image-{index}", projection_key=projection,
+                artifact_kind=ImageArtifactType.value,
+            ),
+        )
+        for index, (path, projection) in enumerate(zip(paths, projections, strict=True))
+    )
+    return arrays, paths, records
+
+
+def test_stream_batch_owns_correlated_projection_order_and_frozen_input_lists(monkeypatch):
+    arrays, paths, records = _stream_batch_sources(("second", "first", "second", "first"))
+    expected_arrays, expected_paths = tuple(arrays), tuple(paths)
+    observed = []
+    original_project = StreamOutputBatch.project_item
+
+    def project(request):
+        observed.append(request.source_description)
+        arrays.clear()
+        paths.clear()
+        return original_project(request)
+
+    monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(project))
+    batches = StreamOutputBatch.from_projection_groups(
+        parser=ImageXpressFilenameParser(), payloads=arrays, paths=paths,
+        produced_outputs=records,
+    )
+    assert observed == [expected_paths[index] for index in (0, 2, 1, 3)]
+    assert len(batches) == 2
+    assert [item.output_path for batch in batches for item in batch.items] == observed
+    assert [item.producer_identity for batch in batches for item in batch.items] == [
+        records[index].producer_identity for index in (0, 2, 1, 3)
+    ]
+    for item, index in zip(
+        (item for batch in batches for item in batch.items), (0, 2, 1, 3), strict=True,
+    ):
+        assert item.data is expected_arrays[index]
+        assert item.source_component_metadata["channel"] == str(index)
+
+
+def test_stream_batch_keeps_first_projection_error_and_prior_callback_effects(monkeypatch):
+    arrays, paths, records = _stream_batch_sources(("first", "second", "first", "second"))
+    observed = []
+    failure = ValueError("actual projector failure")
+    original_project = StreamOutputBatch.project_item
+
+    def project(request):
+        observed.append(request.source_description)
+        if request.source_description == paths[1]:
+            raise failure
+        return original_project(request)
+
+    monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(project))
+    with pytest.raises(ValueError) as raised:
+        StreamOutputBatch.from_projection_groups(
+            parser=ImageXpressFilenameParser(), payloads=arrays, paths=paths,
+            produced_outputs=records,
+        )
+    assert raised.value is failure
+    assert observed == [paths[index] for index in (0, 2, 1)]
+
+
+def test_stream_batch_validates_cardinality_and_routes_before_projecting(monkeypatch):
+    arrays, paths, records = _stream_batch_sources(("first", "second"))
+
+    def forbidden_project(request):
+        raise AssertionError("invalid inputs reached projection")
+
+    monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(forbidden_project))
+    parser = ImageXpressFilenameParser()
+    with pytest.raises(ValueError, match="payload/path cardinality mismatch"):
+        StreamOutputBatch.from_projection_groups(
+            parser=parser, payloads=arrays, paths=paths[:1], produced_outputs=(),
+        )
+    with pytest.raises(ValueError, match="payload/output-record cardinality mismatch"):
+        StreamOutputBatch.from_projection_groups(
+            parser=parser, payloads=arrays, paths=paths, produced_outputs=records[:1],
+        )
+    with pytest.raises(ValueError, match="at least one produced output record"):
+        StreamOutputBatch.from_projection_groups(
+            parser=parser, payloads=(), paths=(), produced_outputs=(),
+        )
+    with pytest.raises(ValueError, match="cannot mix producer projections"):
+        StreamOutputBatch.from_projection(
+            parser=parser, payloads=arrays, paths=paths, produced_outputs=records,
+        )
+
+
+@pytest.mark.parametrize("with_artifact", (False, True))
+def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
+    tmp_path, with_artifact
+):
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source_projection import SourceArtifactProjection
+
+    plate_root = tmp_path / "plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    path = output_dir / "A01_s001_w2_z001_t001.tif"
+    pixels = np.arange(5 * 6 * 7, dtype=np.uint16).reshape(5, 6, 7)
+    components = tuple(
+        {
+            "well": "A01",
+            "site": 1,
+            "channel": 2,
+            "z_index": z,
+            "timepoint": 1,
+            "extension": ".tif",
+        }
+        for z in range(1, 6)
+    )
+    metadata = ImagePayloadMetadata(
+        source_image_names=("DNA",),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_spatial_domain=VolumeSourceSpatialDomain(
+            source_depth=5,
+            origin_yx=(0, 0),
+            source_shape_yx=(6, 7),
+        ),
+        source_component_metadata={
+            "well": "A01",
+            "site": 1,
+            "channel": 2,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(f"/input/A01_s001_w2_z{z:03d}_t001.tif" for z in range(1, 6)),
+            component_metadata=components,
+        ),
+    )
+    metadata = metadata.with_source_provenance(
+        metadata.source_provenance.with_derived_source_image_names(("DNA",))
+    )
+    incomplete = metadata.replace_fields(
+        source_component_metadata={
+            key: value
+            for key, value in metadata.source_component_metadata.items()
+            if key != "timepoint"
+        }
+    )
+    contextualized = incomplete.with_source_context_from(
+        ImagePayloadMetadata(source_component_metadata=components[0])
+    )
+    assert str(contextualized.source_component_metadata["timepoint"]) == "1"
+    assert "z_index" not in contextualized.source_component_metadata
+    assert contextualized.source_image_provenance_planes == metadata.source_image_provenance_planes
+    manager = FileManager(
+        {"disk": DiskStorageBackend(), "memory": MemoryStorageBackend()}
+    )
+    manager.ensure_directory(output_dir, "memory")
+    manager.save(metadata.payload_with(pixels), str(path), "memory")
+    context = context_stub(manager, parser=SourceSchemaFilenameParser())
+    plan = function_step_plan(
+        "Volume checkpoint", variable_components=(VariableComponents.Z_INDEX,)
+    )
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "results")
+    plan.write_backend = "disk"
+    identity = FunctionOutputIdentity(
+        component_values={"well": "A01", "site": 1, "channel": 2, "timepoint": 1},
+        filename_component_values=components[0],
+        extension=".tif",
+        source="declared volume",
+    )
+    record_output_path(
+        context,
+        plan,
+        str(path),
+        image_metadata=metadata,
+        identity=identity,
+        output_context=AlignedImageSliceContext.main_flow(
+            output_key="DNA", artifact_kind=ImageArtifactType.value
+        ),
+    )
+    MemoryOutputWriter.write_if_needed(context, plan)
+    np.testing.assert_array_equal(tifffile.imread(path), pixels)
+    (target,) = OpenHCSMetadataTarget.for_execution(context, plan)
+    materializations = ()
+    if with_artifact:
+        plan.streaming_configs = {}
+        context.runtime_value_store = RuntimeValueStore()
+        plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+            persistent_enabled=True,
+            persistent_backend=Backend.DISK.value,
+        )
+        output_plan = ArtifactOutputPlan(
+            name="DNA",
+            path="/memory/DNA.pkl",
+            artifact_type=ImageArtifactType,
+            producer_step_scope_id=plan.step_scope_id,
+            materialization=MaterializationSpec(
+                ImageFileOptions(relative_path_template=path.name)
+            ),
+        )
+        plan.artifact_outputs[output_plan.ref()] = output_plan
+        context.runtime_value_store.record(
+            RuntimeValue.normalize_for_execution_scope(
+                output_plan,
+                metadata.payload_with(pixels),
+                execution_scope=RuntimeExecutionAxisScope.from_raw(
+                    "A01",
+                    component=None,
+                    value=None,
+                    fixed_component_values=(
+                        (AllComponents.CHANNEL, "2"),
+                        (AllComponents.SITE, "1"),
+                        (AllComponents.TIMEPOINT, "1"),
+                    ),
+                ),
+            ),
+            path=output_plan.path,
+            backend=Backend.MEMORY.value,
+        )
+        materializations = ArtifactMaterializationTargetPlan.materialize(
+            context, plan
+        )
+        assert {
+            Path(output.path)
+            for artifact in materializations
+            for output in artifact.outputs_for_backend(Backend.DISK.value)
+        } == {path}
+    target = replace(target, artifact_materializations=materializations)
+    entries = target.produced_projection_entries(context, plan)
+    assert entries is not None
+    (projection,) = entries.entries.values()
+    assert isinstance(projection, SourceArtifactProjection)
+    assert projection.address is None
+    assert projection.source_alias == "DNA"
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.CHANNEL)
+        == "2"
+    )
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.SITE) == "1"
+    )
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.TIMEPOINT)
+        == "1"
+    )
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.Z_INDEX)
+        is None
+    )
+    assert (
+        projection.image_metadata.source_image_provenance_planes.component_metadata
+        == metadata.source_image_provenance_planes.component_metadata
+    )
+    document = {}
+    entries.merge_into_subdirectory(document)
+    decoded = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        json.loads(json.dumps(document))
+    )
+    restored = decoded.entries["images/A01_s001_w2_z001_t001.tif"]
+    assert restored.execution_scope == projection.execution_scope
+    assert restored.image_metadata.source_spatial_domain.source_depth == 5

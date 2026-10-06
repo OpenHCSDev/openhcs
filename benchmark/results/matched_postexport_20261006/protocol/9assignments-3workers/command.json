@@ -1,0 +1,32 @@
+{
+  "status": "PREPARED_FINAL_COHORT_NOT_LAUNCHED",
+  "argv": [
+    "taskset",
+    "-c",
+    "1,4,5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "-B",
+    "-c",
+    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
+    "--manifest",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json",
+    "--all-cases",
+    "--well-count",
+    "1",
+    "--repeat-assignments",
+    "9",
+    "--openhcs-workers",
+    "3",
+    "--native-jobs",
+    "3",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--output-dir",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases"
+  ],
+  "protocol": "Actualmatched9assignments/3workers, warmup+3, fresh native serial baseline and3actualbarrier-synchronizedparallelshards. Equalthreeassignmentsperlane for3workers; compare9/1\u21929/3sameworkload for parallelefficiency. Originalcase3declarations, no projection/readinessclock/nativeguardrelaxation.",
+  "source_freeze_head": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "cohort_scope": "Exact original declarations selected by qualified full30 weakest execution, weakest total, and fixed3D; repeated source assignments, not independent biological samples."
+}

@@ -1,0 +1,44 @@
+{
+  "source_commit": "3d98ad2c31d5f144f76e2e3878adcc69757bd7dc",
+  "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+  "modules": [
+    {
+      "module": "openhcs.core.processing_preparation",
+      "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/core/processing_preparation.py",
+      "sha256": "86c47138e34d162a85627741a8c588e059158a7009f16269d11d664e819fddab",
+      "matches_source": true
+    },
+    {
+      "module": "openhcs.processing.backends.lib_registry.registry_service",
+      "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/processing/backends/lib_registry/registry_service.py",
+      "sha256": "afc6c8d9d3ad9798713d4a34393ab060f48fac35a5a055fa4f3bdbd9c982b341",
+      "matches_source": true
+    },
+    {
+      "module": "openhcs.runtime.function_catalog_preparation",
+      "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/runtime/function_catalog_preparation.py",
+      "sha256": "75e26491f9d13792a4dc312eaa439ac71197e432dc2591ee275146f4a757a12f",
+      "matches_source": true
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/runtime/zmq_execution_server.py",
+      "sha256": "e3eab99bfc1fbb5828e7e83f228e497ed1e83bb9693d8479bc4409f073c563a4",
+      "matches_source": true
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server_launcher",
+      "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/runtime/zmq_execution_server_launcher.py",
+      "sha256": "09c3dd01d5bfd0fe2d08d6d8ffe0c9c806a817940d2df2d176ae5108cf0a1708",
+      "matches_source": true
+    },
+    {
+      "module": "benchmark.cellprofiler_benchmark_cli",
+      "path": "/tmp/openhcs-server-startup-final-installed-20260930/benchmark/cellprofiler_benchmark_cli.py",
+      "sha256": "39272e9d32cf758dfb6e2183f899562d6fab9af3a4d8f5fbc81a434d21f464a1",
+      "matches_source": true
+    }
+  ],
+  "wheel_sha256": "c5a1242aed22b1902a95a8574d21e3a831f92bb847713a0cb3192684ea8027b8",
+  "gitlinks": "160000 commit b0004daf3223326ac78689ba7b2e68abc18ae298\texternal/ObjectState\n160000 commit 1209068f5fc9e4f7025a24ada8a73ef30dd1ddd7\texternal/PolyStore\n160000 commit 409b1e0831f815fa9ef91d4ecc04989f9fbb89c5\texternal/arraybridge\n160000 commit ca0a87e873f929b311a87a4d60cd3bfba315dbcf\texternal/metaclass-registry\n160000 commit 792b03413331fdf107e369c924c257a2f0b16126\texternal/pycodify\n160000 commit a51c3d965f8ffdefe95a2b4b37347a85341d483a\texternal/pyqt-reactive\n160000 commit 4e8f8bde5f750d9a50eacac80acd3806123addd8\texternal/python-introspect\n160000 commit 2c68a114bc7121e6e72124edbaaf321cccc1a2b7\texternal/zmqruntime\n"
+}

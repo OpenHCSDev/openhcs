@@ -11,10 +11,13 @@ from functools import cache
 from importlib.metadata import distributions
 from inspect import getdoc
 from math import isfinite
-from typing import ClassVar, Generic, Self, TypeAlias, TypeVar
+from types import UnionType
+from typing import ClassVar, Generic, Self, TypeAlias, TypeVar, get_args, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.client import EndpointShutdownResult
+
+from openhcs.agent.services.execution_session_service import ExecutionSessionService
 
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
@@ -65,12 +68,21 @@ from openhcs.agent.dto.execution import (
     RuntimeServerInfoRequest,
     RuntimeServerScanRequest,
     RuntimeServerScanResult,
+    RuntimeBootstrapStartRequest,
+    RuntimeBootstrapObserveRequest,
+    RuntimeBootstrapState,
+    RuntimeBootstrapCloseRequest,
+    RuntimeBootstrapCloseResult,
     SourceWorkspaceSummary,
 )
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    CustomFunctionRegistrationHandle,
+    CustomFunctionRegistrationObservation,
     FunctionCatalogPage,
+    FunctionCatalogPreparationHandle,
+    FunctionCatalogPreparationState,
     FunctionDetail,
     FunctionDetailRequest,
     FunctionSearchRequest,
@@ -162,6 +174,10 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
 )
 from openhcs.agent.dto.viewer import (
+    ViewerWindowPolylineMeasurementRequest,
+    ViewerWindowPolylineMeasurementResult,
+    ViewerWindowRegionMeasurementRequest,
+    ViewerWindowRegionMeasurementResult,
     ViewerEndpointDiscoveryResult,
     ViewerWindowCloseRequest,
     ViewerWindowImageIntensityRequest,
@@ -172,6 +188,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
+    ViewerWindowLayerRetirementRequest,
+    ViewerWindowLayerRetirementResult,
     ViewerWindowNavigationRequest,
     ViewerWindowNavigationResult,
     ViewerWindowPayloadRequest,
@@ -187,6 +205,10 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowValidationSummaryResult,
     ViewerWindowViewportRequest,
     ViewerWindowViewportResult,
+    ViewerWindowImageColorRequest,
+    ViewerWindowImageColorResult,
+    ViewerWindowNativePresentationRequest,
+    ViewerWindowNativePresentationResult,
 )
 from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
 from openhcs.serialization.json import to_jsonable
@@ -600,7 +622,32 @@ class AgentScalarInputContract:
         return self.field_name
 
 
-AgentContract: TypeAlias = type | AgentScalarInputContract
+@dataclass(frozen=True, slots=True)
+class AgentResultFamilyContract:
+    """Actual producer alternatives and their existing external nominal identity.
+
+    MCP's advertised owner is an external metadata fact, not the entire result
+    family. Keep those questions distinct while deriving decode membership from
+    the producer's declared union. No presentation roster owns that membership.
+    """
+
+    advertised_contract: type
+    producer: Callable[..., object]
+
+    @property
+    def result_type(self) -> UnionType:
+        return get_type_hints(self.producer, include_extras=True)["return"]
+
+    @property
+    def result_types(self) -> tuple[type, ...]:
+        return get_args(self.result_type)
+
+    @property
+    def schema_name(self) -> str:
+        return self.advertised_contract.__name__
+
+
+AgentContract: TypeAlias = type | AgentScalarInputContract | AgentResultFamilyContract
 AgentContextT = TypeVar("AgentContextT")
 AgentServiceT = TypeVar("AgentServiceT")
 AgentRequestT = TypeVar("AgentRequestT")
@@ -624,12 +671,14 @@ def _enum_member_title(value: Enum) -> str:
 def _contract_schema_name(contract: AgentContract | None) -> str | None:
     if contract is None:
         return None
-    if isinstance(contract, AgentScalarInputContract):
+    if isinstance(contract, (AgentScalarInputContract, AgentResultFamilyContract)):
         return contract.schema_name
     return contract.__name__
 
 
 def require_agent_type_contract(contract: AgentContract | None) -> type:
+    if isinstance(contract, AgentResultFamilyContract):
+        return contract.advertised_contract
     if not isinstance(contract, type):
         raise TypeError(f"Expected agent type contract, got {contract!r}.")
     return contract
@@ -947,6 +996,17 @@ class AgentCapabilitySpec:
     progress_worker_thread_safe: bool = True
     input_contract: AgentContract | None = None
     output_contract: AgentContract | None = None
+
+    @property
+    def output_contract_types(self) -> tuple[type, ...]:
+        if isinstance(self.output_contract, AgentResultFamilyContract):
+            return self.output_contract.result_types
+        return (
+            ()
+            if self.output_contract is None
+            else (require_agent_type_contract(self.output_contract),)
+        )
+
     exposition: AgentCapabilityExposition | None = None
 
     def __post_init__(self) -> None:
@@ -1448,7 +1508,19 @@ class ArchitectureCapability(
     )
 
 
-class FunctionCatalogCapability(AgentCapabilityDeclaration):
+class ProgressAcknowledgedCapability(AgentCapabilityDeclaration):
+    """Operations acknowledge activity before the client idle limit."""
+
+    progress_heartbeat_seconds = 1.0
+
+
+class MainThreadProgressCapability(ProgressAcknowledgedCapability):
+    """Compose progress with Qt/ObjectState's original main-thread affinity."""
+
+    progress_worker_thread_safe = False
+
+
+class FunctionCatalogCapability(ProgressAcknowledgedCapability):
     """Capability that reads or extends the processing-function catalog."""
 
     exposition = AgentCapabilityExposition(
@@ -1848,7 +1920,6 @@ class SearchFunctionsCapability(
         "or an exact declaration-owned backend tag."
     )
     service = "function_catalog"
-    progress_heartbeat_seconds = 5.0
     input_contract = FunctionSearchRequest
     output_contract = FunctionCatalogPage
     request_invocation = AgentDataclassRequestServiceInvocation(
@@ -1887,6 +1958,57 @@ class DescribeFunctionCapability(
     )
 
 
+class StartFunctionCatalogPreparationCapability(FunctionCatalogCapability):
+    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+
+    name = "openhcs_start_function_catalog_preparation"
+    cli_command = "start-function-catalog-preparation"
+    kind = CapabilityKind.TOOL
+    title = "Start catalog preparation"
+    description = "Starts/coalesces existing native catalog/kernel preparation at an explicit owned port. Returns promptly with the exact process-incarnation handle; no custom source is submitted. Observe status, then register only once ready."
+    service = "endpoint_function_catalog"
+    mutating = True
+    side_effects = ("prepares_function_catalog", "writes_declared_kernel_caches")
+    input_contract = ExecutionConnectionSpec
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.start_catalog_preparation(request),
+    )
+
+
+class GetFunctionCatalogPreparationStatusCapability(FunctionCatalogCapability):
+    name = "openhcs_get_function_catalog_preparation_status"
+    cli_command = "get-function-catalog-preparation-status"
+    kind = CapabilityKind.TOOL
+    title = "Observe catalog preparation"
+    description = "Returns the existing preparation future's current state/progress promptly. Use the exact returned connection/process handle; stale owners reject without starting or replacing a runtime."
+    service = "endpoint_function_catalog"
+    input_contract = FunctionCatalogPreparationHandle
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.catalog_preparation_status(request),
+    )
+
+
+class CancelFunctionCatalogPreparationCapability(FunctionCatalogCapability):
+    name = "openhcs_cancel_function_catalog_preparation"
+    cli_command = "cancel-function-catalog-preparation"
+    kind = CapabilityKind.TOOL
+    title = "Cancel owned catalog preparation"
+    description = "Signals cancellation of the same incarnation-bound preparation future without blocking for child cleanup. Observe status until terminal; it does not restart preparation or submit custom source."
+    service = "endpoint_function_catalog"
+    mutating = True
+    side_effects = ("cancels_function_catalog_preparation",)
+    input_contract = FunctionCatalogPreparationHandle
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.cancel_catalog_preparation(request),
+    )
+
+
 class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     name = "openhcs_register_custom_function"
     cli_command = "register-custom-function"
@@ -1895,7 +2017,11 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     description = (
         "Validates, registers, and optionally persists custom function Python "
         "source through CustomFunctionManager, then returns registry function_id "
-        "values for MCP pipeline authoring."
+        "values for MCP pipeline authoring. Requires an explicit execution port; "
+        "persist=true also requires the endpoint's exact storage_dir and function_name "
+        "under AgentPathPolicy writable roots before dispatch. Start/observe the native "
+        "catalog preparation handle first; not-ready registration rejects before source dispatch. A transport timeout "
+        "is uncertain, not proof that no source or registry mutation occurred."
     )
     service = "function_catalog"
     exposition = FunctionCatalogCapability.exposition.refine(
@@ -1905,9 +2031,27 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     side_effects = ("writes_custom_function_file", "updates_function_registry")
     input_contract = CustomFunctionRegistrationRequest
     output_contract = CustomFunctionRegistrationResult
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    request_invocation = AgentFromFieldsServiceInvocation(
         service=lambda context: context.function_catalog,
         method=lambda service, request: service.register_custom_function(request),
+    )
+
+
+class ObserveCustomFunctionRegistrationCapability(FunctionCatalogCapability):
+    name = "openhcs_get_custom_function_registration_status"
+    cli_command = "get-custom-function-registration-status"
+    kind = CapabilityKind.TOOL
+    title = "Observe custom registration source"
+    description = "Read exact publication/persistence proofs through the original native owners using observation_handle. Does not evaluate/load source or prepare a catalog. Missing evidence stays not_observed; it never authorizes registration replay or proves original mutation did not occur."
+    service = "function_catalog"
+    exposition = FunctionCatalogCapability.exposition.refine(
+        visibility=CapabilityVisibility.STANDARD,
+    )
+    input_contract = CustomFunctionRegistrationHandle
+    output_contract = CustomFunctionRegistrationObservation
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.function_catalog,
+        method=lambda service, request: service.observe_custom_function_registration(request),
     )
 
 
@@ -1968,6 +2112,7 @@ class ListKnowledgeDocumentsCapability(
 
 
 class GetKnowledgeDocumentCapability(
+    MainThreadProgressCapability,
     HostedTransportCapabilityMixin,
     KnowledgeCapability,
 ):
@@ -2007,8 +2152,9 @@ class SearchKnowledgeCapability(
     )
 
 
-class GenerateSyntheticPlateCapability(PlatePathCapability):
-    progress_heartbeat_seconds = 5.0
+class GenerateSyntheticPlateCapability(
+    ProgressAcknowledgedCapability, PlatePathCapability
+):
     name = "openhcs_generate_synthetic_plate"
     cli_command = "generate-synthetic-plate"
     cli_aliases = ("synthetic-plate",)
@@ -2033,7 +2179,8 @@ class GenerateSyntheticPlateCapability(PlatePathCapability):
     )
 
 
-class InspectPlatePathCapability(PlatePathCapability):
+class InspectPlatePathCapability(ProgressAcknowledgedCapability, PlatePathCapability):
+    progress_worker_thread_safe = True
     name = "openhcs_inspect_plate_path"
     cli_command = "inspect-plate"
     kind = CapabilityKind.TOOL
@@ -2045,9 +2192,18 @@ class InspectPlatePathCapability(PlatePathCapability):
         "workspace-preparation advice, and structured workflow routing. "
         "It does not configure a running UI or make a handler override the setup "
         "route; use the PlateManager code document plus selected-plate init when "
-        "the result must remain visible in the desktop."
+        "the result must remain visible in the desktop. Optional Bio-Formats "
+        "cold preparation can download verified Fiji artifacts into its declared "
+        "bundle cache and start Java; progress keeps this operation observable "
+        "without blocking unrelated MCP reads. Plate contents remain read-only."
     )
     service = "selected_plate"
+    mutating = True
+    side_effects = (
+        "may_download_verified_fiji_runtime",
+        "may_write_runtime_bundle_cache",
+        "may_start_java_runtime",
+    )
     data_exposure = (
         "local_plate_path",
         "microscope_metadata",
@@ -2064,7 +2220,7 @@ class InspectPlatePathCapability(PlatePathCapability):
     )
 
 
-class QueryPlateFilesCapability(PlatePathCapability):
+class QueryPlateFilesCapability(MainThreadProgressCapability, PlatePathCapability):
     name = "openhcs_query_plate_files"
     cli_command = "query-plate-files"
     kind = CapabilityKind.TOOL
@@ -2073,7 +2229,10 @@ class QueryPlateFilesCapability(PlatePathCapability):
         "Read-only query of image/result file records exposed "
         "by a local plate inventory. Returns virtual image names, source "
         "paths, result artifact paths, and metadata from the same inventory "
-        "API used by the Image Browser."
+        "API used by the Image Browser. For retained outputs outside the standard "
+        "plate layout, pass result_directory with kind='result'. This inspects "
+        "persisted files and bounded native previews without microscope detection "
+        "or inferred acquisition identity; it does not attest writer success."
     )
     service = "plate_inspection"
     data_exposure = (
@@ -2092,7 +2251,7 @@ class QueryPlateFilesCapability(PlatePathCapability):
     )
 
 
-class SamplePlateImageCapability(PlatePathCapability):
+class SamplePlateImageCapability(MainThreadProgressCapability, PlatePathCapability):
     name = "openhcs_sample_plate_image"
     cli_command = "sample-plate-image"
     kind = CapabilityKind.TOOL
@@ -2120,7 +2279,7 @@ class SamplePlateImageCapability(PlatePathCapability):
     )
 
 
-class StreamPlateFilesToViewerCapability(PlatePathCapability):
+class StreamPlateFilesToViewerCapability(MainThreadProgressCapability, PlatePathCapability):
     name = "openhcs_stream_plate_files_to_viewer"
     cli_command = "stream-plate-files"
     kind = CapabilityKind.TOOL
@@ -2129,8 +2288,13 @@ class StreamPlateFilesToViewerCapability(PlatePathCapability):
         "Resolves image or ROI result records by virtual path, source path, "
         "result path, basename, or bounded inventory query, then streams them "
         "to a managed viewer through the same core service used by the Image Browser."
+        " Set result_directory to reopen retained native results independently of "
+        "their output location; plate_path supplies the original source context. "
+        "ROI reopening requires persisted source metadata, not filename guesses."
     )
     service = "plate_streaming"
+    mutating = True
+    side_effects = ("launches_or_updates_managed_viewer",)
     data_exposure = (
         "local_plate_path",
         "plate_virtual_image_path",
@@ -2248,7 +2412,7 @@ class UiSampleSelectedPlateImageCapability(UiSelectedPlateCapability):
     )
 
 
-class UiStreamSelectedPlateFilesToViewerCapability(UiSelectedPlateCapability):
+class UiStreamSelectedPlateFilesToViewerCapability(MainThreadProgressCapability, UiSelectedPlateCapability):
     name = "openhcs_ui_stream_selected_plate_files_to_viewer"
     cli_command = "selected-plate-stream"
     kind = CapabilityKind.TOOL
@@ -2536,7 +2700,7 @@ class CreateOrchestratorSessionCapability(HeadlessExecutionCapability):
 
 
 class CreateOrchestratorSessionFromPipelineSourceCapability(
-    HeadlessExecutionCapability
+    MainThreadProgressCapability, HeadlessExecutionCapability
 ):
     name = "openhcs_create_orchestrator_session_from_pipeline_source"
     kind = CapabilityKind.TOOL
@@ -2554,8 +2718,6 @@ class CreateOrchestratorSessionFromPipelineSourceCapability(
     service = "execution_session"
     mutating = True
     side_effects = ("creates_in_memory_execution_session",)
-    progress_heartbeat_seconds = 10.0
-    progress_worker_thread_safe = False
     input_contract = PipelineSourceOrchestratorSessionRequest
     output_contract = OrchestratorSessionRef
     request_invocation = AgentFromFieldsServiceInvocation(
@@ -2580,7 +2742,9 @@ class GetOrchestratorSessionCapability(HeadlessExecutionCapability):
     )
 
 
-class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
+class InspectPipelineSourceArtifactPlanCapability(
+    MainThreadProgressCapability, PipelineDraftCapability
+):
     name = "openhcs_inspect_pipeline_source_artifact_plan"
     cli_command = "artifact-plan"
     kind = CapabilityKind.TOOL
@@ -2589,9 +2753,14 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
         "Compiles a complete pycodified PipelineDocument with an explicit progress queue "
         "and returns bounded axis, step, group-key, virtual source-workspace, "
         "path, main-flow checkpoint, viewer-streaming, and artifact-output plans."
+        " Initialization may persist workspace metadata; the plate must be under "
+        "an authorized write root. Use an explicitly staged writable plate when "
+        "preserving read-only originals."
         f" Source workspace: {getdoc(SourceWorkspaceSummary)}"
     )
     service = "execution_session"
+    mutating = True
+    side_effects = ("may_persist_workspace_metadata",)
     exposition = PipelineDraftCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.VALIDATION,
     )
@@ -2605,7 +2774,7 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
     )
 
 
-class SubmitCompileCapability(HeadlessExecutionCapability):
+class SubmitCompileCapability(ProgressAcknowledgedCapability, HeadlessExecutionCapability):
     name = "openhcs_submit_compile"
     kind = CapabilityKind.TOOL
     title = "Submit compile job"
@@ -2619,7 +2788,9 @@ class SubmitCompileCapability(HeadlessExecutionCapability):
     mutating = True
     side_effects = ("submits_zmq_compile_job",)
     input_contract = CompileSubmissionRequest
-    output_contract = ExecutionJobRef
+    output_contract = AgentResultFamilyContract(
+        ExecutionJobRef, ExecutionSessionService._submit_job
+    )
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,
         method=lambda service, request: service.submit_compile(
@@ -2631,7 +2802,9 @@ class SubmitCompileCapability(HeadlessExecutionCapability):
     )
 
 
-class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
+class SubmitPipelineExecutionCapability(
+    ProgressAcknowledgedCapability, HeadlessExecutionCapability
+):
     name = "openhcs_submit_pipeline_execution"
     kind = CapabilityKind.TOOL
     title = "Submit pipeline execution"
@@ -2650,7 +2823,9 @@ class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
     mutating = True
     side_effects = ("submits_zmq_execution_job",)
     input_contract = PipelineExecutionSubmissionRequest
-    output_contract = ExecutionJobRef
+    output_contract = AgentResultFamilyContract(
+        ExecutionJobRef, ExecutionSessionService._submit_job
+    )
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,
         method=lambda service, request: service.submit_execution(
@@ -2709,6 +2884,63 @@ class CancelExecutionCapability(HeadlessExecutionCapability):
             request.job_id,
             timeout_ms=request.timeout_ms,
         ),
+    )
+
+
+class StartOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_start_owned_runtime"
+    cli_command = "runtime-start-owned"
+    kind = CapabilityKind.TOOL
+    title = "Start owned execution runtime"
+    description = "Explicitly spawn once at an empty local execution pair after native write admission. Returns the exact child handle promptly, without catalogue warming or adopting/replacing any endpoint. Never replay an uncertain startup."
+    service = "runtime_server"
+    mutating = True
+    side_effects = ("spawns_owned_execution_runtime", "writes_native_startup_artifacts")
+    exposition = RuntimeServerCliConnectionCapability.exposition.refine(
+        workflow_group=CapabilityWorkflowGroup.FUNCTION_AUTHORING,
+        visibility=CapabilityVisibility.STANDARD,
+        role=CapabilityRole.PRIMARY,
+        workflow_stage=CapabilityWorkflowStage.CONTROL,
+    )
+    input_contract = RuntimeBootstrapStartRequest
+    output_contract = RuntimeBootstrapState
+    request_invocation = AgentFromFieldsServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.start_from_request(request),
+    )
+
+
+class ObserveOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_observe_owned_runtime"
+    kind = CapabilityKind.TOOL
+    title = "Observe owned runtime startup"
+    description = "Read startup activity and readiness of the exact spawned child handle. No spawn, replacement, catalogue warming, or mutation. Preserve pending/uncertain handles."
+    service = "runtime_server"
+    input_contract = RuntimeBootstrapObserveRequest
+    output_contract = RuntimeBootstrapState
+    exposition = StartOwnedRuntimeCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.STATUS
+    )
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.observe_bootstrap(request),
+    )
+
+
+class CloseOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_close_owned_runtime"
+    kind = CapabilityKind.TOOL
+    title = "Close exact owned execution runtime"
+    description = "Close only the retained bootstrap child proven by both native endpoint reservations. FORCE sends at most one shutdown request and closes through the exact process owner within the existing budget; listener disappearance is not process exit. GRACEFUL clears workers but keeps the server. Retain unresolved handles and observe without replay."
+    service = "runtime_server"
+    mutating = True
+    side_effects = ("requests_owned_runtime_shutdown", "terminates_exact_owned_process")
+    exposition = StartOwnedRuntimeCapability.exposition
+    input_contract = RuntimeBootstrapCloseRequest
+    output_contract = RuntimeBootstrapCloseResult
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.close_bootstrap(request),
     )
 
 
@@ -2942,6 +3174,59 @@ class GetViewerWindowPayloadsCapability(ViewerWindowCliConnectionCapability):
     )
 
 
+class MeasureViewerPolylineCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_measure_viewer_polyline"
+    kind = CapabilityKind.TOOL
+    title = "Measure native viewer polyline and intensity profile"
+    description = (
+        "Read-only bounded source-native (y,x) ruler/polyline with exact route and route-local axis_indices. "
+        "Returns data/pixel length versus chord, transformed world geometry and endpoint-inclusive raw intensity "
+        "profile. line_width uses a centred perpendicular band reduced by mean; interpolation_order0 nearest/1 bilinear. "
+        "Requires one scalar2D original plane; rejects ambiguous/sparse-padding/OOB geometry before interpolation. "
+        "Does not alter pixels, contrast, layers, axes or camera; world scale/units are not verified physical calibration."
+    )
+    service = "viewer_window"
+    runtime_requirements = ("running_openhcs_napari_viewer_server",)
+    data_exposure = (
+        "viewer_native_measurements",
+        "viewer_source_coordinates",
+        "bounded_raw_intensity_profile",
+    )
+    input_contract = ViewerWindowPolylineMeasurementRequest
+    output_contract = ViewerWindowPolylineMeasurementResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.measure_polyline(request),
+    )
+
+
+class MeasureViewerRegionCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_measure_viewer_region"
+    kind = CapabilityKind.TOOL
+    title = "Measure independent native region and background support"
+    description = (
+        "Read-only bounded independent simple polygon on one exact scalar2D original image route/axis coordinate. "
+        "Returns continuous polygon and raster pixel-centre area/extent/roundness, actual transformed world geometry, "
+        "raw intensity statistics and optional separately authored non-overlapping background polygon. "
+        "Support is raw value strictly greater than support_threshold, or background mean + background_sigma*population std. "
+        "This region is NOT a biological mask; world scale1 is not proof of micrometres. "
+        "Rejects nonfinite, ambiguous, invalid axes, padding/OOB or pixel/work-budget excess before allocating masks."
+    )
+    service = "viewer_window"
+    runtime_requirements = ("running_openhcs_napari_viewer_server",)
+    data_exposure = (
+        "viewer_native_measurements",
+        "viewer_source_coordinates",
+        "bounded_raw_intensity_statistics",
+    )
+    input_contract = ViewerWindowRegionMeasurementRequest
+    output_contract = ViewerWindowRegionMeasurementResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.measure_region(request),
+    )
+
+
 class SampleViewerWindowImageCapability(ViewerWindowCliConnectionCapability):
     name = "openhcs_sample_viewer_window_image"
     cli_command = "sample-viewer-image"
@@ -2994,10 +3279,23 @@ class SummarizeViewerWindowRoisCapability(ViewerWindowCliConnectionCapability):
     )
 
 
-class SetViewerViewportCapability(ViewerWindowCliConnectionCapability):
+class ViewerNativePresentationCapability(ViewerWindowCliConnectionCapability):
+    """Original derived exposure and shared native-presentation invocation."""
+
+    kind = CapabilityKind.TOOL
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("mutates_viewer_window_presentation",)
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.presentation(request),
+    )
+
+
+class SetViewerViewportCapability(ViewerNativePresentationCapability):
     name = "openhcs_set_viewer_viewport"
     cli_command = "viewer-viewport"
-    kind = CapabilityKind.TOOL
     title = "Set native viewer viewport"
     description = (
         "Sets finite native 2D camera center (three world coordinates) and positive zoom. "
@@ -3005,17 +3303,42 @@ class SetViewerViewportCapability(ViewerWindowCliConnectionCapability):
         "native readback, without changing pixels, axes, selection or layer transforms. "
         "Unsupported viewer modes fail closed. Settle and snapshot after presentation changes."
     )
-    service = "viewer_window"
-    mutating = True
-    side_effects = ("mutates_viewer_window_presentation",)
-    runtime_requirements = ("running_openhcs_viewer_server",)
     data_exposure = ("viewer_native_viewport",)
     input_contract = ViewerWindowViewportRequest
     output_contract = ViewerWindowViewportResult
-    request_invocation = AgentViewerWindowRequestServiceInvocation(
-        service=lambda context: context.viewer_window_service,
-        method=lambda service, request: service.viewport(request),
+
+
+class SetViewerImageColorCapability(ViewerNativePresentationCapability):
+    name = "openhcs_set_viewer_image_color"
+    cli_command = "viewer-image-color"
+    title = "Set native image colormap and blending"
+    description = (
+        "Set an installed Napari colormap and blending mode on one exact mounted scalar "
+        "image route. Returns actual native readback. Use channel_mode=LAYER in the "
+        "stream's original display_config for simultaneous channel composition, and "
+        "the existing image-intensity tool for each route's numeric window. No pixels, "
+        "axes, transforms or physical source identities change. RGB images fail closed."
     )
+    data_exposure = ("viewer_native_image_color",)
+    input_contract = ViewerWindowImageColorRequest
+    output_contract = ViewerWindowImageColorResult
+
+
+class SetViewerNativeWindowCapability(ViewerNativePresentationCapability):
+    name = "openhcs_set_viewer_native_window"
+    cli_command = "viewer-native-window"
+    title = "Read, focus or position the exact detached viewer window"
+    description = (
+        "Read actual window geometry/focus with presentation={}, or set focus=true "
+        "and/or a complete Qt logical client geometry bounded by its current screen. "
+        "Addresses only the supplied running viewer endpoint through its native Qt "
+        "control action, not the GUI bridge or OS input. Missing endpoints fail without "
+        "launch/restart/adoption. Camera, layers, pixel values and axes are unchanged. "
+        "Returns native readback; window-manager focus may settle before a later read."
+    )
+    data_exposure = ("viewer_native_window",)
+    input_contract = ViewerWindowNativePresentationRequest
+    output_contract = ViewerWindowNativePresentationResult
 
 
 class SetViewerImageIntensityCapability(ViewerWindowCliConnectionCapability):
@@ -3050,7 +3373,11 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
     description = (
         "Sets a viewer layer visible or selected, moves zero-based route-local "
         "axis indices, and can select one zero-based data_index on a native "
-        "feature-bearing result layer. The result reports feature_row_count and "
+        "feature-bearing result layer. display_axes selects an ordered semantic "
+        "spatial pair (y/x, z_index/x or z_index/y) for native orthogonal review; "
+        "hide planar Shapes before cross-section changes. The returned "
+        "native_dimensions reports actual orientation, world position and canvas. "
+        "The result reports feature_row_count and "
         "selected_data_indices so agents can verify the visible overlay and "
         "Napari feature-table selection are linked. "
         f"{ViewerNavigationControlOptions.DATA_INDEX_SEMANTICS}."
@@ -3071,6 +3398,26 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.navigate_window(request),
     )
+
+
+class RetireViewerWindowLayersCapability(ViewerNativePresentationCapability):
+    name = "openhcs_retire_viewer_window_layers"
+    cli_command = "retire-viewer"
+    title = "Retire explicit viewer layers"
+    description = (
+        "After viewer settlement, removes only explicitly selected mounted routes "
+        "and releases their native layers and receiver payload caches. Supply "
+        "expected_producers as a route-key mapping to each route's complete "
+        "producer_identities from viewer state, including invocation_key. The "
+        "whole set is checked before removal. Pending intake/display mutations "
+        "must reach a known terminal state first; known terminal failed candidates "
+        "can be retired. Untargeted routes and persisted source/results remain "
+        "intact. Hiding layers is not retirement."
+    )
+    side_effects = ("retires_explicit_viewer_layers",)
+    data_exposure = ("viewer_layer_retirement",)
+    input_contract = ViewerWindowLayerRetirementRequest
+    output_contract = ViewerWindowLayerRetirementResult
 
 
 class IsolateViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):

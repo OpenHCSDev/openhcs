@@ -1,13 +1,18 @@
 """The matched pilot preserves interpreter and output evidence identities."""
 
 import hashlib
+import json
+from dataclasses import asdict, replace
 from pathlib import Path
 from subprocess import CompletedProcess
 
 import pytest
 from objectstate.context_manager import config_context
+from objectstate.global_config import GlobalContextValues
 
 import benchmark.matched_cellprofiler_batch as matched_batch
+from benchmark.native_batch_contracts import NativeBatchRequest
+from benchmark.adapters.cellprofiler import NativeCellProfilerSelectedSourceUniverse
 from benchmark.matched_cellprofiler_batch import (
     _candidate_pipeline_config,
     _global_config,
@@ -19,8 +24,247 @@ from benchmark.matched_cellprofiler_batch import (
     _source_input_inventory,
     _worker_axis_evidence,
 )
-from openhcs.core.config import MultiprocessingStartMethod, PipelineConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    MultiprocessingStartMethod,
+    PipelineConfig,
+)
 from openhcs.core.progress.types import ProgressEvent
+from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_equivalence import (
+    RuntimeMeasurementSnapshot,
+    RuntimeOutputSnapshot,
+    RuntimeTableSnapshot,
+    runtime_measurement_equivalence,
+)
+
+
+@pytest.fixture(autouse=True)
+def restore_benchmark_global_context():
+    """Restore both saved and live projections changed by config rebuilding."""
+    previous = GlobalContextValues.capture(GlobalPipelineConfig)
+    yield
+    previous.apply()
+
+
+@pytest.mark.parametrize("extra", (None, "Experiment.csv", "plate_Experiment.csv"))
+def test_matched_inventory_accepts_csv_and_only_engine_receipt_asymmetry(
+    tmp_path: Path,
+    extra: str | None,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+        (root / "plate_Image.csv").write_text("ImageNumber,Count_Cells\n1,2\n")
+    if extra is not None:
+        (roots[0] / extra).write_text("Key,Value\nCellProfiler_Version,4.2.8.1\n")
+    exports = tuple(RuntimeExportObservation.from_output_root(root) for root in roots)
+    snapshots = tuple(
+        RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+    )
+
+    matched_batch._require_compared_output_inventory(
+        reference_files=frozenset(roots[0].iterdir()),
+        candidate_files=frozenset(roots[1].iterdir()),
+        reference_exports=exports[0],
+        candidate_exports=exports[1],
+        reference_snapshot=snapshots[0],
+        candidate_snapshot=snapshots[1],
+    )
+
+
+@pytest.mark.parametrize(
+    "contents, message",
+    (
+        ({"unexpected.txt": "data"}, "without a value comparison"),
+        ({"Empty.csv": ""}, "without a value comparison"),
+        (
+            {"Cells.csv": "ImageNumber,ObjectNumber,AreaShape_Area\n1,1,5\n"},
+            "counts differ",
+        ),
+        ({"Experiment.csv": "ImageNumber,Count_Cells\n1,2\n"}, "counts differ"),
+        ({"Receipt.csv": "Key,Value\nVersion,1\n"}, "counts differ"),
+    ),
+)
+def test_matched_inventory_rejects_uncompared_and_extra_scientific_files(
+    tmp_path: Path,
+    contents: dict[str, str],
+    message: str,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+        (root / "Image.csv").write_text("ImageNumber,Count_Cells\n1,2\n")
+    for name, text in contents.items():
+        (roots[1] / name).write_text(text)
+    exports = tuple(RuntimeExportObservation.from_output_root(root) for root in roots)
+    snapshots = tuple(
+        RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+    )
+    with pytest.raises(RuntimeError, match=message):
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(roots[0].iterdir()),
+            candidate_files=frozenset(roots[1].iterdir()),
+            reference_exports=exports[0],
+            candidate_exports=exports[1],
+            reference_snapshot=snapshots[0],
+            candidate_snapshot=snapshots[1],
+        )
+
+
+@pytest.mark.parametrize(
+    "path, header, expected",
+    (
+        ("Experiment.csv", ("Key", "Value"), True),
+        ("Experiment.csv", ("Value", "Key"), True),
+        ("Receipt.csv", ("Key", "Value"), False),
+        ("Experiment.csv", ("ImageNumber", "Count_Cells"), False),
+        ("Experiment.csv", ("Key", "Value", "Measurement"), False),
+    ),
+)
+def test_engine_metadata_classification_preserves_scientific_tables(
+    path: str,
+    header: tuple[str, ...],
+    expected: bool,
+) -> None:
+    assert RuntimeTableSnapshot(Path(path), header, ()).participates_in_comparison is (
+        not expected
+    )
+
+
+@pytest.mark.parametrize(
+    "candidate, equivalent",
+    (
+        (
+            "ImageNumber,ObjectNumber,AreaShape_Area,Metadata_Plate\n1,1,5.0000001,plate\n",
+            True,
+        ),
+        (
+            "ImageNumber,ObjectNumber,AreaShape_Area,Metadata_Plate\n1,1,6,plate\n",
+            False,
+        ),
+        ("ImageNumber,ObjectNumber,Metadata_Plate\n1,1,plate\n", False),
+        (
+            "ImageNumber,ObjectNumber,AreaShape_Area,Image_Metadata_Plate\n1,1,5,plate\n",
+            False,
+        ),
+    ),
+)
+def test_matched_csv_scientific_comparison_rejects_value_and_schema_changes(
+    tmp_path: Path,
+    candidate: str,
+    equivalent: bool,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+    (roots[0] / "Cells.csv").write_text(
+        "ImageNumber,ObjectNumber,AreaShape_Area,Metadata_Plate\n1,1,5,plate\n"
+    )
+    (roots[1] / "Cells.csv").write_text(candidate)
+    policy = matched_batch._strict_cellprofiler_runtime_equivalence_policy()
+    measurements = tuple(
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot.from_output_root(root),
+            policy=policy,
+        )
+        for root in roots
+    )
+    report = runtime_measurement_equivalence(*measurements, policy=policy)
+    assert report.is_equivalent is equivalent
+
+
+@pytest.mark.parametrize(
+    "candidate_text",
+    (
+        "ImageNumber,ObjectNumber,AreaShape_Area\n1,1,5\n1,2,5\n",
+        "ImageNumber,ObjectNumber,AreaShape_Area\n",
+    ),
+)
+def test_matched_inventory_rejects_csv_row_duplication_or_loss(
+    tmp_path: Path,
+    candidate_text: str,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+    (roots[0] / "Cells.csv").write_text(
+        "ImageNumber,ObjectNumber,AreaShape_Area\n1,1,5\n"
+    )
+    (roots[1] / "Cells.csv").write_text(candidate_text)
+    exports = tuple(RuntimeExportObservation.from_output_root(root) for root in roots)
+    snapshots = tuple(
+        RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+    )
+    with pytest.raises(RuntimeError, match="CSV table row counts differ"):
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(roots[0].iterdir()),
+            candidate_files=frozenset(roots[1].iterdir()),
+            reference_exports=exports[0],
+            candidate_exports=exports[1],
+            reference_snapshot=snapshots[0],
+            candidate_snapshot=snapshots[1],
+        )
+
+
+def test_matched_inventory_rejects_metadata_only_outputs(tmp_path: Path) -> None:
+    (tmp_path / "Experiment.csv").write_text("Key,Value\nVersion,1\n")
+    exports = RuntimeExportObservation.from_output_root(tmp_path)
+    snapshot = RuntimeOutputSnapshot.from_export_observation(exports)
+    with pytest.raises(RuntimeError, match="no compared scientific output"):
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(tmp_path.iterdir()),
+            candidate_files=frozenset(tmp_path.iterdir()),
+            reference_exports=exports,
+            candidate_exports=exports,
+            reference_snapshot=snapshot,
+            candidate_snapshot=snapshot,
+        )
+
+
+@pytest.mark.parametrize("renamed", (False, True))
+def test_matched_inventory_accepts_only_declared_workspace_managed_paths(
+    tmp_path: Path,
+    renamed: bool,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+        (root / "Image.csv").write_text("ImageNumber,Count_Cells\n1,2\n")
+    config = (
+        replace(matched_batch.METADATA_CONFIG, METADATA_FILENAME="renamed.json")
+        if renamed
+        else matched_batch.METADATA_CONFIG
+    )
+    managed_files = frozenset(config.managed_paths(roots[1]))
+    for path in managed_files:
+        path.write_text("{}")
+
+    def validate() -> None:
+        exports = tuple(
+            RuntimeExportObservation.from_output_root(root) for root in roots
+        )
+        snapshots = tuple(
+            RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+        )
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(roots[0].rglob("*")),
+            candidate_files=frozenset(
+                path for path in roots[1].rglob("*") if path.is_file()
+            ),
+            reference_exports=exports[0],
+            candidate_exports=exports[1],
+            reference_snapshot=snapshots[0],
+            candidate_snapshot=snapshots[1],
+            candidate_managed_files=managed_files,
+        )
+
+    validate()
+    nested = roots[1] / "unowned"
+    nested.mkdir()
+    (nested / config.METADATA_FILENAME).write_text("{}")
+    with pytest.raises(RuntimeError, match="without a value comparison"):
+        validate()
 
 
 def test_pilot_parser_requires_one_sampling_declaration() -> None:
@@ -78,31 +322,68 @@ def test_native_python_keeps_virtual_environment_symlink(tmp_path: Path) -> None
     assert selected != selected.resolve()
 
 
+@pytest.mark.parametrize(
+    ("timeout_seconds", "assignments", "expected_timeout"),
+    ((None, (), None), (1800, (), 3600), (1800, ("W001", "W002"), 7200)),
+)
 def test_native_worker_receives_an_owned_temporary_root(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    timeout_seconds: float | None,
+    assignments: tuple[str, ...],
+    expected_timeout: float | None,
 ) -> None:
     invocation: dict[str, object] = {}
 
     def fake_run(command: tuple[str, ...], **kwargs: object) -> CompletedProcess[str]:
         invocation.update(kwargs)
-        return CompletedProcess(command, 0, stdout="{}\n", stderr="")
+        request = json.loads(Path(command[-1]).read_text())
+        Path(request["report_path"]).write_text("{}")
+        kwargs["stdout"].write("native stdout is diagnostic text\n")
+        kwargs["stderr"].write("native stderr evidence\n")
+        return CompletedProcess(command, 0)
 
     monkeypatch.setattr(matched_batch.subprocess, "run", fake_run)
     evidence_prefix = tmp_path / "native"
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps(
+            asdict(
+                NativeBatchRequest(
+                    pipeline_path=str(tmp_path / "pipeline.cppipe"),
+                    input_dir=str(tmp_path / "inputs"),
+                    output_root=str(evidence_prefix),
+                    expected_image_sets=None,
+                    repetitions=1,
+                    assignment_output_subdirectories=assignments,
+                )
+            )
+        )
+    )
 
     assert (
         _invoke_native_worker(
             native_python=Path("native-python"),
             worker_script=Path("worker.py"),
-            request_path=Path("request.json"),
+            request_path=request_path,
             evidence_prefix=evidence_prefix,
             project_root=tmp_path,
             repetitions=1,
+            timeout_seconds=timeout_seconds,
         )
         == {}
     )
     temporary_root = tmp_path / "native_tmp"
     assert temporary_root.is_dir()
+    assert "capture_output" not in invocation
+    assert invocation["timeout"] == expected_timeout
+    assert json.loads(request_path.read_text())["report_path"] == str(
+        tmp_path / "native_report.json"
+    )
+    assert (
+        tmp_path / "native_stdout.log"
+    ).read_text() == "native stdout is diagnostic text\n"
+    assert (tmp_path / "native_stderr.log").read_text() == "native stderr evidence\n"
     native_environment = invocation["env"]
     assert isinstance(native_environment, dict)
     assert native_environment["TMPDIR"] == str(temporary_root)
@@ -135,7 +416,9 @@ def test_source_input_inventory_hashes_symlink_target(tmp_path: Path) -> None:
     staged.mkdir()
     (staged / "source.tif").symlink_to(source)
 
-    inventory = _source_input_inventory(staged)
+    inventory = _source_input_inventory(
+        NativeCellProfilerSelectedSourceUniverse((staged / "source.tif",))
+    )
 
     assert inventory == (
         {
@@ -162,7 +445,9 @@ def test_pilot_inventories_stream_files_without_read_bytes(
     monkeypatch.setattr(Path, "read_bytes", reject_read_bytes)
     expected = hashlib.sha256(b"microscopy pixels").hexdigest()
 
-    assert _source_input_inventory(staged)[0]["sha256"] == expected
+    assert _source_input_inventory(
+        NativeCellProfilerSelectedSourceUniverse((staged / "image.tif",))
+    )[0]["sha256"] == expected
     assert _output_inventory(tmp_path, frozenset({source}))[0]["sha256"] == expected
 
 

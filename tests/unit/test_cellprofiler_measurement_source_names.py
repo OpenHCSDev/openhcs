@@ -63,14 +63,15 @@ def test_input_source_name_resolves_only_declared_context_carriers(
     requested_specs: list[ArtifactSpec] = []
 
     class BindingRequest:
-        def artifact_request_for_spec(self, spec: ArtifactSpec) -> SimpleNamespace:
+        def artifact_value_for_spec(self, spec: ArtifactSpec) -> SimpleNamespace:
             requested_specs.append(spec)
             return SimpleNamespace(spec=spec)
 
     class ArtifactStrategy:
         @staticmethod
-        def source_image_name(request: SimpleNamespace) -> str:
-            return request.spec.name
+        def source_image_name(spec: ArtifactSpec, value: SimpleNamespace) -> str:
+            assert value.spec is spec
+            return spec.name
 
     monkeypatch.setattr(
         module_execution,
@@ -79,7 +80,7 @@ def test_input_source_name_resolves_only_declared_context_carriers(
     )
     monkeypatch.setattr(
         module_execution,
-        "RuntimeArtifactTypeStrategy",
+        "CellProfilerOutputRecorder",
         SimpleNamespace(for_artifact_type=lambda _artifact_type: ArtifactStrategy()),
     )
 
@@ -109,9 +110,6 @@ def test_composed_measurement_caller_preserves_ordered_source_aliases() -> None:
         callable_contract=SimpleNamespace(
             image_payload_consumption=ImagePayloadConsumption.COMPOSED
         ),
-        _primary_image_inputs=lambda current_image, adapter, *, module_type: (
-            image_inputs
-        ),
     )
 
     measurement_images = CellProfilerModuleExecutor._measurement_image_inputs(
@@ -119,6 +117,7 @@ def test_composed_measurement_caller_preserves_ordered_source_aliases() -> None:
         adapter=SimpleNamespace(),
         current_image=payload,
         image_request=image_request,
+        image_inputs=image_inputs,
         module_type=SimpleNamespace(),
     )
 

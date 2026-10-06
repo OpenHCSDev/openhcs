@@ -1,0 +1,503 @@
+{
+  "views": [
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-combined-0p40784313725490196-bottom/20261005T215017284129Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "95a118886db8fe8cceabf2f1097598e4f3284a957f250771a4a426c87b0decde",
+      "personally_opened": true,
+      "review_role": "matched03-actin-combined-0p40784313725490196-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-combined-0p40784313725490196-dense/20261005T215016798995Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "49511f6572339fb10fab602aa96aab0f355bc97d235a89f479bdfb1c596af806",
+      "personally_opened": true,
+      "review_role": "matched03-actin-combined-0p40784313725490196-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-combined-0p40784313725490196-left-dim/20261005T215017031422Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "50e62424304d3ee1baa481395ed30ec39171bfc3c17d77820ebb9eb7ebe2bb74",
+      "personally_opened": true,
+      "review_role": "matched03-actin-combined-0p40784313725490196-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-combined-0p40784313725490196-top/20261005T215017552836Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "0b668452a60055c6b2ade12af3154925aa8a0bd3a388a728c37a5440b6d58855",
+      "personally_opened": true,
+      "review_role": "matched03-actin-combined-0p40784313725490196-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-combined-0p40784313725490196-whole/20261005T215016498405Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "5ca78a6c6173cecbc330d43d4ca51db4f435c76d844d4757323b499c6f0d169e",
+      "personally_opened": true,
+      "review_role": "matched03-actin-combined-0p40784313725490196-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-labels-55-bottom/20261005T215015576881Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "a03543ed0aed724fbf0af065653a92f829b2aaf6c67fb8b774bdd9c78b67fc52",
+      "personally_opened": true,
+      "review_role": "matched03-actin-labels-55-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-labels-55-dense/20261005T215015086399Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "eb76647ca5f3c936abb033b2a62fa7f3796fd1b0775d2a63f22beb60effba9ba",
+      "personally_opened": true,
+      "review_role": "matched03-actin-labels-55-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-labels-55-left-dim/20261005T215015317309Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "9d2a3012c374176460d650b6253ff67a3467453005f80870fa11360c437600a5",
+      "personally_opened": true,
+      "review_role": "matched03-actin-labels-55-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-labels-55-top/20261005T215015836867Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "00abe835ad5af41536d823827093617aa724e3d80cbfa431575e3ec6e5666296",
+      "personally_opened": true,
+      "review_role": "matched03-actin-labels-55-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-labels-55-whole/20261005T215014800450Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "e8dd3cfa3e99b557e01438bc6cf258199fdb199da38c4c352d96176bcd3b760d",
+      "personally_opened": true,
+      "review_role": "matched03-actin-labels-55-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-104-bottom/20261005T215013905833Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "a9a3abce022aa9e5736dd80bf16ea07bdd50308d709a1c5eb9070a014ebbd42b",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-104-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-104-dense/20261005T215013382022Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "caed6c21b83c5de570527e8f52be26c71531fa6fc3a80c24c3f84e922254f667",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-104-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-104-left-dim/20261005T215013642872Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "4c0f31adfb0c5a2466d02dd9ef9b03e54ccbe95342a44299f64f08a29b354159",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-104-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-104-top/20261005T215014179575Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "b4a7b9eeb0589594e6977992f3b43760bcf415e9a085dd7e3536619820497842",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-104-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-104-whole/20261005T215013021915Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "30d241bc1f6e07fc467403ca10e15deb7f005411bcfde9f9e8efb73522b05bb1",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-104-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-203-bottom/20261005T215012371986Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "f57f70b5e3de6766e34ca9bd9d582b2a9e863e223f6d5ce91ea2995dc66c7a18",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-203-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-203-dense/20261005T215011846419Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "d4849091b9e7f4818ba8f2f0f3717633c8cf66e2ba4ace64ac65c0fabc0b0ceb",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-203-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-203-left-dim/20261005T215012125501Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "3ff0f1b5295e6f23c667b49f1104d538af6adfa88acb9036b3f04806987c84a9",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-203-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-203-top/20261005T215012655516Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "0ac27b331342300652dee88bf3686607e1ab17f960f2e08192fbaeb26607decf",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-203-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-actin-raw-203-whole/20261005T215011537971Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "d078b252736679e5862611a0590d282c7080eca87bf464005ae8d23b75f8e20d",
+      "personally_opened": true,
+      "review_role": "matched03-actin-raw-203-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-combined-0p592156862745098-bottom/20261005T215010587769Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "70c76e426741a43e22e123aff58151a56f5f4818eaf1aa78401ac1fea7432b65",
+      "personally_opened": true,
+      "review_role": "matched03-dna-combined-0p592156862745098-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-combined-0p592156862745098-dense/20261005T215010108191Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "62e6a11f95106317ed8d05cb93f44a02a80b20913aabf19320dd9f41c43e99e5",
+      "personally_opened": true,
+      "review_role": "matched03-dna-combined-0p592156862745098-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-combined-0p592156862745098-left-dim/20261005T215010342622Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "e4f6655fe8d06b4b31b2b4d505de4143eb7f3fa7dfd5ac8a4833f081fd4e7369",
+      "personally_opened": true,
+      "review_role": "matched03-dna-combined-0p592156862745098-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-combined-0p592156862745098-top/20261005T215010832859Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "b9f88ca0d9c28c875a73bf000314420524efade29589c4677615bbd1530a69f2",
+      "personally_opened": true,
+      "review_role": "matched03-dna-combined-0p592156862745098-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-combined-0p592156862745098-whole/20261005T215009788604Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "e70831c3f2462a319a307549bb62e2504f7cd858dbbd839100054ab24f43130e",
+      "personally_opened": true,
+      "review_role": "matched03-dna-combined-0p592156862745098-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-labels-55-bottom/20261005T215008986781Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "e9a5b3d96444a5ec000f7a34f4e8b1962b4ca217f6e6173fc6d3162ad927e7b1",
+      "personally_opened": true,
+      "review_role": "matched03-dna-labels-55-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-labels-55-dense/20261005T215008478966Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "7df6783173c419130e0df95b2fd86a3b9ae5e02fa34eb05eb7ae35bc1bea1dc0",
+      "personally_opened": true,
+      "review_role": "matched03-dna-labels-55-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-labels-55-left-dim/20261005T215008742657Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "7be29c97930b8fbae7739e3fd5e6ad68b57c89fcb12080843cb17d89a6cf5720",
+      "personally_opened": true,
+      "review_role": "matched03-dna-labels-55-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-labels-55-top/20261005T215009219654Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "be83cb388adba944b5d6893e9f18922c3432902dea2f02f29ca1261126deff6f",
+      "personally_opened": true,
+      "review_role": "matched03-dna-labels-55-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-labels-55-whole/20261005T215008162464Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "43b88f2cd52fcb4183dac23b1fdae1a77e96249b0c712e73e9df0b71460917dc",
+      "personally_opened": true,
+      "review_role": "matched03-dna-labels-55-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-151-bottom/20261005T215007228777Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "f0ca68f21e541e9dbf487d4966d5d470f2d1b4d8f4d398fdc1cd31ccef58aa33",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-151-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-151-dense/20261005T215006704714Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "97629d1e212c51a5ea2f742d985e7502a042b0726e75c0c05a4637a16629e1d5",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-151-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-151-left-dim/20261005T215006983988Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "f8e1d04c461ea58bab5dbd2831d40043ea66d8dfd351af1037685b324a07dde3",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-151-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-151-top/20261005T215007488768Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "a952b3b9027cc8cf8ddf8eee296851a1c52bcaad3abecf245aac38950452f7ee",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-151-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-151-whole/20261005T215006382376Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "fead01d9f46f6ae3f98fbf9994bc0cd725ee19e2363ad3140336a4ef2f031cb2",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-151-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-255-bottom/20261005T215005808202Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "34b2e68370e09c2c1733b2d6bb5e8ccbbd890ed07b5eab9465e484e7c1a3a7f9",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-255-bottom"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-255-dense/20261005T215005305090Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "f4748ae863993b99ad397d420a33c6d3a48218a23d04c9c7f897f12b97f1c26a",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-255-dense"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-255-left-dim/20261005T215005565725Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "14de6d539e4ae371e066a835b8f599982fe92aa3b87f01fc11d0325a65dfd04c",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-255-left-dim"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-255-top/20261005T215006060000Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "efa54bf41e560371f36650774799435aa9b86801d9dbae790011d124a03a01b7",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-255-top"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/matched03-dna-raw-255-whole/20261005T215004720693Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "56a525b7317f787c5442337c59bdd8185afe5df0ba8f78e877641db0e6042475",
+      "personally_opened": true,
+      "review_role": "matched03-dna-raw-255-whole"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/nucleus31-feature-link/20261005T215514729984Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "be8a569bced61e763d707a0a24d155c112ef440d893e1c357398399197838a97",
+      "personally_opened": true,
+      "review_role": "nucleus31-feature-link"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-actin-99/20261005T213450666522Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "2e10addb24616bfa40235f0487e1c9befe121a236fb811c083c4a0cdbecc65d9",
+      "personally_opened": true,
+      "review_role": "raw-actin-99"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-actin-full/20261005T213450459716Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "bb57163a1fa11d85b3aece613240c9852fcdd8a76c309128958428373020d2a9",
+      "personally_opened": true,
+      "review_role": "raw-actin-full"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-bottom-0-151/20261005T213556558039Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "9703ea2dd62af0773b1ba3c5d9c3dbf515a34a867264a6f08616dd5f2893297d",
+      "personally_opened": true,
+      "review_role": "raw-corrected-bottom-0-151"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-bottom-0-255/20261005T213556226699Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "58382b1ca8d19b81c827b237246fd8aee52c1007f7805acc352cada02e62ceda",
+      "personally_opened": true,
+      "review_role": "raw-corrected-bottom-0-255"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-bottom-1-104/20261005T213557208645Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "253d8ee340ee0272ec85223a0fc7f2f66264e9a0d38d1310286d3bd57e8ae440",
+      "personally_opened": true,
+      "review_role": "raw-corrected-bottom-1-104"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-bottom-1-203/20261005T213556879589Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "d7f6e73ca216eb0e5d9d0ea7f2c0387b5ccdd3889c636b68ffe6fc5e05663b43",
+      "personally_opened": true,
+      "review_role": "raw-corrected-bottom-1-203"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-dense-0-151/20261005T213553757867Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "f9afea6871539cc0a64047c80a0d7a2bdd4aa34de82358256469585de9f187c2",
+      "personally_opened": true,
+      "review_role": "raw-corrected-dense-0-151"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-dense-0-255/20261005T213552570450Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "352500a99b49caaa19e8387639ba603a5eea18b46fdb3d4ff452ec3663176ffd",
+      "personally_opened": true,
+      "review_role": "raw-corrected-dense-0-255"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-dense-1-104/20261005T213554418967Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "1e33570c88b56853255a8612b1752946f2dabf59604777f97fff6e2c174f8ad1",
+      "personally_opened": true,
+      "review_role": "raw-corrected-dense-1-104"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-dense-1-203/20261005T213554077823Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "be0ccb6dca6280f6d14e0c6fe70db8073df7bd032b2c0ba98df9ad30fefae08c",
+      "personally_opened": true,
+      "review_role": "raw-corrected-dense-1-203"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-left-dim-0-151/20261005T213555204621Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "80863fbd4f173d345709d41f11194a1fb734da2dcab1c4406dac06a23256579d",
+      "personally_opened": true,
+      "review_role": "raw-corrected-left-dim-0-151"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-left-dim-0-255/20261005T213554865534Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "42d912c8b7b030be1f6b02488c91b635ceb2d5f93083a8e8f53ccb5d929d19e7",
+      "personally_opened": true,
+      "review_role": "raw-corrected-left-dim-0-255"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-left-dim-1-104/20261005T213555837947Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "55b9c9733818b82540ff08560cb5c9f3d8ddaca74621267a3678f6b0c30a5f05",
+      "personally_opened": true,
+      "review_role": "raw-corrected-left-dim-1-104"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-left-dim-1-203/20261005T213555517124Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "d96a21bb9a0d259157c9e4fd1f4b695b104f4a37cc1213625bbe34a50376111e",
+      "personally_opened": true,
+      "review_role": "raw-corrected-left-dim-1-203"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-top-0-151/20261005T213557916655Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "f4d7b60a4d654a5714e4a0b16d3fe32e084406de994cfcdd38c79245ed658788",
+      "personally_opened": true,
+      "review_role": "raw-corrected-top-0-151"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-top-0-255/20261005T213557597042Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "b973c9edb609448b80053ba0576a8811882171a8db99657864ce936d6b750ec2",
+      "personally_opened": true,
+      "review_role": "raw-corrected-top-0-255"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-top-1-104/20261005T213558515173Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "1486946851faa730a4a12351f7e633151eafcc596739757e578a37a9651422d3",
+      "personally_opened": true,
+      "review_role": "raw-corrected-top-1-104"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-corrected-top-1-203/20261005T213558217917Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "4e36ee15d20a591360d595270b67c99336973d703bc48a937b4d77d0b5769d58",
+      "personally_opened": true,
+      "review_role": "raw-corrected-top-1-203"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-dna-151/20261005T213450161759Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "26dcf1f08a7dfbf7603b121f751ea819d44fcd514c5a82b86b31f8d004102ea7",
+      "personally_opened": true,
+      "review_role": "raw-dna-151"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/raw-first/20261005T213410737643Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "f99e4d3790e99b70f3716087983abd17dcea3f0cd870d6c8c4d774d1b56fea94",
+      "personally_opened": true,
+      "review_role": "raw-first"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-bottom-actin-outline-valid/20261005T214845284204Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "29edd7fc77ade86fb54dbed108ef2080643d93b2330b44e8b437d61382a10fc3",
+      "personally_opened": true,
+      "review_role": "technical03-bottom-actin-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-bottom-dna-outline-valid/20261005T214843637758Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "d1b9ceac27752bf454127ff3ee988ee52a2a948041670050b0ebb3c849899f19",
+      "personally_opened": true,
+      "review_role": "technical03-bottom-dna-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-dense-actin-outline-valid/20261005T214844806544Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "5a2a1c9d1083b30d484d56d47a86a5f8fab88794088a04f0c907a3d7156a7392",
+      "personally_opened": true,
+      "review_role": "technical03-dense-actin-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-dense-dna-corrected/20261005T214832572412Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "3711bad72767ff6bc78c706f1c47902a7e0cd1549b41970551de64ec42969156",
+      "personally_opened": true,
+      "review_role": "technical03-dense-dna-corrected"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-dense-dna-outline-valid/20261005T214843175910Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "3711bad72767ff6bc78c706f1c47902a7e0cd1549b41970551de64ec42969156",
+      "personally_opened": true,
+      "review_role": "technical03-dense-dna-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-left-dim-actin-outline-valid/20261005T214845056843Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "e14c74367950d9fc14a04b2c175150ae4f9958c359269fa6d70836d41376bbff",
+      "personally_opened": true,
+      "review_role": "technical03-left-dim-actin-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-left-dim-dna-outline-valid/20261005T214843423869Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "5871a8229d46f72ddcb6e2ca0e4bc1d93876f52dcbe8bfd924fbe447a30ae7d4",
+      "personally_opened": true,
+      "review_role": "technical03-left-dim-dna-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-top-actin-outline-valid/20261005T214845538900Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "24a4f121dc997e882f7cd3a9da224e8aafef28404a3ea5292a4c4be88a66f8e2",
+      "personally_opened": true,
+      "review_role": "technical03-top-actin-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-top-dna-outline-valid/20261005T214843870086Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "622b8ecfa7a9239ba78509617163cb876b4dac8069ea2096a2f83dcc5a18388f",
+      "personally_opened": true,
+      "review_role": "technical03-top-dna-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-whole-actin-outline-valid/20261005T214844450856Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "928311fd296208e1c74542410a1a7336cb696e9150bb10a84a7d109eb338d6be",
+      "personally_opened": true,
+      "review_role": "technical03-whole-actin-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/technical03-whole-dna-outline-valid/20261005T214842260857Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "a479db244fa7ac3be0e81702207fb4d2944caba170d92f9a1afa45a1c948afab",
+      "personally_opened": true,
+      "review_role": "technical03-whole-dna-outline-valid"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-actin-combined-0p40784313725490196/20261005T215428995261Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "a7a8728b39019e51ca611d866cac4b14caa60e9fe1ca6e2dc758874bd38de384",
+      "personally_opened": true,
+      "review_role": "unsupported11-actin-combined-0p40784313725490196"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-actin-combined-1/20261005T215428751501Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "596c674cc04fdf6198668bcdfff137456cf64843591468ea5a6ce27a7f77ef23",
+      "personally_opened": true,
+      "review_role": "unsupported11-actin-combined-1"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-actin-labels-55/20261005T215428275423Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "212b3b6ecebea52fdfaf2b05fc3dce6b268bb07ee229d7c702e1357830504637",
+      "personally_opened": true,
+      "review_role": "unsupported11-actin-labels-55"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-actin-raw-104/20261005T215427774779Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "d975b87f9b2cf4185dbdcc482b663535c57427c784c6dcd4e20e4f1c76d4789b",
+      "personally_opened": true,
+      "review_role": "unsupported11-actin-raw-104"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-actin-raw-203/20261005T215427549876Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "0fe6b6b6b2a10511eab7351e97ac7691988dc6f9eb10326f5ecd3771db2e89d0",
+      "personally_opened": true,
+      "review_role": "unsupported11-actin-raw-203"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-dna-combined-0p592156862745098/20261005T215426937471Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "369dcc2e06d4003fd4518ee0e344640111e7b14f4b8202eb9bc740c76f350a3e",
+      "personally_opened": true,
+      "review_role": "unsupported11-dna-combined-0p592156862745098"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-dna-combined-1/20261005T215426723374Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "a48986c29498e596ffa9df5c4ef59171c4b4811cebc35d5a5623c67dd3b2880f",
+      "personally_opened": true,
+      "review_role": "unsupported11-dna-combined-1"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-dna-labels-55/20261005T215426211565Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "3df2bb23615163a29debb1989c0fb83482efeb8ca91db7f76626fdc054791281",
+      "personally_opened": true,
+      "review_role": "unsupported11-dna-labels-55"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-dna-raw-151/20261005T215425711782Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "b8a7ce83b9d2a148b3ced4c582bf3d420a4dec50179d8b6b1778a13a6004fd13",
+      "personally_opened": true,
+      "review_role": "unsupported11-dna-raw-151"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h003-fresh19-96-after-bb13dev-20261005/H003_FRESH19_96/qa/unsupported11-dna-raw-255/20261005T215425483490Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "37d383eba66e168b5418c54420b3662674b7dbf6f7bb47cf25e94a12a097bcd0",
+      "personally_opened": true,
+      "review_role": "unsupported11-dna-raw-255"
+    }
+  ],
+  "source_receipts": "Original runtime/mcp.stdout includes all snapshot source paths, hashes, dimensions and camera/intensity changes. Tool-receipts.json retains complete structured state/payload receipts. Rejected capture sets remain in frozen manifest.",
+  "rejected_sets": [
+    "development-* crop attempts: invalid comma-separated camera center left full field",
+    "technical02-*combined: channel-offset/filled-Shape obstruction; not paired raw comparison",
+    "technical03-dense-dna-outline: invalid color_plane axis, excluded"
+  ],
+  "numeric_window_caveat": "Actin raw-only full window was 0..203 while initial combined full window was 0..1 in normalized RGB, corresponding to raw 0..255. The 0..104 raw versus 0..104/255 combined pair matches exactly. DNA pairs match 0..255 and 0..151. Do not claim two exactly matched Actin raw/combined windows."
+}

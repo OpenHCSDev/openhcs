@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.invocation import (
         CellProfilerImageRequest,
     )
+    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
     from openhcs.interop.cellprofiler.runtime.output_contexts import (
         CellProfilerObjectLabelOutputSourceContext,
     )
@@ -129,7 +130,7 @@ class CellProfilerModuleCallableABI:
         """Return the default image-output source payload."""
 
         del cls
-        return request.declared_source_payload()
+        return request.output_source_payload()
 
     @classmethod
     def output_value(
@@ -156,7 +157,7 @@ class CellProfilerModuleCallableABI:
         source_payload = replace(
             request,
             current_image=request.source.payload,
-        ).declared_source_payload()
+        ).output_source_payload()
         return CellProfilerObjectLabelOutputSourceContext(
             source_payload,
             source_payload,
@@ -165,15 +166,12 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def primary_image_inputs(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Return non-special image inputs that drive invocation slices."""
 
-        if (
-            CallableContract.from_callable(func).execution_scope
-            is FunctionStepExecutionScope.PLATE
-        ):
+        if contract.execution_scope is FunctionStepExecutionScope.PLATE:
             return ()
         image_inputs = ArtifactSpecCollection(declared_inputs).of_artifact_type(
             ImageArtifactType
@@ -187,19 +185,19 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def invocation_domain_inputs(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Return the inputs whose component scope owns one invocation."""
 
-        primary_images = cls.primary_image_inputs(func, declared_inputs)
-        if primary_images:
-            return primary_images
         object_inputs = ArtifactSpecCollection(declared_inputs).of_artifact_type(
             ObjectLabelsArtifactType
         )
         if cls.executes_per_object_measurements(object_inputs):
-            return object_inputs[:1]
+            return object_inputs
+        primary_images = cls.primary_image_inputs(contract, declared_inputs)
+        if primary_images:
+            return primary_images
         return tuple(
             artifact_input
             for artifact_input in declared_inputs
@@ -252,6 +250,14 @@ class CellProfilerModuleCallableABI:
 
         del cls, include_image_measurements
         return runtime_kwargs
+
+    @classmethod
+    def shared_object_measurement_runtime_kwargs(
+        cls, adapter: "CellProfilerRuntimeAdapter"
+    ) -> "RuntimeCallableKwargs":
+        """Project runtime-owned values shared by this module's object calls."""
+        del cls, adapter
+        return {}
 
     @classmethod
     def validate_callable_artifact_abi(

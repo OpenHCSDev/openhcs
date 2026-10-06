@@ -1,0 +1,8 @@
+{
+  "current_matches_prepared": true,
+  "current_environment_sha256": "00b7f550f6e584e34d6070f79bdd60d37859cb58c752b866fc95ac7f5293dabd",
+  "prepared_environment_sha256": "00b7f550f6e584e34d6070f79bdd60d37859cb58c752b866fc95ac7f5293dabd",
+  "differing_key_names": [
+    "CODEX_THREAD_ID"
+  ]
+}

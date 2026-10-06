@@ -1,0 +1,1 @@
+R1 98cf5c270078234dc2ef3e68cff84295ac095a0f: NRA cache=miss, projections=2980, prepare=102.199s, analysis=5.504s

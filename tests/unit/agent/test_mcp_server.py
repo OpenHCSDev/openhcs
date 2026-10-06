@@ -107,6 +107,7 @@ from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.viewer_protocol import ViewerPayloadSummary, ViewerArrayValueSummary
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
@@ -328,6 +329,78 @@ def test_mcp_server_publishes_canonical_instructions():
     assert "names begin" not in built.instructions
     assert "compile before running" in built.instructions
     assert "structured execution results" in built.instructions
+
+
+def test_mcp_tool_argument_family_rejects_unknown_parameters_before_dispatch():
+    from mcp.server.fastmcp.exceptions import ToolError
+
+    invocations = []
+    built = server.build_server(
+        SimpleNamespace(),
+        invocation_observer=lambda capability, outcome: invocations.append(
+            (capability, outcome)
+        ),
+    )
+
+    async def exercise():
+        tools = await built.list_tools()
+        assert tools
+        for tool in tools:
+            assert tool.inputSchema["additionalProperties"] is False, tool.name
+            with pytest.raises(ToolError, match="extra_forbidden"):
+                await built.call_tool(tool.name, {"unadvertised_parameter": True})
+
+    asyncio.run(exercise())
+    assert invocations == []
+
+
+def test_mcp_source_session_strict_decoder_preserves_declared_flat_connection():
+    from mcp.server.fastmcp.exceptions import ToolError
+
+    requests = []
+
+    class ExecutionService:
+        def create_session_from_pipeline_source_request(self, request):
+            requests.append(request)
+            return OrchestratorSessionRef(
+                schema_version=SCHEMA_VERSION,
+                session_id=f"session-{len(requests)}",
+                uri=f"openhcs://execution/sessions/session-{len(requests)}",
+            )
+
+    built = server.build_server(SimpleNamespace(execution_service=ExecutionService()))
+    common = {"plate_path": "/not-opened", "pipeline_source": "not-executed"}
+    connection = {
+        "host": "127.0.0.1",
+        "port": 6014,
+        "transport_mode": "tcp",
+        "persistent": True,
+    }
+
+    async def exercise():
+        await built.call_tool(
+            "openhcs_create_orchestrator_session_from_pipeline_source",
+            common | connection,
+        )
+        with pytest.raises(ToolError, match="extra_forbidden"):
+            await built.call_tool(
+                "openhcs_create_orchestrator_session_from_pipeline_source",
+                common | {"connection": connection},
+            )
+        assert len(requests) == 1
+        await built.call_tool(
+            "openhcs_create_orchestrator_session_from_pipeline_source", common
+        )
+
+    asyncio.run(exercise())
+    assert len(requests) == 2
+    assert requests[0].connection.tool_arguments() == connection
+    assert requests[1].connection.tool_arguments() == {
+        "host": "localhost",
+        "port": None,
+        "transport_mode": None,
+        "persistent": True,
+    }
 
 
 def test_mcp_server_factory_receives_canonical_identity_and_binds_tools():
@@ -826,6 +899,7 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
     assert "image/result file records" in descriptions["openhcs_query_plate_files"]
     query_plate_files_properties = schemas["openhcs_query_plate_files"]["properties"]
     assert "kind" in query_plate_files_properties
+    assert "result_directory" in query_plate_files_properties
     assert "path_contains" in query_plate_files_properties
     assert "well" in query_plate_files_properties
     assert "include_previews" in query_plate_files_properties
@@ -4260,6 +4334,8 @@ def test_mcp_dev_client_function_commands_project_tool_arguments(tmp_path):
             str(custom_source),
             "--no-persist",
             "--full-signature",
+            "--port",
+            "15993",
         )
     )
     authoring_args = parser.parse_args(
@@ -4289,6 +4365,12 @@ def test_mcp_dev_client_function_commands_project_tool_arguments(tmp_path):
         "source_code": "from openhcs.core.memory import numpy\n",
         "persist": False,
         "compact_signature": False,
+        "function_name": None,
+        "storage_dir": None,
+        "host": "localhost",
+        "port": 15993,
+        "transport_mode": None,
+        "persistent": True,
     }
     assert authoring_call.name == "openhcs_get_authoring_context"
     assert authoring_call.arguments == {
@@ -4659,6 +4741,13 @@ def test_mcp_dev_client_authoring_context_renders_bounded_content():
     assert "...<truncated 8 chars>" in rendered
 
 
+def _dev_client_server_fixture():
+    from openhcs.mcp.dev_client_core import McpDevServerIdentity, McpDevServerSpec
+    from openhcs.serialization.json import to_jsonable
+
+    return to_jsonable(McpDevServerIdentity.from_spec(McpDevServerSpec(sys.executable)))
+
+
 def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
     if importlib.util.find_spec("mcp") is None:
         return
@@ -4681,6 +4770,7 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -4698,7 +4788,9 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "pipeline_id": "pipeline-1",
+                        "pipeline_config_id": "config-1",
                         "steps": [
                             {
                                 "step_id": "step-1",
@@ -4713,7 +4805,6 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                                 ],
                             }
                         ],
-                        "errors": [],
                     }
                 ],
             },
@@ -4722,7 +4813,12 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "valid": True,
+                        "pipeline_ref": {
+                            "pipeline_id": "pipeline-1",
+                            "uri": "openhcs://pipelines/pipeline-1",
+                        },
                         "warnings": [{"code": "note", "message": "Pipeline is small."}],
                         "errors": [],
                     }
@@ -4733,9 +4829,9 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "title": "Pipeline",
                         "source": "pipeline_steps = [\\n    FunctionStep(...)\\n]\\n",
-                        "errors": [],
                     }
                 ],
             },
@@ -4774,6 +4870,7 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -4791,7 +4888,9 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "pipeline_id": "pipeline-1",
+                        "pipeline_config_id": "config-1",
                         "steps": [
                             {
                                 "step_id": "step-1",
@@ -4807,7 +4906,6 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
                                 ],
                             }
                         ],
-                        "errors": [],
                     }
                 ],
             },
@@ -4816,7 +4914,12 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "valid": False,
+                        "pipeline_ref": {
+                            "pipeline_id": "pipeline-1",
+                            "uri": "openhcs://pipelines/pipeline-1",
+                        },
                         "warnings": [],
                         "errors": [
                             {
@@ -4909,6 +5012,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -4916,6 +5020,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "plate_path": "/tmp/example-plate",
                         "axes": ["A01"],
                         "axis_count": 1,
@@ -4929,6 +5034,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                             "files": [
                                 {
                                     "virtual_path": "A01_s001_w1_z001_t001.tif",
+                                    "full_virtual_path": "/virtual/A01_s001_w1_z001_t001.tif",
                                     "source_path": "/tmp/source/A01_w1.tif",
                                     "source_metadata": {
                                         "well": "A01",
@@ -4943,6 +5049,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                                 "step_index": 0,
                                 "step_name": "Count cells",
                                 "axis_id": "A01",
+                                "output_dir": None,
                                 "execution_groups": [None],
                                 "artifact_inputs": [
                                     {
@@ -4976,7 +5083,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                                             "paths": [
                                                 {
                                                     "group_key": None,
-                                                    "base_path": (
+                                                    "shared_output_stem": (
                                                         "/tmp/example-plate_openhcs/"
                                                         "images_results/"
                                                         "A01_cell_counts_step0.roi.zip"
@@ -5064,6 +5171,7 @@ def test_mcp_dev_client_artifact_plan_explains_empty_source_workspace():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -5071,6 +5179,7 @@ def test_mcp_dev_client_artifact_plan_explains_empty_source_workspace():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "plate_path": "/tmp/example-plate",
                         "axes": ["A01"],
                         "axis_count": 1,
@@ -5158,7 +5267,7 @@ def test_mcp_dev_client_execute_source_composes_session_and_submit(monkeypatch):
                         "uri": "openhcs://execution/sessions/session-1",
                     },
                 ),
-            )
+            ).decoded_for_rendering()
         return dev_client.McpDevToolResult(
             tool=call.name,
             mcp_error=False,
@@ -5167,13 +5276,14 @@ def test_mcp_dev_client_execute_source_composes_session_and_submit(monkeypatch):
                     "schema_version": "openhcs.agent.v1",
                     "session_id": "session-1",
                     "job_id": "job-1",
+                    "uri": "openhcs://execution/jobs/job-1",
                     "kind": "execute",
                     "status": "complete",
                     "server_execution_id": "exec-1",
                     "response": {"status": "complete", "completed": True},
                 },
             ),
-        )
+        ).decoded_for_rendering()
 
     monkeypatch.setattr(knowledge_pipeline, "call_mcp_tool", fake_call_tool)
 
@@ -5311,6 +5421,7 @@ def test_mcp_dev_client_query_plate_files_command_projects_tool_arguments():
     assert call.name == "openhcs_query_plate_files"
     assert call.arguments == {
         "plate_path": "/tmp/example-plate",
+        "result_directory": None,
         "microscope_type": "openhcsdata",
         "pattern_format": None,
         "kind": "all",
@@ -6428,6 +6539,7 @@ def test_mcp_dev_client_stream_plate_files_command_projects_tool_arguments():
         "fresh_viewer": True,
         "source_receipt": None,
         "plate_path": "/tmp/example-plate-openhcs",
+        "result_directory": None,
     }
 
     query_args = parser.parse_args(("stream-plate-files", "/tmp/example-plate-openhcs"))
@@ -6496,6 +6608,7 @@ def test_mcp_dev_client_sample_plate_image_command_renders_compact_summary():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -6503,6 +6616,9 @@ def test_mcp_dev_client_sample_plate_image_command_renders_compact_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
+                        "plate_path": "/tmp/example-plate",
+                        "requested_image_path": "A01_s001_w1_z001_t001.tif",
                         "virtual_path": "images/A01_s001_w1_z001_t001.tif",
                         "source_path": "/tmp/example-plate/images/A01_s001_w1_z001_t001.tif",
                         "shape": [1, 96, 96],
@@ -6564,6 +6680,7 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_element_budget():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -6571,6 +6688,9 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_element_budget():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
+                        "plate_path": "/tmp/example-plate",
+                        "requested_image_path": "A01_s001_w1_z001_t001.tif",
                         "virtual_path": "images/A01_s001_w1_z001_t001.tif",
                         "source_path": "/tmp/example-plate/images/A01_s001_w1_z001_t001.tif",
                         "shape": [1, 96, 96],
@@ -6618,6 +6738,7 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_include_arrays():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -6625,6 +6746,9 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_include_arrays():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
+                        "plate_path": "/tmp/example-plate",
+                        "requested_image_path": "A01_s001_w1_z001_t001.tif",
                         "virtual_path": "images/A01_s001_w1_z001_t001.tif",
                         "source_path": "/tmp/example-plate/images/A01_s001_w1_z001_t001.tif",
                         "shape": [1, 96, 96],
@@ -7207,6 +7331,7 @@ def test_mcp_dev_client_selected_plate_sample_command_renders_compact_summary():
     parser = dev_client._build_parser()
     args = parser.parse_args(("selected-plate-sample",))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -7214,6 +7339,7 @@ def test_mcp_dev_client_selected_plate_sample_command_renders_compact_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "selected_plate": {
                             "name": "selected-plate",
                             "plate_root": "/tmp/selected-plate",
@@ -7222,6 +7348,9 @@ def test_mcp_dev_client_selected_plate_sample_command_renders_compact_summary():
                         "image_path": "./A01_s001_w1_z001_t001.tif",
                         "auto_selected_image_path": True,
                         "sample": {
+                            "schema_version": SCHEMA_VERSION,
+                            "plate_path": "/tmp/selected-plate",
+                            "requested_image_path": "./A01_s001_w1_z001_t001.tif",
                             "virtual_path": "./A01_s001_w1_z001_t001.tif",
                             "source_path": "/tmp/source/A01_w1.tif",
                             "shape": [1, 2, 2],
@@ -7278,6 +7407,7 @@ def test_mcp_dev_client_selected_plate_sample_omission_suggests_element_budget()
     parser = dev_client._build_parser()
     args = parser.parse_args(("selected-plate-sample", "--target", "output"))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -7285,6 +7415,7 @@ def test_mcp_dev_client_selected_plate_sample_omission_suggests_element_budget()
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "selected_plate": {
                             "name": "selected-plate",
                             "plate_root": "/tmp/selected-plate",
@@ -7293,6 +7424,9 @@ def test_mcp_dev_client_selected_plate_sample_omission_suggests_element_budget()
                         "image_path": "./A01_s001_w1_z001_t001.tif",
                         "auto_selected_image_path": False,
                         "sample": {
+                            "schema_version": SCHEMA_VERSION,
+                            "plate_path": "/tmp/selected-plate",
+                            "requested_image_path": "./A01_s001_w1_z001_t001.tif",
                             "virtual_path": "./A01_s001_w1_z001_t001.tif",
                             "source_path": "/tmp/source/A01_w1.tif",
                             "shape": [1, 96, 96],
@@ -7339,6 +7473,7 @@ def test_mcp_dev_client_selected_plate_sample_error_keeps_target_context():
     parser = dev_client._build_parser()
     args = parser.parse_args(("selected-plate-sample", "--target", "output"))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -7346,6 +7481,7 @@ def test_mcp_dev_client_selected_plate_sample_error_keeps_target_context():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "selected_plate": {
                             "name": "selected-plate",
                             "plate_root": "/tmp/selected-plate",
@@ -9066,6 +9202,7 @@ def test_mcp_dev_client_invoke_action_renders_receipt_and_polling():
     parser = dev_client._build_parser()
     args = parser.parse_args(("invoke-action", "plate_manager", "compile_plate"))
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -9073,6 +9210,11 @@ def test_mcp_dev_client_invoke_action_renders_receipt_and_polling():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "test",
+                        "identity": {
+                            "widget_id": "plate_manager",
+                            "action_id": "compile_plate",
+                        },
                         "status": "rejected",
                         "receipt": {
                             "accepted": False,
@@ -10999,6 +11141,18 @@ def test_mcp_dev_client_workflow_poll_terminal_state_policy():
     )
 
 
+def _state_surface_dev_wire(dev_client):
+    """Declare the complete wire envelope; each poll test supplies its body."""
+    return dev_client.to_jsonable(UiStateSurfaceDocument(
+        schema_version=SCHEMA_VERSION,
+        summary=UiStateSurfaceSummary(
+            SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+            "Plate Manager", True, widget_id="plate_manager",
+        ),
+        payload_schema="openhcs.ui.plate_manager_state.v1", payload={},
+    ))
+
+
 def test_mcp_dev_client_workflow_poll_filters_target_scope_ids():
     import openhcs.mcp.dev_client as dev_client
 
@@ -11007,6 +11161,7 @@ def test_mcp_dev_client_workflow_poll_filters_target_scope_ids():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "idle",
                     "rows": [
@@ -11052,6 +11207,7 @@ def test_mcp_dev_client_workflow_poll_waits_for_manager_finalization():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "running",
                     "rows": [
@@ -11094,6 +11250,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "idle",
                     "rows": [
@@ -11113,6 +11270,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "idle",
                     "rows": [
@@ -11178,6 +11336,7 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
                     "payload": {
                         "manager_execution_state": ("idle" if compiled else "running"),
@@ -11249,7 +11408,7 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is False
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11304,6 +11463,7 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "baseline",
                     "payload": {"object_state_token": 1, "rows": []},
                 },
@@ -11335,7 +11495,7 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
     if receipt_status is not None:
         expected_call_names.append("openhcs_ui_wait_for_operation_receipt")
     assert [call.name for call in calls] == expected_call_names
-    assert response.results[-1].payloads[0] == {
+    assert dev_client.to_jsonable(response.results[-1].payloads[0]) == {
         "poll_status": expected_poll_status,
         "poll_requested": True,
         "poll_completed": False,
@@ -11381,6 +11541,7 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "baseline",
                     "payload": {"object_state_token": 1, "rows": []},
                 },
@@ -11404,10 +11565,9 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
         "openhcs_ui_selected_plate_workflow",
         "openhcs_ui_wait_for_operation_receipt",
     ]
-    assert response.results[-1].payloads[0]["poll_status"] == "failed"
-    assert response.results[-1].payloads[0]["skip_reason"] == (
-        "operation_receipt_failed"
-    )
+    assert response.results[-1].payloads[0].status is dev_client.WorkflowPollSummaryStatus.FAILED
+    from openhcs.mcp.dev_client_core import WorkflowPollSkipReason
+    assert response.results[-1].payloads[0].skip_reason is WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
 
 
 def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
@@ -11425,6 +11585,7 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "current_revision_token": "prior-completed-run",
                 "payload": {
                     "manager_execution_state": "idle",
@@ -11480,8 +11641,8 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
     ]
     summary = response.results[-1]
     assert summary.mcp_error is True
-    assert summary.payloads[0]["poll_status"] == "timeout"
-    assert summary.payloads[0]["poll_count"] == 1
+    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.TIMEOUT
+    assert summary.payloads[0].poll_count == 1
 
 
 def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state(
@@ -11499,6 +11660,7 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "current_revision_token": "already-initialized",
                 "payload": {
                     "manager_execution_state": "idle",
@@ -11558,8 +11720,8 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
     ]
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0]["poll_status"] == "completed"
-    assert summary.payloads[0]["poll_count"] == 1
+    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.COMPLETED
+    assert summary.payloads[0].poll_count == 1
 
 
 def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_timeout(
@@ -11610,6 +11772,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
                     "payload": {
                         "manager_execution_state": ("idle" if compiled else "running"),
@@ -11658,7 +11821,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
     )
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11717,6 +11880,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "terminal",
                     "payload": {
                         "manager_execution_state": "idle",
@@ -11763,7 +11927,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
     )
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11808,6 +11972,7 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
                 mcp_error=False,
                 payloads=(
                     {
+                        **_state_surface_dev_wire(dev_client),
                         "current_revision_token": "baseline",
                         "payload": {"object_state_token": 1, "rows": []},
                     },
@@ -11855,7 +12020,7 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
     assert response.results[-2].has_errors()
     summary = response.results[-1]
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "timeout",
         "poll_requested": True,
         "poll_completed": False,
@@ -11898,6 +12063,7 @@ def test_mcp_dev_client_selected_workflow_poll_summary_reports_failure(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
                     "payload": {
                         "manager_execution_state": ("idle" if failed else "running"),
@@ -11943,7 +12109,7 @@ def test_mcp_dev_client_selected_workflow_poll_summary_reports_failure(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "failed",
         "poll_requested": True,
         "poll_completed": False,
@@ -11985,6 +12151,7 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
                 mcp_error=False,
                 payloads=(
                     {
+                        **_state_surface_dev_wire(dev_client),
                         "current_revision_token": "rev-1",
                         "payload": {
                             "object_state_token": 1,
@@ -12035,7 +12202,7 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "failed",
         "poll_requested": True,
         "poll_completed": False,
@@ -12060,62 +12227,53 @@ def test_mcp_dev_client_selected_workflow_poll_renders_compact_summary():
             "--poll-state",
         )
     )
-    response = {
-        "errors": [],
-        "results": [
-            {
-                "tool": "openhcs_ui_selected_plate_workflow",
-                "mcp_error": False,
-                "payloads": [
-                    {
-                        "action_result": {
-                            "status": "accepted",
-                            "target_scope_ids": ["scope-a"],
-                        }
-                    }
-                ],
-            },
-            {
-                "tool": "openhcs_ui_get_state_surface",
-                "mcp_error": False,
-                "payloads": [
-                    {
-                        "payload": {
-                            "rows": [
-                                {
-                                    "name": "plate-a",
-                                    "orchestrator_state": "completed",
-                                    "status_prefix": "Complete",
-                                    "terminal_status": "complete",
-                                    "selected": True,
-                                },
-                                {
-                                    "name": "plate-a_openhcs",
-                                    "orchestrator_state": "created",
-                                    "status_prefix": "",
-                                    "terminal_status": None,
-                                    "selected": False,
-                                },
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "tool": "mcp_dev_selected_workflow_poll",
-                "mcp_error": False,
-                "payloads": [
-                    {
-                        "workflow": "run_plate",
-                        "action_status": "accepted",
-                        "poll_status": "completed",
-                        "poll_count": 4,
-                        "target_scope_ids": ["scope-a"],
-                    }
-                ],
-            },
-        ],
-    }
+    from dataclasses import replace
+    from openhcs.agent.dto.ui_bridge import (
+        UiPlateManagerRowState, UiPlateManagerState, UiStateSurfaceDocument,
+        UiStateSurfaceIdentity, UiStateSurfaceSummary,
+    )
+
+    row = UiPlateManagerRowState(
+        plate_scope_id="scope-a", name="plate-a", plate_root="/plate-a",
+        cppipe_path=None, selected=True, initialized=True, compiled=True,
+        init_pending=False, compile_pending=False, execution_active=False,
+        status_prefix="Complete", orchestrator_state="completed",
+        execution_id="execution-a", terminal_status="complete",
+        runtime_state=None, runtime_percent=None, queue_position=None,
+    )
+    output_row = replace(
+        row, plate_scope_id="scope-output", name="plate-a_openhcs", selected=False,
+        status_prefix="", orchestrator_state="created", terminal_status=None,
+    )
+    surface_summary = UiStateSurfaceSummary(
+        "test", UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+        "Plate Manager", True, widget_id="plate_manager",
+    )
+    native_state = UiPlateManagerState(
+        schema_version="test", summary=surface_summary, object_state_token=2,
+        manager_execution_state="idle", rows=(row, output_row),
+    )
+    state = UiStateSurfaceDocument(
+        schema_version="test",
+        summary=surface_summary,
+        payload_schema="openhcs.ui.plate_manager_state.v1",
+        payload=dev_client.to_jsonable(native_state),
+    )
+    response = dev_client.McpDevToolBatchResponse.from_results(
+        dev_client.McpDevServerSpec(sys.executable),
+        (
+            _accepted_workflow_dev_result(dev_client, workflow="run_plate"),
+            dev_client.McpDevToolResult(
+                tool="openhcs_ui_get_state_surface", mcp_error=False,
+                payloads=(dev_client.to_jsonable(state),),
+            ),
+            dev_client.workflow_poll_summary_result(
+                workflow="run_plate", status=dev_client.WorkflowPollSummaryStatus.COMPLETED,
+                poll_requested=True, poll_completed=True, poll_count=4,
+                target_scope_ids=("scope-a",), action_status="accepted",
+            ),
+        ),
+    )
 
     rendered = dev_client.McpDevCommandSpec.for_name(
         "selected-workflow"
@@ -12130,6 +12288,12 @@ def test_mcp_dev_client_selected_workflow_poll_renders_compact_summary():
     )
     assert '- plate-a_openhcs: state=created, status="", terminal=<none>' in rendered
 
+    # The production entrypoint now retains a batch. The pending workflow's
+    # distinct composite view must not be replaced by its primary tool view.
+    assert dev_client.McpDevCommandSpec.for_name("selected-workflow").render_result(
+        response, args
+    ) == rendered
+
 
 def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
     monkeypatch,
@@ -12139,6 +12303,24 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
 
     import openhcs.mcp.dev_client as dev_client
     import openhcs.mcp.dev_client_commands.ui as ui_commands
+    from openhcs.agent.dto.ui_bridge import (
+        UiPlateManagerState, UiStateSurfaceDocument,
+        UiStateSurfaceIdentity, UiStateSurfaceSummary,
+    )
+
+    surface_summary = UiStateSurfaceSummary(
+        "test", UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+        "Plate Manager", True, widget_id="plate_manager",
+    )
+    baseline = UiPlateManagerState(
+        schema_version="test", summary=surface_summary, object_state_token=1,
+        manager_execution_state="idle", rows=(), current_revision_token="rev-1",
+    )
+    baseline_document = UiStateSurfaceDocument(
+        schema_version="test", summary=surface_summary,
+        payload_schema="openhcs.ui.plate_manager_state.v1",
+        payload=dev_client.to_jsonable(baseline), current_revision_token="rev-1",
+    )
 
     calls: list[dev_client.McpDevToolCall] = []
 
@@ -12148,15 +12330,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
             return dev_client.McpDevToolResult(
                 tool=call.name,
                 mcp_error=False,
-                payloads=(
-                    {
-                        "current_revision_token": "rev-1",
-                        "payload": {
-                            "object_state_token": 1,
-                            "rows": [],
-                        },
-                    },
-                ),
+                payloads=(dev_client.to_jsonable(baseline_document),),
             )
         return _rejected_workflow_dev_result(
             dev_client,
@@ -12190,7 +12364,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "skipped",
         "poll_requested": True,
         "poll_completed": False,
@@ -12203,7 +12377,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
 
     rendered = dev_client.McpDevCommandSpec.for_name(
         "selected-workflow"
-    ).render_response(dev_client.to_jsonable(response), args)
+    ).render_result(response, args)
 
     assert "Workflow: compile_plate" in rendered
     assert "Skip reason: workflow_not_accepted" in rendered
@@ -12226,7 +12400,7 @@ def test_mcp_dev_client_workflow_poll_timeout_summary_is_error():
 
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "timeout",
         "poll_requested": True,
         "poll_completed": False,
@@ -12916,7 +13090,14 @@ def test_mcp_viewer_close_binding_requires_confirmation_and_projects_result():
     )
     payload = json.loads(_direct_tool_text(result))
 
-    assert payload == {"succeeded": True, "endpoint_terminated": True}
+    assert payload == {
+        "succeeded": True,
+        "endpoint_terminated": True,
+        "process_identity": None,
+        "process_exited": None,
+        "request_attempted": False,
+        "acknowledged": False,
+    }
     assert len(viewer_window_service.close_requests) == 1
     request = viewer_window_service.close_requests[0]
     assert request.connection.port == 5555
@@ -13853,10 +14034,9 @@ def test_mcp_viewer_rois_collapses_duplicate_member_metadata():
                                 data_type="shapes",
                                 path="/tmp/A01_w2_rois.roi.zip",
                                 components={"well": "A01", "channel": 2},
-                                summary={
-                                    "shape_payload_count": 3,
-                                    "shape_coordinate_count": 12,
-                                },
+                                summary=ViewerPayloadSummary(
+                                    shape_payload_count=3, shape_coordinate_count=12,
+                                ),
                                 shape_payloads=(
                                     {
                                         "type": "polygon",
@@ -13952,17 +14132,11 @@ def test_mcp_sample_viewer_image_auto_selects_single_image_layer():
                                 path=f"/tmp/image-{index}.tif",
                                 components={"well": "A01", "channel": 1},
                                 axis_indices=(index,),
-                                summary={
-                                    "shape": [96, 96],
-                                    "dtype": "uint16",
-                                    "min": 1,
-                                    "max": 4,
-                                    "nonzero_count": 10,
-                                },
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(
+                                    shape=(96, 96), dtype="uint16", min=1, max=4,
+                                    nonzero_count=10,
+                                ),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             )
                             for index in range(5)
                         ),
@@ -14036,11 +14210,8 @@ def test_mcp_sample_viewer_image_ambiguous_route_returns_no_records():
                                 path="/tmp/first.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
@@ -14056,11 +14227,8 @@ def test_mcp_sample_viewer_image_ambiguous_route_returns_no_records():
                                 path="/tmp/second.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
@@ -14123,11 +14291,8 @@ def test_mcp_sample_viewer_image_axis_filter_preserves_route_filter():
                                 path="/tmp/selected.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
@@ -14143,11 +14308,8 @@ def test_mcp_sample_viewer_image_axis_filter_preserves_route_filter():
                                 path="/tmp/other.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
@@ -14294,6 +14456,7 @@ def test_mcp_dev_client_sample_viewer_image_command_renders_compact_summary(tmp_
     args = parser.parse_args(("sample-viewer-image", "5555", "image-layer"))
     streamed_path = tmp_path / "sampled_virtual_image.tif"
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -14301,6 +14464,7 @@ def test_mcp_dev_client_sample_viewer_image_command_renders_compact_summary(tmp_
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "observed": True,
                         "route_key": "image-layer",
                         "axis_indices": [0, 1],
@@ -14315,6 +14479,9 @@ def test_mcp_dev_client_sample_viewer_image_command_renders_compact_summary(tmp_
                         "sample_omitted_count": 0,
                         "records": [
                             {
+                                "layer_title": "image-layer",
+                                "data_type": "image",
+                                "components": {},
                                 "payload_route_key": "image-layer:0",
                                 "layer_route_key": "image-layer",
                                 "axis_indices": [0, 1],
@@ -14368,6 +14535,7 @@ def test_mcp_dev_client_sample_viewer_image_renders_omitted_reason():
     parser = dev_client._build_parser()
     args = parser.parse_args(("sample-viewer-image", "5555", "image-layer"))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -14375,6 +14543,7 @@ def test_mcp_dev_client_sample_viewer_image_renders_omitted_reason():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "observed": True,
                         "route_key": "image-layer",
                         "axis_indices": {"channel": 1},
@@ -14387,6 +14556,9 @@ def test_mcp_dev_client_sample_viewer_image_renders_omitted_reason():
                         "sample_omitted_count": 1,
                         "records": [
                             {
+                                "layer_title": "image-layer",
+                                "data_type": "image",
+                                "components": {},
                                 "payload_route_key": "image-layer",
                                 "layer_route_key": "image-layer",
                                 "axis_indices": [1],
@@ -14444,6 +14616,7 @@ def test_mcp_dev_client_sample_viewer_image_omission_suggests_element_budget():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -14451,6 +14624,7 @@ def test_mcp_dev_client_sample_viewer_image_omission_suggests_element_budget():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "observed": True,
                         "route_key": "image-layer",
                         "axis_indices": {"channel": 1},
@@ -14463,6 +14637,9 @@ def test_mcp_dev_client_sample_viewer_image_omission_suggests_element_budget():
                         "sample_omitted_count": 1,
                         "records": [
                             {
+                                "layer_title": "image-layer",
+                                "data_type": "image",
+                                "components": {},
                                 "payload_route_key": "image-layer",
                                 "layer_route_key": "image-layer",
                                 "axis_indices": [1],
@@ -14985,71 +15162,6 @@ def test_mcp_dev_client_transport_failure_projects_leaf_causes():
     assert error["server_stderr_tail"] == "captured server log"
 
 
-def test_mcp_stdio_bootstrap_failure_keeps_transport_open(tmp_path):
-    if importlib.util.find_spec("mcp") is None:
-        return
-
-    from mcp import ClientSession, StdioServerParameters
-    from mcp.client.stdio import stdio_client
-
-    (tmp_path / "sitecustomize.py").write_text(
-        "\n".join(
-            (
-                "import openhcs.mcp.server as openhcs_mcp_server",
-                "",
-                "def fail_build_server(**kwargs):",
-                "    del kwargs",
-                "    raise RuntimeError('stdio construction failed')",
-                "",
-                "openhcs_mcp_server.build_server = fail_build_server",
-            )
-        )
-    )
-    pythonpath_parts = [str(tmp_path)]
-    current_pythonpath = os.environ.get("PYTHONPATH")
-    if current_pythonpath is not None:
-        pythonpath_parts.append(current_pythonpath)
-    # Subprocess tracing races the MCP SDK teardown after successful responses.
-    child_environment = {
-        name: value
-        for name, value in os.environ.items()
-        if not name.startswith("COV_CORE_")
-    }
-
-    async def call_stdio_server():
-        parameters = StdioServerParameters(
-            command=sys.executable,
-            args=("-m", "openhcs.mcp"),
-            env={
-                **child_environment,
-                "PYTHONPATH": os.pathsep.join(pythonpath_parts),
-            },
-        )
-        async with stdio_client(parameters) as (read_stream, write_stream):
-            async with ClientSession(read_stream, write_stream) as session:
-                await asyncio.wait_for(session.initialize(), timeout=5)
-                health = await asyncio.wait_for(
-                    session.call_tool("openhcs_health_check", {}),
-                    timeout=5,
-                )
-                failure = await asyncio.wait_for(
-                    session.call_tool("openhcs_bootstrap_failure", {}),
-                    timeout=5,
-                )
-                return health, failure
-
-    health, failure = asyncio.run(call_stdio_server())
-    health_payload = json.loads(_direct_tool_text(health))
-    failure_payload = json.loads(_direct_tool_text(failure))
-
-    assert health_payload["schema_version"] == "openhcs.mcp.bootstrap.v1"
-    assert health_payload["ok"] is False
-    assert health_payload["status"] == "unavailable"
-    assert health_payload["phase"] == "build_server"
-    assert health_payload["message"] == "stdio construction failed"
-    assert failure_payload == health_payload
-
-
 def test_mcp_bootstrap_failure_server_reports_startup_exception():
     if importlib.util.find_spec("mcp") is None:
         return
@@ -15109,6 +15221,9 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
     transports: list[str] = []
 
     class FailingRunServer:
+        def __init__(self, *args, **kwargs):
+            assert kwargs["main_thread_dispatcher"] is recording_transport.execution.dispatcher
+
         def run(self, *, transport: str) -> None:
             transports.append(transport)
             raise RuntimeError("run failed")
@@ -15139,7 +15254,8 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
         build_failure_server,
     )
     recording_transport = SimpleNamespace(
-        run=lambda server: server.run(transport="stdio")
+        run=lambda server: server.run(transport="stdio"),
+        execution=SimpleNamespace(dispatcher=object()),
     )
     monkeypatch.setattr(
         mcp_stdio.McpStdioTransport,

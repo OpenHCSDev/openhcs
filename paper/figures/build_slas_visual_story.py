@@ -6,6 +6,7 @@ from the published gallery authority; no UI state or scientific image is invente
 
 from __future__ import annotations
 
+import csv
 import json
 from io import BytesIO
 from pathlib import Path
@@ -18,7 +19,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Rectangle
 from PIL import Image
 
-from build_slas_agent import ROOT, OUTPUT, digest
+from build_slas_agent import ROOT, OUTPUT, digest, normalize_generated_svg
 
 GALLERY = ROOT / "website/assets/gallery"
 INK = "#203044"
@@ -218,6 +219,8 @@ class FigureSheet:
         for extension in ("png", "pdf", "svg"):
             path = OUTPUT / f"{self.stem}.{extension}"
             self.figure.savefig(path, dpi=300)
+            if extension == "svg":
+                normalize_generated_svg(path)
             outputs.append(path)
         plt.close(self.figure)
         receipt = {
@@ -231,6 +234,478 @@ class FigureSheet:
             json.dumps(receipt, indent=2) + "\n"
         )
         print(f"Rendered {self.stem}")
+
+
+def h001_scored():
+    """Native witnesses from the exact fresh author evaluated in Figure 5B."""
+    sheet = FigureSheet("h001_scored_native", "", 6.4)
+    sheet.source(
+        ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst"
+    )
+    evaluation_path = (
+        ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
+    )
+    sheet.source(evaluation_path)
+    evaluation = json.loads(evaluation_path.read_text())
+    first, final = evaluation["attempts"]
+    sheet.text(
+        3, 97, "H001: native views from the scored task-only run",
+        size=18, weight="bold", va="top",
+    )
+    for y, title, prefix, crop, bottom, height in (
+        (89, "A  Matched overview", "overview", (553, 40, 995, 478), 47, 36),
+        (41, "B  Elongated-body false split repaired", "detail", (297, 28, 1037, 492), 9, 26),
+    ):
+        sheet.text(3, y, title, size=15, weight="bold")
+        for x, stage, label in (
+            (3, "raw", "Raw"), (35, "first", "First, a01"), (67, "final", "Final, a04")
+        ):
+            sheet.text(x, y - 5, label, size=14)
+            sheet.source_image(
+                OUTPUT / "h001_scored_sources" / f"{prefix}_{stage}.png",
+                (x, bottom, 29, height), crop=crop,
+            )
+    sheet.text(
+        3, 3,
+        f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
+        f"{final['score']['false_negative_objects']} reference misses remain.",
+        size=14,
+    )
+    sheet.save()
+
+
+def task_only_story():
+    """Main-text native evidence and scores from the same frozen author runs."""
+    from build_slas_task_only import (
+        BBBC039_SOURCE, H001_SOURCE, load_evaluations, plot_coverage, plot_pair,
+    )
+
+    h001, bbbc039 = load_evaluations(ROOT)
+    with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("task_only_visual", "", 8.2)
+        for path in (H001_SOURCE, BBBC039_SOURCE,
+                     Path("paper/figures/build_slas_task_only.py"),
+                     Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
+            sheet.source(ROOT / path)
+        sheet.text(3, 98, "Autonomous segmentation: repair and field coverage",
+                   size=18, weight="bold", va="top")
+        sheet.text(3, 93, "A  H001: an elongated-body split repaired",
+                   size=15, weight="bold")
+        for x, stage, label in ((3, "raw", "Raw"), (35, "first", "First"),
+                                (67, "final", "Final")):
+            sheet.text(x, 89, label, size=14)
+            sheet.source_image(
+                OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
+                (x, 64, 30, 24), crop=(297, 28, 1037, 492),
+            )
+        sheet.text(50, 64, "Own image review; no reference feedback",
+                   size=14, ha="center", color=MUTED)
+        axes = (sheet.figure.add_axes((.09, .37, .35, .23)),
+                sheet.figure.add_axes((.60, .37, .35, .23)),
+                sheet.figure.add_axes((.09, .12, .86, .15)))
+        first, final = h001["attempts"]
+        plot_pair(axes[0], first["derived_f1"], final["derived_f1"],
+                  "B  H001: same whole image", "Notebook-derived reference", font_size=16)
+        paired = bbbc039["first_vs_final_same_three"]
+        plot_pair(axes[1], paired["first"]["micro_f1"], paired["final"]["micro_f1"],
+                  "C  BBBC039: same three fields", "Independent annotations", font_size=16)
+        plot_coverage(axes[2], bbbc039, font_size=14)
+        axes[2].set_title("D  BBBC039: final coverage, all 200 fields")
+        for axis in axes:
+            axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+            axis.set_axisbelow(True)
+        sheet.text(50, 2,
+                   "Independent full-200 repeat: caption and Supplementary Figure 20",
+                   size=12, ha="center", color=MUTED)
+        sheet.save()
+
+
+def h002_measurement_first():
+    """Retained native views and postfreeze centre agreement, without scoring."""
+    source_root = OUTPUT / "h002_firstmethod_sources"
+    source_path = source_root / "source-receipt.json"
+    evaluation_path = ROOT / "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json"
+    sources = json.loads(source_path.read_text())
+    evaluation = json.loads(evaluation_path.read_text())
+    if sources["author_run"] != evaluation["author_run"]:
+        raise ValueError("Native captures and evaluation name different authors")
+    with plt.rc_context({"font.size": 13, "axes.spines.top": False,
+                         "axes.spines.right": False}):
+        sheet = FigureSheet("h002_measurement_first", "", 7.3)
+        sheet.source(source_path)
+        sheet.source(evaluation_path)
+        sheet.source(ROOT / "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst")
+        sheet.text(3, 98, "Measurement-first autonomous 3D localisation",
+                   size=17, weight="bold", va="top")
+        for name, bounds, heading_position in (
+            ("xy", (3, 42, 47, 49), (3, 93)),
+            ("xz", (55, 73, 42, 18), (55, 93)),
+            ("yz", (55, 45, 42, 18), (55, 65)),
+        ):
+            capture = sources["captures"][name]
+            path = source_root / capture["asset"]
+            crop = tuple(capture["crop_xyxy"])
+            if digest(path) != capture["sha256"]:
+                raise ValueError(f"Frozen native capture changed: {name}")
+            sheet.text(*heading_position, capture["panel_heading"], size=13, weight="bold")
+            sheet.source_image(path, bounds, crop=crop)
+        sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
+        sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
+        sheet.text(3, 36, sources["presentation_note"],
+                   size=11, color=MUTED)
+        axis = sheet.figure.add_axes((.12, .14, .39, .18))
+        thresholds = (10, evaluation["primary_threshold_voxels"])
+        matches = [evaluation["scores"][str(value)]["true_positives"] for value in thresholds]
+        total = evaluation["scores"][str(thresholds[-1])]["reference_points"]
+        axis.bar((0, 1), matches, color=(BLUE, TEAL), width=.5)
+        for index, matched in enumerate(matches):
+            axis.text(index, matched + .3, f"{matched}/{total}", ha="center", size=13)
+        axis.set(xticks=(0, 1), xticklabels=(f"{thresholds[0]} voxels", f"{thresholds[1]} voxels\n(primary)"),
+                 ylim=(0, total+2), yticks=(0, 5, 10, 15), ylabel="Matched centres")
+        axis.set_title("D  Postfreeze one-to-one matching", size=13)
+        axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+        axis.set_axisbelow(True)
+        primary = evaluation["scores"][str(thresholds[-1])]
+        sheet.text(58, 31, f"{primary['predicted_points']} candidate centres", size=15, weight="bold")
+        sheet.text(58, 26, f"Mean matched error: {primary['mean_localisation_error_voxels']:.2f} voxels", size=12)
+        sheet.text(58, 21, f"{primary['false_positives']} predictions unmatched to annotations", size=12)
+        sheet.text(58, 15, "Annotation completeness is unestablished;\nunmatched does not mean biologically false", size=11, color=MUTED)
+        sheet.text(50, 3, "One scientific method • technical rerun only • localisation, not boundary accuracy",
+                   size=11, ha="center", color=MUTED)
+        sheet.save()
+
+
+def h002_fresh22_split_repair():
+    """Frozen same-coordinate categorical labels, not a new segmentation."""
+    sources = OUTPUT / "h002_fresh22_sources"
+    receipt_path = sources / "source-receipt.json"
+    receipt = json.loads(receipt_path.read_text())
+    sheet = FigureSheet("h002_fresh22_split_repair", "", 6.4)
+    sheet.source(receipt_path)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")
+    sheet.text(3, 97, "Autonomous repair of a continuous-body split", size=17,
+               weight="bold", va="top")
+    for name, x, y, heading in (
+        ("raw", 3, 53, "A  Unchanged raw image"),
+        ("first-labels", 52, 53, "B  First instance labels"),
+        ("final-labels", 3, 13, "C  Repaired instance labels"),
+        ("final-combined", 52, 13, "D  Repaired labels + raw"),
+    ):
+        path = sources / f"{name}.png"
+        if digest(path) != receipt["captures"][name]["sha256"]:
+            raise ValueError(f"Frozen H002 capture changed: {name}")
+        sheet.text(x, y + 35, heading, size=13, weight="bold")
+        sheet.source_image(path, (x, y, 45, 32), crop=(610, 28, 1250, 448))
+    sheet.text(3, 7, "Same XY viewport, Z index 36; categorical colours are not shared IDs.",
+               size=12, color=MUTED)
+    sheet.text(3, 2, "Local partition repair, not proof of complete volume segmentation.",
+               size=12, color=MUTED)
+    sheet.save()
+
+
+def retina_matched_repair():
+    """Same raw presentation before and after a retained retinal repair."""
+    source_root = OUTPUT / "retina_fresh16_sources"
+    sheet = FigureSheet("retina_fresh16_repair", "", 5.4)
+    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
+    sheet.text(3, 97, "Retinal body outlines: local repair and remaining ambiguity",
+               size=16, weight="bold", va="top")
+    for row, (region, title) in enumerate((
+        ("nw", "Bright neighbouring bodies remain separate"),
+        ("edge", "Border outlines smooth; possible split remains"),
+    )):
+        y = 53 - row * 38
+        sheet.text(3, y + 35, title, size=13, weight="bold")
+        for column, (view, label) in enumerate((
+            ("raw", "Raw RBPMS"),
+            ("first", "First candidate + raw"),
+            ("final", "Repaired candidate + raw"),
+        )):
+            x = 3 + column * 32
+            letter = chr(ord("A") + 3 * row + column)
+            sheet.text(x, y + 28, f"{letter}  {label}", size=11, weight="bold")
+            sheet.source_image(source_root / f"{region}-{view}.png",
+                               (x, y, 30, 26), crop=(297, 28, 1250, 470))
+    sheet.text(50, 5, "Matched pixels and display • self-directed retained-run repair",
+               size=12, ha="center", color=MUTED)
+    sheet.text(50, 1, "Local geometry improvement; no manual-count accuracy estimate",
+               size=11, ha="center", color=MUTED)
+    sheet.save()
+
+
+def translocation_repeat():
+    """Plot frozen native well summaries, without rerunning scientific analysis."""
+    source_path = ROOT / "paper/supplementary/task_only_analysis/bbbc013-fresh13-plot-source.json"
+    source = json.loads(source_path.read_text())
+    if source["author_run"] != "BBBC013_FRESH13_88":
+        raise ValueError("Expected the frozen fresh13 translocation author")
+    tables = source["tables"]
+    with plt.rc_context({"font.size": 12, "axes.titlesize": 13,
+                         "axes.spines.top": False, "axes.spines.right": False,
+                         "axes.linewidth": 1.5, "xtick.major.width": 1.5,
+                         "ytick.major.width": 1.5}):
+        sheet = FigureSheet("translocation_fresh13", "", 6.3)
+        sheet.source(source_path)
+        sheet.source(ROOT / "figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst")
+        sheet.text(3, 97, "Fresh-context analysis recovers translocation response",
+                   size=16, weight="bold", va="top")
+        for index, (block, unit, color) in enumerate(
+            (("Wortmannin", "nM", BLUE), ("LY294002", "uM", TEAL))
+        ):
+            rows = sorted(
+                (row for row in tables["dose_response"]["rows"]
+                 if row["assay_block"] == block and row["assay_role"] in {"empty", "dose"}),
+                key=lambda row: float(row["concentration"]),
+            )
+            if any(row["concentration_unit"] != unit or row["treatment"] != block
+                   or int(row["finite_wells"]) != 4 for row in rows):
+                raise ValueError("Dose plots require the declared treatment, units and four wells")
+            left = .09 + .49 * index
+            dose_axis = sheet.figure.add_axes((left, .52, .36, .33))
+            positions = list(range(len(rows)))
+            dose_axis.errorbar(
+                positions, [float(row["mean_well_ratio"]) for row in rows],
+                yerr=[float(row["replicate_sd"]) for row in rows],
+                fmt="o-", color=color, capsize=4, linewidth=2.2, markersize=6,
+                elinewidth=2.0, capthick=2.0, markeredgewidth=1.2,
+            )
+            dose_axis.set(
+                title=f"{'AB'[index]}  {block}", ylim=(0, 9),
+                ylabel="Nuclear / cytoplasmic GFP",
+                xlabel=f"Concentration ({'µM' if unit == 'uM' else unit})",
+                xticks=positions,
+                xticklabels=[f"{float(row['concentration']):g}" for row in rows],
+            )
+            dose_axis.tick_params(axis="x", labelrotation=45, labelsize=12)
+            statistics, = (row for row in tables["assay_statistics"]["rows"]
+                           if row["assay_block"] == block)
+            control_axis = sheet.figure.add_axes((left, .13, .36, .21))
+            control_axis.bar(
+                (0, 1), (float(statistics["negative_mean"]), float(statistics["positive_mean"])),
+                yerr=(float(statistics["negative_replicate_sd"]),
+                      float(statistics["positive_replicate_sd"])),
+                color=(MUTED, color), width=.5, capsize=4,
+                edgecolor=INK, linewidth=1.5,
+                error_kw={"elinewidth": 2.0, "capthick": 2.0},
+            )
+            control_axis.set(
+                title=f"{'CD'[index]}  Controls: Z′ = {float(statistics['z_prime']):.3f}",
+                xticks=(0, 1), xticklabels=("Vehicle", "Wortmannin\n150 nM"),
+                ylabel="GFP ratio", ylim=(0, 9),
+            )
+            for axis in (dose_axis, control_axis):
+                axis.set_yticks((0, 2, 4, 6, 8))
+                axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+                axis.set_axisbelow(True)
+        sheet.text(50, 3, "Means ± between-well SD; four wells per group. Dose positions equally spaced.",
+                   size=12, ha="center", color=MUTED)
+        sheet.save()
+
+
+def bbbc039_repeat():
+    """Compare independent frozen authors using their existing score receipts."""
+    from build_slas_task_only import BBBC039_SOURCE
+
+    earlier_path = ROOT / BBBC039_SOURCE
+    repeat_path = ROOT / "figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json"
+    earlier = json.loads(earlier_path.read_text())
+    repeat = json.loads(repeat_path.read_text())
+    if digest(earlier_path) != repeat["comparison612"]["report_sha256"]:
+        raise ValueError("Repeat comparison must use the exact earlier receipt")
+    key = lambda row: (row["source_set_id"], row["channel"], row["partition"])
+    previous = {key(row): row for row in earlier["instance_metrics"]}
+    current = {key(row): row for row in repeat["instance_metrics"]}
+    if len(previous) != 200 or previous.keys() != current.keys():
+        raise ValueError("Independent repeat requires the same 200 field identities")
+    if repeat["match_iou"] != earlier["match_iou"] or repeat["match_iou"] != .5:
+        raise ValueError("Independent repeat requires the same IoU matching rule")
+    for identity, row in current.items():
+        if row["reference_count"] != previous[identity]["reference_count"]:
+            raise ValueError("Reference population changed between authors")
+
+    with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("bbbc039_independent_repeat", "", 4.9)
+        sheet.source(earlier_path)
+        sheet.source(repeat_path)
+        sheet.text(3, 98, "Independent authors: agreement across the same 200 fields",
+                   size=18, weight="bold", va="top")
+        scatter = sheet.figure.add_axes((.09, .27, .35, .55))
+        pooled = sheet.figure.add_axes((.61, .27, .35, .55))
+        for empty, color, label in (
+            (False, BLUE, "Annotated fields"),
+            (True, ORANGE, "Annotation-empty fields (n=3)"),
+        ):
+            rows = [row for row in current.values()
+                    if (row["reference_count"] == 0) == empty]
+            scatter.scatter([100 * previous[key(row)]["f1"] for row in rows],
+                            [100 * row["f1"] for row in rows],
+                            s=24, alpha=.75, color=color, label=label, zorder=3)
+        scatter.plot((0, 100), (0, 100), "--", color=MUTED, linewidth=1)
+        scatter.set(title="A  Paired field scores", xlabel="Earlier author F1 (%)",
+                    ylabel="Independent repeat F1 (%)", xlim=(-3, 103), ylim=(-3, 103))
+        scatter.set_aspect("equal", adjustable="box")
+        for offset, record, color, label in (
+            (-.18, earlier, BLUE, "Earlier author"),
+            (.18, repeat, TEAL, "Independent repeat"),
+        ):
+            values = [100 * record["summary"][name]
+                      for name in ("precision", "recall", "micro_f1")]
+            bars = pooled.bar([index + offset for index in range(3)], values,
+                              width=.34, color=color, label=label)
+            pooled.bar_label(bars, labels=[f"{value:.2f}" for value in values],
+                             padding=3, fontsize=12, rotation=90)
+        pooled.set(title="B  Pooled object agreement", ylabel="Agreement (%)",
+                   xticks=(0, 1, 2), xticklabels=("Precision", "Recall", "F1"),
+                   ylim=(0, 112), yticks=(0, 20, 40, 60, 80, 100))
+        pooled.legend(frameon=False, fontsize=11, loc="upper center",
+                      bbox_to_anchor=(.5, -.24), ncol=2)
+        for axis in (scatter, pooled):
+            axis.grid(color="#d9e0e5", linewidth=.6)
+            axis.set_axisbelow(True)
+        counts = repeat["distribution"]
+        sheet.text(50, 4,
+                   f"{counts['improved_vs612']} fields improved; "
+                   f"{counts['regressed_vs612']} lower; "
+                   f"{counts['unchanged_vs612']} unchanged",
+                   size=14, ha="center", color=MUTED)
+        sheet.save()
+
+
+def h004_junction():
+    """Retained neurite support repair, separate from crossing ownership."""
+    sheet = FigureSheet("h004_junction_native", "", 6.3)
+    sheet.source(ROOT / "figure-collection-20261004/H004-FRESH10-NATIVE-REVIEW.rst")
+    metrics_path = ROOT / "paper/supplementary/task_only_analysis/h004-fresh10/final-metrics.json"
+    sheet.source(metrics_path)
+    metrics = json.loads(metrics_path.read_text())
+    for attempt in ("BIO04", "BIO06"):
+        sheet.source(ROOT / f"paper/supplementary/task_only_analysis/h004-fresh10/{attempt}.py")
+    sheet.text(3, 97, "Neurite support: a recovered junction, remaining gaps", size=18, weight="bold", va="top")
+    for x, y, name, label in (
+        (3, 53, "raw", "A  Raw process channel"),
+        (52, 53, "before", "B  Before: ridge-derived support"),
+        (3, 12, "final", "C  Final: strong-raw support added"),
+        (52, 12, "combined", "D  Final raw + skeleton / soma"),
+    ):
+        sheet.text(x, y + 35, label, size=14, weight="bold")
+        sheet.source_image(
+            OUTPUT / "h004_junction_sources" / f"{name}.png",
+            (x, y, 45, 32), crop=(297, 28, 1250, 430),
+        )
+    sheet.text(
+        3, 5,
+        f"Selected bright-junction tile: {metrics['junction_raw20_count']} strong raw pixels; "
+        f"{metrics['junction_raw20_missing_final']} excluded in final support.",
+        size=14,
+    )
+    sheet.text(3, 1, "Local support recovery is not complete tracing or neuron ownership.", size=14)
+    sheet.save()
+
+
+def h004_faint_path():
+    """Independent local recovery with visible sensitivity costs."""
+    sheet = FigureSheet("h004_fresh20_faint_path", "", 6.3)
+    sources = OUTPUT / "h004_fresh20_sources"
+    index_path = sources / "QA-INDEX.json"
+    measurements_path = sources / "ATTEMPT-MEASUREMENTS.csv"
+    sheet.source(index_path)
+    sheet.source(measurements_path)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
+    captures = {item["capture_group"]: item for item in json.loads(index_path.read_text())}
+    with measurements_path.open(newline="") as stream:
+        measurements = {row["attempt"]: row for row in csv.DictReader(stream)}
+    first, final = measurements["first"], measurements["repair03"]
+    sheet.text(3, 97, "Faint-path recovery adds uncertain short branches", size=17, weight="bold", va="top")
+    for x, y, name, heading in (
+        (3, 53, "first-bottom-raw", "A  Raw process-rich channel"),
+        (52, 53, "first-bottom-result", "B  First result"),
+        (3, 12, "repair03-bottom-result", "C  Final result"),
+        (52, 12, "repair03-bottom-combined", "D  Final raw + result"),
+    ):
+        path = sources / f"{name}.png"
+        if digest(path) != captures[name]["sha256"]:
+            raise ValueError(f"Retained capture hash mismatch: {name}")
+        sheet.text(x, y + 35, heading, size=13, weight="bold")
+        sheet.source_image(path, (x, y, 45, 32), crop=(297, 28, 1250, 410))
+    sheet.text(
+        3, 5,
+        f"Whole-field graph length: {float(first['total_outgrowth']):,.0f} → "
+        f"{float(final['total_outgrowth']):,.0f} px; algorithm branches: "
+        f"{first['total_branches']} → {final['total_branches']}.",
+        size=13,
+    )
+    sheet.text(3, 1, "Eight soma candidates retained; neuron-specific topology remains uncertain.", size=13)
+    sheet.save()
+
+
+def assay_review_sheets():
+    """Keep related native witnesses on one assay sheet, with original receipts."""
+    groups = (
+        ("h001_assay_review", "Bright-object separation", ("h001_scored_native",)),
+        ("h002_assay_review", "Volumetric localisation and body separation", ("h002_fresh22_split_repair", "h002_fresh10_native")),
+        ("retina_assay_review", "Retinal soma localisation", ("retina_fresh16_repair", "retinal_development_repair")),
+        ("h003_assay_review", "Paired nuclear and cell-body analysis", ("h003_fresh656_native", "h003_fresh19_matched")),
+        ("h004_assay_review", "Neurite main-shaft recovery", ("h004_main_shafts", "h004_junction_native")),
+    )
+    for stem, title, panels in groups:
+        sheet = FigureSheet(stem, title, 5.2 * len(panels))
+        height = 88 / len(panels)
+        for index, panel in enumerate(panels):
+            sheet.asset(OUTPUT / f"{panel}.png", (2, 5 + (len(panels) - index - 1) * height, 96, height - 2))
+        sheet.save()
+
+
+def h004_main_shafts():
+    """Show the retained initial shaft result, not a fine-branch sensitivity trial."""
+    sheet = FigureSheet("h004_main_shafts", "Main-shaft recovery", 4.2)
+    sources = OUTPUT / "h004_fresh20_sources"
+    index_path = sources / "QA-INDEX.json"
+    sheet.source(index_path)
+    captures = {item["capture_group"]: item for item in json.loads(index_path.read_text())}
+    for x, name, title in ((3, "first-bottom-raw", "A  Raw process channel"), (52, "first-bottom-result", "B  Main-shaft result")):
+        path = sources / f"{name}.png"
+        if digest(path) != captures[name]["sha256"]:
+            raise ValueError(f"Retained capture hash mismatch: {name}")
+        sheet.text(x, 87, title, size=13, weight="bold")
+        sheet.source_image(path, (x, 12, 45, 69), crop=(297, 28, 1250, 410))
+    sheet.save()
+
+
+def personal_stitched_development():
+    """Retained development witnesses, not a fresh autonomous score."""
+    sheet = FigureSheet("p001_stitched_dev13_native", "", 6.2)
+    sheet.source(ROOT / "figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst")
+    source_root = OUTPUT / "p001_stitched_dev13_sources"
+    record_path = source_root / "capture-records.json"
+    sheet.source(record_path)
+    records = {item["phase"]: item["record"] for item in json.loads(record_path.read_text())}
+    sheet.text(3, 97, "Nine-field neurite mosaic: retained-context development", size=16, weight="bold", va="top")
+    for row, (region, suffix, heading) in enumerate((
+        ("seam", "96", "Sampled tile overlap"),
+        ("bottom", "97", "Lower-right field core"),
+    )):
+        y = 53 - row * 39
+        sheet.text(3, y + 35, heading, size=13, weight="bold")
+        for column, (view, label) in enumerate((
+            ("raw", "Raw FITC"),
+            ("result", "Bodies + paths"),
+            ("combined", "Raw + result"),
+        )):
+            phase = f"{region}-{view}{suffix}"
+            path = source_root / f"{phase}.png"
+            record = records[phase]
+            if not record["captured"] or digest(path) != record["resource"]["sha256"]:
+                raise ValueError(f"Native screenshot hash mismatch: {phase}")
+            x = 3 + column * 32
+            letter = chr(ord("A") + row * 3 + column)
+            sheet.text(x, y + 29, f"{letter}  {label}", size=12, weight="bold")
+            sheet.source_image(path, (x, y, 30, 25), crop=(297, 28, 1250, 492))
+    sheet.text(3, 7, "Shared channel-stack fit; acquisition-derived placement.", size=12)
+    sheet.text(3, 4, "Faint paths and crowded ownership remain incomplete.", size=12)
+    sheet.text(3, 1, "Attempt08 development outputs—not final09 validation or a fresh autonomous pass.", size=12)
+    sheet.save()
 
 
 def architecture():
@@ -249,7 +724,7 @@ def architecture():
 
     logos = ROOT / "website/assets/logos"
     sheet.source(logos / "README.md")
-    sheet.panel("A", "Choose how to work", 3, 89)
+    sheet.panel("A", "Choose how to work: UI editors and MCP bridge", 3, 89)
     # Original desktop pictogram; upstream product marks remain unmodified.
     sheet.axis.add_patch(
         Rectangle((8, 77), 14, 8, edgecolor=PURPLE, facecolor=PALE, linewidth=1.5)
@@ -319,25 +794,25 @@ def architecture():
     sheet.text(2.1, 45, "Images", size=11, color=BLUE, rotation=90)
     sheet.text(97, 43, "Functions", size=11, color=ORANGE, rotation=90)
 
-    sheet.panel("C", "Compile, execute and inspect", 3, 19)
-    sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=TEAL)
+    sheet.panel("C", "Separate execution and viewer processes", 3, 19)
+    sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=BLUE)
     sheet.text(
         35,
         36.5,
-        "Workflow to compile",
+        "Submit workflow",
         size=11,
-        color=TEAL,
+        color=BLUE,
         ha="center",
         va="center",
         bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
     )
-    sheet.text(11, 9, "Compile", size=12, weight="bold", ha="center", color=BLUE)
-    sheet.text(11, 5.5, "validate + plan", size=11, ha="center")
-    sheet.arrow((20, 9), (26, 9))
+    sheet.text(11, 9, "ZMQ server", size=12, weight="bold", ha="center", color=BLUE)
+    sheet.text(11, 5.5, "Catalog · compile · schedule", size=9.5, ha="center")
+    sheet.arrow((20, 9), (26, 9), both=True, color=BLUE)
     sheet.chip(28, 5, "CPU")
     sheet.chip(45, 5, "GPU")
-    sheet.text(42.5, 15.5, "Support depends on the function", size=11, ha="center")
-    sheet.text(42.5, 2.3, "Workers reused within each run", size=11, ha="center")
+    sheet.text(42.5, 15.5, "Worker processes", size=11, ha="center", weight="bold")
+    sheet.text(42.5, 2.3, "Prepared tasks ↔ progress", size=10.5, ha="center", color=BLUE)
     sheet.arrow((59, 9), (65, 9), color=TEAL)
     sheet.stack(67, 6, 6, 5)
     sheet.axis.add_patch(Rectangle((77, 6), 7, 6, edgecolor=TEAL, facecolor="white"))
@@ -348,8 +823,9 @@ def architecture():
     sheet.asset(logos / "fiji.svg", (93, 6, 5, 6))
     sheet.text(81, 2.3, "Images · ROIs · tables", size=11, ha="center")
     sheet.text(
-        81, 13.3, "napari / Fiji + saved outputs", size=11, ha="center", color=TEAL
+        81, 13.3, "Separate napari / Fiji viewers", size=10.5, ha="center", color=TEAL
     )
+    sheet.text(11, 2.3, "Requests ↔ status", size=10.5, ha="center", color=BLUE)
     sheet.save()
 
 
@@ -385,35 +861,13 @@ def authoring():
         raise ValueError("Recorded final field and control do not agree")
 
     sheet.panel("A", "Main window: the complete workflow", 3, 90)
-    sheet.native_image("authoring_main_verified_capture", (3, 49, 60, 39))
-    sheet.panel("B", "Recorded MCP edits", 66, 90)
-    sheet.box(
-        67,
-        73,
-        29,
-        12,
-        "Apply code to step",
-        f"Control updates to {observed[0]}",
-        color=PURPLE,
-    )
-    sheet.arrow((81.5, 72), (81.5, 67), color=PURPLE)
-    sheet.box(
-        67,
-        54,
-        29,
-        12,
-        "Edit the same field",
-        f"Code returns to {field_edit['value']}",
-        color=TEAL,
-    )
-    sheet.text(3, 46, "Detail from A: the two analysis steps", size=10, color=MUTED)
+    sheet.native_image("authoring_main_verified_capture", (3, 53, 60, 35))
+    sheet.text(66, 86, "Detail from A: pipeline steps", size=10, color=MUTED)
     sheet.native_image(
-        "authoring_main_verified_capture", (3, 35, 62, 9), crop=(516, 230, 1024, 320)
+        "authoring_main_verified_capture", (66, 63, 31, 20), crop=(516, 230, 1024, 320)
     )
-    sheet.text(69, 46, "Connection status in A", size=10, color=MUTED)
-    sheet.native_image(
-        "authoring_main_verified_capture", (69, 36, 27, 7), crop=(895, 733, 1024, 768)
-    )
+    sheet.panel("B", "ZeroMQ server browser", 3, 49)
+    sheet.native_image("authoring_server_browser_verified_capture", (3, 32, 94, 15))
     sheet.panel("C", "Function controls", 3, 29)
     sheet.panel("D", "Matching Python code", 54, 29)
     sheet.native_image(

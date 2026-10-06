@@ -194,8 +194,14 @@ def main(
             config=config,
         )
 
+        status_reporter.emit(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Warming execution server function catalogue and kernels",
+        )
         server.prepare_runtime_capabilities(
-            lambda status: status_reporter.emit(status.phase, status.message)
+            lambda status: status_reporter.emit(
+                EndpointStartupPhase.PREPARING_CAPABILITIES, status.message
+            )
         )
 
         status_reporter.emit(

@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import json
+from dataclasses import replace
 from pathlib import Path
+
+import pytest
+from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.authoring_contexts import (
     AuthoringContextDeclaration,
@@ -10,15 +16,21 @@ from openhcs.agent.authoring_contexts import (
     UiVisibleWorkflowAuthoringContext,
     ViewerReviewAuthoringContext,
 )
-from openhcs.agent.capabilities import CapabilityTransport, agent_capabilities
-from openhcs.agent.dto.authoring import AuthoringContextRequest
+from openhcs.agent.capabilities import (
+    AgentCapabilitySearchResult,
+    CapabilityTransport,
+    agent_capabilities,
+)
+from openhcs.agent.dto.authoring import AuthoringContext, AuthoringContextRequest
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.config import ConfigFieldSchema, ConfigSchema
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseCatalog,
+    KnowledgeBaseDocument,
     KnowledgeBaseDocumentSummary,
     KnowledgeBaseDocumentTarget,
 )
+from openhcs.agent.image_analysis_qa import ImageAnalysisQaPolicy
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
 
@@ -153,6 +165,191 @@ def test_actual_source_backed_guides_fit_the_public_default_bound() -> None:
         assert bounded.content == complete.content
 
 
+def test_task_authorization_routes_to_the_existing_canonical_knowledge_owner() -> None:
+    from openhcs.agent.dto.knowledge import (
+        KnowledgeBaseDocumentRequest,
+        KnowledgeBaseSearchRequest,
+    )
+
+    root = Path(__file__).resolve().parents[3]
+    knowledge = KnowledgeBaseService(repo_root=root)
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog(), knowledge_base=knowledge
+    )
+    target = KnowledgeBaseDocumentTarget(
+        "openhcs_architecture_quick_start", section_id="task-authorization"
+    )
+    hits = knowledge.search(
+        KnowledgeBaseSearchRequest(query="routine authorized workflow", limit=10)
+    )
+    assert not hits.errors
+    assert target.document_id in {hit.document.document_id for hit in hits.hits}
+    document = knowledge.get_document(KnowledgeBaseDocumentRequest(target=target))
+    assert not document.errors and not document.truncated
+    assert document.selected_section_id == target.section_id
+    assert document.document.source_path == "docs/source/architecture/quick_start.rst"
+    for kind in ("first_use", "ui_visible_workflow"):
+        context = service.get_bounded_authoring_context(AuthoringContextRequest(kind=kind))
+        assert context == service.get_authoring_context(kind)
+        assert target.document_id in context.content
+        assert agent_capabilities.get_knowledge_document.name in context.content
+
+
+def test_default_image_analysis_context_preserves_the_entire_typed_qa_policy() -> None:
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog()
+    )
+    request = AuthoringContextRequest(
+        kind=ImageAnalysisWorkflowAuthoringContext.require_kind()
+    )
+    delivered = service.get_bounded_authoring_context(request)
+    assert delivered == service.get_authoring_context(request.kind)
+    assert len(delivered.content) <= request.max_chars
+    assert ImageAnalysisQaPolicy.repair_guidance() in delivered.content
+    for (
+        target
+    ) in ImageAnalysisWorkflowAuthoringContext.require_route().knowledge_targets:
+        assert target.document_id in delivered.content
+
+
+def test_claim_scope_is_retrievable_through_composed_context_declarations() -> None:
+    from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
+    from openhcs.agent.services.llm_context_service import (
+        ImageAnalysisWorkflowSection,
+        ViewerReviewStepsSection,
+    )
+
+    class _CombinedReviewContext(
+        ImageAnalysisWorkflowAuthoringContext, ViewerReviewAuthoringContext
+    ):
+        kind = "temporary_claim_scope_review"
+
+    try:
+        service = AgentAuthoringContextService(
+            function_catalog=_UnexpectedFunctionCatalog()
+        )
+        target = ImageAnalysisQaPolicy.claim_scope_target
+        document = service.knowledge_base.get_document(
+            KnowledgeBaseDocumentRequest(target=target)
+        )
+        assert not document.errors and not document.truncated
+        assert document.selected_section_id == target.section_id
+        source = Path(__file__).resolve().parents[3] / document.document.source_path
+        lines = tuple(source.read_text(encoding="utf-8").splitlines())
+        section = target.find_section(document.sections)
+        assert document.content.strip() == "\n".join(
+            section.span.line_slice(lines)
+        ).strip()
+        for declaration in (
+            ImageAnalysisWorkflowAuthoringContext,
+            ViewerReviewAuthoringContext,
+            _CombinedReviewContext,
+        ):
+            assert target in declaration.require_route().knowledge_targets
+            context = service.get_authoring_context(declaration.require_kind())
+            assert f"{target.document_id}#{target.section_id}" in context.content
+            assert document.content not in context.content
+        combined = service.get_authoring_context(_CombinedReviewContext.kind)
+        assert ImageAnalysisWorkflowSection.render(service) in combined.content
+        assert ViewerReviewStepsSection.render(service) in combined.content
+    finally:
+        AuthoringContextDeclaration.__registry__.pop(_CombinedReviewContext.kind)
+
+
+def test_knowledge_summary_growth_does_not_expand_context_deepening_links() -> None:
+    knowledge = _DeclaredKnowledgeBase()
+    knowledge._catalog = replace(
+        knowledge._catalog,
+        documents=tuple(
+            replace(document, summary="long-catalog-summary " * 2000)
+            for document in knowledge._catalog.documents
+        ),
+    )
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog(),
+        config_service=_ReflectedConfigService(),
+        knowledge_base=knowledge,
+    )
+    for declaration in AuthoringContextDeclaration.__registry__.values():
+        request = AuthoringContextRequest(kind=declaration.require_kind())
+        delivered = service.get_bounded_authoring_context(request)
+        assert delivered == service.get_authoring_context(request.kind)
+        assert len(delivered.content) <= request.max_chars
+        assert "long-catalog-summary" not in delivered.content
+        for target in declaration.require_route().knowledge_targets:
+            target_id = target.document_id
+            if target.section_id is not None:
+                target_id = f"{target_id}#{target.section_id}"
+            assert (
+                f"{target_id} — Title for {target.document_id}"
+                in delivered.content
+            )
+
+
+@pytest.mark.parametrize("kind", ("first_use", "pipeline"))
+def test_actual_mcp_onboarding_reaches_responsive_preparation_without_endpoint_contact(
+    monkeypatch, kind: str
+) -> None:
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        ZMQFunctionCatalogService,
+    )
+    from openhcs.mcp.context import create_agent_context
+    from openhcs.mcp.server import build_server
+
+    def reject_endpoint_contact(*_args, **_kwargs):
+        raise AssertionError(
+            "guide/capability discovery must not contact a catalogue endpoint"
+        )
+
+    monkeypatch.setattr(
+        ZMQFunctionCatalogService, "_new_client", reject_endpoint_contact
+    )
+    context = create_agent_context()
+
+    async def invoke():
+        built = build_server(context)
+
+        async def read(capability, arguments, result_type):
+            response = await built.call_tool(capability.name, arguments)
+            content = response[0] if isinstance(response, tuple) else response.content
+            payload = json.loads(content[0].text)
+            assert not payload.get("errors")
+            return dataclass_from_mapping(result_type, payload)
+
+        onboarding = await read(
+            agent_capabilities.get_authoring_context,
+            {"kind": kind},
+            AuthoringContext,
+        )
+        assert (
+            agent_capabilities.start_function_catalog_preparation.name
+            in onboarding.content
+        )
+        guide = await read(
+            agent_capabilities.get_knowledge_document,
+            {"document_id": "openhcs_custom_function_workflow"},
+            KnowledgeBaseDocument,
+        )
+        assert guide.document.document_id == "openhcs_custom_function_workflow"
+        assert not guide.truncated
+        assert (
+            agent_capabilities.start_function_catalog_preparation.name in guide.content
+        )
+        discovery = await read(
+            agent_capabilities.search_capabilities,
+            {"query": "catalog preparation", "limit": 10},
+            AgentCapabilitySearchResult,
+        )
+        assert agent_capabilities.start_function_catalog_preparation.name in {
+            capability.name for capability in discovery.capabilities
+        }
+
+    try:
+        asyncio.run(invoke())
+    finally:
+        context.endpoint_function_catalog.close()
+
+
 def test_first_use_projects_new_routes_from_the_nominal_registry() -> None:
     class _TemporaryAuthoringContext(AuthoringContextDeclaration):
         kind = "temporary_progressive_test"
@@ -186,7 +383,7 @@ def test_every_context_is_complete_within_the_progressive_bound() -> None:
         assert "=== DEEPEN ONLY WHEN NEEDED ===" in context.content
         for target in route.knowledge_targets:
             assert target.document_id in context.content
-            assert f"Summary for {target.document_id}" in context.content
+            assert f"Title for {target.document_id}" in context.content
 
     assert config_service.requests == ["global", "pipeline"]
 
@@ -319,9 +516,6 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "unregistered callable is not an OpenHCS pipeline result" in image_analysis
     assert "Do not preprocess scientific inputs in an external script" in image_analysis
     assert "behind the MCP surface" in image_analysis
-    assert "control ordering remain stable" in image_analysis
-    assert "Escalate rather than declare success" in image_analysis
-    assert "unexplained tile/quadrant drift" in image_analysis
     assert "Ask the domain expert" in image_analysis
     assert "artifact provenance" in image_analysis
     assert "dispatch on function-name strings" in image_analysis
@@ -448,7 +642,6 @@ def test_onboarding_surfaces_link_to_the_canonical_image_analysis_context() -> N
     canonical_rules = (
         "must not fit a separate percentile pair per field",
         "blinded, spatially distributed representative set",
-        "Escalate rather than declare success",
     )
     context = AgentAuthoringContextService().get_authoring_context(context_kind).content
     for canonical_rule in canonical_rules:

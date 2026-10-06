@@ -1,11 +1,19 @@
+import json
+import sys
 from pathlib import Path
+from dataclasses import replace
 from queue import SimpleQueue
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 
 import pytest
 from objectstate import get_current_global_config
 from zmqruntime.execution import ExecutionServer
-from zmqruntime.messages import ExecutionRecord, ExecutionStatus
+from zmqruntime.messages import (
+    ExecuteRequest,
+    ExecutionRecord,
+    ExecutionStatus,
+    MessageFields,
+)
 
 import openhcs.runtime.zmq_execution_server as zmq_execution_server_module
 from openhcs.constants.constants import GroupBy
@@ -15,8 +23,14 @@ from openhcs.core.config import (
     ProcessingConfig,
 )
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.orchestrator.compiled_plate_execution import (
+    CompiledPlateExecutionResults,
+)
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
+    RuntimeContextObservation,
+    RuntimeExecutionObservation,
     RuntimeObservationMode,
 )
 from openhcs.core.progress import (
@@ -85,6 +99,129 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
     assert saved_global_config.processing_config.group_by is GroupBy.CHANNEL
 
 
+@pytest.mark.parametrize("failed", [False, True])
+def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed):
+    server = ZMQExecutionServer(port=5555)
+    record = ExecutionRecord(
+        execution_id="axis-outcome-check",
+        plate_id="/tmp/plate",
+        client_address=None,
+        status=ExecutionStatus.QUEUED.value,
+    )
+    server._lifecycle.enqueue(record)
+    results = CompiledPlateExecutionResults(
+        {
+            "A01": ExecutionResult.success("A01"),
+            "A02": (
+                ExecutionResult.error("A02", error_message="producer lineage missing")
+                if failed
+                else ExecutionResult.success("A02")
+            ),
+        }
+    )
+    exported = []
+    monkeypatch.setattr(
+        zmq_execution_server_module,
+        "ZMQWorkerExecutionRequest",
+        lambda **kwargs: SimpleNamespace(execute=lambda: results),
+    )
+    monkeypatch.setattr(
+        server,
+        "_export_runtime_observation",
+        lambda **kwargs: exported.append(kwargs["execution_results"]),
+    )
+    context = SimpleNamespace(
+        compile_only=False,
+        execution_id=record.execution_id,
+        auxiliary_params=SimpleNamespace(
+            runtime_observation_mode_for=lambda bundle: RuntimeObservationMode.OMIT
+        ),
+    )
+    monkeypatch.setattr(
+        server,
+        "execute_task",
+        lambda execution_id, request: server._finish_compilation_or_execute(
+            request_context=context,
+            orchestrator=None,
+            compilation=SimpleNamespace(execution_bundle=object()),
+            progress_context={},
+            debug_execution_policy=None,
+        ),
+    )
+    monkeypatch.setattr(server, "_kill_worker_processes", lambda: 0)
+    server.run_execution(
+        record.execution_id,
+        ExecuteRequest(plate_id=record.plate_id, pipeline_code="pass"),
+        record,
+    )
+    terminal = server.progress_queue.get_nowait()[MessageFields.EXECUTION]
+    assert terminal[MessageFields.STATUS] == (
+        ExecutionStatus.FAILED.value if failed else ExecutionStatus.COMPLETE.value
+    )
+    assert exported == [results]
+    assert results["A01"].is_success()
+    if failed:
+        assert "A02: error: producer lineage missing" in terminal[MessageFields.ERROR]
+    else:
+        assert terminal[MessageFields.RESULTS_SUMMARY][MessageFields.WELLS] == [
+            "A01",
+            "A02",
+        ]
+
+
+@pytest.mark.parametrize("invalid_output_metadata", (False, True))
+def test_terminal_notification_contains_openhcs_summary_before_cleanup(
+    monkeypatch, caplog, invalid_output_metadata
+) -> None:
+    server = ZMQExecutionServer(port=5555)
+    monkeypatch.setattr(
+        server, "execute_task", lambda _execution_id, _request: {"W001": None}
+    )
+    monkeypatch.setattr(server, "_kill_worker_processes", lambda: 0)
+    record = ExecutionRecord(
+        execution_id="exec-finalized",
+        plate_id="/tmp/plate",
+        client_address=None,
+        status=ExecutionStatus.QUEUED.value,
+    )
+    record.set_extra("orchestrator", object())
+    output_plate = ExecutionOutputPlateSummary(
+        output_plate_root="/tmp/output",
+        auto_add_output_plate_to_plate_manager=True,
+    )
+    record.set_extra(
+        ExecutionOutputPlateSummary.EXECUTION_RECORD_KEY,
+        "invalid" if invalid_output_metadata else output_plate,
+    )
+    record.set_extra("runtime_observation_export_path", "/tmp/outcomes.json")
+    record.set_extra("runtime_observation_export_scope", "outcomes")
+    server._lifecycle.enqueue(record)
+
+    server.run_execution(
+        record.execution_id,
+        ExecuteRequest(plate_id=record.plate_id, pipeline_code="pass"),
+        record,
+    )
+
+    terminal = server.progress_queue.get_nowait()[MessageFields.EXECUTION]
+    assert terminal[MessageFields.STATUS] == ExecutionStatus.COMPLETE.value
+    assert terminal[MessageFields.START_TIME] is not None
+    assert terminal[MessageFields.END_TIME] is not None
+    summary = terminal[MessageFields.RESULTS_SUMMARY]
+    assert summary[MessageFields.WELL_COUNT] == 1
+    assert summary[MessageFields.WELLS] == ["W001"]
+    if invalid_output_metadata:
+        assert "Failed to attach output_plate_root" in caplog.text
+        assert "output_plate_root" not in summary
+    else:
+        for name, value in output_plate.results_summary_fields().items():
+            assert summary[name] == value
+        assert summary["runtime_observation_export_path"] == "/tmp/outcomes.json"
+        assert summary["runtime_observation_export_scope"] == "outcomes"
+    assert terminal[MessageFields.RESULTS_SUMMARY] == record.results_summary
+    assert record.get_extra("orchestrator") is None
+
+
 @pytest.mark.parametrize(
     ("compiled_mode", "export_path", "expected_mode"),
     (
@@ -95,9 +232,19 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
             RuntimeObservationMode.MERGE_INTO_PARENT,
         ),
         (
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+            None,
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+        ),
+        (
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+            "/tmp/runtime-observation.pkl",
+            RuntimeObservationMode.MERGE_INTO_PARENT,
+        ),
+        (
             RuntimeObservationMode.MERGE_INTO_PARENT,
             None,
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
         ),
     ),
 )
@@ -112,7 +259,7 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
         else None
     )
     execution_bundle = SimpleNamespace(
-        requires_parent_runtime_observation=compiled_mode.collects_records
+        requires_parent_runtime_observation=compiled_mode.collects_records,
     )
 
     assert params.runtime_observation_mode_for(execution_bundle) is expected_mode
@@ -123,7 +270,9 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
         runtime_observation_export_path=Path("/tmp/outcomes.pkl.gz"),
         runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
     )
-    execution_bundle = SimpleNamespace(requires_parent_runtime_observation=False)
+    execution_bundle = SimpleNamespace(
+        requires_parent_runtime_observation=False,
+    )
 
     assert (
         params.runtime_observation_mode_for(execution_bundle)
@@ -160,7 +309,10 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         ),
     )
     compilation = SimpleNamespace(
-        execution_bundle=SimpleNamespace(runtime_contexts={}),
+        execution_bundle=SimpleNamespace(
+            runtime_contexts={},
+            requires_parent_runtime_observation=False,
+        ),
         output_plate=SimpleNamespace(output_plate_root=tmp_path),
     )
     monkeypatch.setattr(
@@ -168,27 +320,51 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         lambda contexts, root: (root,),
     )
 
+    declared_output = tmp_path / "exports" / "Saved.tiff"
+    declared_output.parent.mkdir()
+    declared_output.write_bytes(b"image evidence")
     server._export_runtime_observation(
         request_context=request_context,
         compilation=compilation,
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results=CompiledPlateExecutionResults(
+            {
+                "A01": ExecutionResult.success(
+                    "A01",
+                    runtime_observation=RuntimeExecutionObservation(
+                        contexts=(
+                            RuntimeContextObservation(
+                                "context",
+                                (),
+                                outputs=StepExecutionObservation({}, (declared_output,)),
+                            ),
+                        )
+                    ),
+                )
+            }
+        ),
     )
 
     export = ZMQRuntimeExecutionOutcomeExport.read(export_path)
     assert export.successful_axis_count == 1
     assert export.execution_id == record.execution_id
     assert export.exports is not None
-    assert export.exports.output_files == ()
+    assert export.exports.output_files == (declared_output,)
     assert record.get_extra("runtime_observation_export_path") == str(export_path)
     assert record.get_extra("runtime_observation_export_scope") == "outcomes"
 
 
-def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
+@pytest.mark.parametrize("changed", (None, "pipeline", "config", "plate"))
+def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
     monkeypatch,
+    changed,
 ) -> None:
     import openhcs.processing.func_registry as func_registry_module
 
-    monkeypatch.setattr(func_registry_module, "_registry_initialized", True)
+    monkeypatch.setattr(
+        func_registry_module,
+        "initialize_registry",
+        lambda: pytest.fail("Direct-import pipeline initialized the full registry"),
+    )
     monkeypatch.setattr(
         ZMQExecutionServer,
         "_cleanup_compiled_artifacts",
@@ -216,8 +392,72 @@ def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
         compile_control=ZMQExecutionCompileControl(compile_artifact_id="compile-1"),
     )
 
-    context = server._execute_pipeline("exec-1", request_payload)
+    from openhcs.core.compiled_execution import (
+        CompiledExecutionBundle,
+        CompiledRuntimeEnvironmentPlan,
+    )
+    from openhcs.runtime.zmq_compilation import (
+        ZMQCompileArtifactRecord,
+        ZMQCompilationResult,
+    )
 
+    configs = OpenHCSExecutionConfigBundle(GlobalPipelineConfig(), PipelineConfig())
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=[],
+        runtime_contexts={},
+        transport_contexts={},
+        worker_assignments={},
+        runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+            configs.global_pipeline,
+            compiled_contexts={},
+            server_mode=True,
+        ),
+    )
+    server._compiled_artifacts["compile-1"] = ZMQCompileArtifactRecord(
+        execution_id="compile-1",
+        plate_id=request_payload.plate_id,
+        compilation_signature=request_payload.compilation_signature,
+        debug_replay_signature=request_payload.debug_replay_signature,
+        compilation=ZMQCompilationResult(bundle, []),
+        configs=configs,
+    )
+    monkeypatch.setattr(
+        server,
+        "_resolve_request_config",
+        lambda *args: pytest.fail("Artifact executed config source"),
+    )
+    monkeypatch.setattr(
+        zmq_execution_server_module.PipelineDocumentAuthority,
+        "from_namespace",
+        lambda *args: pytest.fail("Artifact rebuilt pipeline declaration"),
+    )
+    if changed == "pipeline":
+        request_payload = replace(
+            request_payload,
+            pipeline_code=request_payload.pipeline_code
+            + "\nraise AssertionError('must not execute')\n",
+        )
+    elif changed == "config":
+        request_payload = replace(
+            request_payload,
+            config_transport=replace(
+                request_payload.config_transport,
+                config_code="raise AssertionError('must not execute')",
+            ),
+        )
+    elif changed == "plate":
+        request_payload = replace(
+            request_payload,
+            identity=replace(request_payload.identity, plate_id="/different/source"),
+        )
+    if changed is not None:
+        with pytest.raises(ValueError, match="does not match execution request"):
+            server._execute_pipeline("exec-1", request_payload)
+        assert "compile-1" in server._compiled_artifacts
+        return
+    context = server._execute_pipeline("exec-1", request_payload)
+    assert context.execution_id == "exec-1"
+    assert context.configs is configs
     assert type(context.pipeline_steps) is list
     assert context.pipeline_steps == []
     assert isinstance(context.configs, OpenHCSExecutionConfigBundle)
@@ -226,42 +466,118 @@ def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
     assert context.compile_artifact_id == "compile-1"
 
 
-def test_zmq_server_forwards_parent_execution_progress_without_worker_claim() -> None:
-    server = object.__new__(ZMQExecutionServer)
+def test_zmq_server_prepares_virtual_import_before_evaluating_pipeline(
+    monkeypatch,
+) -> None:
+    import openhcs
+    import openhcs.processing.func_registry as func_registry_module
+
+    initialized: list[str] = []
+
+    def initialize_registry() -> None:
+        initialized.append("registry")
+        package = ModuleType("openhcs.codex_virtual")
+        package.__path__ = []
+        module = ModuleType("openhcs.codex_virtual.filters")
+        module.noop = lambda value: value
+        package.filters = module
+        monkeypatch.setitem(sys.modules, package.__name__, package)
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+        monkeypatch.setattr(openhcs, "codex_virtual", package, raising=False)
+
+    monkeypatch.setattr(
+        func_registry_module, "initialize_registry", initialize_registry
+    )
+    monkeypatch.setattr(
+        ZMQExecutionServer, "_cleanup_compiled_artifacts", lambda self: None
+    )
+    monkeypatch.setattr(
+        ZMQExecutionServer,
+        "_execute_with_orchestrator",
+        lambda self, context: context,
+    )
+    request_payload = ZMQExecutionRequestPayload(
+        identity=ZMQExecutionIdentity(plate_id="/tmp/plate"),
+        pipeline_code=(
+            "from openhcs.codex_virtual.filters import noop\n"
+            "from openhcs.core.config import PipelineConfig\n"
+            "pipeline_config = PipelineConfig()\n"
+            "pipeline_steps = []\n"
+        ),
+        config_transport=ZMQExecutionConfigTransport(
+            config_code=(
+                "from openhcs.core.config import GlobalPipelineConfig\n"
+                "config = GlobalPipelineConfig()\n"
+            ),
+        ),
+        compile_control=ZMQExecutionCompileControl(),
+    )
+
+    context = ZMQExecutionServer()._execute_pipeline("exec-1", request_payload)
+
+    assert initialized == ["registry"]
+    assert context.pipeline_steps == []
+
+
+def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> None:
+    from zmqruntime.execution.progress_stream import ProgressStreamSubscriber
+    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+
+    server = ZMQExecutionServer()
+    record = ExecutionRecord("execution-1", "plate-1", None, ExecutionStatus.RUNNING.value)
+    server.active_executions[record.execution_id] = record
     server._worker_assignments_by_execution = {
         "execution-1": {"worker_0": ["A01", "B01"]}
     }
-    server.progress_queue = SimpleQueue()
     worker_queue = SimpleQueue()
     progress_context = ProgressExecutionContext(
-        execution_id="execution-1",
-        plate_id="plate-1",
+        execution_id=record.execution_id,
+        plate_id=record.plate_id,
     )
-    worker_queue.put(
-        create_event(
-            ProgressEventPayload(
-                identity=progress_context.identity_for_event(
-                    axis_id="",
-                    step_name="ExportToDatabase",
-                ),
-                phase=ProgressPhase.RUNNING,
-                status=ProgressStatus.RUNNING,
-                completed=32,
-                total=33,
-                percent=(32 / 33) * 100.0,
-            )
-        ).to_dict()
+    parent = create_event(
+        ProgressEventPayload(
+            identity=progress_context.identity_for_event(
+                axis_id="", step_name="ExportToDatabase",
+            ),
+            phase=ProgressPhase.RUNNING,
+            status=ProgressStatus.RUNNING,
+            completed=32, total=33, percent=(32 / 33) * 100.0,
+        )
     )
+    server._enqueue_progress(parent.to_dict())
+    worker_queue.put(parent.to_dict())
+    worker = replace(
+        parent,
+        identity=progress_context.identity_for_event(
+            axis_id="A01", step_name="ExportToDatabase",
+        ),
+        worker_slot="worker_0",
+        owned_wells=["A01", "B01"],
+    )
+    worker_queue.put(worker.to_dict())
     worker_queue.put(None)
-
     server._forward_worker_progress(worker_queue)
 
-    event = ProgressEvent.from_dict(server.progress_queue.get())
+    published = [server.progress_queue.get_nowait() for _ in range(3)]
+    received = []
+    client = ZMQExecutionClient(progress_callback=received.append)
+    subscriber = ProgressStreamSubscriber(lambda: None, client._record_progress)
+    for payload in published:
+        assert subscriber._dispatch_message(json.dumps(payload))
+    assert [payload[MessageFields.PROGRESS_SEQUENCE] for payload in received] == [1, 2, 3]
+    assert client.progress_observation(record.execution_id).sequence == 3
+    assert record.to_dict()[MessageFields.PROGRESS_SEQUENCE] == 3
+    assert record.progress_event == published[-1]
+    event = ProgressEvent.from_dict(published[1])
     assert event.axis_id == ""
     assert event.worker_slot is None
     assert event.owned_wells is None
     assert event.worker_assignments == {"worker_0": ["A01", "B01"]}
     assert event.total_wells == ["A01", "B01"]
+    worker_event = ProgressEvent.from_dict(published[2])
+    assert worker_event.axis_id == "A01"
+    assert worker_event.worker_slot == "worker_0"
+    assert worker_event.owned_wells == ["A01", "B01"]
 
 
 def test_zmq_server_records_the_compilation_output_plate_value_without_rebuilding_it() -> (
@@ -322,3 +638,109 @@ def test_zmq_server_stop_releases_process_resources_when_transport_stop_fails(
         server.stop()
 
     assert events == ["transport", "catalog", ("process_resources", True)]
+
+
+def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_gate(
+    tmp_path,
+):
+    import json
+    from polystore.base import reset_memory_backend
+    from polystore.virtual_workspace import VirtualWorkspaceBackend
+    from openhcs.constants.constants import Backend
+    from openhcs.core.compiled_execution import (
+        CompiledExecutionBundle,
+        CompiledRuntimeEnvironmentPlan,
+    )
+    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+
+    previous = PipelineOrchestrator(
+        plate_path=tmp_path, pipeline_config=PipelineConfig()
+    )
+    metadata_path = tmp_path / "polystore_metadata.json"
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "subdirectories": {
+                    "images": {
+                        "workspace_mapping": {
+                            "image.tif": {
+                                "backend": Backend.MEMORY.value,
+                                "backend_address": str(tmp_path / "source.tif"),
+                                "source_axis_indices": [],
+                            }
+                        },
+                    }
+                }
+            }
+        )
+    )
+    virtual_workspace = VirtualWorkspaceBackend(plate_root=tmp_path)
+    previous.filemanager.register_backend(
+        Backend.VIRTUAL_WORKSPACE.value, virtual_workspace
+    )
+    previous._execution_cancellation.request()
+    previous.filemanager.ensure_directory(str(tmp_path), Backend.MEMORY.value)
+    previous.filemanager.save("stale", str(tmp_path / "old.tif"), Backend.MEMORY.value)
+    handler = OpenHCSMicroscopeHandler(previous.filemanager)
+    context = ProcessingContext(axis_id="A01", filemanager=previous.filemanager)
+    context.plate_path = tmp_path
+    context.input_dir = tmp_path
+    context.microscope_handler = handler
+    transport = ProcessingContext(axis_id="A01")
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=[],
+        runtime_contexts={"A01": context},
+        transport_contexts={"A01": transport},
+        worker_assignments={},
+        runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+            GlobalPipelineConfig(),
+            compiled_contexts={"A01": context},
+            server_mode=True,
+        ),
+    )
+    reset_memory_backend()
+    runtime = PipelineOrchestrator(
+        plate_path=tmp_path, pipeline_config=PipelineConfig()
+    )
+    runtime.execution_id = "next-execution"
+    runtime.adopt_compiled_execution(bundle)
+    assert runtime.filemanager is not previous.filemanager
+    assert (
+        runtime.filemanager.registry[Backend.VIRTUAL_WORKSPACE.value]
+        is virtual_workspace
+    )
+    assert not runtime.filemanager.exists(
+        str(tmp_path / "old.tif"), Backend.MEMORY.value
+    )
+    assert not context.filemanager.exists(
+        str(tmp_path / "old.tif"), Backend.MEMORY.value
+    )
+    runtime.filemanager.save("live", str(tmp_path / "source.tif"), Backend.MEMORY.value)
+    assert (
+        runtime.filemanager.load(
+            str(tmp_path / "image.tif"),
+            Backend.VIRTUAL_WORKSPACE.value,
+        )
+        == "live"
+    )
+    assert bundle.runtime_contexts["A01"] is context
+    assert bundle.transport_contexts["A01"] is transport
+    assert runtime.microscope_handler is handler
+    assert runtime.execution_id == "next-execution"
+    signal = runtime._execution_cancellation.begin()
+    signal.raise_if_requested("new execution")
+    runtime._execution_cancellation.request()
+    with pytest.raises(ExecutionCancelledError):
+        signal.raise_if_requested("active execution")
+    runtime._execution_cancellation.finish(signal)
+    metadata_path.unlink()
+    tmp_path.rmdir()
+    unavailable = PipelineOrchestrator(
+        plate_path=tmp_path, pipeline_config=PipelineConfig()
+    )
+    with pytest.raises(FileNotFoundError):
+        unavailable.adopt_compiled_execution(bundle)
+    assert not unavailable.is_initialized()

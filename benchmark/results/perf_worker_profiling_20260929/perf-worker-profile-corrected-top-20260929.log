@@ -1,0 +1,100 @@
+Tue Sep 29 20:40:46 2026    /home/ts/code/projects/openhcs-benchmark-runs/perf-worker-profile-corrected-20260929/ffa5b9a0-cbbf-47cd-9b56-5cfd186ab00e___home_ts__cache_openhcs_cellprofiler_examples_ExampleImagingFlowCytometryObjectsInGrid_images__worker_0__W001.prof
+
+         14004327 function calls (13940996 primitive calls) in 22.048 seconds
+
+   Ordered by: internal time
+   List reduced from 4113 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       30    1.875    0.062    1.875    0.062 {built-in method openhcs.processing.backends.cellprofiler._granularity_reconstruct.reconstruct_f32}
+     3224    0.814    0.000    0.814    0.000 {method 'astype' of 'numpy.ndarray' objects}
+       75    0.698    0.009    0.698    0.009 label_geometry.py:424(_numpy124_aquicksort_indices_numba)
+       12    0.645    0.054    1.356    0.113 shape.py:2173(_maximum_position_of_labels_scipy_select)
+        6    0.643    0.107    1.321    0.220 intensity_distribution.py:1873(measure)
+     2349    0.583    0.000    0.593    0.000 numeric.py:1726(indices)
+       10    0.570    0.057    0.570    0.057 {built-in method scipy.ndimage._nd_image.min_or_max_filter}
+1939289/1939093    0.466    0.000    0.669    0.000 {built-in method builtins.isinstance}
+     2323    0.456    0.000    1.311    0.001 texture.py:150(haralick_features)
+       12    0.404    0.034    0.404    0.034 {built-in method scipy.ndimage._nd_image.geometric_transform}
+  1023479    0.387    0.000    0.603    0.000 measurement_row_materialization.py:76(is_structural_missing_measurement_cell)
+        6    0.384    0.064    0.940    0.157 label_geometry.py:290(_cellprofiler_convex_hull)
+       36    0.313    0.009    0.313    0.009 {erode}
+    27844    0.303    0.000    0.623    0.000 measurement_row_materialization.py:449(iter_row_mappings)
+       67    0.300    0.004    1.137    0.017 measurement_row_materialization.py:624(coalesced_sparse_measurement_row_mappings)
+52644/52606    0.298    0.000    0.298    0.000 {built-in method numpy.asarray}
+   545968    0.296    0.000    0.407    0.000 enum.py:202(__get__)
+    55752    0.292    0.000    0.355    0.000 texture.py:17(_entropy)
+        6    0.275    0.046    0.275    0.046 zernike.py:1895(_score_intensity_zernike_moments_direct_numba)
+       92    0.257    0.003    0.257    0.003 {method 'argsort' of 'numpy.ndarray' objects}
+    67342    0.250    0.000    0.250    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+        8    0.239    0.030    0.239    0.030 intensity_object_quantiles_numba.py:295(_object_intensity_quantiles_grouped_numba)
+       23    0.237    0.010    0.237    0.010 {method 'searchsorted' of 'numpy.ndarray' objects}
+       62    0.221    0.004    0.221    0.004 shape_base.py:378(stack)
+       42    0.205    0.005    0.205    0.005 {built-in method _hashlib.openssl_sha1}
+        6    0.189    0.031    0.434    0.072 label_geometry.py:270(_compact_requested_labels)
+     3588    0.187    0.000    0.187    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+     2343    0.178    0.000    0.774    0.000 _index_tricks_impl.py:146(__getitem__)
+       81    0.164    0.002    0.164    0.002 {built-in method numpy._core._multiarray_umath._unique_hash}
+   644485    0.160    0.000    0.160    0.000 {method 'append' of 'list' objects}
+       16    0.156    0.010    0.156    0.010 {built-in method scipy.ndimage._nd_image.correlate1d}
+      495    0.152    0.000    0.320    0.001 measurement_row_materialization.py:394(selected_values)
+   856176    0.151    0.000    0.151    0.000 measurement_row_materialization.py:398(<genexpr>)
+   110006    0.140    0.000    0.211    0.000 runtime_measurements.py:1194(measurement_axis_integer_value)
+   333278    0.138    0.000    0.379    0.000 measurement_row_materialization.py:635(<genexpr>)
+
+
+Tue Sep 29 20:40:46 2026    /home/ts/code/projects/openhcs-benchmark-runs/perf-worker-profile-corrected-20260929/ffa5b9a0-cbbf-47cd-9b56-5cfd186ab00e___home_ts__cache_openhcs_cellprofiler_examples_ExampleImagingFlowCytometryObjectsInGrid_images__worker_0__W001.prof
+
+         14004327 function calls (13940996 primitive calls) in 22.048 seconds
+
+   Ordered by: cumulative time
+   List reduced from 4113 to 45 due to restriction <45>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   22.255   22.255 worker_execution.py:1050(execute_worker_lane)
+        1    0.000    0.000   22.255   22.255 worker_execution.py:753(_execute_axis_with_sequential_combinations)
+        1    0.001    0.001   22.241   22.241 worker_execution.py:931(_execute_single_axis_static)
+       23    0.000    0.000   22.052    0.959 function_step.py:41(process)
+       23    0.000    0.000   22.052    0.959 function_execution.py:684(execute)
+       23    0.001    0.000   22.051    0.959 function_execution.py:713(run)
+       23    0.000    0.000   21.827    0.949 function_execution.py:1081(_execute_pattern_groups)
+       31    0.012    0.000   21.824    0.704 function_runtime.py:3433(_process_single_pattern_group)
+       31    0.001    0.000   21.811    0.704 function_runtime.py:2470(run)
+       31    0.000    0.000   21.006    0.678 function_runtime.py:3039(_execute_pattern)
+       31    0.001    0.000   20.948    0.676 function_runtime.py:1467(execute_chain)
+       34    0.001    0.000   20.877    0.614 function_runtime.py:1840(execute)
+       34    0.001    0.000   20.831    0.613 function_runtime.py:2095(invoke)
+       34    0.002    0.000   20.751    0.610 module_execution.py:252(__call__)
+       19    0.002    0.000   16.107    0.848 module_execution.py:775(_run_per_object_measurement)
+       19    0.003    0.000   15.854    0.834 measurement_execution_support.py:240(execute)
+       19    0.000    0.000   15.852    0.834 measurement_execution_support.py:249(_execute_serial)
+       34    0.001    0.000   15.073    0.443 function_contract_execution.py:79(execute)
+       64    0.003    0.000   14.728    0.230 unified_registry.py:255(call)
+    39/30    0.000    0.000   13.678    0.456 unified_registry.py:1219(execute)
+       30    0.002    0.000   13.677    0.456 unified_registry.py:1088(execute)
+       30    0.001    0.000   13.676    0.456 function_contract_execution.py:507(execute_pure_2d)
+       30    0.000    0.000   13.490    0.450 function_contract_execution.py:253(execute_pure_2d_slice_batch)
+       30    0.000    0.000   13.488    0.450 runtime_batch_contracts.py:312(__call__)
+       60    0.000    0.000   13.488    0.225 runtime_batch_contracts.py:211(execute_one)
+       60    0.000    0.000   13.488    0.225 runtime_batch_contracts.py:215(execute_one_with_kwargs)
+       60    0.000    0.000   13.488    0.225 function_contract_execution.py:587(<lambda>)
+       60    0.000    0.000   13.488    0.225 function_contract_execution.py:666(execute_pure_2d_slice)
+       19    0.000    0.000   12.489    0.657 function_contract_execution.py:724(_execute_runtime_batch_invocation)
+       15    0.001    0.000    4.521    0.301 module_execution.py:352(_run_standard_image)
+        6    0.000    0.000    4.138    0.690 intensity_distribution.py:2467(measure_object_intensity_distribution)
+        6    0.000    0.000    4.137    0.689 intensity_distribution.py:1365(rows)
+       12    0.018    0.001    3.987    0.332 granularity.py:1688(measure_granularity_objects)
+       12    0.000    0.000    3.781    0.315 granularity.py:631(series)
+       19    0.000    0.000    3.363    0.177 measurement_execution_support.py:215(record_output)
+       19    0.005    0.000    3.362    0.177 measurement_execution_support.py:408(record)
+        6    0.000    0.000    2.425    0.404 intensity_distribution.py:1691(measure_self_centered)
+        6    0.000    0.000    2.191    0.365 granularity.py:1087(granularity_reconstruction_series)
+        6    0.003    0.001    2.190    0.365 granularity.py:936(reconstruct_series)
+        6    0.053    0.009    2.099    0.350 texture.py:612(measure_texture_objects)
+       19    0.032    0.002    1.997    0.105 object_measurement_row_policies.py:231(split_scoped_rows)
+        9    0.000    0.000    1.985    0.221 unified_registry.py:1107(execute)
+       30    1.875    0.062    1.875    0.062 {built-in method openhcs.processing.backends.cellprofiler._granularity_reconstruct.reconstruct_f32}
+       15    0.001    0.000    1.669    0.111 output_recording.py:106(record_module_outputs)
+     3435    0.010    0.000    1.645    0.000 texture.py:409(feature_matrix)
+
+

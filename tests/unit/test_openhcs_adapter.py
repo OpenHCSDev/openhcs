@@ -42,6 +42,7 @@ from openhcs.core.config import (
     VFSConfig,
     WellFilterConfig,
 )
+from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.runtime_execution_validation import (
@@ -270,6 +271,11 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         def disconnect(self):
             return None
 
+        def submit_prepared_pipeline(self, request):
+            if request.compile_control.compile_only:
+                return self.submit_compile(request)
+            return self.submit_pipeline(request)
+
         def submit_compile(self, submission):
             compile_submission = submission.compile_request()
             self.submitted.append(compile_submission)
@@ -283,13 +289,14 @@ def test_benchmark_executes_pipeline_via_zmq_client(
 
         def submit_pipeline(self, submission):
             self.submitted.append(submission)
-            assert submission.compile_artifact_id == "compile-1"
+            assert submission.compile_control.compile_artifact_id == "compile-1"
             return {"status": "accepted", "execution_id": "exec-1"}
 
-        def wait_for_completion(self, execution_id):
+        def wait_for_completion(self, execution_id, poll_interval=0.5):
             self.waits.append(execution_id)
             if execution_id == "compile-1":
                 return {
+                    "execution": self.poll_status(execution_id)["execution"],
                     "status": "complete",
                     "execution_id": execution_id,
                     "results": {"well_count": 1, "wells": ["A01"]},
@@ -320,6 +327,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                 execution_id=execution_id,
             ).write(observation_path)
             return {
+                "execution": self.poll_status(execution_id)["execution"],
                 "status": "complete",
                 "execution_id": execution_id,
                 "results": {"output_plate_root": str(tmp_path)},
@@ -334,6 +342,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                     "plate_id": "/tmp/execution_plate",
                     "client_address": None,
                     "status": "complete",
+                    "results_summary": {"output_plate_root": str(tmp_path)},
                     "start_time": 10.0 if execution_id == "compile-1" else 13.0,
                     "end_time": 12.0 if execution_id == "compile-1" else 17.0,
                 },
@@ -375,23 +384,25 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         )
         == execution.results_summary
     )
-    assert source == FakeZMQExecutionClient.submitted[0].pipeline_code()
+    assert source == FakeZMQExecutionClient.submitted[0].pipeline_code
     assert (
-        FakeZMQExecutionClient.submitted[0].pipeline_document
-        is FakeZMQExecutionClient.submitted[1].pipeline_document
+        FakeZMQExecutionClient.submitted[0].pipeline_code
+        == FakeZMQExecutionClient.submitted[1].pipeline_code
     )
     assert all(
-        submission.global_pipeline_config is global_config
+        submission.global_config_code == ConfigDocumentAuthority.render(
+            global_config, expected_config_type=GlobalPipelineConfig
+        )
         for submission in FakeZMQExecutionClient.submitted
     )
     assert [
-        submission.compile_only for submission in FakeZMQExecutionClient.submitted
+        submission.compile_control.compile_only for submission in FakeZMQExecutionClient.submitted
     ] == [
         True,
         False,
     ]
     assert [
-        submission.compile_artifact_id
+        submission.compile_control.compile_artifact_id
         for submission in FakeZMQExecutionClient.submitted
     ] == [None, "compile-1"]
     assert FakeZMQExecutionClient.waits == ["compile-1", "exec-1"]

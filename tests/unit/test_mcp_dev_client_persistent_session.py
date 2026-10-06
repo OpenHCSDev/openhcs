@@ -10,6 +10,10 @@ import sys
 from dataclasses import replace
 
 import pytest
+from polystore.imagej_distribution import (
+    FijiArchiveDistribution,
+    ImageJArchiveDownloadPolicy,
+)
 
 import openhcs.mcp.dev_client as dev_client
 from openhcs.pyqt_gui.config import (
@@ -57,6 +61,38 @@ def test_child_environment_does_not_invent_ui_config_override(monkeypatch) -> No
     assert UIConfigCacheEnvironment.cache_file_path_key not in environment
 
 
+def test_fresh_child_consumes_declared_imagej_cache_and_download_policy(
+    tmp_path, monkeypatch
+) -> None:
+    cache_root = tmp_path / "shared-imagej-bundles"
+    monkeypatch.setenv(
+        FijiArchiveDistribution.cache_root_environment_key, str(cache_root)
+    )
+    monkeypatch.setenv(
+        ImageJArchiveDownloadPolicy.allow_download_environment_key, "false"
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import json; "
+                "from polystore.imagej_distribution import "
+                "FijiArchiveDistribution, ImageJArchiveDownloadPolicy; "
+                "print(json.dumps([str(FijiArchiveDistribution.cache_root_from_environment()), "
+                "ImageJArchiveDownloadPolicy.from_environment().allow_download]))"
+            ),
+        ],
+        env=dev_client.McpDevServerSpec(sys.executable).environment(),
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
+    assert json.loads(result.stdout) == [str(cache_root), False]
+    assert not cache_root.exists()
+
+
 def test_multi_call_command_honors_its_declared_timeout_floor() -> None:
     parser = dev_client._build_parser()
     default_args = parser.parse_args(
@@ -88,6 +124,21 @@ def test_multi_call_command_honors_its_declared_timeout_floor() -> None:
 def test_persistent_client_initializes_once_for_distinct_command_specs(
     monkeypatch,
 ) -> None:
+    from openhcs.mcp.dev_client_commands import ui
+    from openhcs.mcp.server import HealthCheckMcpToolBinding
+    from openhcs.serialization.json import to_jsonable
+
+    health_payload = to_jsonable(HealthCheckMcpToolBinding.execute(None))
+
+    decoded_arguments = []
+    parse_arguments = ui.parse_json_object
+
+    def count_argument_decode(text):
+        decoded_arguments.append(text)
+        return parse_arguments(text)
+
+    monkeypatch.setattr(ui, "parse_json_object", count_argument_decode)
+
     class FakeMcpDevStdioSession:
         initialize_count = 0
         tool_calls: list[str] = []
@@ -131,7 +182,7 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
                 "content": [
                     {
                         "type": "text",
-                        "text": json.dumps({"status": "ok"}),
+                        "text": json.dumps(health_payload),
                     }
                 ],
             }
@@ -145,13 +196,17 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
     with dev_client.McpDevClient(sys.executable) as client:
         tools = client.execute(("tools", "--json"))
         health = client.execute(("health", "--json"))
+        raw_health = client.execute(("call", "openhcs_health_check", "--arguments", "{}"))
 
     assert FakeMcpDevStdioSession.initialize_count == 1
-    assert FakeMcpDevStdioSession.tool_calls == ["openhcs_health_check"]
+    assert FakeMcpDevStdioSession.tool_calls == ["openhcs_health_check"] * 2
     assert tools.returncode == 0
     assert tools.payload["tools"][0]["name"] == "openhcs_health_check"
     assert health.returncode == 0
-    assert health.payload["results"][0]["payloads"] == [{"status": "ok"}]
+    assert health.payload["results"][0]["payloads"] == [health_payload]
+    assert raw_health.returncode == 0
+    assert raw_health.payload["results"][0]["payloads"] == [health_payload]
+    assert decoded_arguments == ["{}"]
     assert type(dev_client.McpDevCommandSpec.for_name("tools")) is not type(
         dev_client.McpDevCommandSpec.for_name("health")
     )
@@ -220,7 +275,21 @@ def test_persistent_client_does_not_close_caller_owned_server_stderr() -> None:
     assert server_stderr.closed is False
 
 
-def test_persistent_client_preserves_local_usage_errors(monkeypatch) -> None:
+@pytest.mark.parametrize(
+    ("argv", "exception_type", "message"),
+    (
+        (("viewer-state", "--json"), dev_client.McpDevCliUsageError, "requires a port"),
+        (("call", "openhcs_health_check", "--arguments", "{broken}"), SystemExit, "valid JSON"),
+        (("call", "openhcs_health_check", "--arguments", "[]"), SystemExit, "JSON object"),
+        (("call", "openhcs_health_check", "--arguments", "null"), SystemExit, "JSON object"),
+        (("call", "openhcs_health_check", "--arguments", "42"), SystemExit, "JSON object"),
+    ),
+)
+def test_persistent_client_preserves_local_usage_errors(
+    monkeypatch, capsys, argv, exception_type, message
+) -> None:
+    dispatched_calls = []
+
     class FakeMcpDevStdioSession:
         def __init__(self, server_spec, server_stderr) -> None:
             del server_stderr
@@ -235,6 +304,10 @@ def test_persistent_client_preserves_local_usage_errors(monkeypatch) -> None:
         async def initialize(self, *, timeout_seconds: float) -> None:
             del timeout_seconds
 
+        async def call_tool(self, *args, **kwargs):
+            dispatched_calls.append((args, kwargs))
+            raise AssertionError("Invalid local arguments must never dispatch.")
+
     monkeypatch.setattr(
         dev_client,
         "McpDevStdioSession",
@@ -242,13 +315,25 @@ def test_persistent_client_preserves_local_usage_errors(monkeypatch) -> None:
     )
 
     with dev_client.McpDevClient(sys.executable) as client:
-        with pytest.raises(dev_client.McpDevCliUsageError, match="requires a port"):
-            client.execute(("viewer-state", "--json"))
+        with pytest.raises(exception_type) as caught:
+            client.execute(argv)
+
+    assert dispatched_calls == []
+    if exception_type is SystemExit:
+        assert caught.value.code == 2
+        assert message in capsys.readouterr().err
+    else:
+        assert message in str(caught.value)
 
 
 def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
     monkeypatch,
 ) -> None:
+    from openhcs.mcp.server import HealthCheckMcpToolBinding
+    from openhcs.serialization.json import to_jsonable
+
+    health_payload = to_jsonable(HealthCheckMcpToolBinding.execute(None))
+
     class ProgressAwareFakeMcpDevStdioSession:
         def __init__(self, server_spec, server_stderr) -> None:
             del server_stderr
@@ -280,7 +365,7 @@ def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
                 "content": [
                     {
                         "type": "text",
-                        "text": json.dumps({"status": "ok"}),
+                        "text": json.dumps(health_payload),
                     }
                 ],
             }
@@ -302,8 +387,8 @@ def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
             timeout_seconds=0.02,
         )
 
-    assert execution.returncode == 0
-    assert execution.payload["results"][0]["payloads"] == [{"status": "ok"}]
+    assert execution.returncode == 0, execution.payload
+    assert execution.payload["results"][0]["payloads"] == [health_payload]
 
 
 def test_stdio_tool_call_requests_and_consumes_progress_notifications(monkeypatch):
@@ -388,6 +473,69 @@ def test_stdio_tool_call_progress_renews_inactivity_timeout(monkeypatch) -> None
     )
 
     assert result == {"content": []}
+
+
+@pytest.mark.parametrize(
+    "unrelated_message",
+    [
+        {
+            "jsonrpc": "2.0",
+            "method": "notifications/progress",
+            "params": {"progressToken": "another-request", "progress": 1.0},
+        },
+        {"jsonrpc": "2.0", "id": "another-request", "result": {}},
+    ],
+)
+def test_unrelated_messages_do_not_renew_tool_inactivity(
+    monkeypatch, unrelated_message
+) -> None:
+    session = dev_client.McpDevStdioSession(
+        dev_client.McpDevServerSpec(sys.executable), io.StringIO()
+    )
+    received = 0
+
+    async def write_message(message):
+        del message
+
+    async def read_message(*, timeout_seconds):
+        nonlocal received
+        await asyncio.wait_for(asyncio.sleep(0.01), timeout=timeout_seconds)
+        received += 1
+        if received <= 6:
+            return unrelated_message
+        return {"jsonrpc": "2.0", "id": 1, "result": {"content": []}}
+
+    monkeypatch.setattr(session, "write_message", write_message)
+    monkeypatch.setattr(session, "read_message", read_message)
+    with pytest.raises(TimeoutError):
+        asyncio.run(session.call_tool("openhcs_slow_tool", {}, timeout_seconds=0.025))
+    assert received < 6
+
+
+def test_malformed_progress_fails_at_the_original_protocol_boundary(monkeypatch):
+    from pydantic import ValidationError
+
+    session = dev_client.McpDevStdioSession(
+        dev_client.McpDevServerSpec(sys.executable), io.StringIO()
+    )
+    responses = iter(
+        (
+            {"jsonrpc": "2.0", "method": "notifications/progress", "params": {}},
+            {"jsonrpc": "2.0", "id": 1, "result": {"content": []}},
+        )
+    )
+
+    async def write_message(message):
+        del message
+
+    async def read_message(*, timeout_seconds):
+        del timeout_seconds
+        return next(responses)
+
+    monkeypatch.setattr(session, "write_message", write_message)
+    monkeypatch.setattr(session, "read_message", read_message)
+    with pytest.raises(ValidationError):
+        asyncio.run(session.call_tool("openhcs_slow_tool", {}, timeout_seconds=1.0))
 
 
 def test_stdio_session_times_out_when_no_message_activity_arrives() -> None:

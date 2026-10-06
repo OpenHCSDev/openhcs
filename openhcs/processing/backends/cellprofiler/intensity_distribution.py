@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -31,7 +32,10 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import KeywordRuntimeParameter
-from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
+from openhcs.core.measurement_row_materialization import (
+    MeasurementProjectedColumnarRows,
+    ObjectMeasurementColumnarRows,
+)
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
@@ -40,6 +44,10 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.equivalence.policy import (
+    RuntimeMeasurementQualifierSuffixMatchStrategy,
+)
 from openhcs.core.registry_strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -64,8 +72,8 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
-    MeasurementRowValueField,
     RuntimeMeasurementFeature,
+    RuntimeMeasurementIndexedDescriptorDeclaration,
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
@@ -92,6 +100,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
 )
+from openhcs.interop.cellprofiler.measurement_dialect import (
+    CELLPROFILER_MEASUREMENT_DIALECT,
+)
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
@@ -100,12 +111,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryPropagationBackendStrategy,
     secondary_propagation_backend,
@@ -361,6 +367,86 @@ class MeasureObjectIntensityDistributionObjectMeasurementRowPolicy(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class IndexedRadialDistributionFeature:
+    """Identity of one source-qualified radial feature and its bin."""
+
+    feature: RuntimeMeasurementFeature
+    source_image_name: str
+    bin_index: int
+    bin_count: int
+
+
+class RadialDistributionFeatureDeclaration(
+    RuntimeMeasurementIndexedDescriptorDeclaration
+):
+    """Radial bin suffix ownership shared by production columns and lookup."""
+
+    declaration_key = "cellprofiler_radial_distribution_bin"
+
+    @classmethod
+    def from_feature_name(
+        cls, feature_name: str
+    ) -> IndexedRadialDistributionFeature | None:
+        tokens = tuple(normalize_runtime_identifier(feature_name).split("_"))
+        suffix_width = cls.bin_suffix_width(tokens)
+        if suffix_width is None:
+            return None
+        source_end = len(tokens) - suffix_width
+        for feature in MeasureObjectIntensityDistributionModule.MeasurementFeature:
+            prefix = tuple(
+                normalize_runtime_identifier(
+                    feature.source_qualified_name(source_image_name="")
+                ).split("_")
+            )
+            if source_end <= len(prefix) or tokens[: len(prefix)] != prefix:
+                continue
+            return IndexedRadialDistributionFeature(
+                feature=feature,
+                source_image_name="_".join(tokens[len(prefix) : source_end]),
+                bin_index=int(tokens[-suffix_width]),
+                bin_count=int(tokens[-1]),
+            )
+        return None
+
+    @classmethod
+    def feature_name(cls, identity: object) -> str:
+        if not isinstance(identity, IndexedRadialDistributionFeature):
+            raise TypeError(
+                "Radial feature rendering requires IndexedRadialDistributionFeature."
+            )
+        return CELLPROFILER_MEASUREMENT_DIALECT.projected_feature_name(
+            identity.feature.source_qualified_name(
+                source_image_name=identity.source_image_name
+            ),
+            (
+                (MeasurementRowAxisField.BIN_INDEX.value, identity.bin_index),
+                (MeasurementRowAxisField.BIN_COUNT.value, identity.bin_count),
+            ),
+        )
+
+    @classmethod
+    def indexed_suffix_token_width(cls, feature_tokens: tuple[str, ...]) -> int | None:
+        if cls.from_feature_name("_".join(feature_tokens)) is None:
+            return None
+        return cls.bin_suffix_width(feature_tokens)
+
+    @staticmethod
+    def bin_suffix_width(feature_tokens: tuple[str, ...]) -> int | None:
+        qualifier = next(
+            qualifier
+            for qualifier in CELLPROFILER_MEASUREMENT_DIALECT.row_qualifiers
+            if qualifier.field_names
+            == (
+                MeasurementRowAxisField.BIN_INDEX.value,
+                MeasurementRowAxisField.BIN_COUNT.value,
+            )
+        )
+        return RuntimeMeasurementQualifierSuffixMatchStrategy.for_enum_member(
+            qualifier.value_mode
+        ).matched_token_width(feature_tokens, len(feature_tokens), qualifier)
+
+
 class MeasureObjectIntensityDistributionModule(
     LabelsObjectInputPolicy,
     MeasureObjectIntensityDistributionObjectMeasurementRowPolicy,
@@ -372,6 +458,7 @@ class MeasureObjectIntensityDistributionModule(
 ):
     module_name = "MeasureObjectIntensityDistribution"
     function_name = "measure_object_intensity_distribution"
+    zernike_backend_provider = CellProfilerBackendProvider.LEGACY_FAST
     validated = True
     confidence = 1.0
     measurement_category_prefixes = (
@@ -868,12 +955,20 @@ class MeasureObjectIntensityDistributionModule(
 CenterChoice = IntensityDistributionCenterChoice
 ZernikeMode = IntensityDistributionZernikeMode
 
+
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
-_RADIAL_LABEL_GEOMETRY_CACHE_LIMIT = 16
-_RADIAL_LABEL_GEOMETRY_CACHE: OrderedDict[
-    "RadialLabelGeometryCacheKey", "RadialLabelGeometry"
-] = OrderedDict()
+runtime_profiler = RuntimeProfiler(logger)
+
+
+@dataclass
+class RadialLabelGeometryCache(
+    RegisteredProcessLocalBoundedCache[
+        "RadialLabelGeometryCacheKey", "RadialLabelGeometry"
+    ]
+):
+    """Process-local numerical geometry with shared bounded storage."""
+
+    max_entries: int = 16
 
 
 @dataclass(frozen=True)
@@ -948,29 +1043,151 @@ class RadialCenterDistanceFields:
 class RadialCenterPropagationRequest:
     """Nearest-center propagation for radial intensity-distribution geometry."""
 
+    object_labels: np.ndarray
     center_labels: np.ndarray
-    colors: np.ndarray
+    centers_i: np.ndarray
+    centers_j: np.ndarray
     propagation_backend: SecondaryPropagationBackendStrategy
 
     def fields(self) -> tuple[np.ndarray, np.ndarray]:
-        """Return center distances and propagated center labels by color mask."""
-        d_from_center = np.zeros(self.center_labels.shape, dtype=float)
-        propagated_center_labels = np.zeros(self.center_labels.shape, dtype=int)
-        max_color = int(np.max(self.colors)) if self.colors.size else 0
+        """Use exact octile paths where unobstructed; propagate obstructed labels."""
+        labels = np.ascontiguousarray(self.object_labels, dtype=np.int32)
+        (
+            d_from_center,
+            propagated_center_labels,
+            obstructed,
+            min_rows,
+            min_columns,
+            max_rows,
+            max_columns,
+        ) = _radial_unobstructed_center_fields(
+            labels,
+            np.asarray(self.centers_i, dtype=np.float64),
+            np.asarray(self.centers_j, dtype=np.float64),
+        )
         seed_labels = np.asarray(self.center_labels, dtype=np.int32)
-        for color in range(1, max_color + 1):
-            mask = self.colors == color
-            seed_mask = mask & (seed_labels > 0)
-            if not np.any(seed_mask):
+        for label in np.flatnonzero(obstructed):
+            if min_rows[label] > max_rows[label]:
                 continue
-            propagation = self.propagation_backend.propagate_zero_image_result(
-                seed_labels, mask, 1
+            row_start, row_stop = int(min_rows[label]), int(max_rows[label]) + 1
+            column_start, column_stop = (
+                int(min_columns[label]),
+                int(max_columns[label]) + 1,
             )
-            propagated_labels = propagation.labels
-            distances = propagation.distances
-            d_from_center[mask] = distances[mask]
-            propagated_center_labels[mask] = propagated_labels[mask]
+            local_labels = labels[row_start:row_stop, column_start:column_stop]
+            mask = np.ascontiguousarray(local_labels == label)
+            local_seeds = np.where(
+                mask,
+                seed_labels[row_start:row_stop, column_start:column_stop],
+                0,
+            ).astype(np.int32, copy=False)
+            propagation = self.propagation_backend.propagate_zero_image_result(
+                local_seeds, mask, 1
+            )
+            local_distances = d_from_center[
+                row_start:row_stop, column_start:column_stop
+            ]
+            local_propagated = propagated_center_labels[
+                row_start:row_stop, column_start:column_stop
+            ]
+            local_distances[mask] = propagation.distances[mask]
+            local_propagated[mask] = propagation.labels[mask]
         return (d_from_center, propagated_center_labels)
+
+
+@njit(cache=True)
+def _radial_unobstructed_center_fields(
+    labels: np.ndarray,
+    centers_i: np.ndarray,
+    centers_j: np.ndarray,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+    """Find labels with an octile shortest path from every pixel to its seed."""
+    height, width = labels.shape
+    object_count = centers_i.size
+    distances = np.zeros((height, width), dtype=np.float64)
+    propagated = np.zeros((height, width), dtype=np.int32)
+    obstructed = np.zeros(object_count + 1, dtype=np.bool_)
+    min_rows = np.full(object_count + 1, height, dtype=np.int32)
+    min_columns = np.full(object_count + 1, width, dtype=np.int32)
+    max_rows = np.zeros(object_count + 1, dtype=np.int32)
+    max_columns = np.zeros(object_count + 1, dtype=np.int32)
+    diagonal_extra = np.sqrt(2.0) - 1.0
+    for row in range(height):
+        for column in range(width):
+            label = labels[row, column]
+            if label <= 0 or label > object_count:
+                continue
+            if row < min_rows[label]:
+                min_rows[label] = row
+            if column < min_columns[label]:
+                min_columns[label] = column
+            if row > max_rows[label]:
+                max_rows[label] = row
+            if column > max_columns[label]:
+                max_columns[label] = column
+            if not np.isfinite(centers_i[label - 1]) or not np.isfinite(
+                centers_j[label - 1]
+            ):
+                obstructed[label] = True
+                continue
+            center_row = int(centers_i[label - 1])
+            center_column = int(centers_j[label - 1])
+            if (
+                center_row < 0
+                or center_row >= height
+                or center_column < 0
+                or center_column >= width
+                or labels[center_row, center_column] != label
+            ):
+                obstructed[label] = True
+                continue
+            row_delta = center_row - row
+            column_delta = center_column - column
+            row_distance = abs(row_delta)
+            column_distance = abs(column_delta)
+            row_step = 1 if row_delta > 0 else -1 if row_delta < 0 else 0
+            column_step = 1 if column_delta > 0 else -1 if column_delta < 0 else 0
+            has_predecessor = row_distance == 0 and column_distance == 0
+            if (
+                row_distance > 0
+                and column_distance > 0
+                and labels[row + row_step, column + column_step] == label
+            ):
+                has_predecessor = True
+            if (
+                row_distance > column_distance
+                and labels[row + row_step, column] == label
+            ):
+                has_predecessor = True
+            if (
+                column_distance > row_distance
+                and labels[row, column + column_step] == label
+            ):
+                has_predecessor = True
+            if not has_predecessor:
+                obstructed[label] = True
+            if row_distance > column_distance:
+                distances[row, column] = row_distance + diagonal_extra * column_distance
+            else:
+                distances[row, column] = column_distance + diagonal_extra * row_distance
+            propagated[row, column] = label
+    return (
+        distances,
+        propagated,
+        obstructed,
+        min_rows,
+        min_columns,
+        max_rows,
+        max_columns,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1078,6 +1295,31 @@ class RadialDistributionMeasureRequest:
     wants_scaled: bool
     maximum_radius: int
 
+    @classmethod
+    def from_geometry(
+        cls,
+        image: np.ndarray,
+        labels: np.ndarray,
+        geometry: RadialLabelGeometry,
+        *,
+        bin_count: int,
+        wants_scaled: bool,
+        maximum_radius: int,
+    ) -> "RadialDistributionMeasureRequest":
+        """Project a measurement request from the shared label geometry."""
+        return cls(
+            image=image,
+            labels=labels,
+            d_to_edge=geometry.d_to_edge,
+            d_from_center=geometry.center_fields.d_from_center,
+            center_labels=geometry.center_fields.center_labels,
+            centers_i=geometry.center_fields.centers_i,
+            centers_j=geometry.center_fields.centers_j,
+            bin_count=bin_count,
+            wants_scaled=wants_scaled,
+            maximum_radius=maximum_radius,
+        )
+
     def arrays(
         self,
     ) -> tuple[
@@ -1104,6 +1346,19 @@ class RadialDistributionMeasureRequest:
         if labels_array.shape != image_array.shape:
             raise ValueError(
                 f"Radial distribution labels must match the image shape; got labels {labels_array.shape!r} for image {image_array.shape!r}."
+            )
+        if any(
+            array.shape != image_array.shape
+            for array in (d_to_edge_array, d_from_center_array, center_labels_array)
+        ):
+            raise ValueError("Radial distribution geometry must match the image shape.")
+        if centers_i_array.ndim != 1 or centers_i_array.shape != centers_j_array.shape:
+            raise ValueError(
+                "Radial distribution center coordinates must be equal-length vectors."
+            )
+        if int(center_labels_array.max(initial=0)) > centers_i_array.size:
+            raise ValueError(
+                "Radial distribution center labels exceed the declared center coordinates."
             )
         if self.bin_count <= 0:
             raise ValueError(f"bin_count must be positive, got {self.bin_count!r}.")
@@ -1196,8 +1451,15 @@ class IntensityDistributionMeasurementRequest:
                 row_identity=MeasurementObjectRowIdentity.LABEL_ID,
                 backend_provider=self.zernike_backend_provider,
             ).rows()
-            measurements = ConcatenatedColumnarRows(
-                (measurements, zernike_measurements)
+            measurements = MeasurementProjectedColumnarRows(
+                MappingProxyType(
+                    {**measurements.columns, **zernike_measurements.columns}
+                ),
+                fields=FieldSpec.merge_exact(
+                    (measurements.fields, zernike_measurements.fields)
+                ),
+                declared_object_measurement_domain_covered=True,
+                object_row_identity=MeasurementObjectRowIdentity.LABEL_ID,
             )
             self.profiler.record_rows(
                 "idist_zernike_rows", phase_started_at, len(measurements)
@@ -1238,15 +1500,15 @@ class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumn
 
     def __post_init__(self) -> None:
         object_ids = np.asarray(
-            tuple((int(object_id) for object_id in self.object_ids))
+            tuple((int(object_id) for object_id in self.object_ids)), dtype=np.int64
         )
-        row_count = int(object_ids.size) * int(self.radial_arrays.n_bins) * 3
-        object_labels = np.empty(row_count, dtype=np.int32)
-        feature_names = np.empty(row_count, dtype=object)
-        source_image_names = np.full(row_count, self.source_image_name, dtype=object)
-        bin_indices = np.empty(row_count, dtype=np.int32)
-        bin_counts = np.full(row_count, int(self.bin_count), dtype=np.int32)
-        result_values = np.empty(row_count, dtype=np.float64)
+        field_columns: list[tuple[FieldSpec, np.ndarray]] = [
+            (FieldSpec(MeasurementRowAxisField.OBJECT_LABEL.value, int), object_ids),
+            (
+                FieldSpec(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value, str),
+                np.full(object_ids.size, self.source_image_name, dtype=object),
+            ),
+        ]
         object_has_pixels_by_index = self.radial_arrays.object_has_pixels
         fraction_at_distance = self.radial_arrays.fraction_at_distance
         mean_pixel_fraction = self.radial_arrays.mean_pixel_fraction
@@ -1255,69 +1517,71 @@ class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumn
             object_ids,
             object_has_pixels_by_index,
         )
-        row_index = 0
+        source_indices = object_ids - 1
+        valid_objects = (source_indices >= 0) & (
+            source_indices < object_has_pixels_by_index.size
+        )
+        valid_positions = np.flatnonzero(valid_objects)
+        valid_objects[valid_positions] = object_has_pixels_by_index[
+            source_indices[valid_positions]
+        ]
+        measured_positions = np.flatnonzero(valid_objects)
+        measured_indices = source_indices[measured_positions]
         for bin_idx in range(self.radial_arrays.n_bins):
             bin_index = bin_idx + 1
-            fraction_at_distance_feature = MeasureObjectIntensityDistributionModule.MeasurementFeature.FRACTION_AT_DISTANCE.source_qualified_name(
-                source_image_name=self.source_image_name,
-            )
-            mean_fraction_feature = MeasureObjectIntensityDistributionModule.MeasurementFeature.MEAN_FRACTION.source_qualified_name(
-                source_image_name=self.source_image_name,
-            )
-            radial_cv_feature = MeasureObjectIntensityDistributionModule.MeasurementFeature.RADIAL_CV.source_qualified_name(
-                source_image_name=self.source_image_name,
-            )
             radial_cv = radial_cv_by_bin[bin_idx]
-            for object_label in object_ids:
-                object_row = DeclaredRadialDistributionObjectRow(
-                    int(object_label), object_has_pixels_by_index.size
+            fraction_values = np.full(object_ids.size, np.nan, dtype=np.float64)
+            mean_values = np.full(object_ids.size, np.nan, dtype=np.float64)
+            cv_values = np.asarray(
+                [radial_cv_missing_values[int(label)] for label in object_ids],
+                dtype=np.float64,
+            )
+            fraction_values[measured_positions] = fraction_at_distance[
+                measured_indices, bin_idx
+            ]
+            mean_values[measured_positions] = mean_pixel_fraction[
+                measured_indices, bin_idx
+            ]
+            measured_cv = np.asarray(radial_cv[measured_indices], dtype=np.float64)
+            cv_values[measured_positions] = np.where(
+                np.isfinite(measured_cv), measured_cv, 0.0
+            )
+            for feature, feature_values in (
+                (
+                    MeasureObjectIntensityDistributionModule.MeasurementFeature.FRACTION_AT_DISTANCE,
+                    fraction_values,
+                ),
+                (
+                    MeasureObjectIntensityDistributionModule.MeasurementFeature.MEAN_FRACTION,
+                    mean_values,
+                ),
+                (
+                    MeasureObjectIntensityDistributionModule.MeasurementFeature.RADIAL_CV,
+                    cv_values,
+                ),
+            ):
+                field_columns.append(
+                    (
+                        FieldSpec(
+                            RadialDistributionFeatureDeclaration.feature_name(
+                                IndexedRadialDistributionFeature(
+                                    feature=feature,
+                                    source_image_name=self.source_image_name,
+                                    bin_index=bin_index,
+                                    bin_count=self.bin_count,
+                                )
+                            ),
+                            float,
+                        ),
+                        feature_values,
+                    )
                 )
-                obj_idx = object_row.array_index
-                object_has_pixels = obj_idx is not None and bool(
-                    object_has_pixels_by_index[obj_idx]
-                )
-                object_labels[row_index : row_index + 3] = int(object_label)
-                feature_names[row_index] = fraction_at_distance_feature
-                feature_names[row_index + 1] = mean_fraction_feature
-                feature_names[row_index + 2] = radial_cv_feature
-                bin_indices[row_index : row_index + 3] = bin_index
-                result_values[row_index] = (
-                    float(fraction_at_distance[obj_idx, bin_idx])
-                    if object_has_pixels and obj_idx is not None
-                    else np.nan
-                )
-                result_values[row_index + 1] = (
-                    float(mean_pixel_fraction[obj_idx, bin_idx])
-                    if object_has_pixels and obj_idx is not None
-                    else np.nan
-                )
-                result_values[row_index + 2] = (
-                    RadialCVMissingValueAuthority.export_value(radial_cv[obj_idx])
-                    if object_has_pixels and obj_idx is not None
-                    else radial_cv_missing_values[int(object_label)]
-                )
-                row_index += 3
-        field_columns: tuple[tuple[FieldSpec, np.ndarray], ...] = (
-            (FieldSpec(MeasurementRowAxisField.OBJECT_LABEL.value, int), object_labels),
-            (FieldSpec(MeasurementRowAxisField.FEATURE_NAME.value, str), feature_names),
-            (
-                FieldSpec(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value, str),
-                source_image_names,
-            ),
-            (FieldSpec(MeasurementRowAxisField.BIN_INDEX.value, int), bin_indices),
-            (FieldSpec(MeasurementRowAxisField.BIN_COUNT.value, int), bin_counts),
-            (
-                FieldSpec(MeasurementRowValueField.RESULT_VALUE.value, float),
-                result_values,
-            ),
-        )
         if self.slice_index is not None:
-            field_columns = (
-                *field_columns,
+            field_columns.append(
                 (
                     FieldSpec(MeasurementRowAxisField.SLICE_INDEX.value, int),
-                    np.full(row_count, int(self.slice_index), dtype=np.int32),
-                ),
+                    np.full(object_ids.size, int(self.slice_index), dtype=np.int32),
+                )
             )
         self._fields = tuple(field_spec for field_spec, _values in field_columns)
         self._columns = MappingProxyType(
@@ -1351,14 +1615,6 @@ class DeclaredRadialDistributionObjectRow:
 
 class RadialCVMissingValueAuthority:
     """CellProfiler missing-row values for RadialCV over a dense object domain."""
-
-    @staticmethod
-    def export_value(value: float) -> float:
-        """Normalize undefined radial coefficients to CellProfiler's export value."""
-        raw_value = float(value)
-        if not np.isfinite(raw_value):
-            return 0.0
-        return raw_value
 
     @classmethod
     def values(
@@ -1516,14 +1772,10 @@ class RadialDistributionBackendStrategy(
                 bin_count=bin_count, wants_scaled=wants_scaled
             )
         return self.measure(
-            RadialDistributionMeasureRequest(
-                image=image,
-                labels=labels_array,
-                d_to_edge=geometry.d_to_edge,
-                d_from_center=geometry.center_fields.d_from_center,
-                center_labels=geometry.center_fields.center_labels,
-                centers_i=geometry.center_fields.centers_i,
-                centers_j=geometry.center_fields.centers_j,
+            RadialDistributionMeasureRequest.from_geometry(
+                image,
+                labels_array,
+                geometry,
                 bin_count=bin_count,
                 wants_scaled=wants_scaled,
                 maximum_radius=maximum_radius,
@@ -1580,26 +1832,18 @@ class RadialDistributionBackendStrategy(
             center_labels[
                 centers_i_int[valid_centers], centers_j_int[valid_centers]
             ] = labels_array[centers_i_int[valid_centers], centers_j_int[valid_centers]]
-        shape_backend = self.shape_geometry_backend()
-        phase_started_at = time.perf_counter()
-        colors = shape_backend.color_labels(labels_array)
-        runtime_profiler.log(
-            "idist_center_color_labels",
-            time.perf_counter() - phase_started_at,
-            objects=object_count,
-            colors=int(np.max(colors)) if colors.size else 0,
-        )
         phase_started_at = time.perf_counter()
         d_from_center, propagated_center_labels = RadialCenterPropagationRequest(
+            object_labels=labels_array,
             center_labels=center_labels,
-            colors=colors,
+            centers_i=centers_i,
+            centers_j=centers_j,
             propagation_backend=self.center_propagation_backend(),
         ).fields()
         runtime_profiler.log(
             "idist_center_propagate",
             time.perf_counter() - phase_started_at,
             objects=object_count,
-            colors=int(np.max(colors)) if colors.size else 0,
         )
         return RadialCenterDistanceFields(
             d_from_center=d_from_center,
@@ -1612,9 +1856,8 @@ class RadialDistributionBackendStrategy(
         """Return CP-compatible radial geometry derived only from object labels."""
         labels_array = np.ascontiguousarray(labels, dtype=np.int32)
         cache_key = RadialLabelGeometryCacheKey.from_labels(labels_array)
-        cached = _RADIAL_LABEL_GEOMETRY_CACHE.get(cache_key)
+        cached = RadialLabelGeometryCache.process_cache().cached_value(cache_key)
         if cached is not None:
-            _RADIAL_LABEL_GEOMETRY_CACHE.move_to_end(cache_key)
             runtime_profiler.log(
                 "idist_label_geometry_cache_hit",
                 0.0,
@@ -1645,10 +1888,7 @@ class RadialDistributionBackendStrategy(
                 labels_array, centers_i, centers_j
             ),
         )
-        _RADIAL_LABEL_GEOMETRY_CACHE[cache_key] = geometry
-        _RADIAL_LABEL_GEOMETRY_CACHE.move_to_end(cache_key)
-        while len(_RADIAL_LABEL_GEOMETRY_CACHE) > _RADIAL_LABEL_GEOMETRY_CACHE_LIMIT:
-            _RADIAL_LABEL_GEOMETRY_CACHE.popitem(last=False)
+        RadialLabelGeometryCache.process_cache().store_value(cache_key, geometry)
         return geometry
 
 
@@ -1660,7 +1900,7 @@ class NativeNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStra
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.NATIVE
-    is_default_backend = True
+    is_default_backend = False
 
     def measure(
         self, request: RadialDistributionMeasureRequest
@@ -1771,33 +2011,53 @@ class NumbaNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrat
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.NUMBA
-    is_default_backend = False
+    is_default_backend = True
 
     def prepare_backend(self) -> None:
         labels = np.zeros((8, 8), dtype=np.int32)
         labels[2:6, 2:6] = 1
-        image = np.zeros((8, 8), dtype=np.float32)
-        d_to_edge = np.ones((8, 8), dtype=np.float64)
-        centers_i = np.array([3.5], dtype=np.float64)
-        centers_j = np.array([3.5], dtype=np.float64)
-        self.measure_from_centers(
-            image,
-            labels,
-            d_to_edge,
-            centers_i,
-            centers_j,
-            bin_count=4,
-            wants_scaled=True,
-            maximum_radius=100,
-        )
         geometry = self.label_geometry(labels)
-        self.measure_batch_self_centered_with_geometry(
-            (image, image),
-            labels,
-            geometry,
-            bin_count=4,
-            wants_scaled=True,
-            maximum_radius=100,
+        for dtype in (np.float32, np.float64):
+            image = np.zeros(labels.shape, dtype=dtype)
+            self.measure_self_centered_with_geometry(
+                image,
+                labels,
+                geometry,
+                bin_count=4,
+                wants_scaled=True,
+                maximum_radius=100,
+            )
+            self.measure_batch_self_centered_with_geometry(
+                (image, image),
+                labels,
+                geometry,
+                bin_count=4,
+                wants_scaled=True,
+                maximum_radius=100,
+            )
+
+    def arrays_from_bin_totals(
+        self,
+        histogram: np.ndarray,
+        number_at_distance: np.ndarray,
+        radial_values: np.ndarray,
+        radial_counts: np.ndarray,
+    ) -> RadialDistributionArrays:
+        """Normalize scalar and batched accumulations through one kernel."""
+        (
+            fraction_at_distance,
+            mean_pixel_fraction,
+            radial_cv_by_bin,
+            object_has_pixels,
+        ) = _radial_distribution_arrays_from_bin_totals_numba(
+            histogram, number_at_distance, radial_values, radial_counts
+        )
+        return RadialDistributionArrays.from_components(
+            fraction_at_distance=fraction_at_distance,
+            mean_pixel_fraction=mean_pixel_fraction,
+            radial_cv_by_bin=radial_cv_by_bin,
+            object_has_pixels=object_has_pixels,
+            n_bins=radial_values.shape[0],
         )
 
     def measure(
@@ -1813,39 +2073,24 @@ class NumbaNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrat
             centers_j_array,
         ) = request.arrays()
         object_count = int(labels_array.max()) if labels_array.size else 0
-        n_bins = (
-            int(request.bin_count)
-            if request.wants_scaled
-            else int(request.bin_count) + 1
-        )
         if object_count <= 0:
             return RadialDistributionArrays.empty(
                 bin_count=request.bin_count, wants_scaled=request.wants_scaled
             )
-        (
-            fraction_at_distance,
-            mean_pixel_fraction,
-            radial_cv_by_bin,
-            object_has_pixels,
-        ) = _measure_radial_distribution_numba(
-            image_array,
-            labels_array,
-            d_to_edge_array,
-            d_from_center_array,
-            center_labels_array,
-            centers_i_array,
-            centers_j_array,
-            int(request.bin_count),
-            bool(request.wants_scaled),
-            int(request.maximum_radius),
-            object_count,
-        )
-        return RadialDistributionArrays.from_components(
-            fraction_at_distance=fraction_at_distance,
-            mean_pixel_fraction=mean_pixel_fraction,
-            radial_cv_by_bin=radial_cv_by_bin,
-            object_has_pixels=object_has_pixels,
-            n_bins=n_bins,
+        return self.arrays_from_bin_totals(
+            *_accumulate_radial_distribution_numba(
+                image_array,
+                labels_array,
+                d_to_edge_array,
+                d_from_center_array,
+                center_labels_array,
+                centers_i_array,
+                centers_j_array,
+                int(request.bin_count),
+                bool(request.wants_scaled),
+                int(request.maximum_radius),
+                object_count,
+            )
         )
 
     def measure_batch_self_centered_with_geometry(
@@ -1866,58 +2111,60 @@ class NumbaNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrat
                 bin_count=bin_count, wants_scaled=wants_scaled
             )
             return tuple((empty for _image in images))
+        components = tuple(
+            RadialDistributionMeasureRequest.from_geometry(
+                image,
+                labels_array,
+                geometry,
+                bin_count=bin_count,
+                wants_scaled=wants_scaled,
+                maximum_radius=maximum_radius,
+            ).arrays()
+            for image in images
+        )
+        if not components:
+            return ()
+        (
+            _image,
+            labels_array,
+            d_to_edge,
+            d_from_center,
+            center_labels,
+            centers_i,
+            centers_j,
+        ) = components[0]
         index = RadialDistributionGeometryIndex(
             *_radial_distribution_geometry_index_numba(
                 labels_array,
-                np.ascontiguousarray(geometry.d_to_edge, dtype=np.float64),
-                np.ascontiguousarray(
-                    geometry.center_fields.d_from_center, dtype=np.float64
-                ),
-                np.ascontiguousarray(
-                    geometry.center_fields.center_labels, dtype=np.int32
-                ),
-                np.ascontiguousarray(
-                    geometry.center_fields.centers_i, dtype=np.float64
-                ),
-                np.ascontiguousarray(
-                    geometry.center_fields.centers_j, dtype=np.float64
-                ),
+                d_to_edge,
+                d_from_center,
+                center_labels,
+                centers_i,
+                centers_j,
                 int(bin_count),
                 bool(wants_scaled),
                 int(maximum_radius),
                 object_count,
             )
         )
-        outputs: list[RadialDistributionArrays] = []
-        for image in images:
-            (
-                fraction_at_distance,
-                mean_pixel_fraction,
-                radial_cv_by_bin,
-                object_has_pixels,
-            ) = _measure_radial_distribution_from_geometry_index_numba(
-                np.ascontiguousarray(image),
-                index.pixel_rows,
-                index.pixel_cols,
-                index.object_indices,
-                index.bin_indices,
-                index.radial_indices,
-                index.number_at_distance,
-                index.radial_counts,
-                index.object_count,
-                index.bin_count,
-                index.n_bins,
-            )
-            outputs.append(
-                RadialDistributionArrays.from_components(
-                    fraction_at_distance=fraction_at_distance,
-                    mean_pixel_fraction=mean_pixel_fraction,
-                    radial_cv_by_bin=radial_cv_by_bin,
-                    object_has_pixels=object_has_pixels,
-                    n_bins=index.n_bins,
+        return tuple(
+            self.arrays_from_bin_totals(
+                *_accumulate_radial_distribution_from_geometry_index_numba(
+                    image,
+                    index.pixel_rows,
+                    index.pixel_cols,
+                    index.object_indices,
+                    index.bin_indices,
+                    index.radial_indices,
+                    index.number_at_distance,
+                    index.radial_counts,
+                    index.object_count,
+                    index.bin_count,
+                    index.n_bins,
                 )
             )
-        return tuple(outputs)
+            for image, *_geometry_arrays in components
+        )
 
 
 def radial_distribution_backend(
@@ -1952,16 +2199,6 @@ def _numpy_divide_scalar(numerator: float, denominator: float) -> float:
 
 
 @njit(cache=True)
-def _radial_cv_divide_scalar(numerator: float, denominator: float) -> float:
-    if denominator != 0.0:
-        return numerator / denominator
-    if numerator == 0.0:
-        return 0.0
-    if numerator > 0.0:
-        return np.inf
-    return -np.inf
-
-
 def _radial_distribution_geometry_index_numba(
     labels: np.ndarray,
     d_to_edge: np.ndarray,
@@ -2068,7 +2305,7 @@ def _radial_distribution_geometry_index_numba(
 
 
 @njit(cache=True)
-def _measure_radial_distribution_from_geometry_index_numba(
+def _accumulate_radial_distribution_from_geometry_index_numba(
     image: np.ndarray,
     pixel_rows: np.ndarray,
     pixel_cols: np.ndarray,
@@ -2091,66 +2328,11 @@ def _measure_radial_distribution_from_geometry_index_numba(
         radial_index = radial_indices[pixel_index]
         if radial_index >= 0:
             radial_values[bin_index, object_index, radial_index] += pixel_value
-    fraction_at_distance = np.zeros((object_count, bin_count + 1), dtype=image.dtype)
-    fraction_at_bin = np.zeros((object_count, bin_count + 1), dtype=np.float64)
-    object_has_pixels = np.zeros(object_count, dtype=np.bool_)
-    eps = np.finfo(np.float64).eps
-    for object_index in range(object_count):
-        intensity_sum = 0.0
-        pixel_count = 0.0
-        for bin_index in range(bin_count + 1):
-            intensity_sum += histogram[object_index, bin_index]
-            pixel_count += number_at_distance[object_index, bin_index]
-        if pixel_count > 0.0:
-            object_has_pixels[object_index] = True
-        for bin_index in range(bin_count + 1):
-            fraction_at_distance[object_index, bin_index] = _numpy_divide_scalar(
-                histogram[object_index, bin_index], intensity_sum
-            )
-            fraction_at_bin[object_index, bin_index] = _numpy_divide_scalar(
-                number_at_distance[object_index, bin_index], pixel_count
-            )
-    mean_pixel_fraction = np.zeros((object_count, bin_count + 1), dtype=np.float64)
-    for object_index in range(object_count):
-        for bin_index in range(bin_count + 1):
-            mean_pixel_fraction[object_index, bin_index] = fraction_at_distance[
-                object_index, bin_index
-            ] / (fraction_at_bin[object_index, bin_index] + eps)
-    radial_cv_by_bin = np.zeros((n_bins, object_count), dtype=np.float64)
-    for bin_index in range(n_bins):
-        for object_index in range(object_count):
-            populated_wedges = 0
-            wedge_sum = 0.0
-            wedge_sum_sq = 0.0
-            for radial_index in range(8):
-                count = radial_counts[bin_index, object_index, radial_index]
-                if count <= 0.0:
-                    continue
-                radial_mean = (
-                    radial_values[bin_index, object_index, radial_index] / count
-                )
-                populated_wedges += 1
-                wedge_sum += radial_mean
-                wedge_sum_sq += radial_mean * radial_mean
-            if populated_wedges == 0:
-                continue
-            mean = wedge_sum / populated_wedges
-            variance = wedge_sum_sq / populated_wedges - mean * mean
-            if variance < 0.0:
-                variance = 0.0
-            radial_cv_by_bin[bin_index, object_index] = _radial_cv_divide_scalar(
-                np.sqrt(variance), mean
-            )
-    return (
-        fraction_at_distance,
-        mean_pixel_fraction,
-        radial_cv_by_bin,
-        object_has_pixels,
-    )
+    return histogram, number_at_distance, radial_values, radial_counts
 
 
 @njit(cache=True)
-def _measure_radial_distribution_numba(
+def _accumulate_radial_distribution_numba(
     image: np.ndarray,
     labels: np.ndarray,
     d_to_edge: np.ndarray,
@@ -2198,56 +2380,70 @@ def _measure_radial_distribution_numba(
                 radial_index = imask + jmask * 2 + absmask * 4
                 radial_values[bin_index, object_index, radial_index] += pixel_value
                 radial_counts[bin_index, object_index, radial_index] += 1.0
-    fraction_at_distance = np.zeros((object_count, bin_count + 1), dtype=image.dtype)
-    fraction_at_bin = np.zeros((object_count, bin_count + 1), dtype=np.float64)
+    return histogram, number_at_distance, radial_values, radial_counts
+
+
+@njit(cache=True)
+def _radial_distribution_arrays_from_bin_totals_numba(
+    histogram: np.ndarray,
+    number_at_distance: np.ndarray,
+    radial_values: np.ndarray,
+    radial_counts: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    object_count, distance_bins = histogram.shape
+    n_bins = radial_values.shape[0]
+    # Fractions are real-valued measurements even for integer input images.
+    fraction_at_distance = np.zeros(histogram.shape, dtype=np.float64)
+    mean_pixel_fraction = np.zeros(histogram.shape, dtype=np.float64)
     object_has_pixels = np.zeros(object_count, dtype=np.bool_)
+    intensity_sums = np.sum(histogram, axis=1)
     eps = np.finfo(np.float64).eps
     for object_index in range(object_count):
-        intensity_sum = 0.0
         pixel_count = 0.0
-        for bin_index in range(bin_count + 1):
-            intensity_sum += histogram[object_index, bin_index]
+        for bin_index in range(distance_bins):
             pixel_count += number_at_distance[object_index, bin_index]
-        if pixel_count > 0.0:
-            object_has_pixels[object_index] = True
-        for bin_index in range(bin_count + 1):
-            fraction_at_distance[object_index, bin_index] = _numpy_divide_scalar(
-                histogram[object_index, bin_index], intensity_sum
+        object_has_pixels[object_index] = pixel_count > 0.0
+        for bin_index in range(distance_bins):
+            fraction = _numpy_divide_scalar(
+                histogram[object_index, bin_index], intensity_sums[object_index]
             )
-            fraction_at_bin[object_index, bin_index] = _numpy_divide_scalar(
+            fraction_at_distance[object_index, bin_index] = fraction
+            pixel_fraction = _numpy_divide_scalar(
                 number_at_distance[object_index, bin_index], pixel_count
             )
-    mean_pixel_fraction = np.zeros((object_count, bin_count + 1), dtype=np.float64)
-    for object_index in range(object_count):
-        for bin_index in range(bin_count + 1):
-            mean_pixel_fraction[object_index, bin_index] = fraction_at_distance[
-                object_index, bin_index
-            ] / (fraction_at_bin[object_index, bin_index] + eps)
+            mean_pixel_fraction[object_index, bin_index] = fraction / (
+                pixel_fraction + eps
+            )
     radial_cv_by_bin = np.zeros((n_bins, object_count), dtype=np.float64)
     for bin_index in range(n_bins):
         for object_index in range(object_count):
             populated_wedges = 0
             wedge_sum = 0.0
-            wedge_sum_sq = 0.0
             for radial_index in range(8):
                 count = radial_counts[bin_index, object_index, radial_index]
-                if count <= 0.0:
-                    continue
-                radial_mean = (
-                    radial_values[bin_index, object_index, radial_index] / count
-                )
-                populated_wedges += 1
-                wedge_sum += radial_mean
-                wedge_sum_sq += radial_mean * radial_mean
+                if count > 0.0:
+                    populated_wedges += 1
+                    wedge_sum += (
+                        radial_values[bin_index, object_index, radial_index] / count
+                    )
             if populated_wedges == 0:
                 continue
             mean = wedge_sum / populated_wedges
-            variance = wedge_sum_sq / populated_wedges - mean * mean
-            if variance < 0.0:
-                variance = 0.0
-            radial_cv_by_bin[bin_index, object_index] = _radial_cv_divide_scalar(
-                np.sqrt(variance), mean
+            squared_deviations = 0.0
+            for radial_index in range(8):
+                count = radial_counts[bin_index, object_index, radial_index]
+                if count > 0.0:
+                    deviation = (
+                        radial_values[bin_index, object_index, radial_index] / count
+                        - mean
+                    )
+                    squared_deviations += deviation * deviation
+            cv = _numpy_divide_scalar(
+                np.sqrt(squared_deviations / populated_wedges), mean
             )
+            # Native masked-array division fills undefined coefficients with zero.
+            if np.isfinite(cv):
+                radial_cv_by_bin[bin_index, object_index] = cv
     return (
         fraction_at_distance,
         mean_pixel_fraction,
@@ -2264,7 +2460,7 @@ def _measure_radial_distribution_numba(
     _IntensityDistributionHeatmapOutputsRuntimeParameter,
 )
 def measure_object_intensity_distribution(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     bin_count: int = 4,
     wants_scaled: bool = True,
@@ -2273,7 +2469,9 @@ def measure_object_intensity_distribution(
     zernike_degree: int = 9,
     center_choice: CenterChoice = CenterChoice.SELF,
     radial_distribution_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    zernike_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    zernike_backend_provider: BackendProviderInput = (
+        MeasureObjectIntensityDistributionModule.zernike_backend_provider
+    ),
     slice_index: int | None = None,
     heatmap_groups: tuple[IntensityDistributionHeatmapGroup, ...] = (),
     heatmap_outputs: tuple[IntensityDistributionHeatmapRuntimeOutput, ...] = (),
@@ -2363,7 +2561,7 @@ def measure_object_intensity_distribution(
 
 
 def _intensity_distribution_heatmap(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     request: IntensityDistributionHeatmapRuntimeOutput,
     *,
     radial_backend: "RadialDistributionBackendStrategy",

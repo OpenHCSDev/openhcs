@@ -15,6 +15,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowImageSampleRequest,
     ViewerWindowIntensityWindowRequest,
     ViewerWindowLayerIsolationRequest,
+    ViewerWindowLayerRetirementRequest,
     ViewerWindowNavigationRequest,
     ViewerNativeViewportPresentation,
     ViewerWindowViewportRequest,
@@ -41,6 +42,7 @@ from openhcs.mcp.dev_client_core import (
     extend_required_component_labels,
     optional_bool,
     parse_navigation_axis_indices,
+    parse_json_object,
     parse_required_axis_labels,
     request_factory_parameter,
     request_field_bool_default,
@@ -723,6 +725,31 @@ class NavigateViewerCommandSpec(SingleToolCommandSpec):
             visible=args.visible,
             selected=args.selected,
             data_index=args.data_index,
+        )
+        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+
+
+class RetireViewerCommandSpec(SingleToolCommandSpec):
+    capability = agent_capabilities.retire_viewer_window_layers
+
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
+        add_viewer_port_argument(parser)
+        parser.add_argument(
+            "--expected-producers", required=True, type=parse_json_object,
+            help="JSON route-key mapping to complete producer_identities from viewer state.",
+        )
+        parser.add_argument("--json", action="store_true")
+        add_viewer_connection_options(parser)
+
+    def tool_arguments(self, args: argparse.Namespace) -> dict[str, JsonValue]:
+        connection = ViewerConnectionArguments.from_args(args)
+        request = ViewerWindowLayerRetirementRequest.from_fields(
+            connection=ExecutionConnectionSpec(
+                host=connection.host, port=connection.port,
+                transport_mode=connection.transport_mode,
+            ),
+            timeout_ms=(connection.timeout_ms or VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT),
+            expected_producers=args.expected_producers,
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
 

@@ -1,0 +1,65 @@
+from pathlib import Path
+
+from nominal_refactor_advisor.codemod import (
+    CodemodPlanDocument, CodemodSourceSnapshot, PatchTargetOperation,
+    RefactorRecipe, SourceRewriteTarget, SourceTextReplacement,
+)
+
+path = Path('/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_callable_kernel_preparation.py')
+original = path.read_text()
+test = '''def test_generic_kernel_registry_prepares_non_cellprofiler_families_once(
+    monkeypatch, kernel_module, tmp_path
+):
+    from openhcs.core.processing_preparation import (
+        PersistentNumbaKernelPreparation,
+        RegisteredNumbaKernelPreparation,
+    )
+
+    events = []
+
+    class FirstKernel(RegisteredNumbaKernelPreparation, metaclass=AutoRegisterMeta):
+        __registry__ = {}
+
+        def execute(self):
+            events.append("first")
+
+    class SecondKernel(RegisteredNumbaKernelPreparation, metaclass=AutoRegisterMeta):
+        __registry__ = {}
+
+        def execute(self):
+            events.append("second")
+
+    kernel_module.FirstKernel = FirstKernel
+    kernel_module.SecondKernel = SecondKernel
+    kernel_module.__openhcs_prepare__ = lambda: events.append("module")
+    process = declare_callable(kernel_module, lambda: events.append("callable"))
+    monkeypatch.setenv("OPENHCS_CPU_ONLY", "true")
+    monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path / "cache"))
+    # A provider-specific capture flag must not suppress independent kernels.
+    monkeypatch.setenv("OPENHCS_CAPTURE_CELLPROFILER_FIXTURES_DIR", str(tmp_path))
+    assert FirstKernel.can_prepare_in_child()
+    assert SecondKernel.can_prepare_in_child()
+    assert FirstKernel.__registry__ is not SecondKernel.__registry__
+    assert "__registry__" not in vars(PersistentNumbaKernelPreparation)
+    assert "__registry__" not in vars(RegisteredNumbaKernelPreparation)
+
+    prepare_processing_callable(process)
+    prepare_processing_callable(process)
+    assert events == ["first", "second", "module", "callable"]
+
+
+'''
+anchor = 'def test_real_declarations_own_independent_registry_obligations():'
+assert original.count(anchor) == 1
+changed = original.replace(anchor, test + anchor, 1)
+operation = PatchTargetOperation(target=SourceRewriteTarget(file_path=str(path)),
+    replacements=(SourceTextReplacement(old_source=original, new_source=changed),),
+    rationale='Exercise a second nominal provider through the real registry/callable preparation consumer, once-only effect order and independent capture policy.')
+plan = CodemodPlanDocument(recipes=(RefactorRecipe(
+    recipe_id='exercise-generic-numba-registry-consumer',
+    reason='The moved core family must transfer to independently declared numerical providers.',
+    operations=(operation,)),))
+simulation = plan.simulate(CodemodSourceSnapshot.from_source_mapping({str(path): original}))
+assert simulation.is_clean
+Path('/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-numba-owner-consumer-test-20260930.diff').write_text(simulation.unified_diff({str(path): original}))
+print(simulation.apply())

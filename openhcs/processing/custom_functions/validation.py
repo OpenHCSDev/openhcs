@@ -14,9 +14,7 @@ import inspect
 from dataclasses import dataclass, replace
 from typing import Callable
 
-from arraybridge import MemoryContractAttribute
-
-from openhcs.core.callable_contract import CallableMetadata
+from openhcs.core.callable_contract import FunctionStepExecutionScope
 
 
 class ValidationError(Exception):
@@ -43,6 +41,12 @@ class ValidationError(Exception):
         if self.code_snippet:
             parts.append(f"Code: {self.code_snippet}")
         return " | ".join(parts)
+
+    def __copy__(self) -> "ValidationError":
+        """Copy declared values without reformatting an already formatted arg."""
+        error = type(self)(self.message, self.line_number, self.code_snippet)
+        error.__dict__.update(self.__dict__)
+        return error
 
 
 @dataclass(frozen=True)
@@ -155,87 +159,6 @@ def validate_imports(code: str) -> ValidationResult:
     )
 
 
-def validate_function_signature(func: Callable) -> ValidationResult:
-    """
-    Validate that a function has correct signature (first param is 'image').
-
-    Args:
-        func: Function to validate
-
-    Returns:
-        ValidationResult with signature validation results
-    """
-    errors: list[str] = []
-    warnings: list[str] = []
-
-    sig = inspect.signature(func)
-    params = list(sig.parameters.keys())
-
-    if not params:
-        errors.append(
-            f"Function '{func.__name__}' has no parameters. "
-            "First parameter must be 'image' (3D array: C, Y, X)."
-        )
-    elif params[0] != "image":
-        errors.append(
-            f"Function '{func.__name__}' first parameter is '{params[0]}', "
-            "but must be 'image' (3D array: C, Y, X)."
-        )
-
-    is_valid = len(errors) == 0
-    return ValidationResult(
-        is_valid=is_valid,
-        errors=errors,
-        warnings=warnings,
-        function_names=[func.__name__],
-    )
-
-
-def validate_function_attributes(func: Callable) -> ValidationResult:
-    """
-    Validate that function has required memory type attributes.
-
-    Args:
-        func: Function to validate
-
-    Returns:
-        ValidationResult with attribute validation results
-    """
-    errors: list[str] = []
-    warnings: list[str] = []
-
-    try:
-        metadata = CallableMetadata.from_callable(func)
-    except (TypeError, ValueError) as exc:
-        errors.append(
-            f"Function '{func.__name__}' has an invalid memory declaration: {exc}"
-        )
-    else:
-        required_boundaries = (
-            MemoryContractAttribute.INPUT,
-            MemoryContractAttribute.OUTPUT,
-        )
-        missing_boundaries = tuple(
-            boundary.value
-            for boundary in required_boundaries
-            if boundary.read(metadata) is None
-        )
-        if missing_boundaries:
-            errors.append(
-                f"Function '{func.__name__}' lacks required memory declarations "
-                f"{missing_boundaries!r}. Use an OpenHCS memory decorator such as "
-                "@numpy or @cupy."
-            )
-
-    is_valid = len(errors) == 0
-    return ValidationResult(
-        is_valid=is_valid,
-        errors=errors,
-        warnings=warnings,
-        function_names=[func.__name__],
-    )
-
-
 def validate_code(code: str) -> ValidationResult:
     """
     Run all code validations before exec().
@@ -264,25 +187,28 @@ def validate_code(code: str) -> ValidationResult:
 
 
 def validate_function(func: Callable) -> ValidationResult:
-    """
-    Validate a function object after exec().
+    """Validate the selected declaration using its original scope contract."""
+    from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 
-    Checks signature and required attributes.
+    errors: list[str] = []
+    try:
+        contract = OpenHCSRegistry.declared_callable_contract(func)
+        if contract is None:
+            raise ValueError(f"Function {func.__name__!r} is not an admitted OpenHCS declaration.")
+        if contract.execution_scope is FunctionStepExecutionScope.PLATE:
+            from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 
-    Args:
-        func: Function to validate
-
-    Returns:
-        ValidationResult with combined validation results
-    """
-    # Validate signature
-    result = validate_function_signature(func)
-    if not result.is_valid:
-        return result
-
-    # Validate attributes
-    result = validate_function_attributes(func)
-    if not result.is_valid:
-        return result
-
-    return result
+            FuncStepContractValidator.validate_plate_callable_contracts(
+                (contract,), func.__name__,
+            )
+        else:
+            params = tuple(inspect.signature(func).parameters)
+            if not params or params[0] != "image":
+                raise ValueError(
+                    f"Function {func.__name__!r} first parameter must be 'image'."
+                )
+    except (TypeError, ValueError) as exc:
+        errors.append(str(exc))
+    return ValidationResult(
+        is_valid=not errors, errors=errors, warnings=[], function_names=[func.__name__],
+    )

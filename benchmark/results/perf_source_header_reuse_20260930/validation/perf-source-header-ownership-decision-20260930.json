@@ -1,0 +1,53 @@
+{
+  "base": "a0e7cda697f6752a06aa677c9fd13a998df1b88a",
+  "task_authority": "User requests nominal shared algorithms, eliminate runtime data-preparation overhead and preserve source/CP semantics.",
+  "corpus": "702 modules / 5110 original ClassDefs / 5098 projected / 12 retained OPEN, complete original census before editing.",
+  "domain": "File-format-owned immutable header facts for a physical source revision.",
+  "measured_dominant_term": "780 header reads over three physical files: 0.494 seconds out of 1.589 seconds source loading plus side-artifact materialization. Saved physical-file replay 0.383285 -> 0.003932 seconds for balanced 780 reads.",
+  "maximum_payoff": "Approximately 0.49 seconds per representative 3D well; removes about 31% of remaining source-preparation cost. Header parsing grows with planes/repeated readers; reuse requires no pixel retention. This does not close the whole execution gap.",
+  "determining_owners": {
+    "format_selection": "ImageFileFormat.__registry__ and require_path",
+    "file_revision": "ImageFileRevision derived from OS stat path/device/inode/size/mtime_ns/ctime_ns",
+    "header_fields": "ImageFileSourceMetadata plus SourceImagePixelSemantics",
+    "reuse_and_failure_lifecycle": "ImageFileFormat.require_source_metadata shared bounded cache; only successful reads cache, exceptions are not cached",
+    "parsing": "ImageFileFormat._read_source_metadata concrete class hooks; existing TIFF single-container logic and NumPy loader remain exact"
+  },
+  "required_pairs": [
+    "Every registered format inherits the revision/cache algorithm",
+    "Concrete parsing hooks are class methods, determined by format declarations and file input, not transient format instances",
+    "Cache key includes the actual bound parsing hook so decoder replacement invalidates reuse",
+    "Strict and optional TIFF metadata calls derive from the same successful immutable header value"
+  ],
+  "forbidden_pairs": [
+    "independent format roster/cache dispatch",
+    "retained pixel arrays",
+    "negative cache of failed reads",
+    "reuse across changed file revisions or changed parsing hooks",
+    "try/except for known codebase imports"
+  ],
+  "consumers": [
+    "image_file_source_metadata -> ImagePayloadSourceMetadataContext.metadata -> both main-flow/source side-input materialization",
+    "require_image_file_source_metadata -> strict source ingestion",
+    "ImageFileFormat.persisted_metadata -> produced-image metadata publication",
+    "existing TIFF declared-scale and pixel-semantics callers"
+  ],
+  "counterevidence": [
+    "Formats are currently stateless declarations: no source header reader uses instance-owned data. Changing readers to class hooks makes this explicit.",
+    "NumPy historically propagates optional entrypoint read errors; retain its strict source_metadata override.",
+    "NumPy strict source metadata previously fell through generic ImageIO; migrated strict/optional paths now derive from its one native reader, requiring new explicit tests.",
+    "Stat fingerprints do not promise atomic reads during concurrent mutation; preserve current source-reader concurrency scope.",
+    "Frozen header values carry np.dtype/scalar/frozen pixel semantics on all observed native readers."
+  ],
+  "OPEN": [
+    "12 original unprojected ClassDefs remain outside nominal projection.",
+    "Authored new cache/expression bodies and classmethod migration are syntax/revision checked, not an automatic native behavioral proof; require native tests, reader replacement/file rewrite/delete/failure checks and installed pipeline parity.",
+    "No multiwell/native CP rerun or total-runtime improvement claimed from the prototype."
+  ],
+  "migration": [
+    "Add typed file-revision view",
+    "Move root and TIFF parsing into class hooks and common cached strict method on existing root",
+    "Move NumPy native parsing into the same hook while preserving its strict optional entrypoint policy",
+    "Convert pure metadata helpers to class methods, preserving instance call consumers",
+    "Remove old duplicate parsing entrypoints; derive strict and optional metadata from shared root"
+  ]
+}

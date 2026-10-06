@@ -1,0 +1,13 @@
+{
+  "scope": "Selected matched native views from R0010_REPAIR10_94 same-author assisted development; not fresh autonomous success or a biological count evaluation.",
+  "output_sha256": {
+    "retinal_development_repair.png": "176a6675a410c6a16a52111db5d641715f9b24c3304cc6271ca6cf068818f443",
+    "retinal_development_repair.svg": "948c0df93013696b3943716337f2cdb6743aa416a49e3bff80f36dd3d746f056"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/retinal-development-source-receipt.json": "643ca463a917b11994f18a5d7605e89ab5595fe5f48a271a9f75b21ed07c5872",
+    "paper/supplementary/task_only_analysis/retinal-development-render-receipt.json": "8be2a120166b0d918b6ee58b953795ead85bdb52346e15a656a0cd2f93db6b77"
+  },
+  "rendering": "Original PNG byte sequences embedded unchanged; identical native-canvas crop [297,28,953,442]. Shared raw control reused explicitly. Existing rsvg-convert produces the PNG, no new intensity transformation or scientific execution.",
+  "limits": "Released predecessor versus revised admission model, not a smoothing-only comparison. Faint omissions and crowded boundaries persist. Native region colours do not establish cross-candidate identities; no accuracy score or validated cell total."
+}

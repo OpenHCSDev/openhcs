@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from polystore.base import ImageSamplingRequest
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.dto.common import (
     AgentError,
@@ -64,10 +65,6 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFilePreviewReader,
     PlateResultFileInventory,
 )
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
-)
-
 if TYPE_CHECKING:
     from openhcs.core.components.parser_metaprogramming import (
         FilenameParseResult,
@@ -78,6 +75,7 @@ if TYPE_CHECKING:
         FilenameParser,
         MetadataComponentValueSet,
         MetadataHandler,
+        MicroscopeImagePathParser,
     )
     from polystore.filemanager import FileManager
 
@@ -526,7 +524,7 @@ class PlateInspectionFilenameParser:
     def parse(
         self,
         *,
-        parser: "FilenameParser | None",
+        parser: "MicroscopeImagePathParser | None",
         image_files: tuple[str, ...],
         bounds: PlateInspectionBounds,
     ) -> PlateInspectionParsedFileSet:
@@ -546,7 +544,7 @@ class PlateInspectionFilenameParser:
 
         for filename in image_files[:parse_limit]:
             try:
-                parsed = parser.parse_filename(Path(filename).name)
+                parsed = parser.parse_image_path(filename)
             except Exception as exc:
                 failed_count += 1
                 self._append_failure(
@@ -1139,6 +1137,9 @@ class PlateInspectionService:
                 ),
             )
 
+        if request.result_directory is not None:
+            return self._query_explicit_result_directory(request, plate_path)
+
         query_kind = request.kind
         if (
             query_kind is PlateFileKind.RESULT
@@ -1226,6 +1227,76 @@ class PlateInspectionService:
             warnings=tuple(warnings),
         )
 
+    def _query_explicit_result_directory(
+        self,
+        request: PlateFileQueryRequest,
+        plate_path: Path,
+    ) -> PlateFileQueryResult:
+        """Read persisted files without inventing a microscope/source identity."""
+        if request.kind is not PlateFileKind.RESULT or request.well is not None:
+            return self._query_files_error(
+                request,
+                AgentError(
+                    code="plate_result_directory_selection_invalid",
+                    message=(
+                        "Explicit result-directory inspection requires kind='result' "
+                        "and no acquisition-component filter. Native previews do not "
+                        "establish a file's source or writer success."
+                    ),
+                ),
+                plate_path=plate_path,
+            )
+
+        result_path, errors = self._resolve_plate_path(request.result_directory)
+        if errors:
+            return self._query_files_error(
+                request,
+                errors[0],
+                plate_path=plate_path,
+            )
+        if result_path is None:
+            raise RuntimeError("Result directory resolution returned no path or error.")
+        try:
+            file_inventory = self.result_directory_inventory(result_path)
+        except AgentPathPolicyError as exc:
+            return self._query_files_error(
+                request,
+                AgentError.from_exception(
+                    PlateInspectionIssueCode.PATH_POLICY_REJECTED.value,
+                    exc,
+                    path=request.result_directory,
+                ),
+                plate_path=plate_path,
+            )
+        return self._query_files_from_inventory(
+            request=request,
+            plate_path=plate_path,
+            file_inventory=file_inventory,
+            detected_microscope_type=None,
+            handler_class=None,
+            parser_class=None,
+            warnings=(),
+        )
+
+    def result_directory_inventory(self, directory: Path) -> PlateFileInventory:
+        """Admit persisted files once for both inspection and viewer reopening."""
+        from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+
+        result_path = self._path_policy.assert_readable(directory)
+        if not result_path.is_dir():
+            raise ValueError(f"Result path is not a directory: {result_path}")
+        return PlateFileInventory.from_inventories(
+            image_inventory=PlateImageInventory(plate_path=result_path, records=()),
+            result_inventory=PlateResultFileInventory.from_directory_files(
+                plate_path=result_path,
+                result_directory=AnalysisResultDirectory(
+                    subdirectory_name=result_path.name,
+                    path=result_path,
+                ),
+                file_paths=self._path_policy.iter_readable_files(result_path),
+            ),
+        )
+
     @staticmethod
     def _query_files_from_inventory(
         *,
@@ -1249,6 +1320,11 @@ class PlateInspectionService:
         return PlateFileQueryResult(
             schema_version=SCHEMA_VERSION,
             plate_path=str(plate_path),
+            result_directory=(
+                str(file_inventory.plate_path)
+                if request.result_directory is not None
+                else None
+            ),
             requested_microscope_type=request.microscope_type,
             detected_microscope_type=detected_microscope_type,
             handler_class=handler_class,
@@ -1544,18 +1620,20 @@ class PlateInspectionService:
         pixel_size = self._pixel_size(handler, plate_path, warnings)
         available_backends = self._available_backends(handler, plate_path, warnings)
         parser = self._parser(handler, warnings)
-        file_inventory = self._plate_file_inventory(
+        file_inventory = self._plate_file_inventory_for_query(
             handler,
             plate_path,
             parser,
             filemanager,
+            None,
             warnings,
+            warn_on_recovered_listing_failure=True,
         )
         image_files = tuple(
             record.virtual_path for record in file_inventory.image_records
         )
         parsed = self._filename_parser.parse(
-            parser=parser,
+            parser=handler if parser is not None else None,
             image_files=image_files,
             bounds=bounds,
         )
@@ -1795,12 +1873,21 @@ class PlateInspectionService:
     ) -> "MicroscopeHandler":
         from openhcs.microscopes import create_microscope_handler
 
-        return create_microscope_handler(
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Preparing physical microscope handler and reader runtime",
+        ).publish()
+        handler = create_microscope_handler(
             microscope_type=request.microscope_type,
             plate_folder=plate_path,
             filemanager=filemanager,
             pattern_format=request.pattern_format,
         )
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Physical microscope handler ready",
+        ).publish()
+        return handler
 
     @staticmethod
     def _metadata_file_path(
@@ -1882,12 +1969,17 @@ class PlateInspectionService:
         filemanager: "FileManager",
         query_kind: PlateFileKind | None,
         warnings: list[AgentWarning],
+        *,
+        warn_on_recovered_listing_failure: bool = False,
     ) -> PlateFileInventory:
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Reading plate file inventory and native metadata",
+        ).publish()
         if query_kind is PlateFileKind.IMAGE:
             image_inventory = PlateInspectionService._image_inventory(
                 handler,
                 plate_path,
-                parser,
                 filemanager,
                 warnings,
             )
@@ -1897,7 +1989,7 @@ class PlateInspectionService:
                     plate_path,
                     parser,
                     warnings,
-                    warn_on_recovered_listing_failure=False,
+                    warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
                 )
                 if result_inventory.records:
                     warnings.append(
@@ -1923,14 +2015,13 @@ class PlateInspectionService:
                     plate_path,
                     parser,
                     warnings,
-                    warn_on_recovered_listing_failure=False,
+                    warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
                 ),
             )
         return PlateFileInventory.from_inventories(
             PlateInspectionService._image_inventory(
                 handler,
                 plate_path,
-                parser,
                 filemanager,
                 warnings,
             ),
@@ -1939,60 +2030,22 @@ class PlateInspectionService:
                 plate_path,
                 parser,
                 warnings,
-                warn_on_recovered_listing_failure=False,
+                warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
             ),
         )
-
-    def _plate_file_inventory(
-        self,
-        handler: "MicroscopeHandler",
-        plate_path: Path,
-        parser: "FilenameParser | None",
-        filemanager: "FileManager",
-        warnings: list[AgentWarning],
-    ) -> PlateFileInventory:
-        image_inventory = PlateInspectionService._image_inventory(
-            handler,
-            plate_path,
-            parser,
-            filemanager,
-            warnings,
-        )
-        result_inventory = self._result_file_inventory(
-            handler,
-            plate_path,
-            parser,
-            warnings,
-        )
-        return PlateFileInventory.from_inventories(image_inventory, result_inventory)
 
     @staticmethod
     def _image_inventory(
         handler: "MicroscopeHandler",
         plate_path: Path,
-        parser: "FilenameParser | None",
         filemanager: "FileManager",
         warnings: list[AgentWarning],
     ) -> PlateImageInventory:
         try:
-            handler.register_source_backends(filemanager)
-            source_projection = (
-                VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
-                    plate_path=plate_path,
-                    metadata_handler=handler.metadata_handler,
-                    filemanager=filemanager,
-                ).projection_if_available()
-            )
-            if source_projection is not None:
-                handler.register_workspace_backends(plate_path, filemanager)
-            return PlateImageInventory.from_handler(
+            return PlateImageInventory.from_read_only_handler(
                 plate_path=plate_path,
-                metadata_handler=handler.metadata_handler,
-                parser=parser,
+                handler=handler,
                 filemanager=filemanager,
-                backend=handler.get_primary_backend(plate_path, filemanager),
-                source_projection=source_projection,
-                all_subdirs=True,
             )
         except Exception as exc:
             warnings.append(

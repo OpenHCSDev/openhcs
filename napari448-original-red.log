@@ -1,0 +1,54 @@
+Interpreter: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python 3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]
+Discovery owner: /home/ts/wt/metaclass-registry-selected-discovery-376-20261001/src/metaclass_registry/__init__.py
+
+==================================== ERRORS ====================================
+__ ERROR collecting tests/unit/test_napari_source_channel_presentation_448.py __
+tests/unit/test_napari_source_channel_presentation_448.py:12: in <module>
+    from openhcs.runtime.napari_viewer_server import (
+openhcs/runtime/napari_viewer_server.py:70: in <module>
+    from openhcs.agent.dto.viewer import ViewerWindowDescriptor
+openhcs/agent/dto/viewer.py:183: in <module>
+    class ViewerWindowSnapshotRequest(
+openhcs/agent/dto/viewer.py:187: in ViewerWindowSnapshotRequest
+    WindowSnapshotFrameCondition.RENDER_COMPLETE
+E   AttributeError: type object 'WindowSnapshotFrameCondition' has no attribute 'RENDER_COMPLETE'
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/unit/test_napari_source_channel_presentation_448.py - AttributeEr...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+2 warnings, 1 error in 6.69s
+Command exited with non-zero status 2
+	Command being timed: "/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python docs/validation/knowledge-selected-source-tests.py --basetemp=/home/ts/.cache/agent-scratch/napari-source-channel-448-20261002/pytest tests/unit/test_napari_source_channel_presentation_448.py -k non_rgb and 1 -q --tb=short"
+	User time (seconds): 6.92
+	System time (seconds): 0.72
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:07.77
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 486884
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 72
+	Minor (reclaiming a frame) page faults: 116131
+	Voluntary context switches: 357
+	Involuntary context switches: 254
+	Swaps: 0
+	File system inputs: 14680
+	File system outputs: 2712
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2

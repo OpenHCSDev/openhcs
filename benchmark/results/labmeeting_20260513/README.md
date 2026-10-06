@@ -18,17 +18,44 @@ official30 CellProfiler-vs-OpenHCS benchmark discussion.
 
 ## Interpretation Caveat
 
-The `1 core` point in the core-scaling figures is same-process, single-well
-execution latency. The `2/3/4 cores` points are native OpenHCS multiprocessing
-throughput runs over replicated wells.
+These are historical observations with different timing boundaries and output
+workloads, not a matched comparison of current runtimes. The May native timer
+wraps `subprocess.run`, including process, import and JVM startup. The OpenHCS
+`1 core` point measures direct, same-process single-well execution; its
+`2/3/4 cores` points measure OpenHCS multiprocessing throughput over replicated wells.
+The generated OpenHCS pipeline requests
+`prune_dead_unmaterialized_artifact_steps=True` and
+`materialize_skipped_save_images=False`, with a different spreadsheet-export path.
+Exact historical input, environment and complete-output equivalence to current
+runs is not established by these compact artifacts.
 
-That distinction matters for very small pipelines. If a single well executes in
-tens of milliseconds, fixed fork/work-queue/file overhead may dominate at low
-well counts. Those pipelines can appear non-monotonic in
-`02_core_scaling_by_pipeline_plus_average_speedup.*` even when throughput
-improves with larger queues. Use
-`05_speedup_summary_by_core_and_wells_per_core.*` to assess amortized throughput
-scaling.
+The native multiwell denominator is a serial projection:
+`native_single_sample_execution_seconds * well_count`. It is not a measured
+native makespan with matching worker concurrency. The archived speedups and
+queue-depth figures must be read with that projection and the distinct execution
+boundaries; they do not establish matched native scaling or a current speedup.
+Fixed OpenHCS fork/work-queue/file costs can also dominate very small pipelines
+at low well counts.
+
+The WoundHealing native baseline is additionally unqualified. Its exact `900 s`
+value equals the configured timeout. At historical source `f58bca4e9`,
+`CachedNativeReferenceTimingPolicy` in `benchmark/cellprofiler_comparison.py:655`
+substitutes that timeout for a cached successful reference with missing elapsed
+timing. No retained original observation proves that the WoundHealing `900 s`
+entry was an actual elapsed native measurement. The source CSV's `success`
+status describes OpenHCS execution; it does not authenticate native timing.
+
+That entry yields approximately `725x` in the `1w_1t` core-scaling row. Removing
+only this unqualified row changes that table's arithmetic mean from `36.30x` to
+`12.55x`; this is a sensitivity check, not a corrected matched benchmark, since
+all other boundary and custody limitations remain. Do not describe `900 s` as
+measured CellProfiler runtime or use the uncensored corpus means as headline
+performance evidence. The archived CSVs and figures are preserved unchanged.
+
+Current typed native batch reports require complete measured observations and
+do not use this historical missing-timing fallback. Fresh matched measurements
+must state their own clock boundaries, concurrency, input custody and exported
+output scope; they cannot be inferred from this archive.
 
 ## Regeneration
 

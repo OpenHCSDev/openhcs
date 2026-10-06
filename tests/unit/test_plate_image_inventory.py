@@ -30,6 +30,22 @@ from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 
 
+@pytest.mark.parametrize("kind", ("absent", "file", "directory"))
+def test_declared_result_directory_admits_only_existing_directories(tmp_path, kind):
+    path = tmp_path / "results"
+    if kind == "file":
+        path.write_bytes(b"not a directory")
+        with pytest.raises(NotADirectoryError, match="non-directory results path"):
+            AnalysisResultDirectory.from_declared_path("images", path)
+    elif kind == "directory":
+        path.mkdir()
+        assert AnalysisResultDirectory.from_declared_path("images", path) == (
+            AnalysisResultDirectory("images", path)
+        )
+    else:
+        assert AnalysisResultDirectory.from_declared_path("images", path) is None
+
+
 class _ImageBrowserOrchestrator:
     def __init__(self, plate_path: Path, microscope_handler, filemanager: FileManager):
         self.plate_path = plate_path

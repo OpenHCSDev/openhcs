@@ -40,6 +40,7 @@ from openhcs.core.debug import DebugExecutionPolicy
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.function_patterns import CompiledFunctionInvocation
 from openhcs.core.orchestrator.analysis_consolidation import (
+    RuntimeAnalysisConsolidationInputs,
     consolidate_analysis_outputs,
 )
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
@@ -77,10 +78,12 @@ from openhcs.core.runtime_stores import (
     replace_runtime_artifact_payload,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
+from openhcs.core.steps.function_artifact_materialization import (
+    ArtifactMaterializationTargetPlan,
+)
 from openhcs.core.steps.function_outputs import (
-    OpenHCSMetadataWriter,
-    RuntimeArtifactMaterializationAuthority,
+    OpenHCSMetadataTarget,
 )
 
 if TYPE_CHECKING:
@@ -104,6 +107,9 @@ class CompiledPlateExecutionExtras:
     RESULTS_SUMMARY_KEY: ClassVar[str] = "viewer_states_by_port"
 
     viewer_states_by_port: Mapping[int, "ViewerControlResponse"]
+    runtime_observation: RuntimeExecutionObservation = field(
+        default_factory=RuntimeExecutionObservation
+    )
 
 
 class CompiledPlateExecutionResults(dict[str, ExecutionResult]):
@@ -118,6 +124,27 @@ class CompiledPlateExecutionResults(dict[str, ExecutionResult]):
         super().__init__(results or {})
         self.extras = extras or CompiledPlateExecutionExtras(
             viewer_states_by_port=MappingProxyType({})
+        )
+
+    def is_success(self) -> bool:
+        """Whether every returned axis completed successfully."""
+        return all(result.is_success() for result in self.values())
+
+    def require_success(self) -> None:
+        """Reject failed axes at terminal boundaries without dropping their outputs."""
+        failures = [
+            f"{axis_id}: {result.status.value}: {result.error_message or 'no error detail'}"
+            for axis_id, result in self.items()
+            if not result.is_success()
+        ]
+        if failures:
+            raise RuntimeError("Unsuccessful execution axes: " + "; ".join(failures))
+
+    @property
+    def runtime_observations(self) -> tuple[RuntimeExecutionObservation, ...]:
+        return (
+            *tuple(result.runtime_observation for result in self.values()),
+            self.extras.runtime_observation,
         )
 
 
@@ -197,6 +224,8 @@ def execute_compiled_plate_request(
         raise
 
     set_progress_queue(validated.progress_queue)
+    for context in validated.compiled_contexts.values():
+        context.reset_completed_step_outputs()
     try:
         orchestrator._state = OrchestratorState.EXECUTING
         logger.info(
@@ -207,7 +236,6 @@ def execute_compiled_plate_request(
         executor_resources = WorkerExecutorFactory(
             log_file_base=request.log_file_base,
             progress_queue=validated.progress_queue,
-            progress_context=validated,
             cancellation=cancellation,
         ).create(
             runtime_environment=validated.runtime_environment,
@@ -217,52 +245,65 @@ def execute_compiled_plate_request(
         execution_bundle = request.execution_bundle
         worker_assignments = request.worker_assignments_for()
 
-        executor_resources.install_execution_bundle(execution_bundle)
-        orchestrator._executor = executor_resources.executor
-        execution_results: Dict[str, ExecutionResult] = {}
+        execution_results = CompiledPlateExecutionResults()
+        plate_runtime_observation = RuntimeExecutionObservation()
         try:
-            with executor_resources.execution_context():
-                worker_assignment_plan = executor_resources.plan_worker_lanes(
-                    actual_max_workers=validated.actual_max_workers,
-                    execution_bundle=execution_bundle,
-                    worker_assignments=worker_assignments,
+            executor_resources.install_execution_bundle(execution_bundle)
+            orchestrator._executor = executor_resources.executor
+            try:
+                with executor_resources.execution_context():
+                    worker_assignment_plan = executor_resources.plan_worker_lanes(
+                        actual_max_workers=validated.actual_max_workers,
+                        execution_bundle=execution_bundle,
+                        worker_assignments=worker_assignments,
+                    )
+                    worker_lane_execution_plan = validated.worker_lane_execution_plan(
+                        request=request,
+                        worker_assignment_plan=worker_assignment_plan,
+                    )
+                    execution_results = CompiledPlateExecutionResults(
+                        executor_resources.run_worker_lanes(
+                            pipeline_definition=validated.pipeline_definition,
+                            worker_lane_execution_plan=worker_lane_execution_plan,
+                            parent_contexts=validated.compiled_contexts,
+                        )
+                    )
+                    if any(result.is_cancelled() for result in execution_results.values()):
+                        raise ExecutionCancelledError("Execution cancelled during worker execution")
+                    cancellation.raise_if_requested("after worker execution")
+                    executor_resources.shutdown_executor()
+            except BrokenProcessPool as exc:
+                logger.warning(
+                    "ORCHESTRATOR: Executor context exit failed due to broken process "
+                    f"pool (workers were killed externally): {exc}"
                 )
-                worker_lane_execution_plan = validated.worker_lane_execution_plan(
-                    request=request,
-                    worker_assignment_plan=worker_assignment_plan,
-                )
-                execution_results = executor_resources.run_worker_lanes(
-                    pipeline_definition=validated.pipeline_definition,
-                    worker_lane_execution_plan=worker_lane_execution_plan,
-                    parent_contexts=validated.compiled_contexts,
-                )
-                cancellation.raise_if_requested("after worker execution")
-                executor_resources.shutdown_executor()
-        except BrokenProcessPool as exc:
-            logger.warning(
-                "ORCHESTRATOR: Executor context exit failed due to broken process "
-                f"pool (workers were killed externally): {exc}"
-            )
-            if not execution_results:
-                raise
-        finally:
-            executor_resources.clear_execution_bundle()
-            executor_resources.release_parent_runtime_resources(execution_bundle)
+                if not execution_results:
+                    raise
+            finally:
+                executor_resources.clear_execution_bundle()
+                executor_resources.release_parent_runtime_resources(execution_bundle)
 
-        if all(result.is_success() for result in execution_results.values()):
-            plate_runtime_observation = execute_plate_scoped_steps(
+            if execution_results.is_success():
+                plate_runtime_observation = execute_plate_scoped_steps(
+                    validated.compiled_contexts,
+                    progress_queue=validated.progress_queue,
+                    progress_context=validated,
+                )
+                consolidate_analysis_outputs(
+                    validated.compiled_contexts,
+                    execution_results,
+                    plate_runtime_observation=plate_runtime_observation,
+                )
+        finally:
+            OpenHCSMetadataTarget.finalize_completed_plate(
                 validated.compiled_contexts,
-                progress_queue=validated.progress_queue,
-                progress_context=validated,
+                runtime_observations=(
+                    RuntimeExecutionObservation.from_completed_outputs(
+                        validated.compiled_contexts
+                    ),
+                ),
             )
-            consolidate_analysis_outputs(
-                validated.compiled_contexts,
-                execution_results,
-                plate_runtime_observation=plate_runtime_observation,
-            )
-            OpenHCSMetadataWriter.finalize_completed_plate(
-                validated.compiled_contexts,
-            )
+        if execution_results.is_success():
             viewer_states_by_port = settle_viewer_state(
                 visualizers,
                 progress_queue=validated.progress_queue,
@@ -271,7 +312,7 @@ def execute_compiled_plate_request(
         else:
             viewer_states_by_port = MappingProxyType({})
         project_execution_state(orchestrator, execution_results)
-        if all(result.is_success() for result in execution_results.values()):
+        if execution_results.is_success():
             _emit_execution_progress(
                 progress_queue=validated.progress_queue,
                 progress_context=validated,
@@ -285,7 +326,8 @@ def execute_compiled_plate_request(
         return CompiledPlateExecutionResults(
             execution_results,
             extras=CompiledPlateExecutionExtras(
-                viewer_states_by_port=viewer_states_by_port
+                viewer_states_by_port=viewer_states_by_port,
+                runtime_observation=plate_runtime_observation,
             ),
         )
     except ExecutionCancelledError:
@@ -445,18 +487,22 @@ def execute_plate_scoped_steps(
     plate_step_indexes = validate_plate_scoped_contexts(compiled_contexts)
     total_steps = max(next(iter(compiled_contexts.values())).step_plans) + 1
     records_by_axis = _runtime_record_snapshot(compiled_contexts)
+    observations_by_context = {key: [] for key in compiled_contexts}
     for step_index in plate_step_indexes:
         owner_context, owner_plan = _plate_output_owner(
             compiled_contexts,
             step_index,
         )
-        with _PlateStepProgressHeartbeat(
-            progress_queue=progress_queue,
-            progress_context=progress_context,
-            step_index=step_index,
-            step_name=owner_plan.step_name,
-            total_steps=total_steps,
-            interval_seconds=heartbeat_interval_seconds,
+        with (
+            owner_context.runtime_step_scope(),
+            _PlateStepProgressHeartbeat(
+                progress_queue=progress_queue,
+                progress_context=progress_context,
+                step_index=step_index,
+                step_name=owner_plan.step_name,
+                total_steps=total_steps,
+                interval_seconds=heartbeat_interval_seconds,
+            ),
         ):
             owner_invocations = (
                 owner_plan.compiled_function_pattern.default_group.invocations
@@ -523,14 +569,32 @@ def execute_plate_scoped_steps(
                 )
                 records_by_axis = _records_with_output(records_by_axis, record)
 
-            RuntimeArtifactMaterializationAuthority.materialize(
+            materializations = ArtifactMaterializationTargetPlan.materialize(
                 owner_context,
                 owner_plan.require_function_execution_ready(),
             )
-            OpenHCSMetadataWriter.write(
+            projection_entries = OpenHCSMetadataTarget.observe_for_step(
                 owner_context,
                 owner_plan.require_function_execution_ready(),
+                artifact_materializations=materializations,
             )
+            owner_context_key = next(
+                key
+                for key, context in compiled_contexts.items()
+                if context is owner_context
+            )
+            observation = StepExecutionObservation.combine((
+                StepExecutionObservation.combine(
+                    item.observation(owner_plan, owner_context)
+                    for item in materializations
+                ),
+                StepExecutionObservation(
+                    materialized_locations_by_address=MappingProxyType({}),
+                    source_projection_entries_by_target=projection_entries,
+                ),
+            ))
+            owner_context.record_completed_step_outputs(observation)
+            observations_by_context[owner_context_key].append(observation)
         _emit_execution_progress(
             progress_queue=progress_queue,
             progress_context=progress_context,
@@ -544,9 +608,14 @@ def execute_plate_scoped_steps(
 
     return RuntimeExecutionObservation(
         contexts=tuple(
-            RuntimeContextObservation(
+            RuntimeContextObservation.from_context(
                 context_key=context_key,
+                context=context,
                 records=records,
+                runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+                outputs=StepExecutionObservation.combine(
+                    observations_by_context[context_key]
+                ),
             )
             for context_key, context in compiled_contexts.items()
             if (
@@ -778,30 +847,18 @@ def _plate_artifact_batch(
             if input_ref not in selected_input_edges:
                 continue
             input_edge = selected_input_edges[input_ref]
-            input_plan = input_edge.storage_plan
-            projection = input_edge.projection
-            if input_plan is None or projection is None:
-                raise RuntimeError(
-                    "Selected plate artifact input lost its storage plan."
+            matches = RuntimeArtifactQuery.records_for_input_edge(
+                input_edge,
+                records_by_axis.get(axis_id, ()),
+                axis_id=axis_id,
+                backend=Backend.MEMORY.value,
+            )
+            for record in matches:
+                selected[axis_id].setdefault(
+                    (record.key, record.location),
+                    record,
                 )
-            for group_key in projection.producer_selection_scope.keys:
-                query = RuntimeArtifactQuery.from_input_plan(
-                    input_plan,
-                    axis_id=axis_id,
-                    backend=Backend.MEMORY.value,
-                    group_key=group_key,
-                )
-                matches = tuple(
-                    record
-                    for record in records_by_axis.get(axis_id, ())
-                    if query.matches(record)
-                )
-                for record in matches:
-                    selected[axis_id].setdefault(
-                        (record.key, record.location),
-                        record,
-                    )
-                selected_for_spec += len(matches)
+            selected_for_spec += len(matches)
         if input_spec.required and selected_for_spec == 0:
             raise ValueError(
                 f"Plate-scoped callable {contract.function_name!r} is missing required "
@@ -1150,11 +1207,11 @@ def stop_execution_visualizers(visualizers: list[ExecutionVisualizerABC]) -> Non
 
 def project_execution_state(
     orchestrator: "PipelineOrchestrator",
-    execution_results: Mapping[str, ExecutionResult],
+    execution_results: CompiledPlateExecutionResults,
 ) -> None:
     """Project worker-lane results back into orchestrator lifecycle state."""
 
-    if all(result.is_success() for result in execution_results.values()):
+    if execution_results.is_success():
         orchestrator._state = OrchestratorState.COMPLETED
     else:
         orchestrator._state = OrchestratorState.EXEC_FAILED

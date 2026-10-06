@@ -102,6 +102,29 @@ projection. Saving a changed source-binding config invalidates that projection;
 the next normal initialization rebuilds it and updates the available aliases and
 coordinates without a separate UI metadata copy.
 
+Joining an external metadata table
+-----------------------------------
+
+``ImportedMetadataTable`` joins apply to the assembled logical source set,
+not separately to each named channel. Before declaring its joins, compare the
+join fields across all members of a representative set. Each join key must have
+one consistent value among the members that supply it; a complete identity
+must resolve to a row in the table.
+
+For example, paired DNA and actin images may share well, site, Z and time while
+their channel names and relative paths differ. Join a set-level table using the
+shared identity appropriate to that acquisition, not the differing channel or
+file path. Keep plane-specific channel/path provenance in the original plane
+manifest and source-binding declarations. If projecting a set-level table from
+that manifest, retain the original and check that non-key columns also have
+the intended set-level meaning; do not silently choose one channel's values.
+
+If initialization reports conflicting imported join values, repair the table's
+scope or join declaration rather than renaming the channels to agree. Omitting
+channel from a table join does not omit it from physical source identity or
+permit contradictory plane identities. Reflect the current imported-table
+schema before authoring its typed declarations.
+
 Binding positions are not microscope channel values
 ---------------------------------------------------
 
@@ -194,6 +217,64 @@ count and axes; downstream code must use the current artifact provenance plus
 its own ``variable_components`` declaration. ``group_by`` then partitions that
 already assembled downstream value.
 
+Plan image stacks and source-bound labels before authoring
+----------------------------------------------------------
+
+Naming two sources does not make both available in every invocation. Before
+authoring a multi-image measurement, separate its current image input from its
+typed artifact inputs. ``input_source=PIPELINE_START`` returns to acquisition
+images; it does not remove the step's inherited variable-component scope.
+When the invocation needs an assembled channel stack, declare
+``variable_components=[CHANNEL]`` with the intended step bindings/order. A
+``SITE`` stack or ``group_by=NONE`` alone does not assemble channels. Inspect the
+resolved step configuration and artifact plan, not just the pipeline universe.
+
+Object-label inputs also retain their producer's source context. Equal shape,
+the same well, or an exact artifact name alone does not establish that labels
+from one channel belong to a measurement invocation on another. A runtime
+error with an address-matched label candidate but different fixed channels is
+a context mismatch, not permission to rename the channels or use the first
+available labels. Check the producer, acquisition identity, current image
+scope and declared input relations before changing grouping.
+
+For a custom consumer that intentionally measures an aligned image using labels
+produced on another channel of the same declared image set, use the existing
+``InputImageSetContextSourceRelation`` on the label input. For example, this
+**input-contract fragment** names the measurement image and its label subject:
+
+.. code-block:: python
+
+   from openhcs.core.artifacts import (
+       ArtifactSpec, ImageArtifactType, InputImageSetContextSourceRelation,
+       ObjectLabelsArtifactType,
+   )
+
+   SIGNAL = ArtifactSpec.input(
+       "Signal", ImageArtifactType, parameter_name="signal",
+   )
+   SUBJECTS = ArtifactSpec.input(
+       "Subjects", ObjectLabelsArtifactType, parameter_name="subjects",
+       relations=(InputImageSetContextSourceRelation(SIGNAL.ref()),),
+   )
+
+Declare both inputs through ``artifact_inputs`` and provide the matching nominal
+callable parameters; follow :doc:`../development/callable_artifact_authoring`
+for the complete ABI. The relation derives image-set membership from the
+compiled source bindings while retaining exact artifact identity. It does not
+regroup or broadcast labels, register images, remap object IDs, or make
+unrelated samples compatible. Declare the real shared well/site/Z/time context
+and verify alignment; do not manufacture equality to satisfy a check.
+Registered CellProfiler object-measurement declarations already derive this
+relation from their selected image inputs; a custom callable's input names and
+``ObjectLabelValue`` annotations alone do not declare it.
+
+Check the compiled image and artifact scopes before the first execution, then
+read back each requested source's own values and label/object identity. Stack
+assembly, image-set context and intensity-unit conversion are separate
+decisions: fixing one does not prove the others. A failed receipt remains
+preserved; validate a separately recorded declaration repair rather than replay
+an uncertain operation.
+
 Executable code-mode declarations
 ---------------------------------
 
@@ -210,17 +291,21 @@ Choose one as ``pipeline_config`` and keep the ``pipeline_steps`` assignment in
 the same document. Filenames are exact examples; replace them with names present
 directly under the selected plate directory.
 
+``PipelineConfig.source_bindings_config`` takes ``LazySourceBindingsConfig``
+from ``openhcs.core.config``. ``SourceBindingsConfig`` names the concrete
+source-binding semantics; do not pass that concrete class to this lazy field.
+
 .. code-block:: python
 
    from openhcs.constants.input_source import InputSource
    from openhcs.core.config import (
        LazyProcessingConfig,
+       LazySourceBindingsConfig,
        LazyStepSourceBindingsConfig,
        PipelineConfig,
    )
    from openhcs.core.source_bindings import (
        NamedSourceBinding,
-       SourceBindingsConfig,
        SourceFilterClause,
        SourceFilterMatchType,
        SourceFilterSubject,
@@ -248,7 +333,7 @@ directly under the selected plate directory.
 
 
    tiff_png_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(
                bind_file("DNA", "nuclei.tif"),
                bind_file("Mask", "segmentation.png"),
@@ -257,25 +342,25 @@ directly under the selected plate directory.
    )
 
    czi_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(bind_file("DNA", "experiment.czi"),),
        ),
    )
 
    ome_tiff_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(bind_file("DNA", "plate.ome.tif"),),
        ),
    )
 
    ome_zarr_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(bind_file("DNA", "plate.zarr"),),
        ),
    )
 
    mixed_store_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(
                bind_file("DNA", "plate.zarr"),
                bind_file("Brightfield", "brightfield.tif"),
@@ -341,16 +426,15 @@ values equal merely to satisfy validation.
 .. code-block:: python
 
    from openhcs.constants.constants import AllComponents
-   from openhcs.core.config import PipelineConfig
+   from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
    from openhcs.core.source_bindings import (
        ComponentSelector,
        NamedSourceBinding,
-       SourceBindingsConfig,
        SourceSelector,
    )
 
    pipeline_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(
                NamedSourceBinding(
                    alias="DNA",

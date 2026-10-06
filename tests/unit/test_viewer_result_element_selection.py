@@ -9,6 +9,8 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from polystore.streaming.identity import StreamProducerIdentity
+from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
@@ -25,7 +27,10 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariComponentGroupStore,
     NapariDimensionLayerState,
     NapariLayerRouteStateStore,
+    NapariStreamLayerAddress,
+    NapariStreamLayerItem,
 )
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.runtime.napari_viewer_server import (
     NapariLayerIsolationControlMessageAction,
     NapariNavigationControlMessageAction,
@@ -36,6 +41,7 @@ from openhcs.runtime.napari_viewer_server import (
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_controls import (
+    ViewerPointCoordinateAuthority,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
     ViewerResultElementCoordinateAuthority,
@@ -44,6 +50,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsAuthority,
     ViewerComponentLayout,
     ViewerLayerAxisProjection,
+    ViewerComponentValueDomainPayload,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
@@ -55,7 +62,7 @@ class _NavigationResponseGateway(ViewerWindowGatewayABC):
     def close_window(self, request):
         raise AssertionError(request)
 
-    def viewport(self, request):
+    def presentation_control(self, request):
         raise AssertionError(request)
 
     def image_intensity(self, request):
@@ -154,6 +161,26 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=
     )
     server.result_selection_controller = NapariResultSelectionController(server)
     if NapariResultElementSelectionAuthority.state(layer).supported:
+        from napari.layers import Points
+
+        server.component_groups.items_for(route_key).append(
+            NapariStreamLayerItem(
+                data=layer.data,
+                producer=StreamProducerIdentity(
+                    origin="manual", output_kind="fixture", output_key=route_key,
+                    projection_key=route_key,
+                ),
+                address=NapariStreamLayerAddress(
+                    components={}, path=f"fixture/{route_key}",
+                    stream_layer_data_type=(
+                        StreamingDataType.POINTS if isinstance(layer, Points)
+                        else StreamingDataType.SHAPES
+                    ),
+                ),
+                image_metadata=ImagePayloadMetadata(),
+                plane_component_domain=ViewerComponentValueDomainPayload(()),
+            )
+        )
         server.result_selection_controller.bind(layer, group_binding=group_binding)
     return server, overlay, result_selection_dock, qt_window
 
@@ -186,7 +213,7 @@ def test_native_navigation_acknowledges_exact_bound_linked_selection(qtbot):
         np.testing.assert_array_equal(before, after)
 
 
-def test_singleton_selection_stays_strict_with_bound_group(qtbot):
+def test_singleton_selection_expands_only_after_queued_navigation(qtbot):
     from napari.components import ViewerModel
 
     viewer = ViewerModel()
@@ -194,9 +221,68 @@ def test_singleton_selection_stays_strict_with_bound_group(qtbot):
     layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
     binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
     _viewer_server(viewer, layer, group_binding=binding)
-    with pytest.raises(RuntimeError, match="requested native data selection"):
-        NapariResultElementSelectionAuthority.select(layer, 1)
-    assert layer.selected_data == {0, 1}
+    state = NapariResultElementSelectionAuthority.select(layer, 1)
+    assert state.selected_data_indices == (1,)
+    assert layer.selected_data == {1}
+    qtbot.waitUntil(lambda: layer.selected_data == {0, 1}, timeout=1000)
+
+
+def test_linked_selection_projects_off_slice_members_without_changing_subject(qtbot):
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
+    paths = [np.array([[0, i, i], [0, i + 1, i + 1]], dtype=float) for i in range(2)]
+    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8]})
+    linked_paths = [coordinates + [1, 0, 0] for coordinates in paths]
+    linked = viewer.add_shapes(linked_paths, shape_type="path", features={"owner": [8, 8]})
+    viewer.dims.current_step = (0, 0, 0)
+    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
+    server.result_selection_controller.bind(linked, group_binding=binding)
+    original_data = [coordinates.copy() for coordinates in linked.data]
+
+    # Original native behaviour reproduces the retained failure signature.
+    with pytest.raises(ValueError, match="zero-size array.*minimum"):
+        linked.selected_data = {0, 1}
+    linked.selected_data = set()
+
+    state = server.result_selection_controller.select(layer, 1)
+
+    assert state.selected_data_indices == (0, 1)
+    assert linked.selected_data == set()
+    assert server.result_selection_controller._linked_group_members(layer, 1) == (
+        (layer, (0, 1)), (linked, (0, 1)),
+    )
+    assert viewer.dims.current_step == (0, 0, 0)
+    for before, after in zip(original_data, linked.data, strict=True):
+        np.testing.assert_array_equal(before, after)
+
+
+def test_linked_points_use_the_same_native_slice_projection(qtbot):
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
+    layer = viewer.add_shapes(
+        [np.array([[0, 0, 0], [0, 1, 1]], dtype=float)],
+        shape_type="path", features={"owner": [8]},
+    )
+    linked = viewer.add_points(
+        np.array([[0, 2, 2], [1, 3, 3]], dtype=float), features={"owner": [8, 8]},
+    )
+    viewer.dims.current_step = (0, 0, 0)
+    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
+    server.result_selection_controller.bind(linked, group_binding=binding)
+
+    state = server.result_selection_controller.select(layer, 0)
+
+    assert state.selected_data_indices == (0,)
+    assert linked.selected_data == {0}
+    assert server.result_selection_controller._linked_group_members(layer, 0) == (
+        (layer, (0,)), (linked, (0, 1)),
+    )
 
 
 def test_bound_selection_rejects_unrelated_native_members(qtbot):
@@ -220,7 +306,7 @@ def test_bound_selection_rejects_unrelated_native_members(qtbot):
             mutating = False
 
     layer.events.highlight.connect(add_unrelated_member)
-    with pytest.raises(RuntimeError, match="canonical linked result selection"):
+    with pytest.raises(RuntimeError, match="requested native data selection"):
         server.result_selection_controller.select(layer, 1)
 
 
@@ -449,13 +535,14 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
             ),
         ],
         shape_type=["polygon", "polygon"],
-        features={"label": [11, 12], "area": [3.0, 4.0]},
+        features={"label": [11, 12], "area": [3.0, 4.0], "owner": [8, 8]},
         ndim=4,
         name="Result ROIs",
     )
     server, _overlay, _result_selection_dock, _qt_window = _viewer_server(
         viewer,
         layer,
+        group_binding=NapariResultSelectionGroupBinding("native-test-subject", "owner"),
     )
     projection = ViewerLayerAxisProjection(
         projected_axis_components=("channel", "z"),
@@ -502,6 +589,9 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
     assert response["status"] == "success"
     assert viewer.dims.current_step[:2] == (2, 3)
     assert layer.selected_data == {1}
+    assert server.result_selection_controller._linked_group_members(layer, 1) == (
+        (layer, (0, 1)),
+    )
 
     conflicting_response = NapariNavigationControlMessageAction().handle(
         server,
@@ -531,13 +621,15 @@ def test_result_element_coordinate_authority_derives_native_slice_indices() -> N
     assert ViewerResultElementCoordinateAuthority.axis_indices(
         coordinates=coordinates,
         axis_labels=("channel", "z", "y", "x"),
-        displayed_axis_count=2,
+        displayed_axis_indices=(2, 3),
+        spatial_axis_labels=("y", "x"),
     ) == {"channel": 2, "z": 3}
     assert (
         ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=(4, 5),
             axis_labels=("y", "x"),
-            displayed_axis_count=2,
+            displayed_axis_indices=(0, 1),
+            spatial_axis_labels=("y", "x"),
         )
         == {}
     )
@@ -548,8 +640,97 @@ def test_result_element_coordinate_authority_rejects_cross_slice_geometry() -> N
         ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=((2, 3, 4, 4), (2, 4, 4, 6), (2, 3, 6, 6)),
             axis_labels=("channel", "z", "y", "x"),
-            displayed_axis_count=2,
+            displayed_axis_indices=(2, 3),
+            spatial_axis_labels=("y", "x"),
         )
+
+
+def test_fractional_z_point_navigation_chooses_slice_without_rounding_geometry() -> (
+    None
+):
+    assert ViewerPointCoordinateAuthority.axis_indices(
+        coordinates=(2.375, 1.25, 3.5),
+        axis_labels=("z_index", "y", "x"),
+        displayed_axis_indices=(1, 2),
+        spatial_axis_labels=("z_index", "y", "x"),
+    ) == {"z_index": 2}
+    with pytest.raises(ValueError, match="integral slice"):
+        ViewerResultElementCoordinateAuthority.axis_indices(
+            coordinates=(2.375, 1.25, 3.5),
+            axis_labels=("z_index", "y", "x"),
+            displayed_axis_indices=(1, 2),
+            spatial_axis_labels=("z_index", "y", "x"),
+        )
+
+
+@pytest.mark.parametrize("coordinate", [1.5, float("nan"), float("inf")])
+def test_point_coordinate_owner_preserves_strict_acquisition_admission(coordinate):
+    with pytest.raises(ValueError):
+        ViewerPointCoordinateAuthority.axis_indices(
+            coordinates=(coordinate, 1.5, 2.5, 3.5),
+            axis_labels=("channel", "z_index", "y", "x"),
+            displayed_axis_indices=(2, 3),
+            spatial_axis_labels=("z_index", "y", "x"),
+        )
+
+
+@pytest.mark.parametrize("displayed", [(1, 2), (0, 2), (0, 1)])
+def test_shapes_coordinate_owner_stays_strict_for_hidden_spatial_axes(displayed):
+    with pytest.raises(ValueError, match="integral slice"):
+        ViewerResultElementCoordinateAuthority.axis_indices(
+            coordinates=((1.5, 2.5, 3.5),), axis_labels=("z_index", "y", "x"),
+            displayed_axis_indices=displayed, spatial_axis_labels=("z_index", "y", "x"),
+        )
+
+
+def test_napari_navigation_selects_fractional_z_point_feature(qtbot) -> None:
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    viewer.add_image(np.zeros((4, 8, 8), dtype=np.uint8), name="Source planes")
+    layer = viewer.add_points(
+        np.array([[2.375, 1.25, 3.5]], dtype=float),
+        features={"response": [4.75]},
+        name="Centres",
+    )
+    server, _overlay, _dock, _window = _viewer_server(viewer, layer, "centres")
+    projection = ViewerLayerAxisProjection(
+        projected_axis_components=("z_index",),
+        component_values={"z_index": [0, 1, 2, 3]},
+        routed_component_values={"z_index": [0, 1, 2, 3]},
+        axis_offsets=(0,),
+    )
+    semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    server.layer_route_state.set_dimension_state(
+        "centres",
+        NapariDimensionLayerState(
+            labels={"z_index": ("Z 0", "Z 1", "Z 2", "Z 3")},
+            presentation=NapariAxisPresentation(
+                entries=semantics.entries,
+                layout=ViewerComponentLayout.from_parts(
+                    component_modes={"z_index": ViewerComponentMode.STACK},
+                    component_order=("z_index",),
+                ),
+                route_key="centres",
+                projection=projection,
+            ),
+        ),
+    )
+
+    response = NapariNavigationControlMessageAction().handle(
+        server,
+        {
+            ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
+                route_key="centres", visible=True, selected=True, data_index=0
+            )
+        },
+    )
+
+    assert response["status"] == "success", response
+    assert layer.selected_data == {0}
+    assert viewer.dims.current_step[0] == 2
+    assert layer.data[0, 0] == 2.375
+    assert layer.features.loc[0, "response"] == 4.75
 
 
 def test_napari_navigation_rejects_out_of_range_data_index(qtbot) -> None:

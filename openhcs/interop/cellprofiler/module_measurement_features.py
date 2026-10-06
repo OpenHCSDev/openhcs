@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 from abc import ABC
-from collections.abc import Mapping, Sequence
-from functools import lru_cache
+from collections.abc import Callable, Mapping, Sequence
+from functools import lru_cache, partial
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -29,6 +29,9 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_tabular_values import FieldSpec
 
 if TYPE_CHECKING:
+    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+        FormattingMeasurementFeatureTemplate,
+    )
     from openhcs.core.artifacts import ArtifactSpec
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.runtime_measurements import MeasurementTable
@@ -170,15 +173,39 @@ class CellProfilerMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):
     def database_measurement_field(cls, field: FieldSpec) -> FieldSpec:
         """Project a runtime field through its module-owned database declaration."""
 
+        return cls.database_measurement_field_projection()(field)
+
+    @classmethod
+    def database_measurement_field_projection(cls) -> Callable[[FieldSpec], FieldSpec]:
+        """Bind current declarations for one table's ordered field admission.
+
+        A subsequent operation discovers the module's current MRO and nested
+        declarations again. Feature matching and dtype hooks remain live.
+        Custom table projection owners override this operation; the scalar API
+        delegates to it for a fresh single-field operation.
+        """
+
         from openhcs.interop.cellprofiler.runtime.measurement_rows import (
             FormattingMeasurementFeatureTemplate,
         )
 
+        return partial(
+            cls._database_measurement_field,
+            feature_types=cls.declared_authority_types(
+                FormattingMeasurementFeatureTemplate
+            ),
+        )
+
+    @classmethod
+    def _database_measurement_field(
+        cls,
+        field: FieldSpec,
+        *,
+        feature_types: tuple[type[FormattingMeasurementFeatureTemplate], ...],
+    ) -> FieldSpec:
         matches = tuple(
             feature
-            for feature_type in cls.declared_authority_types(
-                FormattingMeasurementFeatureTemplate
-            )
+            for feature_type in feature_types
             for feature in feature_type
             if feature.matches_feature_name(field.name)
             and type(feature).database_measurement_dtype() is not None
@@ -441,12 +468,16 @@ class CellProfilerMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):
         """Dispatch plate reductions to the exact recorded measurement owners."""
 
         table_sequence = tuple(tables)
+        # Tables retain their exact nominal feature owner. Check that owner
+        # against the already-registered declaration instead of discovering
+        # every CellProfiler backend module during a timed export step.
         owners = tuple(
             dict.fromkeys(
-                module_type
+                owner
                 for table in table_sequence
-                for module_type in cls.__registry__.values()
-                if table.measurement_feature_owner is module_type
+                if (owner := table.measurement_feature_owner) is not None
+                and isinstance((owner_name := getattr(owner, "module_name", None)), str)
+                and dict.get(cls.__registry__, owner_name) is owner
             )
         )
         return tuple(
@@ -477,49 +508,60 @@ class CellProfilerMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):
         return aliases
 
     @classmethod
+    def declared_measurement_feature_part_rewrites(
+        cls,
+    ) -> Mapping[tuple[str, ...], tuple[str, ...]]:
+        """Return direct and feature-derived rewrites owned by this declaration."""
+        aliases: dict[tuple[str, ...], tuple[str, ...]] = {
+            tuple(source): tuple(target)
+            for source, target in cls.measurement_feature_part_rewrites.items()
+        }
+        for feature_type in cls.measurement_feature_types():
+            for feature in feature_type:
+                if feature.relations:
+                    continue
+                source = tuple(
+                    part
+                    for part in normalize_runtime_identifier(
+                        feature.measurement_row_field_name
+                    ).split("_")
+                    if part
+                )
+                target = tuple(
+                    part for part in feature.feature_family().split("_") if part
+                )
+                if source == target:
+                    continue
+                existing = aliases.get(source)
+                if existing is not None and existing != target:
+                    raise ValueError(
+                        "CellProfiler measurement feature declarations disagree for "
+                        f"{source!r}: {existing!r} versus {target!r} on "
+                        f"{cls.__name__}."
+                    )
+                aliases[source] = target
+        return aliases
+
+    @classmethod
     @lru_cache(maxsize=1)
     def measurement_feature_part_rewrite_declarations(
         cls,
     ) -> Mapping[tuple[str, ...], tuple[str, ...]]:
         """Return module-owned direct feature-family rewrites."""
         aliases: dict[tuple[str, ...], tuple[str, ...]] = {}
-        declarations = (
-            (
-                tuple(source),
-                tuple(target),
-                module_type,
-            )
-            for module_type in cls.__registry__.values()
-            for source, target in module_type.measurement_feature_part_rewrites.items()
-        )
-        derived_declarations = (
-            (
-                tuple(
-                    part
-                    for part in normalize_runtime_identifier(
-                        feature.measurement_row_field_name
-                    ).split("_")
-                    if part
-                ),
-                tuple(part for part in feature.feature_family().split("_") if part),
-                module_type,
-            )
-            for module_type in cls.__registry__.values()
-            for feature_type in module_type.measurement_feature_types()
-            for feature in feature_type
-            if not feature.relations
-            if normalize_runtime_identifier(feature.measurement_row_field_name)
-            != feature.feature_family()
-        )
-        for source, target, owner in (*declarations, *derived_declarations):
-            existing = aliases.get(source)
-            if existing is not None and existing != target:
-                raise ValueError(
-                    "CellProfiler measurement feature declarations disagree for "
-                    f"{source!r}: {existing!r} versus {target!r} on "
-                    f"{owner.__name__}."
-                )
-            aliases[source] = target
+        for module_type in cls.__registry__.values():
+            for (
+                source,
+                target,
+            ) in module_type.declared_measurement_feature_part_rewrites().items():
+                existing = aliases.get(source)
+                if existing is not None and existing != target:
+                    raise ValueError(
+                        "CellProfiler measurement feature declarations disagree for "
+                        f"{source!r}: {existing!r} versus {target!r} on "
+                        f"{module_type.__name__}."
+                    )
+                aliases[source] = target
         return aliases
 
     @classmethod

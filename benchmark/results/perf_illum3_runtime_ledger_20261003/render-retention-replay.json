@@ -1,0 +1,817 @@
+{
+  "status": "PASS",
+  "head": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "source_unchanged": true,
+  "source_hashes": {
+    "openhcs/core/pipeline_document.py": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
+    "openhcs/core/config_document.py": "37f66fd971806e059da6194c003e20a7ad08f69066eec4af7ebb11b4b70a08db",
+    "openhcs/core/function_step_transport.py": "b4c89539ace519926d178eb85a7909b4a7894203bf340213279e4f2a11e1152f",
+    "openhcs/runtime/zmq_execution_client.py": "8f98169438b1f9d65dd2a4f1517b5901e5d2ffd944fce4b0779a8f9b17d01db3",
+    "openhcs/runtime/zmq_compilation.py": "ad958c78ec9a26b778ad231501751f38ec6dd3d0c73ca2c1082207031fc6781f",
+    "openhcs/runtime/zmq_execution_signature.py": "41dcdb0a40446947a42a87482f27da051408015eec972e11e4d3329464db11ac",
+    "openhcs/serialization/source_path_factoring.py": "d8dd55b7d45882e067f9fddbe87327000a7e226dbc531a90fc543f201ea665ab",
+    "openhcs/serialization/pycodify_formatters.py": "b86d8a18b32084839667ebeb1322fd2e86ccb5fd8bea0365f01c03bc56042e9f",
+    "benchmark/openhcs_measured_run.py": "1e0cccc518fb6bec9c92ea8057dd7adfc7305b2d90a6da8f152c1b97601878ab",
+    "benchmark/well_throughput_scaling.py": "bcb58517c9c699be96d87027725a1fe299082874002cf0dc1032c6b267283e35",
+    "benchmark/metrics/memory.py": "bc049ff424564b876b82d79f5a34f49a3d5dc7f374804b23d53eed1dd729e25e"
+  },
+  "actual_import_root": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/openhcs/__init__.py",
+  "retained_source_paths": {
+    "pipeline": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/ordinary_run_evidence/ExampleIlluminationCorrection_Example3-1w_1t-1791013778142438710/submitted_pipeline.py",
+    "config": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/ordinary_run_evidence/ExampleIlluminationCorrection_Example3-1w_1t-1791013778142438710/submitted_global_config.py"
+  },
+  "retained_source_hashes": {
+    "pipeline": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+    "config": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3"
+  },
+  "preparation": {
+    "actual_registered_declarations": 44,
+    "entry_point": "SignatureAnalyzer.prepare_dataclass_declaration over existing LazyDataclassFactory.registered_type_pairs",
+    "FunctionStep_constructors_during_pure_preparation": 0,
+    "law": "No default factory/formatter memo introduced. First reflection-analysis epoch remains separately labeled, not hidden in preparation."
+  },
+  "runs": [
+    {
+      "index": 0,
+      "first_reflection_analysis_epoch": true,
+      "alternating_observation_order": [
+        "original_render",
+        "actual_payload_read"
+      ],
+      "completion_observations": {
+        "original_render": {
+          "seconds": 0.08703801175579429,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        },
+        "actual_payload_read": {
+          "seconds": 3.3262185752391815e-06,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        }
+      },
+      "submit_compile_total": 0.06521604722365737,
+      "submit_execution_total": 0.04581552976742387,
+      "original_render_events": [
+        {
+          "epoch": "0:submit_compile",
+          "owner": "pipeline",
+          "seconds": 0.05955396592617035,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "0:submit_compile",
+          "owner": "config",
+          "seconds": 0.005617266055196524,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "0:submit_execution",
+          "owner": "pipeline",
+          "seconds": 0.040430141147226095,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "0:submit_execution",
+          "owner": "config",
+          "seconds": 0.005347607657313347,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "0:completion_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04034718498587608,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "0:completion_config",
+          "owner": "config",
+          "seconds": 0.005629708990454674,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "0:returned_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04102328699082136,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        }
+      ],
+      "maximum_retention_return_removal_seconds": 0.08700018096715212,
+      "signature": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe"
+    },
+    {
+      "index": 1,
+      "first_reflection_analysis_epoch": false,
+      "alternating_observation_order": [
+        "actual_payload_read",
+        "original_render"
+      ],
+      "completion_observations": {
+        "actual_payload_read": {
+          "seconds": 1.0421499609947205e-06,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        },
+        "original_render": {
+          "seconds": 0.08516591787338257,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        }
+      },
+      "submit_compile_total": 0.04546358669176698,
+      "submit_execution_total": 0.04510248685255647,
+      "original_render_events": [
+        {
+          "epoch": "1:submit_compile",
+          "owner": "pipeline",
+          "seconds": 0.04016154492273927,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "1:submit_compile",
+          "owner": "config",
+          "seconds": 0.005269180051982403,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "1:submit_execution",
+          "owner": "pipeline",
+          "seconds": 0.039719612803310156,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "1:submit_execution",
+          "owner": "config",
+          "seconds": 0.005344413220882416,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "1:completion_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.03979505505412817,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "1:completion_config",
+          "owner": "config",
+          "seconds": 0.005292725283652544,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "1:returned_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04004170000553131,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        }
+      ],
+      "maximum_retention_return_removal_seconds": 0.08512948034331203,
+      "signature": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe"
+    },
+    {
+      "index": 2,
+      "first_reflection_analysis_epoch": false,
+      "alternating_observation_order": [
+        "original_render",
+        "actual_payload_read"
+      ],
+      "completion_observations": {
+        "original_render": {
+          "seconds": 0.08613781817257404,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        },
+        "actual_payload_read": {
+          "seconds": 1.0421499609947205e-06,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        }
+      },
+      "submit_compile_total": 0.04603173676878214,
+      "submit_execution_total": 0.045378165785223246,
+      "original_render_events": [
+        {
+          "epoch": "2:submit_compile",
+          "owner": "pipeline",
+          "seconds": 0.04065810004249215,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "2:submit_compile",
+          "owner": "config",
+          "seconds": 0.005338640883564949,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "2:submit_execution",
+          "owner": "pipeline",
+          "seconds": 0.040114596020430326,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "2:submit_execution",
+          "owner": "config",
+          "seconds": 0.005215710029006004,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "2:completion_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04045192198827863,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "2:completion_config",
+          "owner": "config",
+          "seconds": 0.005408914294093847,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "2:returned_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04024395998567343,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        }
+      ],
+      "maximum_retention_return_removal_seconds": 0.0861047962680459,
+      "signature": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe"
+    },
+    {
+      "index": 3,
+      "first_reflection_analysis_epoch": false,
+      "alternating_observation_order": [
+        "actual_payload_read",
+        "original_render"
+      ],
+      "completion_observations": {
+        "actual_payload_read": {
+          "seconds": 1.051928848028183e-06,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        },
+        "original_render": {
+          "seconds": 0.08610337320715189,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        }
+      },
+      "submit_compile_total": 0.04541486594825983,
+      "submit_execution_total": 0.04553820798173547,
+      "original_render_events": [
+        {
+          "epoch": "3:submit_compile",
+          "owner": "pipeline",
+          "seconds": 0.0400394550524652,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "3:submit_compile",
+          "owner": "config",
+          "seconds": 0.005345273297280073,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "3:submit_execution",
+          "owner": "pipeline",
+          "seconds": 0.04022560594603419,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "3:submit_execution",
+          "owner": "config",
+          "seconds": 0.005268760025501251,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "3:completion_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04016644414514303,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "3:completion_config",
+          "owner": "config",
+          "seconds": 0.005493993870913982,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "3:returned_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.040407488122582436,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        }
+      ],
+      "maximum_retention_return_removal_seconds": 0.08606792613863945,
+      "signature": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe"
+    },
+    {
+      "index": 4,
+      "first_reflection_analysis_epoch": false,
+      "alternating_observation_order": [
+        "original_render",
+        "actual_payload_read"
+      ],
+      "completion_observations": {
+        "original_render": {
+          "seconds": 0.08702337462455034,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        },
+        "actual_payload_read": {
+          "seconds": 1.2721866369247437e-06,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        }
+      },
+      "submit_compile_total": 0.04540669033303857,
+      "submit_execution_total": 0.04590281518176198,
+      "original_render_events": [
+        {
+          "epoch": "4:submit_compile",
+          "owner": "pipeline",
+          "seconds": 0.040172276087105274,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "4:submit_compile",
+          "owner": "config",
+          "seconds": 0.005201412830501795,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "4:submit_execution",
+          "owner": "pipeline",
+          "seconds": 0.040503378957509995,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "4:submit_execution",
+          "owner": "config",
+          "seconds": 0.005346857011318207,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "4:completion_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04052451904863119,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "4:completion_config",
+          "owner": "config",
+          "seconds": 0.005857598967850208,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "4:returned_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.040605089627206326,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        }
+      ],
+      "maximum_retention_return_removal_seconds": 0.08698720764368773,
+      "signature": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe"
+    },
+    {
+      "index": 5,
+      "first_reflection_analysis_epoch": false,
+      "alternating_observation_order": [
+        "actual_payload_read",
+        "original_render"
+      ],
+      "completion_observations": {
+        "actual_payload_read": {
+          "seconds": 6.118789315223694e-07,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        },
+        "original_render": {
+          "seconds": 0.08574638096615672,
+          "hashes": [
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+            "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+            "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+          ]
+        }
+      },
+      "submit_compile_total": 0.0462398286908865,
+      "submit_execution_total": 0.04573139222338796,
+      "original_render_events": [
+        {
+          "epoch": "5:submit_compile",
+          "owner": "pipeline",
+          "seconds": 0.040598487947136164,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "5:submit_compile",
+          "owner": "config",
+          "seconds": 0.0056106531992554665,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "5:submit_execution",
+          "owner": "pipeline",
+          "seconds": 0.04038529610261321,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "5:submit_execution",
+          "owner": "config",
+          "seconds": 0.005311900749802589,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "5:completion_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.040041168220341206,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        },
+        {
+          "epoch": "5:completion_config",
+          "owner": "config",
+          "seconds": 0.0053860098123550415,
+          "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+          "bytes": 407
+        },
+        {
+          "epoch": "5:returned_pipeline",
+          "owner": "pipeline",
+          "seconds": 0.04028505785390735,
+          "sha256": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687",
+          "bytes": 10647
+        }
+      ],
+      "maximum_retention_return_removal_seconds": 0.0857122358866036,
+      "signature": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe"
+    }
+  ],
+  "maximum_removed_summary": {
+    "median_all6": 0.08608636120334268,
+    "minimum_all6": 0.08512948034331203,
+    "maximum_all6": 0.08700018096715212,
+    "median_steady5": 0.08606792613863945
+  },
+  "controls": [
+    {
+      "name": "actual_FunctionStep_constructor_callbacks_at_both_submit_epochs",
+      "status": "PASS",
+      "counts": {
+        "required_submit_compile": 30,
+        "required_submit_execution": 30
+      },
+      "events": [
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_compile",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        },
+        {
+          "epoch": "required_submit_execution",
+          "called_original": true
+        }
+      ]
+    },
+    {
+      "name": "original_first_constructor_error_order",
+      "status": "PASS",
+      "events": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "nested_kwargs_mutation_changes_real_compilation_signature",
+      "status": "PASS",
+      "before": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe",
+      "after": "ee83d723591705cf2adf6c65e572d18d33993121e8642346f3d205d0233cf352",
+      "scope": "Actual request signature changes; no locally retained compiled execution artifact exists, so no fake artifact/server receiver was constructed."
+    },
+    {
+      "name": "lawful_submission_config_replacement_changes_real_compilation_signature",
+      "status": "PASS",
+      "before": "7b48f26c01b7c75e705c8fcaf0ccc83dabeeced6a14b0b74ef3f582be72aeabe",
+      "after": "9f26d2c15fa6857faa197e5f7f2c49cc87375809f45addb44dad52d5bd71dadd"
+    },
+    {
+      "name": "actual_execution_payload_snapshot_survives_later_authoring_mutation",
+      "status": "PASS",
+      "actual_sha": "c313ff0830e45c62dc23d7ce5a013c490383a007a65a633c3c5df973a5edc687"
+    },
+    {
+      "name": "reviewed_source_public_contract",
+      "status": "PASS"
+    }
+  ],
+  "limits": [
+    "Original API renders only, no client network/server/pipeline job or completion evidence IO was executed.",
+    "Each repetition executes original two submit builders plus all third/fourth pipeline and third config renders, alternating original render versus actual sent-payload read order. Payload reads are an offline observation only; no production path was implemented.",
+    "Timing callbacks add bounded attribution overhead and current unprofiled interpreter may differ from an ordinary reused client; savings are a local removal ceiling, not end-to-end gain.",
+    "No actual compiled artifact was fabricated; actual changed signature refusal must remain exercised by existing receiver tests or later authorized full transaction gate."
+  ],
+  "decision": "Local immutable source replay supplies actual removed-render ceiling only; no production caching or implementation."
+}

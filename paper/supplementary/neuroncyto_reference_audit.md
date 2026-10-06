@@ -1,5 +1,18 @@
 # NeuronCyto II image 1 reference audit
 
+Archive membership rechecked 6 October 2026 without extraction or new downloads:
+the retained official `Testing image.zip` contains 60 TIFF images and one
+`Thumbs.db` file, with no spatial tracing files. Both image 1 channel hashes
+still match the identities in the post-freeze field comparison:
+
+- `1_w1.tif`: `2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7`.
+- `1_w2.tif`: `ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847`.
+
+The published table extraction below was not repeated in this archive check.
+It supports aggregate reference entries, not available pixel/path annotations.
+The manuscript's main-shaft illustration does not require exhaustive filopodial
+tracing and is not assigned a spatial reference accuracy score.
+
 Checked 15 September 2026. This is a retrospective inspection of retained
 outputs and published references, not a new execution or an accuracy benchmark.
 

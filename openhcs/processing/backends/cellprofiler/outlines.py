@@ -20,7 +20,6 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
-from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
@@ -46,6 +45,7 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
+    ObjectLabelStorageStrategy,
     object_label_dense_array,
 )
 from openhcs.core.runtime_image_values import (
@@ -61,6 +61,10 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendAuthority,
 )
 from openhcs.processing.backends.cellprofiler.color import coerce_rgb_color
+from openhcs.processing.backends.cellprofiler.object_images import (
+    ImageMode,
+    ImageModeRenderer,
+)
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
 )
@@ -878,7 +882,7 @@ class OverlayOutlineExecutionContext:
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
 @special_inputs("object_labels")
 def overlay_outlines(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     blank_image: bool = False,
     display_mode: OutlineDisplayMode = OutlineDisplayMode.COLOR,
@@ -922,7 +926,7 @@ def overlay_outlines(
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
 @special_inputs("labels")
 def overlay_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     opacity: float = 0.3,
     max_label: int | None = None,
@@ -944,122 +948,26 @@ def overlay_objects(
     if not isinstance(labels, ObjectLabelValue):
         raise TypeError("OverlayObjects requires a runtime-projected ObjectLabelValue.")
     label_data = object_label_dense_array(labels, dtype=np.int32)
-    if label_data.ndim == 2:
-        overlay = _overlay_objects_array(
-            image,
-            label_data,
-            opacity=opacity,
-            max_label=max_label,
-            seed=seed,
-            colormap=colormap,
-        )
-    elif label_data.ndim == 3:
-        image_data = np.asarray(image_payload_data(image))
-        channel_axis = image_payload_metadata(image).normalized_source_channel_axis(
-            image
-        )
-        image_volume = (
-            np.mean(image_data, axis=channel_axis)
-            if channel_axis is not None
-            else image_data
-        )
-        if image_volume.shape != label_data.shape:
-            raise ValueError(
-                "OverlayObjects image and label volumes must have matching shapes; "
-                f"got {image_volume.shape!r} and {label_data.shape!r}."
-            )
-        volume_max_label = (
-            int(label_data.max()) if max_label is None else int(max_label)
-        )
-        overlay = np.stack(
-            tuple(
-                _overlay_objects_array(
-                    image_plane,
-                    label_plane,
-                    opacity=opacity,
-                    max_label=volume_max_label,
-                    seed=seed,
-                    colormap=colormap,
-                )
-                for image_plane, label_plane in zip(
-                    image_volume, label_data, strict=True
-                )
-            ),
-            axis=0,
-        )
-    else:
-        raise ValueError(
-            "OverlayObjects requires 2-D or 3-D object labels, got "
-            f"shape {label_data.shape!r}."
-        )
+    image_data = np.asarray(image_payload_data(image))
+    channel_axis = image_payload_metadata(image).normalized_source_channel_axis(image)
+    grayscale = (
+        np.mean(image_data, axis=channel_axis)
+        if channel_axis is not None
+        else image_data
+    )
+    renderer = ImageModeRenderer.for_enum_member(ImageMode.COLOR)
+    overlay = renderer.blend_image(
+        grayscale,
+        label_data,
+        opacity=opacity,
+        max_label=max_label,
+        seed=seed,
+        colormap_value=colormap,
+    )
     return with_image_payload_data(
         image,
         overlay,
         metadata=replace(image_payload_metadata(image), source_channel_axis=-1),
-    )
-
-
-def _overlay_objects_array(
-    image: np.ndarray,
-    labels: np.ndarray,
-    *,
-    opacity: float,
-    max_label: int | None,
-    seed: int | None,
-    colormap: str,
-) -> np.ndarray:
-    """Return OverlayObjects pixels for one image/label plane."""
-    image_data = np.asarray(image_payload_data(image))
-    channel_axis = image_payload_metadata(image).normalized_source_channel_axis(image)
-    image_plane = (
-        np.mean(image_data, axis=channel_axis)
-        if channel_axis is not None
-        else image_data.copy()
-    )
-    if image_plane.ndim != 2:
-        raise ValueError(
-            "OverlayObjects requires one projected XY image plane; "
-            f"got shape {image_data.shape!r}."
-        )
-    if image_plane.max() > 1.0:
-        image_plane = image_plane / image_plane.max()
-    label_plane = CellProfilerPlaneGeometry.from_image_plane(image_plane).label_plane(
-        labels
-    )
-    if max_label is None:
-        max_label = int(label_plane.max())
-    if seed is not None:
-        np.random.seed(seed)
-    label_count = max_label + 1
-    colors = _overlay_objects_color_table(colormap, label_count)
-    if colors.size == 0:
-        overlay = np.stack([image_plane, image_plane, image_plane], axis=-1)
-    else:
-        overlay = np.stack([image_plane, image_plane, image_plane], axis=-1).astype(
-            np.float32,
-            copy=False,
-        )
-        foreground = label_plane > 0
-        if np.any(foreground):
-            foreground_colors = colors[(label_plane[foreground] - 1) % colors.shape[0]]
-            overlay[foreground] = (1.0 - opacity) * overlay[
-                foreground
-            ] + opacity * foreground_colors
-    return np.clip(overlay, 0, 1).astype(np.float32)
-
-
-@lru_cache(maxsize=256)
-def _overlay_objects_color_table(colormap: str, label_count: int) -> np.ndarray:
-    """Return CellProfiler OverlayObjects RGB colors for one label domain."""
-    from matplotlib import colormaps
-
-    colormap_object = colormaps.get_cmap(colormap)
-    return np.asarray(
-        [
-            colormap_object(index / max(label_count - 1, 1))[:3]
-            for index in range(1, label_count)
-        ],
-        dtype=np.float32,
     )
 
 
@@ -1156,12 +1064,6 @@ def _draw_object_labels(
     import skimage.color
     import skimage.segmentation
 
-    label_plane = object_label_dense_array(labels, dtype=np.int32)
-    if label_plane.ndim != 2:
-        raise ValueError(
-            "OverlayOutlines requires runtime-projected 2-D object labels."
-        )
-    labels_2d = align_label_plane_to_shape(label_plane, output.shape[:2])
     outline_color: tuple[float, float, float] | float
     if display_mode is OutlineDisplayMode.COLOR:
         if output.ndim == 2:
@@ -1169,19 +1071,27 @@ def _draw_object_labels(
         outline_color = color
     else:
         outline_color = outline_intensity
-    boundaries = skimage.segmentation.find_boundaries(
-        labels_2d, mode=line_mode.skimage_mode
-    )
-    if not np.any(boundaries):
-        return output
-    return skimage.segmentation.mark_boundaries(
-        output, labels_2d, color=outline_color, mode=line_mode.skimage_mode
-    )
+    for label_plane in ObjectLabelStorageStrategy.for_value(labels).rendering_layers(
+        labels, source_spatial_shape_yx=labels.source_spatial_shape_yx,
+    ):
+        if label_plane.ndim != 2:
+            raise ValueError(
+                "OverlayOutlines requires runtime-projected 2-D object labels."
+            )
+        labels_2d = align_label_plane_to_shape(label_plane, output.shape[:2])
+        boundaries = skimage.segmentation.find_boundaries(
+            labels_2d, mode=line_mode.skimage_mode
+        )
+        if np.any(boundaries):
+            output = skimage.segmentation.mark_boundaries(
+                output, labels_2d, color=outline_color, mode=line_mode.skimage_mode
+            )
+    return output
 
 
 def _draw_outline_image(
     output: np.ndarray,
-    outline_image: np.ndarray,
+    outline_image: RuntimeArrayData,
     color: tuple[float, float, float],
     *,
     outline_intensity: float,
@@ -1200,7 +1110,7 @@ def _draw_outline_image(
     return output
 
 
-def _outline_image_mask(outline_image: np.ndarray) -> np.ndarray:
+def _outline_image_mask(outline_image: RuntimeArrayData) -> np.ndarray:
     mask = np.asarray(image_payload_data(outline_image)) > 0
     channel_axis = image_payload_metadata(outline_image).normalized_source_channel_axis(
         outline_image

@@ -13,6 +13,7 @@ from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
@@ -65,7 +66,7 @@ STRATEGY_REGISTRY_KEY = "method_label"
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def enhance_or_suppress_features(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     method: OperationMethod = OperationMethod.ENHANCE,
     enhance_method: EnhanceMethod = EnhanceMethod.SPECKLES,
     radius: float = 10.0,
@@ -301,15 +302,19 @@ class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.SPECKLES
 
     def apply(self, request: FeatureEnhancementRequest) -> np.ndarray:
-        from scipy import ndimage
         from skimage import morphology
 
         footprint = _structuring_element(request.radius)
         masked = request.mask_context.masked_original
         if request.speckle_accuracy is SpeckleAccuracy.FAST and request.radius > 3:
-            opened = ndimage.maximum_filter(
-                ndimage.minimum_filter(masked, footprint=footprint),
-                footprint=footprint,
+            from ._backend import CellProfilerBackendProvider
+            from .morphology import MorphologyBackendStrategy
+
+            opened = MorphologyBackendStrategy.for_callable(
+                enhance_or_suppress_features,
+                backend_provider=CellProfilerBackendProvider.OPENCV,
+            ).grayscale_opening(
+                masked, footprint,
             )
             result = masked - opened
         else:

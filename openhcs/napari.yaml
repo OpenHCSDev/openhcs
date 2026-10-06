@@ -10,6 +10,9 @@ contributions:
     - id: openhcs.make_roi_manager_widget
       python_name: openhcs.napari_roi_manager:QRoiManager
       title: Open the OpenHCS ROI Manager
+    - id: openhcs.make_orthogonal_widget
+      python_name: openhcs.runtime.napari_orthogonal_widget:make_orthogonal_widget
+      title: Review OpenHCS spatial planes
   readers:
     - command: openhcs.get_swc_reader
       accepts_directories: false
@@ -17,3 +20,5 @@ contributions:
   widgets:
     - command: openhcs.make_roi_manager_widget
       display_name: OpenHCS ROI Manager
+    - command: openhcs.make_orthogonal_widget
+      display_name: OpenHCS Spatial Planes

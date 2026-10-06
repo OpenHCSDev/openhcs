@@ -6,14 +6,14 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Mapping
 from dataclasses import dataclass, replace
 from enum import Enum
-from functools import lru_cache
 import inspect
 from types import MappingProxyType
-from typing import ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable_contract import CallableMetadata, KeywordRuntimeParameter
+from openhcs.core.function_reference import FunctionReference
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadExecutionMode,
@@ -25,6 +25,10 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+if TYPE_CHECKING:
+    from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+
 
 F = TypeVar("F", bound=Callable)
 RuntimeSliceDataT = TypeVar("RuntimeSliceDataT")
@@ -48,11 +52,12 @@ class RuntimePlaneAxisValueProjectionParameter(KeywordRuntimeParameter):
     parameter_default = None
 
 
-@lru_cache(maxsize=1024)
-def runtime_callable_defaults(func: Callable[..., object]) -> Mapping[str, object]:
+def runtime_callable_defaults(
+    func: Callable[..., object], *, signature: inspect.Signature | None = None,
+) -> Mapping[str, object]:
     """Return callable defaults visible to runtime batch executors."""
     try:
-        callable_signature = inspect.signature(func)
+        callable_signature = CallableMetadata.callable_signature(func) if signature is None else signature
     except (TypeError, ValueError) as exc:
         raise TypeError(
             f"Runtime batch function {func!r} must expose an inspectable signature."
@@ -94,16 +99,22 @@ class RuntimeBatchInvocationRequest(RuntimeImageExecutionContext):
             ),
         )
 
-    def batch_executor_request(self) -> "RuntimeBatchInvocationRequest | None":
+    def batch_executor_request(
+        self, *, processing_contract: "ProcessingContract",
+    ) -> "RuntimeBatchInvocationRequest | None":
         """Return a request projected into the batch executor's image domain.
 
         A batch executor may inspect image pixels before it delegates the actual
-        call.  It must therefore see the same image domain as the callable.  A
+        call.  It must therefore see the same image domain as the callable.
+        Preserved NATURAL axes requiring 2D execution remain with the ordinary
+        slicer under the processing declaration.  A
         singleton aligned runtime-slice axis can be consumed exactly; a larger
         aligned axis requires per-slice execution and is left to the ordinary
         contract executor by returning ``None``.
         """
 
+        if not processing_contract.declaration.supports_measurement_image_batch(self):
+            return None
         if (
             self.execution_mode
             is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
@@ -190,6 +201,7 @@ class RuntimePure2DSliceBatchRequest(
         ],
         RuntimeSliceResultT,
     ]
+    signature: inspect.Signature | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -197,7 +209,7 @@ class RuntimePure2DSliceBatchRequest(
             "kwargs",
             MappingProxyType(
                 {
-                    **runtime_callable_defaults(self.func),
+                    **runtime_callable_defaults(self.func, signature=self.signature),
                     **dict(self.kwargs),
                 }
             ),
@@ -250,25 +262,37 @@ class RuntimeBatchExecutor(ABC, metaclass=AutoRegisterMeta):
 class RuntimeBatchCallableFamily:
     """Callable plus its raw processing ancestor for inherited batch contracts."""
 
-    func: Callable
-    raw_processing_function: Callable | None = None
+    func: Callable | FunctionReference
+    raw_processing_function: Callable | FunctionReference | None = None
 
     def __post_init__(self) -> None:
-        if self.raw_processing_function is not None and not callable(
-            self.raw_processing_function
+        if self.raw_processing_function is not None and not (
+            callable(self.raw_processing_function)
+            or isinstance(self.raw_processing_function, FunctionReference)
         ):
             raise TypeError(
-                "raw_processing_function must be callable when inheriting runtime "
+                "raw_processing_function must be callable or FunctionReference "
+                "when inheriting runtime "
                 "batch executors, got "
                 f"{type(self.raw_processing_function).__name__}."
             )
 
     def executors(self) -> Mapping[RuntimeBatchExecutionDomain, Callable]:
         """Return batch executors declared by the wrapper family."""
-        batch_executors = dict(runtime_batch_executors_from_callable(self.func))
+        declared_callable = (
+            self.func.resolve()
+            if isinstance(self.func, FunctionReference)
+            else self.func
+        )
+        batch_executors = dict(runtime_batch_executors_from_callable(declared_callable))
         if self.raw_processing_function is not None:
+            raw_callable = (
+                self.raw_processing_function.resolve()
+                if isinstance(self.raw_processing_function, FunctionReference)
+                else self.raw_processing_function
+            )
             inherited = runtime_batch_executors_from_callable(
-                self.raw_processing_function
+                raw_callable
             )
             for domain, executor in inherited.items():
                 if domain not in batch_executors:
@@ -278,6 +302,14 @@ class RuntimeBatchCallableFamily:
 
 class Pure2DSliceBatchExecutor(RuntimeBatchExecutor):
     """Base contract for equivalent pure-2D slice batch execution."""
+
+    @classmethod
+    def from_executors(
+        cls, executors: Mapping[RuntimeBatchExecutionDomain, Callable] | None,
+    ) -> Callable:
+        """Honor a declared pure-2D executor before the nominal serial default."""
+        declared = None if executors is None else executors.get(RuntimeBatchExecutionDomain.PURE_2D_SLICES)
+        return declared if callable(declared) else cls.default_executor()
 
     @classmethod
     def default_executor(cls) -> "Pure2DSliceBatchExecutor":

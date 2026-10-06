@@ -1,0 +1,345 @@
+{
+  "source_scope": "step-scope-3",
+  "produced": [
+    {
+      "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/images/A01_s001_w2_z001_t001_MosaicRole.tif",
+      "identity": {
+        "origin": "pipeline",
+        "output_kind": "main",
+        "output_key": "MosaicRole",
+        "projection_key": "main",
+        "step_name": "Derived role images",
+        "pipeline_position": 3,
+        "step_scope_id": "step-scope-3",
+        "invocation_key": null,
+        "artifact_kind": "image"
+      },
+      "address": {
+        "site": "1",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+        "well": "A01"
+      }
+    }
+  ],
+  "materialized": [
+    {
+      "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/images/A01_s001_w2_z001_t001_MosaicRole.tif",
+      "role": "MosaicRole",
+      "semantic_source": {
+        "path": null,
+        "component_metadata": {
+          "extension": ".tif",
+          "well": "A01",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1"
+        }
+      },
+      "producer_scope": "step-scope-3",
+      "stored_key": "ArtifactKey(name='MosaicRole', artifact_type=<class 'openhcs.core.artifacts.ImageArtifactType'>, scope=RuntimeExecutionAxisScope(axis_id='A01', component=None, value=None, fixed_component_values=((<AllComponents.CHANNEL: 'channel'>, '2'), (<AllComponents.Z_INDEX: 'z_index'>, '1'), (<AllComponents.TIMEPOINT: 'timepoint'>, '1'))), semantic_id=None)"
+    }
+  ],
+  "artifact_projections": [
+    {
+      "path": "images/A01_s001_w2_z001_t001_MosaicRole.tif",
+      "role": "source_artifact",
+      "address": null,
+      "alias": "MosaicRole",
+      "kind": "image"
+    }
+  ],
+  "pre_join_main_flow": [
+    {
+      "virtual_path": "images/A01_s001_w2_z001_t001_MosaicRole.tif",
+      "address": null,
+      "ref": {
+        "backend": "disk",
+        "backend_address": "images/A01_s001_w2_z001_t001_MosaicRole.tif",
+        "source_axis_indices": []
+      },
+      "projection_role": "source_artifact",
+      "source_alias": "MosaicRole",
+      "source_metadata": {
+        "extension": ".tif",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+        "well": "A01",
+        "OpenHCSSourceVoxelSpacingZYX": "0.5,0.5",
+        "OpenHCSSourceVoxelSpacingUnit": "micrometers"
+      },
+      "execution_scope": {
+        "axis_id": "A01",
+        "component": null,
+        "value": null,
+        "fixed_component_values": [
+          [
+            "channel",
+            "2"
+          ],
+          [
+            "z_index",
+            "1"
+          ],
+          [
+            "timepoint",
+            "1"
+          ]
+        ]
+      },
+      "artifact_kind": "image",
+      "image_metadata": {
+        "source_voxel_spacing": {
+          "values_zyx": [
+            0.5,
+            0.5
+          ],
+          "unit": "micrometers"
+        },
+        "source_spatial_domain": {
+          "origin_yx": null,
+          "source_shape_yx": null,
+          "fill_value": 0,
+          "value_name": "Dense array",
+          "spatial_dimensions": 2
+        },
+        "source_provenance": {
+          "source_path": null,
+          "source_component_metadata": {
+            "well": "A01",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "extension": ".tif"
+          },
+          "source_image_provenance_planes": [
+            {
+              "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/physical_source/A01_s001_w2_z001_t001.tif",
+              "component_metadata": {
+                "site": "1"
+              },
+              "identity_kind": "pixel_contributor",
+              "source_image_name": null,
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/physical_source/A01_s002_w2_z001_t001.tif",
+              "component_metadata": {
+                "site": "2"
+              },
+              "identity_kind": "pixel_contributor",
+              "source_image_name": null,
+              "contributors": []
+            }
+          ],
+          "source_image_names": [
+            "MosaicRole"
+          ]
+        },
+        "intensity_scale": 65535.0,
+        "source_dtype": "uint16",
+        "unit_interval_intensity": null,
+        "source_plane_intensity_scales": [],
+        "source_plane_dtypes": [],
+        "physical_border_edges_yx": null,
+        "mask_defines_border": null,
+        "source_channel_axis": null,
+        "plane_axis": null
+      }
+    }
+  ],
+  "pre_join_artifacts": [
+    {
+      "virtual_path": "images/A01_s001_w2_z001_t001_MosaicRole.tif",
+      "address": null,
+      "ref": {
+        "backend": "disk",
+        "backend_address": "images/A01_s001_w2_z001_t001_MosaicRole.tif",
+        "source_axis_indices": []
+      },
+      "projection_role": "source_artifact",
+      "source_alias": "MosaicRole",
+      "source_metadata": {
+        "well": "A01",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+        "extension": ".tif",
+        "OpenHCSSourceVoxelSpacingZYX": "0.5,0.5",
+        "OpenHCSSourceVoxelSpacingUnit": "micrometers"
+      },
+      "execution_scope": {
+        "axis_id": "A01",
+        "component": null,
+        "value": null,
+        "fixed_component_values": [
+          [
+            "channel",
+            "2"
+          ],
+          [
+            "z_index",
+            "1"
+          ],
+          [
+            "timepoint",
+            "1"
+          ]
+        ]
+      },
+      "artifact_kind": "image",
+      "image_metadata": {
+        "source_voxel_spacing": {
+          "values_zyx": [
+            0.5,
+            0.5
+          ],
+          "unit": "micrometers"
+        },
+        "source_spatial_domain": {
+          "origin_yx": null,
+          "source_shape_yx": null,
+          "fill_value": 0,
+          "value_name": "Dense array",
+          "spatial_dimensions": 2
+        },
+        "source_provenance": {
+          "source_path": null,
+          "source_component_metadata": {
+            "well": "A01",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "extension": ".tif"
+          },
+          "source_image_provenance_planes": [
+            {
+              "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/physical_source/A01_s001_w2_z001_t001.tif",
+              "component_metadata": {
+                "site": "1"
+              },
+              "identity_kind": "pixel_contributor",
+              "source_image_name": null,
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/physical_source/A01_s002_w2_z001_t001.tif",
+              "component_metadata": {
+                "site": "2"
+              },
+              "identity_kind": "pixel_contributor",
+              "source_image_name": null,
+              "contributors": []
+            }
+          ],
+          "source_image_names": [
+            "MosaicRole"
+          ]
+        },
+        "intensity_scale": 65535.0,
+        "source_dtype": "uint16",
+        "unit_interval_intensity": null,
+        "source_plane_intensity_scales": [],
+        "source_plane_dtypes": [],
+        "physical_border_edges_yx": null,
+        "mask_defines_border": null,
+        "source_channel_axis": null,
+        "plane_axis": null
+      }
+    }
+  ],
+  "produced_records": [
+    {
+      "component_values": {
+        "well": "A01",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1"
+      },
+      "extension": ".tif",
+      "source": "collapsed Mosaic contributors",
+      "filename_component_values": {
+        "well": "A01",
+        "site": "1",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1"
+      },
+      "filename_qualifier": null,
+      "producer_identity": {
+        "origin": "pipeline",
+        "output_kind": "main",
+        "output_key": "MosaicRole",
+        "projection_key": "main",
+        "step_name": "Derived role images",
+        "pipeline_position": 3,
+        "step_scope_id": "step-scope-3",
+        "invocation_key": null,
+        "artifact_kind": "image"
+      },
+      "output_path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/images/A01_s001_w2_z001_t001_MosaicRole.tif",
+      "relative_output_path": "A01_s001_w2_z001_t001_MosaicRole.tif",
+      "image_metadata": {
+        "source_voxel_spacing": {
+          "values_zyx": [
+            0.5,
+            0.5
+          ],
+          "unit": "micrometers"
+        },
+        "source_spatial_domain": {
+          "origin_yx": null,
+          "source_shape_yx": null,
+          "fill_value": 0,
+          "value_name": "Dense array",
+          "spatial_dimensions": 2
+        },
+        "source_provenance": {
+          "source_path": null,
+          "source_component_metadata": {
+            "well": "A01",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "extension": ".tif"
+          },
+          "source_image_provenance_planes": [
+            {
+              "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/physical_source/A01_s001_w2_z001_t001.tif",
+              "component_metadata": {
+                "site": "1"
+              },
+              "identity_kind": "pixel_contributor",
+              "source_image_name": null,
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-source-owner-final-20261004/test_saved_roles_publish_once_11/physical_source/A01_s002_w2_z001_t001.tif",
+              "component_metadata": {
+                "site": "2"
+              },
+              "identity_kind": "pixel_contributor",
+              "source_image_name": null,
+              "contributors": []
+            }
+          ],
+          "source_image_names": [
+            "MosaicRole"
+          ]
+        },
+        "intensity_scale": null,
+        "source_dtype": null,
+        "unit_interval_intensity": null,
+        "source_plane_intensity_scales": [],
+        "source_plane_dtypes": [],
+        "physical_border_edges_yx": null,
+        "mask_defines_border": null,
+        "source_channel_axis": null,
+        "plane_axis": null
+      },
+      "main_flow_plane_axis": "runtime_slice"
+    }
+  ]
+}

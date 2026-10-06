@@ -13,13 +13,28 @@ from enum import Enum
 from types import UnionType
 from typing import Annotated, Any, Union, get_args, get_origin, get_type_hints
 
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+import numpy as np
 
 
 class ColumnarRows(ABC):
     """Nominal ABC for schema-bearing table payloads exposing named columns."""
 
     object_row_identity: MeasurementObjectRowIdentity | None = None
+
+    @staticmethod
+    def column_array(values: Sequence[object]) -> np.ndarray:
+        """Retain each declared column cell as one atomic array entry.
+
+        Native one-dimensional arrays already carry that representation. Other
+        sequences may contain arrays, lists or ragged cells; their row count
+        cannot be changed by NumPy's nested-sequence shape discovery.
+        """
+        if isinstance(values, np.ndarray) and values.ndim == 1:
+            return values
+        result = np.empty(len(values), dtype=object)
+        for index, value in enumerate(values):
+            result[index] = value
+        return result
 
     @staticmethod
     def common_object_row_identity(
@@ -84,6 +99,24 @@ class ColumnarRows(ABC):
         if isinstance(columns, Mapping):
             return columns[column]
         return self[column]
+
+    def column_value_segments(
+        self, column: str
+    ) -> Iterable[tuple[int, Sequence[object]]]:
+        """Read the current physical segments of one column in row order."""
+        yield 0, self.column_values(column)
+
+    def bounded_column_values(self, column: str, row_stop: int) -> Sequence[object]:
+        """Read a prefix without requiring whole-column admission."""
+        return self.column_values(column)[:row_stop]
+
+    def columnar_row_batches(
+        self,
+    ) -> Iterable[tuple[int, Mapping[str, Sequence[object]]]]:
+        """Read correlated column batches at the current payload epoch."""
+        yield self.row_count(), {
+            str(column): self.column_values(str(column)) for column in self.columns
+        }
 
     def row_count(self) -> int:
         """Return the number of rows represented by this columnar payload."""
@@ -262,29 +295,8 @@ def measurement_row_mapping(row: object) -> Mapping[str, object]:
     if isinstance(row, Mapping):
         return row
     if is_dataclass(row):
-        return MeasurementRowMappingCache.process_cache().mapping(row)
+        return asdict(row)
     raise TypeError(f"Unsupported measurement row type {type(row).__name__}.")
-
-
-@dataclass(slots=True)
-class MeasurementRowMappingCache(
-    RegisteredProcessLocalBoundedCache[int, tuple[object, Mapping[str, object]]]
-):
-    """Bounded process-local cache for immutable dataclass measurement rows."""
-
-    max_entries: int = 262144
-
-    def mapping(self, row: object) -> Mapping[str, object]:
-        row_id = id(row)
-        cached = self.cached_value(row_id)
-        if cached is not None:
-            cached_row, row_mapping = cached
-            if cached_row is row:
-                return row_mapping
-            del self.entries[row_id]
-        row_mapping = asdict(row)
-        self.store_value(row_id, (row, row_mapping))
-        return row_mapping
 
 
 class MeasurementObjectRowIdentity(str, Enum):

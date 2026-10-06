@@ -1,0 +1,54 @@
+{
+  "preparation_seconds": 0.2498337929137051,
+  "saved_calls": 2325,
+  "production_calls": 2323,
+  "maximum_absolute_difference": 7.275957614183426e-11,
+  "production_maximum_absolute_difference": 1.317002062961592e-13,
+  "different_calls": 891,
+  "numeric_abs_tolerance": 1e-06,
+  "numeric_rel_tolerance": 1e-06,
+  "source": "/benchmark/adapters/openhcs.py::_strict_cellprofiler_runtime_equivalence_policy",
+  "input_unchanged": true,
+  "samples": [
+    {
+      "implementation": "mahotas",
+      "seconds": 1.0479681193828583,
+      "calls": 2325
+    },
+    {
+      "implementation": "fused",
+      "seconds": 0.005066211335361004,
+      "calls": 2325
+    },
+    {
+      "implementation": "mahotas",
+      "seconds": 0.7085205935873091,
+      "calls": 2325
+    },
+    {
+      "implementation": "fused",
+      "seconds": 0.004975589923560619,
+      "calls": 2325
+    },
+    {
+      "implementation": "mahotas",
+      "seconds": 0.7055267449468374,
+      "calls": 2325
+    },
+    {
+      "implementation": "fused",
+      "seconds": 0.005121354945003986,
+      "calls": 2325
+    },
+    {
+      "implementation": "mahotas",
+      "seconds": 0.7086416319943964,
+      "calls": 2325
+    },
+    {
+      "implementation": "fused",
+      "seconds": 0.00503320898860693,
+      "calls": 2325
+    }
+  ]
+}
