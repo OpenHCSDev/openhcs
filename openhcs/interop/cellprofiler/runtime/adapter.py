@@ -103,19 +103,6 @@ class CellProfilerRuntimeAdapterSpec(RuntimeAdapterSpec):
             contract, contract.artifact_inputs.specs,
         ))
 
-    def consumes_image_input(
-        self,
-        contract: CallableContract,
-        spec: ArtifactSpec,
-    ) -> bool:
-        """Use the module's primary-image policy for unnamed CP inputs."""
-        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-
-        module = CellProfilerModule.require_callable_contract_owner(contract)
-        return spec.binds_callable_parameter() or spec in module.primary_image_inputs(
-            contract,
-            contract.artifact_inputs.specs,
-        )
 
 @dataclass(slots=True)
 class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
