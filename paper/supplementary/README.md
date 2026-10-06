@@ -784,6 +784,14 @@ Original attempts, unsuccessful candidates and delivery history remain in the
 linked records and the [archived evidence inventory](https://github.com/OpenHCSDev/openhcs/blob/7f318f36969cae281964a31f4f43899a45a9a8f3/paper/supplementary/README.md#supplementary-data-8-task-only-authoring-and-independent-repair).
 They are not additional experimental replicates.
 
+For NeuronCyto II image 1, the published manual-reference table contains eight
+traced-cell entries, without spatial identifiers or an exhaustive-coverage
+statement. The official testing archive contains the two source images but no
+manual spatial tracing files. Aggregate agreement therefore does not establish
+shaft recall, neuron ownership or calibrated length accuracy. The
+[reference audit](neuroncyto_reference_audit.md) retains the source-table
+checksums, image correspondence and interpretation [@NeuronCytoII].
+
 ## Software snapshots and evidence
 
 A subsequent independent paired DNA/actin author recovered three crowded
