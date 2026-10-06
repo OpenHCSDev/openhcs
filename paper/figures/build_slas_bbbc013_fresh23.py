@@ -130,7 +130,7 @@ class MedianLog2Ratio(WellMetric):
 
 
 class EligibilityFraction(WellMetric):
-    label = "Eligible nuclear identities (fraction)"
+    label = "Eligible nuclei (fraction)"
     limits = (0.6, 1.0)
 
     def value(self, well: WellEndpoint) -> float:

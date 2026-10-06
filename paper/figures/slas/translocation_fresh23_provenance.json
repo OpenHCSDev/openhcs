@@ -1,14 +1,14 @@
 {
-  "generator_sha256": "f87397a88b37006a9f7af71fc5ef5bcda3257df51b379ec9048aa33603f31e13",
+  "generator_sha256": "f67ca6145f7e8ef67219e810dc89bdc794cd991ed9fc337d2b7086a800b21499",
   "source_sha256": {
-    "paper/figures/build_slas_bbbc013_fresh23.py": "8d876eef45f0848fe426257aa890002e455a4c24105841834791656f17ce0e2a",
+    "paper/figures/build_slas_bbbc013_fresh23.py": "eb66b12b64529b563b9f290b7e0969bf00c4b45b0fcdab46f130754c801b295b",
     "paper/supplementary/task_only_analysis/bbbc013-fresh23-plot-source.json": "834fd2de0c8d82c34bf152474f575371cfeaa59ea1e38a66e9cff70a270ec8d7"
   },
   "ui_crops": [],
   "output_sha256": {
-    "translocation_fresh23.png": "c13e4f4b86f681cd0b177f3da264295e8f1da58e5dcf7b6727207bdf9102e47c",
-    "translocation_fresh23.pdf": "52635cace10257206923e7488893ce8bdf5be761eaf97b2cd2dbe05c9fd1100c",
-    "translocation_fresh23.svg": "290f6ecddc565a7f3b8067a164a1000ba425b93a19bb4c4998a78fb14d13ece2"
+    "translocation_fresh23.png": "3bda8db7aa8ed962f730d46ab491bb87b9fab5349a750990f03f51f8d00ed11a",
+    "translocation_fresh23.pdf": "514c21f91cc6b9829a04e7aad3514d45ca1a2c7da1636727ceb7b73854def9aa",
+    "translocation_fresh23.svg": "ff3766e7a3e7aa82dd2d74e279a85eaaa456be9b35e18911f5e4acf892f31239"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

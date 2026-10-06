@@ -1,9 +1,9 @@
 {
   "generator_sha256": "f67ca6145f7e8ef67219e810dc89bdc794cd991ed9fc337d2b7086a800b21499",
   "source_sha256": {
-    "paper/figures/slas/translocation_fresh23_provenance.json": "81a2a8c2c1c8dbc4926af5ef12a91554d1be2865bc3357a8f527f4be0f01082e",
+    "paper/figures/slas/translocation_fresh23_provenance.json": "67517ba57556fcb24dd0481f4cff9809f9bde9329736f9b455f473ac23362bf3",
     "paper/figures/slas/h002_measurement_first_provenance.json": "d948f5ccc0370f974c5ce0674842587496d49cf5244a82c5fad60d3e2fd46eba",
-    "paper/figures/slas/translocation_fresh23.png": "c13e4f4b86f681cd0b177f3da264295e8f1da58e5dcf7b6727207bdf9102e47c",
+    "paper/figures/slas/translocation_fresh23.png": "3bda8db7aa8ed962f730d46ab491bb87b9fab5349a750990f03f51f8d00ed11a",
     "paper/figures/slas/h002_measurement_first.png": "339b9e2e987ec7dd6b89ca8e9e17651e9c61774ed22a195cc4b90cf18baa276d"
   },
   "ui_crops": [
@@ -35,9 +35,9 @@
     }
   ],
   "output_sha256": {
-    "submission_quantitative_results.png": "430306a2a2239c9fb4e950e7f57801d5fac7e962a531aca1e4379513e9ecdf30",
-    "submission_quantitative_results.pdf": "d20ea7591676d12e3f6d54abe4dec55d543bdddaaf5f5babac035b880774ea36",
-    "submission_quantitative_results.svg": "d29a24cfdac3ca47fd1a92d5bf83aa223ad31638241044d2f246868dbbf4a6d5"
+    "submission_quantitative_results.png": "605bef213a9adfed71abf1f2ff21dce203904dd493081a33f9d9428185acd900",
+    "submission_quantitative_results.pdf": "95193ee76624fe2694fe8b949ead684667ea093f7e6acd2f2b3e7a255175bea6",
+    "submission_quantitative_results.svg": "03c010dbd63a2aa7e507c3d66ce508e69fc54fbc0e729bf2fa8e7da252f7abdd"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
