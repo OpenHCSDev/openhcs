@@ -46,7 +46,7 @@ We evaluate whether this shared workflow preserves established analyses and supp
 
 ![Shared workflow, source connections and execution.](figures/slas/shared_workflow.png){width=6in}
 
-\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) Compilation resolves inputs, dependencies and array requirements before worker processes execute the analysis. Selected intermediate results can be inspected in napari or Fiji, and retained images, ROIs and measurements support review and subsequent edits. CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 4.
+\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The illustrated desktop process hosts the editors and MCP bridge. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) A separate ZeroMQ execution server compiles workflows and schedules prepared tasks on worker processes. Blue arrows distinguish requests and progress from green result streaming to separate napari or Fiji viewers. Workers also retain configured images, ROIs and measurements for review and subsequent edits. Worker/viewer counts are configurable, and CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 4. Supplementary Figure 2 expands the same process arrangement.
 
 ## Materials and Methods
 
@@ -163,7 +163,7 @@ Automated regression tests check nested configuration, inherited defaults, param
 
 Stacking, grouping and scheduling express different choices. A step can assemble Z planes into an array, apply different function chains to different channels, and supply named segmentation labels to a later measurement step. When time is configured as sequential, the entire pipeline finishes for one timepoint before the next begins; separate wells can run in parallel (Supplementary Figure 1). Each selected function determines its array-library support and whether it processes individual planes, whole stacks or reduces a stack to an output.
 
-The UI submits work to a separate execution server using ZeroMQ messaging. The server compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Supplementary Figure 2).
+The UI submits work to a separate execution server using ZeroMQ messaging. The server compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Figure 1C; expanded in Supplementary Figure 2).
 
 ### Figure 2. Forms, Python and MCP edit the same analysis
 
@@ -171,7 +171,7 @@ The UI submits work to a separate execution server using ZeroMQ messaging. The s
 
 \(A) Full NeuronCyto II main window, with enlarged step and connection details. (B) MCP applies edited Python to the step and checks the updated control, then edits the field and checks regenerated Python. (C, D) Same-session crops show matching controls and code, with high percentile restored to 99.8 and parameters in signature order. Captures use OpenHCS 0.8.5; Figure 3 shows the current replay and retained measurements.
 
-### An agent builds and inspects a neurite-outgrowth workflow
+### An agent-authored workflow recovers neurite morphology and topology
 
 From a detailed prompt identifying the two NeuronCyto II channels and requested outputs, the agent built and inspected a neurite-outgrowth analysis without further human input.
 
@@ -181,11 +181,11 @@ The final napari view displayed enhanced neuronal signal, unified neuron labels 
 
 A separate current-source replay used nuclear-supported soma detection and soma-rooted path assignment. It produced eight cell bodies, eight nuclei, 18 processes, two branch events and 24 graph paths. Per-cell measurements agree with graph distance features, totaling 2556.137 pixels under unit spacing. Supplementary Data 4 retains the original run, intervening correction and current replay separately. Document validation caught invalid authoring attempts before execution; image review identified errors in the biological result.
 
-### Figure 3. Agent-authored neurite workflow and current-source review
+### Figure 3. Neurite morphology and topology from an agent-authored workflow
 
 ![Original inputs, current native viewer inspection and retained neurite measurements.](figures/slas/figure3_agent_workflow.png){width=6in}
 
-(A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) Native napari capture of the current replay, combining neuronal signal, unified labels and graph paths; selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. The original unattended run remains separately retained in Supplementary Data 4.
+(A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) The native napari canvas shows neuronal signal, unified labels and graph paths from the current-source replay; application controls are cropped away without changing image or overlay pixels. Selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. This replay is distinct from the original unattended run retained in Supplementary Data 4; it is not another fresh autonomous evaluation.
 
 ### Frozen workflows recover held-out assay structure
 
