@@ -442,6 +442,7 @@ class FunctionStepExecutor:
         main_flow_refs = compiled_group.main_flow_input_refs_for_component(
             self.plan.execution_group_scope,
             component_value,
+            source_bindings=self.plan.source_binding_plan,
         )
         if main_flow_refs == ():
             return None

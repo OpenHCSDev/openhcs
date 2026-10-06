@@ -90,8 +90,8 @@ Stored produced images keep their storage edge and transformed pixels.
 The existing refactor-audit Package parser covered 1409 OpenHCS/test modules:
 1393 selected sites before, 1396 after, zero parse omissions. These are source
 declaration/call/write findings, not global semantic or behavioral proof. The
-only production reads of requires_current_pixels are the compiled carrier
-decision and StepInputSourceUniverseRequest; its declaration owns origin/role.
+only production reads of requires_current_pixels are the existing input-edge
+carrier query and StepInputSourceUniverseRequest; its declaration owns origin/role.
 The related origin registry still selects SourceUniverseRequest.for_binding;
 the image-input admission owner retains its single-authority check.
 
@@ -142,3 +142,25 @@ the unmatched two-anchor expectation. These are not declared passed or erased.
 The next fixture revision explicitly declares its CHANNEL source stack through
 SourceBindingsConfig, retains one module-lifetime custom declaration, and uses
 the actual compiled-step dictionary key. Production bytes remain df283098a.
+
+Determining follow-through after controls02
+------------------------------------------
+
+Readback found the second consumer of the same fact: the compiled group's
+main-flow reference query ignored unstored current-image bindings. Merely
+refusing stored-label transport did not make all consumed raw planes available.
+InvocationArtifactInputEdgePlan.requires_current_image_carrier now derives
+the unstored-edge/binding relation once. Both main-flow reference selection
+and stored-cohort selection consume it. Compiler source-anchor validation,
+FunctionStepExecutor source anchors, and PatternGroupExecutionScope loading
+pass their existing compiled source-binding plan to that reference query.
+The old plan-free property is replaced by the explicit query and all callers
+are migrated; no second plane store or original-pixel resolver is introduced.
+
+The interim source_stack_components fixture change is removed: that declaration
+describes axes inside each physical source file, not a remedy for omitted
+current-image references. Controls03 preserves that interim negative revision
+at 35f08b267. Neither it nor controls02 is claimed as full acceptance.
+Normal main integration at 70605278a includes accepted PR926 and current paper
+commits; those are not attributed to this photometry repair. The new source
+checkpoint still requires its batch and installed MCP checks before merge.

@@ -248,6 +248,7 @@ class PatternGroupExecutionScope:
         main_flow_refs = self.compiled_group.main_flow_input_refs_for_component(
             self.execution_plan.execution_group_scope,
             self.component_key,
+            source_bindings=declared_plan,
         )
         return (
             declared_plan

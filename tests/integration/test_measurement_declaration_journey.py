@@ -245,7 +245,6 @@ def _document(*, selected=True, two_producers=True, same_source=False):
         pipeline_config=PipelineConfig(
             microscope=Microscope.SOURCE_BINDINGS,
             source_bindings_config=LazySourceBindingsConfig(
-                source_stack_components=(AllComponents.CHANNEL,),
                 bindings=(_source("DNA", "1"),) if same_source else (
                     _source("DNA", "1"), _source("Actin", "2"),
                 ),
@@ -493,7 +492,6 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
             original.pipeline_config,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(_source("DNA", "1"), _source("Actin", "2")),
-                source_stack_components=(AllComponents.CHANNEL,),
                 match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
             ),
         ),

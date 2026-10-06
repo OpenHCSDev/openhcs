@@ -650,7 +650,7 @@ def test_special_input_without_main_flow_edge_preserves_implicit_image_flow() ->
 
     compiled = compile_function_pattern(measure, {}, {})
 
-    assert compiled.default_group.main_flow_input_refs is None
+    assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
 
 
 def test_unstored_positional_artifact_does_not_override_compiled_main_flow() -> None:
@@ -677,7 +677,7 @@ def test_unstored_positional_artifact_does_not_override_compiled_main_flow() -> 
         invocations=(invocation.with_artifact_input_edges((edge,)),),
     )
 
-    assert group.main_flow_input_refs is None
+    assert group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
 
 
 def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
@@ -746,10 +746,10 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
         component=AllComponents.CHANNEL,
     )
 
-    assert group.main_flow_input_refs_for_component(execution_scope, "1") == (
+    assert group.main_flow_input_refs_for_component(execution_scope, "1", source_bindings=CompiledSourceBindingPlan.empty()) == (
         blue.ref(),
     )
-    assert group.main_flow_input_refs_for_component(execution_scope, "2") == (
+    assert group.main_flow_input_refs_for_component(execution_scope, "2", source_bindings=CompiledSourceBindingPlan.empty()) == (
         green.ref(),
     )
     green_outputs = invocation.output_plans_for_component(execution_scope, "2")
@@ -948,7 +948,7 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
 
     compiled = compile_function_pattern(consume, {}, {})
 
-    assert compiled.default_group.main_flow_input_refs == ()
+    assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) == ()
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.pipeline.framework_device_assignment import (
         assign_framework_devices,
