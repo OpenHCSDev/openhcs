@@ -46,9 +46,7 @@ else:
     cp = optional_import_placeholder("cupy")
     ndimage = None
     if cp:
-        cupyx_scipy = optional_import_placeholder("cupyx.scipy")
-        if cupyx_scipy:
-            ndimage = cupyx_scipy.ndimage
+        ndimage = optional_import_placeholder("cupyx.scipy.ndimage")
 
     # Import CuCIM for edge detection
     cucim_filters = optional_import_placeholder("cucim.skimage.filters")

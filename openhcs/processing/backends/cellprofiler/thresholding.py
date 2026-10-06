@@ -2716,6 +2716,14 @@ def _li_threshold_float32_numpy(values: np.ndarray) -> float:
 def _li_tolerance_numpy(values: np.ndarray) -> float:
     if values.size < 2:
         return CELLPROFILER_LI_TOLERANCE
+    if values.size > 1024:
+        stride = (values.size + 1023) // 1024
+        observed = np.unique(np.asarray(values.flat[::stride], dtype=np.float64))
+        differences = np.diff(observed)
+        # This pair also occurs in the full array, whose minimum positive gap
+        # cannot be larger. A gap at most twice the floor proves the tolerance.
+        if np.any((differences > 0) & (differences <= 2.0 * CELLPROFILER_LI_TOLERANCE)):
+            return CELLPROFILER_LI_TOLERANCE
     unique_values = np.unique(np.asarray(values, dtype=np.float64).ravel())
     if unique_values.size < 2:
         return CELLPROFILER_LI_TOLERANCE
