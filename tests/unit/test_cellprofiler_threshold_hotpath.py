@@ -12,6 +12,8 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
     CellProfilerThresholdScope,
     NumbaNumpyThresholdDiagnosticsBackendStrategy,
+    CELLPROFILER_LI_TOLERANCE,
+    _li_tolerance_numpy,
     cellprofiler_get_adaptive_threshold,
     cellprofiler_get_global_threshold,
     threshold,
@@ -29,6 +31,54 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagn
 )
 
 UINT16_SCALE = int(np.iinfo(np.uint16).max)
+
+
+@pytest.mark.parametrize("layout", ("contiguous", "strided", "transposed"))
+@pytest.mark.parametrize("witness", (True, False))
+def test_li_tolerance_preserves_full_array_gap_for_sparse_and_dense_values(
+    layout: str, witness: bool
+) -> None:
+    values = np.arange(4096, dtype=np.float64).reshape(64, 64)
+    if witness:
+        values.flat[4] = CELLPROFILER_LI_TOLERANCE
+    else:
+        # The close pair misses the sparse observation; the full owner is needed.
+        values.flat[1] = CELLPROFILER_LI_TOLERANCE
+    if layout == "strided":
+        backing = np.empty((64, 128), dtype=np.float64)
+        backing[:, ::2] = values
+        values = backing[:, ::2]
+    elif layout == "transposed":
+        values = values.T
+    differences = np.diff(np.unique(values.astype(np.float64).ravel()))
+    expected = max(
+        float(np.min(differences[differences > 0]) / 2), CELLPROFILER_LI_TOLERANCE
+    )
+    assert _li_tolerance_numpy(values) == expected
+
+
+@pytest.mark.parametrize(
+    "values",
+    (
+        np.array([], dtype=np.float32),
+        np.ones(4096, dtype=np.float32),
+        np.tile([0.0, 1.0], 4096),
+        np.tile([np.nan, np.inf, -np.inf, 0.0, 1.0], 1024),
+        np.tile([np.nan, np.inf, -np.inf, 0.0, CELLPROFILER_LI_TOLERANCE], 1024),
+    ),
+)
+def test_li_tolerance_preserves_degenerate_and_nonfinite_inputs(
+    values: np.ndarray,
+) -> None:
+    with np.errstate(invalid="ignore"):
+        differences = np.diff(np.unique(values.astype(np.float64).ravel()))
+        positive = differences[differences > 0]
+        expected = (
+            max(float(np.min(positive) / 2), CELLPROFILER_LI_TOLERANCE)
+            if positive.size
+            else CELLPROFILER_LI_TOLERANCE
+        )
+        assert _li_tolerance_numpy(values) == expected
 
 
 def _quantized_stack() -> tuple[np.ndarray, np.ndarray]:
