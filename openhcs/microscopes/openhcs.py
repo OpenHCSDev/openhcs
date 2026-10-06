@@ -1338,6 +1338,10 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         )
         return handler
 
+    def source_admission_config(self):
+        """Expose the original prepared-workspace declaration to runtime readers."""
+        return self._source_bindings_config
+
     @classmethod
     def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
         """Declare OpenHCS data as an already prepared workspace format."""

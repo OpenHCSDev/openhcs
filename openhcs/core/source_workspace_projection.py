@@ -794,6 +794,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
             metadata_handler=context.microscope_handler.metadata_handler,
             filemanager=context.filemanager,
             cache=cache,
+            source_bindings=context.microscope_handler.source_admission_config(),
         )
 
     @classmethod

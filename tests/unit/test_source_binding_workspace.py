@@ -84,7 +84,10 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     filemanager = _filemanager()
     workspace = tmp_path / "prepared"
     materialization = SourceBindingWorkspaceProjector(
-        SourceBindingsConfig(bindings=(NamedSourceBinding(alias="Images"),)),
+        SourceBindingsConfig(metadata_rules=(MetadataExtractionRule(
+            source=MetadataSource.FILE_NAME,
+            pattern=r"(?P<well>A\d+)_s(?P<site>\d+)_w(?P<channel>\d+)",
+        ),)),
         parser=SourceSchemaFilenameParser(),
     ).materialize(source, workspace, filemanager=filemanager,
                   source_backend=Backend.DISK, workspace_backend=Backend.DISK,
@@ -119,6 +122,25 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         assert selected.require_source_projection_for(lookup) is full.require_source_projection_for(lookup)
         assert selected.source_metadata_for(lookup) == full.source_metadata_for(lookup)
     assert len(full.pipeline_start_files()) == 18
+    from openhcs.core.context.processing_context import ProcessingContext
+    context = ProcessingContext(filemanager=filemanager, axis_id="A01")
+    context.plate_path = workspace
+    context.microscope_handler = handler
+    runtime_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+        context,
+    ).projection_or_empty()
+    assert runtime_projection.pipeline_start_files() == selected.pipeline_start_files()
+    from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    orchestrator = PipelineOrchestrator(
+        workspace, pipeline_config=PipelineConfig(
+            source_bindings_config=LazySourceBindingsConfig(source_filters=config.source_filters),
+        ),
+    ).initialize()
+    assert orchestrator.source_workspace_files() == selected.pipeline_start_files()
+    assert set(orchestrator.get_component_keys(AllComponents.SITE)) == set(map(str, expected_sites))
+    assert orchestrator.get_component_keys(AllComponents.SITE, [str(expected_sites[0])]) == [str(expected_sites[0])]
+    assert orchestrator.get_component_keys(AllComponents.SITE, ["99"]) == []
     assert materialization.metadata_path.read_bytes() == original_bytes
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
         VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
