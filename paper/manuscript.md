@@ -455,7 +455,7 @@ counts also increased from 12 to 234, with uncertain short twigs and ambiguous
 ownership at crossings. The trial demonstrates autonomous recovery of a
 measured local omission, but the sensitivity of the graph outputs prevents
 interpreting them as validated neuron-specific outgrowth or branch counts
-(Supplementary Data 8).
+(Supplementary Figure 24; Supplementary Data 8).
 
 A separate retained-context personal-neurite continuation
 processed a nine-field mosaic with shared channel fits and paths across sampled
