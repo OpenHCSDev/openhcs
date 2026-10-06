@@ -301,9 +301,116 @@ class ImagePayloadIntensityFields(ABC):
         )
 
 
+class ImagePayloadAxisFields(ABC):
+    """Declared plane/channel geometry shared by image metadata capabilities.
+
+    Concrete metadata owns the stored declarations. This capability owns their
+    validation and derived array-axis views, independent of source identity and
+    numerical intensity conversion.
+    """
+
+    @property
+    @abstractmethod
+    def source_channel_axis(self) -> int | None: ...
+
+    @property
+    @abstractmethod
+    def plane_axis(self) -> RuntimePlaneAxis | None: ...
+
+    def require_scalar_source_plane(self) -> None:
+        """Require source metadata for one scalar grayscale image plane."""
+        if self.plane_axis is not None:
+            raise ValueError("Exported source planes require scalar image metadata.")
+        if self.source_channel_axis is not None:
+            raise ValueError("Exported Z planes cannot carry an undeclared color axis.")
+
+    def require_leading_plane_axis(self, message: str) -> None:
+        """Require axis presence before later ordered projection validation."""
+        if self.plane_axis is None:
+            raise ValueError(message)
+
+    def validate_source_channel_axis(self) -> None:
+        """Validate the authored channel declaration before transforming axes."""
+        if self.source_channel_axis is not None and (
+            not isinstance(self.source_channel_axis, int)
+            or isinstance(self.source_channel_axis, bool)
+        ):
+            raise TypeError(
+                "ImagePayloadMetadata.source_channel_axis must be int or None."
+            )
+
+    def normalized_source_channel_axis(self, data: Any) -> int | None:
+        """Return this declared channel axis normalized for ``data``."""
+        if self.source_channel_axis is None:
+            return None
+        ndim = image_payload_geometry(data).ndim
+        axis = self.source_channel_axis
+        normalized = axis if axis >= 0 else ndim + axis
+        if normalized < 0 or normalized >= ndim:
+            raise ValueError(
+                f"Source channel axis {axis} is invalid for payload rank {ndim}."
+            )
+        return normalized
+
+    def spatial_axes_yx(self, data: Any) -> tuple[int, int] | None:
+        """Return Y/X axes after excluding the declared channel axis."""
+        ndim = image_payload_geometry(data).ndim
+        channel_axis = self.normalized_source_channel_axis(data)
+        candidate_axes = tuple(axis for axis in range(ndim) if axis != channel_axis)
+        if len(candidate_axes) < 2:
+            return None
+        return candidate_axes[-2], candidate_axes[-1]
+
+    def is_declared_source_channel_plane(self, data: Any) -> bool:
+        """Return whether this payload declares one channel-bearing image plane."""
+        if self.normalized_source_channel_axis(data) is None:
+            return False
+        return self.plane_axis is None
+
+    def is_declared_source_channel_stack(self, data: Any) -> bool:
+        """Return whether this payload declares a plane stack with a channel axis."""
+        if self.normalized_source_channel_axis(data) is None:
+            return False
+        return self.plane_axis is not None
+
+    def spatial_shape_yx(self, data: Any) -> tuple[int, int] | None:
+        """Return Y/X shape using only declared channel-axis semantics."""
+        axes = self.spatial_axes_yx(data)
+        if axes is None:
+            return None
+        shape = image_payload_geometry(data).shape
+        return shape[axes[0]], shape[axes[1]]
+
+    @property
+    def has_leading_intensity_axis(self) -> bool:
+        """Bind intensity projection to the existing image-axis declaration."""
+        return self.plane_axis is not None
+
+    def require_leading_intensity_axis(self) -> None:
+        """Keep numerical normalization inside the existing image-axis domain."""
+        self.require_leading_plane_axis(
+            "Leading intensity normalization requires a declared plane axis."
+        )
+        self.validate_source_channel_axis()
+        self.channel_axis_without_leading_plane()
+
+    def channel_axis_without_leading_plane(self) -> int | None:
+        """Validate distinct plane/channel axes and derive the scalar channel."""
+        source_channel_axis = self.source_channel_axis
+        if source_channel_axis == 0:
+            raise ValueError(
+                "Image metadata cannot declare the same leading axis as both "
+                "plane and channel."
+            )
+        if source_channel_axis is not None and source_channel_axis > 0:
+            source_channel_axis -= 1
+        return source_channel_axis
+
+
 @dataclass(slots=True)
 class ImagePayloadMetadata(
     SourceImageProvenanceFields,
+    ImagePayloadAxisFields,
     ImagePayloadIntensityFields,
     SourceSpatialDomainFields,
     SourceVoxelSpacingFields,
@@ -327,13 +434,6 @@ class ImagePayloadMetadata(
             for member in fields(cls)
             if member.metadata.get(ViewerWireField.IMAGE_METADATA, False)
         )
-
-    def require_scalar_source_plane(self) -> None:
-        """Require source metadata for one scalar grayscale image plane."""
-        if self.plane_axis is not None:
-            raise ValueError("Exported source planes require scalar image metadata.")
-        if self.source_channel_axis is not None:
-            raise ValueError("Exported Z planes cannot carry an undeclared color axis.")
 
     def require_source_image_pixels(self, data: Any) -> None:
         """Validate decoded pixels against declared XY placement and dtype."""
@@ -461,20 +561,6 @@ class ImagePayloadMetadata(
         if self.plane_axis is not None:
             self.plane_axis = RuntimePlaneAxis(self.plane_axis)
 
-    def require_leading_plane_axis(self, message: str) -> None:
-        """Require axis presence before later ordered projection validation."""
-        if self.plane_axis is None:
-            raise ValueError(message)
-
-    def validate_source_channel_axis(self) -> None:
-        """Validate the authored channel declaration before transforming axes."""
-        if self.source_channel_axis is not None and (
-            not isinstance(self.source_channel_axis, int)
-            or isinstance(self.source_channel_axis, bool)
-        ):
-            raise TypeError(
-                "ImagePayloadMetadata.source_channel_axis must be int or None."
-            )
 
     @property
     def has_values(self) -> bool:
@@ -740,47 +826,9 @@ class ImagePayloadMetadata(
             metadata_type=cls,
         ).compose()
 
-    def normalized_source_channel_axis(self, data: Any) -> int | None:
-        """Return this declared channel axis normalized for ``data``."""
-        if self.source_channel_axis is None:
-            return None
-        ndim = image_payload_geometry(data).ndim
-        axis = self.source_channel_axis
-        normalized = axis if axis >= 0 else ndim + axis
-        if normalized < 0 or normalized >= ndim:
-            raise ValueError(
-                f"Source channel axis {axis} is invalid for payload rank {ndim}."
-            )
-        return normalized
 
-    def spatial_axes_yx(self, data: Any) -> tuple[int, int] | None:
-        """Return Y/X axes after excluding the declared channel axis."""
-        ndim = image_payload_geometry(data).ndim
-        channel_axis = self.normalized_source_channel_axis(data)
-        candidate_axes = tuple(axis for axis in range(ndim) if axis != channel_axis)
-        if len(candidate_axes) < 2:
-            return None
-        return candidate_axes[-2], candidate_axes[-1]
 
-    def is_declared_source_channel_plane(self, data: Any) -> bool:
-        """Return whether this payload declares one channel-bearing image plane."""
-        if self.normalized_source_channel_axis(data) is None:
-            return False
-        return self.plane_axis is None
 
-    def is_declared_source_channel_stack(self, data: Any) -> bool:
-        """Return whether this payload declares a plane stack with a channel axis."""
-        if self.normalized_source_channel_axis(data) is None:
-            return False
-        return self.plane_axis is not None
-
-    def spatial_shape_yx(self, data: Any) -> tuple[int, int] | None:
-        """Return Y/X shape using only declared channel-axis semantics."""
-        axes = self.spatial_axes_yx(data)
-        if axes is None:
-            return None
-        shape = image_payload_geometry(data).shape
-        return shape[axes[0]], shape[axes[1]]
 
     def mask_domain(self, data: Any) -> "ImageMaskDomain":
         """Return the mask domain declared for this payload."""
@@ -1075,30 +1123,7 @@ class ImagePayloadMetadata(
             return metadata
         return metadata.for_source_planes(source_plane_indices)
 
-    @property
-    def has_leading_intensity_axis(self) -> bool:
-        """Bind intensity projection to the existing image-axis declaration."""
-        return self.plane_axis is not None
 
-    def require_leading_intensity_axis(self) -> None:
-        """Keep numerical normalization inside the existing image-axis domain."""
-        self.require_leading_plane_axis(
-            "Leading intensity normalization requires a declared plane axis."
-        )
-        self.validate_source_channel_axis()
-        self.channel_axis_without_leading_plane()
-
-    def channel_axis_without_leading_plane(self) -> int | None:
-        """Validate distinct plane/channel axes and derive the scalar channel."""
-        source_channel_axis = self.source_channel_axis
-        if source_channel_axis == 0:
-            raise ValueError(
-                "Image metadata cannot declare the same leading axis as both "
-                "plane and channel."
-            )
-        if source_channel_axis is not None and source_channel_axis > 0:
-            source_channel_axis -= 1
-        return source_channel_axis
 
     def without_spatial_domain(self) -> "ImagePayloadMetadata":
         """Return metadata with invalidated source-spatial placement removed."""
