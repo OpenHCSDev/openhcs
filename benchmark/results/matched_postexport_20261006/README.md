@@ -38,3 +38,20 @@ Efficiency compares the same nine repeated assignments: one-worker median divide
 - [Original9/3 custody](data/9assignments-3workers/summary_custody.json)
 
 The lightweight archive includes original shard requests/reports, collection/equivalence and exact barrier markers admitted by the native owner, plus original candidate receipts and whole reports. Each was copied byte-for-byte and checked against custody. No final amortization figure,16-assignment row, projected timing or memory result has been fabricated.
+
+### Qualified paired figures and caption
+
+- [Actual9/1 versus9/3 execution](../../../paper/figures/slas/matched_postexport_20261006/matched-nine-execution/measured_execution_seconds.png)
+- [Actual9/1 versus9/3 total](../../../paper/figures/slas/matched_postexport_20261006/matched-nine-total/measured_total_seconds.png)
+
+**Caption:** Actual matched nine-assignment execution and prepared-service total times, comparing one worker (`9/1`) with three workers (`9/3`). The cohort retains the prior single-well timing frontiers and representative3D workflow; assignments reuse one biological source sample. Bars show independent engine medians over three measured repetitions after warmup on the same56c3 source. Native parallel bars derive genuine simultaneous shard clocks; OpenHCS execution includes the whole server job and plate exports. Native total excludes one-time CPPipe loading/JVM startup while OH total includes per-job compilation; readiness and scientific comparisons are excluded. The Average row is an arithmetic presentation summary, not another observed workflow. Figures use the existing May-style owner and retain complete source/output hash provenance. No final amortization, unmeasured16-assignment point or15%-loss acceptance is claimed.
+
+The CP efficiencies in the preceding matched-mode table compare native serial timings from the9/1 capture with native parallel timings from the9/3 capture. Separately, the9/3 capture also retains a genuine whole-batch serial native baseline, used to qualify its shards. Its **within-capture** physical efficiencies are:
+
+| Workflow | Serial CP inside9/3 capture | Parallel CP9/3 | Within-capture CP efficiency |
+|---|---:|---:|---:|
+|ExampleVitra|23.080005s|9.742642s|78.966%|
+|ExampleIlluminationCorrection_Example3|3.277442s|2.230507s|48.979%|
+|cp_tutorial_3d_monolayer|123.242523s|45.977632s|89.350%|
+
+These efficiencies differ from the cross-capture82.579/54.265/92.657% figures above because they use different genuine serial observations. Neither native comparison establishes OpenHCS efficiency or biological replication.
