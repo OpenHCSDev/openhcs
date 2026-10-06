@@ -807,7 +807,7 @@ def architecture():
         bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
     )
     sheet.text(11, 9, "ZMQ server", size=12, weight="bold", ha="center", color=BLUE)
-    sheet.text(11, 5.5, "Compile + schedule", size=10.5, ha="center")
+    sheet.text(11, 5.5, "Catalog · compile · schedule", size=9.5, ha="center")
     sheet.arrow((20, 9), (26, 9), both=True, color=BLUE)
     sheet.chip(28, 5, "CPU")
     sheet.chip(45, 5, "GPU")
