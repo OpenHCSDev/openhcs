@@ -170,3 +170,53 @@ nuclei versus411 closed manual interiors;20700/27212 scored boundary pixels
 qualify (0.7606938115537263). That four-field subset follows the author's
 pre-existing split, not a new selection chosen by reference score. No results
 were returned to live blind authors; these references remain evaluator-only.
+
+Paired first-completed and final development comparison
+-----------------------------------------------------
+
+Original evaluator execution20528 completed exit0 on the same twelve
+development fields, excluding the four predeclared reserve fields. The earlier
+lookup attempt28091 stopped before scoring because FIRST_TECH02 uses
+NucleusLabelsUInt16/CellLabelsUInt16 names rather than FINAL's label filenames.
+The corrected lookup accepts these two recorded naming forms, requires one
+checkpoint per source/channel and verifies every size/hash against the frozen
+manifest. The scorer and annotation bindings above are unchanged.
+
+FIRST_TECH02 is the first completed scientific candidate, after technical
+measurement/streaming repairs. It is not a successful first dispatch. Its source
+SHA256 is1d5cd2819772c78205bca1091de633ca6318346e372e51b7d9229cd344deef71.
+Independent AST comparison found identical Nuclei and SeededCells callable
+settings and processing configuration between FIRST.py and FIRST_TECH02.py;
+measurement declarations differ and an integrity step was added. Earlier
+technical failures remain in the original record.
+
+.. csv-table:: Same-field comparison, before reference feedback
+   :header: "Source", "First nuclei", "Final nuclei", "Closed manual interiors", "First eligible boundaries", "First within2px", "Final eligible boundaries", "Final within2px"+
+   A01_10,107,101,87,5506,4056,5301,3948
+   A01_5,98,107,90,5067,3868,5671,4219
+   A01_7,146,152,126,8323,5961,8727,6240
+   A02_1,16,73,81,167,113,4866,3252
+   A03_13,54,55,49,3833,2848,3841,2924
+   A03_6,35,32,31,1761,1324,1640,1272
+   A03_7,87,90,79,6223,4809,6469,4925
+   A04_10,69,70,60,2775,2004,2906,2084
+   A04_2,100,103,101,7267,5463,7423,5673
+   A04_5,53,54,47,2991,2069,3066,2197
+   A04_7,84,83,78,4460,3127,4419,3126
+   A04_8,69,70,61,3535,2646,3552,2663
+
+On these fields FIRST has918 predicted nuclei versus890 closed manual
+interiors; FINAL has990. Net count agreement therefore worsens, but excess
+and missed counts can cancel and the closed-interior denominator excludes12
+open/frame regions. No instance precision/recall is inferred. A02 recovery
+from16 to73 against81 closed interiors supports the original visual diagnosis
+of a severe coverage failure; it does not establish a matched-object recall.
+
+Directed boundary agreement is38288/51908 (0.7376126993912306) first and
+42523/57881 (0.7346624971925156) final. Mean field fractions are0.7313180106610657
+and0.7354435134607923. Final admits5973 additional scored boundary pixels,
+4235 of them within2pixels, while pooled agreement remains approximately flat.
+This comparison supports a substantial local coverage repair, not a general
+boundary-accuracy gain or a causal estimate of the skill's effect. All twelve
+paired fields remain visible, including regressions; no outcome or parameter
+was chosen from the evaluator results and no live author received feedback.
