@@ -1,0 +1,72 @@
+{
+  "generator_sha256": "662ce1832f7e49ae34caf96e7c6a6495655a1cbde029bdb1c6dd3d58a11e9192",
+  "source_sha256": {
+    "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
+    "paper/figures/slas/h004_fresh20_sources/ATTEMPT-MEASUREMENTS.csv": "f91f97ab7afc521d3bb088b848f880c1f1c8d1a9c3f345fccfc4bf3f55bdc55d",
+    "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst": "fc4bb85f2d13b8086f664d3c898a16b76d9a1be87628c9252a32296d9f1e63d8",
+    "paper/figures/slas/h004_fresh20_sources/first-bottom-raw.png": "a31555a497ce061fe397a10bd33046119e15ce6ce000539fd02dc3d2baad4324",
+    "paper/figures/slas/h004_fresh20_sources/first-bottom-result.png": "ae1b34c445b8537fd732f45efda47c837068e0ddf7623cf1dec297bf28f11f66",
+    "paper/figures/slas/h004_fresh20_sources/repair03-bottom-result.png": "af6fd659402fc15b3da2d6838d9a4dacaee91e9fbe0810ae9545e264f3e9ef9e",
+    "paper/figures/slas/h004_fresh20_sources/repair03-bottom-combined.png": "e4e8bb4f7e8ce89e7c1b1fe23e590fceda9bbe6d4d7764550ff0954274a25a9e"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/first-bottom-raw.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        410
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/first-bottom-result.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        410
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/repair03-bottom-result.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        410
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/repair03-bottom-combined.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        410
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    }
+  ],
+  "output_sha256": {
+    "h004_fresh20_faint_path.png": "d4d0a8ec6157544322c623bbe38db21e4323652df57736b97fc3f65f5708424c",
+    "h004_fresh20_faint_path.pdf": "7c7df518591c849f792d754bbdac5cdd74cd03af73321e96be5e5594a696ee5b",
+    "h004_fresh20_faint_path.svg": "de5c0a7cd52c8d7e81e65f4aeab6f7cc88c9436638ecd3b4bb555e0c07c23268"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

@@ -117,11 +117,13 @@ class CellProfilerRuntimeProfileLogger:
         payload_type: str,
         labels: ObjectLabelValue,
     ) -> None:
-        cls.artifact(
+        cls.log_module_profile_deferred(
             label,
             seconds,
-            artifact_name=artifact_name,
-            kind=ObjectLabelsArtifactType,
-            payload_type=payload_type,
-            extra_fields=object_label_artifact_profile_fields(labels),
+            lambda: {
+                "artifact": artifact_name,
+                "kind": ObjectLabelsArtifactType.value,
+                "payload_type": payload_type,
+                **object_label_artifact_profile_fields(labels),
+            },
         )

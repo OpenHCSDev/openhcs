@@ -117,8 +117,8 @@ class ObjectLabelVariantData:
     small_removed_labels: ObjectLabelData | None = None
 
     @property
-    def shape(self) -> tuple[int, ...]:
-        return self.labels.shape
+    def shape(self) -> tuple[int, ...] | None:
+        return ObjectLabelStorageStrategy.for_value(self.labels).label_shape(self.labels)
 
     @property
     def dtype(self) -> Any:
@@ -1413,6 +1413,12 @@ class ObjectLabelStorageStrategy(
     ) -> np.ndarray:
         """Materialize dense labels from this storage."""
 
+    def rendering_layers(
+        self, labels: object, *, source_spatial_shape_yx: tuple[int, int] | None,
+    ) -> tuple[np.ndarray, ...]:
+        """Return nonoverlapping dense layers for image rendering consumers."""
+        return (self.dense_data(labels, source_spatial_shape_yx=source_spatial_shape_yx),)
+
     @abstractmethod
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
         """Materialize sparse-IJV rows from this storage."""
@@ -1689,6 +1695,13 @@ class SparseIJVObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
             source_spatial_shape_yx=source_spatial_shape_yx,
         )
 
+    def rendering_layers(
+        self, labels: object, *, source_spatial_shape_yx: tuple[int, int] | None,
+    ) -> tuple[np.ndarray, ...]:
+        return cast(SparseIJVLabelRows, labels).nonoverlapping_dense_layers(
+            source_spatial_shape_yx=source_spatial_shape_yx,
+        )
+
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
         return cast(SparseIJVLabelRows, labels)
 
@@ -1804,6 +1817,16 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
             source_spatial_shape_yx=label_value.source_spatial_domain.source_shape_yx,
         )
 
+    def rendering_layers(
+        self, labels: object, *, source_spatial_shape_yx: tuple[int, int] | None,
+    ) -> tuple[np.ndarray, ...]:
+        del source_spatial_shape_yx
+        value = cast(ObjectLabelValue, labels)
+        data = self.label_data(value)
+        return ObjectLabelStorageStrategy.for_value(data).rendering_layers(
+            data, source_spatial_shape_yx=value.source_spatial_shape_yx,
+        )
+
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
         label_data = self.label_data(labels)
         return ObjectLabelStorageStrategy.for_value(label_data).sparse_ijv_rows(
@@ -1896,8 +1919,7 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
         )
 
     def label_shape(self, labels: object) -> tuple[int, ...] | None:
-        label_data = self.label_data(labels)
-        return ObjectLabelStorageStrategy.for_value(label_data).label_shape(label_data)
+        return cast(ObjectLabelValue, labels).variant_data.shape
 
 
 def object_label_dense_array(

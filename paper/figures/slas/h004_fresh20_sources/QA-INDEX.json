@@ -1,0 +1,991 @@
+[
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-bottom-combined/20261006T000328514333Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 175656,
+    "sha256": "9a7c49f8655a88e5d524e360f7fc8056ea0610c71851878d4bc7e07fd640774d",
+    "capture_group": "first-bottom-combined",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-bottom-raw/20261006T000327730357Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 143421,
+    "sha256": "a31555a497ce061fe397a10bd33046119e15ce6ce000539fd02dc3d2baad4324",
+    "capture_group": "first-bottom-raw",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-bottom-result/20261006T000328160900Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 117772,
+    "sha256": "ae1b34c445b8537fd732f45efda47c837068e0ddf7623cf1dec297bf28f11f66",
+    "capture_group": "first-bottom-result",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-cross-combined/20261006T000327184795Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 234994,
+    "sha256": "2c6afc4249e2ac15ae2b1f62eb66085cf54e5acfaaebd0f827f67bc72e5b2cd8",
+    "capture_group": "first-cross-combined",
+    "center_yx": [
+      400,
+      410
+    ],
+    "zoom": 1.5,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-cross-raw/20261006T000326424247Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 198475,
+    "sha256": "11ede8937e466f1f48ecfc87ddc9042afd1af89cb8f1a45883723dd1aa85dacf",
+    "capture_group": "first-cross-raw",
+    "center_yx": [
+      400,
+      410
+    ],
+    "zoom": 1.5,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-cross-result/20261006T000326819698Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 119239,
+    "sha256": "dfadc91101be860ba6f2fc40f493a5508ca49240537cb7581562aef09af1315a",
+    "capture_group": "first-cross-result",
+    "center_yx": [
+      400,
+      410
+    ],
+    "zoom": 1.5,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-full-combined/20261006T000248606664Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 218232,
+    "sha256": "55c3b915a45ab8a07c11e49544dee0e0a8a6678344258b57378eb99ab4acc068",
+    "capture_group": "first-full-combined",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-full-raw/20261006T000247964251Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 192560,
+    "sha256": "a5ff357b010c1869732c54890aa611b6ed9f6ab674086a911c2bbb8c11a3a3e2",
+    "capture_group": "first-full-raw",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-full-result/20261006T000248330147Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 118421,
+    "sha256": "8526d5be0e23deff03407e8b78a18d4b5f5e4f9cc1b7ce3f35a148b5b8c45ba2",
+    "capture_group": "first-full-result",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-gap-candidate/20261006T000412979846Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 87441,
+    "sha256": "d9a5cc2adc9901d423488d43cd9839ccd13ace5f8c4626147927d40c6b4c21ee",
+    "capture_group": "first-gap-candidate",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      255
+    ],
+    "personally_opened": true,
+    "mode": "candidate"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-gap-neurite_candidate_mask/20261006T000504630496Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 86636,
+    "sha256": "92446549912dc5acb8d6154f2906094de3bc1ec42b2c517449122dcbc52e4767",
+    "capture_group": "first-gap-neurite_candidate_mask",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      1
+    ],
+    "personally_opened": true,
+    "mode": "neurite_candidate_mask"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-gap-neurite_local_support/20261006T000504984516Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 90548,
+    "sha256": "5bf9edbd7612f7da96c3d467e15f3fd482ddc6401ff03518064727b5816a1668",
+    "capture_group": "first-gap-neurite_local_support",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      1
+    ],
+    "personally_opened": true,
+    "mode": "neurite_local_support"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-gap-neurite_threshold_support/20261006T000505333246Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 87501,
+    "sha256": "18644c59a8593dd5d9758e933697fcc5a9de1f290ddc52c0635637d1b3c78eeb",
+    "capture_group": "first-gap-neurite_threshold_support",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      1
+    ],
+    "personally_opened": true,
+    "mode": "neurite_threshold_support"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-gap-neurite_unrooted_residual/20261006T000505642917Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 85307,
+    "sha256": "40583a64678255714942accc47b65cd63102a0b874b6d13abead227eb3d96748",
+    "capture_group": "first-gap-neurite_unrooted_residual",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      1
+    ],
+    "personally_opened": true,
+    "mode": "neurite_unrooted_residual"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-nuc-center-combined/20261006T000412560250Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 146097,
+    "sha256": "2651480cafe22f1b0ca844d552a6b6b949f1fca3eefea2e38dd9d44727eb9004",
+    "capture_group": "first-nuc-center-combined",
+    "center_yx": [
+      397,
+      448
+    ],
+    "zoom": 3,
+    "raw_or_diagnostic_window": [
+      0,
+      255
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-nuc-center-raw/20261006T000412020804Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 120035,
+    "sha256": "9948b94007cb9ba3b205e58640ca078d1e66856d315c567db6f75b9feb1955d5",
+    "capture_group": "first-nuc-center-raw",
+    "center_yx": [
+      397,
+      448
+    ],
+    "zoom": 3,
+    "raw_or_diagnostic_window": [
+      0,
+      255
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-nuc-center-result/20261006T000412306948Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 111131,
+    "sha256": "defbbc7752a211f61267f6d1ec051d91aa91748b08e6d04a3cc565326ed35b93",
+    "capture_group": "first-nuc-center-result",
+    "center_yx": [
+      397,
+      448
+    ],
+    "zoom": 3,
+    "raw_or_diagnostic_window": [
+      0,
+      255
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-nuc-full-combined/20261006T000411572418Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 195711,
+    "sha256": "0dc6f132745055671895f9f348f76d35bc556bf95ae3b71128a3bc47a3ab6468",
+    "capture_group": "first-nuc-full-combined",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      255
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-nuc-full-raw/20261006T000410955312Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 171200,
+    "sha256": "e80216d9bfc6ae9bce5cbada9baa9986deee9b85272fae79b8768e4ba40cfbf9",
+    "capture_group": "first-nuc-full-raw",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      255
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-nuc-full-result/20261006T000411319164Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 111420,
+    "sha256": "eb8148e58f98d534772f794dfb05ed33b7e68e633931f5259f109c3c37ada466",
+    "capture_group": "first-nuc-full-result",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      255
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-upper-combined/20261006T000325983768Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 209083,
+    "sha256": "3c0f188e601abf5c0f61ef3aebe5bfcd683c2ee8a383b7b3da2f05f2138da085",
+    "capture_group": "first-upper-combined",
+    "center_yx": [
+      150,
+      220
+    ],
+    "zoom": 1.5,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-upper-raw/20261006T000324677153Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 172469,
+    "sha256": "74eb7b77ff9f7f2346338e2ce88f6942fcf4384ba2329436d94fd209e0bd3112",
+    "capture_group": "first-upper-raw",
+    "center_yx": [
+      150,
+      220
+    ],
+    "zoom": 1.5,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-upper-result/20261006T000325670667Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 117164,
+    "sha256": "6b59a31b7858bbc88f35552011bd5a3588f26a7c57fefe24bf9795b0ce17cca7",
+    "capture_group": "first-upper-result",
+    "center_yx": [
+      150,
+      220
+    ],
+    "zoom": 1.5,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-initial/20261005T235411375212Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 179684,
+    "sha256": "762d4ea4a50ce323444da36100ba8562cecd6b69b21d249ccad0f0f0f3a7278e",
+    "capture_group": "raw-initial",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "initial"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-w1-bottom-faint/20261005T235646620568Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 139246,
+    "sha256": "d1dbf72ccb36d13ff3423890c20d821bd2eb0584acfb7cf3d4df62ff013cf6be",
+    "capture_group": "raw-w1-bottom-faint",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "faint"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-w1-center/20261005T235511440388Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 197768,
+    "sha256": "b9fd6e34a4b5430f12852aa5b1a37e5e06ac7c9b163d04f8e110e33d024b6e09",
+    "capture_group": "raw-w1-center",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "center"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-w1-full-faint/20261005T235723558801Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 171077,
+    "sha256": "d3f62f486ac87d534c29341093b08c17391f2e741aafd4f97e2b7b52c9692793",
+    "capture_group": "raw-w1-full-faint",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "faint"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-w1-p99/20261005T235433364264Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 194141,
+    "sha256": "be62e5d9dc8fab3d3570c54508244c4dbc82bc3f9a2d14789bb9639587f6aea2",
+    "capture_group": "raw-w1-p99",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "p99"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-w2-center/20261005T235511083428Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 195237,
+    "sha256": "e88b96ee6558c3eb7c4bc128a3dd72e6e8bc925e459e8eef4bd93d3982f20116",
+    "capture_group": "raw-w2-center",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "center"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-w2-full/20261005T235510475173Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 172946,
+    "sha256": "027c39d11c291d6dd23b749594cf20c8c2be6a3b84fdd6bc4bf6ef191c39b038",
+    "capture_group": "raw-w2-full",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "full"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/raw-w2-p99/20261005T235434066480Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 207146,
+    "sha256": "e1acdbbb5c0ad6478474b8a6f2d8b91df34787be6db420fd14304a1adfb3a4b9",
+    "capture_group": "raw-w2-p99",
+    "center_yx": null,
+    "zoom": null,
+    "raw_or_diagnostic_window": null,
+    "personally_opened": true,
+    "mode": "p99"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-bottom-combined/20261006T000810136366Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 176771,
+    "sha256": "261faee0ea631aaaab8ccbdd547d733ff581a04d0f57c7163bbbd555c90dde0f",
+    "capture_group": "repair01-bottom-combined",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-bottom-raw/20261006T000809352293Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 142795,
+    "sha256": "3f1f84ec1b2ab2b65d9adc9686ef393c1658c13628c7bdc399ede4ff1141adab",
+    "capture_group": "repair01-bottom-raw",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-bottom-result/20261006T000809776520Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 118578,
+    "sha256": "53a5217854a74fd32f3c3472f795f1bb27c2bbac8b10288bdc87993f524dbea6",
+    "capture_group": "repair01-bottom-result",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-full-combined/20261006T000807430329Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 217849,
+    "sha256": "d04de3d6b27a636f206f7a8c7bb17907b6198629521edaca950218a818c172b4",
+    "capture_group": "repair01-full-combined",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-full-raw/20261006T000806628942Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 192166,
+    "sha256": "7e2bc12c951a64f70906b84e46dfd896cbfd30dbe975d9d0297b8fb01ce5b543",
+    "capture_group": "repair01-full-raw",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-full-result/20261006T000807084805Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 119156,
+    "sha256": "384c285670960a064d3f315c97fd98a56acea543c90e42d5f6cc32c8f9138c57",
+    "capture_group": "repair01-full-result",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-gap-combined/20261006T000808797726Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 189540,
+    "sha256": "727f63286a0085a81678195b70e8f7cc2be389b71a318d3b825215f3c18c8656",
+    "capture_group": "repair01-gap-combined",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-gap-raw/20261006T000807989032Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 151894,
+    "sha256": "4d61ef70fff839588472c93f9a68edbc8b99ccb7e7fc75080ebfb2a867bf54b2",
+    "capture_group": "repair01-gap-raw",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair01-gap-result/20261006T000808427561Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 117943,
+    "sha256": "c16bebd250190cc57a59c168427d826a5ad16a0de9579f94f91f60217c184f8b",
+    "capture_group": "repair01-gap-result",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-bottom-candidate/20261006T001234396130Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 88224,
+    "sha256": "1a2a515c19ac42e3a7b2e93128d0302fa04a071d1007ad5b687773969e3be992",
+    "capture_group": "repair02-bottom-candidate",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      1
+    ],
+    "personally_opened": true,
+    "mode": "candidate"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-bottom-combined/20261006T001144826734Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 181710,
+    "sha256": "1284ff107a9486be91006cffc025bd2dc26fb62a91eeb0d31e74aa2cec2932f4",
+    "capture_group": "repair02-bottom-combined",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-bottom-raw/20261006T001143450653Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 142684,
+    "sha256": "3378cb7545a5ac3decd09b1b0fc66abe72bdff899f58e656b5f9bd336b19605e",
+    "capture_group": "repair02-bottom-raw",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-bottom-residual/20261006T001235904973Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 85642,
+    "sha256": "939767e04dc39da9874198512e110e8bef0a6ff32d68e75e5442aa7278a03ce0",
+    "capture_group": "repair02-bottom-residual",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      1
+    ],
+    "personally_opened": true,
+    "mode": "residual"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-bottom-result/20261006T001144061983Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 120913,
+    "sha256": "6afa56c71a09d005ce7c19815dd49fd4eb80e4d246a2199edf730ce72f227c76",
+    "capture_group": "repair02-bottom-result",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-bottom-threshold/20261006T001235216560Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 88141,
+    "sha256": "a8b90c0546869f20b43e788dcf7d89ad43805b6d1db0838d4b3fa310fd00f504",
+    "capture_group": "repair02-bottom-threshold",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      1
+    ],
+    "personally_opened": true,
+    "mode": "threshold"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-full-combined/20261006T001140089993Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 217879,
+    "sha256": "be73fcde3fd3ef1db54fafe52344eeca641d6ba3133d5d453e1388bdbaaa3da8",
+    "capture_group": "repair02-full-combined",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-full-raw/20261006T001138489571Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 191792,
+    "sha256": "a383d5db8e31c039718650447f0cb51e5910f62726e28c8d72ae8e410c297f6d",
+    "capture_group": "repair02-full-raw",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-full-result/20261006T001139533720Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 120153,
+    "sha256": "1de44647954915ef59215d7973954bb78ed5bda4965245236a77c72945cbf526",
+    "capture_group": "repair02-full-result",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-gap-combined/20261006T001142459005Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 192265,
+    "sha256": "97dee9c0555ebc1cc712699eecfcb30ce607619e1e67769eb88e1295d3927eae",
+    "capture_group": "repair02-gap-combined",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-gap-raw/20261006T001140926124Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 151649,
+    "sha256": "e6042844b73871c8da66da6685d08f8759bb42a0d67092e42ff08288eda69e51",
+    "capture_group": "repair02-gap-raw",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair02-gap-result/20261006T001141715156Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 119509,
+    "sha256": "990247fd5f954e7fc5ee90c45f65e085e412f2c05ea10ec79e5713fee5de55bc",
+    "capture_group": "repair02-gap-result",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-bottom-combined/20261006T001613624054Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 186795,
+    "sha256": "e4e8bb4f7e8ce89e7c1b1fe23e590fceda9bbe6d4d7764550ff0954274a25a9e",
+    "capture_group": "repair03-bottom-combined",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-bottom-raw/20261006T001612208046Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 142737,
+    "sha256": "f597862a8909c55a036b4a016992b611c9b310be2232353b49a7c68c0f724655",
+    "capture_group": "repair03-bottom-raw",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-bottom-result/20261006T001612945607Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 123263,
+    "sha256": "af6fd659402fc15b3da2d6838d9a4dacaee91e9fbe0810ae9545e264f3e9ef9e",
+    "capture_group": "repair03-bottom-result",
+    "center_yx": [
+      680,
+      365
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      12
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-full-combined/20261006T001608288553Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 219722,
+    "sha256": "3bbe74183e7d7a3653b01f3f5a39520a95a95e15161235d29d4a532412481c7f",
+    "capture_group": "repair03-full-combined",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-full-raw/20261006T001606852341Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 191851,
+    "sha256": "43c9e3163ee9844d5e5ca6692ef6dc3403a8661a2160bd30c902ebcda30efc0e",
+    "capture_group": "repair03-full-raw",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-full-result/20261006T001607612263Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 122015,
+    "sha256": "321dbd0821fd0d089358828b9178faff5de6e945cf297949804c8f34d41271d0",
+    "capture_group": "repair03-full-result",
+    "center_yx": [
+      399.5,
+      399.5
+    ],
+    "zoom": 0.49875,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-gap-combined/20261006T001611160651Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 195040,
+    "sha256": "d4398d0d366a3244e4a8d7c00f67e3b78649500fba334574bac82b7b1a30e61e",
+    "capture_group": "repair03-gap-combined",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "combined"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-gap-raw/20261006T001609660874Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 151750,
+    "sha256": "094e1381ea78a69bb4a4b7ad0cf9a60e6b2857bd948c3fcb5b677d2f30ccfd81",
+    "capture_group": "repair03-gap-raw",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "raw"
+  },
+  {
+    "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/repair03-gap-result/20261006T001610420354Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "bytes": 121405,
+    "sha256": "2a740e131be29540ef10e298014af96cd620267c1d4dd423b1aa12ecb5c5a9e2",
+    "capture_group": "repair03-gap-result",
+    "center_yx": [
+      397,
+      570
+    ],
+    "zoom": 2,
+    "raw_or_diagnostic_window": [
+      0,
+      100
+    ],
+    "personally_opened": true,
+    "mode": "result"
+  }
+]

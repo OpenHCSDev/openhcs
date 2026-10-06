@@ -463,6 +463,31 @@ and the figure receipt records source hashes and crops.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 24. Faint-path recovery and graph sensitivity
+
+![Matched raw, first result, final result and final combined neurite views.](../figures/slas/h004_fresh20_faint_path.png){width=5.3in}
+
+\(A) Process-rich raw channel, with its bright trunks saturated to expose faint
+signal. (B) First result. (C) Final result after three self-directed threshold
+revisions. (D) Final result over raw signal. All four panels show the same
+lower-field region from an independent task-only author of the paired public
+neurite field. The final result recovers faint side paths, while additional
+short twigs and crossing assignments remain uncertain. Eight soma candidates
+and their summed approximate area of 8,692 pixels squared remained unchanged.
+Whole-field computed graph length increased from 4,085 to 7,788 pixels and
+algorithm-defined branch counts from 12 to 234; these are sensitivity measures,
+not validated biological totals. A separately measured local faint-path witness
+retained support through all 20 sampled rows in the final attempt. Raw window
+0–12, gamma 1; declared camera centre y680,x365, zoom 2. Original captures are
+cropped identically and scaled without pixel retouching. Physical calibration
+and neuron-specific ownership are unverified. Supplementary Data 8 retains
+the complete four-candidate table and pipeline freeze; the figure receipt
+records the original capture hashes and editorial crop.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |

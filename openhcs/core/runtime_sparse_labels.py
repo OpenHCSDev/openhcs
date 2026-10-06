@@ -220,6 +220,62 @@ class SparseIJVLabelRows(ColumnarRows):
             ] = array[:, self.label_column].astype(dtype, copy=False)
         return dense
 
+    def nonoverlapping_dense_layers(
+        self, *, source_spatial_shape_yx: tuple[int, int] | None = None,
+    ) -> tuple[np.ndarray, ...]:
+        """Render each object intact in a nonoverlapping label layer.
+
+        Color the pixel-overlap graph in ascending degree/label order, matching
+        CellProfiler's sparse segmentation layer ordering. Touching objects may
+        share a layer; only shared pixels create graph edges.
+        """
+        if self.has_slice_index:
+            raise ValueError("Label rendering requires a projected sparse label plane.")
+        rows = self.as_array()
+        height, width = self._dense_spatial_shape(source_spatial_shape_yx)
+        if not rows.size:
+            return (np.zeros((height, width), dtype=np.int32),)
+        rows = rows[rows[:, self.label_column] > 0]
+        if not rows.size:
+            return (np.zeros((height, width), dtype=np.int32),)
+        label_ids, label_ordinals = np.unique(
+            rows[:, self.label_column], return_inverse=True,
+        )
+        ordered = np.unique(rows, axis=0)
+        edges = []
+        # Compare rows within each coordinate run. This bounds work by actual
+        # pixel multiplicity rather than comparing every pair of objects.
+        breaks = np.r_[
+            0,
+            np.flatnonzero(np.any(ordered[1:, :2] != ordered[:-1, :2], axis=1)) + 1,
+            len(ordered),
+        ]
+        for offset in range(1, int(np.max(np.diff(breaks)))):
+            same_pixel = np.all(ordered[:-offset, :2] == ordered[offset:, :2], axis=1)
+            pairs = np.column_stack((
+                ordered[:-offset, 2][same_pixel], ordered[offset:, 2][same_pixel],
+            ))
+            edges.extend((pairs, pairs[:, ::-1]))
+        colors = np.ones(len(label_ids), dtype=np.intp)
+        if edges:
+            pairs = np.searchsorted(label_ids, np.unique(np.concatenate(edges), axis=0))
+            degree = np.bincount(pairs[:, 0].astype(np.intp), minlength=len(colors))
+            starts = np.cumsum(degree) - degree
+            overlapping = np.flatnonzero(degree)
+            colors[overlapping] = 0
+            for label in overlapping[np.lexsort((overlapping, degree[overlapping]))]:
+                neighbors = pairs[starts[label]:starts[label] + degree[label], 1]
+                used = set(colors[neighbors])
+                color = 1
+                while color in used:
+                    color += 1
+                colors[label] = color
+        dense = np.zeros((int(np.max(colors)), height, width), dtype=rows.dtype)
+        dense[
+            colors[label_ordinals] - 1, rows[:, self.y_column], rows[:, self.x_column],
+        ] = rows[:, self.label_column]
+        return tuple(dense)
+
     def label_data_runtime_slice_count(self) -> int:
         """Return the encoded runtime-slice count, including empty stacks."""
         if not self.has_slice_index:

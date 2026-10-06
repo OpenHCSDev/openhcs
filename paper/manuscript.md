@@ -443,6 +443,20 @@ measurements. A later frozen continuation retained eight supported soma
 candidates, agreeing in count with the eight manually traced entries for the
 same public image [@NeuronCytoII]. This aggregate agreement was assessed after
 freezing; spatial cell correspondence and complete arbor length were not scored.
+
+Another independent author retained eight soma candidates throughout four
+completed analyses of the paired public field. It measured a missed faint
+process and a background control, then lowered the candidate threshold while
+keeping soma detection and the remaining processing settings unchanged. The
+final result recovered support through all 20 sampled rows of the faint-path
+witness. Approximate soma area remained 8,692 pixels squared, while computed
+graph length increased from 4,085 to 7,788 pixels. Algorithm-defined branch
+counts also increased from 12 to 234, with uncertain short twigs and ambiguous
+ownership at crossings. The trial demonstrates autonomous recovery of a
+measured local omission, but the sensitivity of the graph outputs prevents
+interpreting them as validated neuron-specific outgrowth or branch counts
+(Supplementary Figure 24; Supplementary Data 8).
+
 A separate retained-context personal-neurite continuation
 processed a nine-field mosaic with shared channel fits and paths across sampled
 joins, but incomplete nuclear and soma detection limited its morphology

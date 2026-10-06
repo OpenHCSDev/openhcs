@@ -108,3 +108,89 @@ def test_profile_runs_remain_independent_in_concurrent_worker_threads(
     for name in ("left", "right"):
         owned = [line for line in lines if f"execution_id={name}" in line]
         assert len(owned) == 2 and all(f"owner={name}" in line for line in owned)
+
+
+@pytest.mark.parametrize("sparse", [False, True])
+def test_cellprofiler_label_profile_preserves_storage_geometry(
+    monkeypatch, tmp_path, sparse
+):
+    import numpy as np
+    from openhcs.core.runtime_object_labels import (
+        ObjectLabelPayload, ObjectLabelVariantData, ObjectLabelRepresentation,
+        SparseIJVObjectLabelStorageStrategy,
+    )
+    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.interop.cellprofiler.runtime.profile_fields import (
+        cellprofiler_profile_payload_fields, object_label_artifact_profile_fields,
+    )
+    from openhcs.interop.cellprofiler.runtime.runtime_profile import (
+        CellProfilerRuntimeProfileLogger,
+    )
+
+    # The same pixel belongs to two objects: profiling must preserve the IJV
+    # representation, rather than collapse it into a dense segmentation.
+    data = (
+        SparseIJVLabelRows(np.array([[0, 1, 1], [0, 1, 2]], dtype=np.int32))
+        if sparse else np.array([[0, 1], [2, 0]], dtype=np.int32)
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=data),
+        representation=(ObjectLabelRepresentation.SPARSE_IJV if sparse
+                        else ObjectLabelRepresentation.DENSE_LABELS),
+    )
+    def reject_dense(*args, **kwargs):
+        raise AssertionError("Profiling must not densify sparse labels")
+    monkeypatch.setattr(SparseIJVObjectLabelStorageStrategy, "dense_data", reject_dense)
+    expected_shape = None if sparse else (2, 2)
+    assert object_label_artifact_profile_fields(labels)["label_shape"] == expected_shape
+    payload_fields = cellprofiler_profile_payload_fields("value", labels)
+    assert payload_fields["value_shape"] == expected_shape
+    assert payload_fields["value_nbytes"] == (None if sparse else 16)
+    path = tmp_path / "labels.log"
+    monkeypatch.setenv(PROFILE_RUNTIME_ENV, "true")
+    monkeypatch.setenv(PROFILE_RUNTIME_PATH_ENV, str(path))
+    with RuntimeProfileLogger.run():
+        CellProfilerRuntimeProfileLogger.object_label_artifact(
+            "labels", 0.1, artifact_name="Objects", payload_type="labels", labels=labels,
+        )
+    assert f"label_shape={expected_shape}" in path.read_text()
+    assert labels.labels is data
+    if sparse:
+        np.testing.assert_array_equal(data.as_array(), [[0, 1, 1], [0, 1, 2]])
+
+
+def test_cellprofiler_disabled_label_profile_does_not_build_fields(monkeypatch):
+    from openhcs.interop.cellprofiler.runtime import runtime_profile
+
+    monkeypatch.setenv(PROFILE_RUNTIME_ENV, "false")
+    def reject_fields(value):
+        raise AssertionError("Disabled profiling must not inspect labels")
+    monkeypatch.setattr(runtime_profile, "object_label_artifact_profile_fields", reject_fields)
+    runtime_profile.CellProfilerRuntimeProfileLogger.object_label_artifact(
+        "labels", 0.1, artifact_name="Objects", payload_type="labels", labels=object(),
+    )
+
+
+def test_cellprofiler_lazy_label_profile_uses_held_geometry(monkeypatch):
+    import numpy as np
+    from openhcs.core.runtime_object_labels import (
+        ObjectLabelPayload, ObjectLabelVariantData, PlaneStackObjectLabelVariantData,
+    )
+    from openhcs.interop.cellprofiler.runtime.profile_fields import (
+        cellprofiler_profile_payload_fields, object_label_artifact_profile_fields,
+    )
+
+    variants = PlaneStackObjectLabelVariantData(
+        [ObjectLabelVariantData(np.ones((2, 3), dtype=np.int32)),
+         ObjectLabelVariantData(np.ones((2, 3), dtype=np.int32))],
+        "numpy",
+    )
+    labels = ObjectLabelPayload(variant_data=variants)
+    def reject_dense(*args, **kwargs):
+        raise AssertionError("Profiling must not assemble lazy label planes")
+    monkeypatch.setattr(PlaneStackObjectLabelVariantData, "_dense_variant", reject_dense)
+    assert object_label_artifact_profile_fields(labels)["label_shape"] == (2, 2, 3)
+    fields = cellprofiler_profile_payload_fields("value", labels)
+    assert fields["value_shape"] == (2, 2, 3)
+    assert fields["value_nbytes"] == 48
+    assert not variants._dense_variants
