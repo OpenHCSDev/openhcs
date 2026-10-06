@@ -33,7 +33,6 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
 )
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.step_dependencies import StepInputDependency
 
 if TYPE_CHECKING:
@@ -292,7 +291,6 @@ class CompiledStepPlan:
     source_universe_plan: CompiledSourceUniversePlan = field(
         default_factory=CompiledSourceUniversePlan.empty
     )
-    source_load_plan: SourceLoadPlan = field(default_factory=SourceLoadPlan)
     runtime_artifact_materialization: RuntimeArtifactMaterializationPlan = field(
         default_factory=RuntimeArtifactMaterializationPlan.disabled
     )

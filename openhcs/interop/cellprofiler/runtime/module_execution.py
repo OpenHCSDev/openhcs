@@ -1328,7 +1328,18 @@ class CellProfilerModuleExecutor:
         primary_input_edges = []
         for spec in image_inputs:
             edge = input_binding.input_edge_for_spec(spec)
-            value = input_binding.artifact_value(edge)
+            scope = adapter.request.execution_scope
+            if (
+                scope is not None
+                and edge.storage_plan is None
+                and adapter.request.source_binding_plan.declares_artifact_ref(spec.ref())
+            ):
+                value = edge.resolve_unstored_payload(
+                    scope, current_runtime_payload,
+                    request=replace(adapter.request, source_payload=current_runtime_payload),
+                )
+            else:
+                value = input_binding.artifact_value(edge)
             primary_input_edges.append(edge)
             payload = image_strategy.runtime_input_value(spec, value)
             payloads.append(payload)

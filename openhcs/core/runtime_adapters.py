@@ -36,7 +36,6 @@ from openhcs.core.source_bindings import (
 from openhcs.core.source_binding_selection import (
     SourceUniverseRequest,
 )
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
@@ -46,6 +45,7 @@ if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.runtime_stores import RuntimeArtifactInput
+    from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -81,7 +81,7 @@ class RuntimeAdapterRequest:
         default_factory=RuntimePlaneProjection.stack
     )
     variable_components: tuple[VariableComponents, ...] = ()
-    source_load_plan: SourceLoadPlan = field(default_factory=SourceLoadPlan)
+    execution_scope: "FunctionCoreExecutor | None" = None
 
     def __post_init__(self) -> None:
         for key, edge in self.artifact_inputs.items():

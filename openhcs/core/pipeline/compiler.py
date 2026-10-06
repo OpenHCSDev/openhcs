@@ -62,7 +62,10 @@ from openhcs.core.pipeline.compilation_session import (
     ResolvedPipelineDefinition,
     resolve_declared_dataclass_paths,
 )
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source_workspace_projection import (
+    DEFAULT_SOURCE_PROJECTION_CACHE,
+    VirtualWorkspaceSourceProjection,
+)
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
@@ -78,7 +81,6 @@ from openhcs.core.pipeline.path_planner import (
     PipelinePathPlanner,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.pipeline.framework_device_assignment import (
     assign_framework_devices,
 )
@@ -368,9 +370,6 @@ class PipelineCompiler:
             current_plan.sequential_processing = step.processing_config
             current_plan.sequential_filter_plan = (
                 PipelineCompiler._compile_sequential_runtime_filter_plan(session)
-            )
-            current_plan.source_load_plan = SourceLoadPlan(
-                zarr_config=session.global_config.zarr_config
             )
 
     @staticmethod
@@ -1661,10 +1660,9 @@ class PipelineCompiler:
                         get_multiprocessing_axis()
                     ),
                 ),
-                source_projections_by_axis=(
-                    orchestrator.source_workspace_projection().partition_by_axes(
-                        axis_values_to_process
-                    )
+                source_projections_by_axis=DEFAULT_SOURCE_PROJECTION_CACHE.partition_by_axes(
+                    orchestrator.source_workspace_projection(),
+                    axis_ids=axis_values_to_process,
                 ),
                 enable_visualizer_override=enable_visualizer_override,
                 is_zmq_execution=is_zmq_execution,

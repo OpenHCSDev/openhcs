@@ -80,7 +80,6 @@ from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source_metadata import SourceMetadataScalar
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
-    VirtualWorkspaceSourceProjectionAuthority,
 )
 
 from .database_column_dialect import (
@@ -1137,10 +1136,7 @@ class CPATableRowProjection:
                     "CPA source-bound thumbnails require a runtime context."
                 )
             return
-        workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.context,
-            cache=self.context.runtime_source_workspace_projection_cache,
-        ).projection_if_available()
+        workspace = self.context.runtime_source_workspace_projection_authority.projection_if_available()
         if workspace is None:
             if settings.write_image_thumbnails and any(
                 binding.alias in settings.thumbnail_image_names
@@ -1285,10 +1281,7 @@ class CPATableRowProjection:
             raise RuntimeError(
                 "Virtual workspace source resolution requires a runtime FileManager."
             )
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.context,
-            cache=self.context.runtime_source_workspace_projection_cache,
-        ).projection_if_available()
+        projection = self.context.runtime_source_workspace_projection_authority.projection_if_available()
         if projection is None:
             return Path(source_path).resolve(strict=False)
         return Path(

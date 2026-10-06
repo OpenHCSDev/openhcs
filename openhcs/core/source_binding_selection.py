@@ -13,7 +13,6 @@ from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
@@ -57,7 +56,6 @@ from openhcs.core.source_projection import SourceProjection
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
-    VirtualWorkspaceSourceProjectionAuthority,
 )
 from openhcs.core.aligned_image_payload import stack_image_payloads
 from openhcs.core.runtime_image_values import (
@@ -1674,20 +1672,14 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 f"Source-bound artifact {ref!r} requires main-flow source provenance."
             )
 
-        cache = request.context.runtime_source_workspace_projection_cache
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            request.context,
-            cache=cache,
-        ).projection_if_available()
+        projection = request.context.runtime_source_workspace_projection_authority.projection_if_available(
+            axis_id=request.axis_scope.axis_id,
+        )
         if projection is None:
             raise ValueError(
                 f"Source-bound artifact {ref!r} requires a virtual-workspace "
                 "source projection."
             )
-        projection = cache.filtered_by_axis(
-            projection,
-            axis_id=request.axis_scope.axis_id,
-        )
         source_context = (
             request.context.runtime_source_binding_context_cache.source_pattern_context(
                 parser=request.context.microscope_handler.parser,
@@ -1739,10 +1731,40 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 ),
             )
         )
+        return cls.admit_source_artifact_cohort(
+            payload,
+            source_binding_plan=request.source_binding_plan,
+            member_count=len(members),
+        )
+
+    @staticmethod
+    def admit_source_artifact_cohort(
+        payload: RuntimeArrayData,
+        *,
+        source_binding_plan: CompiledSourceBindingPlan,
+        member_count: int,
+    ) -> RuntimeArrayData:
+        """Admit original source pixels with their declared cohort domain.
+
+        A scalar source member still owns a singleton runtime axis. An already
+        assembled runtime cohort retains its held pixels, while an explicitly
+        whole-image source retains its intrinsic spatial dimensions.
+        """
         metadata = image_payload_metadata(payload)
-        domain = request.source_binding_plan.source_spatial_domain.admit_source_cohort(
-            metadata.source_spatial_domain,
-            depth=len(members),
+        if not metadata.persists_whole_image() and metadata.plane_axis is None:
+            if member_count != 1:
+                raise ValueError(
+                    "A scalar source payload must declare exactly one cohort member."
+                )
+            payload = stack_image_payloads(
+                (payload,),
+                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
+                    RuntimePlaneAxis.RUNTIME_SLICE
+                ),
+            )
+            metadata = image_payload_metadata(payload)
+        domain = source_binding_plan.source_spatial_domain.admit_source_cohort(
+            metadata.source_spatial_domain, depth=member_count,
         )
         return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
 
@@ -1839,10 +1861,6 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         )
 
     @property
-    def requires_full_pipeline_source_universe(self) -> bool:
-        return self.plan.source_universe_plan.requires_full_pipeline_source_universe
-
-    @property
     def uses_pipeline_start_binding_origin(self) -> bool:
         return self.plan.source_universe_plan.uses_pipeline_start_binding_origin
 
@@ -1894,9 +1912,6 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
             )
         )
 
-    def physical_full_universe_backend(self) -> Backend:
-        return PipelineStartListingBackendPolicy.backend_for(self.source_backend)
-
 
 @dataclass(frozen=True, slots=True)
 class StepInputSourceUniverseRequest(SourceUniverseRequest):
@@ -1939,25 +1954,6 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
 
     universe_request_kind = "pipeline_start"
 
-    def source_universe(self) -> SourceFileUniverse:
-        """Resolve the declared original-source scope independently of step input."""
-        if not self.requires_full_pipeline_source_universe:
-            return SourceUniverseRequest.source_universe(self)
-        if self.source_projection is not None:
-            return SourceFileUniverse(
-                self.source_projection.pipeline_start_files(), self.source_backend,
-            )
-        backend = self.physical_full_universe_backend()
-        return SourceFileUniverse(
-            files=tuple(
-                str(path)
-                for path in self.context.filemanager.list_files(
-                    str(self.context.input_dir), backend.value, recursive=True,
-                )
-            ),
-            backend=backend,
-        )
-
     def contribute_runtime_state(
         self,
         state: SourceUniverseRuntimeState,
@@ -1982,51 +1978,3 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
             files=projection.pipeline_start_files(axis_id=self.plan.axis_id),
             backend=self.source_backend,
         )
-
-
-class PipelineStartListingBackendPolicy(
-    EnumKeyedStrategyMixin[Backend],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Backend policy for full pipeline-start file listing."""
-
-    __registry_key__ = "backend_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "source_backend"
-    __enum_label_attr__ = "backend_label"
-
-    source_backend: ClassVar[Backend | None] = None
-    backend_label: ClassVar[str | None] = None
-
-    @classmethod
-    def backend_for(cls, source_backend: Backend) -> Backend:
-        strategy_type = cls.__registry__.get(source_backend.value)
-        if strategy_type is None:
-            return source_backend
-        return strategy_type().listing_backend()
-
-    @abstractmethod
-    def listing_backend(self) -> Backend:
-        """Return the backend used for recursive full-universe listing."""
-
-
-class DiskPipelineStartListingBackendPolicy(PipelineStartListingBackendPolicy):
-    """Pipeline-start fan-out policy that lists disk files."""
-
-    def listing_backend(self) -> Backend:
-        return Backend.DISK
-
-
-class MemoryPipelineStartListingBackendPolicy(DiskPipelineStartListingBackendPolicy):
-    """Memory-backed pipeline-start fan-out lists disk files."""
-
-    source_backend = Backend.MEMORY
-
-
-class VirtualWorkspacePipelineStartListingBackendPolicy(
-    DiskPipelineStartListingBackendPolicy
-):
-    """Virtual-workspace pipeline-start fan-out lists disk files."""
-
-    source_backend = Backend.VIRTUAL_WORKSPACE

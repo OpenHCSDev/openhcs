@@ -2490,7 +2490,6 @@ class CompiledSourceUniversePlan:
     """Frozen source-file universe decisions for one compiled step."""
 
     requires_step_input_selector_resolution: bool = False
-    requires_full_pipeline_source_universe: bool = False
     uses_pipeline_start_binding_origin: bool = False
 
     @classmethod
@@ -2513,7 +2512,6 @@ class CompiledSourceUniversePlan:
             requires_step_input_selector_resolution=(
                 source_binding_plan.requires_step_input_selector_resolution
             ),
-            requires_full_pipeline_source_universe=False,
             uses_pipeline_start_binding_origin=uses_pipeline_start_binding_origin,
         )
 

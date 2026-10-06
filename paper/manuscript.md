@@ -46,7 +46,7 @@ We evaluate whether this shared workflow preserves established analyses and supp
 
 ![Shared workflow, source connections and execution.](figures/slas/shared_workflow.png){width=6in}
 
-\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) Compilation resolves inputs, dependencies and array requirements before worker processes execute the analysis. Selected intermediate results can be inspected in napari or Fiji, and retained images, ROIs and measurements support review and subsequent edits. CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 4.
+\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The illustrated desktop process hosts the editors and MCP bridge. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) A separate ZeroMQ execution server compiles workflows and schedules prepared tasks on worker processes. Blue arrows distinguish requests and progress from green result streaming to separate napari or Fiji viewers. Workers also retain configured images, ROIs and measurements for review and subsequent edits. Worker/viewer counts are configurable, and CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 4. Supplementary Figure 2 expands the same process arrangement.
 
 ## Materials and Methods
 
@@ -163,7 +163,7 @@ Automated regression tests check nested configuration, inherited defaults, param
 
 Stacking, grouping and scheduling express different choices. A step can assemble Z planes into an array, apply different function chains to different channels, and supply named segmentation labels to a later measurement step. When time is configured as sequential, the entire pipeline finishes for one timepoint before the next begins; separate wells can run in parallel (Supplementary Figure 1). Each selected function determines its array-library support and whether it processes individual planes, whole stacks or reduces a stack to an output.
 
-The UI submits work to a separate execution server using ZeroMQ messaging. The server compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Supplementary Figure 2).
+The UI submits work to a separate execution server using ZeroMQ messaging. The server compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Figure 1C; expanded in Supplementary Figure 2).
 
 ### Figure 2. Forms, Python and MCP edit the same analysis
 
@@ -171,7 +171,7 @@ The UI submits work to a separate execution server using ZeroMQ messaging. The s
 
 \(A) Full NeuronCyto II main window, with enlarged step and connection details. (B) MCP applies edited Python to the step and checks the updated control, then edits the field and checks regenerated Python. (C, D) Same-session crops show matching controls and code, with high percentile restored to 99.8 and parameters in signature order. Captures use OpenHCS 0.8.5; Figure 3 shows the current replay and retained measurements.
 
-### An agent builds and inspects a neurite-outgrowth workflow
+### An agent-authored workflow recovers neurite morphology and topology
 
 From a detailed prompt identifying the two NeuronCyto II channels and requested outputs, the agent built and inspected a neurite-outgrowth analysis without further human input.
 
@@ -181,11 +181,11 @@ The final napari view displayed enhanced neuronal signal, unified neuron labels 
 
 A separate current-source replay used nuclear-supported soma detection and soma-rooted path assignment. It produced eight cell bodies, eight nuclei, 18 processes, two branch events and 24 graph paths. Per-cell measurements agree with graph distance features, totaling 2556.137 pixels under unit spacing. Supplementary Data 4 retains the original run, intervening correction and current replay separately. Document validation caught invalid authoring attempts before execution; image review identified errors in the biological result.
 
-### Figure 3. Agent-authored neurite workflow and current-source review
+### Figure 3. Neurite morphology and topology from an agent-authored workflow
 
 ![Original inputs, current native viewer inspection and retained neurite measurements.](figures/slas/figure3_agent_workflow.png){width=6in}
 
-(A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) Native napari capture of the current replay, combining neuronal signal, unified labels and graph paths; selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. The original unattended run remains separately retained in Supplementary Data 4.
+(A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) The native napari canvas shows neuronal signal, unified labels and graph paths from the current-source replay; application controls are cropped away without changing image or overlay pixels. Selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. This replay is distinct from the original unattended run retained in Supplementary Data 4; it is not another fresh autonomous evaluation.
 
 ### Frozen workflows recover held-out assay structure
 
@@ -199,7 +199,7 @@ The BBBC013 run produced matched nuclear and cytoplasmic measurements for 14,262
 
 All 30 workflows passed selected reference-output comparisons in one unified current-source run, with zero reported differences. The selected reference profiles comprised 21 with CSV measurements, three with SQLite measurements and CellProfiler Analyst properties, and six containing only retained images or arrays. The five supplemented workflows contributed five object-label images and three numerical images. All five label images matched exactly after singleton-axis normalization, and all three numerical images passed with zero out-of-tolerance pixels. Supplementary Data 1 identifies every selected output and preserves the unified observations and source identity.
 
-Image comparison executed for seven workflows: six image- or array-only profiles and the completed translocation example, whose overlay was compared alongside its SQLite measurements. Supplementary Figure 15 shows how named images, objects and operations are retained in the imported Comet Assay.
+Image comparison executed for seven workflows: six image- or array-only profiles and the completed translocation example, whose overlay was compared alongside its SQLite measurements. Supplementary Figure 14 shows how named images, objects and operations are retained in the imported Comet Assay.
 
 The assays include DNA-damage measurement, human and Drosophila cell morphology, tumor morphology, Cell Painting morphology and quality control, protein translocation, wound healing, time-lapse tracking, imaging flow cytometry, colocalization, positive-cell classification, yeast screening, and *C. elegans* phenotyping. Supplementary Data 1-2 identify the workflows and imported settings.
 
@@ -230,423 +230,80 @@ The earlier analysis-focused throughput and memory measurements remain archived 
 
 ### Inspecting results in Fiji and napari
 
-Supplementary Figure 16 shows streamed images and objects in both viewers. napari additionally exposes structured image, layer and ROI information for agent inspection; Supplementary Figure 4 links a selected object to its saved measurements and viewer features. Fiji provides native image and ROI display with a smaller programmatic inspection interface.
+Supplementary Figure 15 shows streamed images and objects in both viewers. napari additionally exposes structured image, layer and ROI information for agent inspection; Supplementary Figure 4 links a selected object to its saved measurements and viewer features. Fiji provides native image and ROI display with a smaller programmatic inspection interface.
 
-### Task-only instance segmentation and autonomous repair
+### Autonomous analysis across distinct biological tasks
 
-On the complete 254 x 256-pixel H001 image, the first completed prediction matched 59 of 64 notebook-reference objects, with four excess and five missed objects (Figure 5B). The author's final prediction retained 59 matches while reducing excess objects to two, increasing object F1 from 0.929 to 0.944. Foreground intersection over union remained 0.982: the improvement concerned how foreground was partitioned, not recovery of additional foreground. The reference was generated by a pinned notebook, not manual biological annotation. A preceding fresh author scored 0.627 on its first prediction and 0.913 on its final prediction against the same reference. The newer first prediction was therefore substantially better on this image, although different software bundles and independently chosen settings prevent attributing the change to the skill alone.
+Agents used only a task brief, the packaged skill and MCP to select parameters,
+inspect matched raw and result views, and repair their own pipelines. The final
+pipeline was frozen before reference evaluation. The examples below distinguish
+instance detection, localisation, cell-body support and assay measurements;
+these endpoints should not be combined into a single accuracy percentage.
 
-A later independent H001 author matched 62 of 64 reference objects on its first
-attempt, with six excess predictions, two misses and object F1 0.939. A subsequent
-repair introduced one extra partition without recovering a miss, reducing F1 to
-0.932. The author rejected that repair from matched raw-image review before
-reference scoring. This repeat therefore combines useful first-attempt agreement
-with correct detection of a regression; it does not establish a monotonic
-improvement between authors or a skill-only effect. Supplementary Data 8 retains
-both post-freeze scores and the capture-provenance qualification.
+For bright-object segmentation, the H001 author matched 59 of 64
+notebook-reference objects while reducing excess predictions from four to two,
+raising object F1 from 0.929 to 0.944 (Figure 5). The reference is computational,
+not a manual cell census. Independent BBBC039 authors achieved final pooled
+object F1 of 0.898–0.906 over the same 200 annotated fields. The lower-scoring
+fields show that useful overall agreement does not imply uniform accuracy.
 
-A further independent H001 author retained its first segmentation after
-rejecting an intensity-marker revision from distributed raw-image review.
-First and final matched 58 of 64 notebook-reference objects, with six excess
-and six missed partitions: object F1 was 0.906 and foreground IoU was 0.980.
-The rejected revision matched the same 58 objects with three excess partitions,
-giving higher reference F1 (0.928), despite the author's observed local merge
-and split regressions. Visual preference and computational-reference agreement
-therefore did not rank these candidates identically. The repeat retains useful
-bright-body coverage but lower instance agreement than the earlier best run;
-it is not evidence of an accuracy gain (Supplementary Data 8).
+In three dimensions, a measurement-first author recovered all 15 annotated
+centres within 20 voxels, with mean matched error of 4.80 voxels (Figure 9).
+Eleven further predictions were unmatched to annotations of unestablished
+coverage. Native orthogonal views reveal supported body locations and remaining
+lobed-body ambiguity; a separate author repaired an internal partition without
+merging the neighbouring body (Supplementary Figure 10).
 
-A subsequent fresh author traced a missing bright focus to size rejection:
-foreground and a marker were present, but the object failed the minimum-area
-gate. Lowering only that gate recovered two reference objects, increasing
-matches from 60 to 62 of 64 and object F1 from 0.923 to 0.939. Foreground IoU
-rose from 0.983 to 0.985. This independently selected final result approaches
-the earlier best agreement while retaining ambiguous lobed bodies and faint
-foci; it does not establish exhaustive biological detection. Reference scoring
-followed author completion and was not supplied during repair (Supplementary
-Data 8).
+Paired DNA/actin analysis separates nuclear detection from supported cell-body
+growth (Figure 6; Supplementary Figure 12). A completed autonomous field analysis
+recovered 56 nuclei and retained 54 actin-supported cells after removing two
+seed-only candidates. Every retained cell contains all pixels of its associated
+nucleus. This is a geometric consistency check, not proof of biological identity
+or complete cell boundaries. Local controls include recovered crowded nuclei
+and unsupported body candidates.
 
-The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three fields, reducing missed reference nuclei from 39 to 25 while retaining 14 excess predictions (Figure 5C). Its final pipeline then covered all 200 fields: 20,521 of 23,615 reference nuclei matched, with precision 0.947, recall 0.869 and pooled object F1 0.906. Field F1 reached at least 0.90 in 135 fields; ten fields remained below 0.80 (Figure 5D). This distribution retains difficult fields and three annotation-empty fields rather than selecting only favorable examples. No first-attempt score across 200 fields is inferred from the three initial outputs.
+For the noisy retinal field, the completed autonomous pipeline retained 136
+soma candidates, including ten touching the image border. Distributed native
+review found clear bright-body coverage and preserved neighbouring bodies
+(Figure 7; Supplementary Figure 11). Diffuse rings and crowded outlines remain
+uncertain. Without an exhaustive manual reference, these results support useful
+localisation rather than an exact retinal cell count or boundary-accuracy score.
 
-Native H001 views show the elongated-body false-split repair in the same scored
-run, alongside its remaining possible merge (Supplementary Figure 18).
+For public neurite images, autonomous analysis recovered principal shafts and
+raw-supported junctions (Supplementary Figure 13). Main-shaft coverage is the
+relevant illustrative endpoint: exhaustive filopodial tracing is not required.
+Additional threshold lowering can add uncertain short twigs without improving
+that endpoint. Crossings remain a limitation for assigning length to individual
+neurons. The representative shaft result is not presented as a manual-trace
+accuracy measurement.
 
-Three independently authored pipelines achieved pooled object F1 between
-0.898 and 0.906 on the same 200 BBBC039 fields and 23,615 reference nuclei
-(Table 1). This is repeated complete-corpus agreement, not first-attempt
-accuracy or a wholly unseen evaluation: each corpus includes the author's
-development fields, and the authors used different software bundles and
-independently chosen settings.
+The personal neurite example extends the workflow to nine overlapping fields
+(Figure 11). A shared percentile fit across the complete stack preserves a
+common channel scale before mosaic analysis. The completed retained-context
+workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
+outgrowth at the declared spacing. These are algorithmic outputs, not a unique
+biological cell census or calibrated ground-truth length. The workflow is
+assisted development, distinct from the fresh unguided trials.
 
-| Independent author | Matched nuclei | Precision | Recall | Object F1 |
-|---|---:|---:|---:|---:|
-| Figure 5 | 20,521 | 0.947 | 0.869 | 0.906 |
-| Repeat A | 20,207 | 0.946 | 0.856 | 0.898 |
-| Repeat B | 20,457 | 0.944 | 0.866 | 0.904 |
-
-Table 1. Post-freeze reference agreement for three independent BBBC039 authors
-with scored complete-corpus outputs. Repeat A is illustrated in Supplementary
-Figure 20; Repeat B is the subsequent author. Each row includes all 200 fields,
-including three annotation-empty fields; one-to-one matching requires
-intersection over union at least 0.5. Scores were not supplied to the authors.
-Supplementary Data 8 retains per-field results, source identities and
-first-to-final comparisons within their actual coverage.
-
-Across the 197 fields with annotated nuclei, median field F1 was 0.919,
-0.917 and 0.916 for the Figure 5 author and repeats A and B, respectively.
-Seven, eight and seven of these fields had F1 below 0.80. Predictions in the
-three annotation-empty fields varied more strongly: 37, 218 and zero,
-respectively. Similar pooled scores therefore coexisted with different
-behavior on these negative-reference fields.
-
-The Supplementary Figure 20 repeat improved 61 field scores, reduced 123 and
-left 16 unchanged relative to the Figure 5 run; 314 additional misses accounted
-for most of its lower pooled F1. The subsequent repeat reached field F1 at
-least 0.90 in 137 fields, with seven annotated fields below 0.80 and no
-detections in the three annotation-empty fields. Its own revisions improved
-F1 from 0.826 to 0.840 on the same six development fields, recovering 17
-additional matches while adding two unmatched predictions. These results
-retain useful agreement and its difficult-field tail rather than a monotonic
-improvement between authors.
-
-Other repeats retain separate coverage qualifications. One scored 156
-completed fields at precision 0.942, recall 0.838 and pooled F1 0.887, compared
-with 0.909 for the Figure 5 pipeline on exactly those fields. Correcting
-noise-only foreground admission did not improve overall reference agreement.
-Another completed all 200 fields across two execution phases with unchanged
-scientific parameters but was not reference-scored. Supplementary Data 8
-reports this execution coverage separately from measured accuracy.
-
-### Image review supports local repair with regression controls
-
-In a released DNA/actin field, a fresh author separated a joined nuclear pair
-through its own review and exported 55 nuclear instances with linked actin
-territories (Figure 6). A faint pair remained merged. An independent repeat
-recovered three missed nuclei by detecting bright cores before growing their
-boundaries; its 54 nuclear instances included a dim nucleus and clipped edge
-object lost during its first repair (Supplementary Figure 13). A further author
-measured nuclear texture, neighbour separation and actin support before choosing
-its method. Boundary revision reduced assigned actin area from 55,903 to
-52,787 pixels while preserving 55 instances. A nucleus with unsupported actin
-extent and uncertain crowded interfaces remained. These trials demonstrate
-useful nuclear recovery and boundary revision, assessed independently of
-whether each linked territory represents a physical cell. Another independent
-author corrected texture-driven splits and a bright/dim merge, recovering
-55 nuclear instances while withholding two weak actin regions from its
-53-region body result. Crowded boundaries remained uncertain (Supplementary
-Data 8). In a later independent repeat, measured raw controls still led to
-missed crowded nuclei because admitted haze changed the distance landscape.
-The author inspected that failure and revised foreground, markers, division
-and suppression, recovering useful local detections in its final 54-instance
-result. Haze extent, an upper-edge possible merge and crowded actin boundaries
-remained uncertain; the repeat supports self-directed repair, not improved
-first-attempt accuracy (Supplementary Data 8).
-
-A further independent author retained its initial scientific settings after
-measuring nuclear texture, neighbour spacing and weak actin support. Its
-55 nuclear candidates and 53 expanded associated regions had useful ordinary-body
-coverage in independent matched-channel review; two unsupported regions remained
-seed-sized. Transport and source-binding repairs were required, but did not
-change the segmentation. Postfreeze comparison with closed manual nuclear
-interiors matched 42 of 47 regions at intersection over union at least 0.5,
-giving precision 0.764, recall 0.894 and object F1 0.824. An independent repeat's
-final result matched 37 regions, with F1 0.740. Cell-region F1 was 0.697 and
-0.673, respectively, while adjacent-cell boundary agreement was 0.695 and
-0.715. The repeat's boundary gain therefore did not imply better object
-correspondence. Open or frame-connected reference interiors are excluded,
-and tiny closed annotation regions remain included; these single-field scores
-do not establish an exhaustive biological census (Supplementary Data 8).
-
-In another fresh repeat, the author distinguished marker extraction from
-division after its first method missed three joined nuclei. Intensity markers
-alone still merged the group and a genuine pair; changing the dividing landscape
-recovered the three cores and separated the pair while retaining textured-single
-controls. The final 55-instance result included two seed-only actin regions and
-an ambiguous adjacent-nucleus group. The author retained these uncertainties
-after matched review at nine positions in both channels. Independent checks
-confirmed label-to-table agreement and unchanged exports after a technical
-integrity audit. Postfreeze reference comparison found essentially unchanged
-nuclear object F1 (0.747 to 0.745), with recall rising from 0.787 to 0.809;
-actin-region F1 improved from 0.642 to 0.661. Directed adjacent nuclear-boundary
-agreement worsened. Visible local recovery therefore did not establish a
-whole-field nuclear accuracy gain or exact biological counts (Supplementary
-Data 8).
-
-Not every self-directed repair improved the result. A subsequent fresh
-paired-channel author retained a rejected 51-instance final candidate after
-three marker-stage revisions. Nuclear reference F1 fell from 0.745 to 0.735
-and actin-region F1 from 0.679 to 0.629. Nuclear reference matches fell from
-38 to 36, and cell-region matches from 37 to 33. Ordinary supported nuclei
-remained represented, but merged neighbours and unsupported body envelopes
-prevented an accepted whole-cell census. This repeat records a failed repair,
-not an accuracy gain; scoring followed author completion and was not returned
-to the author (Supplementary Data 8).
-
-Retinal authors used measured background and weak-body support to select
-smoothing, background subtraction and foreground admission. In the independent
-trial shown in Figure 7, an intermediate repair
-joined a genuine northwest pair while correcting a southeast body split.
-The author detected that regression and adjusted marker suppression.
-Matched final views confirmed separate northwest neighbours and one southeast
-envelope in the same 102-instance candidate. Diffuse and lobed regions still
-had uncertain identities and extent (Supplementary Figure 14). A later
-independent author repaired fragmented interiors and a merged
-neighbouring pair, retaining 145 candidate soma instances. Independent full-field
-and regional raw/result review supported bright-body localisation, separate
-neighbours and intact isolated bodies against noisy background. Faint open rims
-and lobed or crowded objects retained uncertain extent and identity.
-
-A further fresh author traced nuisance flooding to grain-scale foreground
-admission and replaced it with body-scale background subtraction. The final
-141-instance candidate retained the clear neighbouring pair, but weak southwest
-bodies still received incomplete masks. The author also detected invalid
-label-derived fluorescence measurements and corrected their source binding
-without changing the segmentation. In another independent repeat, changing
-foreground threshold and smoothing joined a fragmented central body while
-preserving a genuine neighbouring pair and bright regional controls. Its final
-110-instance candidate still incompletely covered weak bodies; a separate
-source-binding repair restored fluorescence measurements without changing the
-labels. Across these trials, matched regional
-controls support self-directed preprocessing, instance and measurement repair.
-Manual-reference accuracy remains unmeasured: the detector totals are not
-validated retinal cell counts
-(Supplementary Data 8).
-
-Whole-volume trials tested whether agents could locate nuclei and repair
-duplicate detections without reference feedback. One fresh author measured
-nuclear dimensions, background intensity and neighbour separation before
-choosing shape-based markers. Its first scientific method produced 26 centres;
-a technical rerun changed output delivery without changing the detector.
-Matched raw, point-only and combined XY/XZ/YZ views supported placement inside
-ordinary nuclei. After freezing, one-to-one matching recovered all 15 manual
-reference centres within the predeclared 30-voxel distance, with a mean
-localisation error of 4.80 voxels (Figure 9). All 15 also matched within
-20 voxels, and 14 within 10 voxels. Eleven predictions were unmatched. The
-annotations were not established as exhaustive, so unmatched predictions do
-not establish false biological detections. Distances are in unscaled voxels
-and assess centre placement rather than physical distance or mask boundaries.
-
-Independent repeats supported similar localisation with variable instance
-separation. An early trial matched 15 centres within 30 voxels and 14 within
-10 voxels, with ten unmatched predictions; its bright-core adjustment left
-first and final geometries unchanged. Another author repaired internal-peak
-duplication while retaining neighbours (Supplementary Figure 25). Its 26
-candidates included 16 border-touching basins and 11 unmatched predictions;
-all 15 reference centres matched within 20 and 30 voxels, and 14 within
-10 voxels, with a mean error of 4.82 voxels at 30 voxels. Two further trials
-retained 26 and 22 provisional centres after local duplicate repairs
-(Supplementary Figure 17). Native views supported ordinary-body placement,
-while bright lobed complexes and cropped objects retained uncertain identity.
-
-A later author improved its own result after diagnosing duplicated markers
-on connected distance plateaus. Associating nearby seeds within admitted
-components reduced 31 first-attempt centres to 26. Matched XY/XZ/YZ review
-supported repaired placement while retaining a clear pair and a dim nucleus;
-a fragmented bright group and cropped objects remained uncertain.
-Post-freeze matching recovered all 15 annotated centres within 20 and
-30 voxels in both candidates. Mean localisation error decreased from
-5.37 to 4.86 voxels, and unmatched predictions decreased from 16 to 11.
-The paired comparison demonstrates self-directed localisation repair;
-complete nucleus counts remain unvalidated. Supplementary Data 8 retains
-the distinct trials, first/final comparisons and remaining uncertainties.
-
-A fresh public neurite-field author identified bright junction pixels lost
-after ridge enhancement and restored them by combining enhanced support with
-a separately measured strong-raw threshold (Supplementary Figure 19).
-In a selected junction tile, 19 of 291 strong raw pixels were absent before
-the repair and none afterward; a sampled quiet tile remained empty.
-Faint branches still terminated prematurely, and shared-marker crossings did
-not establish per-neuron ownership. The trial separates a useful image-support
-repair from the unresolved requirements for complete outgrowth measurement.
-
-In another fresh paired-field trial, the first candidate partitioned visibly
-whole soma-like structures into 24 outputs. A measured nuclear-width revision
-retained eight nuclear-associated soma-like localizations. Subsequent changes
-to faint-process admission recovered five sampled distal witnesses without
-changing those body/nuclear labels; the sampled quiet region retained no
-candidate support. Final traces recovered more of a curved continuation, but
-weak gaps, short spurs and uncertain crossing ownership remained. Thus the
-final blind result supports soma localization and local process recovery, not
-validated complete arbors or per-neuron branching measurements
-(Supplementary Data 8).
-
-### Recovery and self-diagnosis vary between images
-
-Crowded DNA/actin fields exposed failures that consistent object tables did
-not resolve. One fresh BBBC007 author processed all 16 paired fields but left
-many bright nuclei without outlines in a dense cluster. An independent author
-traced similar losses to broad foreground support, sparse shape markers and
-size-filtered merged basins. Its threshold repair recovered several nuclear
-anchors while preserving inspected dim and textured bodies, but clear misses
-and seed-sized secondary objects remained. A separate paired-field author
-repaired a cluster and close pair, then introduced an apparent split in an
-isolated mottled nucleus while a dim neighbour stayed joined. It identified
-both failures in its final review. These cases show useful stage-specific
-diagnosis and partial recovery, with inconsistent completion of the repair.
-
-A subsequent independent author completed all 16 paired BBBC007 fields,
-producing 1,413 nuclear and cell instances. Post-freeze comparison placed
-63,223 of 85,093 predicted internal boundary pixels within two pixels of
-the manual-outline union (0.743). On the same 12 development fields, the
-first and final pooled boundary fractions were 0.738 and 0.735, respectively.
-The final method recovered a severely under-detected field from 16 to 73
-nuclear instances, compared with 81 closed manual nuclear interiors, but
-the total prediction excess across those 12 fields increased from 28 to 100.
-Thus a useful local repair did not establish a general accuracy gain.
-The four fields reserved by this author contributed a final directed boundary
-fraction of 0.761 without further parameter changes. These directed scores
-do not measure boundary recall or exhaustive object correspondence; closed
-manual interiors also exclude open and frame-connected regions. Exact field
-identities, paired results and scoring definitions are retained in
-Supplementary Data 8.
-
-A later independent paired-field author retained its first scientific method
-and produced 55 nuclear instances after self-directed technical repairs.
-Matched DNA/actin review showed intact textured nuclei, a separated close pair
-and growth into supported actin regions (Supplementary Figure 23). Every nuclear
-pixel lay inside the body mask with the same label. Two body estimates contained
-only their nuclear seeds; the author identified both rather than presenting
-them as complete cells. This is useful autonomous nuclear segmentation and
-provisional body geometry, without a manual-reference accuracy estimate.
-
-A separate retinal author smoothed fragmented body outlines while preserving
-an inspected bright neighbouring pair (Supplementary Figure 22). The matched
-raw captures were byte-identical before and after repair, separating the
-visible mask change from display changes. Possible splitting at the source
-border and incomplete weak-body coverage remained. This retained-run repair
-supports improved local geometry rather than a manual-count accuracy estimate.
-
-A later independent retinal repeat illustrates a failed repair rather than a
-uniform gain: gap filling recovered some soma support, but stronger marker
-suppression joined a neighbouring pair. Its final 106-region candidate retained
-plausible bright-body localisation alongside incomplete dim rims and uncertain
-instance boundaries. The author detected these conflicts and rejected a complete
-cell census. Independent matched-view review confirmed the pair-joining regression;
-manual-reference accuracy remains unmeasured (Supplementary Data 8).
-
-Public neurite-field authors recovered clear process segments while weak
-paths and ambiguous crossings remained difficult. One corrected false nuclear
-splits and traced a segment to the boundary but admitted nearby fragments.
-Another measured the enhanced response along a missed faint process and in
-background controls, recovered the process while preserving bright trunks,
-and corrected wrong-channel photometry by checking exported values against
-raw pixels. Both retained eight nuclear objects. Discontinuous paths and
-uncertain crossings prevented complete outgrowth and per-neuron topology
-measurements. A later frozen continuation retained eight supported soma
-candidates, agreeing in count with the eight manually traced entries for the
-same public image [@NeuronCytoII]. This aggregate agreement was assessed after
-freezing; spatial cell correspondence and complete arbor length were not scored.
-
-Another independent author retained eight soma candidates throughout four
-completed analyses of the paired public field. It measured a missed faint
-process and a background control, then lowered the candidate threshold while
-keeping soma detection and the remaining processing settings unchanged. The
-final result recovered support through all 20 sampled rows of the faint-path
-witness. Approximate soma area remained 8,692 pixels squared, while computed
-graph length increased from 4,085 to 7,788 pixels. Algorithm-defined branch
-counts also increased from 12 to 234, with uncertain short twigs and ambiguous
-ownership at crossings. The trial demonstrates autonomous recovery of a
-measured local omission, but the sensitivity of the graph outputs prevents
-interpreting them as validated neuron-specific outgrowth or branch counts
-(Supplementary Figure 24; Supplementary Data 8).
-
-Other independent repeats retained useful soma localisation and principal-process
-geometry without stable fine-branch quantification. One recovered measured
-faint support but rejected a longer-trace candidate after finding that it lost
-a raw-visible branch. Saved feature responses and admission masks retained
-that branch; reconstruction through the original processing stages located
-its deletion in downstream signal repair, before graph publication. This
-separates a geometry failure from preprocessing loss without establishing
-the true owner at the crossing (Supplementary Data 8).
-
-A separate retained-context personal-neurite continuation
-processed a nine-field mosaic with shared channel fits and paths across sampled
-joins, but incomplete nuclear and soma detection limited its morphology
-measurements. That assisted continuation is distinct from fresh autonomous
-authoring.
-
-A later retained-context continuation completed fieldwise processing of all
-nine personal-neurite fields. Matched review at three sites showed supported
-bodies and process segments alongside faint gaps and incomplete body association
-in a dense cluster. The overlapping fields were not summed as unique cells or
-independent replicates; fieldwise coverage is distinct from stitched analysis
-and complete outgrowth measurement (Supplementary Data 8).
-
-A separate saved-output review found a process-bearing soma with zero reported
-outgrowth because its continuations were already absent from the candidate
-mask. Inspected raw-mosaic junctions remained locally continuous. Useful raw
-assembly therefore did not imply complete process extraction or cell-specific
-measurement (Supplementary Data 8).
-
-A subsequent development phase analysed the assembled canvas rather than
-summing overlapping fields. Its selected checkpoint retained 1,567 body labels
-and assigned process geometry across the mosaic. Independent recalculation
-from every per-cell row reproduced the native length, area, process and branch
-summaries. Matched views showed supported bright processes and remaining faint
-gaps; lowering the local-response threshold recovered a connection but added
-an unsupported lateral branch, so the author rejected that trial. This provides
-a reproducible stitched development result, with incomplete fine-path coverage
-and uncertain ownership at crowded crossings (Supplementary Data 8).
-
-A retained-context comparison then fitted one analytical percentile mapping
-across all nine process-channel fields, rather than fitting each field separately.
-With local-difference thresholds converted to the new units, reported field
-lengths changed by -0.29% to +3.55%. Matched predecessor/result views retained
-the same supported principal processes and incomplete faint tips; a measured
-crossing's candidate admission was unchanged. Independent recalculation of
-every current per-cell length reproduced all nine field summaries. This
-assisted comparison demonstrates a reproducible shared input transform and
-locally stable geometry, not improved complete-arbor accuracy. Nuclear inputs
-remained untransformed, and overlapping fields were not summed as independent
-replicates or unique-well counts (Supplementary Data 8).
-
-A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
-using scientific settings chosen from six development wells and frozen before
-the remaining 90 were opened. Its measured first candidate retained ordinary
-nuclei and separated inspected close pairs. Fixed ten-pixel expansions supplied
-local cytoplasmic measurement regions, not validated whole-cell boundaries.
-The resulting negative/positive control mean GFP ratios were 1.05/7.40 for
-Wortmannin (Z-prime 0.747) and 1.26/7.33 for LY294002 (Z-prime 0.493), with
-four wells per control group. Independent recalculation from all 96 well tables
-reproduced the dose summaries and assay statistics. This fresh-context repeat (Figure 8)
-supports recovery of the assay response, not exhaustive segmentation accuracy
-or unseen-dataset generalisation; it is distinct from the prospective experiment
-above (Supplementary Data 8).
-
-Other task-only authors also completed the 96-well plate, but compartment
-coverage varied. One continuation left 3,835 of 18,331 nuclear seed rows without
-a defined ratio because their cytoplasmic regions contained no pixels. Its
-self-directed repair retained 16,589 defined ratios from 18,073 seed rows and
-recovered control Z-prime values of 0.700 and 0.513 for Wortmannin and LY294002,
-respectively. Matched review still found a faint nuclear miss, a plausible
-merged pair and seed-sized cytoplasmic regions. Repair recovered useful assay
-responses without resolving every segmentation failure (Supplementary Data 8).
-
-A separate author explicitly qualified cytoplasmic support rather than assigning
-a ratio to every detected nucleus. Of 19,732 nuclear rows, 8,655 (43.9%)
-qualified and 9,661 lacked supported cytoplasm; unsafe ratios remained
-undefined. Independent reading of all object tables reproduced each well's
-contributing-row mean. Conditional Z-prime/V-factor values were 0.885/0.626
-for Wortmannin and 0.262/0.497 for LY294002. Matched reserve review showed
-nuclear-dominant GFP with limited extranuclear support. Across these trials,
-plate completion and control separation could coexist with substantial
-compartment loss. The reported responses therefore describe the contributing
-cohorts, not unbiased whole-population translocation; Supplementary Data 8
-retains each pipeline, coverage denominator and failed predecessor.
-
-Table 2 summarizes the different endpoints supported by these task-only
-trials. The measures are not interchangeable: object matching, directed
-boundary agreement, centre localisation and assay-response separation answer
-different questions.
+The public BBBC013 translocation analysis completed all 96 wells. It retained
+14,631 of 17,320 detected nuclei with eligible cytoplasmic compartments (84.5%).
+The endpoint is each well's median eligible-cell log2 nuclear-to-cytoplasmic
+GFP ratio. Four wells contribute to each treatment group. Control Z-prime was
+0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 8).
+Eligibility varies with treatment, so the response describes contributing cells,
+not an unbiased estimate for every detected cell. Figure 10 shows complementary
+compartment-level inspection from assisted development. Frozen records and
+individual unsuccessful attempts remain in Supplementary Data 8 rather than
+being treated as additional experiments.
 
 | Input and task | Evaluation evidence | Supported result and limit |
 |---|---|---|
 | H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 5 trial; computational, not manual biological truth |
 | BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
-| BBBC007 DNA/actin | Manual-outline union; 16 fields | Directed boundary fraction 0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
+| BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
 | H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
-| H004 public neurites | Matched raw paths and nuisance controls | Local junction and faint-path recovery; complete extent and per-neuron ownership unresolved |
+| H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
 Table 2. Evidence and claim boundaries across task-only analysis tasks.
@@ -662,19 +319,18 @@ comparisons and matched views distinguish detection, object separation,
 boundary extent and execution coverage. Repair of one region alone does not
 establish quality throughout an image or performance on a new dataset.
 Supplementary Data 8 retains the individual attempts, pipeline freezes and
-reference definitions. Supplementary Figures 9–12 separately show task-only
-local controls and same-author development cases; those development cases
-do not supply fresh autonomous scores.
+reference definitions. Supplementary Figures 9–13 group matched evidence by assay. Assisted examples
+are identified separately from fresh autonomous results.
 
 ### Figure 5. Task-only analysis: within-run revision and final coverage
 
 ![Native autonomous repair, paired scores and complete coverage.](figures/slas/task_only_visual.png){width=6in}
 
-\(A) Matched H001 raw and first/final overlays show an elongated-body split repaired without reference feedback. Screenshots are clipped/scaled, not retouched; colours do not identify objects across attempts. Supplementary Figure 18 retains wider views and capture records. (B) Whole-image H001 object F1 against a notebook-derived reference: excess predictions fall from four to two, with 59/64 matches and five misses unchanged. (C) BBBC039 pooled object F1 on the same three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line is pooled, not mean field F1. Matching requires intersection over union at least 0.5. First is the initial completed scientific prediction (H001 a01; final a04). These comparisons do not establish first-200 accuracy, an isolated skill effect or held-out generalization.
+\(A) Matched H001 raw and first/final overlays show an elongated-body split repaired without reference feedback. Screenshots are clipped/scaled, not retouched; colours do not identify objects across attempts. Supplementary Figure 9 retains wider views and capture records. (B) Whole-image H001 object F1 against a notebook-derived reference: excess predictions fall from four to two, with 59/64 matches and five misses unchanged. (C) BBBC039 pooled object F1 on the same three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line is pooled, not mean field F1. Matching requires intersection over union at least 0.5. First is the initial completed scientific prediction (H001 a01; final a04). These comparisons do not establish first-200 accuracy, an isolated skill effect or held-out generalization.
 
 The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
 run plotted above: 61 fields improved, 123 decreased and 16 were unchanged
-(Supplementary Figure 20). This repeat retains useful agreement but shows that
+(Supplementary Figure 16). This repeat retains useful agreement but shows that
 within-run repair does not guarantee a better result from the next fresh author.
 
 ### Figure 6. Autonomous local repair with a retained merge
@@ -687,36 +343,35 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 ![Matched whole-field and regional retinal raw images and final outlines.](figures/slas/retinal_fresh_native.png){width=5.3in}
 
-\(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author caught a pair-merging regression and retained both gains in its final 102-instance candidate. Diffuse regions remain uncertain (Supplementary Figure 14); manual-reference accuracy is unmeasured. Raw RBPMS uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, giving different brightness at matched positions. Original screenshots are clipped/scaled without retouching. Source: user-provided R0010 retina; physical calibration unverified. Supplementary Data 8 retains exact captures and settings.
+\(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author caught a pair-merging regression and retained both gains in its final 102-instance candidate. Diffuse regions remain uncertain (Supplementary Figure 11); manual-reference accuracy is unmeasured. Raw RBPMS uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, giving different brightness at matched positions. Original screenshots are clipped/scaled without retouching. Source: user-provided R0010 retina; physical calibration unverified. Supplementary Data 8 retains exact captures and settings.
 
-### Figure 8. Fresh-context recovery of the public translocation response
+### Figure 8. Autonomous recovery of the translocation response
 
-![Frozen dose-response summaries and assay controls from the fresh BBBC013 author.](figures/slas/translocation_fresh13.png){width=6in}
+![Dose response and contributing-cell coverage.](figures/slas/translocation_fresh23.png){width=6in}
 
-\(A, B) Native dose summaries from the treatment-aware 96-well BBBC013 repeat;
-each plotted group contains four wells. Points show means of well-level mean
-cell ratios; error bars are sample standard deviations between wells, not
-between cells. Concentration units differ between drugs. Dose positions are
-equally spaced; connecting lines guide the eye and are not fitted curves.
-(C, D) Each assay block's four vehicle and four Wortmannin 150 nM control wells,
-with the same between-well variability. LY294002's positive control is
-Wortmannin, not another LY294002 dose. Scientific settings were frozen after
-six development wells, before the 90 reserve wells were opened. These results
-support assay-response recovery using local cytoplasmic regions, not validated
-whole-cell boundaries or segmentation accuracy. This fresh-context public repeat
-is distinct from the prospective held-out experiment in Supplementary Figure 7.
-Supplementary Data 8 retains the frozen pipeline and original table identities.
+Upper panels show the mean and sample standard deviation of four well-level
+median eligible-cell log2 nuclear-to-cytoplasmic GFP ratios per dose. Dots are
+individual wells, not cells. Lower panels show the corresponding fraction of
+detected nuclei contributing an eligible compartment. Drug concentration units
+differ. Equally spaced dose positions and connecting lines are descriptive,
+not a fitted potency model. The autonomous author selected its final pipeline
+without segmentation ground truth. Treatment-dependent eligibility limits
+population interpretation; the preserved source tables are linked in
+Supplementary Data 8.
 
 ### Figure 9. Measurement-first autonomous localisation in three dimensions
 
-![Original native XY, XZ and YZ views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
+![Same-run saved nuclear ROI extents in XY, original XZ/YZ centre views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
 
-\(A–C) Retained native image/Points views from one fresh task-only author.
-XY uses Z index 34, XZ uses Y index 157 and YZ uses X index 80; all are voxel
-indices. Green points are the original fractional predicted centres, not added
-annotations. Out-of-plane Points are hidden, so a body without a visible point
-in one slice is not necessarily missed. Crops are scaled without image or point
-retouching. \(D) Independent postfreeze one-to-one matching recovered 14 of
+\(A) Saved same-run nuclear ROI extents over raw signal, reopened through MCP
+for native presentation at Z index 34; categorical fills and edges show nuclear
+support, not validated cellular boundaries. (B,C) Original retained native
+image/Points views at Y index 157 (XZ) and X index 80 (YZ). All indices are
+voxel indices. Green points in B,C are the original fractional predicted
+centres, not added annotations. Out-of-plane Points are hidden, so a body
+without a visible point in one slice is not necessarily missed. Crops are
+scaled without image or point retouching. \(D) Independent postfreeze
+one-to-one matching recovered 14 of
 15 manual centres within 10 voxels and all 15 within the predeclared 30-voxel
 primary distance. Mean matched error at the primary distance was 4.80 voxels;
 11 of 26 predictions were unmatched to annotations whose coverage was not
@@ -728,6 +383,47 @@ the broader review. Physical calibration is unverified. Source: Allen Institute
 for Cell Science cells3d, through the pinned Haase notebook-derived task.
 Supplementary Data 8 retains capture hashes, crop coordinates and evaluation.
 
+### Figure 10. Local nuclear repair and compartment limitations
+
+![Same-author BBBC013 development views of a dim-nucleus repair, a crowded after-only control and uncertain GFP compartments.](figures/slas/bbbc013_development_repair.png){width=6in}
+
+\(A) Matched H12 views before and after a foreground-admission adjustment show
+recovery of a dim broad profile and retained separation of nearby regions. The
+minimum-size rule was unchanged; retained intermediate measurements support
+threshold-shrunken support as the earlier loss mechanism. (B) An after-only
+bright crowded A01 control shows separate supported regions at the reviewed
+position, with touching or lobed identities still uncertain. (C) Corrected D06
+GFP views show unresolved propagated-compartment extent and ownership. Numeric
+raw windows are 0–60, 0–123 and 0–111 in A, B and C, respectively; gamma is 1.
+Colours are not cross-candidate identities. Physical calibration is unverified.
+These same-author development witnesses support a local nuclear repair, not
+exhaustive accuracy, validated translocation measurements, complete plate
+execution or fresh autonomous success. The full-plate continuation remained
+interrupted. The [source proof](supplementary/task_only_analysis/bbbc013-development-source-proof.json)
+and [render receipt](supplementary/task_only_analysis/bbbc013-development-render-receipt.json)
+retain the original capture, source, presentation and unchanged embed identities.
+Source: Ilya Ravkin, [Broad Bioimage Benchmark Collection BBBC013v1](https://bbbc.broadinstitute.org/BBBC013),
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Adaptations comprise
+OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
+
+
+### Figure 11. Neurite analysis across an overlapping nine-field mosaic
+
+![Matched seam and field-core raw, body/path result and combined views.](figures/slas/p001_stitched_dev13_native.png){width=6in}
+
+(A–C) Sampled overlap region; (D–F) lower-right field core in an acquisition-placed
+nine-field mosaic. Each triplet uses the same native crop, with raw FITC,
+body envelopes plus process paths, and their combination. The analysis fits
+one pooled percentile pair per complete nine-field channel stack before
+assembly, rather than fitting fields separately. Supported long paths remain
+visible; faint segments and crowded ownership remain incomplete. The displayed
+mosaic is an assisted retained-context example, not a fresh unguided trial.
+Original captures, the precise selected pipeline and the development history
+remain in the [source record](../figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst).
+The completed all-channel continuation is recorded separately in Supplementary
+Data 8; its aggregate measurements are not assigned to these earlier panels.
+
+
 ## Discussion
 
 OpenHCS connects interactive and agent-operated microscopy analysis through a shared workflow definition. Parameter controls, editable Python and catalog descriptions draw on the registered functions, while the compiler combines their requirements with configuration and selected images. A scientist can therefore revise the same pipeline that an agent constructed.
@@ -737,8 +433,6 @@ Workflow reuse can reduce the setup required for a new experiment. A laboratory 
 The evaluations cover complementary parts of this workflow. The unified current-source run establishes selected reference-value agreement across all 30 imported workflows, while the release CI record independently preserves package-level execution for the released source. The single-field neurite demonstration records completion under one prompt and client/model configuration; image review then exposed cell-assignment and crossover errors despite successful execution checks. Three prospective trials extend evaluation to held-out annotations or treatment structure. They show useful first-attempt results while also identifying nuclear over-segmentation and the limits of directed boundary and treatment-level references. Because each assay used one authoring attempt with one model and prompt, they do not estimate the probability that an agent will produce an acceptable workflow on a new assay. The separate archived throughput measurements describe a configured analysis-focused workload, not current output-complete performance. Matched Translocation and advanced-segmentation pilots cover two output-complete workflows (Supplementary Data 3); comparative native CellProfiler throughput across workflows remains to be established.
 
 The task-only trials show that agents can improve segmentation through their own image review without reference feedback. H001 reduced excess instances without changing foreground overlap, while BBBC039 recovered more reference nuclei on the paired development fields but retained a low-accuracy tail across the full corpus. The retinal trials show why review must cover several regions: a change that repaired one body also merged a genuine pair elsewhere, and the author corrected that regression before freezing the final result. The volume trials include both a development repair that removed boundary fragments while leaving suspect interior splits and a fresh measurement-first method with useful ordinary-body centre placement. Detection, object separation and boundary extent therefore need separate assessment; a better count alone does not establish a better segmentation (Supplementary Data 8).
-
-Operational losses also need separate accounting: a later public BBBC013 trial was terminated at an imposed 4.5 GiB scope limit before complete table export or distributed review, despite partial mask production. That incomplete trial does not estimate segmentation accuracy or host-wide memory exhaustion. Retained outcomes should distinguish completed analysis, biological acceptance and operational interruption rather than pool them into a single accuracy claim.
 
 Further evaluation can extend reference comparisons to additional modules and settings, compare repeated agent trials with expert-reviewed results, and measure paired CellProfiler/OpenHCS throughput with matched outputs and resource limits. Explicit image-source mappings keep channel and dimensional choices available for review as pipelines move to new experiments. The reusable libraries in Supplementary Table 1 supply the supporting mechanisms independently of the microscopy functions.
 

@@ -178,6 +178,14 @@ viewer preserved that state. Inspect genuine XY/XZ/YZ views when the source
 and exposed contracts support them; record unavailable views without inventing
 a projection or source domain.
 
+After changing the spatial plane, check the result itself in the bitmap.
+Slice-limited Points may disappear even where a body is visible; contours
+exported for XY slices do not establish XZ/YZ mask support. For boundary review,
+use the saved volumetric Labels or a supported native contour route from that
+same result. If unavailable, retain useful centre/XY evidence and state the
+missing view. A blank result-only capture or raw-looking combined capture is
+not a successful orthogonal overlay; do not infer a missed object from it.
+
 Open all three captures and judge raw support, placement and separation at
 distributed positions and scales. Relate points to masks or structures only
 when that association belongs to the intended measurement; there is no

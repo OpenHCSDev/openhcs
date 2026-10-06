@@ -65,3 +65,26 @@ distinct tiny registered public MCP failing-axis and all-success pair on an
 owned reused engineering route coordinated with Dewey. Original science,
 UNKNOWN inputs and active blind-author packages remain untouched. Hosted CI
 is deferred. Do not merge or close #1005 as live-verified yet.
+
+Installed acceptance preparation
+--------------------------------
+
+Dewey confirmed exact receiving26 native and MCP closure and released the :95
+engineering successor route. He owns one next ordinary candidate combining
+published production1007 d89a114fe with final981 f9c09b3dd. This worker retains
+source custody; no second client, server, environment or target mutation.
+
+The committed axis_outcome_probe1005.py source passes the existing custom
+function syntax/import validator with no errors or warnings. Actual native
+registration and reflected callable admission remain pending on that route.
+mixed_axes_pipeline.py and all_success_pipeline.py are distinct documents:
+both persist the first-step pixels, then only the mixed case rejects A02.
+The callable observes pixel values, never filenames or scientific state.
+
+Generated once: /run/media/ts/hdd/openhcs-engineering/execution-axis1005-20261006/input.
+Two 32x32 float32 planes, A01=0.2 and A02=0.8. Their TIFF hashes are
+54fb29ebdff37c5c5b5fc71fb95b587afde1af79718c92c737cf01f4f4323342 and
+43714da601538fd95515e0a9f32be1c06e792d39b9befb35488df7b4eebfceb4.
+These tiny input files are owned retained acceptance evidence, not disposable
+scientific scratch. Never rerun create_inputs.py over that existing directory.
+No installed success/failure outcome is claimed by fixture validation.

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from inspect import signature
 
 import numpy as np
@@ -53,6 +53,8 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     _render_owned_skeleton,
     _seeded_candidate_components,
     _TopologyResult,
+    _ResolvedCrossing,
+    _empty_topology,
     count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
     neurite_outgrowth_metaxpress_pixels,
@@ -895,6 +897,7 @@ def test_owned_topology_ignores_three_pixel_cycle_for_separate_owner():
         bodies,
         coordinate_scale=1.0,
         outgrowth_width_px=3.0,
+        crossing_topology=_empty_topology(),
     )
     rendered = _render_owned_skeleton(owned.shape, topology)
 
@@ -947,6 +950,7 @@ def test_owned_geometric_crossing_uses_nominal_owner_as_branch():
         bodies,
         coordinate_scale=1.0,
         outgrowth_width_px=2.0,
+        crossing_topology=_empty_topology(),
     )
     rendered = _render_owned_skeleton(owned.shape, topology)
 
@@ -1007,6 +1011,81 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
         topology.path_branch_types[path_index] == 0
         for path_index in topology.crossing_paths
     )
+
+    # A resolved logical crossing must survive the same repair stage used by
+    # the public profile. Secondary regions deliberately supply no alternate
+    # connection; only the original declared core may join these rooted arms.
+    owned = _render_owned_skeleton(skeleton.shape, topology)
+    response = np.where(skeleton, 150.0, 0.0)
+    repaired = _repair_signal_supported_skeleton(
+        owned, response, np.zeros_like(cell_bodies), cell_bodies,
+        minimum_response=100.0, crossing_topology=topology,
+    )
+    core = topology.crossing_core_mask(skeleton.shape)
+    np.testing.assert_array_equal(repaired[core], owned[core])
+    # Renumbering reverses physical owner traversal without changing geometry.
+    reversed_topology = replace(
+        topology, path_owners=np.where(topology.path_owners > 0, 3 - topology.path_owners, 0),
+    )
+    reversed_owned = np.where(owned > 0, 3 - owned, 0)
+    reversed_bodies = np.where(cell_bodies > 0, 3 - cell_bodies, 0)
+    reversed_repair = _repair_signal_supported_skeleton(
+        reversed_owned, response, np.zeros_like(cell_bodies), reversed_bodies,
+        minimum_response=100.0, crossing_topology=reversed_topology,
+    )
+    np.testing.assert_array_equal(
+        reversed_repair, np.where(repaired > 0, 3 - repaired, 0),
+    )
+    foreign_owned = owned.copy()
+    foreign_bodies = cell_bodies.copy()
+    foreign_owned[core] = 99
+    foreign_bodies[20:25, 40:45] = 99
+    core_center = np.rint(np.argwhere(core).mean(axis=0)).astype(int)
+    foreign_rows, foreign_columns = line(*core_center, 22, 42)
+    foreign_owned[foreign_rows, foreign_columns] = 99
+    foreign_response = response.copy()
+    foreign_response[foreign_rows, foreign_columns] = 150.0
+    foreign_repair = _repair_signal_supported_skeleton(
+        foreign_owned, foreign_response, np.zeros_like(cell_bodies), foreign_bodies,
+        minimum_response=100.0, crossing_topology=topology,
+    )
+    assert np.all(foreign_repair[core] == 99)
+    foreign_trace = (foreign_owned == 99) & (foreign_bodies == 0)
+    assert np.all(foreign_repair[foreign_trace] == 99)
+    for path_index in topology.crossing_paths:
+        coordinates = topology.path_coordinates[path_index]
+        outside = ~core[tuple(coordinates.T)] & (cell_bodies[tuple(coordinates.T)] == 0)
+        assert np.all(repaired[tuple(coordinates[outside].T)] == topology.path_owners[path_index])
+    repaired[cell_bodies > 0] = 0  # The profile excludes soma pixels from traces.
+    final = _analyze_owned_topology(
+        repaired, cell_bodies, pixel_size_um, 8.0, crossing_topology=topology,
+    )
+    final_terminals = {
+        tuple(coordinate): int(final.path_owners[path_index])
+        for path_index, coordinates in enumerate(final.path_coordinates)
+        for coordinate in (coordinates[0], coordinates[-1])
+        if tuple(coordinate) in terminals and cell_bodies[tuple(coordinate)] == 0
+    }
+    assert final_terminals == {
+        coordinate: label for coordinate, label in terminal_owners.items()
+        if cell_bodies[coordinate] == 0
+    }
+    assert final.root_paths_by_cell.keys() == {1, 2}
+    final_rendered = _render_owned_skeleton(skeleton.shape, final)
+    for path_index in topology.crossing_paths:
+        coordinates = topology.path_coordinates[path_index]
+        outside = ~core[tuple(coordinates.T)] & (cell_bodies[tuple(coordinates.T)] == 0)
+        assert np.all(final_rendered[tuple(coordinates[outside].T)] == topology.path_owners[path_index])
+
+    unsupported_response = response.copy()
+    unsupported_response[core] = 0
+    unsupported = _repair_signal_supported_skeleton(
+        owned, unsupported_response, np.zeros_like(cell_bodies), cell_bodies,
+        minimum_response=100.0, crossing_topology=topology,
+    )
+    unsupported[cell_bodies > 0] = 0
+    # Merely declaring a crossing does not license a below-threshold bridge.
+    assert np.count_nonzero(unsupported) < np.count_nonzero(repaired)
 
     morphology = _build_neurite_morphology_graph(
         topology,
@@ -1220,9 +1299,7 @@ def test_neurite_morphology_breaks_cycle_without_dropping_path_geometry():
         transitions={0: (1, 2), 1: (0, 2), 2: (0, 1)},
         root_paths_by_cell={1: (0, 2)},
         branch_nodes_by_cell={},
-        crossing_nodes=frozenset(),
-        crossing_paths=frozenset(),
-        crossing_core_paths=frozenset(),
+        resolved_crossings=(),
     )
     cell_bodies = np.zeros((32, 32), dtype=np.int32)
     cell_bodies[6:11, 6:11] = 1
@@ -1277,9 +1354,7 @@ def test_neurite_morphology_does_not_fabricate_links_between_components():
         transitions={0: (), 1: ()},
         root_paths_by_cell={1: (0, 1)},
         branch_nodes_by_cell={},
-        crossing_nodes=frozenset(),
-        crossing_paths=frozenset(),
-        crossing_core_paths=frozenset(),
+        resolved_crossings=(),
     )
     cell_bodies = np.zeros((32, 32), dtype=np.int32)
     cell_bodies[10:17, 9:14] = 1
@@ -2129,6 +2204,7 @@ def test_signal_supported_repair_follows_curved_trace_instead_of_chord():
         owner_regions,
         cell_bodies,
         minimum_response=100.0,
+        crossing_topology=_empty_topology(),
     )
 
     assert ndi.label(repaired == 1, structure=np.ones((3, 3), dtype=bool))[1] == 1
@@ -2217,6 +2293,7 @@ def test_owned_topology_preserves_adjacent_nominal_neuron_paths():
         bodies,
         coordinate_scale=1.0,
         outgrowth_width_px=2.0,
+        crossing_topology=_empty_topology(),
     )
     rendered = np.zeros_like(owned)
     for path_index, coordinates in enumerate(topology.path_coordinates):
@@ -2263,6 +2340,7 @@ def test_secondary_path_adoption_survives_only_with_soma_rooted_signal_support()
             owner_regions,
             cell_bodies,
             minimum_response=100.0,
+            crossing_topology=topology,
         )
         repaired[cell_bodies > 0] = 0
         return repaired, _analyze_topology(
@@ -2280,6 +2358,82 @@ def test_secondary_path_adoption_survives_only_with_soma_rooted_signal_support()
     connected_labels, connected_topology = repaired_topology(connected=True)
     assert np.all(connected_labels[32, 12:53] == 1)
     assert np.all(connected_topology.path_owners == 1)
+
+
+def test_signal_supported_repair_projects_crossings_regionally_on_eight_megapixels(monkeypatch):
+    labels = np.zeros((2000, 4000), dtype=np.int32)
+    bodies = np.zeros_like(labels)
+    response = np.zeros(labels.shape, dtype=np.float32)
+    for index in range(1000):
+        y, x = 5 + 40 * (index // 20), 5 + 200 * (index % 20)
+        bodies[y, x] = index + 1
+        labels[y, x + 1:x + 4] = index + 1
+        response[y, x:x + 4] = 5
+    projected_shapes = []
+    original_projection = _TopologyResult.crossing_core_mask
+
+    def regional_projection(self, shape, **kwargs):
+        projected_shapes.append(shape)
+        return original_projection(self, shape, **kwargs)
+
+    monkeypatch.setattr(_TopologyResult, 'crossing_core_mask', regional_projection)
+    repaired = _repair_signal_supported_skeleton(
+        labels, response, labels, bodies, minimum_response=3,
+        crossing_topology=_empty_topology(),
+    )
+    np.testing.assert_array_equal(repaired, np.where(bodies > 0, bodies, labels))
+    assert len(projected_shapes) == 1000
+    assert all(height * width <= 4 for height, width in projected_shapes)
+
+
+def test_signal_supported_repair_reserves_core_from_unrelated_earlier_owner():
+    labels = np.zeros((41, 41), dtype=np.int32)
+    labels[20, 5:20] = labels[20, 21:36] = 2
+    labels[5:20, 20] = labels[21:36, 20] = 1
+    bodies = np.zeros_like(labels)
+    bodies[3:8, 18:23] = 1
+    bodies[18:23, 3:8] = 2
+    response = np.where((labels > 0) | (bodies > 0), 150.0, 0.0)
+    response[20, 20] = 150.0
+    regions = np.where(response > 0, 1, 0)
+    topology = replace(
+        _empty_topology(), path_owners=np.array([2, 2, 0]),
+        path_coordinates=(np.array([[20, x] for x in range(5, 20)]),
+                          np.array([[20, x] for x in range(21, 36)]),
+                          np.array([[20, 19], [20, 20], [20, 21]])),
+        resolved_crossings=(_ResolvedCrossing(0, (0, 1), (2,)),),
+    )
+    repaired = _repair_signal_supported_skeleton(
+        labels, response, regions, bodies, minimum_response=100.0,
+        crossing_topology=topology,
+    )
+    assert np.all(repaired[20, 8:20] == 2)
+    assert np.all(repaired[20, 21:36] == 2)
+    assert repaired[20, 20] == 0  # Shared support is not an exclusive label.
+    assert not np.any(repaired[21:36, 20])  # Unrelated owner cannot use that core.
+    reversed_topology = replace(topology, path_owners=np.array([1, 1, 0]))
+    reverse = lambda image: np.where(image > 0, 3 - image, 0)
+    reversed_repair = _repair_signal_supported_skeleton(
+        reverse(labels), response, reverse(regions), reverse(bodies),
+        minimum_response=100.0, crossing_topology=reversed_topology,
+    )
+    np.testing.assert_array_equal(reversed_repair, reverse(repaired))
+
+
+def test_crossing_resolution_keeps_branch_arms_in_shared_support_declaration():
+    topology = replace(
+        _empty_topology(), path_owners=np.array([1, 1, 2, 2, 2, 0]),
+        path_coordinates=tuple(np.array([[4, 5]]) for _ in range(6)),
+        resolved_crossings=(_ResolvedCrossing(0, (0, 1, 2, 3, 4), (5,)),),
+    )
+    assert topology.crossing_paths == frozenset({0, 1})
+    assert topology.resolved_crossings[0].supports_owner(2, topology.path_owners)
+    occupied = np.zeros((10, 10), dtype=np.int32)
+    occupied[4, 5] = 2
+    assert topology.crossing_support_mask(occupied, owner=1, origin=(0, 0))[4, 5]
+    assert topology.crossing_support_mask(occupied, owner=2, origin=(0, 0))[4, 5]
+    occupied[4, 5] = 99
+    assert not np.any(topology.crossing_support_mask(occupied, owner=2, origin=(0, 0)))
 
 
 def test_signal_supported_repair_bounds_compiled_search_to_owner_regions(monkeypatch):
@@ -2316,6 +2470,7 @@ def test_signal_supported_repair_bounds_compiled_search_to_owner_regions(monkeyp
         owner_regions,
         cell_bodies,
         minimum_response=100.0,
+        crossing_topology=_empty_topology(),
     )
 
     assert len(observed_shapes) == 4
@@ -2356,6 +2511,7 @@ def test_signal_supported_repair_rejects_unsupported_and_foreign_owner_routes():
         owner_regions,
         cell_bodies,
         minimum_response=100.0,
+        crossing_topology=_empty_topology(),
     )
 
     assert np.all(repaired[20, 5:10] == 1)
@@ -2414,9 +2570,7 @@ def test_morphology_retains_topology_owners_when_shared_endpoints_collide():
         transitions={0: (1,), 1: (0,)},
         root_paths_by_cell={1: (0,), 2: (1,)},
         branch_nodes_by_cell={},
-        crossing_nodes=frozenset(),
-        crossing_paths=frozenset(),
-        crossing_core_paths=frozenset(),
+        resolved_crossings=(),
     )
     bodies = np.zeros((8, 8), dtype=np.int32)
     bodies[1, 2] = 1

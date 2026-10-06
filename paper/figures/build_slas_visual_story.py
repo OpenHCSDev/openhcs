@@ -338,21 +338,21 @@ def h002_measurement_first():
         sheet.source(ROOT / "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst")
         sheet.text(3, 98, "Measurement-first autonomous 3D localisation",
                    size=17, weight="bold", va="top")
-        sheet.text(3, 93, "A  XY: native image and predicted centres", size=13, weight="bold")
-        sheet.text(55, 93, "B  XZ: ordinary-body centre", size=13, weight="bold")
-        sheet.text(55, 65, "C  YZ: ordinary-body centre", size=13, weight="bold")
-        for name, bounds, crop in (
-            ("xy", (3, 42, 47, 49), (560, 35, 985, 468)),
-            ("xz", (55, 73, 42, 18), (690, 185, 1215, 320)),
-            ("yz", (55, 45, 42, 18), (690, 185, 1215, 320)),
+        for name, bounds, heading_position in (
+            ("xy", (3, 42, 47, 49), (3, 93)),
+            ("xz", (55, 73, 42, 18), (55, 93)),
+            ("yz", (55, 45, 42, 18), (55, 65)),
         ):
-            path = source_root / f"{name}.png"
-            if digest(path) != sources["captures"][name]["sha256"]:
+            capture = sources["captures"][name]
+            path = source_root / capture["asset"]
+            crop = tuple(capture["crop_xyxy"])
+            if digest(path) != capture["sha256"]:
                 raise ValueError(f"Frozen native capture changed: {name}")
+            sheet.text(*heading_position, capture["panel_heading"], size=13, weight="bold")
             sheet.source_image(path, bounds, crop=crop)
         sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
         sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
-        sheet.text(3, 38, "Green points are original native predictions; out-of-plane points are hidden",
+        sheet.text(3, 36, sources["presentation_note"],
                    size=11, color=MUTED)
         axis = sheet.figure.add_axes((.12, .14, .39, .18))
         thresholds = (10, evaluation["primary_threshold_voxels"])
@@ -442,7 +442,9 @@ def translocation_repeat():
         raise ValueError("Expected the frozen fresh13 translocation author")
     tables = source["tables"]
     with plt.rc_context({"font.size": 12, "axes.titlesize": 13,
-                         "axes.spines.top": False, "axes.spines.right": False}):
+                         "axes.spines.top": False, "axes.spines.right": False,
+                         "axes.linewidth": 1.5, "xtick.major.width": 1.5,
+                         "ytick.major.width": 1.5}):
         sheet = FigureSheet("translocation_fresh13", "", 6.3)
         sheet.source(source_path)
         sheet.source(ROOT / "figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst")
@@ -465,7 +467,8 @@ def translocation_repeat():
             dose_axis.errorbar(
                 positions, [float(row["mean_well_ratio"]) for row in rows],
                 yerr=[float(row["replicate_sd"]) for row in rows],
-                fmt="o-", color=color, capsize=3, linewidth=1.3, markersize=4,
+                fmt="o-", color=color, capsize=4, linewidth=2.2, markersize=6,
+                elinewidth=2.0, capthick=2.0, markeredgewidth=1.2,
             )
             dose_axis.set(
                 title=f"{'AB'[index]}  {block}", ylim=(0, 9),
@@ -482,7 +485,9 @@ def translocation_repeat():
                 (0, 1), (float(statistics["negative_mean"]), float(statistics["positive_mean"])),
                 yerr=(float(statistics["negative_replicate_sd"]),
                       float(statistics["positive_replicate_sd"])),
-                color=(MUTED, color), width=.5, capsize=3,
+                color=(MUTED, color), width=.5, capsize=4,
+                edgecolor=INK, linewidth=1.5,
+                error_kw={"elinewidth": 2.0, "capthick": 2.0},
             )
             control_axis.set(
                 title=f"{'CD'[index]}  Controls: Z′ = {float(statistics['z_prime']):.3f}",
@@ -635,6 +640,39 @@ def h004_faint_path():
     sheet.save()
 
 
+def assay_review_sheets():
+    """Keep related native witnesses on one assay sheet, with original receipts."""
+    groups = (
+        ("h001_assay_review", "Bright-object separation", ("h001_scored_native",)),
+        ("h002_assay_review", "Volumetric localisation and body separation", ("h002_fresh22_split_repair", "h002_fresh10_native")),
+        ("retina_assay_review", "Retinal soma localisation", ("retina_fresh16_repair", "retinal_development_repair")),
+        ("h003_assay_review", "Paired nuclear and cell-body analysis", ("h003_fresh656_native", "h003_fresh19_matched")),
+        ("h004_assay_review", "Neurite main-shaft recovery", ("h004_main_shafts", "h004_junction_native")),
+    )
+    for stem, title, panels in groups:
+        sheet = FigureSheet(stem, title, 5.2 * len(panels))
+        height = 88 / len(panels)
+        for index, panel in enumerate(panels):
+            sheet.asset(OUTPUT / f"{panel}.png", (2, 5 + (len(panels) - index - 1) * height, 96, height - 2))
+        sheet.save()
+
+
+def h004_main_shafts():
+    """Show the retained initial shaft result, not a fine-branch sensitivity trial."""
+    sheet = FigureSheet("h004_main_shafts", "Main-shaft recovery", 4.2)
+    sources = OUTPUT / "h004_fresh20_sources"
+    index_path = sources / "QA-INDEX.json"
+    sheet.source(index_path)
+    captures = {item["capture_group"]: item for item in json.loads(index_path.read_text())}
+    for x, name, title in ((3, "first-bottom-raw", "A  Raw process channel"), (52, "first-bottom-result", "B  Main-shaft result")):
+        path = sources / f"{name}.png"
+        if digest(path) != captures[name]["sha256"]:
+            raise ValueError(f"Retained capture hash mismatch: {name}")
+        sheet.text(x, 87, title, size=13, weight="bold")
+        sheet.source_image(path, (x, 12, 45, 69), crop=(297, 28, 1250, 410))
+    sheet.save()
+
+
 def personal_stitched_development():
     """Retained development witnesses, not a fresh autonomous score."""
     sheet = FigureSheet("p001_stitched_dev13_native", "", 6.2)
@@ -686,7 +724,7 @@ def architecture():
 
     logos = ROOT / "website/assets/logos"
     sheet.source(logos / "README.md")
-    sheet.panel("A", "Choose how to work", 3, 89)
+    sheet.panel("A", "Choose how to work: UI editors and MCP bridge", 3, 89)
     # Original desktop pictogram; upstream product marks remain unmodified.
     sheet.axis.add_patch(
         Rectangle((8, 77), 14, 8, edgecolor=PURPLE, facecolor=PALE, linewidth=1.5)
@@ -756,25 +794,25 @@ def architecture():
     sheet.text(2.1, 45, "Images", size=11, color=BLUE, rotation=90)
     sheet.text(97, 43, "Functions", size=11, color=ORANGE, rotation=90)
 
-    sheet.panel("C", "Compile, execute and inspect", 3, 19)
-    sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=TEAL)
+    sheet.panel("C", "Separate execution and viewer processes", 3, 19)
+    sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=BLUE)
     sheet.text(
         35,
         36.5,
-        "Workflow to compile",
+        "Submit workflow",
         size=11,
-        color=TEAL,
+        color=BLUE,
         ha="center",
         va="center",
         bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
     )
-    sheet.text(11, 9, "Compile", size=12, weight="bold", ha="center", color=BLUE)
-    sheet.text(11, 5.5, "validate + plan", size=11, ha="center")
-    sheet.arrow((20, 9), (26, 9))
+    sheet.text(11, 9, "ZMQ server", size=12, weight="bold", ha="center", color=BLUE)
+    sheet.text(11, 5.5, "Compile + schedule", size=10.5, ha="center")
+    sheet.arrow((20, 9), (26, 9), both=True, color=BLUE)
     sheet.chip(28, 5, "CPU")
     sheet.chip(45, 5, "GPU")
-    sheet.text(42.5, 15.5, "Support depends on the function", size=11, ha="center")
-    sheet.text(42.5, 2.3, "Workers reused within each run", size=11, ha="center")
+    sheet.text(42.5, 15.5, "Worker processes", size=11, ha="center", weight="bold")
+    sheet.text(42.5, 2.3, "Prepared tasks ↔ progress", size=10.5, ha="center", color=BLUE)
     sheet.arrow((59, 9), (65, 9), color=TEAL)
     sheet.stack(67, 6, 6, 5)
     sheet.axis.add_patch(Rectangle((77, 6), 7, 6, edgecolor=TEAL, facecolor="white"))
@@ -785,8 +823,9 @@ def architecture():
     sheet.asset(logos / "fiji.svg", (93, 6, 5, 6))
     sheet.text(81, 2.3, "Images · ROIs · tables", size=11, ha="center")
     sheet.text(
-        81, 13.3, "napari / Fiji + saved outputs", size=11, ha="center", color=TEAL
+        81, 13.3, "Separate napari / Fiji viewers", size=10.5, ha="center", color=TEAL
     )
+    sheet.text(11, 2.3, "Requests ↔ status", size=10.5, ha="center", color=BLUE)
     sheet.save()
 
 
