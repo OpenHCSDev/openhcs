@@ -1,0 +1,10 @@
+{
+  "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+  "input_dir": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input",
+  "file_list_path": null,
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native",
+  "expected_image_sets": null,
+  "repetitions": 3,
+  "assignment_output_subdirectories": [],
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native_report.json"
+}

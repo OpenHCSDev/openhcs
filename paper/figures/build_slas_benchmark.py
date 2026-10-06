@@ -1,7 +1,7 @@
-"""Render the manuscript benchmark panel from the archived May 13 tables.
+"""Render measured manuscript benchmarks or reproduce the May 13 archive.
 
 Run from any directory. Outputs are derived; input measurements are never edited.
-The native wound-healing timing is unresolved and omitted from speed comparisons.
+Only the archived mode omits its unresolved native wound-healing timing.
 """
 
 from __future__ import annotations
@@ -39,6 +39,76 @@ SOURCES = (
 def sha256(path: Path) -> str:
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def write_provenance(
+    output_dir: Path,
+    sources: tuple[Path, ...],
+    outputs: tuple[Path, ...],
+    interpretation: dict[str, object],
+) -> None:
+    """Record the existing manuscript source/output checksum contract."""
+    receipt = {
+        "source_sha256": {
+            str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path):
+            sha256(path)
+            for path in sources
+        },
+        "generator_sha256": sha256(Path(__file__)),
+        "output_sha256": {path.name: sha256(path) for path in outputs},
+        **interpretation,
+    }
+    (output_dir / "figure2_provenance.json").write_text(
+        json.dumps(receipt, indent=2) + "\n"
+    )
+
+
+def build_measured(
+    summary_sources: tuple[str, ...], scope: str, output_dir: Path,
+) -> None:
+    """Present qualified matched summaries through the measured figure owner."""
+    from benchmark.reports.cppipe_figures import (
+        MeasuredBatchSummarySource,
+        generate_measured_batch_figures,
+        parse_summary_source,
+    )
+    from benchmark.reports import cppipe_figures
+
+    sources = tuple(parse_summary_source(value) for value in summary_sources)
+    custody_paths = tuple(dict.fromkeys(
+        source.path.parent / "summary_custody.json" for source in sources
+    ))
+    custody = tuple(json.loads(path.read_text()) for path in custody_paths)
+    if any(record["status"] != "PASS" for record in custody):
+        raise ValueError("Measured manuscript inputs require qualified matched reports")
+    if len({record["source_head"] for record in custody}) != 1:
+        raise ValueError("Measured manuscript modes must share one source revision")
+    outputs = generate_measured_batch_figures(
+        tuple(MeasuredBatchSummarySource(source.label, source.path) for source in sources),
+        scope=scope,
+        output_dir=output_dir,
+    )
+    write_provenance(
+        output_dir,
+        (
+            *tuple(source.path for source in sources),
+            *custody_paths,
+            Path(cppipe_figures.__file__).resolve(),
+        ),
+        outputs,
+        {
+            "benchmark_mode": "measured",
+            "scope": scope,
+            "matched_report_provenance": custody,
+            "interpretation": (
+                "Qualified matched measurements rendered by the existing measured "
+                "benchmark owner. Original clock boundaries, repetitions and source "
+                "custody remain in matched_report_provenance. Each mode owns its "
+                "actual native baseline; no projected throughput or RAM is supplied."
+            ),
+        },
+    )
+    print(f"Rendered measured benchmark panels and provenance to {output_dir}")
 
 
 def load_tables(
@@ -451,17 +521,8 @@ def build(data_dir: Path = DEFAULT_DATA, output_dir: Path = DEFAULT_OUTPUT) -> N
         )
     outputs = sorted(output_dir.glob("figure2_*"))
     outputs = [path for path in outputs if path.suffix != ".json"]
-    receipt = {
-        "source_sha256": {
-            (
-                str((data_dir / name).relative_to(ROOT))
-                if (data_dir / name).is_relative_to(ROOT)
-                else str(data_dir / name)
-            ): sha256(data_dir / name)
-            for name in SOURCES
-        },
-        "generator_sha256": sha256(Path(__file__)),
-        "output_sha256": {path.name: sha256(path) for path in outputs},
+    interpretation = {
+        "benchmark_mode": "archived_may13",
         "unresolved_native_timing_excluded_from_speed_comparisons": UNRESOLVED_NATIVE_TIMING,
         "single_sample_workflows": len(timed),
         "repetitions_per_single_sample_row": sorted(single.n.unique().tolist()),
@@ -472,15 +533,33 @@ def build(data_dir: Path = DEFAULT_DATA, output_dir: Path = DEFAULT_OUTPUT) -> N
         "memory_conversion": "Source collector reports RSS bytes / 1024**2; divide by 1024 for GiB",
         "interpretation": "Historical phase ratios with different timing boundaries: native command includes startup, OpenHCS execution follows preparation, and phase sums include different work. Native persistent or parallel throughput was not measured.",
     }
-    (output_dir / "figure2_provenance.json").write_text(
-        json.dumps(receipt, indent=2) + "\n"
+    write_provenance(
+        output_dir,
+        tuple(data_dir / name for name in SOURCES),
+        tuple(outputs),
+        interpretation,
     )
     print(f"Rendered benchmark panels and plotted observations to {output_dir}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA)
+    inputs = parser.add_mutually_exclusive_group()
+    inputs.add_argument("--data-dir", type=Path, default=DEFAULT_DATA,
+                        help="Reproduce the archived May 13 tables (default).")
+    inputs.add_argument("--summary-source", action="append",
+                        help="Measured MODE_LABEL=qualified_summary.csv; repeat for modes.")
+    parser.add_argument("--scope", choices=("execution", "total"),
+                        help="Required for measured summaries; archive has its retained clocks.")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     arguments = parser.parse_args()
-    build(arguments.data_dir, arguments.output_dir)
+    if arguments.summary_source:
+        if arguments.scope is None:
+            parser.error("--summary-source requires --scope")
+        if arguments.output_dir.resolve() == DEFAULT_OUTPUT.resolve():
+            parser.error("Measured figures require an explicit distinct --output-dir")
+        build_measured(tuple(arguments.summary_source), arguments.scope, arguments.output_dir)
+    else:
+        if arguments.scope is not None:
+            parser.error("--scope requires --summary-source")
+        build(arguments.data_dir, arguments.output_dir)

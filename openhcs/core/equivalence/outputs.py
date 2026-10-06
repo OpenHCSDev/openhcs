@@ -52,11 +52,8 @@ class RuntimeOutputSnapshot:
         measurement_dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
     ) -> "RuntimeOutputSnapshot":
         """Build a semantic output snapshot from observed runtime exports."""
-        tables = RuntimeTableNamespaceAdapter.normalize(
-            tuple(
-                RuntimeTableSnapshot.from_csv(path)
-                for path in observation.table_outputs
-            )
+        tables = tuple(
+            RuntimeTableSnapshot.from_csv(path) for path in observation.table_outputs
         )
         if execution_axis_id is not None:
             for path in observation.table_outputs:
@@ -92,7 +89,7 @@ class RuntimeOutputSnapshot:
                 for table in tables
             )
         return cls(
-            tables=tables,
+            tables=RuntimeTableNamespaceAdapter.normalize(tables),
             images=cls.image_snapshots(
                 observation.image_outputs,
                 source_workspaces=source_workspaces,
