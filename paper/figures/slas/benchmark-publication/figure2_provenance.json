@@ -8,10 +8,10 @@
   },
   "generator_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
   "output_sha256": {
-    "benchmark_claims.json": "bc0a756abdfe29ef1ddfbd4c09991fdbed1f9c4e760da62bdb7e7173309ebec1",
+    "benchmark_claims.json": "83f52ea3c3324dfd766f97c1c3f4af38bcc5940d25630ab1d81267fc92690f3a",
     "measured_benchmark_publication.png": "bc06a451450382c97fc2d6350f1807e10816eca75dec97c1ee49cd17b20f2009",
-    "measured_benchmark_publication.svg": "a6e73fb3095b1f08aff8af7778b117461b10901e318da71522a4c6cc5bf0cc85",
-    "measured_benchmark_publication_caption.md": "b9758d7c7acee2d047d130810fd019fc08cb7d35f2d867663d5674333d9cb094"
+    "measured_benchmark_publication.svg": "fecedcaad9fc9206ca876b71096287ac1177b4730d3b916ddaf7a9c53c381447",
+    "measured_benchmark_publication_caption.md": "d5e4c83fc5160939367e98431dbcdb539bc61abd2c4ea4f9ef9139a37fbe4c2e"
   },
   "interpretation": "Single measured-owner projection; final claims require explicit owner freeze."
 }

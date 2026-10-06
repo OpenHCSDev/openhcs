@@ -1,8 +1,10 @@
 Submission archive for autonomous OpenHCS analysis
 =================================================
 
-Publication status: awaiting final benchmark freeze and Zenodo account details.
-No DOI has been issued or claimed by this draft.
+Publication status: local preparation only. On 6 October 2026 the corresponding
+author deferred the author declarations and instructed that nothing be uploaded
+to Zenodo yet. No DOI has been issued or claimed by this draft. Resume the
+deposit only on a subsequent instruction from the corresponding author.
 
 Record title
 ------------

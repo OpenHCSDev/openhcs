@@ -1028,6 +1028,8 @@ the length definitions and units have not been aligned, and the retained
 reference has no spatial traces or cell correspondences. The
 [aggregate table](neuroncyto_length_evaluation/aggregate_lengths.csv) keeps the
 first prediction separate from the final candidate illustrated beside it.
+The [primary-source follow-through](neuroncyto_length_evaluation/unit_followthrough.rst)
+records the article and user-guide checks and the remaining unit requirement.
 
 ## Software snapshots and evidence
 

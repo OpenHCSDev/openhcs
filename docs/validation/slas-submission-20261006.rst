@@ -27,3 +27,23 @@ Submission is not complete: numerical benchmark claims await the external
 owner's final-record identification; author declarations and Zenodo deposit
 need confirmed information. NeuronCyto reference units and spatial traces
 remain unresolved. Trial billing amounts are explicitly not recorded.
+
+Final matched-record publication
+-------------------------------
+
+The external benchmark owner's PR 1061 is merged and its collection issue
+1060 is closed. The issue prohibited complete publication/merge before every
+requested mode qualified; the merged delivery states all five modes qualified
+on frozen production source e905e77057e588f48df141634b4eb5b4a765095a.
+The single-well terminal has return code zero, identical before/after source
+heads and a clean final status. This establishes the delivered final record,
+matched_final_20261006, rather than relying on its directory name alone.
+
+The existing build_slas_benchmark.py --publication-record route was rerun with
+--frozen using the already installed paired interpreter, without executing a
+benchmark or changing scientific records. The owner-generated include now
+reports execution minimum/median 2.955/4.401 and total minimum/median
+1.327/3.370. Every manuscript performance claim still derives from that include.
+
+The author deferred declarations and prohibited Zenodo upload on 6 October.
+These remain pending; local archive preparation does not authorize publication.

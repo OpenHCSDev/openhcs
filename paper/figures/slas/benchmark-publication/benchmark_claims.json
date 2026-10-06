@@ -1,10 +1,10 @@
 {
   "record_name": "matched_final_20261006",
   "source_revision": "e905e77057e588f48df141634b4eb5b4a765095a",
-  "status": "pending-final-freeze",
+  "status": "frozen",
   "case_count": "30",
-  "execution_min": "PENDING",
-  "execution_median": "PENDING",
-  "total_min": "PENDING",
-  "total_median": "PENDING"
+  "execution_min": "2.955",
+  "execution_median": "4.401",
+  "total_min": "1.327",
+  "total_median": "3.370"
 }
