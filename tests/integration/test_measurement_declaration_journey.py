@@ -276,6 +276,56 @@ def _execute(path, document, bundle):
     )
 
 
+@pytest.mark.parametrize("image_names", [
+    ("DNA",), ("DNA", "Actin"), ("Actin", "DNA"), ("DNAHalf",),
+])
+def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(tmp_path, image_names):
+    """A stored label cohort must not substitute label IDs for measured images."""
+    from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity, RescaleMethod
+    dna = np.zeros((16, 16), dtype=np.float32)
+    dna[6:8, 6:8] = ((0.6, 0.7), (0.8, 0.9))
+    actin = (0.1 + np.arange(256).reshape(16, 16) * 0.001).astype(np.float32)
+    tifffile.imwrite(tmp_path / "A01_s001_DNA.tif", dna)
+    tifffile.imwrite(tmp_path / "A01_s001_Actin.tif", actin)
+    document = _document()
+    if image_names == ("DNAHalf",):
+        document.pipeline_steps.insert(0, _step(rescale_intensity, "Produced half intensity", {
+            "select_the_input_image": "DNA", "name_the_output_image": "DNAHalf",
+            "rescale_method": RescaleMethod.DIVIDE_BY_VALUE, "divisor_value": 2.0,
+        }))
+    document.pipeline_steps[-1] = _step(measure_object_intensity, "Actual photometry", {
+        "select_images_to_measure": image_names, "select_object_sets_to_measure": ("Cells",),
+    })
+    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
+    context = bundle.runtime_contexts["A01"]
+    plan = context.step_plans[len(document.pipeline_steps)-1]
+    group = plan.compiled_function_pattern.default_group
+    selected = plan.stored_primary_input_edges_for_group(group, None)
+    if image_names != ("DNAHalf",):
+        assert selected is None  # Raw STEP_INPUT aliases need the current image carrier.
+    results = _execute(tmp_path, document, bundle)
+    assert results['A01'].is_success(), results['A01'].error_message
+    (labels,) = context.runtime_value_store.find(name="Cells", axis_id="A01")
+    foreground = object_label_dense_array(labels.data).squeeze() == 1
+    (invocation,) = group.invocations
+    (output,) = invocation.artifact_output_plans
+    (measurement,) = context.runtime_value_store.find(
+        name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
+    )
+    expected_images = {"DNA": dna, "Actin": actin, "DNAHalf": dna / 2}
+    for image_name in image_names:
+        values = expected_images[image_name][foreground]
+        assert values.size and values.std() > 0
+        for feature, expected in (("MeanIntensity", values.mean()), ("MinIntensity", values.min()),
+                                  ("MaxIntensity", values.max()), ("StdIntensity", values.std())):
+            actual = measurement_values_for_feature(
+                (measurement.data,), f"Intensity_{feature}_{image_name}",
+                object_count=1, object_name="Cells", dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            )
+            assert tuple(actual) == pytest.approx((expected,), abs=1e-7)
+
+
 @pytest.mark.parametrize("same_source", [True, False], ids=["single-source", "paired-channels"])
 def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_path, same_source):
     _write_plate(tmp_path, same_source=same_source)

@@ -56,6 +56,7 @@ from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPol
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.processing.materialization import csv_only
 
 
@@ -1791,10 +1792,10 @@ def test_artifact_binding_owner_does_not_erase_undeclared_raw_image_demand():
     group = replace(compiled.default_group, invocations=(invocation,))
     assert invocation.adapter_manages_artifact_inputs
     assert invocation.contract.accepts_implicit_main_flow_input
-    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) is None
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan.empty()) is None
     primary = replace(edge, main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD)
     group = replace(group, invocations=(invocation.with_artifact_input_edges((primary,)),))
-    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) == (primary,)
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan.empty()) == (primary,)
 
 
 def test_table_context_cannot_stand_in_for_an_image_cohort():
@@ -1813,4 +1814,4 @@ def test_table_context_cannot_stand_in_for_an_image_cohort():
         parameter_name=None,
     )
     group = replace(compiled.default_group, invocations=(invocation.with_artifact_input_edges((edge,)),))
-    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) is None
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan.empty()) is None

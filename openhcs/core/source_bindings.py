@@ -1154,6 +1154,14 @@ class NamedSourceBinding(SourceAssignmentBase):
             selected = metadata.project_source_planes(payload, selection)
         return self.apply_loaded_payload(selected, source_context=None)
 
+    @property
+    def requires_current_pixels(self) -> bool:
+        """Whether this source projects the actual current main-flow pixels."""
+        return (
+            self.origin is SourceBindingOrigin.STEP_INPUT
+            and self.projection_role is SourceProjectionRole.PRIMARY_PLANE
+        )
+
     @staticmethod
     def _monochrome_source_data(
         data: RuntimeArrayData,

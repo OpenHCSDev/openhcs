@@ -1933,7 +1933,7 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
         cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
     ) -> object:
         """Resolve primary planes from current pixels; companions from source."""
-        if binding.projection_role is SourceProjectionRole.SOURCE_ARTIFACT:
+        if not binding.requires_current_pixels:
             return SourceUniverseRequest.source_artifact_payload(request, binding)
         if request.source_payload is None:
             raise ValueError(f"STEP_INPUT binding {binding.alias!r} requires current pixels.")

@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
+    from openhcs.core.source_bindings import CompiledSourceBindingPlan
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
@@ -1053,6 +1054,8 @@ class CompiledFunctionGroup:
         self,
         execution_scope: ComponentGroupScope,
         component_key: str | None,
+        *,
+        source_bindings: CompiledSourceBindingPlan,
     ) -> tuple[InvocationArtifactInputEdgePlan, ...] | None:
         """Select exact producer edges supplying an artifact-owned cohort.
 
@@ -1073,6 +1076,19 @@ class CompiledFunctionGroup:
             invocation.contract.accepts_implicit_main_flow_input
             and not invocation.adapter_manages_artifact_inputs
             for invocation, edges in active
+        ):
+            return None
+        # Stored objects can own cohort identity without carrying the current
+        # image consumed by an unstored primary source alias. Keep that input
+        # on the declared main-flow transport rather than projecting labels
+        # as image intensities. Produced image edges retain their own pixels.
+        if any(
+            edge.storage_plan is None
+            and (binding := source_bindings.binding_for_artifact_ref(edge.spec.ref()))
+            is not None
+            and binding.requires_current_pixels
+            for _invocation, edges in active
+            for edge in edges
         ):
             return None
         primary_edges = tuple(
