@@ -862,33 +862,11 @@ def authoring():
 
     sheet.panel("A", "Main window: the complete workflow", 3, 90)
     sheet.native_image("authoring_main_verified_capture", (3, 49, 60, 39))
-    sheet.panel("B", "Recorded MCP edits", 66, 90)
-    sheet.box(
-        67,
-        73,
-        29,
-        12,
-        "Apply code to step",
-        f"Control updates to {observed[0]}",
-        color=PURPLE,
-    )
-    sheet.arrow((81.5, 72), (81.5, 67), color=PURPLE)
-    sheet.box(
-        67,
-        54,
-        29,
-        12,
-        "Edit the same field",
-        f"Code returns to {field_edit['value']}",
-        color=TEAL,
-    )
+    sheet.panel("B", "ZeroMQ server browser", 66, 90)
+    sheet.native_image("authoring_server_browser_verified_capture", (66, 49, 31, 39))
     sheet.text(3, 46, "Detail from A: the two analysis steps", size=10, color=MUTED)
     sheet.native_image(
         "authoring_main_verified_capture", (3, 35, 62, 9), crop=(516, 230, 1024, 320)
-    )
-    sheet.text(69, 46, "Connection status in A", size=10, color=MUTED)
-    sheet.native_image(
-        "authoring_main_verified_capture", (69, 36, 27, 7), crop=(895, 733, 1024, 768)
     )
     sheet.panel("C", "Function controls", 3, 29)
     sheet.panel("D", "Matching Python code", 54, 29)
