@@ -679,9 +679,12 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
 
         if not producer_matching_files:
             matching_files.sort()
-        logger.debug(
-            f"Pattern {self.pattern_repr} sorted files: {[Path(f).name for f in matching_files]}"
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Pattern %s sorted files: %s",
+                self.pattern_repr,
+                [Path(f).name for f in matching_files],
+            )
         matching_files = self._filter_matching_files_for_source_bindings(matching_files)
 
         full_file_paths = [
@@ -1841,7 +1844,9 @@ class FunctionCoreExecutor:
         if not self.should_load_artifact_inputs():
             return {}
         logger.info(
-            f"Artifact inputs for {self.invocation.contract.function_name}: {self.artifact_inputs}"
+            "Artifact inputs for %s: %s",
+            self.invocation.contract.function_name,
+            self.artifact_inputs,
         )
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
         parameter_values: dict[str, list[RuntimeValue]] = {}

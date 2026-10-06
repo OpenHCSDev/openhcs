@@ -1085,6 +1085,13 @@ along with all candidate scores, source hashes, independently reconciled
 areas and terminal evidence. The repeat is not an accuracy gain over the
 earlier best result.
 
+A subsequent fresh H001 author recovered two size-rejected bright foci through
+its own stage diagnosis. Its independently selected final result matched 62 of
+64 notebook-reference objects, versus 60 initially (object F1 0.939 versus
+0.923). The [paired comparison and custody record](task_only_analysis/h001-fresh25-postfreeze-comparison.rst)
+retains both scores, distributed native review, exact source/output hashes and
+successful scientific execution separately from the recorded client exit2.
+
 A separate public translocation trial, `BBBC013_REPEAT94`, compiled the full
 plate but was terminated at its configured 4.5 GiB scope limit. Complete masks
 survived for 42 of 96 wells; final plate tables and distributed biological review
@@ -1405,6 +1412,15 @@ files and eight terminal files were independently hash-checked. The operational
 review blocker was resolved for this phase without replaying the earlier UNKNOWN
 or claiming a new autonomous success; retained-context development continues.
 
+The [pooled analytical-input comparison](task_only_analysis/p001-pooled25-qualified-comparison.rst)
+subsequently completed all nine fields with one process-channel fit. Current
+per-cell sums independently reproduce all nine summaries; the reported length
+changes are -0.29% to +3.55%, with locally retained geometry and unresolved tips.
+It is assisted development, not a fresh autonomous pass or a broad accuracy
+gain. The record also preserves the original report-overwrite incident and
+its separately recovered, hash-identical authored report without altering the
+scientific freeze.
+
 A later independent full-plate translocation author retained all 19,732 nuclear
 rows, with 8,655 contributing ratios and 9,661 rows lacking supported cytoplasm.
 The [qualified completion record](task_only_analysis/bbbc013-fresh20-qualified-completion.rst)
@@ -1433,6 +1449,14 @@ found essentially unchanged nuclear object F1 and modestly better actin-region
 F1, with worse directed nuclear contact-boundary agreement. No reference
 feedback reached the authors; runtime retirement is a separate handoff.
 
+The [subsequent fresh paired-channel repeat](task_only_analysis/h003-fresh25-postfreeze-comparison.rst)
+retains a rejected final 51-instance candidate. Its self-directed marker repairs
+reduced nuclear reference F1 from 0.745 to 0.735 and cell-region F1 from 0.679
+to 0.629. All 493 frozen artifact hashes and the final journals were independently
+checked before reference scoring. These results retain the failed repair and
+supported ordinary-object coverage rather than selecting a different candidate
+after seeing the reference.
+
 A fresh retinal author replaced grain-scale foreground admission with
 body-scale contrast after rejecting nuisance flooding and dim-body losses.
 The final 141-instance candidate preserves a clear neighbouring pair, while
@@ -1449,6 +1473,14 @@ unchanged. The [qualified repeat record](task_only_analysis/retinal-fresh23-qual
 reports independent saved-array/CSV reconciliation, all 313 declared file hashes
 and exact runtime disposition. Weak-object sensitivity and boundary accuracy
 remain unmeasured; this is useful detection coverage, not an exact cell census.
+
+A subsequent independent retinal repeat retained 106 candidate parent labels
+and matching measurement rows. Gap filling improved some body support, but
+stronger marker suppression merged a neighbouring pair; incomplete dim rims
+remained. The [qualified final review](task_only_analysis/retinal-fresh25-qualified-review.rst)
+records useful bright-body localisation separately from the rejected complete
+instance inventory, with independent matched-view checks and frozen-artifact
+scope. This repeat is not a manual-reference accuracy estimate.
 
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected

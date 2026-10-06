@@ -4,6 +4,7 @@ import threading
 import asyncio
 import pickle
 import queue
+from concurrent.futures import Future
 import weakref
 from contextlib import contextmanager
 from dataclasses import replace
@@ -513,7 +514,7 @@ class QueuedRetirementGateway(ZMQViewerWindowGateway):
     def _send_control_message(self, request, message):
         assert request.operation_deadline is not None
         assert request.control_deadline() is request.operation_deadline
-        reply = queue.Queue(maxsize=1)
+        reply = Future()
         self.server.accepted_control_requests.put(NapariAcceptedControlRequest(
             pickle.loads(pickle.dumps(message)), reply,
         ))
@@ -523,8 +524,8 @@ class QueuedRetirementGateway(ZMQViewerWindowGateway):
             loop.quit()
         QTimer.singleShot(0, dispatch)
         loop.exec()
-        response = pickle.loads(reply.get_nowait())
-        assert reply.empty()
+        response = pickle.loads(reply.result(timeout=0))
+        assert reply.done()
         return response
 
 

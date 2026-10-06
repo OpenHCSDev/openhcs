@@ -9,6 +9,7 @@ from skimage.filters import gaussian
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_image_values import (
+    ImagePayloadAxisFields,
     ImagePayloadMetadata,
     image_payload_data,
     image_payload_mask,
@@ -145,6 +146,19 @@ def test_yx_does_not_inherit_strict_volume_rank_requirement():
     assert metadata.spatial_axes_yx(pixels) == (0, 1)
     with pytest.raises(ValueError, match="spatial rank"):
         metadata.spatial_axes(pixels)
+
+
+def test_axis_capability_is_inherited_without_metadata_overrides():
+    for name in (
+        "non_channel_axes", "normalized_source_channel_axis", "spatial_axes_yx",
+        "is_declared_source_channel_plane", "is_declared_source_channel_stack",
+    ):
+        assert name not in ImagePayloadMetadata.__dict__
+        assert getattr(ImagePayloadMetadata, name) is getattr(ImagePayloadAxisFields, name)
+    metadata = ImagePayloadMetadata()
+    assert metadata.source_channel_axis is None
+    assert metadata.plane_axis is None
+    assert metadata.non_channel_axes(np.zeros((3, 7, 9))) == (0, 1, 2)
 
 
 @pytest.mark.parametrize("projection", ("spatial_axes_yx", "spatial_axes"))

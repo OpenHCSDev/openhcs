@@ -709,7 +709,14 @@ class ProducedPathRecordIndex:
             parser=parser,
             source_paths_by_virtual_path={},
             source_metadata_by_path={
-                record.output_path: record.component_values for record in self.records
+                record.output_path: (
+                    record.component_values
+                    if record.image_metadata is None
+                    else record.source_metadata_for_projection(
+                        record.image_metadata, record.output_path
+                    )
+                )
+                for record in self.records
             },
             metadata_rules=source_bindings.metadata_rules,
         )

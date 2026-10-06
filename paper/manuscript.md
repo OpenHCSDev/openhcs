@@ -256,6 +256,16 @@ therefore did not rank these candidates identically. The repeat retains useful
 bright-body coverage but lower instance agreement than the earlier best run;
 it is not evidence of an accuracy gain (Supplementary Data 8).
 
+A subsequent fresh author traced a missing bright focus to size rejection:
+foreground and a marker were present, but the object failed the minimum-area
+gate. Lowering only that gate recovered two reference objects, increasing
+matches from 60 to 62 of 64 and object F1 from 0.923 to 0.939. Foreground IoU
+rose from 0.983 to 0.985. This independently selected final result approaches
+the earlier best agreement while retaining ambiguous lobed bodies and faint
+foci; it does not establish exhaustive biological detection. Reference scoring
+followed author completion and was not supplied during repair (Supplementary
+Data 8).
+
 The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three fields, reducing missed reference nuclei from 39 to 25 while retaining 14 excess predictions (Figure 5C). Its final pipeline then covered all 200 fields: 20,521 of 23,615 reference nuclei matched, with precision 0.947, recall 0.869 and pooled object F1 0.906. Field F1 reached at least 0.90 in 135 fields; ten fields remained below 0.80 (Figure 5D). This distribution retains difficult fields and three annotation-empty fields rather than selecting only favorable examples. No first-attempt score across 200 fields is inferred from the three initial outputs.
 
 Native H001 views show the elongated-body false-split repair in the same scored
@@ -361,6 +371,16 @@ actin-region F1 improved from 0.642 to 0.661. Directed adjacent nuclear-boundary
 agreement worsened. Visible local recovery therefore did not establish a
 whole-field nuclear accuracy gain or exact biological counts (Supplementary
 Data 8).
+
+Not every self-directed repair improved the result. A subsequent fresh
+paired-channel author retained a rejected 51-instance final candidate after
+three marker-stage revisions. Nuclear reference F1 fell from 0.745 to 0.735
+and actin-region F1 from 0.679 to 0.629. Nuclear reference matches fell from
+38 to 36, and cell-region matches from 37 to 33. Ordinary supported nuclei
+remained represented, but merged neighbours and unsupported body envelopes
+prevented an accepted whole-cell census. This repeat records a failed repair,
+not an accuracy gain; scoring followed author completion and was not returned
+to the author (Supplementary Data 8).
 
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. In the independent
@@ -496,6 +516,14 @@ visible mask change from display changes. Possible splitting at the source
 border and incomplete weak-body coverage remained. This retained-run repair
 supports improved local geometry rather than a manual-count accuracy estimate.
 
+A later independent retinal repeat illustrates a failed repair rather than a
+uniform gain: gap filling recovered some soma support, but stronger marker
+suppression joined a neighbouring pair. Its final 106-region candidate retained
+plausible bright-body localisation alongside incomplete dim rims and uncertain
+instance boundaries. The author detected these conflicts and rejected a complete
+cell census. Independent matched-view review confirmed the pair-joining regression;
+manual-reference accuracy remains unmeasured (Supplementary Data 8).
+
 Public neurite-field authors recovered clear process segments while weak
 paths and ambiguous crossings remained difficult. One corrected false nuclear
 splits and traced a segment to the boundary but admitted nearby fragments.
@@ -557,6 +585,18 @@ gaps; lowering the local-response threshold recovered a connection but added
 an unsupported lateral branch, so the author rejected that trial. This provides
 a reproducible stitched development result, with incomplete fine-path coverage
 and uncertain ownership at crowded crossings (Supplementary Data 8).
+
+A retained-context comparison then fitted one analytical percentile mapping
+across all nine process-channel fields, rather than fitting each field separately.
+With local-difference thresholds converted to the new units, reported field
+lengths changed by -0.29% to +3.55%. Matched predecessor/result views retained
+the same supported principal processes and incomplete faint tips; a measured
+crossing's candidate admission was unchanged. Independent recalculation of
+every current per-cell length reproduced all nine field summaries. This
+assisted comparison demonstrates a reproducible shared input transform and
+locally stable geometry, not improved complete-arbor accuracy. Nuclear inputs
+remained untransformed, and overlapping fields were not summed as independent
+replicates or unique-well counts (Supplementary Data 8).
 
 A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
 using scientific settings chosen from six development wells and frozen before
