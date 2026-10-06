@@ -493,39 +493,26 @@ supports recovery of the assay response, not exhaustive segmentation accuracy
 or unseen-dataset generalisation; it is distinct from the prospective experiment
 above (Supplementary Data 8).
 
-A later independent translocation author also completed all 96 wells, with
-incomplete compartments in the inspected fields. Its recorded continuation retained
-18,331 nuclear seed rows and 14,496 defined nuclear-to-cytoplasmic ratios;
-3,835 ratios were undefined because cytoplasmic regions had no pixels.
-Matched native review found a faint nuclear miss and regions confined to
-bright centres. This repeat supports execution coverage and exploratory
-measurements on selected masks, not reliable population counts or unbiased
-translocation estimates. The difference from the earlier repeat illustrates
-why successful execution and response recovery need separate visual assessment
-(Supplementary Data 8).
+Other task-only authors also completed the 96-well plate, but compartment
+coverage varied. One continuation left 3,835 of 18,331 nuclear seed rows without
+a defined ratio because their cytoplasmic regions contained no pixels. Its
+self-directed repair retained 16,589 defined ratios from 18,073 seed rows and
+recovered control Z-prime values of 0.700 and 0.513 for Wortmannin and LY294002,
+respectively. Matched review still found a faint nuclear miss, a plausible
+merged pair and seed-sized cytoplasmic regions. Repair recovered useful assay
+responses without resolving every segmentation failure (Supplementary Data 8).
 
-A self-directed continuation improved dim nuclear admission and local
-cytoplasmic growth, then completed all 96 wells with settings frozen before
-five additional fields were reviewed. It retained 16,589 defined ratios from
-18,073 nuclear seed rows. Independent recalculation reproduced all 24 dose
-summaries and control Z-prime values of 0.700 and 0.513 for the Wortmannin and
-LY294002 blocks, respectively. Both dose series rose at lower concentrations.
-Matched image review still found a faint nuclear miss, a plausible merged pair
-and seed-sized cytoplasmic regions. This same-author development recovered
-useful assay responses on selected masks, while incomplete compartments and
-GFP-dependent selection limited population inference (Supplementary Data 8).
-
-Another independent author completed all 96 wells after repairing object
-separation and preserving missing compartments as undefined measurements.
-It retained 19,732 detected nuclear rows, of which 8,655 (43.9%) qualified for
-the nuclear-to-cytoplasmic ratio; 9,661 lacked supported cytoplasm. Independent
-reading of all object tables reproduced each well's contributing-row mean.
-Conditional Z-prime/V-factor values were 0.885/0.626 for Wortmannin and
-0.262/0.497 for LY294002. Matched reserve review showed nuclear-dominant GFP
-with limited extranuclear support. This complete measurement workflow therefore
-retains useful cohort-specific responses alongside substantial selection loss,
-rather than establishing unbiased whole-population translocation
-(Supplementary Data 8).
+A separate author explicitly qualified cytoplasmic support rather than assigning
+a ratio to every detected nucleus. Of 19,732 nuclear rows, 8,655 (43.9%)
+qualified and 9,661 lacked supported cytoplasm; unsafe ratios remained
+undefined. Independent reading of all object tables reproduced each well's
+contributing-row mean. Conditional Z-prime/V-factor values were 0.885/0.626
+for Wortmannin and 0.262/0.497 for LY294002. Matched reserve review showed
+nuclear-dominant GFP with limited extranuclear support. Across these trials,
+plate completion and control separation could coexist with substantial
+compartment loss. The reported responses therefore describe the contributing
+cohorts, not unbiased whole-population translocation; Supplementary Data 8
+retains each pipeline, coverage denominator and failed predecessor.
 
 Together, the task-only trials demonstrate useful initial choices, local
 recovery and self-diagnosis without reference-score feedback. Their quantitative
