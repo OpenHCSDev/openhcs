@@ -22,7 +22,7 @@ SOURCE_MANIFEST = OUTPUT / "figure3_current_replay_sources.json"
 NEURITE_PIPELINE_SUFFIX = "/neurite/plate"
 # Native screenshot coordinates: x0, y0, x1, y1 of the napari canvas.
 DETAIL_CANVAS_XYXY = (580, 40, 1753, 720)
-OVERVIEW_CANVAS_XYXY = (454, 42, 1752, 720)
+OVERVIEW_CANVAS_XYXY = (594, 55, 2294, 942)
 SOMA_ASSIGNMENT_PADDING = 72
 
 

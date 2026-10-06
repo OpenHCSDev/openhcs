@@ -691,7 +691,7 @@ def architecture():
 
     logos = ROOT / "website/assets/logos"
     sheet.source(logos / "README.md")
-    sheet.panel("A", "Choose how to work", 3, 89)
+    sheet.panel("A", "Choose how to work: UI editors and MCP bridge", 3, 89)
     # Original desktop pictogram; upstream product marks remain unmodified.
     sheet.axis.add_patch(
         Rectangle((8, 77), 14, 8, edgecolor=PURPLE, facecolor=PALE, linewidth=1.5)
@@ -761,25 +761,25 @@ def architecture():
     sheet.text(2.1, 45, "Images", size=11, color=BLUE, rotation=90)
     sheet.text(97, 43, "Functions", size=11, color=ORANGE, rotation=90)
 
-    sheet.panel("C", "Compile, execute and inspect", 3, 19)
-    sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=TEAL)
+    sheet.panel("C", "Separate execution and viewer processes", 3, 19)
+    sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=BLUE)
     sheet.text(
         35,
         36.5,
-        "Workflow to compile",
+        "Submit workflow",
         size=11,
-        color=TEAL,
+        color=BLUE,
         ha="center",
         va="center",
         bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
     )
-    sheet.text(11, 9, "Compile", size=12, weight="bold", ha="center", color=BLUE)
-    sheet.text(11, 5.5, "validate + plan", size=11, ha="center")
-    sheet.arrow((20, 9), (26, 9))
+    sheet.text(11, 9, "ZMQ server", size=12, weight="bold", ha="center", color=BLUE)
+    sheet.text(11, 5.5, "Compile + schedule", size=10.5, ha="center")
+    sheet.arrow((20, 9), (26, 9), both=True, color=BLUE)
     sheet.chip(28, 5, "CPU")
     sheet.chip(45, 5, "GPU")
-    sheet.text(42.5, 15.5, "Support depends on the function", size=11, ha="center")
-    sheet.text(42.5, 2.3, "Workers reused within each run", size=11, ha="center")
+    sheet.text(42.5, 15.5, "Worker processes", size=11, ha="center", weight="bold")
+    sheet.text(42.5, 2.3, "Prepared tasks ↔ progress", size=10.5, ha="center", color=BLUE)
     sheet.arrow((59, 9), (65, 9), color=TEAL)
     sheet.stack(67, 6, 6, 5)
     sheet.axis.add_patch(Rectangle((77, 6), 7, 6, edgecolor=TEAL, facecolor="white"))
@@ -790,8 +790,9 @@ def architecture():
     sheet.asset(logos / "fiji.svg", (93, 6, 5, 6))
     sheet.text(81, 2.3, "Images · ROIs · tables", size=11, ha="center")
     sheet.text(
-        81, 13.3, "napari / Fiji + saved outputs", size=11, ha="center", color=TEAL
+        81, 13.3, "Separate napari / Fiji viewers", size=10.5, ha="center", color=TEAL
     )
+    sheet.text(11, 2.3, "Requests ↔ status", size=10.5, ha="center", color=BLUE)
     sheet.save()
 
 
