@@ -376,6 +376,34 @@ def h002_measurement_first():
         sheet.save()
 
 
+def h002_fresh22_split_repair():
+    """Frozen same-coordinate categorical labels, not a new segmentation."""
+    sources = OUTPUT / "h002_fresh22_sources"
+    receipt_path = sources / "source-receipt.json"
+    receipt = json.loads(receipt_path.read_text())
+    sheet = FigureSheet("h002_fresh22_split_repair", "", 6.4)
+    sheet.source(receipt_path)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")
+    sheet.text(3, 97, "Autonomous repair of a continuous-body split", size=17,
+               weight="bold", va="top")
+    for name, x, y, heading in (
+        ("raw", 3, 53, "A  Unchanged raw image"),
+        ("first-labels", 52, 53, "B  First instance labels"),
+        ("final-labels", 3, 13, "C  Repaired instance labels"),
+        ("final-combined", 52, 13, "D  Repaired labels + raw"),
+    ):
+        path = sources / f"{name}.png"
+        if digest(path) != receipt["captures"][name]["sha256"]:
+            raise ValueError(f"Frozen H002 capture changed: {name}")
+        sheet.text(x, y + 35, heading, size=13, weight="bold")
+        sheet.source_image(path, (x, y, 45, 32), crop=(610, 28, 1250, 448))
+    sheet.text(3, 7, "Same XY viewport, Z index 36; categorical colours are not shared IDs.",
+               size=12, color=MUTED)
+    sheet.text(3, 2, "Local partition repair, not proof of complete volume segmentation.",
+               size=12, color=MUTED)
+    sheet.save()
+
+
 def retina_matched_repair():
     """Same raw presentation before and after a retained retinal repair."""
     source_root = OUTPUT / "retina_fresh16_sources"
