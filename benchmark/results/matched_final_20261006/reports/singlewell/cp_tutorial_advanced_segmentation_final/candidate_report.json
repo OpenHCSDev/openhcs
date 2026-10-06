@@ -1,0 +1,534 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "e7d37d35-6e0b-468b-8642-81daf0aa5bc4",
+    "compile_artifact_id": "6a1102d1-bdf8-4103-96a8-e6ea33711d77",
+    "endpoint_pid": 1314925,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      1314925
+    ],
+    "worker_interval_overlap_seconds": 4.697672367095947,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791300414.7257757,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791300419.423448,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791300414.6746848,
+    "first_axis_started_at_epoch_seconds": 1791300414.7257757,
+    "server_job_completed_at_epoch_seconds": 1791300420.4438138,
+    "server_job_seconds": 5.769129037857056,
+    "execution_seconds": 4.697672367095947,
+    "compile_seconds": 1.4633042812347412,
+    "total_seconds": 7.374070461373776,
+    "first_axis_through_server_completion_seconds": 5.718038082122803,
+    "native_image_count": 0,
+    "candidate_image_count": 0,
+    "native_physical_image_count": 0,
+    "candidate_physical_image_count": 0,
+    "native_output_file_count": 8,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "BBBC022.db",
+        "sha256": "5a225c816cc3cb126c4f5b34028819f0f730d846b0189af8deabe092c46d3641"
+      },
+      {
+        "path": "BBBC022_Cells.properties",
+        "sha256": "5e4709729f18c55c94cd5758b8195a104d94d5bbda8635d787647436d510a2a7"
+      },
+      {
+        "path": "BBBC022_Cytoplasm.properties",
+        "sha256": "7150c3c43d47bd60d22d4d42d480ab2e4adcf08cd4f90302b2f53a729dc3f6c2"
+      },
+      {
+        "path": "BBBC022_Mitochondria.properties",
+        "sha256": "b03cb2f1d94123d3e23bbbc9248c0f984ad10d16e513bfa911f05efbcf990a98"
+      },
+      {
+        "path": "BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "9f4a03e244591a86e6bda2a094843bcfeee31833d89492e0bd87079030a64bf3"
+      },
+      {
+        "path": "BBBC022_Nuclei.properties",
+        "sha256": "dba0cb1c1d7e948aa9d635654c09c49c3191b81b7856824f142117cb2b139a4e"
+      },
+      {
+        "path": "BBBC022_Nucleoli.properties",
+        "sha256": "57d507e476b4dbbe8b4b7f6a38a3564b8bbac1ef2b9de3b2c85381523a0ed349"
+      },
+      {
+        "path": "BBBC022_NucleoliChildObjects.properties",
+        "sha256": "ca66fa87eaec718b0c1f42aa62d6b8e9aa995782ce82ffdc1786eb19fb5646f0"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022.db",
+        "sha256": "ded3a46e0c06508daf1a63cda0566f02c5ae87b4848f48d9336e68fb4b317512"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+        "sha256": "67c99c34da28c429ed4dbbfcee7cd9c6f465e5dff1d4f4b022aa8f16683a6022"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+        "sha256": "35675c65b7af10a7cda91c004de825ec59758ac21c73af79102e5c9daf91387f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+        "sha256": "b26b97ac9ff178897630e3fcf00ca2c9d5b88736e622b4a037f3ef1f2d6fde36"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "02abe9f8f1021e970cb8732b2528503f0431269f8e85d2f45a0ff869614cbb5b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+        "sha256": "c91acc838935779c5ac4d9fa66d1cec3b486410bc3f87456929b6aebd27669f0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+        "sha256": "e0564820ef3c932cf3079fc7707e324c6e9e4e416f0eb77b6c958801da652a80"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+        "sha256": "7fb43675c621ea19b88c4eb5f6fe578ff167c598d1aad572d7b872ac3089f974"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "1010b553-ca76-43ba-b89b-94ca1f432524",
+    "compile_artifact_id": "c43ab69e-fa74-48f8-b399-5b9a9727aea5",
+    "endpoint_pid": 1314925,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      1314925
+    ],
+    "worker_interval_overlap_seconds": 4.433006286621094,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791300438.6121922,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791300443.0451984,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791300438.5579681,
+    "first_axis_started_at_epoch_seconds": 1791300438.6121922,
+    "server_job_completed_at_epoch_seconds": 1791300444.054051,
+    "server_job_seconds": 5.496082782745361,
+    "execution_seconds": 4.433006286621094,
+    "compile_seconds": 1.4208784103393555,
+    "total_seconds": 7.067728290800005,
+    "first_axis_through_server_completion_seconds": 5.441858768463135,
+    "native_image_count": 0,
+    "candidate_image_count": 0,
+    "native_physical_image_count": 0,
+    "candidate_physical_image_count": 0,
+    "native_output_file_count": 8,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "BBBC022.db",
+        "sha256": "c0d07c8b22f0c1247d34a5f05f2e6f1c72e5992cc5239bf32f23ec2e78ee4165"
+      },
+      {
+        "path": "BBBC022_Cells.properties",
+        "sha256": "068ebcd15fc0855c2574e92847f2f1205c21ff1bcaed3e64939696223ac499f0"
+      },
+      {
+        "path": "BBBC022_Cytoplasm.properties",
+        "sha256": "da95b651217ddc38d85f5495fbc8f9216c5423599713d24b038760c85efb4d86"
+      },
+      {
+        "path": "BBBC022_Mitochondria.properties",
+        "sha256": "b495a473f410e4a83d8c79de3a7ce4953ce4ee3db96211b13805561e4ac6f486"
+      },
+      {
+        "path": "BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "4d4c6d40d6695a4c96f6b0ac9d506f59a189c7618820774a3f4fe3fcebf74129"
+      },
+      {
+        "path": "BBBC022_Nuclei.properties",
+        "sha256": "df4d7c10c97e38ba46835943cc305a850c07a3fe7a522deeb72a19666a785905"
+      },
+      {
+        "path": "BBBC022_Nucleoli.properties",
+        "sha256": "e8fd3f0c742240a0d325b0e82fd32c90e3d1446f60db2282955aee03a44a0811"
+      },
+      {
+        "path": "BBBC022_NucleoliChildObjects.properties",
+        "sha256": "38b7c1859c3d8322582c09c4825e55ec50a42e39ae7d3212a877cbe166130057"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022.db",
+        "sha256": "ded3a46e0c06508daf1a63cda0566f02c5ae87b4848f48d9336e68fb4b317512"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+        "sha256": "67c99c34da28c429ed4dbbfcee7cd9c6f465e5dff1d4f4b022aa8f16683a6022"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+        "sha256": "35675c65b7af10a7cda91c004de825ec59758ac21c73af79102e5c9daf91387f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+        "sha256": "b26b97ac9ff178897630e3fcf00ca2c9d5b88736e622b4a037f3ef1f2d6fde36"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "02abe9f8f1021e970cb8732b2528503f0431269f8e85d2f45a0ff869614cbb5b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+        "sha256": "c91acc838935779c5ac4d9fa66d1cec3b486410bc3f87456929b6aebd27669f0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+        "sha256": "e0564820ef3c932cf3079fc7707e324c6e9e4e416f0eb77b6c958801da652a80"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+        "sha256": "7fb43675c621ea19b88c4eb5f6fe578ff167c598d1aad572d7b872ac3089f974"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "6109fcd3-744d-47fe-9a5f-b5b003db5269",
+    "compile_artifact_id": "990b2f70-dda9-447d-8613-dfb6479a65e6",
+    "endpoint_pid": 1314925,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      1314925
+    ],
+    "worker_interval_overlap_seconds": 4.411871671676636,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791300458.4466796,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791300462.8585513,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791300458.3914416,
+    "first_axis_started_at_epoch_seconds": 1791300458.4466796,
+    "server_job_completed_at_epoch_seconds": 1791300463.90193,
+    "server_job_seconds": 5.510488510131836,
+    "execution_seconds": 4.411871671676636,
+    "compile_seconds": 1.4887163639068604,
+    "total_seconds": 7.140599041245878,
+    "first_axis_through_server_completion_seconds": 5.45525050163269,
+    "native_image_count": 0,
+    "candidate_image_count": 0,
+    "native_physical_image_count": 0,
+    "candidate_physical_image_count": 0,
+    "native_output_file_count": 8,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "BBBC022.db",
+        "sha256": "3e824ea022b785a355d4828dc53679567bfac8f979b8d3a539c841bfd89b6272"
+      },
+      {
+        "path": "BBBC022_Cells.properties",
+        "sha256": "107750fba9bb6c9c96ab1623685e8bbae30a7a661fae854dd8d69dff63291ab2"
+      },
+      {
+        "path": "BBBC022_Cytoplasm.properties",
+        "sha256": "bb76b092d97ed51592d5b7d40ef63cb7825cf451d95f004674bdfc336eb89d32"
+      },
+      {
+        "path": "BBBC022_Mitochondria.properties",
+        "sha256": "a18770de349366eb5f257c20a50cbf9c66bf72aade73f3f3a956f43d2bf568c0"
+      },
+      {
+        "path": "BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "7d2c57d65113bfaccce30d4ac28badfbb6ca66cdfcc9c5d5fbb8badfc7786769"
+      },
+      {
+        "path": "BBBC022_Nuclei.properties",
+        "sha256": "dc3f7d20ebecc3a4d8a88caa74a5a234c5e1f6b05dc006c92fa9779925ca102c"
+      },
+      {
+        "path": "BBBC022_Nucleoli.properties",
+        "sha256": "f4b9e01f19000b52a75a3aa8a56e9437813bb11b78d87ed45ff8b286904c2967"
+      },
+      {
+        "path": "BBBC022_NucleoliChildObjects.properties",
+        "sha256": "9fdaa25b69e82233287de4695f6d52c0b935613f7a3e88b5eda117d9ac23642e"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022.db",
+        "sha256": "ded3a46e0c06508daf1a63cda0566f02c5ae87b4848f48d9336e68fb4b317512"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+        "sha256": "67c99c34da28c429ed4dbbfcee7cd9c6f465e5dff1d4f4b022aa8f16683a6022"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+        "sha256": "35675c65b7af10a7cda91c004de825ec59758ac21c73af79102e5c9daf91387f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+        "sha256": "b26b97ac9ff178897630e3fcf00ca2c9d5b88736e622b4a037f3ef1f2d6fde36"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "02abe9f8f1021e970cb8732b2528503f0431269f8e85d2f45a0ff869614cbb5b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+        "sha256": "c91acc838935779c5ac4d9fa66d1cec3b486410bc3f87456929b6aebd27669f0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+        "sha256": "e0564820ef3c932cf3079fc7707e324c6e9e4e416f0eb77b6c958801da652a80"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+        "sha256": "7fb43675c621ea19b88c4eb5f6fe578ff167c598d1aad572d7b872ac3089f974"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "d57e3d3f-f523-4c81-81b2-8369c1eec0da",
+    "compile_artifact_id": "841ef935-cfcb-4e4b-a161-02e74ad94f9f",
+    "endpoint_pid": 1314925,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      1314925
+    ],
+    "worker_interval_overlap_seconds": 4.494657754898071,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791300478.9442272,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791300483.438885,
+        "pid": 1314925,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791300478.8865395,
+    "first_axis_started_at_epoch_seconds": 1791300478.9442272,
+    "server_job_completed_at_epoch_seconds": 1791300484.4660954,
+    "server_job_seconds": 5.579555988311768,
+    "execution_seconds": 4.494657754898071,
+    "compile_seconds": 1.5204100608825684,
+    "total_seconds": 7.2485328344628215,
+    "first_axis_through_server_completion_seconds": 5.5218682289123535,
+    "native_image_count": 0,
+    "candidate_image_count": 0,
+    "native_physical_image_count": 0,
+    "candidate_physical_image_count": 0,
+    "native_output_file_count": 8,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "BBBC022.db",
+        "sha256": "643e2fe48349dc37b6b29a0591d5685925095156d368451cee7f1e6166277e13"
+      },
+      {
+        "path": "BBBC022_Cells.properties",
+        "sha256": "60f7625e56ea245f547eca8aff53c1199eb78279018d1025bba2f977b970b176"
+      },
+      {
+        "path": "BBBC022_Cytoplasm.properties",
+        "sha256": "459286cea2b51bba37763d9622455a6974d8dfe5be69f03bf4b90f5e39cfe656"
+      },
+      {
+        "path": "BBBC022_Mitochondria.properties",
+        "sha256": "8bc5b42325455cf073974c19eb0252c0d12358bb5779f04d3e91011f9df7c95f"
+      },
+      {
+        "path": "BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "892daad75677bf4d7e1248661464efa13a6370f692c2b1640fad4b2d44577d4c"
+      },
+      {
+        "path": "BBBC022_Nuclei.properties",
+        "sha256": "ce3e08472358b30778059b3c4e6ca7dd594ee0f52e599fd025e8e2918de21968"
+      },
+      {
+        "path": "BBBC022_Nucleoli.properties",
+        "sha256": "5e1952171309691872c3cf6f7eb0c20ac45b37e3ce0fabe0bb27a77ab29da6cc"
+      },
+      {
+        "path": "BBBC022_NucleoliChildObjects.properties",
+        "sha256": "88bad5e71222df599c99fbb6124f24619ad4ea906f35894316faec5f8d5334b8"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022.db",
+        "sha256": "ded3a46e0c06508daf1a63cda0566f02c5ae87b4848f48d9336e68fb4b317512"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+        "sha256": "67c99c34da28c429ed4dbbfcee7cd9c6f465e5dff1d4f4b022aa8f16683a6022"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+        "sha256": "35675c65b7af10a7cda91c004de825ec59758ac21c73af79102e5c9daf91387f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+        "sha256": "b26b97ac9ff178897630e3fcf00ca2c9d5b88736e622b4a037f3ef1f2d6fde36"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+        "sha256": "02abe9f8f1021e970cb8732b2528503f0431269f8e85d2f45a0ff869614cbb5b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+        "sha256": "c91acc838935779c5ac4d9fa66d1cec3b486410bc3f87456929b6aebd27669f0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+        "sha256": "e0564820ef3c932cf3079fc7707e324c6e9e4e416f0eb77b6c958801da652a80"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+        "sha256": "7fb43675c621ea19b88c4eb5f6fe578ff167c598d1aad572d7b872ac3089f974"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

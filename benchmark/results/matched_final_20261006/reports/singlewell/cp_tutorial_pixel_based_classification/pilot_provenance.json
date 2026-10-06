@@ -1,0 +1,147 @@
+{
+  "case": "cp_tutorial_pixel_based_classification",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "11d03e78bdee9e80bf05e1a233ae16aa224a399855fd9d608a325127a09ea051",
+  "driver_sha256": "128f5d81011fb5e7207c51c6a32072e10aa62f029e5545cb5ebaf245b3c3041b",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e905e77057e588f48df141634b4eb5b4a765095a",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "cho01.png",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/PixelBasedClassification/images/cho01.png",
+      "size_bytes": 891562,
+      "sha256": "8dda116e3281b02dd227180c1297d63690c8f391b1d539d3cd452b4fc0eaff93"
+    },
+    {
+      "path": "cho01_Probabilities.tiff",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/PixelBasedClassification/images/cho01_Probabilities.tiff",
+      "size_bytes": 349496,
+      "sha256": "ecbacc3e98edca12c5f849c2bd348468abd365690227d5df26b8fdbc35e37dc5"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_pixel_based_classification/native_report.json",
+  "native_reference_report_sha256": "9c19a2f0667e09f3762e919259e1dfca0999363a11d3a705d4b9f2d3daaaac7b",
+  "native_reference_source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/-1/cho01_outlines.png",
+      "sha256": "f79d304a78ee7d881c9e85eca53003e47812d4ce886f4014bfc7c1e7361ce96a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/-1/cho_Cells.csv",
+      "sha256": "0d04a1adfec9141705ec49660f0e2ec07ae447be28fe86402b5f7c5861883709"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/-1/cho_Experiment.csv",
+      "sha256": "b4ac4f94b97750287ff348e1c1cef03ab33c12c8f3e5d9c8c92964db349f27b5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/-1/cho_Image.csv",
+      "sha256": "379aa4b30ea3cbb4d76e5a244ea2012e4a578b1adbcf8446dc2bc55e6dd0527c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/0/cho01_outlines.png",
+      "sha256": "f79d304a78ee7d881c9e85eca53003e47812d4ce886f4014bfc7c1e7361ce96a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/0/cho_Cells.csv",
+      "sha256": "0d04a1adfec9141705ec49660f0e2ec07ae447be28fe86402b5f7c5861883709"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/0/cho_Experiment.csv",
+      "sha256": "ea93b055273240fb4255ae42658b03834b99b846e768886efcca72e74148fc1c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/0/cho_Image.csv",
+      "sha256": "096872900ab2479cf48af27d265b8bf01d5d0ee6b851740e1c75998b08416cf6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/1/cho01_outlines.png",
+      "sha256": "f79d304a78ee7d881c9e85eca53003e47812d4ce886f4014bfc7c1e7361ce96a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/1/cho_Cells.csv",
+      "sha256": "0d04a1adfec9141705ec49660f0e2ec07ae447be28fe86402b5f7c5861883709"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/1/cho_Experiment.csv",
+      "sha256": "d9b4a8caf8ca341cba1d412e50e92192f902ee7cfdb1d19c40c8e80cca9cf760"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/1/cho_Image.csv",
+      "sha256": "51d8d1c192584bd00d441aac370d03ecdc08e7c4e76378a38b32fa31f0e4995a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/2/cho01_outlines.png",
+      "sha256": "f79d304a78ee7d881c9e85eca53003e47812d4ce886f4014bfc7c1e7361ce96a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/2/cho_Cells.csv",
+      "sha256": "0d04a1adfec9141705ec49660f0e2ec07ae447be28fe86402b5f7c5861883709"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/2/cho_Experiment.csv",
+      "sha256": "8491c7497216f92415a4dc3b48830a592d4d3cf527b3fb014c8c78b3eadafb8e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native/2/cho_Image.csv",
+      "sha256": "2efcf36a52597e709a474dbadf25cf661b7cb4e0c7b5a32b851efeb52a24963d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "e34bd9281ebffbcff1008132d11d6576cf13901ee324287ed988ba2752fc3f68"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native_preparation/native_cellprofiler_headless/pixel_based_classification_cho.cppipe",
+      "sha256": "385f023c14177880d5caa55ccdcecfb39a6b9e3344884588c3f558d9a5b00367"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_pixel_based_classification/native_report.json",
+      "sha256": "9c19a2f0667e09f3762e919259e1dfca0999363a11d3a705d4b9f2d3daaaac7b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_pixel_based_classification/native_request.json",
+      "sha256": "a1e59a1fe6ccedd708ad287324cdae8220749a0bf34e43ed3eda73f271dc1818"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_pixel_based_classification/pilot_provenance.json",
+      "sha256": "85f54eef518da2d45a35a3ff27c9126b75266f861ac0032ae4352562badaf178"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "cho01.png",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/PixelBasedClassification/images/cho01.png",
+      "size_bytes": 891562,
+      "sha256": "8dda116e3281b02dd227180c1297d63690c8f391b1d539d3cd452b4fc0eaff93"
+    },
+    {
+      "path": "cho01_Probabilities.tiff",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/PixelBasedClassification/images/cho01_Probabilities.tiff",
+      "size_bytes": 349496,
+      "sha256": "ecbacc3e98edca12c5f849c2bd348468abd365690227d5df26b8fdbc35e37dc5"
+    }
+  ]
+}

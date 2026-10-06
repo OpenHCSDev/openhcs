@@ -1,0 +1,1399 @@
+{
+  "case": "cp_tutorial_3d_monolayer",
+  "wells": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "independent repeated source assignments",
+  "manifest_sha256": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+  "cppipe_sha256": "9fcd24a1be8372b5c2e87637a055032c3362b9ad8729e361095f93d8bbe71838",
+  "driver_sha256": "128f5d81011fb5e7207c51c6a32072e10aa62f029e5545cb5ebaf245b3c3041b",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e905e77057e588f48df141634b4eb5b4a765095a",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "3d_monolayer_xy1_ch0.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch0.tif",
+      "size_bytes": 8607492,
+      "sha256": "63114f614fec95664f718a39cddac58449f0edb5cc31b57584e4ba5b1f4994c7"
+    },
+    {
+      "path": "3d_monolayer_xy1_ch1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch1.tif",
+      "size_bytes": 8607491,
+      "sha256": "a7d9abf632850875c22613c4b740fc01153cf60e9773c16d4a670a97b46e5751"
+    },
+    {
+      "path": "3d_monolayer_xy1_ch2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch2.tif",
+      "size_bytes": 8607491,
+      "sha256": "191754bc7f43856223180483e2737ea93bab4d0cf98b1b2a4c27425e9908147d"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_report.json",
+  "native_reference_report_sha256": "95d0a7edb05a9ae26373c47d463e7d94953b515347e6dee94ccf4a388b469187",
+  "native_reference_source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_Experiment.csv",
+      "sha256": "cd6e248d10b96c3a1a128d9c6922ed2819b6b34a4d91daa00a82b776215aa159"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_Image.csv",
+      "sha256": "dc833cf5b023f09e0ec3a2751ae4614901a0ce34dc06c70e5cf5c28bb6626d2a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W001/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_Experiment.csv",
+      "sha256": "9e195611e898f42eb5d36011380046991bc279bec8e06b1c78837c6c4c18dc5c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_Image.csv",
+      "sha256": "9d4f59f37ec3f557d4b4801e238786e20e5e8e6ea13aa8940f9f6b5f78f9c79e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W002/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_Experiment.csv",
+      "sha256": "59f8ddc925c69d02ce5d084bbcd351406aec4fa9720f1386794704d6f3e4ebd0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_Image.csv",
+      "sha256": "4844625f2d111a334efe89f4c160b7b1b8e2eed6f4e1ebba5a5a87ecb554c01f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W003/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_Experiment.csv",
+      "sha256": "63ddd94b60fc89f5e65474c75099ae040c5ffde97d8d9088a8ac73c4526a9162"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_Image.csv",
+      "sha256": "fc50d48bf7dc31c92440969bd9045000e5f53f54d434af0599e7d7d6b677bdf1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W004/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_Experiment.csv",
+      "sha256": "b57a21fb793595b632c413d3d4a42db6aabf275d5d7afd1008e61c5efcf5ef0c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_Image.csv",
+      "sha256": "18b4f07757a08cb6efed69b0c9ddabefd33d2ccf3c55262db75913dd6b9b59db"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W005/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_Experiment.csv",
+      "sha256": "4f442eb871fae5e823116a8be967365638e5a782d34cfc0e06c01021da4ca3a9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_Image.csv",
+      "sha256": "dfe103f5c393b94c6878e6e44363d7d93e84472c1007cbb6c83723d5701e63e7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W006/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_Experiment.csv",
+      "sha256": "2e34276fd950ecf015ef9ec3ec22ea013c66004426f3e55f2c07b4f9ea71d05f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_Image.csv",
+      "sha256": "3b6ddc89b5538b15e26d5ccb6926e55fd9b036def31441ae78ebde72cc629449"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W007/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_Experiment.csv",
+      "sha256": "75fd5de5d734bd7e23b6b56ebb13f7740e7dea68a2614b0ba51b93f6bba17e63"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_Image.csv",
+      "sha256": "8190e071c171d742b7bca126d04c902db66ba943a349b0ac527b7fee63136850"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W008/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_Experiment.csv",
+      "sha256": "c9fb41863dfb4a0a1d1a6feea0fbd7a4218d6064192db22d43e66244510f47d6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_Image.csv",
+      "sha256": "61646eed5a52a96e6df9d2b5c81e35c83e9ebaa8c925e9c2d29b07fa27a21398"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/-1/W009/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_Experiment.csv",
+      "sha256": "d1c3fbac2e784c8995401b5258426a2c06e6e2968490803cb85fde9f0cbf35a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_Image.csv",
+      "sha256": "d2e16f26bf0b98fdaabbe32fb175faa204b86cf99cbf14a3cdd8f02969fec91d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W001/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_Experiment.csv",
+      "sha256": "a02c847951388b0116af41dda5f083349c10f0bda9254c0fe659f250b8753abc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_Image.csv",
+      "sha256": "bfe0d280ddf7b39c63cb45642d327e15ae8e78653a2b6ac161bb804631a29229"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W002/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_Experiment.csv",
+      "sha256": "2d0eb04c41b0d72e0d0493e37d84f84e6c44c57a7dd6acdae985556b86ce8134"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_Image.csv",
+      "sha256": "d06af41b8cbd050182e5e04936c63d76bb31207c7454f8ec7c0861b7ba4aab9c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W003/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_Experiment.csv",
+      "sha256": "64868aadb3c5877d3c6fffb29e60f258dd005aab1e02f213b796bef8f34ba92f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_Image.csv",
+      "sha256": "a33583898febbcc28dee81710ef14a4e9529bebf7c4baa07f064b7c94ba41b0e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W004/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_Experiment.csv",
+      "sha256": "cdc1040b5f25a83d80473c1046f6c818d3a718b6b4e00e72a98c8d5afcebcaf5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_Image.csv",
+      "sha256": "c146f161cca879858b8723e5fd645d68bb733745d9c1e000920f3320eb315099"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W005/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_Experiment.csv",
+      "sha256": "7241c52cbfbf2fbc44a19eee0c52d242dc05660bccef766c55cd06295dd18fb1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_Image.csv",
+      "sha256": "dc749401aa9f94e0e8c31f587bbfb0e5fa32f858c99be880d2d27108860b4fba"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W006/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_Experiment.csv",
+      "sha256": "a747bf8b3b382723e639184bfb54194df47f9d319e9c7d96d558440ca83118d8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_Image.csv",
+      "sha256": "d822a97c02226e592146805ba71705e3b641cedc044542292bdaa22d0f0a50d0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W007/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_Experiment.csv",
+      "sha256": "4abf898a0dd90bfa1105029724eac6c481129ac4c32f9365d69cd0a69e9911e6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_Image.csv",
+      "sha256": "cdc182e0e0c1564ce05e4435efd1b014bfb48e98d2f3d589bd374383f32b9d06"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W008/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_Experiment.csv",
+      "sha256": "7f62fc971bb9dab40261f4bc24ce3217b99f7c24cf4365a1f70f0e45ae5c645e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_Image.csv",
+      "sha256": "ccb9e04b5f8e2a77267578625ec932082ab491b0c03890bcde8e36521b2512d9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/0/W009/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_Experiment.csv",
+      "sha256": "e23d3b1de3d7193a736bb3192e3b162cf4d25644e7d7dc973c8b9e8a9f291ad8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_Image.csv",
+      "sha256": "ebf3decf325371cad8813b7842f349e618f6509139e8fa57fbba6ec3415a2ad0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W001/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_Experiment.csv",
+      "sha256": "adcbac3bfd21044d13bbe0a970c0026220b7e9d67760a5ac01dbfbb91d149532"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_Image.csv",
+      "sha256": "2c4444f5be9b9cc5c9a3cdeae4857411e96a741ed175189321202a1b6bcf6b4d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W002/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_Experiment.csv",
+      "sha256": "4eae5bf21f71a09c2a43722d88d640b30be3c0d03fdebfaa70b84d54f98290f5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_Image.csv",
+      "sha256": "559ed2d6612809d39baed2b5d759712ffc5efcee47a03f4d47d5665e52a83312"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W003/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_Experiment.csv",
+      "sha256": "2660bbe56e8d55e0dd6023da9abfde13ef0d934e73f56b7326e255064bd2a3f7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_Image.csv",
+      "sha256": "70f732d6eb3d8f97a2038097023ab313b7b28cad82d15fdc1ca6302f8940aac9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W004/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_Experiment.csv",
+      "sha256": "03b1675367c9407517f651b515feec391542d86bbb691ded73a43d1be69acf4f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_Image.csv",
+      "sha256": "3cb718d1c5a4f1b04f3db0703d658949c6e2eeee07f2f9702eff0efca2ad3113"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W005/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_Experiment.csv",
+      "sha256": "c82e488b6b3adfb1e9c838bbc7a33ece1a29e541393aa618bfa8758177faf7a4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_Image.csv",
+      "sha256": "93b51e4435e351e262926287b2671b99c4431e2d7158fcce4bbc93d4dca65f6b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W006/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_Experiment.csv",
+      "sha256": "a841c371ed0b0ba793ae89db32b74415bee0c36fddbbb59df31eee7ccda63c23"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_Image.csv",
+      "sha256": "5074a97d9750b4728ead96035ae5fddc2f8f8bffb6ea027f6178df5cc1f5ece8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W007/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_Experiment.csv",
+      "sha256": "63cf636db65473d8f94edfc1a6ccffc484fdd8015cd3244c991f38480ffb639b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_Image.csv",
+      "sha256": "46b1159898f33b7454c755355e45d0bbf519bbd5140d760859d14c8739330d6d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W008/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_Experiment.csv",
+      "sha256": "81e6326a899ee948f370ef2b64f048b069fa111ee0662e4ebf6ca2c9b9dec060"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_Image.csv",
+      "sha256": "01384360217079ea8398139e5752c5fb8deadd5c4b84076fe57be5fbe67a98ae"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/1/W009/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_Experiment.csv",
+      "sha256": "feb686589a48b53c38b68d705422bbb34989e60409fdbf0f58eb465464648288"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_Image.csv",
+      "sha256": "18d38ce55bf543076dabaa1716cf37c1a04ac59ddaead10603354caf97213040"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W001/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_Experiment.csv",
+      "sha256": "dfbccb90c06234c191672d67a84b2eadb6962413f480e679033bfbae2b08b101"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_Image.csv",
+      "sha256": "6a6cb30ed7d3e9708c3217f904845b40cae862f11c3e8333aa455ebf70b1f34a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W002/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_Experiment.csv",
+      "sha256": "f5c27eb9552343f6cd6afd92864d310b4431c7385650e22054bccb3c4bc70595"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_Image.csv",
+      "sha256": "9b7fe07cbc2295b3d30000e1e2d783b63d050a17626237fe960787174fad03c4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W003/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_Experiment.csv",
+      "sha256": "c1defe67f5862496bc3b7dd33976f3c55a122b5811b58580d0d4a420684477ca"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_Image.csv",
+      "sha256": "000e57d1174700d2f58078257a6f0a07ec9be26e967adb7358365d0de7e433f5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W004/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_Experiment.csv",
+      "sha256": "acbd8560bbc34127320f91950a7fee831c41e35ac0bb3b2017828065abd0c673"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_Image.csv",
+      "sha256": "21e0ef1aa2030c863b65c0d71124fc5850d64e9155f50e4aeaea855d7b2c80dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W005/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_Experiment.csv",
+      "sha256": "b826ea405501470368f33a7575502557c1fb6660aa42d2f27cf34fb912b40dea"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_Image.csv",
+      "sha256": "f15d733c3f019ef55074f45396206c3b75d8c05cefe809dc6b927960fa6e3fe0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W006/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_Experiment.csv",
+      "sha256": "a83740af8152cb9acaeeee70e631b0560f11534425d9663a4327432c3ed06ca9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_Image.csv",
+      "sha256": "3036350369dfada3f411c4b8c40d0a595ca4320760e64106817b4da582907184"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W007/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_Experiment.csv",
+      "sha256": "6a2aabe4a65059bc8a6e6ff1797a040d2fdd3b91d59895f0a0ea8050aa4bf629"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_Image.csv",
+      "sha256": "453611b083c94164f3f202677ecbb8f09f111f287b374e2f41954ed5f1a43898"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W008/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_Cells.csv",
+      "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_Experiment.csv",
+      "sha256": "95f056ecdd777c7a5257dc10a225a86a88be199244e83d8ee3bb6fd0ec51bd3c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_Image.csv",
+      "sha256": "132f9aa6e383b225b1a9805c06bb237763243fef61d1996555125aafa1d04dcd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_Nuclei.csv",
+      "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_downsizedNuclei.csv",
+      "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_erodedDownsizedNuclei.csv",
+      "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_erodedResizedNuclei.csv",
+      "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_xy1_ch0_CellsLabels.tiff",
+      "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native/2/W009/3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+      "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "556169d5baf25f95b770d2b03ec431cc4217bf3f92008d4c0000b13154d3de5e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_preparation/native_cellprofiler_headless/3d_monolayer_final.cppipe",
+      "sha256": "fbbf5bab2b6fd314178d6fccccd1f24ed62e83c9ede141629ed7dbe0b4563ccc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_report.json",
+      "sha256": "95d0a7edb05a9ae26373c47d463e7d94953b515347e6dee94ccf4a388b469187"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_request.json",
+      "sha256": "cb00e54cfc094eba67fef49e3b6e00005298ed2fe65dcbc2897c95aa2bd58927"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/pilot_provenance.json",
+      "sha256": "c15ef0620ce9d57e13816d75f5a1975d00a9323c7c2deb4439239bff1e1e7a53"
+    }
+  ],
+  "native_image_set_count": 9,
+  "native_input_inventory_after": [
+    {
+      "path": "3d_monolayer_xy1_ch0.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch0.tif",
+      "size_bytes": 8607492,
+      "sha256": "63114f614fec95664f718a39cddac58449f0edb5cc31b57584e4ba5b1f4994c7"
+    },
+    {
+      "path": "3d_monolayer_xy1_ch1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch1.tif",
+      "size_bytes": 8607491,
+      "sha256": "a7d9abf632850875c22613c4b740fc01153cf60e9773c16d4a670a97b46e5751"
+    },
+    {
+      "path": "3d_monolayer_xy1_ch2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch2.tif",
+      "size_bytes": 8607491,
+      "sha256": "191754bc7f43856223180483e2737ea93bab4d0cf98b1b2a4c27425e9908147d"
+    }
+  ]
+}
