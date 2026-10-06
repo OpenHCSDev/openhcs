@@ -1326,7 +1326,7 @@ def _partitioned_spreadsheet_export(
             axis_numbers = numbers_by_axis.setdefault(record.key.scope.axis_id, [])
             axis_numbers.extend(number for number in numbers.values() if number not in axis_numbers)
             schema = table.rows.fields
-            declaration = (spec.ref(), table.name)
+            declaration = (spec.ref(), table.runtime_semantic_id)
             declarations_by_axis.setdefault(record.key.scope.axis_id, []).append(declaration)
             previous = schemas_by_spec.setdefault(declaration, schema)
             homogeneous = homogeneous and previous == schema
