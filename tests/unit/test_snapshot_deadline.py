@@ -2,6 +2,7 @@
 
 import pickle
 import queue
+from concurrent.futures import Future
 import time
 
 import pytest
@@ -41,7 +42,7 @@ def test_no_frame_failure_reaches_original_gateway_before_bound_and_cannot_captu
 ):
     app, canvas, server = queued_viewer
     canvas.setUpdatesEnabled(False)
-    reply = queue.Queue(maxsize=1)
+    reply = Future()
 
     class Socket:
         def setsockopt(self, *args):
@@ -61,7 +62,7 @@ def test_no_frame_failure_reaches_original_gateway_before_bound_and_cannot_captu
             server.process_messages()
 
         def recv(self, flags):
-            return reply.get_nowait()
+            return reply.result(timeout=0)
 
     socket = Socket()
 
@@ -79,9 +80,9 @@ def test_no_frame_failure_reaches_original_gateway_before_bound_and_cannot_captu
         def poll(self, timeout):
             self.timeout = timeout
             end = time.monotonic() + timeout / 1000
-            while reply.empty() and time.monotonic() < end:
+            while not reply.done() and time.monotonic() < end:
                 app.processEvents()
-            return [(socket, service_module.zmq.POLLIN)] if not reply.empty() else []
+            return [(socket, service_module.zmq.POLLIN)] if reply.done() else []
 
     poller = Poller()
     monkeypatch.setattr(service_module.zmq, "Poller", lambda: poller)
@@ -100,8 +101,8 @@ def test_no_frame_failure_reaches_original_gateway_before_bound_and_cannot_captu
     assert receipt.render_frame is None and receipt.painted_frame_count == 0
     assert receipt.observation_budget_s <= request.observation_timeout_s
     assert receipt.operation_deadline == socket.message["payload"].operation_deadline
-    assert not tuple(tmp_path.glob("*.png")) and reply.empty()
+    assert not tuple(tmp_path.glob("*.png")) and reply.done()
     canvas.setUpdatesEnabled(True)
     canvas.update()
     app.processEvents()
-    assert reply.empty() and not tuple(tmp_path.glob("*.png"))
+    assert reply.done() and not tuple(tmp_path.glob("*.png"))
