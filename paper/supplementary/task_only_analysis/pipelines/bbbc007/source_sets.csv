@@ -1,0 +1,17 @@
+partition,source_set_id,well,site,official_pair_key
+complete,A01_10,A01,10,A9/A9 p10
+complete,A01_5,A01,5,A9/A9 p5
+complete,A01_7,A01,7,A9/A9 p7
+complete,A01_9,A01,9,A9/A9 p9
+complete,A02_1,A02,1,f113/AS_09125_040701150004_A02f00d
+complete,A03_6,A03,6,f96 (17)/17P1_POS0006
+complete,A03_7,A03,7,f96 (17)/17P1_POS0007
+complete,A03_11,A03,11,f96 (17)/17P1_POS0011
+complete,A03_13,A03,13,f96 (17)/17P1_POS0013
+complete,A03_14,A03,14,f96 (17)/17P1_POS0014
+complete,A04_2,A04,2,f9620/20P1_POS0002
+complete,A04_5,A04,5,f9620/20P1_POS0005
+complete,A04_7,A04,7,f9620/20P1_POS0007
+complete,A04_8,A04,8,f9620/20P1_POS0008
+complete,A04_10,A04,10,f9620/20P1_POS0010
+complete,A04_11,A04,11,f9620/20P1_POS0011

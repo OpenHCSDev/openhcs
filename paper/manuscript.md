@@ -342,7 +342,7 @@ are identified separately from fresh autonomous results.
 
 ![Native autonomous repair, paired scores and complete coverage.](figures/slas/task_only_visual.png){width=6in}
 
-\(A) Matched H001 raw and first/final overlays show an elongated-body split repaired without reference feedback. Screenshots are clipped/scaled, not retouched; colours do not identify objects across attempts. Supplementary Figure 9 retains wider views and capture records. (B) Whole-image H001 object F1 against a notebook-derived reference: excess predictions fall from four to two, with 59/64 matches and five misses unchanged. (C) BBBC039 pooled object F1 on the same three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line is pooled, not mean field F1. Matching requires intersection over union at least 0.5. First is the initial completed scientific prediction (H001 a01; final a04). These comparisons do not establish first-200 accuracy, an isolated skill effect or held-out generalization.
+\(A) Matched H001 raw images and initial/final overlays show correction of a split elongated nucleus without reference feedback. (B) Whole-image agreement with a notebook-derived reference: excess predictions fall from four to two, while 59 of 64 reference objects remain matched and five remain missed. (C) BBBC039 pooled object F1 on three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line denotes pooled F1 rather than the mean of field scores; matching requires intersection over union of at least 0.5. Initial results precede the author's self-directed revisions. Colours do not identify objects across attempts. Wider views and capture records are retained in Supplementary Figure 9. These development comparisons do not establish held-out generalization or isolate the contribution of the skill.
 
 The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
 run plotted above: 61 fields improved, 123 decreased and 16 were unchanged
@@ -353,13 +353,13 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 ![Matched first/final nuclear overlays and a final-only faint-pair failure control.](figures/slas/h003_native_repair.png){width=6in}
 
-\(A) Matched raw DNA and first/final overlays show separation of a joined pair; diffuse support remains in the lower region. A compact neighbour stays separate. (B) Final raw, result-only and combined views retain a faint merge. This fresh-context author revised its own pipeline without reference feedback. The first complete prediction follows technical repair; these local witnesses do not establish exhaustive accuracy or validated actin boundaries. DNA windows are 0–255 (A) and 0–151 (B), gamma 1, final ROI opacity 0.7. Colours are not cross-candidate identities. Original screenshots are clipped/scaled without pixel retouching; physical calibration is unverified. Supplementary Data 8 retains exact capture and crop identities. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
+\(A) Matched raw DNA images and initial/final overlays show separation of a joined nuclear pair while a compact neighbour remains separate. Diffuse signal remains in the lower region. (B) Final raw, segmentation-only and combined views reveal a faint pair that remains merged. The autonomous author revised its pipeline without reference feedback. These examples demonstrate a useful correction and a remaining failure, not exhaustive detection accuracy or validation of actin-defined cell boundaries. Contrast windows differ between regions to reveal their local signal; colours do not identify objects across attempts. Capture and display settings are retained in Supplementary Data 8. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 
 ### Figure 7. Autonomous retinal repair preserves a neighbouring pair
 
 ![Matched whole-field and regional retinal raw images and final outlines.](figures/slas/retinal_fresh_native.png){width=5.3in}
 
-\(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author caught a pair-merging regression and retained both gains in its final 102-instance candidate. Diffuse regions remain uncertain (Supplementary Figure 11); manual-reference accuracy is unmeasured. Raw RBPMS uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, giving different brightness at matched positions. Original screenshots are clipped/scaled without retouching. Source: user-provided R0010 retina; physical calibration unverified. Supplementary Data 8 retains exact captures and settings.
+\(A) Whole-field detections against heterogeneous retinal background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author recognised a pair-merging regression and retained both corrections in its final 102-instance segmentation. Diffuse regions remain uncertain (Supplementary Figure 11), and accuracy against a manual reference is unmeasured. Raw and outlined views use different intensity stretches, so brightness differs at matched positions. Supplementary Data 8 retains the original captures and display settings. Source: user-provided R0010 RBPMS-labelled retina; physical calibration is unverified.
 
 ### Figure 8. Autonomous recovery of the translocation response
 
@@ -379,25 +379,19 @@ Supplementary Data 8.
 
 ![Same-run saved nuclear ROI extents in XY, original XZ/YZ centre views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
 
-\(A) Saved same-run nuclear ROI extents over raw signal, reopened through MCP
-for native presentation at Z index 34; categorical fills and edges show nuclear
-support, not validated cellular boundaries. (B,C) Original retained native
-image/Points views at Y index 157 (XZ) and X index 80 (YZ). All indices are
-voxel indices. Green points in B,C are the original fractional predicted
-centres, not added annotations. Out-of-plane Points are hidden, so a body
-without a visible point in one slice is not necessarily missed. Crops are
-scaled without image or point retouching. \(D) Independent postfreeze
-one-to-one matching recovered 14 of
-15 manual centres within 10 voxels and all 15 within the predeclared 30-voxel
-primary distance. Mean matched error at the primary distance was 4.80 voxels;
-11 of 26 predictions were unmatched to annotations whose coverage was not
-established as exhaustive. No new scorer or scientific execution was used to
-assemble the figure. The first scientific settings were unchanged through a
-technical rerun; this is localisation evidence, not boundary accuracy or a
-complete biological census. A lobed chromatin complex remains unresolved in
-the broader review. Physical calibration is unverified. Source: Allen Institute
-for Cell Science cells3d, through the pinned Haase notebook-derived task.
-Supplementary Data 8 retains capture hashes, crop coordinates and evaluation.
+\(A) Predicted nuclear regions over raw signal in the XY plane at Z index 34.
+(B,C) Predicted centres in XZ and YZ views at Y index 157 and X index 80,
+respectively. Indices and distances are in voxels. Green points are the author's
+predictions; out-of-plane points are hidden, so a nucleus without a visible
+point in one slice is not necessarily missed. \(D) Independent evaluation after
+the pipeline was frozen matched 14 of 15 manual centres within 10 voxels and
+all 15 within the predeclared 30-voxel primary distance. Mean matched error
+was 4.80 voxels. Eleven of 26 predictions were unmatched, but the annotations
+were not established as exhaustive. These results support nuclear localisation,
+not validated cell boundaries or a complete biological census; a lobed
+chromatin complex remains unresolved. Physical calibration is unverified.
+Source: Allen Institute for Cell Science cells3d, through the Haase
+notebook-derived task. Supplementary Data 8 retains captures and evaluation details.
 
 ### Figure 10. Nuclear detection improves while cytoplasmic boundaries remain uncertain
 
