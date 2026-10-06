@@ -991,6 +991,18 @@ class SourceVoxelSpacing:
         return values[0] if len(unique) == 1 and None not in unique else None
 
     @classmethod
+    def common(cls, spacings: Iterable["SourceVoxelSpacing"]) -> "SourceVoxelSpacing":
+        """Return a shared declared frame; absent/conflicting sources imply none.
+
+        Numeric metadata compatibility values never establish a source frame.
+        Individual payload declarations remain authoritative when frames differ.
+        """
+        from openhcs.core.source_spatial_domain import CommonRuntimeValue
+
+        spacing = CommonRuntimeValue.from_values(spacings).single
+        return cls() if spacing is None else spacing
+
+    @classmethod
     def metadata_pixel_size(cls, spacings: Iterable["SourceVoxelSpacing"]) -> float:
         """Numeric legacy metadata view; physical artifacts validate coordinates.
 
@@ -1023,19 +1035,6 @@ class SourceVoxelSpacing:
                 "pixel and relative analysis coordinates cannot provide it."
             )
         return coordinates
-
-    @classmethod
-    def resolve_physical_pixel_size(
-        cls,
-        spacings: Iterable["SourceVoxelSpacing"],
-        *,
-        legacy_metadata_pixel_size: float,
-    ) -> float:
-        """Explicit coordinates govern calibration; unconfigured formats retain legacy behavior."""
-        declared = tuple(spacings)
-        if any(spacing.has_values for spacing in declared):
-            return cls.require_physical_pixel_size(declared)
-        return legacy_metadata_pixel_size
 
     def as_source_metadata_value(self) -> str:
         return ",".join(f"{value:.17g}" for value in self.values_zyx)

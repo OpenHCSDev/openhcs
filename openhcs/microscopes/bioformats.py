@@ -16,6 +16,7 @@ from openhcs.core.source_bindings import (
     source_bindings_defaults_to_base,
 )
 from openhcs.core.source_projection import SourcePlaneDataset
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.virtual_workspace_metadata import (
     AtomicMetadataWriter,
     FIELDS,
@@ -125,7 +126,24 @@ class BioFormatsMetadataHandler(MetadataHandler):
         return (1, 1)
 
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
+        return SourceVoxelSpacing.require_physical_pixel_size(
+            self._source_voxel_spacings(plate_path)
+        )
+
+    def get_metadata_pixel_size(self, plate_path: Union[str, Path]) -> float:
+        """Retain the dataset's numeric view without asserting physical units."""
         return self.source_dataset(plate_path).pixel_size
+
+    def source_voxel_spacing(self, plate_path: Union[str, Path]) -> SourceVoxelSpacing:
+        return SourceVoxelSpacing.common(self._source_voxel_spacings(plate_path))
+
+    def _source_voxel_spacings(
+        self, plate_path: Union[str, Path]
+    ) -> tuple[SourceVoxelSpacing, ...]:
+        return tuple(
+            SourceVoxelSpacing.from_source_metadata(candidate.metadata)
+            for candidate in self.source_dataset(plate_path).candidates
+        )
 
     def component_value_set(
         self,
