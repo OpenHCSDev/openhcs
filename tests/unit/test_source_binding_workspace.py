@@ -49,6 +49,8 @@ from openhcs.microscopes.openhcs import (
 )
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionCache,
+    VirtualWorkspaceSourceProjectionAuthority,
+    VirtualWorkspacePathLookup,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
@@ -67,6 +69,94 @@ def _write_tiff_stack(path: Path, values: tuple[int, ...]) -> None:
 def _filemanager() -> FileManager:
     ensure_storage_registry()
     return FileManager(dict(storage_registry))
+
+
+@pytest.mark.parametrize("selection,expected_sites", ((None, tuple(range(1, 10))), (7, (7,)), (3, (3,))))
+def test_prepared_workspace_admits_declared_source_universe_without_rewriting_provenance(
+    tmp_path, selection, expected_sites,
+):
+    source = tmp_path / "source"
+    source.mkdir()
+    files = tuple(source / f"A01_s{site:03}_w{channel}.tif"
+                  for site in range(1, 10) for channel in (1, 2))
+    for path in files:
+        _write_tiff_stack(path, (11,))
+    filemanager = _filemanager()
+    workspace = tmp_path / "prepared"
+    materialization = SourceBindingWorkspaceProjector(
+        SourceBindingsConfig(metadata_rules=(MetadataExtractionRule(
+            source=MetadataSource.FILE_NAME,
+            pattern=r"(?P<well>A\d+)_s(?P<site>\d+)_w(?P<channel>\d+)",
+        ),)),
+        parser=SourceSchemaFilenameParser(),
+    ).materialize(source, workspace, filemanager=filemanager,
+                  source_backend=Backend.DISK, workspace_backend=Backend.DISK,
+                  source_files=files)
+    (workspace / FIELDS.DEFAULT_SUBDIRECTORY).mkdir(exist_ok=True)
+    original_bytes = materialization.metadata_path.read_bytes()
+    config = SourceBindingsConfig(source_filters=() if selection is None else (
+        SourceFilterClause(subject=SourceFilterSubject.FILE,
+                          match_type=SourceFilterMatchType.CONTAINS,
+                          value=f"_s{selection:03}_"),
+    ))
+    handler = create_microscope_handler("auto", workspace, filemanager,
+                                        source_bindings_config=config)
+    from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+    assert isinstance(handler, OpenHCSMicroscopeHandler)
+    handler.initialize_workspace(workspace, filemanager)
+    cache = VirtualWorkspaceSourceProjectionCache()
+    full = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        plate_path=workspace, metadata_handler=handler.metadata_handler,
+        filemanager=filemanager, cache=cache,
+    ).projection_or_empty()
+    selected = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        plate_path=workspace, metadata_handler=handler.metadata_handler,
+        filemanager=filemanager, cache=cache, source_bindings=config,
+    ).projection_or_empty()
+    assert set(selected.component_values(AllComponents.SITE)) == set(map(str, expected_sites))
+    assert set(selected.component_values(AllComponents.CHANNEL)) == {"1", "2"}
+    assert len(selected.pipeline_start_files()) == len(expected_sites) * 2
+    for path in selected.pipeline_start_files():
+        lookup = VirtualWorkspacePathLookup.from_paths(path, path)
+        assert selected.source_ref_for(lookup) is full.source_ref_for(lookup)
+        assert selected.require_source_projection_for(lookup) is full.require_source_projection_for(lookup)
+        assert selected.source_metadata_for(lookup) == full.source_metadata_for(lookup)
+    assert len(full.pipeline_start_files()) == 18
+    from openhcs.core.context.processing_context import ProcessingContext
+    context = ProcessingContext(filemanager=filemanager, axis_id="A01")
+    context.plate_path = workspace
+    context.microscope_handler = handler
+    runtime_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+        context,
+    ).projection_or_empty()
+    assert runtime_projection.pipeline_start_files() == selected.pipeline_start_files()
+    from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    orchestrator = PipelineOrchestrator(
+        workspace, pipeline_config=PipelineConfig(
+            source_bindings_config=LazySourceBindingsConfig(source_filters=config.source_filters),
+        ),
+    ).initialize()
+    assert orchestrator.source_workspace_files() == selected.pipeline_start_files()
+    assert set(orchestrator.get_component_keys(AllComponents.SITE)) == set(map(str, expected_sites))
+    assert orchestrator.get_component_keys(AllComponents.SITE, [str(expected_sites[0])]) == [str(expected_sites[0])]
+    assert orchestrator.get_component_keys(AllComponents.SITE, ["99"]) == []
+    from tests.unit.test_completed_output_publication_lifecycle import _facts
+    context.record_completed_step_outputs(_facts(workspace))
+    with_output = VirtualWorkspaceSourceProjectionAuthority.from_context(context).projection_or_empty()
+    assert set(with_output.pipeline_start_files()) == {
+        *selected.pipeline_start_files(), str(workspace / "images/saved.tif"),
+    }
+    assert materialization.metadata_path.read_bytes() == original_bytes
+    with pytest.raises(ValueError, match="matched no prepared workspace sources"):
+        VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+            plate_path=workspace, metadata_handler=handler.metadata_handler,
+            filemanager=filemanager, source_bindings=SourceBindingsConfig(source_filters=(
+                SourceFilterClause(subject=SourceFilterSubject.FILE,
+                                  match_type=SourceFilterMatchType.CONTAINS,
+                                  value="_s099_"),
+            )),
+        ).projection_if_available()
 
 
 @pytest.mark.parametrize(

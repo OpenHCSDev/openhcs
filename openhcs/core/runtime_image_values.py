@@ -778,14 +778,37 @@ class ImagePayloadMetadata(
             )
         return normalized
 
-    def spatial_axes_yx(self, data: Any) -> tuple[int, int] | None:
-        """Return Y/X axes after excluding the declared channel axis."""
+    def non_channel_axes(self, data: Any) -> tuple[int, ...]:
+        """Return pixel axes excluding this payload's declared channel axis."""
         ndim = image_payload_geometry(data).ndim
         channel_axis = self.normalized_source_channel_axis(data)
-        candidate_axes = tuple(axis for axis in range(ndim) if axis != channel_axis)
+        return tuple(axis for axis in range(ndim) if axis != channel_axis)
+
+    def spatial_axes_yx(self, data: Any) -> tuple[int, int] | None:
+        """Return Y/X axes after excluding the declared channel axis."""
+        candidate_axes = self.non_channel_axes(data)
         if len(candidate_axes) < 2:
             return None
         return candidate_axes[-2], candidate_axes[-1]
+
+    def spatial_axes(self, data: Any) -> tuple[int, ...]:
+        """Project the declared intrinsic spatial domain onto current pixels.
+
+        Source cohorts can add leading SITE, time or binding axes without
+        adding a physical dimension. Channel axes likewise do not belong to
+        the spatial domain. Intrinsic Y/X or Z/Y/X axes are the trailing
+        non-channel axes, including an assembled Z cohort admitted by the
+        original volume-domain owner.
+        """
+        candidate_axes = self.non_channel_axes(data)
+        spatial_rank = self.source_spatial_domain.spatial_rank
+        if len(candidate_axes) < spatial_rank:
+            raise ValueError(
+                f"Declared spatial rank {spatial_rank} exceeds payload rank "
+                f"{image_payload_geometry(data).ndim} after excluding its "
+                "source channel axis."
+            )
+        return candidate_axes[-spatial_rank:]
 
     def is_declared_source_channel_plane(self, data: Any) -> bool:
         """Return whether this payload declares one channel-bearing image plane."""
