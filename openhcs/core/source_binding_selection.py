@@ -13,7 +13,6 @@ from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
@@ -1832,10 +1831,6 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         )
 
     @property
-    def requires_full_pipeline_source_universe(self) -> bool:
-        return self.plan.source_universe_plan.requires_full_pipeline_source_universe
-
-    @property
     def uses_pipeline_start_binding_origin(self) -> bool:
         return self.plan.source_universe_plan.uses_pipeline_start_binding_origin
 
@@ -1887,9 +1882,6 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
             )
         )
 
-    def physical_full_universe_backend(self) -> Backend:
-        return PipelineStartListingBackendPolicy.backend_for(self.source_backend)
-
 
 @dataclass(frozen=True, slots=True)
 class StepInputSourceUniverseRequest(SourceUniverseRequest):
@@ -1932,25 +1924,6 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
 
     universe_request_kind = "pipeline_start"
 
-    def source_universe(self) -> SourceFileUniverse:
-        """Resolve the declared original-source scope independently of step input."""
-        if not self.requires_full_pipeline_source_universe:
-            return SourceUniverseRequest.source_universe(self)
-        if self.source_projection is not None:
-            return SourceFileUniverse(
-                self.source_projection.pipeline_start_files(), self.source_backend,
-            )
-        backend = self.physical_full_universe_backend()
-        return SourceFileUniverse(
-            files=tuple(
-                str(path)
-                for path in self.context.filemanager.list_files(
-                    str(self.context.input_dir), backend.value, recursive=True,
-                )
-            ),
-            backend=backend,
-        )
-
     def contribute_runtime_state(
         self,
         state: SourceUniverseRuntimeState,
@@ -1975,51 +1948,3 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
             files=projection.pipeline_start_files(axis_id=self.plan.axis_id),
             backend=self.source_backend,
         )
-
-
-class PipelineStartListingBackendPolicy(
-    EnumKeyedStrategyMixin[Backend],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Backend policy for full pipeline-start file listing."""
-
-    __registry_key__ = "backend_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "source_backend"
-    __enum_label_attr__ = "backend_label"
-
-    source_backend: ClassVar[Backend | None] = None
-    backend_label: ClassVar[str | None] = None
-
-    @classmethod
-    def backend_for(cls, source_backend: Backend) -> Backend:
-        strategy_type = cls.__registry__.get(source_backend.value)
-        if strategy_type is None:
-            return source_backend
-        return strategy_type().listing_backend()
-
-    @abstractmethod
-    def listing_backend(self) -> Backend:
-        """Return the backend used for recursive full-universe listing."""
-
-
-class DiskPipelineStartListingBackendPolicy(PipelineStartListingBackendPolicy):
-    """Pipeline-start fan-out policy that lists disk files."""
-
-    def listing_backend(self) -> Backend:
-        return Backend.DISK
-
-
-class MemoryPipelineStartListingBackendPolicy(DiskPipelineStartListingBackendPolicy):
-    """Memory-backed pipeline-start fan-out lists disk files."""
-
-    source_backend = Backend.MEMORY
-
-
-class VirtualWorkspacePipelineStartListingBackendPolicy(
-    DiskPipelineStartListingBackendPolicy
-):
-    """Virtual-workspace pipeline-start fan-out lists disk files."""
-
-    source_backend = Backend.VIRTUAL_WORKSPACE

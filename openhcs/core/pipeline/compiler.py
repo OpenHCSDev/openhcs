@@ -62,7 +62,10 @@ from openhcs.core.pipeline.compilation_session import (
     ResolvedPipelineDefinition,
     resolve_declared_dataclass_paths,
 )
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source_workspace_projection import (
+    DEFAULT_SOURCE_PROJECTION_CACHE,
+    VirtualWorkspaceSourceProjection,
+)
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
@@ -1662,8 +1665,9 @@ class PipelineCompiler:
                     ),
                 ),
                 source_projections_by_axis=(
-                    orchestrator.source_workspace_projection().partition_by_axes(
-                        axis_values_to_process
+                    DEFAULT_SOURCE_PROJECTION_CACHE.partition_by_axes(
+                        orchestrator.source_workspace_projection(),
+                        axis_ids=axis_values_to_process,
                     )
                 ),
                 enable_visualizer_override=enable_visualizer_override,

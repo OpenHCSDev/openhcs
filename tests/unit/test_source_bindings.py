@@ -937,7 +937,6 @@ def test_pipeline_start_binding_does_not_force_full_source_universe():
     universe_plan = CompiledSourceUniversePlan.from_source_binding_plan(binding_plan)
 
     assert universe_plan.uses_pipeline_start_binding_origin
-    assert not universe_plan.requires_full_pipeline_source_universe
 
 
 def test_matched_image_set_without_match_plan_uses_selector_compatible_sources():

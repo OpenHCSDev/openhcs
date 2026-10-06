@@ -883,7 +883,9 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
     def _source_binding_load_universe(self) -> tuple[str, ...]:
         """Return loadable files available for source image-set expansion."""
         source_projection = (
-            self.source_workspace_projection_authority().projection_if_available()
+            self.source_workspace_projection_authority().projection_if_available(
+                axis_id=self.execution_plan.axis_id,
+            )
         )
         request = SourceUniverseRequest.from_context(
             context=self.context,

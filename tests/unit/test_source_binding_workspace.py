@@ -154,6 +154,13 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     other.microscope_handler = handler
     assert context.runtime_source_workspace_projection_authority.cache is other.runtime_source_workspace_projection_authority.cache is cache
     assert other.runtime_source_workspace_projection_authority.projection_or_empty().pipeline_start_files() == selected.pipeline_start_files()
+    if selection is None:
+        compiled_views = cache.partition_by_axes(full, axis_ids=("A01",))
+        assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+        handler.metadata_handler.invalidate_metadata_cache()
+        replacement = context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01")
+        assert replacement is not compiled_views["A01"]
+        assert replacement.source_metadata_by_path == compiled_views["A01"].source_metadata_by_path
     from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     orchestrator = PipelineOrchestrator(

@@ -704,13 +704,22 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
         default_factory=dict, compare=False, repr=False,
     )
 
-    def filtered_by_axis(self, *, axis_id: str) -> VirtualWorkspaceSourceProjection:
-        """Derive each axis view from this retained document exactly once."""
-        filtered = self.axis_filtered_projections.get(axis_id)
-        if filtered is None:
-            filtered = self.projection.filtered_by_axis(axis_id=axis_id)
-            self.axis_filtered_projections[axis_id] = filtered
-        return filtered
+    def partition_by_axes(
+        self, axis_ids: Sequence[str],
+    ) -> Mapping[str, VirtualWorkspaceSourceProjection]:
+        """Derive missing axis views together from this retained document."""
+        selected = tuple(dict.fromkeys(axis_ids))
+        missing = tuple(
+            axis_id for axis_id in selected
+            if axis_id not in self.axis_filtered_projections
+        )
+        if missing:
+            self.axis_filtered_projections.update(
+                self.projection.partition_by_axes(missing)
+            )
+        return MappingProxyType({
+            axis_id: self.axis_filtered_projections[axis_id] for axis_id in selected
+        })
 
 
 @dataclass(slots=True)
@@ -721,6 +730,7 @@ class VirtualWorkspaceSourceProjectionCache:
         str,
         VirtualWorkspaceSourceProjectionCacheEntry,
     ] = field(default_factory=dict)
+
     def projection_for(
         self,
         plate_path: Path,
@@ -753,10 +763,19 @@ class VirtualWorkspaceSourceProjectionCache:
         """
         if axis_id is None:
             return projection
+        return self.partition_by_axes(projection, axis_ids=(axis_id,))[axis_id]
+
+    def partition_by_axes(
+        self,
+        projection: VirtualWorkspaceSourceProjection,
+        *,
+        axis_ids: Sequence[str],
+    ) -> Mapping[str, VirtualWorkspaceSourceProjection]:
+        """Share admitted axis views between compilation and runtime queries."""
         cached = self.projections_by_plate_path.get(projection.workspace_root)
         if cached is None or cached.projection is not projection:
-            return projection.filtered_by_axis(axis_id=axis_id)
-        return cached.filtered_by_axis(axis_id=axis_id)
+            return projection.partition_by_axes(axis_ids)
+        return cached.partition_by_axes(axis_ids)
 
 
 # One process-level default: the projection authority owns its cache, so
