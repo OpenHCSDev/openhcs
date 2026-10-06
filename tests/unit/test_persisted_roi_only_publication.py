@@ -36,13 +36,32 @@ from openhcs.core.steps.function_outputs import (
     ProducedImageMetadataCapability,
     RuntimeArtifactMetadataTarget,
 )
-from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG, MetadataWriteError
+from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, METADATA_CONFIG, MetadataWriteError
 from openhcs.processing.materialization.core import (
     MaterializationSpec,
     _WRITERS_BY_OPTIONS,
     prepare_materialization,
 )
 from openhcs.processing.materialization.options import FileBundleOptions
+
+
+def _publish_saved_step(context, plan, *, artifact_materializations=()):
+    """Exercise the receiving transaction with this step's actual saved facts."""
+    facts = OpenHCSMetadataTarget.observe_for_step(
+        context, plan, artifact_materializations=artifact_materializations
+    )
+    for metadata_path in dict.fromkeys(
+        METADATA_CONFIG.metadata_path(target.plate_root) for target in facts
+    ):
+        entries = {
+            target: value for target, value in facts.items()
+            if METADATA_CONFIG.metadata_path(target.plate_root) == metadata_path
+        }
+        AtomicMetadataWriter().reconcile_completed_plate(
+            metadata_path,
+            {target: context for target in entries if target.create_openhcs_metadata},
+            produced_entries_by_target=entries,
+        )
 
 
 @pytest.fixture
@@ -205,7 +224,7 @@ def test_saved_roi_only_batch_publishes_and_reconciles_without_rendering(
         artifact_materializations=(outcome,),
     )
     assert tuple(target.output_dir for target in targets) == (plate / destination,)
-    OpenHCSMetadataTarget.write_for_step(
+    _publish_saved_step(
         publication_context, plan, artifact_materializations=(outcome,)
     )
     assert result_paths(plate, publication_context) == (output.path,)
@@ -274,19 +293,19 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
         publication_context, plan, artifact_materializations=(outcome,),
     )
     assert target.produced_projection_entries(publication_context, plan).entries == {}
-    OpenHCSMetadataTarget.write_for_step(
+    staged = OpenHCSMetadataTarget.observe_for_step(
         publication_context, plan, artifact_materializations=(outcome,),
     )
     metadata_path = METADATA_CONFIG.metadata_path(plate)
-    snapshot = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][destination]
-    assert snapshot[FIELDS.IMAGE_FILES] == []
-    assert snapshot[FIELDS.SOURCE_PROJECTION] == []
+    assert not metadata_path.exists()
     assert table_output.path == str(plate / destination / "measurements.csv")
     assert (plate / destination / "measurements.csv").read_bytes() == b"ObjectNumber,Area\n1,6\n"
-    before = metadata_path.read_bytes()
     with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
-        target.write(publication_context)  # Actual final reconciliation remains strict.
-    assert metadata_path.read_bytes() == before
+        AtomicMetadataWriter().reconcile_completed_plate(
+            metadata_path, {target: publication_context},
+            produced_entries_by_target=staged,
+        )
+    assert not metadata_path.exists()
 
     virtual_path = str(pending.relative_to(plate))
     projection = SourceArtifactProjection(

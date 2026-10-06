@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import ClassVar, TypeVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 import numpy as np
 from metaclass_registry import (
@@ -87,6 +87,9 @@ from openhcs.core.virtual_workspace_metadata import (
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 
+if TYPE_CHECKING:
+    from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
+
 logger = logging.getLogger(__name__)
 StreamPayload = RuntimeArrayData
 
@@ -117,7 +120,7 @@ def finalize_function_step_outputs(
         MaterializedImageOutputWriter.write_if_needed(context, plan)
         StreamOutputsAuthority.stream_outputs(context, plan)
         materializations = ArtifactMaterializationTargetPlan.materialize(context, plan)
-        OpenHCSMetadataTarget.write_for_step(
+        projection_entries = OpenHCSMetadataTarget.observe_for_step(
             context, plan, artifact_materializations=materializations
         )
     else:
@@ -141,15 +144,18 @@ def finalize_function_step_outputs(
             lambda: ArtifactMaterializationTargetPlan.materialize(context, plan),
             plan,
         )
-        _profile_finalization_phase(
+        projection_entries = _profile_finalization_phase(
             "finalize_openhcs_metadata",
-            lambda: OpenHCSMetadataTarget.write_for_step(
+            lambda: OpenHCSMetadataTarget.observe_for_step(
                 context, plan, artifact_materializations=materializations
             ),
             plan,
         )
-    return StepExecutionObservation.combine(
-        item.observation(plan, context) for item in materializations
+    return replace(
+        StepExecutionObservation.combine(
+            item.observation(plan, context) for item in materializations
+        ),
+        source_projection_entries_by_target=projection_entries,
     )
 
 
@@ -645,6 +651,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
     __key_extractor__ = staticmethod(extract_key_from_class_name)
     declaration_key: ClassVar[str | None] = None
     is_main: ClassVar[bool] = False
+    create_openhcs_metadata: bool = field(default=True, kw_only=True)
 
     output_dir: Path
     backend: str
@@ -689,7 +696,8 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             for declaration in cls.__registry__.values()
             if (owner := declaration.from_execution(context, plan)) is not None
             for target in replace(
-                owner, artifact_materializations=artifact_materializations
+                owner, artifact_materializations=artifact_materializations,
+                create_openhcs_metadata=plan.create_openhcs_metadata,
             ).production_targets(context, plan)
         )
 
@@ -812,7 +820,8 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             raise ValueError("OpenHCS metadata requires a file manager.")
         target = type(self).from_plan(plan)
         if target is None or self not in replace(
-            target, artifact_materializations=self.artifact_materializations
+            target, artifact_materializations=self.artifact_materializations,
+            create_openhcs_metadata=self.create_openhcs_metadata,
         ).production_targets(context, plan):
             raise ValueError("Produced metadata plan does not own this output target.")
         records = self.produced_records(context, plan)
@@ -1024,34 +1033,31 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         )
 
     @classmethod
-    def write_for_step(
+    def observe_for_step(
         cls,
         context: ProcessingContext,
         plan: CompiledStepPlan,
         *,
         artifact_materializations: tuple[MaterializedRuntimeArtifact, ...] = (),
-    ) -> None:
+    ) -> Mapping[OpenHCSMetadataTarget, VirtualWorkspaceSourceProjectionEntries]:
+        """Retain exact saved-image facts before payload release, without JSON I/O."""
+        observations = {}
         for target in cls.for_execution(
             context, plan, artifact_materializations=artifact_materializations
         ):
-            if not plan.create_openhcs_metadata:
-                projection_entries = target.produced_projection_entries(context, plan)
-                if projection_entries.is_empty:
-                    continue
-                AtomicMetadataWriter().merge_source_projection_metadata(
-                    METADATA_CONFIG.metadata_path(target.plate_root),
-                    target.sub_dir,
-                    projection_entries,
-                )
-            else:
-                target.write(context, produced_plan=plan)
+            entries = target.produced_projection_entries(context, plan)
+            if target.create_openhcs_metadata or not entries.is_empty:
+                observations[replace(target, artifact_materializations=())] = entries
+        return MappingProxyType(observations)
 
     @classmethod
     def finalize_completed_plate(
         cls,
         compiled_contexts: Mapping[str, ProcessingContext],
+        *,
+        runtime_observations: Iterable[RuntimeExecutionObservation] = (),
     ) -> None:
-        """Write each populated metadata target after all axis outputs exist."""
+        """Publish completed or partial saved outputs once at the receiving boundary."""
 
         target_contexts: dict[OpenHCSMetadataTarget, ProcessingContext] = {}
         for context in compiled_contexts.values():
@@ -1061,6 +1067,17 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                 for target in cls.for_plan(plan):
                     target_contexts.setdefault(target, context)
 
+        produced_by_document: dict[Path, dict[OpenHCSMetadataTarget, list[VirtualWorkspaceSourceProjectionEntries]]] = {}
+        for observation in runtime_observations:
+            for context_observation in observation.contexts:
+                context = compiled_contexts[context_observation.context_key]
+                for target, entries in context_observation.outputs.source_projection_entries_by_target.items():
+                    produced_by_document.setdefault(
+                        METADATA_CONFIG.metadata_path(target.plate_root), {}
+                    ).setdefault(target, []).append(entries)
+                    if target.create_openhcs_metadata:
+                        target_contexts.setdefault(target, context)
+
         targets_by_document: dict[
             Path, dict[OpenHCSMetadataTarget, ProcessingContext]
         ] = {}
@@ -1068,8 +1085,15 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             targets_by_document.setdefault(
                 METADATA_CONFIG.metadata_path(owner.plate_root), {}
             )[owner] = context
-        for metadata_path, targets in targets_by_document.items():
-            AtomicMetadataWriter().reconcile_completed_plate(metadata_path, targets)
+        for metadata_path in dict.fromkeys((*targets_by_document, *produced_by_document)):
+            AtomicMetadataWriter().reconcile_completed_plate(
+                metadata_path,
+                targets_by_document.get(metadata_path, {}),
+                produced_entries_by_target={
+                    target: VirtualWorkspaceSourceProjectionEntries.combine(entries)
+                    for target, entries in produced_by_document.get(metadata_path, {}).items()
+                },
+            )
 
 
 class ProducedImageMetadataCapability:
@@ -1163,13 +1187,9 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
             Path(output.path).parent
             for materialization in self.artifact_materializations
             for output in materialization.outputs_for_backend(self.backend)
+            if context.filemanager.exists(output.path, self.backend)
         )
-        return tuple(
-            target
-            for directory in directories
-            for target in (self.for_directory(directory),)
-            if target.contains_outputs(context)
-        )
+        return tuple(self.for_directory(directory) for directory in directories)
 
     def reconciliation_targets(
         self,
