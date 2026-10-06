@@ -1,0 +1,50 @@
+{
+  "execution": {
+    "native_seconds": 245.8032439951785,
+    "openhcs_seconds": 17.16048526763916,
+    "primary_speedup": 14.32379330546721,
+    "original_calibration_speedup": 4.253137628339004
+  },
+  "total": {
+    "native_seconds": 245.80418001906946,
+    "openhcs_seconds": 19.359680893365294,
+    "primary_speedup": 12.69670617883523,
+    "original_calibration_speedup": 3.7700361636272373
+  },
+  "source_head": {
+    "rejected": true,
+    "reason": "Serial baseline must share qualified source and pipeline declarations"
+  },
+  "manifest": {
+    "rejected": true,
+    "reason": "Serial baseline must share qualified source and pipeline declarations"
+  },
+  "assignments": {
+    "rejected": true,
+    "reason": "Serial baseline assignment scope differs: wells"
+  },
+  "native_job_count": {
+    "rejected": true,
+    "reason": "Primary CellProfiler baseline must be one actual process"
+  },
+  "cross_scope": {
+    "rejected": true,
+    "reason": "Serial baseline must use the same qualified clock scope"
+  },
+  "claims": {
+    "record_name": "matched_lastconsumer_20261006",
+    "source_revision": "2cda84a3691e6f2c87bff4c9f7a540aea9e0c902",
+    "status": "frozen",
+    "case_count": "1",
+    "execution_min": "14.324",
+    "execution_median": "14.324",
+    "total_min": "12.697",
+    "total_median": "12.697"
+  },
+  "rendered_provenance": [
+    "paper/figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-total/figure2_provenance.json",
+    "paper/figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-execution/figure2_provenance.json",
+    "paper/figures/slas/matched_lastconsumer_20261006/primary-execution/figure2_provenance.json",
+    "paper/figures/slas/matched_lastconsumer_20261006/primary-total/figure2_provenance.json"
+  ]
+}

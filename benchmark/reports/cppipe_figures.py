@@ -8,9 +8,10 @@ import json
 import math
 import re
 import statistics
-from dataclasses import dataclass
 from collections.abc import Iterable, Sequence
 from contextlib import contextmanager
+from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 
 import matplotlib
@@ -79,6 +80,12 @@ class SummarySource:
     def candidate_method(self) -> str:
         return self.label
 
+    def native_summary_row(self, pipeline_name: str, row: SummaryRow | None) -> SummaryRow | None:
+        return row
+
+    def comparison_speedup(self, row: SummaryRow | None, native: float | None, candidate: float | None) -> float | None:
+        return SUMMARY_ROW_NUMERICS.speedup(row, native, candidate)
+
     def metric_rows(
         self,
         pipeline_name: str,
@@ -88,7 +95,8 @@ class SummarySource:
     ) -> tuple[BenchmarkMetricRow, BenchmarkMetricRow]:
         """Derive the paired methods from this source's actual summary row."""
         category = _category_from_summary_row(pipeline_name, row or category_row)
-        native_seconds = SUMMARY_ROW_NUMERICS.optional_float(row, NATIVE_SECONDS_FIELD)
+        native_row = self.native_summary_row(pipeline_name, row)
+        native_seconds = SUMMARY_ROW_NUMERICS.optional_float(native_row, NATIVE_SECONDS_FIELD)
         openhcs_seconds = SUMMARY_ROW_NUMERICS.optional_float(
             row, OPENHCS_SECONDS_FIELD
         )
@@ -102,7 +110,7 @@ class SummarySource:
                 raw_seconds=native_seconds,
                 speedup=1.0,
                 peak_memory_mb=SUMMARY_ROW_NUMERICS.optional_float(
-                    row, NATIVE_MEMORY_FIELD
+                    native_row, NATIVE_MEMORY_FIELD
                 ),
             ),
             BenchmarkMetricRow(
@@ -114,9 +122,7 @@ class SummarySource:
                     row, ACCURACY_FIELD
                 ),
                 raw_seconds=openhcs_seconds,
-                speedup=SUMMARY_ROW_NUMERICS.speedup(
-                    row, native_seconds, openhcs_seconds
-                ),
+                speedup=self.comparison_speedup(row, native_seconds, openhcs_seconds),
                 peak_memory_mb=SUMMARY_ROW_NUMERICS.optional_float(
                     row, OPENHCS_MEMORY_FIELD
                 ),
@@ -130,11 +136,19 @@ class MeasuredBatchSummarySource(SummarySource):
 
     @property
     def native_method(self) -> str:
-        return f"CP ({self.label})"
+        counts = {case["mode"]["native_job_count"] for case in self.qualified_custody()["cases"]}
+        if len(counts) != 1:
+            raise ValueError("Measured mode must have one declared CP process count")
+        count = counts.pop()
+        return f"CP ({self.label})" if count == 1 else f"CP ({count} independent processes; calibration)"
 
     @property
     def candidate_method(self) -> str:
         return f"OH ({self.label})"
+
+    @property
+    def comparison_description(self) -> str:
+        return "CP parallel timings are an external independent-process calibration, not a built-in CellProfiler feature."
 
     @property
     def custody_path(self) -> Path:
@@ -146,6 +160,26 @@ class MeasuredBatchSummarySource(SummarySource):
         if custody["status"] != "PASS":
             raise ValueError("Measured publication requires qualified matched custody")
         return custody
+
+    @cached_property
+    def clock_scope(self) -> str:
+        """Identify the converter's clock from its actual qualified observations."""
+        table = _load_summary_table(self)
+        cases = {case["case"]: case for case in self.qualified_custody()["cases"]}
+        matches = []
+        for scope in ("execution", "total"):
+            if all(
+                math.isclose(float(row[field]), statistics.median(
+                    observation[f"{engine}_{scope}_seconds"]
+                    for observation in cases[name]["rows"]
+                ), rel_tol=1e-12, abs_tol=1e-12)
+                for name, row in table.items()
+                for engine, field in (("native", NATIVE_SECONDS_FIELD), ("openhcs", OPENHCS_SECONDS_FIELD))
+            ):
+                matches.append(scope)
+        if len(matches) != 1:
+            raise ValueError("Measured summary must identify one qualified clock scope")
+        return matches[0]
 
     def retained_manifest_path(self) -> Path:
         """Bind the archived declaration to the converter's original digest."""
@@ -178,7 +212,7 @@ class MeasuredBatchSummarySource(SummarySource):
             "case_count": str(len(tables[0])),
         }
         for scope, source, table in zip(("execution", "total"), (self, total), tables, strict=True):
-            ratios = tuple(SUMMARY_ROW_NUMERICS.speedup_from_summary_row(row) for row in table.values())
+            ratios = tuple(source.metric_rows(name, row, category_row=row)[1].speedup for name, row in table.items())
             if any(value is None or not math.isfinite(value) or value <= 0 for value in ratios):
                 raise ValueError("Publication requires positive finite speedups for every case")
             statistics = SpeedupSummaryStatistics.from_series(
@@ -270,6 +304,46 @@ class MeasuredBatchSummarySource(SummarySource):
         if not math.isclose(float(row[OPENHCS_SECONDS_FIELD]), values["OH execution"], abs_tol=1e-9):
             raise ValueError("Amortization source must be the custody-owned execution summary")
         return count, {key: value / count for key, value in values.items()}
+
+
+@dataclass(frozen=True)
+class SerialCellProfilerBatchSummarySource(MeasuredBatchSummarySource):
+    """Built-in OpenHCS workers compared with one measured stock CP process."""
+
+    baseline: MeasuredBatchSummarySource
+
+    @property
+    def native_method(self) -> str:
+        return "CP (one process)"
+
+    @property
+    def comparison_description(self) -> str:
+        return "Primary comparison: one stock CellProfiler process versus OpenHCS built-in workers on the same assignments."
+
+    @cached_property
+    def baseline_table(self) -> SummaryTable:
+        custody, baseline = self.qualified_custody(), self.baseline.qualified_custody()
+        if self.clock_scope != self.baseline.clock_scope:
+            raise ValueError("Serial baseline must use the same qualified clock scope")
+        if custody["source_head"] != baseline["source_head"] or custody["manifest"]["sha256"] != baseline["manifest"]["sha256"]:
+            raise ValueError("Serial baseline must share qualified source and pipeline declarations")
+        baseline_cases = {case["case"]: case for case in baseline["cases"]}
+        for case in custody["cases"]:
+            reference = baseline_cases[case["case"]]
+            mode, reference_mode = case["mode"], reference["mode"]
+            if reference_mode["native_job_count"] != 1:
+                raise ValueError("Primary CellProfiler baseline must be one actual process")
+            for field in ("wells", "selected_source_wells", "assignment_scope"):
+                if mode[field] != reference_mode[field]:
+                    raise ValueError(f"Serial baseline assignment scope differs: {field}")
+        return _load_summary_table(self.baseline)
+
+    def native_summary_row(self, pipeline_name: str, row: SummaryRow | None) -> SummaryRow:
+        return self.baseline_table[pipeline_name]
+
+    def comparison_speedup(self, row: SummaryRow | None, native: float | None, candidate: float | None) -> float | None:
+        # The saved speedup belongs to the original matched parallel calibration.
+        return None if native is None or candidate is None or candidate <= 0 else native / candidate
 
 
 @dataclass(frozen=True)
@@ -824,12 +898,12 @@ def generate_measured_batch_figures(
         raise ValueError(f"Unknown measured timing scope: {scope!r}")
     if not summary_sources:
         raise ValueError("At least one measured summary source is required.")
-    methods = tuple(
-        method
-        for source in summary_sources
+    methods = tuple(dict.fromkeys(
+        method for source in summary_sources
         for method in (source.native_method, source.candidate_method)
-    )
-    if len(set(methods)) != len(methods):
+    ))
+    if (len({source.candidate_method for source in summary_sources}) != len(summary_sources)
+            or {source.candidate_method for source in summary_sources} & {source.native_method for source in summary_sources}):
         raise ValueError("Measured mode method labels must be distinct.")
     tables = tuple(_load_summary_table(source) for source in summary_sources)
     if selected_pipeline_names is None:
@@ -856,7 +930,7 @@ def generate_measured_batch_figures(
             tables,
             summary_sources=summary_sources,
             pipeline_names=pipeline_names,
-            include_average=include_average,
+            include_average=include_average and len(pipeline_names) > 1,
         )
     )
     metrics = (
@@ -900,12 +974,13 @@ def generate_measured_batch_figures(
         f"Measured batch {scope} comparison. Modes: "
         + "; ".join(source.label for source in summary_sources)
         + ". Each pipeline contributes one speedup: its native CellProfiler "
-        "median divided by its OpenHCS median in the same measured mode. "
+        "median from the declared baseline divided by its OpenHCS median. "
         "Distribution statistics exclude the plotted Average row and native "
         "baseline rows. Grouped Average bars are arithmetic averages across "
         "the supplied pipeline cohort. Qualification, clock boundaries, and "
         "repetition selection are established by the matched-report producer, "
-        "not by plotting. No RAM measurements are supplied.\n",
+        "not by plotting. No RAM measurements are supplied. "
+        + " ".join(dict.fromkeys(source.comparison_description for source in summary_sources)) + "\n",
         encoding="utf-8",
     )
     return (
