@@ -1,3 +1,4 @@
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
     PatternGroupExecutionScope,
@@ -130,15 +131,16 @@ def _anchor_executor(
     executor = object.__new__(FunctionStepExecutor)
     executor.plan = plan
     executor.context = Mock(
+        completed_step_outputs=StepExecutionObservation.empty(),
         plate_path=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
+            source_admission_config=lambda: None,
             metadata_handler=SimpleNamespace(
                 source_workspace_metadata_document=lambda _path: None
             ),
         ),
         filemanager=SimpleNamespace(exists=lambda *_args: False),
-        runtime_source_workspace_projection_cache=source_workspace_projection_cache,
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
     )
     executor.context.runtime_source_workspace_projection_authority = (
@@ -2384,7 +2386,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
     from openhcs.core.runtime_adapters import (
         RuntimePlaneProjection,
     )
-    from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps.function_runtime import (
         PatternGroupData,
         FunctionCoreExecutor,
@@ -2416,7 +2417,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         source_binding_plan=source_binding_plan,
         compiled_function_pattern=compiled_pattern,
         variable_components=(VariableComponents.SITE,),
-        source_load_plan=SourceLoadPlan(),
     )
     scope = PatternGroupData(
         matching_files=["first.tif", "second.tif"],
@@ -2463,7 +2463,6 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from openhcs.core.artifacts import NoMainFlowOutput
-    from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
         PatternGroupData,
@@ -2541,7 +2540,6 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         source_binding_plan=source_binding_plan,
         input_memory_type="numpy",
         variable_components=(VariableComponents.SITE,),
-        source_load_plan=SourceLoadPlan(),
         compiled_function_pattern=compiled_pattern,
         artifact_inputs={},
         artifact_outputs=output_plans,
@@ -2689,7 +2687,6 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from openhcs.core.function_patterns import CompiledFunctionGroup
-    from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
         PatternGroupData,
@@ -2764,7 +2761,6 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         step_type="FunctionStep",
         execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
-        source_load_plan=SourceLoadPlan(),
         input_memory_type="numpy",
         variable_components=(VariableComponents.SITE,),
         artifact_inputs={},
@@ -3329,7 +3325,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     assert mask_edge.storage_plan is not None
     assert (mask_edge.main_flow_projection is not None) is False
     assert invocation.contract.accepts_implicit_main_flow_input is True
-    assert compiled_pattern.default_group.main_flow_input_refs is None
+    assert compiled_pattern.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
     assert tuple(
         binding.alias
         for binding in scope.main_flow_source_binding_plan.binding_declarations
@@ -4105,7 +4101,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         "source_workspace_projection_authority",
         lambda _self: SimpleNamespace(
             projection_if_available=lambda: projection,
-            projection_or_empty=lambda: projection,
+            projection_or_empty=lambda *, axis_id=None: projection.filtered_by_axis(axis_id=axis_id),
         ),
     )
 
@@ -4131,9 +4127,6 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         runtime_image_stack_cache=RuntimeImageStackCache(),
         runtime_pattern_discovery_cache=RuntimePatternDiscoveryCache(),
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
-        runtime_source_workspace_projection_cache=(
-            VirtualWorkspaceSourceProjectionCache()
-        ),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
     runtime = function_runtime.PatternGroupExecutionRequest(
@@ -4266,6 +4259,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         ),
     )
     context = SimpleNamespace(
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
         microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
         filemanager=MemoryFileManager(),
         runtime_image_stack_cache=RuntimeImageStackCache(),
@@ -5911,6 +5905,7 @@ def test_producer_loader_validates_ambiguity_before_cache(
             pytest.fail("Ambiguous producer admission must precede cached pixels")
 
     context = SimpleNamespace(
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
         microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
         runtime_image_stack_cache=RejectImageCache(),
     )

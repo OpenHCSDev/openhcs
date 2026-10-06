@@ -108,6 +108,7 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
+    SourceBindingOrigin,
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     SourceProjectionRole,
 )
@@ -130,6 +131,7 @@ from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
+    RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
 from openhcs.core.step_dependencies import StepInputDependencyKind
@@ -248,6 +250,7 @@ class PatternGroupExecutionScope:
         main_flow_refs = self.compiled_group.main_flow_input_refs_for_component(
             self.execution_plan.execution_group_scope,
             self.component_key,
+            source_bindings=declared_plan,
         )
         return (
             declared_plan
@@ -258,10 +261,17 @@ class PatternGroupExecutionScope:
     @property
     def main_flow_source_binding_plan(self) -> CompiledSourceBindingPlan:
         """Return bindings that anchor and load this group's main-flow stack."""
-
-        return self.unscoped_main_flow_source_binding_plan.for_execution_axis_scope(
-            self.axis_scope
+        declared_plan = self.execution_plan.source_binding_plan
+        selected = declared_plan.for_main_flow_scope(
+            component=self.execution_plan.execution_group_scope.component,
+            group_key=self.component_key,
+            main_flow_refs=self.compiled_group.main_flow_input_refs_for_component(
+                self.execution_plan.execution_group_scope,
+                self.component_key,
+                source_bindings=declared_plan,
+            ),
         )
+        return declared_plan.for_artifact_refs(()) if selected is None else selected
 
     def active_main_flow_source_binding_plan(
         self,
@@ -305,13 +315,13 @@ class PatternGroupExecutionScope:
 
         declared_plan = self.execution_plan.source_binding_plan
         source_refs = self.invocation_source_artifact_refs
-        return (
-            declared_plan.for_artifact_refs(source_refs)
-            if source_refs
-            or self.compiled_group.runtime_domain
-            is RuntimeInvocationDomain.ARTIFACT_MANAGED
-            else self.main_flow_source_binding_plan
-        )
+        if source_refs:
+            return declared_plan.for_artifact_refs(source_refs)
+        if self.compiled_group.runtime_domain is RuntimeInvocationDomain.ARTIFACT_MANAGED:
+            # The compiler has already traced stored artifact lineage to its
+            # source bindings. A produced name is not itself a raw alias.
+            return declared_plan
+        return self.main_flow_source_binding_plan
 
     @property
     def axis_component(self) -> str | None:
@@ -640,6 +650,16 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 raise NoStepOutputManifestMatch
             matching_files = selected_paths
 
+        if producer_index is not None:
+            producer_records = producer_index.source_binding_members(
+                matching_files,
+                source_bindings=self.main_flow_source_binding_plan,
+                identity_policy=context.source_image_set_identity_policy,
+                parser=context.microscope_handler.parser,
+            )
+            matching_files = [record.output_path for record in producer_records]
+            producer_matching_files = tuple(matching_files)
+
         if not matching_files:
             raise ValueError(
                 f"No matching files found for pattern group {self.pattern_repr} "
@@ -661,9 +681,12 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
 
         if not producer_matching_files:
             matching_files.sort()
-        logger.debug(
-            f"Pattern {self.pattern_repr} sorted files: {[Path(f).name for f in matching_files]}"
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Pattern %s sorted files: %s",
+                self.pattern_repr,
+                [Path(f).name for f in matching_files],
+            )
         matching_files = self._filter_matching_files_for_source_bindings(matching_files)
 
         full_file_paths = [
@@ -861,25 +884,23 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
 
     def _source_binding_load_universe(self) -> tuple[str, ...]:
         """Return loadable files available for source image-set expansion."""
-        source_projection = (
-            self.source_workspace_projection_authority().projection_if_available()
-        )
         request = SourceUniverseRequest.from_context(
             context=self.context,
             plan=self.execution_plan,
             matching_files=(),
-            source_projection=source_projection,
+            source_projection=self.source_workspace_projection_authority().projection_if_available(
+                axis_id=self.execution_plan.axis_id,
+            ),
         )
         return request.runtime_universe_state().require_load_universe().files
 
     def _source_binding_candidate_context(self) -> SourcePatternResolutionContext:
-        projection = self.source_workspace_projection_authority().projection_or_empty()
+        projection = self.source_workspace_projection_authority().projection_or_empty(
+            axis_id=self.execution_plan.axis_id,
+        )
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
-            projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
-                projection,
-                axis_id=self.execution_plan.axis_id,
-            ),
+            projection=projection,
             metadata_rules=self.source_binding_plan.metadata_rules,
         )
 
@@ -1749,8 +1770,56 @@ class FunctionCoreExecutor:
             variable_components=tuple(
                 self.group_data.execution_plan.variable_components
             ),
-            source_load_plan=self.group_data.execution_plan.source_load_plan,
+            execution_scope=self,
         )
+
+    def loaded_source_artifact_payload(
+        self,
+        request: RuntimeAdapterRequest,
+        edge: InvocationArtifactInputEdgePlan,
+    ) -> RuntimePayload | None:
+        """Reuse a proved original primary cohort before its first callable.
+
+        Main-flow projection declares a source role, not pixel origin. Only the
+        initial invocation of a pipeline-start load owns pristine original pixels;
+        later calls may have mutated the shared loaded array in place. This is
+        an input-admission operation; post-call source reads use the origin owner.
+        Compiled input declarations remain stable for the lifetime of a loaded
+        cohort; independently changed request declarations must still match them.
+        """
+        binding = request.source_binding_plan.binding_for_artifact_ref(edge.spec.ref())
+        if (
+            binding is None
+            or self.invocation.key.position != 0
+            or self.group_data.execution_plan.main_input_dependency.kind
+            is not StepInputDependencyKind.PIPELINE_START
+            or binding.origin is not SourceBindingOrigin.PIPELINE_START
+            or request.context is not self.group_data.context
+        ):
+            return None
+        ref = edge.spec.ref()
+        if (
+            self.artifact_inputs.get(edge.key) is not edge
+            or request.artifact_inputs.get(edge.key) is not edge
+            or edge.storage_plan is not None
+            or edge.main_flow_projection is None
+            or self.group_data.main_flow_source_binding_plan.binding_for_artifact_ref(ref)
+            != binding
+        ):
+            return None
+        payload = self.invocation.convert_input(
+            self.group_data.main_data_stack, self.source_memory_type,
+        )
+        if edge.main_flow_projection is MainFlowInputProjection.DECLARED_SOURCE_IMAGE:
+            payload = project_declared_source_identity(payload, ref)
+        elif edge.main_flow_projection is not MainFlowInputProjection.COMPLETE_PAYLOAD:
+            return None
+        projection = RuntimePlaneAxisValueProjection.from_projector(
+            request.plane_projection, RuntimePlaneAxis.RUNTIME_SLICE, (),
+        )
+        if projection is not None and projection.plane_index is not None:
+            payload = RuntimeSliceProjection.value_for_slice(payload, projection)
+        return payload
 
     def declared_source_payload(
         self,
@@ -1758,6 +1827,7 @@ class FunctionCoreExecutor:
         primary_source_payload: RuntimePayload,
         *,
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
+        request: RuntimeAdapterRequest | None = None,
     ) -> RuntimePayload:
         input_spec = self.invocation.contract.artifact_inputs.by_ref(source_ref)
         if input_spec is None:
@@ -1766,9 +1836,11 @@ class FunctionCoreExecutor:
                 f"{source_ref!r}."
             )
         stored_payload = loaded_artifact_payloads.get(source_ref)
-        source_binding = self.group_data.source_binding_plan.binding_for_artifact_ref(
-            source_ref
+        source_binding_plan = (
+            self.group_data.source_binding_plan
+            if request is None else request.source_binding_plan
         )
+        source_binding = source_binding_plan.binding_for_artifact_ref(source_ref)
         main_flow_edges = tuple(
             edge
             for edge in self.artifact_inputs.values()
@@ -1795,8 +1867,9 @@ class FunctionCoreExecutor:
         if source_binding is not None:
             return cast(
                 RuntimePayload,
-                self.runtime_adapter_request(
-                    primary_source_payload
+                (
+                    self.runtime_adapter_request(primary_source_payload)
+                    if request is None else request
                 ).source_artifact_payload(source_ref),
             )
         if len(main_flow_edges) != 1:
@@ -1823,7 +1896,9 @@ class FunctionCoreExecutor:
         if not self.should_load_artifact_inputs():
             return {}
         logger.info(
-            f"Artifact inputs for {self.invocation.contract.function_name}: {self.artifact_inputs}"
+            "Artifact inputs for %s: %s",
+            self.invocation.contract.function_name,
+            self.artifact_inputs,
         )
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
         parameter_values: dict[str, list[RuntimeValue]] = {}

@@ -163,6 +163,35 @@ class RuntimeArtifactQuery:
     target: RuntimeArtifactQueryTarget
 
     @classmethod
+    def records_for_input_edge(
+        cls,
+        edge: InvocationArtifactInputEdgePlan,
+        records: tuple["StoredRuntimeValue", ...],
+        *,
+        axis_id: str,
+        backend: str,
+    ) -> tuple["StoredRuntimeValue", ...]:
+        """Select observed records in the compiled producer-group order.
+
+        Unstored sources have no runtime records. Missing records remain empty;
+        the consuming invocation owns required-input admission across axes.
+        """
+        if edge.storage_plan is None:
+            return ()
+        queries = (
+            cls.from_input_plan(
+                edge.storage_plan,
+                axis_id=axis_id,
+                backend=backend,
+                group_key=group_key,
+            )
+            for group_key in edge.projection.producer_selection_scope.keys
+        )
+        return tuple(
+            record for query in queries for record in records if query.matches(record)
+        )
+
+    @classmethod
     def from_input_plan(
         cls,
         input_plan: ArtifactInputPlan,
@@ -719,9 +748,12 @@ class RuntimeArtifactInput:
         ).matches()
 
     def _source_context_identity_policy(self) -> SourceImageSetIdentityPolicy:
-        """Derive plane membership only from this edge's context declarations."""
+        """Use declared consumer context, otherwise the stored producer's context."""
 
         context_sources = self.edge_plan.spec.source_context_sources()
+        if not context_sources and self.edge_plan.storage_plan is not None:
+            producer_source = self.edge_plan.storage_plan.source_context_source()
+            context_sources = () if producer_source is None else (producer_source,)
         if not context_sources:
             return SourceImageSetIdentityPolicy()
         return SourceImageSetIdentityPolicy.from_source_bindings(

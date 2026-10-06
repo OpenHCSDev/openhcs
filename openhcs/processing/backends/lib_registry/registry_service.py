@@ -5,6 +5,7 @@ Provides unified access to all registry implementations with automatic discovery
 Follows OpenHCS generic solution principle - automatically adapts to new registries.
 """
 
+import gc
 import inspect
 import logging
 import os
@@ -63,6 +64,46 @@ class RegistryService:
         tuple[str, "CallableImportIdentity", str | None], ResolvedRegistryFunction
     ] = {}
     _registry_inventory_lock = threading.RLock()
+    _startup_heap_prepared = False
+    _startup_heap_frozen = False
+
+    @classmethod
+    def freeze_prepared_catalog_once(cls) -> None:
+        """Exclude the prepared startup graph from later cyclic collections.
+
+        Only endpoint startup calls this boundary. After declaration retirement
+        or shutdown releases the graph, it must never capture subsequent jobs.
+        Catalog and custom-source locks follow the existing inventory-first
+        order; retirement needs only the source lifecycle lock.
+        """
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        with cls._registry_inventory_lock, CustomFunctionRuntimeRegistry.lifecycle():
+            if cls._startup_heap_prepared:
+                return
+            gc.collect()
+            gc.freeze()
+            cls._startup_heap_prepared = True
+            cls._startup_heap_frozen = True
+
+    @classmethod
+    def release_prepared_catalog(cls) -> None:
+        """Thaw before a captured source graph or endpoint is retired.
+
+        Custom declaration mutations already hold this reentrant lifecycle
+        lock. Do not acquire the inventory lock here and reverse its order.
+        Ordinary GC remains enabled throughout both lifecycle operations.
+        """
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        with CustomFunctionRuntimeRegistry.lifecycle():
+            if cls._startup_heap_frozen:
+                gc.unfreeze()
+                cls._startup_heap_frozen = False
 
     @classmethod
     def metadata_for_canonical_key(cls, function_id: str) -> FunctionMetadata:
@@ -521,6 +562,7 @@ class RegistryService:
     def clear_metadata_cache(cls) -> None:
         """Clear cached metadata to force re-discovery."""
         with cls._registry_inventory_lock:
+            cls.release_prepared_catalog()
             cls._metadata_cache = None
             cls._registry_instances = None
             cls._resolved_reference_callables.clear()

@@ -9,7 +9,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, TypeAlias
+from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
 from polystore.atomic import FileLockError, atomic_update_json
 from polystore.metadata_writer import MetadataConfig
@@ -35,6 +35,10 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
+
+if TYPE_CHECKING:
+    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 
 
 @dataclass(frozen=True)
@@ -130,28 +134,6 @@ class AtomicMetadataWriter:
             {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
         )
 
-    def merge_source_projection_metadata(
-        self,
-        metadata_path: str | Path,
-        subdirectory_name: str,
-        projection_entries: VirtualWorkspaceSourceProjectionEntries,
-    ) -> None:
-        """Merge exact produced paths under one lock, preserving other wells."""
-
-        def update(data):
-            data = self._ensure_subdirectories_structure(data)
-            subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
-                subdirectory_name, {}
-            )
-            entries = projection_entries.merge_into_subdirectory(subdirectory)
-            self._update_projection_geometry(
-                subdirectory,
-                entries.entries.values(),
-            )
-            return data
-
-        self._execute_update(metadata_path, update)
-
     def publish_source_projection_metadata(
         self,
         metadata_path: str | Path,
@@ -166,7 +148,9 @@ class AtomicMetadataWriter:
         backend: str,
         is_main: bool,
         results_dir: str | None,
-    ) -> None:
+        metadata_document: dict[str, Any] | None = None,
+        admitted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         """Publish saved inventory from retained addresses, never generated names.
 
         Final reconciliation uses the same durable typed projections after step
@@ -174,13 +158,15 @@ class AtomicMetadataWriter:
         inventing coordinates from filenames or the input label cache.
         """
         saved_paths = tuple(saved_image_paths)
+        published_entries = None
 
         def update(data):
+            nonlocal published_entries
             data = self._ensure_subdirectories_structure(data)
             subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
                 subdirectory_name, {}
             )
-            entries = (
+            published_entries = (
                 VirtualWorkspaceSourceProjectionEntries(MappingProxyType({}))
                 if projection_entries is None else projection_entries
             ).publish_into_subdirectory(
@@ -189,7 +175,9 @@ class AtomicMetadataWriter:
                 reconcile_directory=(
                     subdirectory_name if projection_entries is None else None
                 ),
-            ).entries
+                admitted_entries=admitted_entries,
+            )
+            entries = published_entries.entries
             # Concurrent axes may persist their pixels before publishing their
             # own producer records. A step publishes known saved addresses only;
             # completed-plate reconciliation requires the entire saved inventory.
@@ -218,6 +206,67 @@ class AtomicMetadataWriter:
                 subdirectory,
                 entries.values(),
             )
+            return data
+
+        if metadata_document is None:
+            self._execute_update(metadata_path, update)
+        else:
+            update(metadata_document)
+        return published_entries
+
+    def reconcile_completed_plate(
+        self,
+        metadata_path: str | Path,
+        target_contexts: Mapping[OpenHCSMetadataTarget, ProcessingContext],
+        *,
+        produced_entries_by_target: Mapping[
+            OpenHCSMetadataTarget, VirtualWorkspaceSourceProjectionEntries
+        ] = MappingProxyType({}),
+    ) -> None:
+        """Admit and reconcile all targets from one locked plate document."""
+        if not produced_entries_by_target and not Path(metadata_path).is_file() and not any(
+            target.contains_outputs(context)
+            for target, context in target_contexts.items()
+        ):
+            return
+
+        def update(data):
+            data = self._ensure_subdirectories_structure(data)
+            subdirectories = data[METADATA_CONFIG.SUBDIRECTORIES_KEY]
+            updates_by_directory: dict[str, list[VirtualWorkspaceSourceProjectionEntries]] = {}
+            for target, entries in produced_entries_by_target.items():
+                updates_by_directory.setdefault(target.sub_dir, []).append(entries)
+            admitted = {}
+            for name, updates in updates_by_directory.items():
+                subdirectory = subdirectories.setdefault(name, {})
+                admitted[name] = VirtualWorkspaceSourceProjectionEntries.combine(
+                    updates
+                ).merge_into_subdirectory(subdirectory)
+            document = OpenHCSMetadataSubdirectories(data)
+            for name, subdirectory in document.items():
+                if name not in admitted:
+                    admitted[name] = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
+            for name in updates_by_directory:
+                self._update_projection_geometry(
+                    subdirectories[name], admitted[name].entries.values()
+                )
+            reconciliation_contexts = {}
+            for owner, context in target_contexts.items():
+                for target in owner.reconciliation_targets(
+                    context, document=document, admitted_entries=admitted
+                ):
+                    reconciliation_contexts.setdefault(target, context)
+            for target, context in reconciliation_contexts.items():
+                if target.contains_outputs(context):
+                    admitted[target.sub_dir] = target.write(
+                        context,
+                        metadata_writer=self,
+                        metadata_document=data,
+                        admitted_entries=admitted.get(
+                            target.sub_dir,
+                            VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
+                        ),
+                    )
             return data
 
         self._execute_update(metadata_path, update)
@@ -427,6 +476,20 @@ class VirtualWorkspaceSourceProjectionEntries:
         return tuple((projection, path) for path, projection in self.entries.items())
 
     @classmethod
+    def combine(
+        cls, observations: Iterable[VirtualWorkspaceSourceProjectionEntries]
+    ) -> VirtualWorkspaceSourceProjectionEntries:
+        """Combine exact producer paths in execution order, retaining typed facts."""
+        entries = {}
+        for observation in observations:
+            entries.update(observation.entries)
+        if not entries:
+            return cls(MappingProxyType({}))
+        return cls.from_projection_paths(
+            tuple((projection, path) for path, projection in entries.items())
+        )
+
+    @classmethod
     def from_projection_paths(
         cls,
         projection_paths: Sequence[tuple[SourceProjection, str]],
@@ -514,6 +577,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         *,
         saved_image_paths: Sequence[str],
         reconcile_directory: str | None,
+        admitted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
     ) -> "VirtualWorkspaceSourceProjectionEntries":
         """Publish current path views while retaining admitted durable records.
 
@@ -523,7 +587,10 @@ class VirtualWorkspaceSourceProjectionEntries:
         workspace maps are independently derived normalized views.
         """
         records = self._records_by_path(subdirectory)
-        admitted = self._admit_retained_records(records)
+        admitted = (
+            self._admit_retained_records(records)
+            if admitted_entries is None else admitted_entries
+        )
         saved_set = frozenset(saved_image_paths)
         missing = saved_set.difference(admitted.entries)
         if missing and reconcile_directory is not None:
@@ -636,21 +703,21 @@ class VirtualWorkspaceSourceProjectionEntries:
         source_metadata = cls._optional_metadata(record, "source_metadata")
         component_labels = cls._optional_component_labels(record)
         source_alias = cls._optional_text(record, "source_alias")
+        image_metadata_value = record.get(SourcePlaneProjection.image_metadata_wire_field())
+        if image_metadata_value is not None and not isinstance(image_metadata_value, Mapping):
+            raise TypeError("Persisted image metadata must be a mapping.")
+        image_metadata = (
+            None if image_metadata_value is None else
+            ImagePayloadMetadata.from_mapping(image_metadata_value)
+        )
         if projection_role is SourceProjectionRole.PRIMARY_PLANE:
-            image_metadata_value = record.get(
-                SourcePlaneProjection.image_metadata_wire_field()
-            )
             projection: SourceProjection = SourcePlaneProjection(
                 address=address,
                 ref=ref,
                 source_alias=source_alias,
                 source_metadata=source_metadata,
                 component_labels=component_labels,
-                image_metadata=(
-                    None
-                    if image_metadata_value is None
-                    else ImagePayloadMetadata.from_mapping(image_metadata_value)
-                ),
+                image_metadata=image_metadata,
             )
         else:
             if source_alias is None:
@@ -658,9 +725,6 @@ class VirtualWorkspaceSourceProjectionEntries:
                     "Source-artifact projection records require source_alias."
                 )
             artifact_kind = cls._required_text(record, "artifact_kind")
-            image_metadata_value = record.get(
-                SourcePlaneProjection.image_metadata_wire_field()
-            )
             projection = SourceArtifactProjection(
                 address=address,
                 ref=ref,
@@ -668,11 +732,7 @@ class VirtualWorkspaceSourceProjectionEntries:
                 artifact_kind=ArtifactType.coerce(artifact_kind),
                 source_metadata=source_metadata,
                 component_labels=component_labels,
-                image_metadata=(
-                    None
-                    if image_metadata_value is None
-                    else ImagePayloadMetadata.from_mapping(image_metadata_value)
-                ),
+                image_metadata=image_metadata,
                 execution_scope=cls._optional_execution_scope(record),
             )
         return virtual_path, projection

@@ -171,7 +171,7 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
     first_subject, first_rows, first_fields = next(projection.measurement_projections(first, scope=None))
     assert first_subject == subject
     assert first_fields == (FieldSpec("Count_Nuclei", int),)
-    assert first_rows == (
+    assert first_rows.row_mappings() == (
         {"Count_Nuclei": 1},
         {"Count_Nuclei": 2},
         {"Count_Nuclei": 3},
@@ -179,7 +179,7 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
     second_subject, second_rows, second_fields = next(projection.measurement_projections(second, scope=None))
     assert second_subject == subject
     assert second_fields == (FieldSpec("Count_Nuclei", float),)
-    assert second_rows == (
+    assert second_rows.row_mappings() == (
         {"Count_Nuclei": 4.5},
         {"Count_Nuclei": 5.5},
     )
@@ -194,20 +194,20 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
     cells = MeasurementSubject(MeasurementScope.OBJECT, "Cells")
     nuclei = MeasurementSubject(MeasurementScope.OBJECT, "Nuclei")
     object_field_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None] = {}
-    assert projection._project_runtime_row(
+    assert projection._project_runtime_rows(
         object_table,
-        {"AreaShape_Area": 1.0},
+        object_table.rows,
         subject=cells,
         field_projection_cache=object_field_cache,
         project_database_field=None,
-    ) == {"Cells_AreaShape_Area": 1.0}
-    assert projection._project_runtime_row(
+    ).row_mappings()[0] == {"Cells_AreaShape_Area": 1.0}
+    assert projection._project_runtime_rows(
         object_table,
-        {"AreaShape_Area": 2.0},
+        MeasurementProjectedColumnarRows({"AreaShape_Area": (2.0,)}, fields=(FieldSpec("AreaShape_Area", float),)),
         subject=nuclei,
         field_projection_cache=object_field_cache,
         project_database_field=None,
-    ) == {"Nuclei_AreaShape_Area": 2.0}
+    ).row_mappings()[0] == {"Nuclei_AreaShape_Area": 2.0}
     assert calls == [
         ("FirstExperiment", subject, "Count_Nuclei"),
         ("SecondExperiment", subject, "Count_Nuclei"),
@@ -249,13 +249,13 @@ def test_database_field_projection_refreshes_declarations_and_live_dtype_hooks(
         subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
         measurement_feature_owner=RelateObjectsModule,
     )
-    assert next(projection.measurement_projections(table, scope=None))[1:] == (
-        (), (field,),
-    )
+    _subject, actual_rows, actual_fields = next(projection.measurement_projections(table, scope=None))
+    assert actual_rows.row_mappings() == ()
+    assert actual_fields == (field,)
     monkeypatch.undo()
-    assert next(projection.measurement_projections(table, scope=None))[1:] == (
-        (), (replace(field, dtype=int),),
-    )
+    _subject, actual_rows, actual_fields = next(projection.measurement_projections(table, scope=None))
+    assert actual_rows.row_mappings() == ()
+    assert actual_fields == (replace(field, dtype=int),)
 
     class CustomFieldOwner(RelateObjectsModule):
         module_name = None
@@ -265,9 +265,9 @@ def test_database_field_projection_refreshes_declarations_and_live_dtype_hooks(
             return lambda source_field: replace(source_field, dtype=str)
 
     custom_table = replace(table, measurement_feature_owner=CustomFieldOwner)
-    assert next(projection.measurement_projections(custom_table, scope=None))[1:] == (
-        (), (replace(field, dtype=str),),
-    )
+    _subject, actual_rows, actual_fields = next(projection.measurement_projections(custom_table, scope=None))
+    assert actual_rows.row_mappings() == ()
+    assert actual_fields == (replace(field, dtype=str),)
     assert CustomFieldOwner.database_measurement_field(field).dtype is str
 
 
@@ -358,6 +358,7 @@ def _export_context() -> ProcessingContext:
     context.plate_path = Path("/")
     context.microscope_handler = SimpleNamespace(
         metadata_handler=_MetadataHandlerStub(),
+        source_admission_config=lambda: None,
     )
     return context
 
@@ -859,6 +860,7 @@ def _borrowed_source_export_fixture(
     context = _export_context()
     context.plate_path = tmp_path
     context.microscope_handler = SimpleNamespace(
+        source_admission_config=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_metadata_document=lambda _plate_path: document,
         )
@@ -930,9 +932,10 @@ def test_source_only_calibration_occurrences_export_each_executed_site(
         tmp_path
     )
     assert batch.records_of_type(ImageArtifactType)["A01"] == ()
+    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
     monkeypatch.setattr(
-        np,
-        "asarray",
+        VirtualWorkspaceSourceProjection,
+        "load_binding_payloads",
         lambda *_args, **_kwargs: pytest.fail(
             "Source headers must not decode pixel arrays"
         ),

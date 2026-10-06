@@ -432,6 +432,34 @@ and [CP Threshold settings](https://github.com/CellProfiler/CellProfiler/blob/v4
 contracts; they do not prescribe a scientific normalisation or establish parity
 for every out-of-range input.
 
+### Backend range and outer dtype policy
+
+A library's `preserve_range=True` describes its own operation, not every
+conversion around the registered callable. A Gaussian can return floating
+values in acquisition units while the outer adapter's preserve-input-dtype
+policy scales them back to an integer dtype. For a nonconstant NumPy
+float-to-integer output, ArrayBridge's scaling owner can map the output's
+observed minimum/maximum to the target codebook. The resulting image has the
+original dtype but different effective intensity units; a backend argument
+alone cannot establish that the pipeline preserved the range.
+
+Reflect the effective dtype-conversion policy and inspect the persisted or
+native post-wrapper alias at ordinary/faint positives and nuisance controls.
+Record the invocation/group domain too: an output-derived mapping applied
+independently to fields can change their comparability even after a shared
+upstream fit. Do not assume this conversion occurs on every backend or dtype.
+If the task requires native output units, use the existing declared dtype
+policy where exposed, then verify the delivered values rather than bypassing
+the adapter or introducing a second conversion helper.
+
+Before interpreting a post-smoothing loss, trace changed response/support,
+unfiltered objects and size/shape acceptance. Rescaled response can change
+admission and object widths; a missing final label may be an admitted object
+rejected by a width bound, not absent signal. Re-measure the consumed units and
+geometry before retuning thresholds or widening limits, retaining faint,
+isolated and genuine-neighbour controls through the
+[stage-specific diagnostics](segmentation-diagnostics.md).
+
 ## Detection pixels versus measurement pixels
 
 Thresholding, CLAHE, nonlinear gamma, high-end clipping, denoising and

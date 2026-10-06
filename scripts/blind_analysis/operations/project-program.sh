@@ -37,6 +37,17 @@ case "$mode" in
     test ! -e "$run/program.json"
     test ! -e "$run/READY-FREEZE.sha256"
     project_program "$qualification" > "$run/program.json"
+    # The declared input owner supplies the brief bytes. Copy the file itself;
+    # never turn a failed command's diagnostic output into a released brief.
+    while IFS= read -r member; do
+      input=$(jq -er '.input_root' <<< "$member")
+      brief=$(jq -er '.brief' <<< "$member")
+      slot=$(jq -er '.slot' <<< "$member")
+      workspace="$run/$slot/author-workspace"
+      mkdir -p "$workspace"
+      cp -- "$input/$brief" "$workspace/$brief"
+    done < <(jq -c --arg run "$run" '.authors[] |
+      select(.run_owner_root==$run and (.brief|type)=="string")' "$run/program.json")
     exit
     ;;
   initialize|publish)

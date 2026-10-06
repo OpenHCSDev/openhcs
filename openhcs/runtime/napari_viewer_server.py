@@ -16,6 +16,7 @@ import threading
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Mapping
+from concurrent.futures import Future, InvalidStateError
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -480,10 +481,42 @@ class NapariAcceptedStreamBatch:
 
 @dataclass(frozen=True, slots=True)
 class NapariAcceptedControlRequest:
-    """Qt-bound control request received by the socket-owning pump."""
+    """One accepted request owns its eventual reply, including deferred errors."""
 
     message: Mapping[str, object]
-    response_queue: queue.Queue[bytes]
+    response: Future[bytes] = field(default_factory=Future)
+
+    def complete_from(self, server, projection, *args) -> None:
+        """Project and serialize inside the same reply failure boundary."""
+        try:
+            payload = server.serialize_control_response(projection(*args))
+        except Exception as error:
+            payload = server.serialize_control_response(server.control_error_response(error))
+        try:
+            self.response.set_result(payload)
+        except InvalidStateError:
+            # A deferred callback may arrive after the original observation
+            # deadline. Never block Qt or replace the already delivered result.
+            logger.debug("Ignoring late completion of an accepted control request")
+
+    def fail_observation(self, server, failure) -> None:
+        self.complete_from(
+            server,
+            ViewerWindowSnapshotFailureReply.from_control_error,
+            server.control_error_response(failure.error),
+            failure,
+        )
+
+    def dispatch_to(self, server) -> None:
+        """Keep action selection and synchronous admission in reply custody."""
+        try:
+            message_type = self.message.get(ViewerControlResponseField.TYPE.value)
+            action = NapariControlMessageAction.for_message_type(
+                message_type if isinstance(message_type, str) else None
+            )
+            action.dispatch(server, self)
+        except Exception as error:
+            self.complete_from(server, server.control_error_response, error)
 
 
 @dataclass(frozen=True)
@@ -2656,10 +2689,16 @@ class NapariLayerDisplayPipeline:
         if claimed_update is None:
             return
         route_key, update = claimed_update
-        QTimer.singleShot(
-            NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
-            update.retained_callback(partial(self._execute_settlement_update, settlement, route_key)),
-        )
+        try:
+            QTimer.singleShot(
+                NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
+                update.retained_callback(partial(self._execute_settlement_update, settlement, route_key)),
+            )
+        except Exception as error:
+            self.server.layer_route_state.record_update_error(route_key, error)
+            self._display_work_by_route.pop(route_key, None)
+            settlement.fail_active(route_key)
+            logger.exception("Failed to schedule claimed settlement route %s", route_key)
 
     def _execute_settlement_update(
         self,
@@ -2682,6 +2721,9 @@ class NapariLayerDisplayPipeline:
                     update.retained_callback(partial(self._execute_settlement_update, settlement, route_key)),
                 )
                 return
+            self._display_work_by_route.pop(route_key, None)
+            self.server.layer_route_state.clear_update_error(route_key)
+            settlement.complete_active(route_key)
         except Exception as error:
             self.server.layer_route_state.record_update_error(route_key, error)
             self._display_work_by_route.pop(route_key, None)
@@ -2691,9 +2733,6 @@ class NapariLayerDisplayPipeline:
             )
             settlement.fail_active(route_key)
             return
-        self._display_work_by_route.pop(route_key, None)
-        self.server.layer_route_state.clear_update_error(route_key)
-        settlement.complete_active(route_key)
         self._schedule_next_settlement_update(settlement)
 
     def display_layer_batch(
@@ -2784,42 +2823,13 @@ class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMe
 
     __registry__: ClassVar[dict[str, type["NapariControlMessageAction"]]] = {}
 
-    def dispatch(self, server, message, completed, failed) -> None:
+    def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
         """Default synchronous action hook on the shared reply owner."""
-        completed(self.handle(server, message))
+        request.complete_from(server, self.handle, server, request.message)
 
-    @classmethod
-    def dispatch_accepted_request(
-        cls, server, request: NapariAcceptedControlRequest
-    ) -> None:
-        """Complete the existing socket reply queue without blocking Qt paint."""
-        message_type = request.message.get(ViewerControlResponseField.TYPE.value)
-        action = cls.for_message_type(
-            message_type if isinstance(message_type, str) else None
-        )
-        completed = partial(cls._complete_control_reply, server, request.response_queue)
-        try:
-            action.dispatch(
-                server,
-                request.message,
-                completed,
-                partial(cls._failed_observation, server, completed),
-            )
-        except Exception as error:
-            completed(server.control_error_response(error))
-
-    @staticmethod
-    def _complete_control_reply(server, response_queue, response) -> None:
-        response_queue.put(server.serialize_control_response(response))
-
-    @staticmethod
-    def _failed_observation(server, completed, failure) -> None:
-        completed(
-            ViewerWindowSnapshotFailureReply.from_control_error(
-                server.control_error_response(failure.error),
-                failure,
-            )
-        )
+    def observation_deadline(self, message):
+        """Only an action with an existing operation budget supplies a deadline."""
+        return None
 
     @classmethod
     def for_message_type(cls, message_type: str | None) -> "NapariControlMessageAction":
@@ -6094,13 +6104,15 @@ class NapariScreenshotControlMessageAction(
             ),
         )
 
-    def dispatch(self, server, message, completed, failed) -> None:
-        super().request_viewer_capture(
-            self.snapshot_request(server, message),
-            self.snapshot_descriptor(server),
-            partial(self._complete_native_reply, server, completed),
-            failed,
+    def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
+        super().request_capture(
+            self.snapshot_request(server, request.message),
+            partial(request.complete_from, server, self._snapshot_native_reply, server),
+            partial(request.fail_observation, server),
         )
+
+    def observation_deadline(self, message):
+        return message[ViewerControlResponseField.PAYLOAD.value].snapshot_operation_deadline()
 
     @staticmethod
     def snapshot_descriptor(server) -> ViewerWindowDescriptor:
@@ -6135,8 +6147,10 @@ class NapariScreenshotControlMessageAction(
             ),
         )
 
-    def _complete_native_reply(self, server, completed, response) -> None:
-        completed(self._native_reply(server, response))
+    def _snapshot_native_reply(self, server, snapshot):
+        return self._native_reply(
+            server, self.snapshot_reply(self.snapshot_descriptor(server), snapshot)
+        )
 
     @staticmethod
     def _native_reply(server, response):
@@ -6387,32 +6401,42 @@ class NapariControlTransportPump:
         msg_type = message.get(ViewerControlResponseField.TYPE.value)
         if msg_type == ControlMessageType.PING.value:
             return self.server.control_response_payload(message)
-        action = NapariControlMessageAction.for_message_type(
-            msg_type if isinstance(msg_type, str) else None
-        )
-        transport_response = action.transport_thread_response(
-            self.server,
-            message,
-        )
+        try:
+            action = NapariControlMessageAction.for_message_type(
+                msg_type if isinstance(msg_type, str) else None
+            )
+            transport_response = action.transport_thread_response(self.server, message)
+            deadline = action.observation_deadline(message)
+        except Exception as error:
+            return self.server.serialize_control_response(
+                self.server.control_error_response(error)
+            )
         if transport_response is not None:
             return self.server.serialize_control_response(transport_response)
 
-        response_queue: queue.Queue[bytes] = queue.Queue(maxsize=1)
-        self.server.accepted_control_requests.put(
-            NapariAcceptedControlRequest(message, response_queue)
-        )
+        request = NapariAcceptedControlRequest(message)
+        self.server.accepted_control_requests.put(request)
         while True:
             try:
-                return response_queue.get(timeout=0.05)
-            except queue.Empty:
-                if self._stop_event.is_set() or not self.server.is_running():
-                    return self.server.serialize_control_response(
-                        self.server.control_error_response(
-                            RuntimeError(
-                                "Napari viewer stopped before completing its "
-                                "Qt-bound control request."
-                            )
+                return request.response.result(timeout=0.05)
+            except TimeoutError:
+                if deadline is not None:
+                    try:
+                        deadline.remaining_seconds()
+                    except TimeoutError as error:
+                        # Observation expiry is NOT cancellation of native work
+                        # or proof of non-dispatch. Its original deadline also
+                        # bounds the snapshot owner's eventual capture/commit.
+                        request.complete_from(
+                            self.server, self.server.control_error_response, error
                         )
+                if self._stop_event.is_set() or not self.server.is_running():
+                    request.complete_from(
+                        self.server, self.server.control_error_response,
+                        RuntimeError(
+                            "Napari viewer stopped before completing its "
+                            "Qt-bound control request."
+                        ),
                     )
 
 
@@ -6726,7 +6750,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 request = self.accepted_control_requests.get_nowait()
             except queue.Empty:
                 return
-            NapariControlMessageAction.dispatch_accepted_request(self, request)
+            request.dispatch_to(self)
 
     def _accept_single_image(
         self,

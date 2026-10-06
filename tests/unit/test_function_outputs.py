@@ -88,6 +88,8 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerSurface,
 )
 from openhcs.core.virtual_workspace_metadata import (
+    AtomicMetadataWriter,
+    METADATA_CONFIG,
     FIELDS,
     MetadataWriteError,
     VirtualWorkspaceSourceProjectionEntries,
@@ -102,6 +104,25 @@ from openhcs.processing.materialization import (
     MaterializationSpec,
     MaterializedFilenameIdentity,
 )
+
+
+def _publish_saved_step(context, plan, *, artifact_materializations=()):
+    """Exercise the receiving transaction with this step's actual saved facts."""
+    facts = OpenHCSMetadataTarget.observe_for_step(
+        context, plan, artifact_materializations=artifact_materializations
+    )
+    for metadata_path in dict.fromkeys(
+        METADATA_CONFIG.metadata_path(target.plate_root) for target in facts
+    ):
+        entries = {
+            target: value for target, value in facts.items()
+            if METADATA_CONFIG.metadata_path(target.plate_root) == metadata_path
+        }
+        AtomicMetadataWriter().reconcile_completed_plate(
+            metadata_path,
+            {target: context for target in entries if target.create_openhcs_metadata},
+            produced_entries_by_target=entries,
+        )
 
 
 @pytest.mark.parametrize("backend", [Backend.ZARR.value, "custom-array-store"])
@@ -139,14 +160,14 @@ def test_function_step_metadata_follows_runtime_artifact_persistence(
             "materialize",
             "runtime_artifacts",
         ),
-        (OpenHCSMetadataTarget, "write_for_step", "metadata"),
+        (OpenHCSMetadataTarget, "observe_for_step", "metadata"),
     ):
         monkeypatch.setattr(
             authority,
             method_name,
-            lambda _context, _plan, event=event, **_kwargs: (events.append(event), ())[
-                1
-            ],
+            lambda _context, _plan, event=event, **_kwargs: (
+                events.append(event), {} if event == "metadata" else ()
+            )[1],
         )
 
     finalize_function_step_outputs(context, plan)
@@ -1457,7 +1478,7 @@ def test_metadata_target_family_discovers_new_declaration_without_consumer_edits
         (target,) = OpenHCSMetadataTarget.for_plan(plan)
         assert type(target) is SupplementalImageMetadataTarget
         assert OpenHCSMetadataTarget.for_execution(context, plan) == (
-            target,
+            replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),
         )
         assert target.produced_projection_entries(context, plan).entries == {}
     finally:
@@ -1482,7 +1503,7 @@ def test_metadata_writer_skips_owner_without_image_outputs():
         ),
     )
 
-    OpenHCSMetadataTarget.write_for_step(context, plan)
+    _publish_saved_step(context, plan)
 
 
 def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifact(
@@ -1526,7 +1547,7 @@ def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifac
     plan.create_openhcs_metadata = True
     record_output_path(context, plan, output_path)
 
-    OpenHCSMetadataTarget.write_for_step(context, plan)
+    _publish_saved_step(context, plan)
 
     subdirectory = json.loads(
         (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
@@ -1619,7 +1640,7 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
         str(path),
         Backend.MEMORY.value,
     )
-    OpenHCSMetadataTarget.write_for_step(context, plan)
+    _publish_saved_step(context, plan)
     OpenHCSMetadataTarget.finalize_completed_plate({"A01": context})
 
     subdirectory = json.loads(
@@ -1982,7 +2003,7 @@ def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
         ),
     )
 
-    OpenHCSMetadataTarget.write_for_step(context, plan)
+    _publish_saved_step(context, plan)
 
     subdirectory = json.loads(
         (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
@@ -2090,7 +2111,7 @@ def test_produced_address_publication_never_parses_generated_filenames(
         raise AssertionError("Publication must consume the typed produced address.")
 
     monkeypatch.setattr(parser, "parse_filename", reject_generated_path_parse)
-    OpenHCSMetadataTarget.write_for_step(context, plan)
+    _publish_saved_step(context, plan)
     # Step memory is unavailable at final reconciliation. Durable projections
     # must supply the same addresses, calibration and exact saved coverage.
     for record in records:
@@ -2212,11 +2233,8 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     owner_context.step_plans = {owner_plan.step_index: owner_plan}
     record_output_path(owner_context, owner_plan, str(first_image))
 
-    OpenHCSMetadataTarget.write_for_step(owner_context, owner_plan)
-    initial_metadata = json.loads(
-        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
-    )["subdirectories"]["images"]
-    assert initial_metadata["wells"] == {"A01": None}
+    first_facts = OpenHCSMetadataTarget.observe_for_step(owner_context, owner_plan)
+    assert not (plate_root / "openhcs_metadata.json").exists()
 
     follower_context = context_stub(filemanager)
     follower_context.metadata_cache = owner_context.metadata_cache
@@ -2231,7 +2249,19 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     follower_plan.create_openhcs_metadata = True
     filemanager.save(first_pixels, str(later_image), Backend.MEMORY.value)
     record_output_path(follower_context, follower_plan, str(later_image))
-    OpenHCSMetadataTarget.write_for_step(follower_context, follower_plan)
+    later_facts = OpenHCSMetadataTarget.observe_for_step(follower_context, follower_plan)
+    combined_facts = {
+        target: VirtualWorkspaceSourceProjectionEntries.combine(
+            (first_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})),
+             later_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})))
+        )
+        for target in dict.fromkeys((*first_facts, *later_facts))
+    }
+    AtomicMetadataWriter().reconcile_completed_plate(
+        plate_root / "openhcs_metadata.json",
+        {target: owner_context for target in combined_facts},
+        produced_entries_by_target=combined_facts,
+    )
 
     OpenHCSMetadataTarget.finalize_completed_plate(
         {"A01": owner_context, "B03": follower_context}
@@ -2350,11 +2380,11 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
         context, plan, artifact_materializations=saved_artifacts
     )
     if contents == "images":
-        assert selected == (target,)
+        assert selected == (replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),)
     else:
         assert selected == ()
         plan.create_openhcs_metadata = True
-        OpenHCSMetadataTarget.write_for_step(context, plan)
+        _publish_saved_step(context, plan)
         assert not (tmp_path / "openhcs_metadata.json").exists()
     assert directory.exists() == (contents != "absent")
 
@@ -2423,7 +2453,7 @@ def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
     materializations = ArtifactMaterializationTargetPlan.materialize(
         context, plan
     )
-    OpenHCSMetadataTarget.write_for_step(
+    _publish_saved_step(
         context, plan, artifact_materializations=materializations
     )
     context.runtime_value_store.clear()
@@ -2543,7 +2573,7 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
     )
     assert {Path(location.path) for location in observed_locations} == expected_paths
 
-    OpenHCSMetadataTarget.write_for_step(
+    _publish_saved_step(
         context, plan, artifact_materializations=materializations
     )
     context.runtime_value_store.clear()

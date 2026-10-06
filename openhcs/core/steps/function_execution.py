@@ -442,22 +442,13 @@ class FunctionStepExecutor:
         main_flow_refs = compiled_group.main_flow_input_refs_for_component(
             self.plan.execution_group_scope,
             component_value,
+            source_bindings=self.plan.source_binding_plan,
         )
-        if main_flow_refs == ():
-            return None
-        component_plan = self.plan.source_binding_plan.for_component_group(
-            self.plan.execution_group_scope.component,
-            component_value,
+        return self.plan.source_binding_plan.for_main_flow_scope(
+            component=self.plan.execution_group_scope.component,
+            group_key=component_value,
+            main_flow_refs=main_flow_refs,
         )
-        if main_flow_refs is None:
-            return component_plan
-        declared_main_flow_plan = self.plan.source_binding_plan.for_artifact_refs(
-            main_flow_refs,
-        )
-        if not declared_main_flow_plan.binding_declarations:
-            return None
-        compatible_plan = component_plan.for_artifact_refs(main_flow_refs)
-        return compatible_plan if compatible_plan.binding_declarations else None
 
     def producer_anchor_patterns(
         self,
@@ -533,13 +524,12 @@ class FunctionStepExecutor:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = self.context.runtime_source_workspace_projection_authority.projection_or_empty()
+        projection = self.context.runtime_source_workspace_projection_authority.projection_or_empty(
+            axis_id=self.plan.axis_id,
+        )
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
-            projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
-                projection,
-                axis_id=self.plan.axis_id,
-            ),
+            projection=projection,
             metadata_rules=self.plan.source_binding_plan.metadata_rules,
         )
 

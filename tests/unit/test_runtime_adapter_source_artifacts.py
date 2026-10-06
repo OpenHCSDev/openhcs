@@ -1,3 +1,4 @@
+from openhcs.core.steps.abstract import StepExecutionObservation
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -138,14 +139,17 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     microscope_handler.initialize_workspace(workspace_root, filemanager)
     projection_cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
+        completed_step_outputs=StepExecutionObservation.empty(),
         plate_path=workspace_root,
         filemanager=filemanager,
         microscope_handler=microscope_handler,
-        runtime_source_workspace_projection_cache=projection_cache,
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
             frozenset((AllComponents.CHANNEL,))
         ),
+    )
+    context.runtime_source_workspace_projection_authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+        context, cache=projection_cache,
     )
     projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
         context,
@@ -297,8 +301,8 @@ def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mo
     microscope.initialize_workspace(workspace_root, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
+        completed_step_outputs=StepExecutionObservation.empty(),
         plate_path=workspace_root, filemanager=filemanager, microscope_handler=microscope,
-        runtime_source_workspace_projection_cache=cache,
     )
     workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(context, cache=cache).projection_or_empty()
     paths = tuple(path for path, _projection in workspace.source_occurrences_for_binding(binding, axis_id="A01"))

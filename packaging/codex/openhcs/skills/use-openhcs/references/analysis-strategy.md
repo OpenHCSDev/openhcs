@@ -24,10 +24,11 @@ It distinguishes missing information from an unhelpful display.
 
 | Observation or task | Retrieve | Decision to make |
 | --- | --- | --- |
-| FIRST foreground proposal, especially textured/ring bodies or regional nuisance | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md#compare-body-admission-models), then [openhcs_image_preprocessing](image-preprocessing.md) when needed | Does admission on the consumed alias/response preserve distributed positives while excluding nuisance-only regions? |
+| FIRST foreground proposal, especially textured/ring bodies or regional nuisance | [openhcs_image_preprocessing](image-preprocessing.md#normalize-segmentation-inputs-before-tuning), then [openhcs_segmentation_diagnostics](segmentation-diagnostics.md#compare-body-admission-models) | Are the analytical input mapping and units established, and does admission on that alias/response preserve distributed positives while excluding nuisance-only regions? |
 | FIRST threshold proposal or widening a positive-only sample to more fields | [openhcs_measurement_interpretation](measurement-interpretation.md#include-no-object-fields-before-widening) | Does the sampled scope include available whole no-object fields as well as genuine dim positives? |
 | FIRST marker/declumping proposal, including a shape-based method | [openhcs_measurement_interpretation](measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate) | Does the actual chosen landscape distinguish within-body maxima from a genuine pair, with justified competition and spacing units? |
 | Uneven background, noisy seeds, dim objects, bright outliers | [openhcs_image_preprocessing](image-preprocessing.md) | Which nuisance model fits, and what biology must survive? |
+| Comparable fields of one well or mosaic, including field-by-field analysis | [openhcs_image_preprocessing](image-preprocessing.md#shared-scaling-for-fields-of-one-mosaic) | Does the analysis use the requested shared input scaling over the complete per-channel SITE stack, rather than independent field fits or only internal detector-response scaling? |
 | Touching nuclei, one body split, merged cells, zero-growth secondary objects | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Is the failure in foreground, markers, separation or secondary growth? |
 | Thin neurites, disconnected traces, puncta or irregular cells | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Does the object model match the target and its topology? |
 | Intensity, volume, colocalisation, comparisons or final figures | [openhcs_measurement_interpretation](measurement-interpretation.md) | Which pixels, geometry, units and experimental units support the claim? |
@@ -151,6 +152,15 @@ units, misaligned geometry or catastrophic failures still reject the affected
 claim. Do not invent a universal error tolerance or relax the task's declared
 criteria to fit a result.
 
+For neurite outgrowth, distinguish principal-shaft recovery from exhaustive
+fine-protrusion tracing. When the requested endpoint concerns soma-connected
+main shafts, assess their distributed raw support, continuity and false bridges;
+unrequested filopodial completeness is not an acceptance gate. Lowering a
+threshold to add uncertain twigs or increase graph length/branch counts is not
+necessarily an improvement. Retain the author's best-supported candidate with
+its inclusion rules and known misses. If the task requires fine-branch counts
+or complete arbor length, those finer structures still need their own evidence.
+
 Useful algorithm-defined assay or morphology estimates can include counts and
 per-object summaries with stated inclusion rules, observed errors and uncertainty.
 They are not biological ground truth. Do not require proof of every body's cell
@@ -217,6 +227,15 @@ harness. Self-correction using that frozen harness is autonomous; externally
 corrected or repaired continuations are not. If assistance is supplied, retain
 the original unassisted outcome and its evaluation denominator, then label the
 continuation separately. Do not change a declared evaluation budget mid-run.
+
+Assess autonomous quality on the author's final frozen choice after its own
+inspection and repairs, including its decision to retain an earlier candidate
+when a revision regresses. A poor first candidate does not fail the whole run
+if the author independently reaches a useful result within the declared scope.
+Report the first completed prediction separately as an initial-selection and
+repair-effort diagnostic, not as the autonomous success criterion. Preserve
+first, rejected and final artifacts; do not substitute the evaluator's
+highest-scoring attempt for the author's final choice or feed scores back to it.
 
 Transfer only general, tested operational or reasoning improvements into the
 skill/MCP harness through [analysis learning](analysis-learning.md). Do not copy

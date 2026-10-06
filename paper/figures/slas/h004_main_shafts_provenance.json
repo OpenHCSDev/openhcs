@@ -1,0 +1,42 @@
+{
+  "generator_sha256": "2e7d4ec1c9a3cf47e8f30788262b520bdf3d4fef0cc49c4bb2bbe4e4019e62ef",
+  "source_sha256": {
+    "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
+    "paper/figures/slas/h004_fresh20_sources/first-bottom-raw.png": "a31555a497ce061fe397a10bd33046119e15ce6ce000539fd02dc3d2baad4324",
+    "paper/figures/slas/h004_fresh20_sources/first-bottom-result.png": "ae1b34c445b8537fd732f45efda47c837068e0ddf7623cf1dec297bf28f11f66"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/first-bottom-raw.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        410
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/first-bottom-result.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        410
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    }
+  ],
+  "output_sha256": {
+    "h004_main_shafts.png": "ff2451cec52fa68080e893e149921ca2668450b58a4ffafaa5c844551bb3caa8",
+    "h004_main_shafts.pdf": "b8bd10c02c0d65cb9c0d7b84fa9114e9f1a4340bb18b6935e622549a8813cdbb",
+    "h004_main_shafts.svg": "dc86106a6c9330cab451796ed27e23781bfb3067adbddfcdbef91d8ac01cceb8"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

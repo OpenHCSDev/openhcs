@@ -1,6 +1,8 @@
 # Choose and test microscopy preprocessing
 
-Start from a failed raw biological witness, not a favourite filter. Establish
+Normalize segmentation and tracing inputs before tuning detection parameters.
+For additional corrections, start from a raw biological witness and its nuisance,
+not a favourite filter. Establish
 the target channel, the structures that must survive and a specific nuisance
 model. Retain acquisition source and provenance as a reproducible reference;
 creating or modifying working analytical arrays is normal pipeline processing,
@@ -10,6 +12,32 @@ hypotheses, not unconditional steps to concatenate. Discover and describe the
 compatible registered OpenHCS
 callable before choosing parameters; the live contract owns backend, dtype,
 axes, units and artifact flow.
+
+## Normalize segmentation inputs before tuning
+
+Analytical normalization is a standard part of segmentation and tracing, not
+an optional cosmetic repair reserved for visibly poor images. Declare the
+mapping, fit domain and target range before measuring the detector's input or
+choosing intensity-dependent parameters. Use the existing source/processing
+owner: if it already supplies the intended normalized input, verify that
+contract rather than adding a duplicate transform or independently refitting it.
+An internally rescaled feature response is not evidence that the requested
+input normalization has been performed.
+
+Choose a linear/percentile rescaling or another justified mapping through a
+registered operation. For comparable fields, follow
+[shared scaling](#shared-scaling-for-fields-of-one-mosaic); keep that fit and
+mapping fixed across the channel's fields. Measure thresholds and noise scales
+in the actual resulting units, not the original detector counts. Normalization
+does not replace denoising, background subtraction or illumination correction;
+select those operations from their nuisance evidence and record their order.
+
+Processed pixels may legitimately clip bright bodies or change intensities when
+the claim is segmentation, count, area or traced geometry. Validate faint
+structures, neighbours and nuisance controls against raw. Original-fluorescence
+quantification has a different input claim: preserve its appropriate original
+or calibrated corrected source, rather than forbidding normalization of the
+separate detection branch.
 
 ## Establish spatial coverage before tuning
 

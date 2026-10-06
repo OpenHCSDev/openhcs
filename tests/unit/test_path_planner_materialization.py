@@ -43,7 +43,6 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payloa
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.config import ProcessingConfig, StepMaterializationConfig
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
@@ -131,7 +130,6 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         axis_id="A01",
         input_memory_type=MEMORY_TYPE_NUMPY,
         source_binding_plan=CompiledSourceBindingPlan.empty(),
-        source_load_plan=SourceLoadPlan(),
         variable_components=(),
         execution_group_scope=ComponentGroupScope.ungrouped(),
         compiled_function_pattern=compiled,

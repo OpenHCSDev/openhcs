@@ -242,6 +242,10 @@ class MicroscopeHandler(
 
         return False
 
+    def source_admission_config(self) -> Optional["SourceBindingsConfig"]:
+        """Return declarations still required to admit a retained source universe."""
+        return None
+
     @classmethod
     def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
         """Declare this handler as the owner of a format-specific source layout."""
@@ -468,9 +472,8 @@ class MicroscopeHandler(
         """
         Register virtual workspace backend for this plate.
 
-        VirtualWorkspace backends are plate-specific (each has a plate_root),
-        so we always create a new backend for each plate, replacing any existing one.
-        This ensures each plate uses the correct virtual workspace mapping.
+        Reuse the registered owner for the same plate and metadata contract.
+        Its mapping refreshes on metadata changes; a different namespace replaces it.
 
         Args:
             plate_path: Path to plate directory
@@ -480,9 +483,17 @@ class MicroscopeHandler(
         from openhcs.constants.constants import Backend
         from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
-        # Always create a new backend for this plate (VirtualWorkspace is plate-specific)
+        plate_root = Path(plate_path).resolve()
+        registered = filemanager.registry.get(Backend.VIRTUAL_WORKSPACE.value)
+        if (
+            isinstance(registered, VirtualWorkspaceBackend)
+            and registered.plate_root.resolve() == plate_root
+            and registered.metadata_config == METADATA_CONFIG
+        ):
+            return
+
         backend = VirtualWorkspaceBackend(
-            plate_root=Path(plate_path), metadata_config=METADATA_CONFIG
+            plate_root=plate_root, metadata_config=METADATA_CONFIG
         )
         filemanager.register_backend(Backend.VIRTUAL_WORKSPACE.value, backend)
         logger.info(f"Registered virtual workspace backend for {plate_path}")

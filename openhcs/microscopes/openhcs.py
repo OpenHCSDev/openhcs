@@ -407,12 +407,29 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 for directory in self.analysis_result_directories(plate_root)
             )
         document = OpenHCSMetadataSubdirectories.from_path(metadata_path)
+        admitted_entries = {
+            name: VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
+            for name, subdirectory in document.items()
+        }
+        return self.reconciliation_directories_from_document(
+            plate_root, backend, document, admitted_entries
+        )
+
+    def reconciliation_directories_from_document(
+        self,
+        plate_path: Union[str, Path],
+        backend: str,
+        document: OpenHCSMetadataSubdirectories,
+        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries],
+    ) -> tuple[Path, ...]:
+        """Select destinations from the current transaction's admitted entries."""
+        plate_root = Path(plate_path)
         admitted = tuple(
             (
                 subdirectory,
-                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory),
+                admitted_entries[name],
             )
-            for _name, subdirectory in document.items()
+            for name, subdirectory in document.items()
         )
         directories = tuple(
             plate_root / directory
@@ -1321,6 +1338,28 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
     _metadata_handler_class = None  # Set explicitly after class definition
 
     @classmethod
+    def create(
+        cls, *, filemanager: FileManager, pattern_format: Optional[str] = None,
+        source_bindings_config=None,
+    ) -> "OpenHCSMicroscopeHandler":
+        """Keep prepared source ownership while consuming declared admission."""
+        from openhcs.core.source_bindings import source_bindings_defaults_to_base
+
+        handler = super().create(
+            filemanager=filemanager, pattern_format=pattern_format,
+            source_bindings_config=source_bindings_config,
+        )
+        handler._source_bindings_config = (
+            None if source_bindings_config is None
+            else source_bindings_defaults_to_base(source_bindings_config)
+        )
+        return handler
+
+    def source_admission_config(self):
+        """Expose the original prepared-workspace declaration to runtime readers."""
+        return self._source_bindings_config
+
+    @classmethod
     def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
         """Declare OpenHCS data as an already prepared workspace format."""
 
@@ -1351,6 +1390,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
             None  # Will be set by factory or post_workspace
         )
         self.pattern_format = pattern_format  # Store for parser instantiation
+        self._source_bindings_config = None
 
         # Initialize super with a None parser. The actual parser is loaded dynamically.
         # The `parser` property will handle on-demand loading.
@@ -1575,6 +1615,17 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         # Set plate_folder to the metadata-owning root, even if the caller passed
         # a child such as images/ or images_results/.
         self.plate_folder = plate_root
+        if self._source_bindings_config is not None:
+            from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
+
+            projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+                plate_path=plate_root,
+                metadata_handler=self.metadata_handler,
+                filemanager=filemanager,
+                source_bindings=self._source_bindings_config,
+            ).projection_if_available()
+            if projection is None and self._source_bindings_config.source_filter_declarations:
+                raise ValueError("Prepared source filtering requires a typed workspace projection.")
         logger.debug("OpenHCSHandler: plate_folder set to %s", self.plate_folder)
 
         # Determine the main subdirectory from metadata - fail-loud on errors

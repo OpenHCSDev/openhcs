@@ -33,7 +33,6 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
 )
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.step_dependencies import StepInputDependency
 
 if TYPE_CHECKING:
@@ -292,7 +291,6 @@ class CompiledStepPlan:
     source_universe_plan: CompiledSourceUniversePlan = field(
         default_factory=CompiledSourceUniversePlan.empty
     )
-    source_load_plan: SourceLoadPlan = field(default_factory=SourceLoadPlan)
     runtime_artifact_materialization: RuntimeArtifactMaterializationPlan = field(
         default_factory=RuntimeArtifactMaterializationPlan.disabled
     )
@@ -333,6 +331,7 @@ class CompiledStepPlan:
             return None
         edges = group.stored_primary_input_edges_for_component(
             self.execution_group_scope, component_key,
+            source_bindings=self.source_binding_plan,
         )
         if edges and any(
             edge.storage_plan.source_step_scope_id == self.step_scope_id

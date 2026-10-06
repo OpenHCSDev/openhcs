@@ -22,6 +22,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
 )
 from openhcs.core.callable_contract import (
+    CallableContract,
     KeywordRuntimeParameter,
     runtime_image_execution_mode,
 )
@@ -153,6 +154,29 @@ class CalculateMathInputPolicy(CellProfilerObjectInputPolicyMixin):
 
     binds_without_declared_inputs = True
     supported_non_object_input_kinds = frozenset({MeasurementsArtifactType})
+
+    @classmethod
+    def invocation_domain_inputs(
+        cls,
+        contract: CallableContract,
+        declared_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        """Use the first required object operand as the correlated row domain.
+
+        Artifact bindings retain numerator/denominator order. Other operands
+        remain independently bound to their exact output-contract relations;
+        they do not add runtime image planes to the first operand's domain.
+        """
+        object_inputs = tuple(
+            spec
+            for spec in ArtifactSpecCollection(declared_inputs).of_artifact_type(
+                ObjectLabelsArtifactType
+            )
+            if spec.required
+        )
+        if object_inputs:
+            return object_inputs[:1]
+        return super().invocation_domain_inputs(contract, declared_inputs)
 
     @classmethod
     def bind_runtime_inputs(

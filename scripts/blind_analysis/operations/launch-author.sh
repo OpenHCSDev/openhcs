@@ -4,9 +4,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "${1:?root}" "${2:?slot}"
 config=$(jq -er '.author_config' "$FLEET_RUN_ROOT/program.json")
 cli=$(jq -er '.cli' "$FLEET_RUN_ROOT/program.json")
 prompt="Read TASK.rst in the current workspace. Complete the released public analysis autonomously within its recorded resource, evidence and time bounds; freeze and report the final attempted pipeline even on rejection or abstention."
-final_message=output/FINAL.rst
+# The CLI's last answer is controller evidence, not an authored science report.
+# Use the existing recorder namespace for fresh and recovery observations alike.
+final_message="$FLEET_RECORD_RUNTIME/author-final-answer.rst"
 if [[ -n "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
-  final_message="$FLEET_RECORD_RUNTIME/FINAL.rst"
   prompt="Continue this saved analysis context after the CLI interruption; this is a recorded continuation, not a new fresh autonomous pass. Original author and stdio client journals have closed; their originals and scientific outputs remain immutable. Original native runtimes remain alive. Do not start a native runtime or replay any UNKNOWN input. Start exactly one replacement recorded interactive client using: FLEET_RECOVERY_OBSERVATION=$FLEET_RECOVERY_OBSERVATION bash $FLEET_OPERATIONS/recorded-mcp.sh $FLEET_ROOT $FLEET_SLOT reconnect01. Keep that original tool handle. First use ordinary health and openhcs_observe_owned_runtime with the exact original RuntimeBootstrapHandle retained in your journal/files, then read-only reconcile pending jobs and viewer identities. No port-based adoption or synthetic handle. Resume only known-disposed work and unfinished QA through this retained runtime. Preserve interruption, original first-MCP clock and source/bundle/skill identities; record this operational revision separately. Use the same recovery observation environment and operations path for subsequent resource observations. No model/provider switch, no changed science settings or external answers supplied by this intervention. Complete your own reasoning/QA and close exact owned processes when done. Original TASK.rst objective remains; do not overwrite original journals or original FINAL files."
 fi
 skill="$FLEET_INSTALL/openhcs/agent/resources/knowledge/packaging/codex/openhcs/skills/use-openhcs"

@@ -1,0 +1,14 @@
+{
+  "generator_sha256": "2e7d4ec1c9a3cf47e8f30788262b520bdf3d4fef0cc49c4bb2bbe4e4019e62ef",
+  "source_sha256": {
+    "paper/figures/slas/h003_fresh656_native.png": "715039e50da86a0c372377ba9a7419c9fba8f59b9d5c938699d2182fb264e6f3",
+    "paper/figures/slas/h003_fresh19_matched.png": "af9234786b4103d75a57226ec5dab0e19000b5530a34eceb0285ebf7f7251a3f"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "h003_assay_review.png": "27d00740fc5d2d3263f3f8fcad1b15bd5076f55b22320808ba193e8f2063efbe",
+    "h003_assay_review.pdf": "eec8f792847154e1b268a5a6bf7b9a82bdd716367b656e3615f0a80b80e82bb6",
+    "h003_assay_review.svg": "be9a05e12da72b4abfd33737db62dd24a47a36ed268b2f13a92402b8f2120abd"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}
