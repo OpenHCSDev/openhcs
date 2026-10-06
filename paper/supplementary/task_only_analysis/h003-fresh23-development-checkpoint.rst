@@ -10,8 +10,8 @@ sent to the author.
 Run and candidate
 -----------------
 
-The author uses the receiving23 package on isolated display89 through MCP.
-The paired A02 acquisition contains DNA and Actin images of400x400 pixels.
+The author uses the receiving23 package on isolated display :89 through MCP.
+The paired A02 acquisition contains DNA and Actin images of 400 x 400 pixels.
 Physical calibration is unverified; geometry is reported in native pixels.
 The author retained FIRST and rejected CANDIDATE02 rather than overwriting
 their scientific source, outputs, matched captures or decisions.
@@ -33,7 +33,7 @@ These identify the proposal, not a post-writer seal of all final artifacts.
 Self-directed repair
 --------------------
 
-FIRST retained52 nuclei and52 seeded cell regions. The author's distributed
+FIRST retained 52 nuclei and 52 seeded cell regions. The author's distributed
 review found three supported nuclear bodies joined through threshold-admitted
 signal. Shape markers supplied one centre, and size filtering removed the
 merged object. CANDIDATE02 changed marker extraction to smoothed intensity;
@@ -55,12 +55,12 @@ Independent saved-output check
 ------------------------------
 
 The parent read the existing TIFF label arrays and exported CSVs without
-changing the masks, pipeline or tables. Both arrays have shape400x400,
-with55 nonzero IDs each and identical ID sets. Every nuclear pixel lies
+changing the masks, pipeline or tables. Both arrays have shape 400 x 400,
+with 55 nonzero IDs each and identical ID sets. Every nuclear pixel lies
 inside the cell-region mask with the same ID. Every exported object area
 in Nuclei.csv and Cells.csv matches its saved array pixel count. Both tables
-contain55 rows. The minimum per-ID cell-region growth area is zero;
-IDs4 and11 have no growth beyond their nuclear seeds.
+contain 55 rows. The minimum per-ID cell-region growth area is zero;
+IDs 4 and 11 have no growth beyond their nuclear seeds.
 
 Saved label files under input_candidate03/results::
 
@@ -72,7 +72,7 @@ Their independently calculated SHA256 values are, respectively::
   b3e06aa2614ccaaed3ffccc7e88cac30c05ee7b68fed75440d5e4939ebb0822e
   87726d1e391553de4434f702f57293e7d687ca66a71fcb2fa1944fdcf28d1217
 
-This proves consistency of these saved algorithm artifacts, not55 biological
+This proves consistency of these saved algorithm artifacts, not 55 biological
 cells. Seed-only regions, ambiguous adjacent nuclear lobes and censored image
 borders retain separate review flags. No fluorescence acceptance is inferred
 from area or ID agreement.
