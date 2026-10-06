@@ -268,3 +268,46 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             produced_metadata.source_provenance.represented_source_identities
             == live_metadata.source_provenance.represented_source_identities
         )
+
+
+@pytest.mark.parametrize("mode", ("rgb", "monochrome", "mask"))
+def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mode):
+    from PIL import Image
+    from skimage.color import rgb2gray
+    source_root, workspace_root = tmp_path / "source", tmp_path / "workspace"
+    source_root.mkdir()
+    path = source_root / "A01_s1_w1_z001_t001.tif"
+    pixels = np.arange(60, dtype=np.uint8).reshape(4, 5, 3)
+    if mode == "mask":
+        pixels = pixels[..., 0]
+    Image.fromarray(pixels).save(path)
+    binding = NamedSourceBinding(
+        alias="Raw", load_as_monochrome=mode == "monochrome", load_as_mask=mode == "mask",
+    )
+    bindings = SourceBindingsConfig(bindings=(binding,))
+    filemanager = _filemanager()
+    SourceBindingWorkspaceProjector(bindings, parser=SourceSchemaFilenameParser()).materialize(
+        source_root, workspace_root, filemanager=filemanager,
+        source_backend=Backend.DISK, workspace_backend=Backend.DISK, source_files=(path,),
+    )
+    microscope = create_microscope_handler(
+        microscope_type="auto", plate_folder=workspace_root,
+        filemanager=filemanager, source_bindings_config=bindings,
+    )
+    microscope.initialize_workspace(workspace_root, filemanager)
+    cache = VirtualWorkspaceSourceProjectionCache()
+    context = SimpleNamespace(
+        plate_path=workspace_root, filemanager=filemanager, microscope_handler=microscope,
+        runtime_source_workspace_projection_cache=cache,
+    )
+    workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(context, cache=cache).projection_or_empty()
+    paths = tuple(path for path, _projection in workspace.source_occurrences_for_binding(binding, axis_id="A01"))
+    assert len(paths) == 1
+    (payload,) = workspace.load_binding_payloads(paths, binding=binding, filemanager=filemanager)
+    expected = rgb2gray(pixels.astype(np.float32) / 255) if mode == "monochrome" else pixels.astype(bool) if mode == "mask" else pixels
+    assert np.allclose(image_payload_data(payload), expected)
+    metadata = image_payload_metadata(payload)
+    assert metadata.source_channel_axis == (-1 if mode == "rgb" else None)
+    assert metadata.source_provenance.represented_source_image_names == ("Raw",)
+    if mode in ("monochrome", "mask"):
+        assert metadata.has_normalized_intensity
