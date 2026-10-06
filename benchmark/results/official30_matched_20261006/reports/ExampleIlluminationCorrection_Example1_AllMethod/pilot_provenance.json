@@ -1,0 +1,939 @@
+{
+  "case": "ExampleIlluminationCorrection_Example1_AllMethod",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "805146550f128163e6fc1d5280876d6bf6031e3f7c4755f674fa7b766f2fd745",
+  "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "AS_09047_050428030001_O01f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O01f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5bfdeeb9e1dba87dc55220f71168af3d9949f38b8d59ba741b546619c2a49fd3"
+    },
+    {
+      "path": "AS_09047_050428030001_O01f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O01f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "8ddf231a2727fe0dd5e80d1747a968ecc67438def175dd2b4a5850bf54699c2b"
+    },
+    {
+      "path": "AS_09047_050428030001_O01f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O01f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5a7bf7ff3504baaf787f004e2137059ea2ca890a37842df5360a035b78e49940"
+    },
+    {
+      "path": "AS_09047_050428030001_O02f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O02f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "57f0a36092341c746441c837c78b103f35ef6460a71df77f5ae9ee74cd82ad4e"
+    },
+    {
+      "path": "AS_09047_050428030001_O02f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O02f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "d1b6057f138d897c3dba0d055e90e17ca5239523264c138c863bd2c4c7e453fa"
+    },
+    {
+      "path": "AS_09047_050428030001_O02f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O02f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "4b52dc59a87b5230d2e8701971d42df4f0e96966cf1308ce6eb7dc4865c1000e"
+    },
+    {
+      "path": "AS_09047_050428030001_O03f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O03f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "269e5ab417a616ef55679321f56ee99e870abe4e519c5c24c911b39b1527e7fd"
+    },
+    {
+      "path": "AS_09047_050428030001_O03f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O03f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0e95bb9ab0feeab2d0ddd1a5cc877475b5c8001ae4873b9ebcaaa44107acec78"
+    },
+    {
+      "path": "AS_09047_050428030001_O03f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O03f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "a26dbf0381c2404bb0f495e9c68d7f2ec8fa87eae6edc7c95b5a3fc55f548a97"
+    },
+    {
+      "path": "AS_09047_050428030001_O04f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O04f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fce63090cdf6281b51ac538d7af3840610f2e275af45d1cf8dd59ee2bf92377a"
+    },
+    {
+      "path": "AS_09047_050428030001_O04f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O04f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e27fd485ee359490f13efa73bf7bbaef2c6743ecadba05d21a22d156ed9b892e"
+    },
+    {
+      "path": "AS_09047_050428030001_O04f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O04f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fa078664928f35b7b0d1a3a971e39602bbb775f78e9001c3dcd81e392c570bf5"
+    },
+    {
+      "path": "AS_09047_050428030001_O05f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O05f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "cb80c657237e9cbdadba93d49d9a10cf35531ea2cb7246c5cf15d6cac1a30651"
+    },
+    {
+      "path": "AS_09047_050428030001_O05f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O05f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "6035bce54914bc2ce236dd1c37eda3dbeb83752ad6c3c3746e57ae13041ec868"
+    },
+    {
+      "path": "AS_09047_050428030001_O05f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O05f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "64e64f69f7b6abd5ed2db49b1a39dcf4036706a2a7cebef48a5188c41e0598e2"
+    },
+    {
+      "path": "AS_09047_050428030001_O06f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O06f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "076a52b3f4e257d18f45b01a61bfeeac112531fb5036890f2f2aa44f2ea36fdf"
+    },
+    {
+      "path": "AS_09047_050428030001_O06f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O06f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "72e69058831189fb1e799209c6d8bfd90d52e2736d96352ecca08735238c8384"
+    },
+    {
+      "path": "AS_09047_050428030001_O06f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O06f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "3c1a864005429908707a07a7f26debc838b9fff9328953a2838b7b629b305d85"
+    },
+    {
+      "path": "AS_09047_050428030001_O07f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O07f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e4adc0b64624c1e83deca015415473d77f323ed7d6cad0322472874cb32b2aa3"
+    },
+    {
+      "path": "AS_09047_050428030001_O07f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O07f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "ce3310b92a870a24abc9e81319d319fef07a6fe6a99961c174b1bc06bb65fc47"
+    },
+    {
+      "path": "AS_09047_050428030001_O07f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O07f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0ada0de31dec60745bece90d3d67c5ca5dbec6fa0532d61afe621602eef95543"
+    },
+    {
+      "path": "AS_09047_050428030001_O08f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O08f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "ff903c458dbfdbdd076952533aa1f3b17aa71d6b2add8cb79ead0f1649d8a189"
+    },
+    {
+      "path": "AS_09047_050428030001_O08f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O08f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0f3c0748ed5ec06b7e95e411a7744571e3338e3c37ff5b0336d707db997e939c"
+    },
+    {
+      "path": "AS_09047_050428030001_O08f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O08f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "97f926715e7ee9743e7b382808486de24a0b386db6712cf9b38a012fcb5b3e0e"
+    },
+    {
+      "path": "AS_09047_050428030001_O09f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O09f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "c60dd32928613a0905306b3697279138828520bc8a9420e662dbe79799cba89c"
+    },
+    {
+      "path": "AS_09047_050428030001_O09f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O09f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "917e37b5cd8d60c9e2caa89472246fb94d1c51f1a350554556cf826fae276437"
+    },
+    {
+      "path": "AS_09047_050428030001_O09f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O09f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "7f3750dd2ea324983f4ab1fcac59183a410267d1f8221f2963f7e74d19646450"
+    },
+    {
+      "path": "AS_09047_050428030001_O10f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O10f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fe52a74223e5a46d3d2b434d7dacc3d2517f2c5b10f0d04b7a3cbf7fbf41e63d"
+    },
+    {
+      "path": "AS_09047_050428030001_O10f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O10f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fc325b8baff83f25402f8398760df8b2bb72425a98077ede74fa05446b22ac88"
+    },
+    {
+      "path": "AS_09047_050428030001_O10f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O10f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "b763c7dc7a8a539f2eaa52517c60c39b0673b9777c4642555ba86b5774d6b0fd"
+    },
+    {
+      "path": "AS_09047_050428030001_O11f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O11f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "3f05a9e77c8cdf6c5c29c0af26a147bcc63c110bf0bc438abc27497501cfeda6"
+    },
+    {
+      "path": "AS_09047_050428030001_O11f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O11f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "93e08b9408c31d4317b2ef2db997c4df3efa7ae8d8d32738cb0ec0c5c9ec1d1f"
+    },
+    {
+      "path": "AS_09047_050428030001_O11f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O11f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "25304455c0b64544bcf09aed892c61cd37c3f6535db2447741f0fd0f08eea27c"
+    },
+    {
+      "path": "AS_09047_050428030001_O12f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O12f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "6876b895933a84d9dbe7d94e0db1862fdc19ae006a9be1ed76c0e1ec390a95cb"
+    },
+    {
+      "path": "AS_09047_050428030001_O12f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O12f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "b29ea362fcf4f1276977f5e09804b3caeca1dba4c030fa285ce69fb7f26b6044"
+    },
+    {
+      "path": "AS_09047_050428030001_O12f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O12f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e086c6b414fa5345577bb9d1cbcfcfdbd183e639e9039b50f1c08b5b67a00f36"
+    },
+    {
+      "path": "AS_09047_050428030001_O13f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O13f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "cae644c4b99556fccddbab42098f8dbdaa723996c521557f3b59caf3430b82d7"
+    },
+    {
+      "path": "AS_09047_050428030001_O13f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O13f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "17e88f342e33075b08338cb191df919c85eb3a5fa8efb3ddfcae57e69e776be3"
+    },
+    {
+      "path": "AS_09047_050428030001_O13f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O13f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "7bfe66d604eeb2b996e368f6a0e36891f2dd0d6ba5d819b4104614d0f0236bd2"
+    },
+    {
+      "path": "AS_09047_050428030001_O14f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "844889a709a3326137fd67171c0b8ec018b397fe1ede836a9b7e5809e075f58d"
+    },
+    {
+      "path": "AS_09047_050428030001_O14f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "968ea530f2a3aab735664fff7936ebc4e406a7112fd84b89d92431ba27178c96"
+    },
+    {
+      "path": "AS_09047_050428030001_O14f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5193e9ba72e56eaaff791c214c6be34766522b6aaab383ad8e9893f0734e60c3"
+    },
+    {
+      "path": "AS_09047_050428030001_O15f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O15f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "488149e5f50630d794c6c57340df6271a693035bbfa46142ed6422cbfa64c8ae"
+    },
+    {
+      "path": "AS_09047_050428030001_O15f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O15f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "3278f9402a8110bb622b2a8c62b8087d19b35736ae9a9e6361e675af67ecc13f"
+    },
+    {
+      "path": "AS_09047_050428030001_O15f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O15f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "25a40d29b3e2525c976b2288013bdbeb0a2eee7026f172d100586ff9a51ce348"
+    },
+    {
+      "path": "AS_09047_050428030001_O16f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O16f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "16fe3c9674e55150497d1d573ccc262419314ae62acb1c76dca858c40f72f744"
+    },
+    {
+      "path": "AS_09047_050428030001_O16f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O16f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "69133d455b367c919d5f2bcde19ab2c6223ef57b06d2c3011393e8c9f1a709c9"
+    },
+    {
+      "path": "AS_09047_050428030001_O16f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O16f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "b0c7dbcf259ad76e9fccb6de614b5d15f542317bb95c97a85233fbdcb73c9de3"
+    },
+    {
+      "path": "AS_09047_050428030001_O17f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O17f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "d049efceda2aea79923d4b8df69de9144ba104c77a06bf168184830cc30f30d4"
+    },
+    {
+      "path": "AS_09047_050428030001_O17f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O17f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "bae6ec7694d0868c74c079f5cd24534542f2835d4cab41ed8d82586c662ce4d1"
+    },
+    {
+      "path": "AS_09047_050428030001_O17f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O17f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "c991d219a21e6f1274b01bb6f370c4fb44addb122c1e292c36acd33def0787e2"
+    },
+    {
+      "path": "AS_09047_050428030001_O18f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O18f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "15e3dde0bdcd792bde186c6576cbb45d64723fb50b5d4c1841ad9ce3c6386f2d"
+    },
+    {
+      "path": "AS_09047_050428030001_O18f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O18f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "cf8e231352f5bf3f0b63aa29cf72a21c90a15ad2233e8495068a778399a056d0"
+    },
+    {
+      "path": "AS_09047_050428030001_O18f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O18f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "f67d7dba8a06dea16da609d350a98647d181c7b175109b940c74627e4c7fc4fd"
+    },
+    {
+      "path": "AS_09047_050428030001_O19f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O19f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "c370003080a53449570d1d780b9dd84626bd3cfa49c80c6db0ccdb493cbf6a63"
+    },
+    {
+      "path": "AS_09047_050428030001_O19f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O19f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "1a5b7ad836b7f86e187c52eb4e9f76dbc71b2057bf6ab8ff57d676314811a930"
+    },
+    {
+      "path": "AS_09047_050428030001_O19f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O19f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e8e3774e2ad39eeb9dcfb25cb92d7c75c022f86de5fab772a36e60a332cc7cf1"
+    },
+    {
+      "path": "AS_09047_050428030001_O20f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O20f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "99cf977fccdc4cbdb1ba8a1a2992dbf4d1c26b7f6d822a18d0db323e842ace8e"
+    },
+    {
+      "path": "AS_09047_050428030001_O20f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O20f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "6847c82a3ea55a29c1f55c7dcf251e5b8a776eb207107f41aaabf3978a855c58"
+    },
+    {
+      "path": "AS_09047_050428030001_O20f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O20f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "2e0059c518aa222960520be791721a52837a948d22bf1d2fb4000b37ec89e881"
+    },
+    {
+      "path": "AS_09047_050428030001_O21f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O21f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "26fb12cc1228982b372da290eabe06897521db386800aca9518535fead716870"
+    },
+    {
+      "path": "AS_09047_050428030001_O21f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O21f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "1c59f7447309b5854ebcac27ed3cd10c564894b4cdb6510865b447bca4029c95"
+    },
+    {
+      "path": "AS_09047_050428030001_O21f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O21f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "9c0d1062e13d193427eb146b882e19c54ccbbba531df786d797e7d13756198b0"
+    },
+    {
+      "path": "AS_09047_050428030001_O22f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O22f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fafa8607d475c46e645433036df14b58ec9ba7c850ef5ff37b8253bd8ea67f05"
+    },
+    {
+      "path": "AS_09047_050428030001_O22f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O22f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "2183fc92523891136905acf96fc2bdad04e00657f8070911ac3d4c1950ebf822"
+    },
+    {
+      "path": "AS_09047_050428030001_O22f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O22f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5684cec26114f2813f41d4c42ba2bbe982b01bdcad78d80d73cfb78e07f9c790"
+    },
+    {
+      "path": "AS_09047_050428030001_O23f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O23f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "7e2420883575733a3d759752d633df10eec665b9d0575173063365366320a8b7"
+    },
+    {
+      "path": "AS_09047_050428030001_O23f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O23f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "f61467aadaf8e4c92cab7daff2cf5cf99b87783d5a055f69d9043c8b9b958554"
+    },
+    {
+      "path": "AS_09047_050428030001_O23f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O23f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0a0839f901f76e8f11e85c94af74e0c8f1df302cc7fd88cd7429e83e694329c7"
+    },
+    {
+      "path": "AS_09047_050428030001_O24f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O24f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "ecd17866fa382365023790c9c874255e9248ce77fa374abfaec73a62f7cb898d"
+    },
+    {
+      "path": "AS_09047_050428030001_O24f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O24f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "8ac212dcc8b92fb953bd4a17f2b6a49a9b824c521b5c0fb62bfafacadd03a44d"
+    },
+    {
+      "path": "AS_09047_050428030001_O24f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O24f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "adf56aa932a3e04f19e5eb2b0f5d85a15b52fa2ffa0a0e57b6754c6de818eee0"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleIlluminationCorrection_Example1_AllMethod/native_report.json",
+  "native_reference_report_sha256": "ced13541b72140f99a296d5b363119cec90c13f4858882b839ab682f46f50a65",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleIlluminationCorrection_Example1_AllMethod/native_report.json",
+      "sha256": "ced13541b72140f99a296d5b363119cec90c13f4858882b839ab682f46f50a65"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleIlluminationCorrection_Example1_AllMethod/native_request.json",
+      "sha256": "454ebb9733e183bb31442d098c8fca2bc9f61f812f0ab0149cc7fc2ca211ca7d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleIlluminationCorrection_Example1_AllMethod/pilot_provenance.json",
+      "sha256": "c9a44c9b3dfe874848919add4f9d651c942947a48e9a58c4608acc0e8d9a1f0b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_AllMethod/native/-1/Illum.npy",
+      "sha256": "2f8490c4a6a7301d569797a80e3f9f26581fc83cc267aa436e44dc2f06cc346a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_AllMethod/native/0/Illum.npy",
+      "sha256": "2f8490c4a6a7301d569797a80e3f9f26581fc83cc267aa436e44dc2f06cc346a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_AllMethod/native/1/Illum.npy",
+      "sha256": "2f8490c4a6a7301d569797a80e3f9f26581fc83cc267aa436e44dc2f06cc346a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_AllMethod/native/2/Illum.npy",
+      "sha256": "2f8490c4a6a7301d569797a80e3f9f26581fc83cc267aa436e44dc2f06cc346a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_AllMethod/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "9793c1df10fad958514cc6604e0edde27dfb152f8654e9414e3729bd19af61a1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example1_AllMethod/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example1_AllMethod.cppipe",
+      "sha256": "e76125ee2402879bf0610135ea02c1bc065120c074d404b6d955fa12523fbb02"
+    }
+  ],
+  "native_image_set_count": 72,
+  "native_input_inventory_after": [
+    {
+      "path": "AS_09047_050428030001_O01f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O01f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5bfdeeb9e1dba87dc55220f71168af3d9949f38b8d59ba741b546619c2a49fd3"
+    },
+    {
+      "path": "AS_09047_050428030001_O01f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O01f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "8ddf231a2727fe0dd5e80d1747a968ecc67438def175dd2b4a5850bf54699c2b"
+    },
+    {
+      "path": "AS_09047_050428030001_O01f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O01f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5a7bf7ff3504baaf787f004e2137059ea2ca890a37842df5360a035b78e49940"
+    },
+    {
+      "path": "AS_09047_050428030001_O02f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O02f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "57f0a36092341c746441c837c78b103f35ef6460a71df77f5ae9ee74cd82ad4e"
+    },
+    {
+      "path": "AS_09047_050428030001_O02f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O02f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "d1b6057f138d897c3dba0d055e90e17ca5239523264c138c863bd2c4c7e453fa"
+    },
+    {
+      "path": "AS_09047_050428030001_O02f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O02f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "4b52dc59a87b5230d2e8701971d42df4f0e96966cf1308ce6eb7dc4865c1000e"
+    },
+    {
+      "path": "AS_09047_050428030001_O03f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O03f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "269e5ab417a616ef55679321f56ee99e870abe4e519c5c24c911b39b1527e7fd"
+    },
+    {
+      "path": "AS_09047_050428030001_O03f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O03f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0e95bb9ab0feeab2d0ddd1a5cc877475b5c8001ae4873b9ebcaaa44107acec78"
+    },
+    {
+      "path": "AS_09047_050428030001_O03f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O03f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "a26dbf0381c2404bb0f495e9c68d7f2ec8fa87eae6edc7c95b5a3fc55f548a97"
+    },
+    {
+      "path": "AS_09047_050428030001_O04f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O04f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fce63090cdf6281b51ac538d7af3840610f2e275af45d1cf8dd59ee2bf92377a"
+    },
+    {
+      "path": "AS_09047_050428030001_O04f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O04f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e27fd485ee359490f13efa73bf7bbaef2c6743ecadba05d21a22d156ed9b892e"
+    },
+    {
+      "path": "AS_09047_050428030001_O04f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O04f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fa078664928f35b7b0d1a3a971e39602bbb775f78e9001c3dcd81e392c570bf5"
+    },
+    {
+      "path": "AS_09047_050428030001_O05f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O05f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "cb80c657237e9cbdadba93d49d9a10cf35531ea2cb7246c5cf15d6cac1a30651"
+    },
+    {
+      "path": "AS_09047_050428030001_O05f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O05f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "6035bce54914bc2ce236dd1c37eda3dbeb83752ad6c3c3746e57ae13041ec868"
+    },
+    {
+      "path": "AS_09047_050428030001_O05f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O05f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "64e64f69f7b6abd5ed2db49b1a39dcf4036706a2a7cebef48a5188c41e0598e2"
+    },
+    {
+      "path": "AS_09047_050428030001_O06f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O06f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "076a52b3f4e257d18f45b01a61bfeeac112531fb5036890f2f2aa44f2ea36fdf"
+    },
+    {
+      "path": "AS_09047_050428030001_O06f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O06f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "72e69058831189fb1e799209c6d8bfd90d52e2736d96352ecca08735238c8384"
+    },
+    {
+      "path": "AS_09047_050428030001_O06f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O06f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "3c1a864005429908707a07a7f26debc838b9fff9328953a2838b7b629b305d85"
+    },
+    {
+      "path": "AS_09047_050428030001_O07f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O07f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e4adc0b64624c1e83deca015415473d77f323ed7d6cad0322472874cb32b2aa3"
+    },
+    {
+      "path": "AS_09047_050428030001_O07f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O07f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "ce3310b92a870a24abc9e81319d319fef07a6fe6a99961c174b1bc06bb65fc47"
+    },
+    {
+      "path": "AS_09047_050428030001_O07f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O07f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0ada0de31dec60745bece90d3d67c5ca5dbec6fa0532d61afe621602eef95543"
+    },
+    {
+      "path": "AS_09047_050428030001_O08f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O08f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "ff903c458dbfdbdd076952533aa1f3b17aa71d6b2add8cb79ead0f1649d8a189"
+    },
+    {
+      "path": "AS_09047_050428030001_O08f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O08f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0f3c0748ed5ec06b7e95e411a7744571e3338e3c37ff5b0336d707db997e939c"
+    },
+    {
+      "path": "AS_09047_050428030001_O08f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O08f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "97f926715e7ee9743e7b382808486de24a0b386db6712cf9b38a012fcb5b3e0e"
+    },
+    {
+      "path": "AS_09047_050428030001_O09f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O09f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "c60dd32928613a0905306b3697279138828520bc8a9420e662dbe79799cba89c"
+    },
+    {
+      "path": "AS_09047_050428030001_O09f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O09f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "917e37b5cd8d60c9e2caa89472246fb94d1c51f1a350554556cf826fae276437"
+    },
+    {
+      "path": "AS_09047_050428030001_O09f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O09f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "7f3750dd2ea324983f4ab1fcac59183a410267d1f8221f2963f7e74d19646450"
+    },
+    {
+      "path": "AS_09047_050428030001_O10f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O10f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fe52a74223e5a46d3d2b434d7dacc3d2517f2c5b10f0d04b7a3cbf7fbf41e63d"
+    },
+    {
+      "path": "AS_09047_050428030001_O10f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O10f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fc325b8baff83f25402f8398760df8b2bb72425a98077ede74fa05446b22ac88"
+    },
+    {
+      "path": "AS_09047_050428030001_O10f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O10f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "b763c7dc7a8a539f2eaa52517c60c39b0673b9777c4642555ba86b5774d6b0fd"
+    },
+    {
+      "path": "AS_09047_050428030001_O11f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O11f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "3f05a9e77c8cdf6c5c29c0af26a147bcc63c110bf0bc438abc27497501cfeda6"
+    },
+    {
+      "path": "AS_09047_050428030001_O11f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O11f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "93e08b9408c31d4317b2ef2db997c4df3efa7ae8d8d32738cb0ec0c5c9ec1d1f"
+    },
+    {
+      "path": "AS_09047_050428030001_O11f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O11f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "25304455c0b64544bcf09aed892c61cd37c3f6535db2447741f0fd0f08eea27c"
+    },
+    {
+      "path": "AS_09047_050428030001_O12f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O12f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "6876b895933a84d9dbe7d94e0db1862fdc19ae006a9be1ed76c0e1ec390a95cb"
+    },
+    {
+      "path": "AS_09047_050428030001_O12f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O12f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "b29ea362fcf4f1276977f5e09804b3caeca1dba4c030fa285ce69fb7f26b6044"
+    },
+    {
+      "path": "AS_09047_050428030001_O12f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O12f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e086c6b414fa5345577bb9d1cbcfcfdbd183e639e9039b50f1c08b5b67a00f36"
+    },
+    {
+      "path": "AS_09047_050428030001_O13f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O13f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "cae644c4b99556fccddbab42098f8dbdaa723996c521557f3b59caf3430b82d7"
+    },
+    {
+      "path": "AS_09047_050428030001_O13f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O13f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "17e88f342e33075b08338cb191df919c85eb3a5fa8efb3ddfcae57e69e776be3"
+    },
+    {
+      "path": "AS_09047_050428030001_O13f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O13f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "7bfe66d604eeb2b996e368f6a0e36891f2dd0d6ba5d819b4104614d0f0236bd2"
+    },
+    {
+      "path": "AS_09047_050428030001_O14f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "844889a709a3326137fd67171c0b8ec018b397fe1ede836a9b7e5809e075f58d"
+    },
+    {
+      "path": "AS_09047_050428030001_O14f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "968ea530f2a3aab735664fff7936ebc4e406a7112fd84b89d92431ba27178c96"
+    },
+    {
+      "path": "AS_09047_050428030001_O14f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O14f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5193e9ba72e56eaaff791c214c6be34766522b6aaab383ad8e9893f0734e60c3"
+    },
+    {
+      "path": "AS_09047_050428030001_O15f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O15f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "488149e5f50630d794c6c57340df6271a693035bbfa46142ed6422cbfa64c8ae"
+    },
+    {
+      "path": "AS_09047_050428030001_O15f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O15f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "3278f9402a8110bb622b2a8c62b8087d19b35736ae9a9e6361e675af67ecc13f"
+    },
+    {
+      "path": "AS_09047_050428030001_O15f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O15f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "25a40d29b3e2525c976b2288013bdbeb0a2eee7026f172d100586ff9a51ce348"
+    },
+    {
+      "path": "AS_09047_050428030001_O16f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O16f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "16fe3c9674e55150497d1d573ccc262419314ae62acb1c76dca858c40f72f744"
+    },
+    {
+      "path": "AS_09047_050428030001_O16f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O16f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "69133d455b367c919d5f2bcde19ab2c6223ef57b06d2c3011393e8c9f1a709c9"
+    },
+    {
+      "path": "AS_09047_050428030001_O16f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O16f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "b0c7dbcf259ad76e9fccb6de614b5d15f542317bb95c97a85233fbdcb73c9de3"
+    },
+    {
+      "path": "AS_09047_050428030001_O17f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O17f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "d049efceda2aea79923d4b8df69de9144ba104c77a06bf168184830cc30f30d4"
+    },
+    {
+      "path": "AS_09047_050428030001_O17f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O17f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "bae6ec7694d0868c74c079f5cd24534542f2835d4cab41ed8d82586c662ce4d1"
+    },
+    {
+      "path": "AS_09047_050428030001_O17f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O17f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "c991d219a21e6f1274b01bb6f370c4fb44addb122c1e292c36acd33def0787e2"
+    },
+    {
+      "path": "AS_09047_050428030001_O18f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O18f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "15e3dde0bdcd792bde186c6576cbb45d64723fb50b5d4c1841ad9ce3c6386f2d"
+    },
+    {
+      "path": "AS_09047_050428030001_O18f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O18f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "cf8e231352f5bf3f0b63aa29cf72a21c90a15ad2233e8495068a778399a056d0"
+    },
+    {
+      "path": "AS_09047_050428030001_O18f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O18f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "f67d7dba8a06dea16da609d350a98647d181c7b175109b940c74627e4c7fc4fd"
+    },
+    {
+      "path": "AS_09047_050428030001_O19f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O19f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "c370003080a53449570d1d780b9dd84626bd3cfa49c80c6db0ccdb493cbf6a63"
+    },
+    {
+      "path": "AS_09047_050428030001_O19f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O19f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "1a5b7ad836b7f86e187c52eb4e9f76dbc71b2057bf6ab8ff57d676314811a930"
+    },
+    {
+      "path": "AS_09047_050428030001_O19f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O19f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "e8e3774e2ad39eeb9dcfb25cb92d7c75c022f86de5fab772a36e60a332cc7cf1"
+    },
+    {
+      "path": "AS_09047_050428030001_O20f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O20f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "99cf977fccdc4cbdb1ba8a1a2992dbf4d1c26b7f6d822a18d0db323e842ace8e"
+    },
+    {
+      "path": "AS_09047_050428030001_O20f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O20f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "6847c82a3ea55a29c1f55c7dcf251e5b8a776eb207107f41aaabf3978a855c58"
+    },
+    {
+      "path": "AS_09047_050428030001_O20f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O20f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "2e0059c518aa222960520be791721a52837a948d22bf1d2fb4000b37ec89e881"
+    },
+    {
+      "path": "AS_09047_050428030001_O21f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O21f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "26fb12cc1228982b372da290eabe06897521db386800aca9518535fead716870"
+    },
+    {
+      "path": "AS_09047_050428030001_O21f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O21f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "1c59f7447309b5854ebcac27ed3cd10c564894b4cdb6510865b447bca4029c95"
+    },
+    {
+      "path": "AS_09047_050428030001_O21f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O21f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "9c0d1062e13d193427eb146b882e19c54ccbbba531df786d797e7d13756198b0"
+    },
+    {
+      "path": "AS_09047_050428030001_O22f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O22f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "fafa8607d475c46e645433036df14b58ec9ba7c850ef5ff37b8253bd8ea67f05"
+    },
+    {
+      "path": "AS_09047_050428030001_O22f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O22f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "2183fc92523891136905acf96fc2bdad04e00657f8070911ac3d4c1950ebf822"
+    },
+    {
+      "path": "AS_09047_050428030001_O22f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O22f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "5684cec26114f2813f41d4c42ba2bbe982b01bdcad78d80d73cfb78e07f9c790"
+    },
+    {
+      "path": "AS_09047_050428030001_O23f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O23f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "7e2420883575733a3d759752d633df10eec665b9d0575173063365366320a8b7"
+    },
+    {
+      "path": "AS_09047_050428030001_O23f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O23f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "f61467aadaf8e4c92cab7daff2cf5cf99b87783d5a055f69d9043c8b9b958554"
+    },
+    {
+      "path": "AS_09047_050428030001_O23f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O23f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "0a0839f901f76e8f11e85c94af74e0c8f1df302cc7fd88cd7429e83e694329c7"
+    },
+    {
+      "path": "AS_09047_050428030001_O24f00d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O24f00d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "ecd17866fa382365023790c9c874255e9248ce77fa374abfaec73a62f7cb898d"
+    },
+    {
+      "path": "AS_09047_050428030001_O24f01d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O24f01d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "8ac212dcc8b92fb953bd4a17f2b6a49a9b824c521b5c0fb62bfafacadd03a44d"
+    },
+    {
+      "path": "AS_09047_050428030001_O24f02d2.TIF",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/AS_09047_050428030001_O24f02d2.TIF",
+      "size_bytes": 264158,
+      "sha256": "adf56aa932a3e04f19e5eb2b0f5d85a15b52fa2ffa0a0e57b6754c6de818eee0"
+    }
+  ]
+}

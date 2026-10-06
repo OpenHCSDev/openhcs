@@ -1,0 +1,15 @@
+{
+  "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_preparation/native_cellprofiler_headless/ExampleTumor.cppipe",
+  "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images",
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native",
+  "expected_image_sets": null,
+  "repetitions": 3,
+  "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_preparation/native_cellprofiler_file_list.txt",
+  "first_image_set": 1,
+  "last_image_set": null,
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_report.json",
+  "start_barrier_root": null,
+  "start_barrier_job_count": 1,
+  "start_barrier_job_index": 0,
+  "assignment_output_subdirectories": []
+}

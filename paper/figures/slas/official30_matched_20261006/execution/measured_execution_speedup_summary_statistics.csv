@@ -1,0 +1,2 @@
+label,sample_count,min_speedup,max_speedup,median_speedup,mean_speedup,standard_deviation
+OH (1 well / 1 worker),30,2.8270538746292924,349.438445344741,4.000566957986215,17.56236751402627,63.03281787894102

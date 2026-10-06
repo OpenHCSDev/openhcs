@@ -1,0 +1,32 @@
+{
+  "status": "PREPARED_NOT_LAUNCHED",
+  "argv": [
+    "taskset",
+    "-c",
+    "5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "-B",
+    "-c",
+    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
+    "--manifest",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json",
+    "--all-cases",
+    "--well-count",
+    "1",
+    "--openhcs-workers",
+    "1",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--output-dir",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases"
+  ],
+  "protocol": "All30 manifest cases; no exclusions; one owned prepared server; one warmup and three measured repetitions per engine per case; internal profiling off; native pipeline call includes prepare_run/prepare_group/modules/post_run, OH full server job; disjoint client total vs native invocation; startup excluded; reuse genuine retained complete native observations via original case directories only after workload/source/environment/hardware/input/output guards pass; missing native cases run fresh; order-only derived manifest runs nine not-yet-qualified cases first then all twenty-one previously receiving-qualified cases, all30 declarations exactly unchanged",
+  "source_freeze_head": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "native_reference_scope": "All30 genuine completed native observations from v10/cases, only after existing strict workload/source/environment/hardware/input/output custody guards pass; no native timing projection."
+}
