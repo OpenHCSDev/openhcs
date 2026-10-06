@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
+from types import MappingProxyType
 
 import numpy as np
 import pytest
@@ -48,14 +50,49 @@ from openhcs.microscopes.openhcs import (
     get_metadata_path,
 )
 from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
     VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspacePathLookup,
 )
+from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceMapping
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
+from polystore.virtual_workspace import SourcePixelRef
+
+
+def test_transient_axis_views_observe_each_new_projection_without_reusing_released_ids():
+    cache = VirtualWorkspaceSourceProjectionCache()
+    refs = MappingProxyType({"A01.tif": SourcePixelRef("disk", "source.tif")})
+    for generation in range(20):
+        metadata = MappingProxyType({"A01.tif": MappingProxyType({
+            "well": "A01", "generation": str(generation),
+        })})
+        projection = VirtualWorkspaceSourceProjection(refs, metadata, "/plate")
+        filtered = cache.filtered_by_axis(projection, axis_id="A01")
+        assert filtered.source_metadata_by_path["A01.tif"]["generation"] == str(generation)
+        del projection
+
+
+def test_source_projection_document_replacement_preserves_absence_and_schema_rejection(tmp_path):
+    cache = VirtualWorkspaceSourceProjectionCache()
+    native_document = {FIELDS.SUBDIRECTORIES: {
+        "images": {FIELDS.IMAGE_FILES: ["native.tif"]},
+    }}
+    empty_workspace = {FIELDS.SUBDIRECTORIES: {
+        "images": {FIELDS.WORKSPACE_MAPPING: {}},
+    }}
+    for document in (native_document, empty_workspace):
+        assert cache.projection_for(tmp_path, document) is None
+        assert cache.projection_for(tmp_path, document) is None
+    malformed_document = {FIELDS.SUBDIRECTORIES: {
+        "images": {FIELDS.WORKSPACE_MAPPING: []},
+    }}
+    with pytest.raises(RuntimeError, match="workspace_mapping must be a mapping"):
+        cache.projection_for(tmp_path, malformed_document)
+    assert cache.projection_for(tmp_path, native_document) is None
 
 
 def _write_tiff_stack(path: Path, values: tuple[int, ...]) -> None:
@@ -73,7 +110,7 @@ def _filemanager() -> FileManager:
 
 @pytest.mark.parametrize("selection,expected_sites", ((None, tuple(range(1, 10))), (7, (7,)), (3, (3,))))
 def test_prepared_workspace_admits_declared_source_universe_without_rewriting_provenance(
-    tmp_path, selection, expected_sites,
+    tmp_path, monkeypatch, selection, expected_sites,
 ):
     source = tmp_path / "source"
     source.mkdir()
@@ -109,6 +146,12 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache,
     ).projection_or_empty()
+    admissions = []
+    original_admit = SourceBindingWorkspaceProjector.admit_prepared_projection
+    def observe_admission(projector, projection):
+        admissions.append(projection)
+        return original_admit(projector, projection)
+    monkeypatch.setattr(SourceBindingWorkspaceProjector, "admit_prepared_projection", observe_admission)
     selected = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache, source_bindings=config,
@@ -126,10 +169,54 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     context = ProcessingContext(filemanager=filemanager, axis_id="A01")
     context.plate_path = workspace
     context.microscope_handler = handler
+    from openhcs.core import source_workspace_projection
+    monkeypatch.setattr(source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache)
     runtime_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
         context,
     ).projection_or_empty()
     assert runtime_projection.pipeline_start_files() == selected.pipeline_start_files()
+    assert not hasattr(context, "runtime_source_workspace_projection_cache")
+    other = ProcessingContext(filemanager=filemanager, axis_id="A01")
+    other.plate_path = workspace
+    other.microscope_handler = handler
+    assert context.runtime_source_workspace_projection_authority.cache is other.runtime_source_workspace_projection_authority.cache is cache
+    assert other.runtime_source_workspace_projection_authority.projection_or_empty() is selected
+    equivalent = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        plate_path=workspace, metadata_handler=handler.metadata_handler,
+        filemanager=filemanager, cache=cache, source_bindings=replace(config),
+    ).projection_or_empty()
+    assert equivalent is selected
+    compiled_views = cache.partition_by_axes(selected, axis_ids=("A01",))
+    assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+    assert len(admissions) == (0 if selection is None else 1)
+    with monkeypatch.context() as admitted_query:
+        def reject_redecode(_cls, _subdirectory):
+            raise AssertionError("An admitted document must not decode its whole workspace again.")
+        admitted_query.setattr(VirtualWorkspaceMapping, "from_subdirectory", classmethod(reject_redecode))
+        assert context.runtime_source_workspace_projection_authority.projection_or_empty() is selected
+        assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+    prior_authority = context.runtime_source_workspace_projection_authority
+    handler._source_bindings_config = replace(config, source_filters=(
+        SourceFilterClause(subject=SourceFilterSubject.FILE,
+                          match_type=SourceFilterMatchType.CONTAINS, value="_s008_"),
+    ))
+    changed = context.runtime_source_workspace_projection_authority
+    assert changed is not prior_authority
+    assert changed.projection_or_empty().component_values(AllComponents.SITE) == ("8",)
+    handler._source_bindings_config = replace(config, source_filters=())
+    assert context.runtime_source_workspace_projection_authority.projection_or_empty() is full
+    handler._source_bindings_config = replace(config, source_filters=(
+        SourceFilterClause(subject=SourceFilterSubject.FILE,
+                          match_type=SourceFilterMatchType.CONTAINS, value="_s099_"),
+    ))
+    with pytest.raises(ValueError, match="matched no prepared workspace sources"):
+        context.runtime_source_workspace_projection_authority.projection_or_empty()
+    handler._source_bindings_config = config
+    assert context.runtime_source_workspace_projection_authority.projection_or_empty() is selected
+    handler.metadata_handler.invalidate_metadata_cache()
+    replacement = context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01")
+    assert replacement is not compiled_views["A01"]
+    assert replacement.source_metadata_by_path == compiled_views["A01"].source_metadata_by_path
     from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     orchestrator = PipelineOrchestrator(
@@ -1438,7 +1525,7 @@ def test_source_reinitialization_refreshes_calibration_and_registered_projection
     )
     current.initialize_workspace(tmp_path, filemanager)
     assert current.metadata_handler.get_pixel_size(tmp_path) == 1.3556
-    assert filemanager.registry[Backend.VIRTUAL_WORKSPACE.value] is not original_backend
+    assert filemanager.registry[Backend.VIRTUAL_WORKSPACE.value] is original_backend
     assert (
         np.asarray(
             filemanager.load(virtual_name, Backend.VIRTUAL_WORKSPACE.value)

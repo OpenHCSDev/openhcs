@@ -29,8 +29,9 @@ from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionCache
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.core.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
@@ -47,16 +48,20 @@ class CellProfilerRuntimeTestContext:
     microscope_handler: object
     source_image_set_identity_policy: SourceImageSetIdentityPolicy
     plate_path: Path = Path('/plate/Images')
+    completed_step_outputs: StepExecutionObservation = field(
+        default_factory=StepExecutionObservation.empty,
+    )
     runtime_source_binding_context_cache: RuntimeSourceBindingContextCache = field(
         default_factory=RuntimeSourceBindingContextCache,
-    )
-    runtime_source_workspace_projection_cache: VirtualWorkspaceSourceProjectionCache = field(
-        default_factory=VirtualWorkspaceSourceProjectionCache,
     )
     runtime_function_output_identity_cache: FunctionOutputIdentityCache = field(
         default_factory=FunctionOutputIdentityCache
     )
     _runtime_step_values: dict[type[object], object] = field(default_factory=dict)
+
+    @property
+    def runtime_source_workspace_projection_authority(self):
+        return VirtualWorkspaceSourceProjectionAuthority.from_context(self)
 
     def runtime_step_value(self, value_type: type[Any]) -> Any:
         """Provide one runtime-only value per type for a test step."""
