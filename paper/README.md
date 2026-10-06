@@ -1,7 +1,7 @@
 # OpenHCS manuscript
 
 Working author-review draft for **SLAS Technology**:
-*OpenHCS: shared microscopy workflows for scientists and AI agents*.
+*OpenHCS: autonomous, auditable image analysis for self-driving microscopy laboratories*.
 
 ## Versioned sources
 
@@ -18,6 +18,17 @@ Working author-review draft for **SLAS Technology**:
 
 ## Editorial guidance
 
+The target is the SLAS Technology special issue
+[Self-Driving Laboratories: AI-Powered Experimental Discovery and Autonomous Science](https://www.slas.org/publications/call-for-papers/).
+Its call includes AI-powered data analysis and integrated laboratory
+infrastructure. The manuscript describes the analysis component, not an
+implemented experiment-design or instrument-control loop.
+
+The [SLAS article guidance](https://www.slas.org/publications/article-types/)
+recommends fewer than 7,000 words and no more than seven figures and tables
+combined for original research. Count the current rendered manuscript after
+resolving generated claim spans; a source count is only an editing checkpoint.
+
 Use the canonical paper-writing style guide in the sibling `papers` repository:
 `docs/papers/writing_style_guide.md`. Keep that guide as the substantive source
 rather than copying it here. For this experimental software paper, apply its
@@ -29,35 +40,27 @@ to understand the scientific findings in the main text.
 
 ## Figures and validation
 
-The seven main figures show the shared workflow, matching UI/code/MCP authoring,
-the recorded agent analysis and benchmark results, followed by task-only
-first/final analysis, full-corpus coverage and native views of autonomous local
-repair and fresh retinal detection. Seventeen supplementary figures explain runtime composition,
-process boundaries, compiler preparation, connected outputs and custom functions.
-They also report historical timing observations and three prospective
-agent-authored assays on held-out public data. The two newer native-view figures
-show a task-only local repair with regression and scope controls, and a separate
-same-context volumetric development example; neither substitutes for reference
-evaluation. Two further native-view figures retain retinal soma development
-and a local BBBC013 nuclear repair with unresolved compartment ownership;
-these same-author development examples are separate from autonomous scores.
-Figures 13–14 show a fresh nuclear core/boundary repair and residual
-crowded-region uncertainty in the independent retinal result shown in main
-Figure 7. Figures 15–16 retain the source-derived CellProfiler import example
-and native Fiji/napari viewer demonstrations. Supplementary Table 1 retains the
-reusable-library roles and source links.
-Figure 17 adds native XY/XZ/YZ review of an independent volume result, retaining
-ordinary-body support and unresolved multi-lobed identity separately.
+The current main layout has five figures and Table 2: a shared workflow with
+native editing evidence; matched CellProfiler execution and total time;
+self-directed image review; quantitative translocation and 3-D localisation;
+and neurite analysis. Supplementary figures group wider views by assay and retain
+runtime explanations, historical measurements and prospective held-out results.
+The manuscript and [current supplementary source](supplementary/README.md)
+own the displayed numbering; older run reports retain their original numbering.
 
-[Supplementary Data 8](supplementary/task_only_analysis.md) retains the newer
-task-only authoring results separately from those prospective held-out assays.
-Figure 5 consumes the exact post-freeze evaluation receipts, without rerunning
-microscopy analyses or scoring. Regenerate its native repair and three score
-panels with `PYTHONPATH=paper/figures python -c 'from build_slas_visual_story import task_only_story; task_only_story()'`
-in an existing matplotlib-capable environment. The existing
-`build_slas_task_only.py` owns evaluation loading and score plots; the shared
-`FigureSheet` owns retained-image placement, crops and source/output hashes.
-The earlier score-only rendering and plotted observations remain retained.
+Regenerate only the editorial composites, using the existing matplotlib-capable
+environment, without rerunning scientific analyses:
+
+```sh
+PYTHONPATH=paper/figures python -c \
+  'from build_slas_visual_story import submission_shared_workflow, submission_quantitative_results; submission_shared_workflow(); submission_quantitative_results()'
+```
+
+The existing `FigureSheet` owns retained-image placement, crops and output
+receipts. Figure 3 uses post-freeze evaluation records through
+`build_slas_task_only.py`; its wider assay views remain in the supplement.
+The legacy `supplementary/task_only_analysis.md` is a historical record, not
+the source of the current supplementary PDF.
 
 Generators, editable artwork, native captures and provenance receipts are in
 `figures/`. Scientific examples in this revision use public CellProfiler workflows
