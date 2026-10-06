@@ -145,3 +145,17 @@ actual child and CLI exits. Never stop the inherited display/helper owners.
 Do not claim a complete journal hash is immutable while its writer is active.
 Freeze an immutable snapshot or name an exact hashed byte-prefix length; the
 harness retains the original and records its complete final hash after exit.
+
+For future recorded evidence use the shared offline recorded-client reader::
+
+  python -m openhcs.mcp.recorded_evidence index --journal output/runtime/mcp.stdout --output output/recorded-evidence-index.json
+  python -m openhcs.mcp.recorded_evidence verify --index output/recorded-evidence-index.json
+
+This index references the original journal prefix/hash, exact response byte spans
+and result ordinals plus native capture paths/hashes. Resolve an original record
+with ``resolve --index PATH --event ORDINAL``. Keep the original journals readable;
+do not copy full tool results, viewer states or controls into per-capture manifests,
+and do not author another journal parser. A nearest preceding state is historical
+evidence, not proof of capture-time visibility: review the original intervening
+applied/rejected controls and each snapshot receipt. Failed/UNKNOWN records stay
+in the original journal; no caps/truncation or mutation of prior freezes.
