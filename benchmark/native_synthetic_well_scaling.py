@@ -22,6 +22,7 @@ from benchmark.adapters.cellprofiler import (
 from benchmark.cellprofiler_comparison import load_comparison_cases
 from benchmark.file_digest import sha256_file
 from benchmark.matched_cellprofiler_batch import (
+    _concurrent_timing,
     _invoke_native_worker,
     _native_python_executable,
 )
@@ -90,49 +91,6 @@ def _stage_wells(
                 }
             )
     return tuple(inventory)
-
-
-def _concurrent_timing(
-    reports: tuple[dict[str, Any], ...], repetition: int
-) -> dict[str, float | int]:
-    observations = tuple(
-        next(
-            observation
-            for observation in report["observations"]
-            if observation["repetition"] == repetition
-        )
-        for report in reports
-    )
-    invocations = tuple(
-        observation["invocation_started_monotonic_seconds"]
-        for observation in observations
-    )
-    starts = tuple(
-        observation["pipeline_started_monotonic_seconds"]
-        for observation in observations
-    )
-    completions = tuple(
-        observation["completed_monotonic_seconds"] for observation in observations
-    )
-    if any(
-        invocation > pipeline_start or pipeline_start > completed
-        for invocation, pipeline_start, completed in zip(
-            invocations, starts, completions, strict=True
-        )
-    ):
-        raise RuntimeError("Native batch timing boundaries are out of order.")
-    if len(reports) > 1 and min(completions) <= max(starts):
-        raise RuntimeError("Native batch jobs did not overlap during analysis.")
-    return {
-        "repetition": repetition,
-        "invocation_start_skew_seconds": max(invocations) - min(invocations),
-        "invocation_through_completion_makespan_seconds": max(completions)
-        - min(invocations),
-        "pipeline_start_skew_seconds": max(starts) - min(starts),
-        "pipeline_execution_makespan_seconds": max(completions)
-        - min(starts),
-        "pipeline_overlap_seconds": min(completions) - max(starts),
-    }
 
 
 def main(argv: list[str] | None = None) -> int:
