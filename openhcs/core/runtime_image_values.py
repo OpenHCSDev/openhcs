@@ -28,6 +28,7 @@ from openhcs.core.alias_property import AliasProperty
 from openhcs.core.runtime_array_values import (
     DataBackedRuntimeArrayPayload,
     RuntimeArrayData,
+    is_array_payload,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -231,13 +232,16 @@ class ImagePayloadIntensityFields(ABC):
     ) -> Any:
         """Normalize the declared current domain, independently of storage dtype."""
         data = image_payload_data(payload)
-        array = np.asarray(MemoryType(detect_memory_type(data)).to_numpy(data))
-        target_dtype = self.normalization_dtype(array.dtype, dtype)
+        array = data if is_array_payload(data) else np.asarray(data)
+        memory_type = MemoryType(detect_memory_type(array))
+        target_dtype = self.normalization_dtype(
+            memory_type.canonical_dtype_name(array.dtype), dtype,
+        )
         if target_dtype is None:
             return payload
         if self.has_normalized_intensity:
             return self.payload_with(
-                array.astype(target_dtype, copy=False), image_payload_mask(payload),
+                memory_type.astype(array, target_dtype), image_payload_mask(payload),
             )
         if self.has_leading_intensity_axis and self.source_plane_intensity_scales:
             if len(self.source_plane_intensity_scales) != len(array):
@@ -258,7 +262,10 @@ class ImagePayloadIntensityFields(ABC):
                 ),
             )
             return metadata.payload_with(
-                np.stack(tuple(plane for plane, _ in normalized_planes)),
+                memory_type.stack_arrays(
+                    [plane for plane, _ in normalized_planes],
+                    memory_type.device_id_of(array),
+                ),
                 image_payload_mask(payload),
             )
         normalized, proof_scale = self.normalized_intensity_array(
@@ -271,20 +278,22 @@ class ImagePayloadIntensityFields(ABC):
 
     @staticmethod
     def normalized_intensity_array(
-        array: np.ndarray, *, target_dtype: np.dtype, scale: float | None,
-    ) -> tuple[np.ndarray, int | None]:
+        array: Any, *, target_dtype: np.dtype, scale: float | None,
+    ) -> tuple[Any, int | None]:
         """Apply one numerical recipe without projecting image source identity."""
+        memory_type = MemoryType(detect_memory_type(array))
+        source_dtype = np.dtype(memory_type.canonical_dtype_name(array.dtype))
         if scale is None:
             # Bare arrays are admitted at this original numerical boundary. A
             # promoted float uses its declared source scale, never a range guess.
-            scale = image_intensity_scale_for_dtype(array.dtype)
-        normalized = array.astype(target_dtype, copy=False)
+            scale = image_intensity_scale_for_dtype(source_dtype)
+        normalized = memory_type.astype(array, target_dtype)
         proof_scale = None
         if scale is not None:
             if not np.isfinite(scale) or scale <= 0:
                 raise ValueError("Source intensity scale must be finite and positive.")
             normalized = normalized / float(scale)
-            if np.issubdtype(array.dtype, np.integer) and float(scale).is_integer():
+            if np.issubdtype(source_dtype, np.integer) and float(scale).is_integer():
                 proof_scale = int(scale)
         return normalized, proof_scale
 
@@ -1614,7 +1623,13 @@ def project_image_mask_to_data_domain(
     """Validate a mask against explicit image-domain metadata."""
     if mask is None:
         return None
-    mask_array = np.asarray(mask, dtype=bool)
+    data_array = image_payload_data(data)
+    mask_array = image_payload_data(mask) if is_array_payload(mask) else np.asarray(mask)
+    target = MemoryType(detect_memory_type(data_array))
+    mask_array = MemoryType(detect_memory_type(mask_array)).convert_to(
+        mask_array, target, target.device_id_of(data_array),
+    )
+    mask_array = target.astype(mask_array, bool)
     mask_shape = tuple(mask_array.shape)
     resolved_metadata = image_payload_metadata(data) if metadata is None else metadata
     mask_domain = resolved_metadata.mask_domain(data)
@@ -2218,7 +2233,8 @@ class ImageMaskDomain:
         channel_index: int,
         channel_axis: int,
     ) -> Any:
-        mask_array = np.asarray(mask, dtype=bool)
+        mask_array = image_payload_data(mask) if is_array_payload(mask) else np.asarray(mask)
+        mask_array = MemoryType(detect_memory_type(mask_array)).astype(mask_array, bool)
         if mask_array.shape != image_payload_geometry(source_data).shape:
             return mask_array
         channel_mask = cls.channel_axis_slice(
@@ -2231,9 +2247,12 @@ class ImageMaskDomain:
             == image_payload_geometry(channel_data).shape
         ):
             return channel_mask
-        squeezed_mask = np.squeeze(
+        squeezed_mask = MemoryType(detect_memory_type(channel_mask)).reshape(
             channel_mask,
-            axis=channel_axis % channel_mask.ndim,
+            tuple(
+                size for axis, size in enumerate(channel_mask.shape)
+                if axis != channel_axis % len(channel_mask.shape)
+            ),
         )
         if (
             image_payload_geometry(squeezed_mask).shape
@@ -2281,9 +2300,11 @@ class ImageMaskDomain:
             if axis != self.channel_axis
         )
 
-    def broadcast_to_data(self, mask: Any) -> np.ndarray:
+    def broadcast_to_data(self, mask: Any) -> Any:
         """Broadcast a valid mask across its declared non-spatial axes."""
-        mask_array = np.asarray(mask, dtype=bool)
+        mask_array = image_payload_data(mask) if is_array_payload(mask) else np.asarray(mask)
+        memory_type = MemoryType(detect_memory_type(mask_array))
+        mask_array = memory_type.astype(mask_array, bool)
         mask_shape = tuple(mask_array.shape)
         if mask_shape == self.data_shape:
             return mask_array
@@ -2293,8 +2314,8 @@ class ImageMaskDomain:
             broadcast_shape = [1] * len(self.data_shape)
             for mask_axis, data_axis in enumerate(self.spatial_axes_yx):
                 broadcast_shape[data_axis] = mask_shape[mask_axis]
-            return np.broadcast_to(
-                mask_array.reshape(tuple(broadcast_shape)),
+            return memory_type.broadcast_to(
+                memory_type.reshape(mask_array, tuple(broadcast_shape)),
                 self.data_shape,
             )
         channel_free_shape = (
@@ -2311,7 +2332,9 @@ class ImageMaskDomain:
                 f"Mask shape {mask_shape!r} is not valid for image "
                 f"shape {self.data_shape!r}."
             )
-        return np.broadcast_to(
-            np.expand_dims(mask_array, axis=self.channel_axis),
+        broadcast_shape = list(mask_shape)
+        broadcast_shape.insert(self.channel_axis, 1)
+        return memory_type.broadcast_to(
+            memory_type.reshape(mask_array, tuple(broadcast_shape)),
             self.data_shape,
         )

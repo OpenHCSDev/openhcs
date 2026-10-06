@@ -37,6 +37,7 @@ from openhcs.core.runtime_image_values import (
     image_payload_geometry,
     image_payload_mask,
     image_payload_metadata,
+    project_image_mask_to_data_domain,
     preserved_image_plane_projection,
     with_image_payload_data,
 )
@@ -581,8 +582,7 @@ class ImagePayloadStackComposition(ABC):
     def compose(
         self, *, memory_type: str | None = None, device_id: int | None = None,
     ) -> Any:
-        # Intensity reconciliation projects pixels to the numerical host domain.
-        # Resolve the destination from the original carrier before that projection.
+        # Resolve the destination from the original carrier before reconciliation.
         memory_type, device_id = self.composition_memory_domain(
             tuple(image_payload_data(payload) for payload in self.composition_payloads),
             memory_type=memory_type, device_id=device_id,
@@ -713,8 +713,13 @@ def _complete_image_payload_mask(
                 f"domain; got mask {tuple(np.shape(mask))!r} for slice "
                 f"{tuple(np.shape(payload_data))!r}."
             )
-        return mask
-    return np.ones(mask_domain.default_mask_shape(), dtype=bool)
+        return project_image_mask_to_data_domain(
+            mask, payload_data, metadata=image_payload_metadata(payload),
+        )
+    data = image_payload_data(payload_data)
+    return MemoryType(detect_memory_type(data)).ones_like(
+        data, shape=mask_domain.default_mask_shape(), dtype=bool,
+    )
 
 
 def unstack_image_payload_context(
@@ -838,7 +843,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         if shared_spatial_shape is not None and all(
             tuple(np.shape(mask)) == shared_spatial_shape for mask in masks
         ):
-            return self.combined_mask()
+            return self.combined_mask(composed)
         resolved_masks = tuple(
             _complete_image_payload_mask(payload, data, mask)
             for payload, data, mask in zip(
@@ -848,16 +853,24 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 strict=True,
             )
         )
-        memory_type = detect_memory_type(resolved_masks[0])
+        shapes = tuple(image_payload_geometry(mask).shape for mask in resolved_masks)
+        if any(shape != shapes[0] for shape in shapes[1:]):
+            resolved_masks = tuple(
+                metadata.for_leading_source_plane(index)
+                .mask_domain(composed[index])
+                .broadcast_to_data(mask)
+                for index, mask in enumerate(resolved_masks)
+            )
+        memory_type = detect_memory_type(image_payload_data(composed))
         memory_type_owner = MemoryType(memory_type)
         stacked = stack_runtime_slices(
             resolved_masks,
             memory_type,
-            memory_type_owner.device_id_of(resolved_masks[0]),
+            memory_type_owner.device_id_of(image_payload_data(composed)),
         )
         return memory_type_owner.astype(stacked, bool)
 
-    def combined_mask(self) -> RuntimeArrayData | None:
+    def combined_mask(self, composed: Any) -> RuntimeArrayData | None:
         masks = self.present_masks
         if not masks:
             return None
@@ -867,12 +880,21 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 "Image bundle mask intersection requires one exact declared "
                 f"spatial mask shape; got {mask_shapes!r}."
             )
-        memory_type = MemoryType(detect_memory_type(masks[0]))
-        combined = memory_type.astype(masks[0], bool)
-        for mask in masks[1:]:
+        data = image_payload_data(composed)
+        memory_type = MemoryType(detect_memory_type(data))
+        device_id = memory_type.device_id_of(data)
+        prepared = tuple(
+            memory_type.astype(
+                MemoryType(detect_memory_type(mask)).convert_to(mask, memory_type, device_id),
+                bool,
+            )
+            for mask in masks
+        )
+        combined = prepared[0]
+        for mask in prepared[1:]:
             combined = memory_type.logical_and(
                 combined,
-                memory_type.astype(mask, bool),
+                mask,
             )
         return combined
 
@@ -914,14 +936,13 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         device_id: int | None,
     ) -> RuntimeArrayData:
         """Promote channel-free payloads using declared channel-axis semantics."""
-        numpy_payloads = tuple(
-            np.asarray(
-                convert_memory(
-                    data=payload,
-                    source_type=detect_memory_type(payload),
-                    target_type=MEMORY_TYPE_NUMPY,
-                    gpu_id=device_id,
-                )
+        target = MemoryType(memory_type)
+        prepared_payloads = tuple(
+            convert_memory(
+                data=payload,
+                source_type=detect_memory_type(payload),
+                target_type=memory_type,
+                gpu_id=device_id,
             )
             for payload in payloads
         )
@@ -934,7 +955,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
             )
         channel_counts = tuple(
             int(payload.shape[channel_axis])
-            for payload, axis in zip(numpy_payloads, channel_axes, strict=True)
+            for payload, axis in zip(prepared_payloads, channel_axes, strict=True)
             if axis is not None
         )
         channel_count = channel_counts[0]
@@ -953,7 +974,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                     if index != axis
                 )
             )
-            for payload, axis in zip(numpy_payloads, channel_axes, strict=True)
+            for payload, axis in zip(prepared_payloads, channel_axes, strict=True)
         )
         if any(shape != source_shapes[0] for shape in source_shapes[1:]):
             raise ValueError(
@@ -964,23 +985,17 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
             (
                 payload
                 if axis is not None
-                else np.repeat(
-                    np.expand_dims(payload, axis=channel_axis),
-                    channel_count,
-                    axis=channel_axis,
+                else target.broadcast_to(
+                    target.reshape(
+                        payload,
+                        (*payload.shape[:channel_axis], 1, *payload.shape[channel_axis:]),
+                    ),
+                    (*payload.shape[:channel_axis], channel_count, *payload.shape[channel_axis:]),
                 )
             )
-            for payload, axis in zip(numpy_payloads, channel_axes, strict=True)
+            for payload, axis in zip(prepared_payloads, channel_axes, strict=True)
         )
-        stacked = np.stack(promoted, axis=0)
-        if memory_type == MEMORY_TYPE_NUMPY:
-            return stacked
-        return convert_memory(
-            data=stacked,
-            source_type=MEMORY_TYPE_NUMPY,
-            target_type=memory_type,
-            gpu_id=device_id,
-        )
+        return target.stack_arrays(list(promoted), device_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1472,7 +1487,11 @@ class ProducedImageStack(ImagePayloadSliceStack):
     @property
     def dtype(self) -> Any:
         return np.result_type(
-            *(image_payload_data(payload).dtype for payload in self.slices)
+            *(
+                MemoryType(detect_memory_type(image_payload_data(payload)))
+                .canonical_dtype_name(image_payload_data(payload).dtype)
+                for payload in self.slices
+            )
         )
 
     def plane_axis_for_output_context(
