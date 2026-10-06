@@ -1344,6 +1344,15 @@ including the weaker LY294002 control separation. It distinguishes complete
 measurement coverage from GFP-dependent population selection and does not claim
 exhaustive biological segmentation or fully sealed runtime closure.
 
+A fresh retinal author replaced grain-scale foreground admission with
+body-scale contrast after rejecting nuisance flooding and dim-body losses.
+The final 141-instance candidate preserves a clear neighbouring pair, while
+weak bodies still have incomplete support. A separately corrected raw-fluorescence
+binding leaves the label array unchanged. The
+[qualified completion record](task_only_analysis/retinal-fresh22-qualified-completion.rst)
+retains all four attempts, the independently checked 903-file freeze and the
+distinction between useful localisation and unmeasured manual-reference accuracy.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
