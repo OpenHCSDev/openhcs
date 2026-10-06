@@ -1369,6 +1369,14 @@ binds the frozen source and independently checked 283 scientific files, 112
 control files, three completed MCP journals and two retained journal prefixes.
 No reference answers were opened for this review.
 
+A subsequent fresh public-neurite repeat retained useful eight-soma coverage
+and partial process geometry after autonomous false-split and admission repairs.
+The [qualified geometry review](task_only_analysis/h004-fresh25-qualified-geometry.rst)
+distinguishes its selected 4,432-pixel checkpoint from the rejected last attempt:
+the latter increases total length while losing a raw-supported branch downstream
+of unchanged feature responses and preserved admission. Whole arbors and overlap
+ownership remain unresolved; the larger total is not an accuracy gain.
+
 A separate fresh public-field author recovered a missed faint process after
 measuring the actual enhanced response and sampled background controls. Eight
 nuclear objects and bounded perinuclear regions remained useful; a raw-pixel
@@ -1429,6 +1437,14 @@ including the weaker LY294002 control separation. It distinguishes complete
 measurement coverage from GFP-dependent population selection and does not claim
 exhaustive biological segmentation or fully sealed runtime closure.
 
+The [later completed translocation analysis](task_only_analysis/bbbc013-fresh23-qualified-completion.rst)
+retained 14,631 eligible rows from 17,320 nuclear identities across all 96 wells.
+Both nine-dose series showed increasing well-median log2 ratios followed by a
+plateau; control Z-prime was 0.849 for LY294002 and 0.726 for Wortmannin.
+Independent all-well recalculation and scientific-file verification supported
+this completed result. Treatment-dependent eligibility remains a qualification,
+while scattered faint misses do not invalidate the measured assay response.
+
 An independent volume repeat repaired internal-peak duplicates before freezing
 26 candidate centres. The existing post-freeze matcher recovered all 15 manual
 centres within 20 and 30 voxels, with mean error 4.82 voxels, and 14 within
@@ -1482,6 +1498,13 @@ records useful bright-body localisation separately from the rejected complete
 instance inventory, with independent matched-view checks and frozen-artifact
 scope. This repeat is not a manual-reference accuracy estimate.
 
+A fresh H001 repeat retained 62 bright-object instances after autonomous
+partition repair, with unchanged foreground compared with its 66-object FIRST.
+The [independent qualified review](task_only_analysis/h001-fresh25-qualified-review.rst)
+records useful compact-body coverage, unresolved lobed-object splits/merges and
+small-focus misses, native label/area reconciliation and the checked freeze.
+It does not infer cell identity or reference accuracy from algorithm counts.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
@@ -1518,6 +1541,21 @@ was rejected and retained separately. The
 records original table identities, reconciliation and twelve personally opened
 native captures. This is retained-context development, not a fresh autonomous
 evaluation.
+
+A later independent retinal author completed a 136-region candidate after
+repairing fragmented rims and size-based omissions. Independent matched
+central and whole-field views support useful bright-body localisation in the
+heavily noisy acquisition; weak rims and some instance divisions remain
+ambiguous. The [qualified completion record](task_only_analysis/retinal-fresh26-qualified-completion.rst)
+retains the source, freeze and scope of review without asserting manual-count
+accuracy or requiring perfect boundaries for useful segmentation.
+
+An assisted personal-neurite continuation completed both-channel shared
+normalization, all nine fields and new analysis of the retained 2,868-square
+mosaic. Its 1,740 software identities and graph summaries reconcile with the
+cell tables. The [all-channel completion record](task_only_analysis/p001-allchannel25-qualified-completion.rst)
+distinguishes body-geometry review from complete arbor validation, and reused
+assembly from autonomous stitching discovery.
 
 ## Software snapshots and evidence
 

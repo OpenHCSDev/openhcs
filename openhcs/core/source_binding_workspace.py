@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, replace
 from itertools import product
 from pathlib import Path
 from types import MappingProxyType
-from typing import ClassVar, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.virtual_workspace import SourcePixelRef
@@ -67,6 +67,9 @@ from openhcs.core.virtual_workspace_metadata import (
     get_metadata_path,
 )
 from openhcs.core.vfs_protocol import FileManagerLike
+
+if TYPE_CHECKING:
+    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
 @dataclass(frozen=True, slots=True)
@@ -626,6 +629,47 @@ class SourceBindingWorkspaceProjector:
                 "SourceBindingWorkspaceProjector.source_bindings must be "
                 f"SourceBindingsConfig, got {type(self.source_bindings).__name__}."
             )
+
+    def admit_prepared_projection(
+        self, projection: "VirtualWorkspaceSourceProjection"
+    ) -> "VirtualWorkspaceSourceProjection":
+        """Admit retained sources without rebuilding their paths or provenance."""
+        from openhcs.core.source_workspace_projection import (
+            VirtualWorkspacePathLookup,
+            VirtualWorkspaceSourceProjection,
+        )
+
+        if not self.source_bindings.source_filter_declarations:
+            return projection
+        selected_paths: set[str] = set()
+        selected_metadata_paths: set[str] = set()
+        for path, ref in projection.source_refs_by_virtual_path.items():
+            metadata = projection.source_metadata_for(
+                VirtualWorkspacePathLookup.from_paths(path, path)
+            )
+            filter_paths = (
+                () if metadata is None else SourceMetadataFields.source_filter_paths(metadata)
+            ) or (ref.backend_address, path)
+            if self.source_bindings.source_path_filters_match(filter_paths):
+                selected_paths.add(path)
+                selected_metadata_paths.update((path, ref.backend_address))
+        if not selected_paths:
+            raise ValueError("Declared source filters matched no prepared workspace sources.")
+        return VirtualWorkspaceSourceProjection(
+            source_refs_by_virtual_path=MappingProxyType({
+                path: ref for path, ref in projection.source_refs_by_virtual_path.items()
+                if path in selected_paths
+            }),
+            source_metadata_by_path=MappingProxyType({
+                path: metadata for path, metadata in projection.source_metadata_by_path.items()
+                if path in selected_metadata_paths
+            }),
+            source_projections_by_virtual_path=MappingProxyType({
+                path: source for path, source in projection.source_projections_by_virtual_path.items()
+                if path in selected_paths
+            }),
+            workspace_root=projection.workspace_root,
+        )
 
     def projection_set(
         self,

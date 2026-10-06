@@ -126,6 +126,20 @@ class CompiledPlateExecutionResults(dict[str, ExecutionResult]):
             viewer_states_by_port=MappingProxyType({})
         )
 
+    def is_success(self) -> bool:
+        """Whether every returned axis completed successfully."""
+        return all(result.is_success() for result in self.values())
+
+    def require_success(self) -> None:
+        """Reject failed axes at terminal boundaries without dropping their outputs."""
+        failures = [
+            f"{axis_id}: {result.status.value}: {result.error_message or 'no error detail'}"
+            for axis_id, result in self.items()
+            if not result.is_success()
+        ]
+        if failures:
+            raise RuntimeError("Unsuccessful execution axes: " + "; ".join(failures))
+
     @property
     def runtime_observations(self) -> tuple[RuntimeExecutionObservation, ...]:
         return (
@@ -231,7 +245,7 @@ def execute_compiled_plate_request(
         execution_bundle = request.execution_bundle
         worker_assignments = request.worker_assignments_for()
 
-        execution_results: Dict[str, ExecutionResult] = {}
+        execution_results = CompiledPlateExecutionResults()
         plate_runtime_observation = RuntimeExecutionObservation()
         try:
             executor_resources.install_execution_bundle(execution_bundle)
@@ -247,10 +261,12 @@ def execute_compiled_plate_request(
                         request=request,
                         worker_assignment_plan=worker_assignment_plan,
                     )
-                    execution_results = executor_resources.run_worker_lanes(
-                        pipeline_definition=validated.pipeline_definition,
-                        worker_lane_execution_plan=worker_lane_execution_plan,
-                        parent_contexts=validated.compiled_contexts,
+                    execution_results = CompiledPlateExecutionResults(
+                        executor_resources.run_worker_lanes(
+                            pipeline_definition=validated.pipeline_definition,
+                            worker_lane_execution_plan=worker_lane_execution_plan,
+                            parent_contexts=validated.compiled_contexts,
+                        )
                     )
                     if any(result.is_cancelled() for result in execution_results.values()):
                         raise ExecutionCancelledError("Execution cancelled during worker execution")
@@ -267,7 +283,7 @@ def execute_compiled_plate_request(
                 executor_resources.clear_execution_bundle()
                 executor_resources.release_parent_runtime_resources(execution_bundle)
 
-            if all(result.is_success() for result in execution_results.values()):
+            if execution_results.is_success():
                 plate_runtime_observation = execute_plate_scoped_steps(
                     validated.compiled_contexts,
                     progress_queue=validated.progress_queue,
@@ -287,7 +303,7 @@ def execute_compiled_plate_request(
                     ),
                 ),
             )
-        if all(result.is_success() for result in execution_results.values()):
+        if execution_results.is_success():
             viewer_states_by_port = settle_viewer_state(
                 visualizers,
                 progress_queue=validated.progress_queue,
@@ -296,7 +312,7 @@ def execute_compiled_plate_request(
         else:
             viewer_states_by_port = MappingProxyType({})
         project_execution_state(orchestrator, execution_results)
-        if all(result.is_success() for result in execution_results.values()):
+        if execution_results.is_success():
             _emit_execution_progress(
                 progress_queue=validated.progress_queue,
                 progress_context=validated,
@@ -1191,11 +1207,11 @@ def stop_execution_visualizers(visualizers: list[ExecutionVisualizerABC]) -> Non
 
 def project_execution_state(
     orchestrator: "PipelineOrchestrator",
-    execution_results: Mapping[str, ExecutionResult],
+    execution_results: CompiledPlateExecutionResults,
 ) -> None:
     """Project worker-lane results back into orchestrator lifecycle state."""
 
-    if all(result.is_success() for result in execution_results.values()):
+    if execution_results.is_success():
         orchestrator._state = OrchestratorState.COMPLETED
     else:
         orchestrator._state = OrchestratorState.EXEC_FAILED

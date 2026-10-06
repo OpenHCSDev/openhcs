@@ -524,6 +524,15 @@ instance boundaries. The author detected these conflicts and rejected a complete
 cell census. Independent matched-view review confirmed the pair-joining regression;
 manual-reference accuracy remains unmeasured (Supplementary Data 8).
 
+A subsequent fresh retinal author recovered useful bright-soma localisation
+across the noisy field, retaining 136 candidate regions after repairing rim
+fragmentation and size-based omissions. Matched raw/result review showed a
+coherent central body and separated bright neighbours. Weak rims and several
+lobed profiles remained ambiguous. This supports useful cell localisation and
+approximate mask geometry, without treating every uncertain boundary as a
+failure or the candidate count as a manual-reference accuracy estimate
+(Supplementary Data 8).
+
 Public neurite-field authors recovered clear process segments while weak
 paths and ambiguous crossings remained difficult. One corrected false nuclear
 splits and traced a segment to the boundary but admitted nearby fragments.
@@ -550,12 +559,14 @@ measured local omission, but the sensitivity of the graph outputs prevents
 interpreting them as validated neuron-specific outgrowth or branch counts
 (Supplementary Figure 24; Supplementary Data 8).
 
-An independent repeat also retained eight soma-associated regions after
-repairing nuclear texture splits. Widening ridge admission recovered a measured
-faint-process witness, but reported branch counts rose from 15 to 247 while
-other gaps and near-track spurs remained. Thus the repeated result supports
-soma localisation and useful principal-process geometry, not stable fine-branch
-quantification (Supplementary Data 8).
+Other independent repeats retained useful soma localisation and principal-process
+geometry without stable fine-branch quantification. One recovered measured
+faint support but rejected a longer-trace candidate after finding that it lost
+a raw-visible branch. Saved feature responses and admission masks retained
+that branch; reconstruction through the original processing stages located
+its deletion in downstream signal repair, before graph publication. This
+separates a geometry failure from preprocessing loss without establishing
+the true owner at the crossing (Supplementary Data 8).
 
 A separate retained-context personal-neurite continuation
 processed a nine-field mosaic with shared channel fits and paths across sampled
@@ -598,6 +609,15 @@ locally stable geometry, not improved complete-arbor accuracy. Nuclear inputs
 remained untransformed, and overlapping fields were not summed as independent
 replicates or unique-well counts (Supplementary Data 8).
 
+A later assisted phase completed all nine fields and analysed the retained
+2,868-by-2,868-pixel mosaic using one percentile-derived mapping per physical
+channel, fitted across the field stack. The mosaic retained 1,740 candidate
+body identities, with distributed raw-supported geometry. Independent
+recalculation reproduced its exported length and graph summaries, but did not
+validate complete arbors or crossing ownership. The existing assembly was
+reused rather than discovered anew; this is completed mosaic analysis, not a
+fresh autonomous stitching demonstration (Supplementary Data 8).
+
 A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
 using scientific settings chosen from six development wells and frozen before
 the remaining 90 were opened. Its measured first candidate retained ordinary
@@ -631,6 +651,17 @@ plate completion and control separation could coexist with substantial
 compartment loss. The reported responses therefore describe the contributing
 cohorts, not unbiased whole-population translocation; Supplementary Data 8
 retains each pipeline, coverage denominator and failed predecessor.
+
+Another independent author completed all 96 wells after its own image review
+and repairs, retaining 14,631 eligible measurements from 17,320 detected
+nuclear identities (84.5%). Well-median log2 nuclear-to-cytoplasmic GFP ratios
+rose across both dose series and approached a plateau, with four wells per
+dose. Control Z-prime was 0.849 for LY294002 and 0.726 for Wortmannin.
+Independent recalculation reproduced all well summaries and control statistics.
+Matched images showed useful cytoplasmic support with some faint extensions
+missed. Eligibility varied with treatment, so these responses describe the
+measured cohort. This completed self-repaired analysis adds a reproducible assay
+result without requiring every faint boundary to be resolved (Supplementary Data 8).
 
 Table 2 summarizes the different endpoints supported by these task-only
 trials. The measures are not interchangeable: object matching, directed
