@@ -1,0 +1,64 @@
+{
+  "evaluation": "Postfreeze FIRST/final H003_FRESH23_89 comparison on BBBC007/f9620/POS0005",
+  "reference_feedback_to_authors": false,
+  "scientific_inputs_or_predictions_changed": false,
+  "scorer_commit": "e99736388140e7ed910b413222a53501ec7d4a0d",
+  "scorer_source_sha256": {
+    "benchmark/validation/references.py": "099d1ad37058bb41a3cad9456d74fa08d32cfb4549a155e7efb124149a7f92c8",
+    "benchmark/validation/scoring.py": "57c23fe3efd4964d3ab353e5c156080d12e1289694952ce0a8ac4762251c4da1"
+  },
+  "scorer_functions": ["Bbbc007ManualOutlineReference.load", "Bbbc007ManualOutlineReference.load_boundary", "instance_segmentation_metrics", "boundary_segmentation_metrics"],
+  "instance_match_iou": 0.5,
+  "instance_assignment": "One-to-one maximum-IoU Hungarian assignment, accepted at IoU >= 0.5",
+  "boundary_distance_pixels": 2.0,
+  "reference_policy": "Four-connected zero interiors; exclude frame-connected regions and strokes; no size filtering, gap closing or contact ownership inference. Boundary scores use original nonzero stroke union, including open/frame contours.",
+  "reference_cache": "/run/media/ts/hdd/openhcs-science/trusted-reference-cache/BBBC007",
+  "reference_outline_sha256": {
+    "DNA": "a64948d4d3bac0c32a44a4c2f137ca4f9bf152f9dc4a8b2a6a4399588cc95103",
+    "ACTIN": "7832d385000b2aabe7c33cffdefa6313fba90cbd67ad9e2e9564742b30fd5b8f"
+  },
+  "pixel_identity": "Each staged 400x400 uint8 channel independently equals component 0 of its corresponding official 400x400x3 TIFF; no crop, resizing or registration",
+  "control_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh23-89-after-h00222-20261006/H003_FRESH23_89/author-workspace/output",
+  "payload_root": "/run/media/ts/hdd/openhcs-science/next-h003-fresh23-89-after-h00222-20261006/H003_FRESH23_89",
+  "science_freeze": "FINAL-ATTEMPT.json, 2026-10-06T02:25:56.484072+00:00",
+  "scored_labels_verified_against_original_manifests": true,
+  "observations": [
+    {
+      "stage": "FIRST", "channel": "DNA", "payload_directory": "input_first/results",
+      "labels_filename": "A02_channel-1_z_index-1_timepoint-1_Nuclei_step0.labels.tif",
+      "labels_sha256": "84e1bdbd4302b91272a2f782a63fc1342ca7d2727be12ee3fa089e4ccc56c02d",
+      "reference_count": 47, "predicted_count": 52, "matches": 37, "unmatched_predictions": 15, "unmatched_references": 10,
+      "precision": 0.7115384615384616, "recall": 0.7872340425531915, "object_f1": 0.7474747474747475,
+      "mean_matched_iou": 0.6070327172276522, "relevant_boundary_pixels": 88,
+      "relevant_boundary_within_two_pixels": 0.7386363636363636, "boundary_f1_within_two_pixels": 0.8096822635391808
+    },
+    {
+      "stage": "FIRST", "channel": "ACTIN", "payload_directory": "input_first/results",
+      "labels_filename": "A02_channel-2_z_index-1_timepoint-1_Cells_step1.labels.tif",
+      "labels_sha256": "2b68d275ab871e003eae6f1fd5a64f6e19a249b4798b19c494ab7882170f8ddd",
+      "reference_count": 54, "predicted_count": 52, "matches": 34, "unmatched_predictions": 18, "unmatched_references": 20,
+      "precision": 0.6538461538461539, "recall": 0.6296296296296297, "object_f1": 0.6415094339622641,
+      "mean_matched_iou": 0.6880330731833891, "relevant_boundary_pixels": 2965,
+      "relevant_boundary_within_two_pixels": 0.702866779089376, "boundary_f1_within_two_pixels": 0.6629834707561231
+    },
+    {
+      "stage": "FINAL", "channel": "DNA", "payload_directory": "input_candidate03/results",
+      "labels_filename": "A02_channel-1_z_index-1_timepoint-1_Nuclei_step0.labels.tif",
+      "labels_sha256": "b3e06aa2614ccaaed3ffccc7e88cac30c05ee7b68fed75440d5e4939ebb0822e",
+      "reference_count": 47, "predicted_count": 55, "matches": 38, "unmatched_predictions": 17, "unmatched_references": 9,
+      "precision": 0.6909090909090909, "recall": 0.8085106382978723, "object_f1": 0.7450980392156863,
+      "mean_matched_iou": 0.6006151519610056, "relevant_boundary_pixels": 167,
+      "relevant_boundary_within_two_pixels": 0.5209580838323353, "boundary_f1_within_two_pixels": 0.8178269750567623
+    },
+    {
+      "stage": "FINAL", "channel": "ACTIN", "payload_directory": "input_candidate03/results",
+      "labels_filename": "A02_channel-2_z_index-1_timepoint-1_Cells_step1.labels.tif",
+      "labels_sha256": "87726d1e391553de4434f702f57293e7d687ca66a71fcb2fa1944fdcf28d1217",
+      "reference_count": 54, "predicted_count": 55, "matches": 36, "unmatched_predictions": 19, "unmatched_references": 18,
+      "precision": 0.6545454545454545, "recall": 0.6666666666666666, "object_f1": 0.6605504587155963,
+      "mean_matched_iou": 0.6860137059664352, "relevant_boundary_pixels": 3068,
+      "relevant_boundary_within_two_pixels": 0.7001303780964798, "boundary_f1_within_two_pixels": 0.6680076764077241
+    }
+  ],
+  "limitations": ["One development field, not held-out generalization", "Closed manual interiors are not certified exhaustive biological truth", "Tiny reference regions remain included; clipped predictions are not filtered to mirror reference exclusions", "Directed relevant-boundary and symmetric whole-boundary metrics measure different subsets", "Local repair is not a whole-field nuclear accuracy improvement", "Scores were not supplied to scientific authors or added to the packaged skill"]
+}
