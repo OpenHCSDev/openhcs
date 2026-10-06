@@ -19,12 +19,14 @@ from python_introspect import (
 
 from openhcs.core.callable_contract import CallableContract, callable_request
 from openhcs.core.config import LazyDtypeConfig
+from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.memory import MEMORY_TYPE_NUMPY
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
+    ImagePayloadMetadataCarrier,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
@@ -213,13 +215,50 @@ def test_pure_2d_contract_slices_image_metadata_payload_nominally() -> None:
         payload,
     )
 
-    assert isinstance(result, ImageMetadataPayload)
+    assert isinstance(result, ImagePayloadMetadataCarrier)
     np.testing.assert_array_equal(image_payload_data(result), stack + 1)
     assert seen_paths == ["z0.tif", "z1.tif"]
     assert image_payload_metadata(result).source_image_provenance_planes.paths == (
         "z0.tif",
         "z1.tif",
     )
+
+
+@pytest.mark.parametrize("slice_by_slice", (True, False))
+def test_native_flexible_callable_receives_declared_array_abi_and_keeps_slice_controls(
+    slice_by_slice: bool,
+) -> None:
+    stack = np.arange(40, dtype=np.float32).reshape(2, 4, 5)
+    mask = np.ones_like(stack, dtype=bool)
+    payload = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(stack, mask)
+    seen_shapes = []
+
+    @numpy
+    def native_image_operation(image: np.ndarray) -> np.ndarray:
+        assert isinstance(image, np.ndarray)
+        seen_shapes.append(image.shape)
+        return image + 1
+
+    invocation = compile_function_pattern(
+        (native_image_operation, {"slice_by_slice": slice_by_slice}), {}, {},
+    ).default_group.invocations[0]
+    result = invocation.runtime_callable(
+        invocation.main_flow_call_argument(payload), **dict(invocation.runtime_kwargs),
+    )
+    assert seen_shapes == ([(4, 5), (4, 5)] if slice_by_slice else [(2, 4, 5)])
+    np.testing.assert_array_equal(result, stack + 1)
+    assert image_payload_mask(payload) is mask
+
+
+def test_native_flexible_callable_preserves_explicitly_declared_carrier_abi() -> None:
+    payload = ImagePayloadMetadata().payload_with(np.ones((2, 4, 5)), np.ones((2, 4, 5), dtype=bool))
+
+    @numpy
+    def carrier_operation(image: RuntimeArrayPayload) -> RuntimeArrayPayload:
+        return image
+
+    invocation = compile_function_pattern(carrier_operation, {}, {}).default_group.invocations[0]
+    assert invocation.main_flow_call_argument(payload) is payload
 
 
 @pytest.mark.parametrize("slice_by_slice", (True, False))
