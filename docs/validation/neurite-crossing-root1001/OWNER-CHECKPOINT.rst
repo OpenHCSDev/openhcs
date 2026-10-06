@@ -124,8 +124,8 @@ witness neighborhoods are6 in04 and4 in05, not a restored previous assignment.
 The resulting graphs pass require_directed_forest (95/216edges). All eight
 original admission/body/response/secondary file hashes remain unchanged.
 This reconstructs the affected original stages, not a pipeline/detector replay
-or biological ownership/accuracy proof. fixed13 terminal0,20-second scale,
-491MiB approximate peak; exact resource values are in its original stderr.
+or biological ownership/accuracy proof. fixed13 terminal0,11.61s/488124KiB
+maximum RSS; exact resource values are in its original stderr.
 
 controls14:25PASS/69deselected, terminal0,13.25s/617404KiB maximum RSS.
 Original resolved multi-owner crossings, reversed owner order, unrelated
@@ -141,3 +141,31 @@ engineering lane. The original registered pixel route/CSV/GraphROI receiving
 recipe will be reused, together with these affected installed owner controls;
 no frozen scientific input, endpoint or installed prefix is changed. PR1004
 stays draft until that ordinary installed/native path is qualified.
+
+Current-main integration and structural evidence
+-----------------------------------------------
+
+Production/checks commit7a477a2c2 is merged normally with main20e034379 through
+two-parent commit381d8c5bac. Git's ordinary merge refused the historical
+validation symlink before writing any merge; the original merge-tree/read-tree/
+commit-tree backend then applied the conflict-free same tree without stashing,
+resetting or changing foreign gitlinks. Historical validation tree is unchanged.
+Neurite source and its tests are byte-identical before/after this integration;
+accepted controls14/fixed13 are not rerun for the disjoint main update.
+
+Original refactor-audit R0 at7a477a2c2 versus88baadf3d measures the actual changed
+production family: every dispatch/type/arms/raw-read/absence-probe/broad-except
+metric has zero positive delta; none_identity is-1 (was+4 at d4e, not waived).
+There is one relationship class and30 net production code lines. The first
+JSON invocation used an unsupported bare --json flag; known parser failure,
+not a code failure. r0-source16.json uses the original tool's output-path
+contract and preserves the original result; no detector copy/cap increase.
+
+source-family17.log uses original Package/Repository tooling at381d8c5bac:
+702 production modules parsed, zero omissions. It enumerates owner declarations,
+calls, assignments and consumers for both shared profiles/topology/repair/core
+projection. No consumer of the removed optional crossing contract or previous
+three stored crossing sets remains. Skan Skeleton.path_coordinates source
+includes original endpoints (csr.py716..734); no new Skan conversion is added.
+Relevant dependency semantics were read, not a completed global R1 dynamic
+proof. All8 foreign gitlinks and historical/untracked evidence remain untouched.
