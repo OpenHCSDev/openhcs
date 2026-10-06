@@ -1,0 +1,6 @@
+PASS execution 19 unchanged outputs
+PASS matched-eight-execution 19 unchanged outputs
+PASS matched-eight-total 17 unchanged outputs
+PASS single-core-amortization 3 unchanged outputs
+PASS total 17 unchanged outputs
+PASS 3 repaired receipts; 4 absolute keys normalized; 75 unchanged outputs across all five official30 receipts
