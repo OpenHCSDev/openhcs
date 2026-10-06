@@ -316,7 +316,7 @@ def task_only_story():
             axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
             axis.set_axisbelow(True)
         sheet.text(50, 2,
-                   "Independent full-200 repeat: caption and Supplementary Figure 20",
+                   "Independent full-200 repeat: caption and Supplementary Figure 15",
                    size=12, ha="center", color=MUTED)
         sheet.save()
 
@@ -705,6 +705,72 @@ def personal_stitched_development():
     sheet.text(3, 7, "Shared channel-stack fit; acquisition-derived placement.", size=12)
     sheet.text(3, 4, "Faint paths and crowded ownership remain incomplete.", size=12)
     sheet.text(3, 1, "Attempt08 development outputs—not final09 validation or a fresh autonomous pass.", size=12)
+    sheet.save()
+
+
+def submission_neurite_results():
+    """Distinguish frozen public-trial sensitivity from personal-field recovery."""
+    sheet = FigureSheet("submission_neurite_results", "", 7.3)
+    public = OUTPUT / "h004_fresh20_sources"
+    personal = OUTPUT / "p001_fresh13_sources"
+    sheet.source(public / "QA-INDEX.json")
+    sheet.source(personal / "source-record.rst")
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
+    sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
+    sheet.panel("I", "Public neurites: raw signal and self-directed sensitivity changes", 3, 97)
+    for x, name, title in (
+        (3, "first-bottom-raw", "A  Raw process channel"),
+        (35, "first-bottom-result", "B  First shaft result"),
+        (67, "repair03-bottom-result", "C  Final result"),
+    ):
+        sheet.text(x, 91, title, size=10.5, weight="bold")
+        sheet.source_image(public / f"{name}.png", (x, 62, 30, 26), crop=(297, 28, 1250, 410))
+    sheet.text(3, 59, "Lowering the admission threshold retains trunks but adds uncertain short twigs.", size=10, color=MUTED)
+    sheet.panel("II", "Laboratory neurites: final autonomous field-by-field analysis", 3, 52)
+    for x, name, title in (
+        (3, "raw", "D  Raw FITC"),
+        (35, "result", "E  Body and path result"),
+        (67, "combined", "F  Combined"),
+    ):
+        sheet.text(x, 46, title, size=10.5, weight="bold")
+        sheet.source_image(personal / f"site1-{name}.png", (x, 8, 30, 35), crop=(550, 28, 997, 437))
+    sheet.text(3, 5, "Matched site-1 crops; nine fields completed without stitching or overlap deduplication.", size=10, color=MUTED)
+    sheet.save()
+
+
+def submission_shared_workflow():
+    """Combine the workflow diagram with its retained native editing evidence."""
+    sheet = FigureSheet("submission_shared_workflow", "", 9.1)
+    sheet.source(OUTPUT / "shared_workflow_provenance.json")
+    sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
+    sheet.panel("I", "Shared analysis and execution", 3, 97)
+    sheet.source_image(OUTPUT / "shared_workflow.png", (3, 45, 94, 50))
+    sheet.panel("II", "Editable workflow", 3, 42)
+    sheet.native_image("authoring_main_verified_capture", (3, 6, 33, 34))
+    sheet.panel("III", "Execution server", 39, 42)
+    sheet.native_image("authoring_server_browser_verified_capture", (39, 30, 58, 10))
+    sheet.panel("IV", "Controls", 39, 27)
+    sheet.panel("V", "Matching Python", 68, 27)
+    sheet.native_image(
+        "authoring_function_verified_capture", (39, 5, 25, 20), crop=(25, 153, 193, 290)
+    )
+    sheet.native_image(
+        "authoring_code_verified_capture", (68, 5, 29, 20), crop=(74, 96, 292, 222)
+    )
+    sheet.save()
+
+
+def submission_quantitative_results():
+    """Keep assay response and 3-D localisation in one quantitative result sheet."""
+    sheet = FigureSheet("submission_quantitative_results", "", 8.3)
+    sheet.source(OUTPUT / "translocation_fresh23_provenance.json")
+    sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
+    sheet.panel("I", "Translocation response", 3, 97)
+    sheet.source_image(OUTPUT / "translocation_fresh23.png", (3, 56, 94, 37),
+                       crop=(50, 270, 2650, 1290))
+    sheet.panel("II", "Three-dimensional nuclear localisation", 3, 52)
+    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 4, 94, 45),
+                       crop=(50, 110, 2660, 1300))
     sheet.save()
 
 

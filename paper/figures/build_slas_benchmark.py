@@ -48,9 +48,10 @@ def write_provenance(
     interpretation: dict[str, object],
 ) -> None:
     """Record the existing manuscript source/output checksum contract."""
+    sources = tuple(path.resolve() for path in sources)
     receipt = {
         "source_sha256": {
-            str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path):
+            str(path.relative_to(ROOT)):
             sha256(path)
             for path in sources
         },
@@ -66,6 +67,7 @@ def write_provenance(
 def build_measured(
     summary_sources: tuple[str, ...], scope: str, output_dir: Path,
     cohort_manifest: Path | None = None,
+    claim_metadata: Path | None = None,
 ) -> None:
     """Present qualified matched summaries through the measured figure owner."""
     from benchmark.reports.cppipe_figures import (
@@ -76,12 +78,9 @@ def build_measured(
     from benchmark.reports import cppipe_figures
 
     sources = tuple(parse_summary_source(value) for value in summary_sources)
-    custody_paths = tuple(dict.fromkeys(
-        source.path.parent / "summary_custody.json" for source in sources
-    ))
-    custody = tuple(json.loads(path.read_text()) for path in custody_paths)
-    if any(record["status"] != "PASS" for record in custody):
-        raise ValueError("Measured manuscript inputs require qualified matched reports")
+    sources = tuple(MeasuredBatchSummarySource(source.label, source.path) for source in sources)
+    custody_paths = tuple(dict.fromkeys(source.custody_path for source in sources))
+    custody = tuple(source.qualified_custody() for source in sources)
     if len({record["source_head"] for record in custody}) != 1:
         raise ValueError("Measured manuscript modes must share one source revision")
     selected_pipeline_names = None
@@ -113,17 +112,27 @@ def build_measured(
                         f"Selected case {case.name!r} differs from qualified declaration: {manifest}"
                     )
     outputs = generate_measured_batch_figures(
-        tuple(MeasuredBatchSummarySource(source.label, source.path) for source in sources),
+        sources,
         scope=scope,
         output_dir=output_dir,
         selected_pipeline_names=selected_pipeline_names,
     )
+    if claim_metadata is not None:
+        claims = json.loads(claim_metadata.read_text())
+        caption = output_dir / f"measured_{scope}_caption.md"
+        with caption.open("a", encoding="utf-8") as stream:
+            stream.write(
+                f"Publication record: {claims['record_name']}; source {claims['source_revision']}; "
+                f"status {claims['status']}. {scope.title()} minimum/median speedup: "
+                f"{claims[scope + '_min']}/{claims[scope + '_median']}x.\n"
+            )
     write_provenance(
         output_dir,
         (
             *tuple(source.path for source in sources),
             *custody_paths,
             *manifest_paths,
+            *((claim_metadata,) if claim_metadata is not None else ()),
             Path(cppipe_figures.__file__).resolve(),
         ),
         outputs,
@@ -141,6 +150,39 @@ def build_measured(
         },
     )
     print(f"Rendered measured benchmark panels and provenance to {output_dir}")
+
+
+def build_publication(record: Path, output_dir: Path, *, frozen: bool = False) -> None:
+    """Regenerate Figure 2 and its single claim include from saved summaries only."""
+    from benchmark.reports import cppipe_figures
+    from benchmark.reports.cppipe_figures import MeasuredBatchSummarySource
+
+    record, output_dir = record.resolve(), output_dir.resolve()
+    execution = MeasuredBatchSummarySource("1 assignment/1 worker", record / "data/singlewell/execution_summary.csv")
+    total = MeasuredBatchSummarySource(execution.label, record / "data/singlewell/total_summary.csv")
+    values = execution.publication_values(total, record_name=record.name, frozen=frozen)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    include = output_dir / "benchmark_claims.json"
+    include.write_text(json.dumps(values, indent=2) + "\n", encoding="utf-8")
+    composite = execution.publication_figure(total, output_dir=output_dir)
+    caption = output_dir / "measured_benchmark_publication_caption.md"
+    caption.write_text(
+        "(A) Workflows passing the qualified declared-output comparison; this is not biological accuracy. "
+        "(B) Execution and (C) total speedup distributions from the same saved cohort, "
+        "using ratios of independent engine medians. Dashed lines denote 2× execution and 1× total parity. "
+        f"Record {values['record_name']}, production source {values['source_revision']}, "
+        f"publication status {values['status']}. Execution minimum/median "
+        f"{values['execution_min']}/{values['execution_median']}×; total minimum/median "
+        f"{values['total_min']}/{values['total_median']}×.\n", encoding="utf-8")
+    write_provenance(
+        output_dir, (execution.path, total.path, execution.custody_path,
+                     Path(cppipe_figures.__file__), Path(__file__).resolve()),
+        (include, *composite, caption),
+        {"interpretation": "Single measured-owner projection; final claims require explicit owner freeze."},
+    )
+    for scope, source in (("execution", execution), ("total", total)):
+        build_measured((f"{source.label}={source.path}",), scope, output_dir / scope,
+                       claim_metadata=include)
 
 
 def load_tables(
@@ -581,13 +623,25 @@ if __name__ == "__main__":
                         help="Reproduce the archived May 13 tables (default).")
     inputs.add_argument("--summary-source", action="append",
                         help="Measured MODE_LABEL=qualified_summary.csv; repeat for modes.")
+    inputs.add_argument("--publication-record", type=Path,
+                        help="Saved record root: derive Figure 2 and the single manuscript claim include.")
+    parser.add_argument("--frozen", action="store_true",
+                        help="Use only after the benchmark owner explicitly freezes this final publication record.")
     parser.add_argument("--scope", choices=("execution", "total", "amortization"),
                         help="Required for measured summaries; archive has its retained clocks.")
     parser.add_argument("--cohort-manifest", type=Path,
                         help="Select unchanged cases declared by this manifest from each qualified measured source.")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     arguments = parser.parse_args()
-    if arguments.summary_source:
+    if arguments.publication_record:
+        if arguments.scope is not None or arguments.cohort_manifest is not None:
+            parser.error("--publication-record owns both scopes and their complete saved cohort")
+        if arguments.output_dir.resolve() == DEFAULT_OUTPUT.resolve():
+            parser.error("--publication-record requires an explicit distinct --output-dir")
+        build_publication(arguments.publication_record, arguments.output_dir, frozen=arguments.frozen)
+    elif arguments.summary_source:
+        if arguments.frozen:
+            parser.error("--frozen requires --publication-record")
         if arguments.scope is None:
             parser.error("--summary-source requires --scope")
         if arguments.output_dir.resolve() == DEFAULT_OUTPUT.resolve():
@@ -597,6 +651,8 @@ if __name__ == "__main__":
             cohort_manifest=arguments.cohort_manifest,
         )
     else:
+        if arguments.frozen:
+            parser.error("--frozen requires --publication-record")
         if arguments.scope is not None:
             parser.error("--scope requires --summary-source")
         if arguments.cohort_manifest is not None:

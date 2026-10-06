@@ -1,10 +1,10 @@
 {
   "source_sha256": {
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/execution_summary.csv": "3d118157f8529b2864af46bfd312e909c19760f92feac7579cc04436a9f2a511",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-4workers/execution_summary.csv": "3d1472579047e29be16c15cdfd0f7866dce014d96a6a89ee8e91b15084d8e450",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/summary_custody.json": "1114e4c0e7fc32831873818ad8401a5f68520d770efe6ff7ef288356646de368",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-4workers/summary_custody.json": "878c21bf18b4e43a503b5d129a2169eb834100a4c4dbda2eab1a593292212db2",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/execution_summary.csv": "3d118157f8529b2864af46bfd312e909c19760f92feac7579cc04436a9f2a511",
+    "benchmark/results/matched_final_20261006/data/16assignments-4workers/execution_summary.csv": "3d1472579047e29be16c15cdfd0f7866dce014d96a6a89ee8e91b15084d8e450",
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/summary_custody.json": "1114e4c0e7fc32831873818ad8401a5f68520d770efe6ff7ef288356646de368",
+    "benchmark/results/matched_final_20261006/data/16assignments-4workers/summary_custody.json": "878c21bf18b4e43a503b5d129a2169eb834100a4c4dbda2eab1a593292212db2",
+    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "benchmark/reports/cppipe_figures.py": "87ceb84ff6d8c4ab6aa8bd0a07ffb8411e730cc7b7c699e76a383be7d1581e76"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
@@ -6984,5 +6984,17 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
+  "source_path_origins": {
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/execution_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/execution_summary.csv",
+    "benchmark/results/matched_final_20261006/data/16assignments-4workers/execution_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-4workers/execution_summary.csv",
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/summary_custody.json",
+    "benchmark/results/matched_final_20261006/data/16assignments-4workers/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-4workers/summary_custody.json",
+    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json"
+  },
+  "provenance_normalization": {
+    "original_receipt_sha256": "5de7b24a8fa0c6aaea8e7c35add56b37cd71f146a588804338e77c2f7c8c8872",
+    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
+    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
+  }
 }

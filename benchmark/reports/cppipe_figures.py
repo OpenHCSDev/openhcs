@@ -135,11 +135,99 @@ class MeasuredBatchSummarySource(SummarySource):
     def candidate_method(self) -> str:
         return f"OH ({self.label})"
 
+    @property
+    def custody_path(self) -> Path:
+        return self.path.parent / "summary_custody.json"
+
+    def qualified_custody(self) -> dict:
+        """The original converter, not publication, qualifies observations."""
+        custody = json.loads(self.custody_path.read_text())
+        if custody["status"] != "PASS":
+            raise ValueError("Measured publication requires qualified matched custody")
+        return custody
+
+    def publication_values(
+        self, total: MeasuredBatchSummarySource, *, record_name: str, frozen: bool,
+    ) -> dict[str, str]:
+        """One projection supplies every manuscript and caption claim.
+
+        A qualified capture is not an owner's final publication freeze. Until
+        that explicit freeze, numeric claims remain placeholders even though
+        checkpoint figures can show the saved observations.
+        """
+        custody = self.qualified_custody()
+        if total.qualified_custody()["source_head"] != custody["source_head"]:
+            raise ValueError("Execution and total claims require the same source revision")
+        tables = (_load_summary_table(self), _load_summary_table(total))
+        if set(tables[0]) != set(tables[1]):
+            raise ValueError("Execution and total claims require the same pipeline cohort")
+        values = {
+            "record_name": record_name,
+            "source_revision": custody["source_head"],
+            "status": "frozen" if frozen else "pending-final-freeze",
+            "case_count": str(len(tables[0])),
+        }
+        for scope, source, table in zip(("execution", "total"), (self, total), tables, strict=True):
+            ratios = tuple(SUMMARY_ROW_NUMERICS.speedup_from_summary_row(row) for row in table.values())
+            if any(value is None or not math.isfinite(value) or value <= 0 for value in ratios):
+                raise ValueError("Publication requires positive finite speedups for every case")
+            statistics = SpeedupSummaryStatistics.from_series(
+                SpeedupDistributionSeries(source.candidate_method, ratios)
+            )
+            if statistics is None or statistics.sample_count != len(table):
+                raise ValueError("Publication statistics must include the complete qualified cohort")
+            values[scope + "_min"] = f"{statistics.minimum:.3f}" if frozen else "PENDING"
+            values[scope + "_median"] = f"{statistics.median:.3f}" if frozen else "PENDING"
+        return values
+
+    def publication_figure(
+        self, total: MeasuredBatchSummarySource, *, output_dir: Path,
+        output_formats: Sequence[str] = DEFAULT_FORMATS,
+    ) -> tuple[Path, ...]:
+        """One parity/execution/total display; reuse the existing CDF painter."""
+        # The same owner validates matching revision/cohort and every ratio.
+        self.publication_values(total, record_name=output_dir.name, frozen=False)
+        execution_table, total_table = _load_summary_table(self), _load_summary_table(total)
+        passed = sum(SUMMARY_ROW_NUMERICS.optional_float(row, ACCURACY_FIELD) == 1.0
+                     for row in execution_table.values())
+        count = len(execution_table)
+        with FIGURE_STYLE.context(), plt.rc_context({"xtick.labelsize": 10, "ytick.labelsize": 10}):
+            fig, axes = plt.subplots(1, 3, figsize=(7.2, 3.4), layout="constrained",
+                                     gridspec_kw={"width_ratios": (0.75, 1.35, 1.35)})
+            axis = axes[0]
+            axis.bar((0,), (100 * passed / count,), color=FIGURE_STYLE.color_for_method(1), width=0.55)
+            axis.set(ylim=(0, 110), xticks=(0,), xticklabels=("Workflows",),
+                     ylabel="Declared-output checks passed (%)")
+            axis.set_title("A  Output parity", loc="left", fontsize=11)
+            axis.text(0, 102, f"{passed}/{count}", ha="center", fontsize=10)
+            FIGURE_STYLE.decorate_axis(axis, metric=FigureMetricSpec(
+                ACCURACY_FRACTION_FIELD, "qualified_science_pass", "", ""), panel_index=1)
+            for axis, scope, source, table, letter, target in zip(
+                axes[1:], ("execution", "total"), (self, total),
+                (execution_table, total_table), ("B", "C"), (SPEEDUP_TARGET, 1.0), strict=True,
+            ):
+                series = SpeedupDistributionSeries(source.candidate_method, tuple(
+                    SUMMARY_ROW_NUMERICS.speedup_from_summary_row(row) for row in table.values()))
+                report = SpeedupDistributionReport((series,), output_dir, "", scope.title(),
+                                                   "Native / OpenHCS time", target_line=target)
+                report.draw_cdf(axis, log_x=True)
+                axis.set_xticks((1, 4, 16, 64, 256), labels=("1", "4", "16", "64", "256"))
+                axis.set_title(f"{letter}  {scope.title()} speedup", loc="left", fontsize=11)
+                axis.set_ylabel("Workflows at or above (%)", fontsize=10)
+                axis.set_xlabel("Native / OpenHCS time", fontsize=10)
+                summary = report.summary_statistics[0]
+                axis.text(0.03, 0.05, f"min {summary.minimum:.3f}×\nmedian {summary.median:.3f}×",
+                          transform=axis.transAxes, fontsize=10,
+                          bbox={"facecolor": FIGURE_STYLE.background, "edgecolor": "none", "alpha": .9})
+            outputs = tuple(output_dir / f"measured_benchmark_publication.{extension}" for extension in output_formats)
+            for path in outputs:
+                FIGURE_STYLE.save(fig, path)
+            plt.close(fig)
+        return outputs
+
     def amortization_points(self, pipeline_name: str) -> tuple[int, dict[str, float]]:
         """Derive single-core per-assignment clocks from qualified paired observations."""
-        custody = json.loads((self.path.parent / "summary_custody.json").read_text())
-        if custody["status"] != "PASS":
-            raise ValueError("Amortization requires qualified matched custody")
+        custody = self.qualified_custody()
         cases = tuple(case for case in custody["cases"] if case["case"] == pipeline_name)
         if len(cases) != 1:
             raise ValueError(f"Custody must own exactly one case {pipeline_name!r}")
@@ -851,7 +939,7 @@ def _generate_measured_amortization_figures(
 ) -> tuple[Path, ...]:
     """Present actual single-core batch sizes using the existing manuscript style."""
     heads = {
-        json.loads((source.path.parent / "summary_custody.json").read_text())["source_head"]
+        source.qualified_custody()["source_head"]
         for source in sources
     }
     if len(heads) != 1:
@@ -1671,71 +1759,7 @@ class SpeedupDistributionReport:
                 figsize=(7.4, 4.4),
                 layout="constrained",
             )
-            for index, item in enumerate(self.series):
-                summary = SpeedupSummaryStatistics.from_series(item)
-                if summary is None:
-                    continue
-                thresholds = self.thresholds(item.values)
-                y_values = tuple(
-                    100.0
-                    * sum(1 for value in item.values if value >= threshold)
-                    / len(item.values)
-                    for threshold in thresholds
-                )
-                axis.step(
-                    thresholds,
-                    y_values,
-                    where="post",
-                    linewidth=2.0,
-                    color=FIGURE_STYLE.color_for_method(index + 1),
-                    label=(
-                        f"{item.label}\n"
-                        f"min {summary.minimum:.2f}x; median {summary.median:.2f}x"
-                    ),
-                )
-            axis.axvline(
-                self.target_line,
-                color=FIGURE_STYLE.target_color,
-                linewidth=1.15,
-                linestyle="--",
-                alpha=0.86,
-            )
-            axis.annotate(
-                "Native parity (1x)" if self.target_line == 1.0 else f"{self.target_line:g}x target",
-                xy=(self.target_line, 99.0),
-                xycoords=("data", "data"),
-                xytext=(3, -2),
-                textcoords="offset points",
-                ha="left",
-                va="top",
-                fontsize=7.8,
-                color=FIGURE_STYLE.target_color,
-            )
-            if log_x:
-                axis.set_xscale("log", base=2)
-                axis.xaxis.set_major_locator(LogLocator(base=2, numticks=12))
-                axis.xaxis.set_minor_locator(NullLocator())
-                axis.xaxis.set_major_formatter(FuncFormatter(_plain_log_tick_label))
-                axis.xaxis.set_minor_formatter(NullFormatter())
-            axis.set_ylim(0.0, 102.0)
-            axis.set_xlabel(self.xlabel)
-            axis.set_ylabel("Pipelines at or above threshold (%)")
-            axis.set_title(
-                f"{self.title} (log scale)" if log_x else self.title,
-                loc="left",
-                pad=10,
-            )
-            axis.grid(
-                axis="both",
-                color=FIGURE_STYLE.grid_color,
-                linewidth=0.8,
-                alpha=0.8,
-            )
-            axis.set_axisbelow(True)
-            axis.spines["top"].set_visible(False)
-            axis.spines["right"].set_visible(False)
-            axis.spines["left"].set_color(FIGURE_STYLE.spine_color)
-            axis.spines["bottom"].set_color(FIGURE_STYLE.spine_color)
+            self.draw_cdf(axis, log_x=log_x)
             axis.legend(frameon=False, loc="upper left", bbox_to_anchor=(1.02, 1.0))
             outputs: list[Path] = []
             suffix = (
@@ -1749,6 +1773,41 @@ class SpeedupDistributionReport:
                 outputs.append(output_path)
             plt.close(fig)
             return tuple(outputs)
+
+    def draw_cdf(self, axis, *, log_x: bool) -> None:
+        """The one empirical CDF painter, for standalone and composed figures."""
+        for index, item in enumerate(self.series):
+            summary = SpeedupSummaryStatistics.from_series(item)
+            if summary is None:
+                continue
+            thresholds = self.thresholds(item.values)
+            y_values = tuple(100.0 * sum(value >= threshold for value in item.values) / len(item.values)
+                             for threshold in thresholds)
+            axis.step(thresholds, y_values, where="post", linewidth=2.0,
+                      color=FIGURE_STYLE.color_for_method(index + 1),
+                      label=f"{item.label}\nmin {summary.minimum:.2f}x; median {summary.median:.2f}x")
+        axis.axvline(self.target_line, color=FIGURE_STYLE.target_color, linewidth=1.15,
+                     linestyle="--", alpha=0.86)
+        axis.annotate("Native parity (1x)" if self.target_line == 1.0 else f"{self.target_line:g}x target",
+                      xy=(self.target_line, 99.0), xycoords=("data", "data"), xytext=(3, -2),
+                      textcoords="offset points", ha="left", va="top", fontsize=10,
+                      color=FIGURE_STYLE.target_color)
+        if log_x:
+            axis.set_xscale("log", base=2)
+            axis.xaxis.set_major_locator(LogLocator(base=2, numticks=12))
+            axis.xaxis.set_minor_locator(NullLocator())
+            axis.xaxis.set_major_formatter(FuncFormatter(_plain_log_tick_label))
+            axis.xaxis.set_minor_formatter(NullFormatter())
+        axis.set_ylim(0.0, 102.0)
+        axis.set_xlabel(self.xlabel)
+        axis.set_ylabel("Pipelines at or above threshold (%)")
+        axis.set_title(f"{self.title} (log scale)" if log_x else self.title, loc="left", pad=10)
+        axis.grid(axis="both", color=FIGURE_STYLE.grid_color, linewidth=0.8, alpha=0.8)
+        axis.set_axisbelow(True)
+        axis.spines["top"].set_visible(False)
+        axis.spines["right"].set_visible(False)
+        axis.spines["left"].set_color(FIGURE_STYLE.spine_color)
+        axis.spines["bottom"].set_color(FIGURE_STYLE.spine_color)
 
     @property
     def summary_statistics(self) -> tuple[SpeedupSummaryStatistics, ...]:
