@@ -1330,6 +1330,11 @@ def _partitioned_spreadsheet_export(
             declarations_by_axis.setdefault(record.key.scope.axis_id, []).append(declaration)
             previous = schemas_by_spec.setdefault(declaration, schema)
             homogeneous = homogeneous and previous == schema
+    if kwargs["export_all_measurement_types"]:
+        uses_metadata_path = uses_metadata_path or any(
+            _METADATA_TEMPLATE.search(_measurement_subject_name(table))
+            for table in all_tables
+        )
     declaration_sets = tuple(tuple(values) for values in declarations_by_axis.values())
     homogeneous = homogeneous and all(
         declarations == declaration_sets[0] for declarations in declaration_sets
