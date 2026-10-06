@@ -348,7 +348,11 @@ controls. The final 55-instance result included two seed-only actin regions and
 an ambiguous adjacent-nucleus group. The author retained these uncertainties
 after matched review at nine positions in both channels. Independent checks
 confirmed label-to-table agreement and unchanged exports after a technical
-integrity audit; they do not establish exact biological counts (Supplementary
+integrity audit. Postfreeze reference comparison found essentially unchanged
+nuclear object F1 (0.747 to 0.745), with recall rising from 0.787 to 0.809;
+actin-region F1 improved from 0.642 to 0.661. Directed adjacent nuclear-boundary
+agreement worsened. Visible local recovery therefore did not establish a
+whole-field nuclear accuracy gain or exact biological counts (Supplementary
 Data 8).
 
 Retinal authors used measured background and weak-body support to select
