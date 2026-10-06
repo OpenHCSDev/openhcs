@@ -1412,6 +1412,15 @@ files and eight terminal files were independently hash-checked. The operational
 review blocker was resolved for this phase without replaying the earlier UNKNOWN
 or claiming a new autonomous success; retained-context development continues.
 
+The [pooled analytical-input comparison](task_only_analysis/p001-pooled25-qualified-comparison.rst)
+subsequently completed all nine fields with one process-channel fit. Current
+per-cell sums independently reproduce all nine summaries; the reported length
+changes are -0.29% to +3.55%, with locally retained geometry and unresolved tips.
+It is assisted development, not a fresh autonomous pass or a broad accuracy
+gain. The record also preserves the original report-overwrite incident and
+its separately recovered, hash-identical authored report without altering the
+scientific freeze.
+
 A later independent full-plate translocation author retained all 19,732 nuclear
 rows, with 8,655 contributing ratios and 9,661 rows lacking supported cytoplasm.
 The [qualified completion record](task_only_analysis/bbbc013-fresh20-qualified-completion.rst)
