@@ -6,6 +6,7 @@ import concurrent.futures
 import inspect
 import pickle
 import threading
+import weakref
 from types import SimpleNamespace
 
 import numpy as np
@@ -663,6 +664,72 @@ def test_concurrent_failed_loads_share_one_exact_source_outcome(
 
     assert prepare_calls == 1
     assert function_name not in CustomFunctionRuntimeRegistry.metadata_by_name()
+
+
+def test_failed_preparation_keeps_evidence_not_payload_or_reader_frames(
+    isolated_custom_runtime,
+) -> None:
+    from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
+
+    source = CustomFunctionSource("failed_payload_probe", "failure-revision")
+    references = []
+    calls = []
+
+    def prepare():
+        calls.append(source)
+        payload = np.zeros((32, 32), dtype=np.uint8)
+        references.append(weakref.ref(payload))
+        try:
+            raise ValueError("original source cause")
+        except ValueError as cause:
+            raise ValidationError("source failed", 7, "raise cause") from cause
+
+    errors = []
+    depths = []
+    for _ in range(4):
+        with pytest.raises(ValidationError) as caught:
+            CustomFunctionRuntimeRegistry.prepare_source_once(source, prepare)
+        error = caught.value
+        errors.append(error)
+        assert str(error) == "source failed | Line 7 | Code: raise cause"
+        assert (error.message, error.line_number, error.code_snippet) == (
+            "source failed", 7, "raise cause",
+        )
+        assert "ValueError: original source cause" in error.__notes__[0]
+        assert "raise ValidationError" in error.__notes__[0]
+        traceback = error.__traceback__
+        depth = 0
+        while traceback is not None:
+            depth += 1
+            traceback = traceback.tb_next
+        depths.append(depth)
+        cached = CustomFunctionRuntimeRegistry._preparation_outcomes[source].exception()
+        assert cached.__traceback__ is None
+        assert cached.__cause__ is None
+        assert cached.__context__ is None
+        assert references[0]() is None  # no explicit GC: cached failure released it
+
+    assert calls == [source]
+    assert len({id(error) for error in errors}) == 4
+    assert len(set(depths)) == 1
+    assert len({tuple(error.__notes__) for error in errors}) == 1
+
+
+def test_preparation_future_preserves_success_timeout_and_cancellation():
+    from openhcs.processing.custom_functions.runtime_registry import (
+        CustomFunctionPreparationFuture,
+    )
+
+    outcome = CustomFunctionPreparationFuture()
+    with pytest.raises(TimeoutError):
+        outcome.result(timeout=0)
+    metadata = SimpleNamespace(original_name="exact_success")
+    outcome.set_result(metadata)
+    assert outcome.result() is metadata
+    cancelled = CustomFunctionPreparationFuture()
+    assert cancelled.cancel()
+    with pytest.raises(concurrent.futures.CancelledError):
+        cancelled.result()
 
 
 def test_delete_linearizes_after_inflight_lazy_load(
