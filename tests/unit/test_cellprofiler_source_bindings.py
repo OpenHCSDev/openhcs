@@ -1063,3 +1063,21 @@ def test_setup_fold_is_source_ordered_and_uses_module_registry() -> None:
         CellProfilerModule.require_module(module.name).emits_function_step() is False
         for module in (images, names, groups)
     )
+
+
+@pytest.mark.parametrize("dtype,foreground", [(np.uint8, 255), (np.uint16, 65535), (np.float32, 0.25)])
+def test_declared_binary_source_preserves_foreground_through_cp_normalization(dtype, foreground):
+    from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
+    from openhcs.processing.backends.cellprofiler.image_geometry import binary_mask_plane
+    from openhcs.core.runtime_image_values import image_payload_data
+
+    raw = np.asarray([[0, foreground], [foreground, 0]], dtype=dtype)
+    context = ImagePayloadSourceMetadataContext(SourceImageIdentity('/input/mask.tif'))
+    loaded = NamedSourceBinding(alias='Mask', load_as_mask=True).apply_loaded_payload(raw, context)
+    source_metadata = image_payload_metadata(loaded)
+    normalized = normalize_cellprofiler_image_payload(loaded)
+    np.testing.assert_array_equal(image_payload_data(normalized), raw != 0)
+    np.testing.assert_array_equal(binary_mask_plane(normalized), raw != 0)
+    assert source_metadata.unit_interval_intensity.scale == 1
+    assert image_payload_metadata(normalized).source_provenance == source_metadata.source_provenance
+    assert source_metadata.source_path == '/input/mask.tif'

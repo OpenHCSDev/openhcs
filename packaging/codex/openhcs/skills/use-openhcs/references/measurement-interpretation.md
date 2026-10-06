@@ -77,6 +77,20 @@ measurements, not ground truth or an automatically validated parameter choice.
    For a compound detector, relate each measurement to the stage it supports:
    raw width or local signal/background difference does not by itself justify
    admission on an enhanced response, seed extraction or final object acceptance.
+   When newly proposed preprocessing changes that response, a small
+   preprocessing-only diagnostic can establish its positive and nuisance values
+   before fixing the first segmentation cutoff. Use the same declared pipeline
+   and native measurement routes, not a second array-analysis engine. Compare
+   ordinary and dim positives with regional nuisance patches on the processed
+   alias; a raw foreground-minus-background difference divided by the integer
+   codebook is not a measured cutoff after smoothing or background subtraction.
+   If that diagnostic is unavailable or disproportionate, label the cutoff an
+   unmeasured trial hypothesis and test its support first, rather than describing
+   it as empirically calibrated. A low numeric cutoff can admit most background
+   even when genuine bodies have higher means; inspect the admitted fraction
+   and continuity, not just the ordering of two means. Where dim-positive and
+   nuisance distributions overlap, reconsider preprocessing/admission or retain
+   the limited endpoint instead of forcing one scalar to separate them.
    Reflect the effective contract: one width may also control smoothing or
    background scale, while a size-acceptance bound need not change markers.
    Before the first proposal, predict both faint-signal recovery and rejection

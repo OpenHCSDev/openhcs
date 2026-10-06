@@ -1117,6 +1117,9 @@ class NamedSourceBinding(SourceAssignmentBase):
             )
         if self.load_as_mask:
             data = np.asarray(data, dtype=bool)
+            metadata = metadata.replace_fields(
+                unit_interval_intensity=ImageUnitIntervalIntensityMetadata(scale=1),
+            )
 
         metadata = metadata.replace_fields(source_channel_axis=source_channel_axis)
         return metadata.payload_with(data, image_payload_mask(payload))

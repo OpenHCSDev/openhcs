@@ -252,6 +252,27 @@ AND regional negatives, not background uniformity, nuclear eligibility or a
 preferred count. Opposite faint-loss/background-flooding outcomes motivate a
 model change, not repeated scalar toggles.
 
+### Body-scale contrast recipe
+
+When soma-sized support is distinct from fine texture and broader haze, one
+candidate is a smoothed body image minus a more broadly smoothed background.
+Choose the finer Gaussian scale to suppress measured grain/internal texture
+while retaining body envelopes and genuine neighbour valleys; choose the
+broader scale to distinguish that support from the observed background.
+Subtract through declared image artifacts in float, recording any negative-value
+clipping and the actual input aliases. Serial Gaussian filters combine their
+scales; smoothing the already smoothed body image is not the same declaration
+as applying both filters independently to raw.
+
+Measure clear bodies, dim rims and regional nuisance on the resulting response
+before selecting its cutoff. Compare the support and final labels across those
+positions: this model can recover broad somata while shortening weak rims or
+removing thin processes. A body-detection branch need not also be the process
+branch. Retain useful detections and their extent uncertainty separately, and
+use the appropriate intensity source for photometry rather than this band-pass
+response. The recipe is a conditional alternative, not a default or a claim of
+validated whole-cell boundaries.
+
 ## Spots, edges and thin processes
 
 Difference/Laplacian of Gaussian can enhance objects at a selected scale; ridge

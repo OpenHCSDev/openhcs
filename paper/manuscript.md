@@ -320,61 +320,63 @@ and tiny closed annotation regions remain included; these single-field scores
 do not establish an exhaustive biological census (Supplementary Data 8).
 
 Retinal authors used measured background and weak-body support to select
-smoothing, background subtraction and foreground admission. Earlier repeats
-retained useful soma detections but uncertain ring-shaped partitions and weak
-boundaries. In the independent trial shown in Figure 7, an intermediate repair
+smoothing, background subtraction and foreground admission. In the independent
+trial shown in Figure 7, an intermediate repair
 joined a genuine northwest pair while correcting a southeast body split.
 The author detected that regression and adjusted marker suppression.
 Matched final views confirmed separate northwest neighbours and one southeast
 envelope in the same 102-instance candidate. Diffuse and lobed regions still
-had uncertain identities and extent (Supplementary Figure 14). The result
-supports autonomous local repair with a retained neighbour control;
-manual-reference accuracy remains unmeasured.
-
-A later independent retinal author repaired fragmented interiors and a merged
+had uncertain identities and extent (Supplementary Figure 14). A later
+independent author repaired fragmented interiors and a merged
 neighbouring pair, retaining 145 candidate soma instances. Independent full-field
 and regional raw/result review supported bright-body localisation, separate
 neighbours and intact isolated bodies against noisy background. Faint open rims
-and lobed or crowded objects retained uncertain extent and identity. This result
-adds evidence of self-directed repair; the detector total is not a manual cell
-count (Supplementary Data 8).
+and lobed or crowded objects retained uncertain extent and identity.
 
-Whole-volume analysis also separated useful localisation from instance
-identity. One fresh nucleus-centre trial matched all 15 manual reference
+A further fresh author traced nuisance flooding to grain-scale foreground
+admission and replaced it with body-scale background subtraction. The final
+141-instance candidate retained the clear neighbouring pair, but weak southwest
+bodies still received incomplete masks. The author also detected invalid
+label-derived fluorescence measurements and corrected their source binding
+without changing the segmentation. Across these trials, matched regional
+controls support self-directed preprocessing, instance and measurement repair.
+Manual-reference accuracy remains unmeasured: the detector totals are not
+validated retinal cell counts
+(Supplementary Data 8).
+
+Whole-volume trials combined annotated-centre localisation with native
+instance review. An early fresh nucleus-centre trial matched all 15 manual reference
 centres within 30 voxels, with ten unmatched predictions; at ten voxels it
 matched 14 of 15. The reference was not established as exhaustive, so unmatched
-centres were not automatically treated as spurious cells. The author's
-bright-core adjustment left first and final geometries unchanged. A separate
-fresh author repaired duplicate centres within one continuous body after
-rejecting an ineffective marker adjustment. Native XY and orthogonal views
-supported one representative, while a positive control stayed unchanged.
-Its 26 provisional centres retained unresolved associations and border
-supports. Supplementary Data 8 preserves these distinct trials and their
-remaining whole-volume uncertainties.
-
-A later independent volume author removed sampled internal-peak duplicates
-using measured component-local spacing while retaining a genuine neighbour
-pair. Its 22 provisional centres included an unresolved bright multi-lobed
-cluster. Native XY, XZ and YZ review separated useful ordinary-body support
-from that identity uncertainty (Supplementary Figure 17); no global biological
-count or new reference score was established.
-
-A further fresh volume author measured nuclear dimensions, background intensity
+centres were not automatically treated as spurious cells. Its bright-core
+adjustment left first and final geometries unchanged. Another fresh author measured nuclear dimensions, background intensity
 and neighbour separation before selecting a shape-based marker method. Its
 first scientific method produced 26 candidate centres; a technical rerun
 changed output delivery while retaining the same detector. Independent raw,
 point-only and combined XY/XZ/YZ review supported centre placement inside
 ordinary nuclei. A bright lobed complex and cropped border supports retained
-identity uncertainty. This trial demonstrates useful measurement-first
-localisation. After the workflow was frozen, one-to-one matching recovered
+identity uncertainty. After the workflow was frozen, one-to-one matching recovered
 all 15 manually annotated centres within the predeclared 30-voxel distance,
 with a mean localisation error of 4.80 voxels (Figure 9). All 15 also matched within
 20 voxels, and 14 matched within 10 voxels. Eleven of the 26 predictions were
 unmatched to these annotations. Their coverage was not established as
 exhaustive, so unmatched predictions do not establish false biological
-detections. These unscaled voxel distances assess centre placement rather
-than physical distance, segmentation boundaries or a whole-volume census
-(Supplementary Data 8).
+detections.
+
+A subsequent independent volume author repaired internal-peak duplication
+while retaining separate neighbours (Supplementary Figure 25). Post-freeze matching again recovered all
+15 annotated centres within 20 and 30 voxels, and 14 within 10 voxels; mean
+localisation error at 30 voxels was 4.82. Its 26 candidates included 16
+border-touching basins and 11 predictions unmatched to the incomplete reference.
+This repeats annotated-centre localisation rather than improving it or
+establishing a complete nucleus census. Separate fresh trials retained 26 and
+22 provisional centres after repairing sampled internal-peak duplicates;
+native XY, XZ and YZ views supported ordinary-body placement and retained
+neighbour controls, while bright multi-lobed complexes and border supports
+remained uncertain (Supplementary Figure 17). These unscaled voxel distances
+assess centre placement, not physical distance or segmentation boundaries.
+Supplementary Data 8 preserves the distinct trials, local repairs and
+remaining whole-volume uncertainties.
 
 A fresh public neurite-field author identified bright junction pixels lost
 after ridge enhancement and restored them by combining enhanced support with
@@ -493,27 +495,48 @@ supports recovery of the assay response, not exhaustive segmentation accuracy
 or unseen-dataset generalisation; it is distinct from the prospective experiment
 above (Supplementary Data 8).
 
-A later independent translocation author also completed all 96 wells, with
-incomplete compartments in the inspected fields. Its recorded continuation retained
-18,331 nuclear seed rows and 14,496 defined nuclear-to-cytoplasmic ratios;
-3,835 ratios were undefined because cytoplasmic regions had no pixels.
-Matched native review found a faint nuclear miss and regions confined to
-bright centres. This repeat supports execution coverage and exploratory
-measurements on selected masks, not reliable population counts or unbiased
-translocation estimates. The difference from the earlier repeat illustrates
-why successful execution and response recovery need separate visual assessment
-(Supplementary Data 8).
+Other task-only authors also completed the 96-well plate, but compartment
+coverage varied. One continuation left 3,835 of 18,331 nuclear seed rows without
+a defined ratio because their cytoplasmic regions contained no pixels. Its
+self-directed repair retained 16,589 defined ratios from 18,073 seed rows and
+recovered control Z-prime values of 0.700 and 0.513 for Wortmannin and LY294002,
+respectively. Matched review still found a faint nuclear miss, a plausible
+merged pair and seed-sized cytoplasmic regions. Repair recovered useful assay
+responses without resolving every segmentation failure (Supplementary Data 8).
 
-A self-directed continuation improved dim nuclear admission and local
-cytoplasmic growth, then completed all 96 wells with settings frozen before
-five additional fields were reviewed. It retained 16,589 defined ratios from
-18,073 nuclear seed rows. Independent recalculation reproduced all 24 dose
-summaries and control Z-prime values of 0.700 and 0.513 for the Wortmannin and
-LY294002 blocks, respectively. Both dose series rose at lower concentrations.
-Matched image review still found a faint nuclear miss, a plausible merged pair
-and seed-sized cytoplasmic regions. This same-author development recovered
-useful assay responses on selected masks, while incomplete compartments and
-GFP-dependent selection limited population inference (Supplementary Data 8).
+A separate author explicitly qualified cytoplasmic support rather than assigning
+a ratio to every detected nucleus. Of 19,732 nuclear rows, 8,655 (43.9%)
+qualified and 9,661 lacked supported cytoplasm; unsafe ratios remained
+undefined. Independent reading of all object tables reproduced each well's
+contributing-row mean. Conditional Z-prime/V-factor values were 0.885/0.626
+for Wortmannin and 0.262/0.497 for LY294002. Matched reserve review showed
+nuclear-dominant GFP with limited extranuclear support. Across these trials,
+plate completion and control separation could coexist with substantial
+compartment loss. The reported responses therefore describe the contributing
+cohorts, not unbiased whole-population translocation; Supplementary Data 8
+retains each pipeline, coverage denominator and failed predecessor.
+
+Table 2 summarizes the different endpoints supported by these task-only
+trials. The measures are not interchangeable: object matching, directed
+boundary agreement, centre localisation and assay-response separation answer
+different questions.
+
+| Input and task | Evaluation evidence | Supported result and limit |
+|---|---|---|
+| H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 5 trial; computational, not manual biological truth |
+| BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
+| BBBC007 DNA/actin | Manual-outline union; 16 fields | Directed boundary fraction 0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
+| H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
+| R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
+| H004 public neurites | Matched raw paths and nuisance controls | Local junction and faint-path recovery; complete extent and per-neuron ownership unresolved |
+| BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
+
+Table 2. Evidence and claim boundaries across task-only analysis tasks.
+Rows summarize the reported trials, not a newly pooled benchmark or a ranking
+of assays. Reference comparisons followed pipeline freezing and were not
+returned to authors. Visual-review rows do not supply a numerical accuracy
+estimate. First/final comparisons and independent repeats remain distinct;
+Supplementary Data 8 retains their exact inputs, predictions and evaluations.
 
 Together, the task-only trials demonstrate useful initial choices, local
 recovery and self-diagnosis without reference-score feedback. Their quantitative
