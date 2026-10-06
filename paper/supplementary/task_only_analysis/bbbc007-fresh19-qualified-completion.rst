@@ -191,7 +191,8 @@ measurement declarations differ and an integrity step was added. Earlier
 technical failures remain in the original record.
 
 .. csv-table:: Same-field comparison, before reference feedback
-   :header: "Source", "First nuclei", "Final nuclei", "Closed manual interiors", "First eligible boundaries", "First within2px", "Final eligible boundaries", "Final within2px"+
+   :header: "Source", "First nuclei", "Final nuclei", "Closed manual interiors", "First eligible boundaries", "First within2px", "Final eligible boundaries", "Final within2px"
+
    A01_10,107,101,87,5506,4056,5301,3948
    A01_5,98,107,90,5067,3868,5671,4219
    A01_7,146,152,126,8323,5961,8727,6240
