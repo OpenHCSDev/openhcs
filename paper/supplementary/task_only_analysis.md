@@ -58,7 +58,7 @@ final report retains uncertain lobed groups, possible merges, small-focus
 exclusions and truncated border objects. Its 61 instances are a defined
 bright-object estimate rather than an exhaustive biological census.
 
-Supplementary Figure 18 shows native raw/first/final witnesses from this same
+Supplementary Figure 9 shows native raw/first/final witnesses from this same
 scored author. The overview uses raw window 8–152; the upper-right detail uses
 8–248, gamma 1, with filled ROI opacity 0.7. It makes the local elongated-body
 false-split repair visible without substituting another trial's result. The
@@ -384,7 +384,7 @@ intermediate measurements identify threshold-shrunken support as the earlier
 loss mechanism. The after-only crowded A01 control retained separate supported
 regions at the inspected position, without establishing a field-wide regression
 rate. Corrected D06 GFP views still showed unresolved propagated-compartment
-extent and ownership (Supplementary Figure 12).
+extent and ownership (main Figure 10).
 
 This local nuclear improvement does not establish whole-cell boundaries,
 nuclear-to-cytoplasmic intensity-ratio accuracy or a treatment effect. The
@@ -719,7 +719,7 @@ claim; no manual-reference score was obtained.
 
 ## Fresh public neurite field: bright-junction support repair
 
-Supplementary Figure 19 shows an independent author recovering a bright
+Supplementary Figure 13 shows an independent author recovering a bright
 junction after enhanced support omitted raw-supported pixels. The final
 candidate retains weak-path gaps and uncertain crossings. The
 [independent native review](../../figure-collection-20261004/H004-FRESH10-NATIVE-REVIEW.rst)
@@ -900,7 +900,7 @@ and visual acceptance. No manual retinal count or mask score was obtained.
 The [independent final review](../../figure-collection-20261004/R0010-C10-INDEPENDENT-LOCAL-REPAIR-REVIEW.rst)
 and [intermediate tradeoff](../../figure-collection-20261004/R0010-C08-REGIONAL-TRADEOFF-REVIEW.rst)
 retain original capture identities, table checks and lifecycle qualifications.
-Main Figure 7 now shows this final candidate's whole field, northwest pair
+Main Figure 7 shows this final candidate's whole field, northwest pair
 and southeast continuous envelope. Its [native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
 binds six unchanged original PNGs, the frozen pipeline, native camera settings
 and exact geometric crops. Raw views use window 0–63 and gamma 1. The outline
@@ -982,7 +982,7 @@ The author retained its original primary scientific method after rejecting
 three development repairs. Its complete-corpus result is not a best-of score
 from those repairs or a first-200 comparison. The repeat shows substantial
 agreement with a remaining difficult-field tail, rather than a causal skill
-improvement. Supplementary Figure 20 displays all paired field scores and the
+improvement. Supplementary Figure 16 displays all paired field scores and the
 pooled detection tradeoff. The [evaluation receipt](../../figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json)
 and [original scoring account](../../figure-collection-20261004/BBBC039-FRESH10-FULL200-SCORE.rst)
 retain unchanged frozen payloads, references, original failures and lifecycle
@@ -1151,7 +1151,7 @@ does not prove biological improvement or complete detection.
 Independent readback found 22 rows in the final centre CSV. The author also
 reconciled 22 persisted ROI geometries, native feature rows and image count.
 These delivery checks are separate from biological validity. Supplementary
-Figure 17 shows final-only native XY, XZ and YZ witnesses; it does not show
+Figure 10 includes final-only native XY, XZ and YZ witnesses; that row does not show
 the earlier candidates or independently establish their repair chronology.
 The [native source proof](task_only_analysis/h002-fresh10-native-source-proof.json)
 binds six byte-identical screenshots, matched camera/axes/windows, the frozen
@@ -1200,7 +1200,7 @@ reports no cell growth beyond the nucleus for 24 of 78 masks. This is useful
 assisted repair evidence, not a fresh autonomous success, reference-based
 accuracy estimate or validated acquisition-wide cell-area measurement.
 
-Main Figure 8 reads the [retained native table projection](task_only_analysis/bbbc013-fresh13-plot-source.json)
+The earlier translocation presentation used the [retained native table projection](task_only_analysis/bbbc013-fresh13-plot-source.json)
 without executing the pipeline or accessing scientific images. That projection
 retains every native CSV row and each original table's path and SHA-256. Dose
 panels use the ten `empty`/`dose` groups for each drug; control panels use the
@@ -1275,14 +1275,16 @@ records exact scorer, reference and prediction hashes, coordinate columns and
 all four evaluations. The [postfreeze comparison](../../figure-collection-20261004/H002-FRESH15-POSTFREEZE-LOCALISATION.rst)
 records its independent execution and reproduction procedure.
 
-Main Figure 9 combines three original native image/Points captures with the
-10-voxel and primary 30-voxel comparisons from that receipt. Its
+Main Figure 9 combines a reviewed same-run saved nuclear-ROI XY view and the
+original native XZ/YZ image/Points captures with the 10-voxel and primary
+30-voxel comparisons from that receipt. Its
 [source record](../figures/slas/h002_firstmethod_sources/source-receipt.json)
 retains their original paths, sizes and frozen-manifest hashes. The
 [figure receipt](../figures/slas/h002_measurement_first_provenance.json)
 records source, generator and output hashes plus editorial crop coordinates.
-Points and image pixels are not retouched; the figure does not show mask
-boundaries or establish whole-volume counting accuracy. Original raw-only and
+Points and image pixels are not retouched. The XY panel shows saved nuclear
+support, not validated cellular boundaries; the figure does not establish
+whole-volume counting accuracy. Original raw-only and
 point-only controls remain identified in the independent review.
 
 The final pipeline SHA-256 is
