@@ -11,8 +11,8 @@ Use the existing figure script and installed numerical environment:
 
 ```sh
 python paper/figures/build_slas_benchmark.py \
-  --publication-record benchmark/results/matched_final_20261006 \
-  --output-dir paper/figures/slas/benchmark-publication
+  --publication-record benchmark/results/matched_latestmain_20261006 \
+  --output-dir paper/figures/slas/benchmark-publication --frozen
 ```
 
 Without `--frozen`, the four numeric claims are `PENDING`. Add `--frozen` only

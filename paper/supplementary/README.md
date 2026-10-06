@@ -325,44 +325,52 @@ comparisons on production revision `eb773573c` in one refreshed environment.
 
 ## Supplementary Figure 17. Matched workload comparisons across worker counts
 
-![Nine assignments: execution on one and three workers.](../figures/slas/matched_postgrid_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
+![Nine assignments: historical execution calibration on one and three workers.](../figures/slas/matched_postgrid_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
 
-![Nine assignments: total on one and three workers.](../figures/slas/matched_postgrid_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
+![Nine assignments: historical total calibration on one and three workers.](../figures/slas/matched_postgrid_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
 
-![Sixteen assignments: execution on one and four workers.](../figures/slas/matched_postgrid_20261006/matched-sixteen-execution/measured_execution_seconds.png){width=6in}
+![Sixteen repeated 3D assignments: stock single-process CellProfiler versus one and four built-in OpenHCS workers, full server execution.](../figures/slas/matched_lastconsumer_20261006/primary-execution/measured_execution_seconds.png){width=6in}
 
-![Sixteen assignments: total on one and four workers.](../figures/slas/matched_postgrid_20261006/matched-sixteen-total/measured_total_seconds.png){width=6in}
+![Sixteen repeated 3D assignments: stock single-process CellProfiler versus one and four built-in OpenHCS workers, compile-plus-run total.](../figures/slas/matched_lastconsumer_20261006/primary-total/measured_total_seconds.png){width=6in}
 
-The same three-workflow cohort, source revision and environment as Supplementary
-Figure 16 are used. Each condition completed warmup and three measured repetitions
-with no declared-output differences. Native parallel durations are actual
-simultaneous shard makespans validated against a complete serial batch; they are
-not estimated from independent durations. OpenHCS execution includes the complete
-server job and plate exports. The Average category is an arithmetic summary of
-workflow bars, not a pooled runtime.
+The nine-assignment panels retain the historical three-workflow cohort and
+production revision of Supplementary Figure 16. Their parallel CellProfiler
+baseline consists of externally orchestrated independent stock processes;
+it is a calibration, not a native CellProfiler multiprocessing feature.
+Durations are actual simultaneous shard makespans validated against a complete
+serial batch, rather than estimates from separate durations. The Average
+category is an arithmetic summary of workflow bars, not a pooled runtime.
 
-For the same assignment count, execution efficiency is the one-worker median
-divided by worker count times the parallel median. OpenHCS efficiencies for Vitra,
-illumination and 3D were 75.5%, 72.3% and 74.4% at three workers, and 71.8%, 69.1%
-and 74.1% at four workers. Native efficiencies were 82.6%, 54.3% and 92.7% at three
-workers, and 67.4%, 64.5% and 84.2% at four workers. These efficiencies measure
-loss against ideal scaling and are distinct from speedup over native. The
-[retained passive-counter comparison](../../benchmark/results/matched_postgrid_20261006/diagnostics/3d-same-step-scaling-counter-comparison.json)
-shows additional 3D work inside the critical worker lane, increased system time,
-process swap and major faults during parallel execution, supporting a working-set
-and reclaim contribution. It does not identify the allocation owner or prove a
-guaranteed fix. Process memory ranges are not summed as unique physical bytes;
-these diagnostics are separate from the benchmark clock and science qualification.
+The sixteen-assignment panels show the latest qualified 3D monolayer checkpoint
+on production revision `2cda84a369`, subsequently merged through PR #1072.
+The primary baseline is one stock CellProfiler process executing the same
+assignments, compared with OpenHCS built-in workers and their integrated
+coordination, saving, plate exports and finalization. Warmup and three measured
+repetitions passed every declared-output comparison in both OpenHCS conditions.
+These are repeated executions of one biological sample, not additional samples.
+Full server execution includes plate exports and finalization; axis-only timing
+is retained as diagnostic evidence and is not substituted for the plotted clock.
+Total includes disjoint compile and execute client submit/wait phases. Endpoint,
+library and kernel startup and subsequent scientific comparison are outside
+both clocks. Exact ratios and original source/clock custody are derived in the
+[primary execution](../figures/slas/matched_lastconsumer_20261006/primary-execution/measured_execution_metrics_long.csv)
+and [primary total](../figures/slas/matched_lastconsumer_20261006/primary-total/measured_total_metrics_long.csv)
+figure tables and the [qualified checkpoint](../../benchmark/results/matched_lastconsumer_20261006/README.md).
 
-Dividing OpenHCS efficiency by native efficiency measures additional scaling loss
-on this hardware. At three workers, the additional execution loss was 8.6% for
-Vitra and 19.7% for 3D; illumination scaled better than native. At four workers,
-Vitra and illumination scaled better than native, while 3D had 12.0% additional
-loss. Ideal linear scaling is not established. Four-worker execution speedups
-over native CellProfiler were 2.56-, 2.43- and 4.28-fold; total speedups were 2.32-,
-1.53- and 3.77-fold, respectively. The single-sample minimum speedup does not apply
-to every parallel condition. Exact execution and total denominators, native
-baselines, inventories and provenance accompany the [current matched record](../../benchmark/results/matched_postgrid_20261006/README.md); the [earlier checkpoint](../../benchmark/results/matched_final_20261006/README.md) remains separate.
+The [separate independent-process execution calibration](../figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-execution/measured_execution_seconds.png)
+and [total calibration](../figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-total/measured_total_seconds.png)
+retain externally parallel CellProfiler as an additional control. It has no
+OpenHCS worker coordination and is not the primary product comparison.
+
+The [historical three-workflow sixteen-assignment record](../../benchmark/results/matched_postgrid_20261006/README.md)
+remains unchanged. Its [passive-counter comparison](../../benchmark/results/matched_postgrid_20261006/diagnostics/3d-same-step-scaling-counter-comparison.json)
+found additional work within the critical 3D worker lane, increased system time,
+process swap and major faults. These observations support a working-set/reclaim
+contribution; they do not identify the allocation owner or establish that the
+latest fixes eliminate paging. Process memory ranges are not summed as unique
+physical bytes. Diagnostics remain separate from measured clocks and scientific
+qualification. This newer one-pipeline checkpoint does not replace the complete
+single-sample cohort or establish a new all-pipeline minimum speedup.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>

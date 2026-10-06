@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+ExampleNeighbors,1,1,worker_0,1,1791320958.9790497,1791320959.4842856,0.5052359104156494

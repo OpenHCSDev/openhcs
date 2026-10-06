@@ -1,0 +1,685 @@
+{
+  "case": "ExampleUntangleWorms",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "ca13e640fe5981ccff352e0d410e712a74d0f7687e45407d0d802bdb3bed2385",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "bb3180e04372a1ba33a269fe37b6512c1dc18da7",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "size_bytes": 726060,
+      "sha256": "3a08ff2e3f2096d039e9da70f23e8284d109a96b172ba7676dbf3b96a08bc034"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "size_bytes": 726082,
+      "sha256": "9e13c07ce69d3ab619c086c4aec8b3c865235514583378a66cd1972e2fb2d49f"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "size_bytes": 726060,
+      "sha256": "630050bca7d937017f10f3e3988b4a42dcaaac8d64bf6d9e5b8e5a43a0019584"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "size_bytes": 726082,
+      "sha256": "f1f9acc9ade3eedc3442ac980aaf91f49175ce5b71b88d0441672de839f478ab"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/native_report.json",
+  "native_reference_report_sha256": "da2105df44032e32e8c03b2eefc6132055021a473d28db6fb824623fb3269084",
+  "native_reference_source_commit": "65bc037274d2b769943139a858723999690e9a26",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "f9f2a939f212b570addf2e4217842844c5bbe4b646fcb76707705d8bc78d9b02"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_preparation/native_cellprofiler_headless/ExampleUntangleWorms.cppipe",
+      "sha256": "9fc8c49624dbb6796afa37794a957eb95177f0632891dc48f2ab12d7d2381c17"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/native_report.json",
+      "sha256": "da2105df44032e32e8c03b2eefc6132055021a473d28db6fb824623fb3269084"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/native_request.json",
+      "sha256": "b2bceeceed902645d379e5a1364423f4b8721d6954f52a4cfd2bced5389440f4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/pilot_provenance.json",
+      "sha256": "f46d95789a339af8a2d3b1e954af9cc6d175ac8314acf17f89850ebbf69b19aa"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "size_bytes": 726060,
+      "sha256": "3a08ff2e3f2096d039e9da70f23e8284d109a96b172ba7676dbf3b96a08bc034"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "size_bytes": 726082,
+      "sha256": "9e13c07ce69d3ab619c086c4aec8b3c865235514583378a66cd1972e2fb2d49f"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "size_bytes": 726060,
+      "sha256": "630050bca7d937017f10f3e3988b4a42dcaaac8d64bf6d9e5b8e5a43a0019584"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "size_bytes": 726082,
+      "sha256": "f1f9acc9ade3eedc3442ac980aaf91f49175ce5b71b88d0441672de839f478ab"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.799044196959585,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_preparation/native_cellprofiler_headless/ExampleUntangleWorms.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native",
+      "expected_image_sets": null,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_report.json",
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": []
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1",
+        "image_set_count": 2,
+        "invocation_seconds": 4.113951868843287,
+        "pre_pipeline_seconds": 0.0016428730450570583,
+        "pipeline_execution_seconds": 4.11230899579823,
+        "invocation_started_monotonic_seconds": 4042035.320037813,
+        "pipeline_started_monotonic_seconds": 4042035.321680686,
+        "completed_monotonic_seconds": 4042039.433989682,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0",
+        "image_set_count": 2,
+        "invocation_seconds": 3.3180155279114842,
+        "pre_pipeline_seconds": 0.000757887028157711,
+        "pipeline_execution_seconds": 3.3172576408833265,
+        "invocation_started_monotonic_seconds": 4042039.434009099,
+        "pipeline_started_monotonic_seconds": 4042039.434766986,
+        "completed_monotonic_seconds": 4042042.752024627,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1",
+        "image_set_count": 2,
+        "invocation_seconds": 3.1696229497902095,
+        "pre_pipeline_seconds": 0.0007659220136702061,
+        "pipeline_execution_seconds": 3.1688570277765393,
+        "invocation_started_monotonic_seconds": 4042042.752038713,
+        "pipeline_started_monotonic_seconds": 4042042.752804635,
+        "completed_monotonic_seconds": 4042045.921661663,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2",
+        "image_set_count": 2,
+        "invocation_seconds": 2.932888836134225,
+        "pre_pipeline_seconds": 0.0008117780089378357,
+        "pipeline_execution_seconds": 2.9320770581252873,
+        "invocation_started_monotonic_seconds": 4042045.921675298,
+        "pipeline_started_monotonic_seconds": 4042045.922487076,
+        "completed_monotonic_seconds": 4042048.854564134,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      }
+    ]
+  },
+  "native_shards": [],
+  "native_shard_equivalence": [],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "143619d2-9877-4e64-9377-feee8db8c5ef",
+      "compile_artifact_id": "e2fe2c56-5cd1-45eb-bf5c-526b7feba951",
+      "endpoint_pid": 3099000,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        3099000
+      ],
+      "worker_interval_overlap_seconds": 0.92510986328125,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791320594.3871233,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791320595.3122332,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791320594.3606887,
+      "first_axis_started_at_epoch_seconds": 1791320594.3871233,
+      "server_job_completed_at_epoch_seconds": 1791320595.3375256,
+      "server_job_seconds": 0.9768369197845459,
+      "execution_seconds": 0.92510986328125,
+      "compile_seconds": 0.2017064094543457,
+      "total_seconds": 1.28471220145002,
+      "first_axis_through_server_completion_seconds": 0.9504022598266602,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+          "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+        },
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+          "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+        },
+        {
+          "path": "OverlappingWorms.csv",
+          "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001outlines.png",
+          "sha256": "046c95a340da08e2cc4fc55fadd1d8d9ef2b3b12df17f514c0f01eb81d322f04"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001outlines.png",
+          "sha256": "f42d82c0de22073e6f847ce9adedbd954ace2a9e0ef642b346f093531277e21c"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "5e3d69153ea31c6fc117a5549e73d5d8604287f8613fc5f56056d145a46c4019"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "5ff84ce20cbd2975ea457ece7666cb5dc6b783ae04b1ed23e92b80660b266b1a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/OverlappingWorms.csv",
+          "sha256": "5770316e1e464e92047e3c3abb080ca2e044fc36eaa4fa503c637ccf1772d0b3"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/singlewell/capture/cases/ExampleUntangleWorms/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "cb4d68d2-5f78-4b87-8415-ab60e1414cbf",
+      "compile_artifact_id": "c07833af-4f5e-4724-9e3a-4fd09849d8b7",
+      "endpoint_pid": 3099000,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        3099000
+      ],
+      "worker_interval_overlap_seconds": 0.8136539459228516,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791320595.7722225,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791320596.5858765,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791320595.7453854,
+      "first_axis_started_at_epoch_seconds": 1791320595.7722225,
+      "server_job_completed_at_epoch_seconds": 1791320596.610253,
+      "server_job_seconds": 0.8648676872253418,
+      "execution_seconds": 0.8136539459228516,
+      "compile_seconds": 0.20204496383666992,
+      "total_seconds": 1.1805636901408434,
+      "first_axis_through_server_completion_seconds": 0.8380305767059326,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+          "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+        },
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+          "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+        },
+        {
+          "path": "OverlappingWorms.csv",
+          "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001outlines.png",
+          "sha256": "046c95a340da08e2cc4fc55fadd1d8d9ef2b3b12df17f514c0f01eb81d322f04"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001outlines.png",
+          "sha256": "f42d82c0de22073e6f847ce9adedbd954ace2a9e0ef642b346f093531277e21c"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "5e3d69153ea31c6fc117a5549e73d5d8604287f8613fc5f56056d145a46c4019"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "5ff84ce20cbd2975ea457ece7666cb5dc6b783ae04b1ed23e92b80660b266b1a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/OverlappingWorms.csv",
+          "sha256": "5770316e1e464e92047e3c3abb080ca2e044fc36eaa4fa503c637ccf1772d0b3"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/singlewell/capture/cases/ExampleUntangleWorms/candidate_evidence/0/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 1,
+      "execution_id": "55841507-72b8-4053-9142-aa9a1bbb5d2c",
+      "compile_artifact_id": "e7e0b12d-b854-46d5-94ae-b2b4eb2c72f2",
+      "endpoint_pid": 3099000,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        3099000
+      ],
+      "worker_interval_overlap_seconds": 0.7990834712982178,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791320597.039876,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791320597.8389595,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791320597.0125277,
+      "first_axis_started_at_epoch_seconds": 1791320597.039876,
+      "server_job_completed_at_epoch_seconds": 1791320597.8626945,
+      "server_job_seconds": 0.8501667976379395,
+      "execution_seconds": 0.7990834712982178,
+      "compile_seconds": 0.20491361618041992,
+      "total_seconds": 1.174858147278428,
+      "first_axis_through_server_completion_seconds": 0.8228185176849365,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+          "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+        },
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+          "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+        },
+        {
+          "path": "OverlappingWorms.csv",
+          "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001outlines.png",
+          "sha256": "046c95a340da08e2cc4fc55fadd1d8d9ef2b3b12df17f514c0f01eb81d322f04"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001outlines.png",
+          "sha256": "f42d82c0de22073e6f847ce9adedbd954ace2a9e0ef642b346f093531277e21c"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "5e3d69153ea31c6fc117a5549e73d5d8604287f8613fc5f56056d145a46c4019"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "5ff84ce20cbd2975ea457ece7666cb5dc6b783ae04b1ed23e92b80660b266b1a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/OverlappingWorms.csv",
+          "sha256": "5770316e1e464e92047e3c3abb080ca2e044fc36eaa4fa503c637ccf1772d0b3"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/singlewell/capture/cases/ExampleUntangleWorms/candidate_evidence/1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 2,
+      "execution_id": "355ea81b-bbe9-49e9-81ba-c22f85d61892",
+      "compile_artifact_id": "179dfb86-3e1f-40d2-a62b-134f34936dd2",
+      "endpoint_pid": 3099000,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        3099000
+      ],
+      "worker_interval_overlap_seconds": 0.7992877960205078,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791320598.287796,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791320599.0870838,
+          "pid": 3099000,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791320598.2611296,
+      "first_axis_started_at_epoch_seconds": 1791320598.287796,
+      "server_job_completed_at_epoch_seconds": 1791320599.1114886,
+      "server_job_seconds": 0.8503589630126953,
+      "execution_seconds": 0.7992877960205078,
+      "compile_seconds": 0.20114731788635254,
+      "total_seconds": 1.1676042042672634,
+      "first_axis_through_server_completion_seconds": 0.8236925601959229,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+          "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+        },
+        {
+          "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+          "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+        },
+        {
+          "path": "OverlappingWorms.csv",
+          "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001outlines.png",
+          "sha256": "046c95a340da08e2cc4fc55fadd1d8d9ef2b3b12df17f514c0f01eb81d322f04"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001outlines.png",
+          "sha256": "f42d82c0de22073e6f847ce9adedbd954ace2a9e0ef642b346f093531277e21c"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "5e3d69153ea31c6fc117a5549e73d5d8604287f8613fc5f56056d145a46c4019"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "5ff84ce20cbd2975ea457ece7666cb5dc6b783ae04b1ed23e92b80660b266b1a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/OverlappingWorms.csv",
+          "sha256": "5770316e1e464e92047e3c3abb080ca2e044fc36eaa4fa503c637ccf1772d0b3"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/singlewell/capture/cases/ExampleUntangleWorms/candidate_evidence/2/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "Observed complete selected batches: native pipeline-start through post-run and full invocation are separate; OpenHCS worker execution and complete client operation are separate. Repeated assignments are independently executed source copies, not projected timings or additional genuine wells. Native timings and output roots were reused from genuine retained observations; their original source and report SHA are recorded separately."
+}
