@@ -109,8 +109,8 @@ class ImageUnitIntervalIntensityMetadata:
 class ImagePayloadIntensityFields(ABC):
     """Current pixel intensity semantics, independent of provenance and placement.
 
-    The composed metadata owner supplies payload construction, field replacement
-    and leading-plane projection; this capability owns scale/quantization and
+    The composed metadata owner supplies payload construction and field
+    replacement; this capability owns scale/quantization and
     their numerical interpretation. Dataclass fields remain the single stored
     declarations consumed by the original metadata codecs.
     """
@@ -127,12 +127,13 @@ class ImagePayloadIntensityFields(ABC):
     @abstractmethod
     def payload_with(self, data: Any, mask: Any | None = None) -> Any: ...
 
-    @abstractmethod
-    def for_leading_source_plane(self, index: int) -> "ImagePayloadMetadata": ...
-
     @property
     @abstractmethod
     def has_leading_intensity_axis(self) -> bool: ...
+
+    @abstractmethod
+    def require_leading_intensity_axis(self) -> None:
+        """Admit the declared plane layout before applying per-plane scales."""
 
     @property
     def has_normalized_intensity(self) -> bool:
@@ -243,21 +244,36 @@ class ImagePayloadIntensityFields(ABC):
                 raise ValueError(
                     "Image intensity scales must match the declared leading plane axis."
                 )
-            metadata, planes = self.normalized_intensity_planes(
-                tuple(array), dtype=target_dtype,
+            self.require_leading_intensity_axis()
+            normalized_planes = tuple(
+                self.normalized_intensity_array(
+                    plane, target_dtype=target_dtype,
+                    scale=self.intensity_scale_for_source_plane(index),
+                )
+                for index, plane in enumerate(array)
             )
-            from openhcs.core.aligned_image_payload import ProducedImageStack
+            metadata = self.replace_fields(
+                unit_interval_intensity=ImageUnitIntervalIntensityMetadata(
+                    source_plane_scales=tuple(proof for _, proof in normalized_planes),
+                ),
+            )
+            return metadata.payload_with(
+                np.stack(tuple(plane for plane, _ in normalized_planes)),
+                image_payload_mask(payload),
+            )
+        normalized, proof_scale = self.normalized_intensity_array(
+            array, target_dtype=target_dtype,
+            scale=self.intensity_scale_for_source_plane(channel_index),
+        )
+        return self.with_unit_interval_intensity_scale(proof_scale).payload_with(
+            normalized, image_payload_mask(payload),
+        )
 
-            projector = ImagePayloadSliceProjector(image_payload_mask(payload), metadata)
-            slices = tuple(
-                projector.payload_for_slice(image_payload_data(plane), index)
-                for index, plane in enumerate(planes)
-            )
-            return ProducedImageStack(
-                slices, memory_type="numpy", plane_axis=metadata.plane_axis,
-                source_metadata=metadata,
-            )
-        scale = self.intensity_scale_for_source_plane(channel_index)
+    @staticmethod
+    def normalized_intensity_array(
+        array: np.ndarray, *, target_dtype: np.dtype, scale: float | None,
+    ) -> tuple[np.ndarray, int | None]:
+        """Apply one numerical recipe without projecting image source identity."""
         if scale is None:
             # Bare arrays are admitted at this original numerical boundary. A
             # promoted float uses its declared source scale, never a range guess.
@@ -270,48 +286,7 @@ class ImagePayloadIntensityFields(ABC):
             normalized = normalized / float(scale)
             if np.issubdtype(array.dtype, np.integer) and float(scale).is_integer():
                 proof_scale = int(scale)
-        return self.with_unit_interval_intensity_scale(proof_scale).payload_with(
-            normalized, image_payload_mask(payload),
-        )
-
-    def normalized_intensity_planes(
-        self, payloads: Sequence[Any], *, dtype: Any = None, channel_index: int = 0,
-    ) -> tuple["ImagePayloadMetadata", tuple[Any, ...]] | None:
-        """Apply the same current-domain recipe before literal planes lose layout."""
-        arrays = tuple(
-            np.asarray(MemoryType(detect_memory_type(image_payload_data(payload))).to_numpy(
-                image_payload_data(payload),
-            ))
-            for payload in payloads
-        )
-        source_dtype = np.result_type(*(array.dtype for array in arrays))
-        target_dtype = self.normalization_dtype(source_dtype, dtype)
-        if target_dtype is None:
-            return None
-        if not self.has_normalized_intensity and self.source_plane_intensity_scales and (
-            len(self.source_plane_intensity_scales) != len(arrays)
-        ):
-            raise ValueError("Image intensity scales must match the declared leading plane axis.")
-        normalized = tuple(
-            self.for_leading_source_plane(index).normalize_intensity_payload(
-                array.astype(source_dtype, copy=False), dtype=target_dtype,
-                channel_index=(0 if self.source_plane_intensity_scales else channel_index),
-            )
-            for index, array in enumerate(arrays)
-        )
-        if self.has_normalized_intensity:
-            metadata = self
-        elif self.source_plane_intensity_scales:
-            metadata = self.replace_fields(
-                unit_interval_intensity=_ImagePayloadMetadataComposer.composed_unit_interval_intensity(
-                    tuple(image_payload_metadata(payload) for payload in normalized),
-                ),
-            )
-        else:
-            metadata = self.replace_fields(
-                unit_interval_intensity=image_payload_metadata(normalized[0]).unit_interval_intensity,
-            )
-        return metadata, normalized
+        return normalized, proof_scale
 
     @classmethod
     def intensity_coherent_payloads(cls, payloads: Sequence[Any]) -> tuple[Any, ...]:
@@ -843,14 +818,7 @@ class ImagePayloadMetadata(
         self.require_leading_plane_axis(
             "Image metadata has no leading plane axis to remove."
         )
-        source_channel_axis = self.source_channel_axis
-        if source_channel_axis == 0:
-            raise ValueError(
-                "Image metadata cannot declare the same leading axis as both "
-                "plane and channel."
-            )
-        if source_channel_axis is not None and source_channel_axis > 0:
-            source_channel_axis -= 1
+        source_channel_axis = self.channel_axis_without_leading_plane()
         if projection is None:
             projection = LeadingPlaneAxisMetadataProjection(self)
         projected = projection.project_source_provenance(
@@ -1111,6 +1079,26 @@ class ImagePayloadMetadata(
     def has_leading_intensity_axis(self) -> bool:
         """Bind intensity projection to the existing image-axis declaration."""
         return self.plane_axis is not None
+
+    def require_leading_intensity_axis(self) -> None:
+        """Keep numerical normalization inside the existing image-axis domain."""
+        self.require_leading_plane_axis(
+            "Leading intensity normalization requires a declared plane axis."
+        )
+        self.validate_source_channel_axis()
+        self.channel_axis_without_leading_plane()
+
+    def channel_axis_without_leading_plane(self) -> int | None:
+        """Validate distinct plane/channel axes and derive the scalar channel."""
+        source_channel_axis = self.source_channel_axis
+        if source_channel_axis == 0:
+            raise ValueError(
+                "Image metadata cannot declare the same leading axis as both "
+                "plane and channel."
+            )
+        if source_channel_axis is not None and source_channel_axis > 0:
+            source_channel_axis -= 1
+        return source_channel_axis
 
     def without_spatial_domain(self) -> "ImagePayloadMetadata":
         """Return metadata with invalidated source-spatial placement removed."""
