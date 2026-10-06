@@ -1664,11 +1664,9 @@ class PipelineCompiler:
                         get_multiprocessing_axis()
                     ),
                 ),
-                source_projections_by_axis=(
-                    DEFAULT_SOURCE_PROJECTION_CACHE.partition_by_axes(
-                        orchestrator.source_workspace_projection(),
-                        axis_ids=axis_values_to_process,
-                    )
+                source_projections_by_axis=DEFAULT_SOURCE_PROJECTION_CACHE.partition_by_axes(
+                    orchestrator.source_workspace_projection(),
+                    axis_ids=axis_values_to_process,
                 ),
                 enable_visualizer_override=enable_visualizer_override,
                 is_zmq_execution=is_zmq_execution,
