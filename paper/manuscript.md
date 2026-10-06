@@ -370,7 +370,12 @@ admission and replaced it with body-scale background subtraction. The final
 141-instance candidate retained the clear neighbouring pair, but weak southwest
 bodies still received incomplete masks. The author also detected invalid
 label-derived fluorescence measurements and corrected their source binding
-without changing the segmentation. Across these trials, matched regional
+without changing the segmentation. In another independent repeat, changing
+foreground threshold and smoothing joined a fragmented central body while
+preserving a genuine neighbouring pair and bright regional controls. Its final
+110-instance candidate still incompletely covered weak bodies; a separate
+source-binding repair restored fluorescence measurements without changing the
+labels. Across these trials, matched regional
 controls support self-directed preprocessing, instance and measurement repair.
 Manual-reference accuracy remains unmeasured: the detector totals are not
 validated retinal cell counts
