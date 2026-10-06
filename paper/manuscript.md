@@ -372,6 +372,16 @@ agreement worsened. Visible local recovery therefore did not establish a
 whole-field nuclear accuracy gain or exact biological counts (Supplementary
 Data 8).
 
+Not every self-directed repair improved the result. A subsequent fresh
+paired-channel author retained a rejected 51-instance final candidate after
+three marker-stage revisions. Nuclear reference F1 fell from 0.745 to 0.735
+and actin-region F1 from 0.679 to 0.629. Nuclear reference matches fell from
+38 to 36, and cell-region matches from 37 to 33. Ordinary supported nuclei
+remained represented, but merged neighbours and unsupported body envelopes
+prevented an accepted whole-cell census. This repeat records a failed repair,
+not an accuracy gain; scoring followed author completion and was not returned
+to the author (Supplementary Data 8).
+
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. In the independent
 trial shown in Figure 7, an intermediate repair
