@@ -338,21 +338,25 @@ def h002_measurement_first():
         sheet.source(ROOT / "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst")
         sheet.text(3, 98, "Measurement-first autonomous 3D localisation",
                    size=17, weight="bold", va="top")
-        sheet.text(3, 93, "A  XY: native image and predicted centres", size=13, weight="bold")
-        sheet.text(55, 93, "B  XZ: ordinary-body centre", size=13, weight="bold")
-        sheet.text(55, 65, "C  YZ: ordinary-body centre", size=13, weight="bold")
-        for name, bounds, crop in (
-            ("xy", (3, 42, 47, 49), (560, 35, 985, 468)),
-            ("xz", (55, 73, 42, 18), (690, 185, 1215, 320)),
-            ("yz", (55, 45, 42, 18), (690, 185, 1215, 320)),
+        for name, bounds, heading_position in (
+            ("xy", (3, 42, 47, 49), (3, 93)),
+            ("xz", (55, 73, 42, 18), (55, 93)),
+            ("yz", (55, 45, 42, 18), (55, 65)),
         ):
-            path = source_root / f"{name}.png"
-            if digest(path) != sources["captures"][name]["sha256"]:
+            capture = sources["captures"][name]
+            path = source_root / capture["asset"]
+            crop = tuple(capture["crop_xyxy"])
+            if digest(path) != capture["sha256"]:
                 raise ValueError(f"Frozen native capture changed: {name}")
+            with Image.open(path) as pixels:
+                x0, y0, x1, y1 = crop
+                if not (0 <= x0 < x1 <= pixels.width and 0 <= y0 < y1 <= pixels.height):
+                    raise ValueError(f"Native crop exceeds capture geometry: {name}")
+            sheet.text(*heading_position, capture["panel_heading"], size=13, weight="bold")
             sheet.source_image(path, bounds, crop=crop)
         sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
         sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
-        sheet.text(3, 38, "Green points are original native predictions; out-of-plane points are hidden",
+        sheet.text(3, 38, sources["presentation_note"],
                    size=11, color=MUTED)
         axis = sheet.figure.add_axes((.12, .14, .39, .18))
         thresholds = (10, evaluation["primary_threshold_voxels"])

@@ -6,17 +6,78 @@
     "xz": {
       "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/qa/full-xz157-combined/20261005T175103967317Z_napari_6023_OpenHCS_Napari_Visualization.png",
       "size_bytes": 102341,
-      "sha256": "f666af3514bdac000b9720a0396c6d6f4ccf0c1a9696c105c207470e5d21c879"
+      "sha256": "f666af3514bdac000b9720a0396c6d6f4ccf0c1a9696c105c207470e5d21c879",
+      "asset": "xz.png",
+      "crop_xyxy": [
+        690,
+        185,
+        1215,
+        320
+      ],
+      "panel_heading": "B  XZ: ordinary-body centre"
     },
     "yz": {
       "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/qa/full-yz80-combined/20261005T175106194866Z_napari_6023_OpenHCS_Napari_Visualization.png",
       "size_bytes": 102175,
-      "sha256": "65525b52c29bac6aefae077a85a9f6ca5f33fb9499e29dc97acc92fceb5a1b82"
+      "sha256": "65525b52c29bac6aefae077a85a9f6ca5f33fb9499e29dc97acc92fceb5a1b82",
+      "asset": "yz.png",
+      "crop_xyxy": [
+        690,
+        185,
+        1215,
+        320
+      ],
+      "panel_heading": "C  YZ: ordinary-body centre"
     },
     "xy": {
       "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/qa/v1-z34-combined-corrected/20261005T174038325557Z_napari_6023_OpenHCS_Napari_Visualization.png",
       "size_bytes": 192031,
-      "sha256": "2740b7b1fb3da7476d09c2c4c014002e0038d0d045c590d6f9e5b13e0dabf5f9"
+      "sha256": "2740b7b1fb3da7476d09c2c4c014002e0038d0d045c590d6f9e5b13e0dabf5f9",
+      "asset": "xy.png",
+      "crop_xyxy": [
+        560,
+        35,
+        985,
+        468
+      ],
+      "panel_heading": "A  XY: native image and predicted centres"
     }
+  },
+  "presentation_note": "Green points are original native predictions; out-of-plane points are hidden",
+  "presentation_phase": "original_captures_retained_pending_native_review",
+  "frozen_scientific_inputs": {
+    "raw": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/plate/image.ome.tif",
+      "size_bytes": 7874982,
+      "sha256": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7"
+    },
+    "points": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_centres_step0_points.roi.zip",
+      "size_bytes": 25791,
+      "sha256": "c55191fe59bb3cf69edbee69f62997358b6d8d02bd4c14a59490e11a574a9df8"
+    },
+    "measurements": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_centres_step0_details.csv",
+      "size_bytes": 2602,
+      "sha256": "19ad71607d72e86d28d35a2418ac48c74ac6985a38d69d6235e38ad6d7076c37"
+    },
+    "labels": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_labels_step0.labels.tif",
+      "size_bytes": 15739430,
+      "sha256": "dffdc99120aedf28863af31ae0efb097ad3cc23e85fb446856242a0e5e101b8a"
+    }
+  },
+  "scientific_scope": {
+    "source_channel": "1",
+    "coordinate_order": "ZYX",
+    "source_shape": [
+      60,
+      256,
+      256
+    ],
+    "physical_calibration_verified": false,
+    "object_kind": "nuclear bodies",
+    "point_count": 26,
+    "detector_reexecuted": false
   }
 }

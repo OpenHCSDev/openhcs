@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "02bde7ea61965e70086c5987209f748dcb28752c77de6f5a1d6fd0db5d6e97f9",
+  "generator_sha256": "25804c8892b2459f72fd35e3493e0b7eedbdc52cc511703ed5381700e0f5d574",
   "source_sha256": {
-    "paper/figures/slas/h002_firstmethod_sources/source-receipt.json": "d29c04b34f5b1494403e9eea4c9521e06b8843193b03360c05a6e44e1ee827af",
+    "paper/figures/slas/h002_firstmethod_sources/source-receipt.json": "de1cb0cba6e9343ffbed17baeb4c712b70c29235b027a98d2f1cce8d4d134e2d",
     "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d",
     "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst": "7d07eb56a73d8e738a915d82f65679a84f412978dc463a1b000bfe332b03c2db",
     "paper/figures/slas/h002_firstmethod_sources/xy.png": "2740b7b1fb3da7476d09c2c4c014002e0038d0d045c590d6f9e5b13e0dabf5f9",
@@ -51,8 +51,8 @@
   ],
   "output_sha256": {
     "h002_measurement_first.png": "41a4496d661a1246e2f99b1207a427263ef061957f685ebc5c896e06c1c5368f",
-    "h002_measurement_first.pdf": "cc35f8e6dfb110d8b6ddbb6c878eec7eebdc4f083c540c42adf5a6fb6aecfa55",
-    "h002_measurement_first.svg": "af3ffa51e0cff0c0a504d39b124cd568fc808d5f46750dd5cb545fa53f206192"
+    "h002_measurement_first.pdf": "13e6a092d9380b750882a60c62bb47f60ae9ab96e5bf18d837a2734e9f2fc9ec",
+    "h002_measurement_first.svg": "12bddf96688e4835c329dfff44a6f3cddce9da7fe6248f4ad7060a28e2c777e0"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
