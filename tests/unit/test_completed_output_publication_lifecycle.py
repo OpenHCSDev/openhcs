@@ -59,6 +59,7 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
     context.microscope_handler = SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
         metadata_handler=SimpleNamespace(source_workspace_metadata_document=lambda _p: None),
+        source_admission_config=lambda: None,
     )
     context.freeze()
     return context

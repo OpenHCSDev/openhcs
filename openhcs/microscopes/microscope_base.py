@@ -242,6 +242,10 @@ class MicroscopeHandler(
 
         return False
 
+    def source_admission_config(self) -> Optional["SourceBindingsConfig"]:
+        """Return declarations still required to admit a retained source universe."""
+        return None
+
     @classmethod
     def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
         """Declare this handler as the owner of a format-specific source layout."""
