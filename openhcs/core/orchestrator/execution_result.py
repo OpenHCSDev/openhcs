@@ -11,8 +11,9 @@ from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Mapping, Optional
 
+from openhcs.constants.constants import Backend
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
 from openhcs.core.steps.abstract import StepExecutionObservation
 
 if TYPE_CHECKING:
@@ -140,15 +141,33 @@ class RuntimeObservationMode(Enum):
             return ()
         if self is RuntimeObservationMode.MERGE_INTO_PARENT:
             return records
-        required_types = {
-            spec.artifact_type
-            for plan in context.step_plans.values()
-            if plan.execution_scope.requires_parent_runtime_observation
-            for invocation in plan.compiled_function_pattern.default_group.invocations
-            for spec in invocation.contract.artifact_inputs
-        }
+        selected_addresses = set()
+        for plan in context.step_plans.values():
+            if not plan.execution_scope.requires_parent_runtime_observation:
+                continue
+            for invocation in plan.compiled_function_pattern.default_group.invocations:
+                input_edges = {
+                    edge.spec.ref(): edge
+                    for edge in invocation.select_inputs(plan.artifact_inputs).values()
+                    if edge.storage_plan is not None
+                }
+                for spec in invocation.contract.artifact_inputs:
+                    edge = input_edges.get(spec.ref())
+                    if edge is None:
+                        continue
+                    selected_addresses.update(
+                        (record.key, record.location)
+                        for record in RuntimeArtifactQuery.records_for_input_edge(
+                            edge,
+                            records,
+                            axis_id=context.require_axis_id(),
+                            backend=Backend.MEMORY.value,
+                        )
+                    )
         return tuple(
-            record for record in records if record.key.artifact_type in required_types
+            record
+            for record in records
+            if (record.key, record.location) in selected_addresses
         )
 
 

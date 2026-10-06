@@ -813,30 +813,18 @@ def _plate_artifact_batch(
             if input_ref not in selected_input_edges:
                 continue
             input_edge = selected_input_edges[input_ref]
-            input_plan = input_edge.storage_plan
-            projection = input_edge.projection
-            if input_plan is None or projection is None:
-                raise RuntimeError(
-                    "Selected plate artifact input lost its storage plan."
+            matches = RuntimeArtifactQuery.records_for_input_edge(
+                input_edge,
+                records_by_axis.get(axis_id, ()),
+                axis_id=axis_id,
+                backend=Backend.MEMORY.value,
+            )
+            for record in matches:
+                selected[axis_id].setdefault(
+                    (record.key, record.location),
+                    record,
                 )
-            for group_key in projection.producer_selection_scope.keys:
-                query = RuntimeArtifactQuery.from_input_plan(
-                    input_plan,
-                    axis_id=axis_id,
-                    backend=Backend.MEMORY.value,
-                    group_key=group_key,
-                )
-                matches = tuple(
-                    record
-                    for record in records_by_axis.get(axis_id, ())
-                    if query.matches(record)
-                )
-                for record in matches:
-                    selected[axis_id].setdefault(
-                        (record.key, record.location),
-                        record,
-                    )
-                selected_for_spec += len(matches)
+            selected_for_spec += len(matches)
         if input_spec.required and selected_for_spec == 0:
             raise ValueError(
                 f"Plate-scoped callable {contract.function_name!r} is missing required "
