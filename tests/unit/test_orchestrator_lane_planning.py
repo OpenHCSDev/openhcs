@@ -719,7 +719,7 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
     )
     process = fork.Process(
         target=worker_execution_module._execute_fork_inherited_worker_lane_process,
-        args=(writer, [], lane, RuntimeObservationMode.OMIT),
+        args=(writer, [], lane, RuntimeObservationMode.OMIT, (reader,)),
     )
     try:
         for sig in parent_handlers:
