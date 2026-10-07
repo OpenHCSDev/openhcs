@@ -184,7 +184,10 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("destroy", ["napari_close", "manager", "immediate_manager", "window"])
+@pytest.mark.parametrize("destroy", [
+    "napari_close", "manager", "immediate_manager", "window",
+    "manager_then_dock", "manager_then_window",
+])
 def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy):
     napari = pytest.importorskip("napari")
     module = pytest.importorskip("openhcs.runtime.napari_viewer_server")
@@ -194,7 +197,7 @@ def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy)
     from napari.settings import get_settings
 
     viewer = napari.Viewer(show=False)
-    if destroy != "window":
+    if destroy not in ("window", "manager_then_window"):
         qtbot.addWidget(viewer.window._qt_window)
     server = module.NapariViewerServer.__new__(module.NapariViewerServer)
     server.viewer = viewer
@@ -223,6 +226,12 @@ def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy)
     elif destroy == "immediate_manager":
         sip.delete(original.manager)
         QCoreApplication.processEvents()
+    elif destroy == "manager_then_dock":
+        sip.delete(original.manager)
+        viewer.window.remove_dock_widget(original.dock)
+    elif destroy == "manager_then_window":
+        sip.delete(original.manager)
+        sip.delete(viewer.window._qt_window)
     else:
         sip.delete(viewer.window._qt_window)
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
@@ -235,7 +244,7 @@ def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy)
     assert sip.isdeleted(original.manager)
     assert sip.isdeleted(toolbars[0])
 
-    if destroy == "window":
+    if destroy in ("window", "manager_then_window"):
         return
 
     next_layer = viewer.add_shapes(
