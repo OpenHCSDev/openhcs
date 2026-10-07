@@ -6132,7 +6132,23 @@ class NapariScreenshotControlMessageAction(
         )
 
     def observation_deadline(self, message):
-        return message[ViewerControlResponseField.PAYLOAD.value].snapshot_operation_deadline()
+        return self.capture_spec(message).snapshot_operation_deadline()
+
+    @staticmethod
+    def capture_spec(message):
+        from python_introspect import validate_annotated_dataclass
+        from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureSpec
+
+        capture_spec = message.get(ViewerControlResponseField.PAYLOAD.value)
+        if not isinstance(capture_spec, WindowSnapshotCaptureSpec):
+            raise TypeError(
+                "Napari screenshot control payload must be WindowSnapshotCaptureSpec."
+            )
+        # Unpickling does not run constructors and positional slot layouts can
+        # differ between client and viewer versions. The original declarations
+        # own validation; reject corrupted carriers before Qt dispatch.
+        validate_annotated_dataclass(capture_spec)
+        return capture_spec
 
     @staticmethod
     def snapshot_descriptor(server) -> ViewerWindowDescriptor:
@@ -6140,22 +6156,17 @@ class NapariScreenshotControlMessageAction(
             viewer_type=ViewerType.NAPARI, title=server.napari_window_title
         )
 
-    @staticmethod
-    def snapshot_request(server, message):
+    @classmethod
+    def snapshot_request(cls, server, message):
         if server.viewer is None:
             raise ValueError("Napari viewer is not available.")
 
         from pyqt_reactive.services.window_snapshot import (
             QtWindowSnapshotRequest,
             OpenGLWidgetSnapshotRenderOwner,
-            WindowSnapshotCaptureSpec,
         )
 
-        capture_spec = message.get(ViewerControlResponseField.PAYLOAD.value)
-        if not isinstance(capture_spec, WindowSnapshotCaptureSpec):
-            raise TypeError(
-                "Napari screenshot control payload must be WindowSnapshotCaptureSpec."
-            )
+        capture_spec = cls.capture_spec(message)
         return QtWindowSnapshotRequest(
             widget=server.viewer.window.qt_viewer.window(),
             capture=capture_spec,
@@ -6427,6 +6438,12 @@ class NapariControlTransportPump:
             )
             transport_response = action.transport_thread_response(self.server, message)
             deadline = action.observation_deadline(message)
+            if deadline is not None:
+                # Pickled carriers can come from a different declaration version.
+                # Consume the original budget before admitting Qt work: a malformed
+                # or already expired deadline is a request error, not a fatal error
+                # in the socket-owning pump after dispatch.
+                deadline.remaining_seconds()
         except Exception as error:
             return self.server.serialize_control_response(
                 self.server.control_error_response(error)

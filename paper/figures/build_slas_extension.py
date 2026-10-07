@@ -9,6 +9,7 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
+import textwrap
 
 from matplotlib.patches import Rectangle
 
@@ -25,11 +26,11 @@ from build_slas_visual_story import (
 )
 
 
-def extension():
+def extension(*, main_panel=False):
     sheet = FigureSheet(
-        "custom_function_extension",
-        "One function declaration reaches the whole workflow",
-        7.6,
+        "submission_custom_function" if main_panel else "custom_function_extension",
+        "" if main_panel else "One function declaration reaches the whole workflow",
+        5.2 if main_panel else 7.6,
     )
     source_path = OUTPUT / "custom_signal_example.py"
     tree = ast.parse(source_path.read_text())
@@ -64,8 +65,8 @@ def extension():
         if ast.literal_eval(parameters[name]["default_repr"]) != source_defaults[name]:
             raise ValueError(f"MCP default differs from the declaration for {name}")
 
-    # The displayed excerpt omits the docstring; the complete source is retained.
-    function.body = [
+    # Preserve the docstring in the main panel: it supplies agent descriptions.
+    function.body = function.body if main_panel else [
         node
         for node in function.body
         if not (
@@ -82,6 +83,20 @@ def extension():
         + "\n\n"
         + ast.unparse(function)
     )
+    if main_panel:
+        # Reflow the actual signature and quote only the relevant docstring
+        # lines; the full registered source remains the evidence owner.
+        declared = ast.unparse(function)
+        decorator, signature, *_ = declared.splitlines()
+        signature = signature.replace("(", "(\n    ", 1).replace(", ", ",\n    ").replace("):", ",\n):")
+        doc = ast.get_docstring(function).splitlines()
+        descriptions = [line.strip() for line in doc
+                        if line.strip().startswith(("gain:", "offset:"))]
+        quoted = [doc[0], "", *descriptions]
+        doc_excerpt = "\n".join(textwrap.fill(line, width=34) if line else "" for line in quoted)
+        excerpt = ("\n".join(ast.unparse(node) for node in imports) + "\n\n" + decorator + "\n"
+                   + signature + '\n    """' + doc_excerpt.replace("\n", "\n    ")
+                   + '\n    """\n    ' + ast.unparse(function.body[-1]))
     for path in (
         source_path,
         registration_path,
@@ -107,6 +122,32 @@ def extension():
         "openhcs/core/steps/function_step.py",
     ):
         sheet.source(ROOT / path)
+
+    if main_panel:
+        sheet.text(3, 96, "VIII", size=14, weight="bold", color=BLUE)
+        sheet.text(11, 96, "Lab Python becomes an editable analysis step", size=12, weight="bold")
+        # The actual declaration, including its array-backend decorator, is
+        # the source of the shown defaults and descriptions, not a mock API.
+        sheet.axis.add_patch(Rectangle((3, 13), 52, 75, color=PALE))
+        sheet.text(5, 84, excerpt, size=11.5, family="DejaVu Sans Mono",
+                   va="top", linespacing=1.15)
+        sheet.text(5, 17, "Docstring excerpt; full registered source retained", size=9, color=MUTED)
+        sheet.arrow((56, 51), (61, 51), color=BLUE)
+        sheet.text(58.5, 63, "Register\nsource", size=9, ha="center")
+        sheet.text(64, 84, "Generated form controls", size=12, weight="bold")
+        sheet.native_image("custom_extension_parameters_capture",
+                           (64, 50, 33, 29), crop=(15, 337, 310, 445))
+        sheet.text(64, 43, "Agent-facing catalog description", size=11, weight="bold")
+        for index, name in enumerate(parameter_names):
+            parameter = parameters[name]
+            y = 34 - index * 12
+            sheet.text(64, y, f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
+                       size=9, family="DejaVu Sans Mono", color=TEAL)
+            sheet.text(64, y-5, parameter["description"], size=9, color=MUTED)
+        sheet.text(50, 4, "One registered source • no function-specific form or MCP tool",
+                   size=11, ha="center", color=MUTED)
+        sheet.save()
+        return
 
     sheet.panel("A", "Register a function with typed parameters", 3, 90)
     sheet.axis.add_patch(Rectangle((3, 67), 94, 20, color=PALE))

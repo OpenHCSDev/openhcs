@@ -207,16 +207,18 @@ review remains in the [full shaft/junction sheet](../figures/slas/h004_assay_rev
 
 ## Supplementary Figure 8. Laboratory treatment responses compared with MetaXpress
 
-![Matched well-level outgrowth and cell-count responses to FC-A and Y27632.](../figures/slas/personal_neurite_effects_transfer.png){width=6in}
+![Six matched well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/personal_neurite_effects_repaired.png){width=6in}
 
 The existing commercial export contains 120 well summaries from two plates.
 An evaluation-only source key links the coded images to their physical wells.
-The frozen recipe settings from the nine-field autonomous analysis illustrated
-in main Figure 5 were applied to 20 drug and control wells on one plate using
-the current production backend. All nine fields in each well were analysed,
-giving 180 field summaries. Source-file hashes, physical well identities and
+Following externally informed soma and tracing repairs, 20 drug and control
+wells on one plate were analysed using one fixed repaired pipeline. All nine
+fields in each well were analysed, giving 180 field summaries. The repaired
+run retained DAPI channel w1 and calcein channel w2, while neurite response
+and candidate admission settings changed from 60 and 0.10 to 30 and 0.03.
+Source-file hashes, physical well identities and
 the 1.3556 µm pixel calibration were checked against the retained source key.
-This fixed-recipe transfer evaluates treatment responses; it is not an
+This assisted-development evaluation measures treatment responses; it is not an
 additional autonomous authoring trial.
 
 Each FC-A and Y27632 (export label Y27) concentration has two technical-replicate
@@ -224,8 +226,10 @@ wells. Fold change is the treatment mean divided by the same curve's zero-dose
 DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth increased
 at every nonzero concentration in both methods:
 
-(A–B) Mean outgrowth per detected cell relative to the same drug curve's DMSO
-control; (C–D) cell-count ratios in those same wells. Dots show the two technical
+(A–B) Mean outgrowth per detected cell; (C–D) detected cells; (E–F) total
+outgrowth; (G–H) branches per cell; (I–J) mean cell process length; (K–L) mean
+cell median process length. Every endpoint is divided by the same drug
+curve's DMSO mean. Dots show the two technical
 wells at each concentration. Marks and whiskers show their mean and sample
 standard deviation after division by the observed control mean; they do not
 propagate uncertainty in that denominator or represent confidence intervals.
@@ -235,11 +239,18 @@ numerical tables are generated from the same well measurements.
 
 Both methods reproduce increasing mean outgrowth across the four nonzero doses
 for each drug. OpenHCS fold changes are smaller at every nonzero concentration.
-Each OpenHCS well summary is the unweighted mean of its nine field-level
-outgrowth-per-cell measurements; cell counts are averaged over those same fields.
+Each OpenHCS well endpoint is the unweighted mean of its nine field-level
+measurements. Total outgrowth is therefore a mean field total, not unique
+whole-well length.
 The commercial endpoint is an existing well export whose exact site weighting
-and length units are unspecified. Absolute lengths and counts are therefore
-not treated as equivalent.
+and software settings are not retained. The
+[MetaXpress 6 Neurite Outgrowth guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf)
+defines total outgrowth in micrometres with diagonal-length correction, primary
+processes as outgrowths attached to cell bodies, and branches as branching
+junctions rather than daughter-process counts. It does not specify how the
+module distinguishes crossings from branches. These documented definitions
+do not establish identical segmentation or topology for the retained export;
+absolute lengths and counts are not treated as equivalent.
 Within-method ratios avoid a constant unit conversion but do not remove those
 measurement differences. Neither method is manual ground truth, and two
 technical wells do not establish biological replication or significance.
@@ -253,16 +264,33 @@ same neuron; resolved crossings are not automatically branches. These
 definitions specify the OpenHCS measurements without asserting that the
 commercial algorithm uses identical topology or aggregation.
 
-The [joined physical-well table](personal_neurite_transfer/joined_wells.csv)
-and [treatment-effect table](personal_neurite_transfer/treatment_effects.csv)
+The [joined physical-well table](personal_neurite_repaired_morphometry/joined_wells.csv)
+and [treatment-effect table](personal_neurite_repaired_morphometry/treatment_effects.csv)
 retain well identities, means, sample standard deviations, counts, raw deltas,
 fold changes and fractional-change differences. Cell-count changes accompany
 outgrowth to expose denominator changes without inferring toxicity. The
-[source hashes](personal_neurite_transfer/source_evidence.json) identify the
+[source hashes](personal_neurite_repaired_morphometry/source_evidence.json) identify the
 exact submitted pipeline, source key, commercial export and all 180 native
 summaries. The comparison script processes tables only and does not tune images.
 Overlapping fields are not deduplicated, so averaged field counts are not unique
 whole-well neuron counts. Unselected wells are not filled with zero.
+The [original frozen comparison](personal_neurite_baseline_morphometry/treatment_effects.csv)
+is retained separately for before/after evaluation; it was not overwritten.
+
+Additional [branch and primary-process totals](personal_neurite_branch_diagnostics/joined_wells.csv)
+and their [treatment responses](personal_neurite_branch_diagnostics/treatment_effects.csv)
+test whether the weaker branching response is explained by the cell denominator.
+At 40 µM, total-branch fold changes are 1.58 versus 3.01 for FC-A and 1.61
+versus 3.03 for Y27632 (OpenHCS versus MetaXpress). Branches per primary
+process likewise give smaller responses: 1.26 versus 2.48 and 1.21 versus
+2.23, respectively. The difference therefore persists without a cell-count
+denominator. OpenHCS totals are means of field totals, and its branch/process
+endpoint is the mean of the nine field ratios. The commercial comparison
+uses ratios of exported well totals; its internal site weighting and primary
+process definition remain unspecified. These diagnostic ratios are not proof
+of equivalent topology or of which method is more accurate. Their
+[source record](personal_neurite_branch_diagnostics/source_evidence.json)
+identifies the same assisted-development run, not a new segmentation attempt.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -301,7 +329,7 @@ the clocks; native total excludes one-time pipeline loading and JVM startup.
 The different revisions and workloads remain separate qualified checkpoints.
 Exact ratios, independent-CellProfiler-process controls and the separate
 single-core amortization plots are linked in Supplementary Data 3. These selected
-workflows do not replace the full single-sample cohort of main Figure 2.
+workflows do not replace the full single-sample cohort of main Figure 6.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -361,7 +389,7 @@ segmentation accuracy.
 
 ![Linear-scale counterpart of the main-text thirty-workflow execution and total speedup distributions.](../figures/slas/benchmark-publication/measured_benchmark_publication.png){width=6in}
 
-The same workflow ratios, mean bars, median lines and extrema as main Figure 2,
+The same workflow ratios, mean bars, median lines and extrema as main Figure 6,
 on a linear vertical scale. The marked axis break keeps the bulk of the cohort
 visible without excluding the large speedup observations. Each clock contains
 the same thirty workflows; no many-worker measurements enter either distribution.
@@ -620,7 +648,7 @@ current-version compatibility matrix.
 
 ### Retained measured panels and numerical tables
 
-- [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 2 and the paired-runtime continuation of Supplementary Figure 9.
+- [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 6 and the paired-runtime continuation of Supplementary Figure 9.
 - [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
 - [Eight-assignment measured source record](../../benchmark/results/official30_matched_20261006/README.md), including the matched one-process baseline used for the two-worker comparison.
 - [Retained nine- and sixteen-assignment paired clock panels](../figures/slas/supp_matched_scaling.png), with the original separate capture heads.
@@ -996,6 +1024,22 @@ from the three score receipts. Its
 retain the plotted rows and source/output hashes.
 
 ## Supplementary Data 8. Autonomous analysis evidence
+
+### Scientific briefs and the limits of the domain-expert framing
+
+The trials evaluate whether agents can construct and repair analyses from supplied tasks, images and packaged guidance. They do not evaluate usability with untrained laboratory members. Scientific targets were accompanied by acquisition facts, export requirements and operational instructions; “task-only” does not mean that every instruction was free of technical terminology.
+
+The retinal fresh26 trial received the following original scientific brief, reproduced verbatim. Its RBPMS/Hoechst identities are acquisition hints; instance labels, PipelineDocument, compile/execution receipts and matched-view QA are technical output and review requirements. No segmentation method, parameter value or expected count is specified.
+
+> Retinal whole-mount RBPMS analysis
+>
+> Analyse only R0010.czi in this input directory. Assay: retinal whole-mount RBPMS/Hoechst. Acquisition hints AF647:RBPMS and H3258:Hoechst; confirm physical channel and axis identity through MCP metadata and raw inspection. Produce RBPMS-positive soma instance labels, per-object measurements, qualified counts and a complete PipelineDocument with compile/execution receipts. Report uncertain identity, extent and dividing boundaries explicitly.
+>
+> This is authorized development input. No expected count or earlier method is supplied. Do not inspect other images, reference answers, notebooks, scorer code, repository plans or prior agents' scientific outputs. Use only this input, MCP and packaged guidance. Preserve FIRST, later self-directed repairs and matched distributed raw/result/combined QA; assess your final selected method at its supported scope. Current AUTHOR-PACKET owns operational paths and resources.
+
+Source: the retained `SCIENCE-BRIEF.rst` accompanying the [retinal fresh26 record](task_only_analysis/retinal-fresh26-qualified-completion.rst). The earlier NeuronCyto demonstration's complete method-directed prompt remains in Supplementary Data 4; its normalization and enhancement instructions must not be described as a method-free brief. The task-only H004 trial also preceded the later thick-shaft clarification below. The remaining original biological briefs are being recovered from their retained trial packets rather than reconstructed from successful pipelines.
+
+The current skill describes intended inspection and repair practice. Its later additions are not evidence that earlier authors followed those instructions. Main Figure 2 separates this intended workflow from a recorded H001 example; its wall times come from the original resource catalogue, and its candidate sequence comes from the author's retained report. No universal count of review rounds is inferred from screenshot totals.
 
 Supplementary Figures 3–8 group native views by assay. Main Figure 4 shows
 translocation and volume localisation; main Figure 5 shows public and personal

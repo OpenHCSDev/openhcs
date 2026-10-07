@@ -349,7 +349,7 @@ class CellProfilerNeuriteEngineProfile:
         )
         if nuclear_seeded_signal_body_mode:
             secondary_owner_regions = _propagate_neurite_owner_regions(
-                outgrowth_response,
+                admission,
                 cell_body_labels,
                 minimum_response=outgrowth.intensity_above_local_background,
             )
@@ -383,6 +383,7 @@ class CellProfilerNeuriteEngineProfile:
             cell_body_labels,
             coordinate_scale,
             outgrowth_width_px,
+            branch_support=admission.mask,
         )
         owner_skeleton = _render_owned_skeleton(
             outgrowth_skeleton.shape,
@@ -440,6 +441,7 @@ class CellProfilerNeuriteEngineProfile:
             coordinate_scale,
             outgrowth_width_px,
             crossing_topology=topology,
+            branch_support=admission.mask,
         )
         neurite_skeleton = _render_owned_skeleton(
             pre_topology_owner_skeleton.shape,
@@ -1458,46 +1460,132 @@ class _TopologyResult:
                 roots[owner].append(min(plateau))
         return {owner: tuple(sorted(paths)) for owner, paths in roots.items()}
 
-    @staticmethod
     def classify_owned_endpoints(
-        path_owners: np.ndarray,
-        path_endpoint_groups: Sequence[Sequence[int]],
-        crossing_core_paths: set[int],
-        endpoint_group_coordinates: Mapping[int, tuple[float, float]],
+        self,
         *,
+        branch_support: np.ndarray,
+        cell_body_labels: np.ndarray,
+        outgrowth_width_px: float,
         merge_radius: float,
     ) -> tuple[np.ndarray, dict[int, tuple[int, ...]]]:
         """Derive path types and branch events from the same final ownership.
 
         Logical crossing groups can span several physical skeleton nodes. A
         physical anchor's incidence is therefore not their degree. Count
-        distinct owned paths at each logical endpoint, excluding crossing
-        cores and counting a closed path only once for branch eligibility.
-        Branch identities are endpoint-group IDs, like the exported graph.
+        distinct image corridors at each logical endpoint, excluding crossing
+        cores. Paths sharing one corridor do not supply additional arms. Inspect
+        successive perimeters within the declared shaft-width neighborhood:
+        real daughters can share a thick junction before separating. A
+        medial-axis star wholly inside one foreground disc is a cap. A short
+        proximal arm must terminate against its own soma; merely passing near
+        a soma does not qualify. Trace geometry and nominal owners are unchanged.
         """
         endpoint_paths: dict[tuple[int, int], set[int]] = defaultdict(set)
-        for path_index, groups in enumerate(path_endpoint_groups):
-            owner = int(path_owners[path_index])
+        owned_paths: dict[int, list[int]] = defaultdict(list)
+        crossing_core_paths = self.crossing_core_paths
+        for path_index, groups in enumerate(self.path_endpoint_groups):
+            owner = int(self.path_owners[path_index])
+            if owner > 0:
+                owned_paths[owner].append(path_index)
             if owner > 0 and path_index not in crossing_core_paths:
                 for group in set(groups):
                     endpoint_paths[owner, group].add(path_index)
+        body_neighbor_offsets = np.argwhere(np.ones((3, 3), dtype=bool)) - 1
+        body_slices = ndi.find_objects(cell_body_labels)
+        support_owners = _expand_skeleton_ownership(
+            _render_owned_skeleton(branch_support.shape, self),
+            branch_support,
+            outgrowth_width_px,
+        )
         branch_groups: dict[int, list[int]] = defaultdict(list)
-        for (owner, group), paths in endpoint_paths.items():
-            if len(paths) >= 3:
-                branch_groups[owner].append(group)
-        branch_types = np.zeros(len(path_owners), dtype=np.int32)
-        for path_index, groups in enumerate(path_endpoint_groups):
-            owner = int(path_owners[path_index])
+        for owner, owner_paths in owned_paths.items():
+            candidates = {
+                group: paths for (cell, group), paths in endpoint_paths.items()
+                if cell == owner and len(paths) >= 3
+            }
+            if not candidates:
+                continue
+            coordinates = np.concatenate([self.path_coordinates[path] for path in owner_paths])
+            lower, upper = coordinates.min(axis=0), coordinates.max(axis=0) + 1
+            body_slice = body_slices[owner - 1] if owner <= len(body_slices) else None
+            if body_slice is not None:
+                lower = np.minimum(lower, [axis.start for axis in body_slice])
+                upper = np.maximum(upper, [axis.stop for axis in body_slice])
+            margin = self.soma_attachment_radius(outgrowth_width_px)
+            lower = np.maximum(0, lower - margin)
+            upper = np.minimum(cell_body_labels.shape, upper + margin)
+            region = tuple(slice(int(start), int(stop)) for start, stop in zip(lower, upper))
+            local_bodies = cell_body_labels[region]
+            own_trace = np.zeros(local_bodies.shape, dtype=np.int32)
+            own_trace[tuple((coordinates - lower).T)] = owner
+            # Nearby foreign shafts cannot enlarge this owner's junction disc.
+            # Explicit path coordinates retain shared crossing identity even
+            # where the raster projection can store only one nominal owner.
+            foreground = (support_owners[region] == owner) | (own_trace > 0)
+            foreground |= local_bodies == owner
+            foreground &= (local_bodies == 0) | (local_bodies == owner)
+            foreground_radius = ndi.distance_transform_edt(foreground)
+            for group, paths in candidates.items():
+                # Sample physical endpoints, not fractional exported centroids.
+                centers = np.unique(np.asarray([
+                    self.path_coordinates[path][0 if endpoint == 0 else -1] - lower
+                    for path in paths for endpoint in (0, 1)
+                    if self.path_endpoint_groups[path][endpoint] == group
+                ]), axis=0)
+                radii = foreground_radius[tuple(centers.T)]
+                neighborhood_radii = radii + outgrowth_width_px
+                ring_lower = np.maximum(0, np.floor((centers - neighborhood_radii[:, None]).min(axis=0)).astype(int) - 2)
+                ring_upper = np.minimum(local_bodies.shape, np.ceil((centers + neighborhood_radii[:, None]).max(axis=0)).astype(int) + 3)
+                ring_slice = tuple(slice(int(start), int(stop)) for start, stop in zip(ring_lower, ring_upper))
+                grid = np.moveaxis(np.indices(tuple(ring_upper - ring_lower)), 0, -1) + ring_lower
+                distances = np.linalg.norm(grid[:, :, None] - centers, axis=3)
+                for expansion in range(int(np.floor(outgrowth_width_px)) + 1):
+                    perimeter_radii = radii + expansion
+                    core = np.any(distances <= perimeter_radii, axis=2)
+                    ring = ndi.binary_dilation(core, structure=np.ones((3, 3), dtype=bool)) & ~core
+                    ring &= foreground[ring_slice] & (local_bodies[ring_slice] == 0)
+                    corridors, _ = ndi.label(ring, structure=np.ones((3, 3), dtype=bool))
+                    resolved_corridors: set[int] = set()
+                    proximal_arm = False
+                    for path in paths:
+                        groups = self.path_endpoint_groups[path]
+                        for endpoint in (0, 1):
+                            if groups[endpoint] != group:
+                                continue
+                            arm = self.path_coordinates[path][::1 if endpoint == 0 else -1] - lower
+                            inside_core = np.any(np.linalg.norm(arm[:, None] - centers, axis=2) <= perimeter_radii, axis=1)
+                            departures = np.flatnonzero(~inside_core)
+                            if departures.size:
+                                first_exit = arm[departures[0]] - ring_lower
+                                if np.all((first_exit >= 0) & (first_exit < corridors.shape)):
+                                    corridor = int(corridors[tuple(first_exit)])
+                                    if corridor:
+                                        resolved_corridors.add(corridor)
+                            elif groups[0] != groups[1]:
+                                # Only the opposite endpoint can be a short root.
+                                neighbors = arm[-1] + body_neighbor_offsets
+                                inside = np.all((neighbors >= 0) & (neighbors < local_bodies.shape), axis=1)
+                                if np.any(local_bodies[tuple(neighbors[inside].T)] == owner):
+                                    proximal_arm = True
+                    if len(resolved_corridors) + int(proximal_arm) >= 3:
+                        branch_groups[owner].append(group)
+                        break
+        qualified_groups = {
+            (owner, group) for owner, groups in branch_groups.items() for group in groups
+        }
+        branch_types = np.zeros(len(self.path_owners), dtype=np.int32)
+        for path_index, groups in enumerate(self.path_endpoint_groups):
+            owner = int(self.path_owners[path_index])
             if owner <= 0 or path_index in crossing_core_paths:
                 continue
             branch_types[path_index] = (
                 3 if groups[0] == groups[1] else sum(
-                    len(endpoint_paths[owner, group]) >= 3 for group in groups
+                    (owner, group) in qualified_groups for group in groups
                 )
             )
         coordinates = {
             group: np.asarray(coordinate)
-            for group, coordinate in endpoint_group_coordinates.items()
+            for group, coordinate in self.endpoint_group_coordinates.items()
         }
         return branch_types, {
             owner: _merge_nearby_nodes(groups, coordinates, radius=merge_radius)
@@ -2131,24 +2219,32 @@ def _identify_secondary_owner_regions_cellprofiler(
 
 
 def _propagate_neurite_owner_regions(
-    signal_response: np.ndarray,
+    admission: NeuriteAdmissionResult,
     cell_body_labels: np.ndarray,
     *,
     minimum_response: float,
 ) -> np.ndarray:
-    """Propagate soma identities through the declared neurite foreground."""
+    """Propagate provisional soma identities through admitted shaft/root support.
 
-    response = np.asarray(signal_response, dtype=float)
+    Local response alone admits background corridors that repair deliberately
+    excludes. A territory reached through those corridors can cut an admitted
+    shaft into labels with no connection to their own soma. Use the original
+    admission and its bounded soma attachment contract for propagation too;
+    rooted topology remains the stronger nominal ownership evidence.
+    """
+
+    response = np.asarray(admission.response, dtype=float)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
-    if response.shape != bodies.shape:
+    if not response.shape == bodies.shape == admission.mask.shape:
         raise ValueError(
-            "signal_response and cell_body_labels must have the same shape"
+            "neurite admission and cell_body_labels must have the same shape"
         )
     if not np.isfinite(minimum_response) or minimum_response < 0:
         raise ValueError("minimum_response must be finite and >= 0")
     if not np.any(bodies):
         return np.zeros_like(bodies)
-    support = (response >= minimum_response) | (bodies > 0)
+    attachments = admission.soma_attachment_labels(bodies, minimum_response)
+    support = admission.mask | (attachments > 0) | (bodies > 0)
     return secondary_propagation_backend().propagate(
         response,
         bodies,
@@ -2568,8 +2664,11 @@ def _analyze_topology(
     coordinate_scale: float,
     outgrowth_width_px: float,
     *,
+    branch_support: np.ndarray,
     assigned_path_labels: np.ndarray | None = None,
 ) -> _TopologyResult:
+    if branch_support.shape != skeleton.shape:
+        raise ValueError("branch_support must have the same shape as the skeleton")
     if (
         assigned_path_labels is not None
         and assigned_path_labels.shape != skeleton.shape
@@ -2780,20 +2879,12 @@ def _analyze_topology(
     process_roots = _TopologyResult.soma_process_roots(
         cell_body_labels, outgrowth_width_px, path_coordinates, transitions, path_owners,
     )
-    path_branch_types, branch_nodes_by_cell = _TopologyResult.classify_owned_endpoints(
-        path_owners,
-        path_endpoint_groups,
-        crossing_core_paths,
-        endpoint_group_coordinates,
-        merge_radius=max(1.0, outgrowth_width_px),
-    )
-
     resolved_crossings = tuple(
         _ResolvedCrossing(node, crossing_paths_by_node[node],
                           crossing_core_paths_by_node[node])
         for node in sorted(crossing_nodes)
     )
-    return _TopologyResult(
+    topology = _TopologyResult(
         path_owners=path_owners,
         path_distances=path_distances,
         path_lengths=path_lengths,
@@ -2802,16 +2893,21 @@ def _analyze_topology(
         path_endpoint_groups=tuple(
             tuple(endpoint_groups) for endpoint_groups in path_endpoint_groups
         ),
-        path_branch_types=path_branch_types,
+        path_branch_types=np.zeros(path_count, dtype=np.int32),
         endpoint_group_coordinates=endpoint_group_coordinates,
         transitions={key: tuple(sorted(value)) for key, value in transitions.items()},
         root_paths_by_cell=process_roots,
-        branch_nodes_by_cell=branch_nodes_by_cell,
+        branch_nodes_by_cell={},
         resolved_crossings=tuple(
             crossing for crossing in resolved_crossings
             if crossing.crossover_paths(path_owners)
         ),
     )
+    path_branch_types, branch_nodes_by_cell = topology.classify_owned_endpoints(
+        branch_support=branch_support, cell_body_labels=cell_body_labels,
+        outgrowth_width_px=outgrowth_width_px, merge_radius=max(1.0, outgrowth_width_px),
+    )
+    return replace(topology, path_branch_types=path_branch_types, branch_nodes_by_cell=branch_nodes_by_cell)
 
 
 def _analyze_owned_topology(
@@ -2821,6 +2917,7 @@ def _analyze_owned_topology(
     outgrowth_width_px: float,
     *,
     crossing_topology: _TopologyResult,
+    branch_support: np.ndarray,
 ) -> _TopologyResult:
     """Analyze each nominal owner without erasing ownership at shared borders.
 
@@ -2833,7 +2930,7 @@ def _analyze_owned_topology(
 
     owned = np.asarray(owner_skeleton, dtype=np.int32)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
-    if owned.shape != bodies.shape:
+    if owned.shape != bodies.shape or owned.shape != branch_support.shape:
         raise ValueError("owner_skeleton and cell_body_labels must have the same shape")
     if not np.any(owned > 0):
         return _empty_topology()
@@ -2889,6 +2986,7 @@ def _analyze_owned_topology(
             coordinate_scale,
             outgrowth_width_px,
             assigned_path_labels=local_owned,
+            branch_support=branch_support[owner_slice],
         )
         local_path_count = len(local.path_owners)
         if local_path_count == 0:

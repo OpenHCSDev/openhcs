@@ -40,11 +40,12 @@ to understand the scientific findings in the main text.
 
 ## Figures and validation
 
-The current main layout has five figures and Table 2: a full-width process
+The current main layout has six figures and Table 1: a full-width process
 architecture with integration logos and a native-editing continuation;
-matched CellProfiler execution and total time;
-self-directed image review; translocation, 3-D localisation and retinal soma
-detection; and public/laboratory neurite analysis with treatment responses.
+an intended autonomous loop alongside a recorded repair trajectory;
+self-directed nuclear and retinal image review; translocation, 3-D localisation
+and retinal soma detection; public/laboratory neurite analysis with treatment
+responses; and matched CellProfiler execution and total time.
 Nine supplementary figures group wider views by assay and retain
 runtime explanations, historical measurements and prospective held-out results.
 The manuscript and [current supplementary source](supplementary/README.md)
