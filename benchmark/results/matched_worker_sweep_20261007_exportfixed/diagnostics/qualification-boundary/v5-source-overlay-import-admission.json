@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "scope": "Actual v5 import paths and final source-custody helper; no pipeline/native jobs",
+  "timed_child_import_root": "/home/ts/code/projects/openhcs-cp-registry-control",
+  "qualifier_core_paths": [
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core",
+    "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/core"
+  ],
+  "qualifier_core_file_sha256": {
+    "openhcs.core.equivalence.tables": "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc",
+    "openhcs.core.equivalence.measurement_rows": "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+  },
+  "harness_source_files": 1344,
+  "source_inventory_repeat_equal": true,
+  "source_guard_includes_all_core_search_roots": true
+}

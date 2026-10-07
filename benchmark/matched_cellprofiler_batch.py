@@ -331,10 +331,10 @@ def _require_compared_output_inventory(
             (
                 tuple(
                     (
-                        measurement.subject.scope.value,
-                        normalize_runtime_identifier(measurement.subject.name),
+                        subject.scope.value,
+                        normalize_runtime_identifier(subject.name),
                     )
-                    for measurement in table.measurement_tables()
+                    for _name, subject, _indexes in table.measurement_subject_columns()
                 ),
                 len(table.rows),
             )
@@ -376,6 +376,9 @@ def _saved_output_equivalence(
         candidate_exports,
         policy=policy,
         execution_axis_id=execution_axis_id,
+        native_measurement_cache_root=native_measurement_cache_root,
+        native_reference_report_sha256=native_reference_report_sha256,
+        production_source_commit=production_source_commit,
     )
     native_exports = RuntimeExportObservation.from_output_roots((native_root,))
     native_snapshot = RuntimeOutputSnapshot.from_export_observation(native_exports)
@@ -1134,6 +1137,16 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _harness_source_inventory(project_root: Path) -> dict[str, str]:
+    """Seal benchmark sources and the actual qualifier core search roots."""
+    roots = (project_root / "benchmark", *(Path(root) for root in openhcs.core.__path__))
+    return {
+        str(path.resolve()): sha256_file(path)
+        for root in roots
+        for path in sorted(root.rglob("*.py"))
+    }
+
+
 def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     """Qualify one case while retaining the suite's prepared execution server."""
 
@@ -1159,10 +1172,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     )
     if args.production_source_root is not None and source_dirty:
         raise RuntimeError("Declared production checkout must be clean.")
-    harness_inventory = {
-        str(path.relative_to(project_root)): sha256_file(path)
-        for path in sorted((project_root / "benchmark").rglob("*.py"))
-    }
+    harness_inventory = _harness_source_inventory(project_root)
     root = args.output_dir.expanduser().resolve()
     if root.exists() and any(root.iterdir()):
         raise FileExistsError(f"Matched pilot output directory must be empty: {root}")
@@ -1255,6 +1265,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 ).strip()
             ),
             "file_sha256": harness_inventory,
+            "core_source_roots": list(openhcs.core.__path__),
         },
         "native_job_count": args.native_jobs,
         "candidate_worker_count": args.openhcs_workers,
@@ -1835,10 +1846,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         ).strip()
     ):
         raise RuntimeError("Production source changed during candidate capture.")
-    if harness_inventory != {
-        str(path.relative_to(project_root)): sha256_file(path)
-        for path in sorted((project_root / "benchmark").rglob("*.py"))
-    }:
+    if harness_inventory != _harness_source_inventory(project_root):
         raise RuntimeError("Benchmark harness changed during candidate capture.")
     provenance["native_input_inventory_after"] = final_input_inventory
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))

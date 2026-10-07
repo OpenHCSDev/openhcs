@@ -150,7 +150,7 @@ May-style worker panels and fixed-workload scaling through the existing owner:
 ```sh
 python benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/render_sweep.py \
   --record benchmark/results/matched_worker_sweep_20261007_exportfixed \
-  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v4/protocol-manifest.json \
+  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v5/protocol-manifest.json \
   --output-dir paper/figures/slas/benchmark-publication
 ```
 

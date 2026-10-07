@@ -1522,13 +1522,13 @@ class RuntimeRowProjectionContext:
             long_form=projection.long_form,
             declared_anchor_groups=projection.declared_anchor_groups,
         )
-        row_facts = RuntimeMeasurementFactProjectionContract.dedupe_records(
-            projection.records
-        )
         if projection.long_form:
             return projection
         if not self.derive_directional_pair_facts:
             return projection
+        row_facts = RuntimeMeasurementFactProjectionContract.dedupe_records(
+            projection.records
+        )
         derived_facts = RuntimeDirectionalPairMeasurementDerivationContract(
             self.policy,
             self.known_source_names,

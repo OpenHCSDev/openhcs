@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 from collections import Counter
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
@@ -36,6 +36,7 @@ from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementScalarLiteral,
+    RuntimeMeasurementRowIdentityContract,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
@@ -75,7 +76,7 @@ def measurement_table_padding_group(table_name: str) -> str:
     return DEFAULT_MEASUREMENT_TABLE_PADDING_GROUP
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class RuntimeTableSnapshot:
     """Semantic snapshot of one exported runtime table."""
 
@@ -83,6 +84,11 @@ class RuntimeTableSnapshot:
     header: tuple[str, ...]
     rows: tuple[tuple[str, ...], ...]
     column_context: tuple[str | None, ...] = ()
+    _measurement_views: dict[
+        RuntimeMeasurementRowIdentityContract, tuple[MeasurementTable, ...]
+    ] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def for_image_numbers(
         self,
@@ -247,10 +253,10 @@ class RuntimeTableSnapshot:
             rows = tuple(tuple(row[index] for index in retained) for row in rows)
             if column_context:
                 column_context = tuple(column_context[index] for index in retained)
-        self.path = path
-        self.header = header
-        self.rows = rows
-        self.column_context = column_context
+        object.__setattr__(self, "path", path)
+        object.__setattr__(self, "header", header)
+        object.__setattr__(self, "rows", rows)
+        object.__setattr__(self, "column_context", column_context)
 
     @property
     def schema_key(self) -> tuple[str, ...]:
@@ -310,19 +316,31 @@ class RuntimeTableSnapshot:
         dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
     ) -> tuple[MeasurementTable, ...]:
         """Expose exported columns as ordinary subject-owned measurement tables."""
+        identity_contract = dialect.row_identity_contract
+        cached = self._measurement_views.get(identity_contract)
+        if cached is not None:
+            return cached
+        tables = tuple(
+            MeasurementTable(
+                name=name,
+                rows=self._columnar_rows(indexes, subject, dialect),
+                subject=subject,
+            )
+            for name, subject, indexes in self.measurement_subject_columns(dialect)
+        )
+        self._measurement_views[identity_contract] = tables
+        return tables
+
+    def measurement_subject_columns(
+        self,
+        dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+    ) -> tuple[tuple[str, MeasurementSubject, tuple[int, ...]], ...]:
+        """Derive subject ownership from the declared schema without reading cells."""
         if not self.column_context:
             subject = self._subject_for_columns(self.header)
-            return (
-                MeasurementTable(
-                    name=self.path.stem,
-                    rows=self._columnar_rows(
-                        tuple(range(len(self.header))),
-                        subject,
-                        dialect,
-                    ),
-                    subject=subject,
-                ),
-            )
+            subjects = ((self.path.stem, subject, tuple(range(len(self.header)))),)
+            self._validate_subject_columns(subjects)
+            return subjects
 
         image_identity_fields = (
             dialect.row_identity_contract.selected_image_identity_fields(
@@ -339,7 +357,7 @@ class RuntimeTableSnapshot:
                 context for context in self.column_context if context is not None
             )
         )
-        tables: list[MeasurementTable] = []
+        subjects: list[tuple[str, MeasurementSubject, tuple[int, ...]]] = []
         for context in contexts:
             context_indexes = tuple(
                 index
@@ -360,14 +378,22 @@ class RuntimeTableSnapshot:
                     dict.fromkeys((*image_identity_indexes, *context_indexes))
                 )
                 subject = self._object_subject(context, indexes, dialect)
-            tables.append(
-                MeasurementTable(
-                    name=f"{self.path.stem}:{context}",
-                    rows=self._columnar_rows(indexes, subject, dialect),
-                    subject=subject,
+            subjects.append((f"{self.path.stem}:{context}", subject, indexes))
+        subjects = tuple(subjects)
+        self._validate_subject_columns(subjects)
+        return subjects
+
+    def _validate_subject_columns(
+        self, subjects: tuple[tuple[str, MeasurementSubject, tuple[int, ...]], ...]
+    ) -> None:
+        for _name, subject, indexes in subjects:
+            selected_header = tuple(self.header[index] for index in indexes)
+            duplicate_headers = duplicate_values(selected_header)
+            if duplicate_headers:
+                raise ValueError(
+                    f"Runtime table {self.path} subject {subject.name!r} has duplicate "
+                    f"columns {duplicate_headers!r}."
                 )
-            )
-        return tuple(tables)
 
     def _subject_for_columns(
         self,
@@ -422,12 +448,6 @@ class RuntimeTableSnapshot:
         dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
     ) -> MeasurementSparseColumnarRows:
         selected_header = tuple(self.header[index] for index in indexes)
-        duplicate_headers = duplicate_values(selected_header)
-        if duplicate_headers:
-            raise ValueError(
-                f"Runtime table {self.path} subject {subject.name!r} has duplicate "
-                f"columns {duplicate_headers!r}."
-            )
         normalized_fields = {
             normalize_runtime_identifier(field_name): field_name
             for field_name in selected_header

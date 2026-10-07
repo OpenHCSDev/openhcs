@@ -89,6 +89,7 @@ def retained_native_measurement_snapshot(
     cache_root: Path | None = None,
     reference_report_sha256: str | None = None,
     source_commit: str | None = None,
+    projection_producer=None,
 ):
     """Project fresh facts or restore exactly the same immutable native evidence.
 
@@ -116,6 +117,7 @@ def retained_native_measurement_snapshot(
         ],
         "normalized_table_names": [str(table.path) for table in snapshot.tables],
         "policy": _policy_identity(policy),
+        "projection_producer": _policy_identity(projection_producer),
         "projection_sources": runtime_measurement_projection_cache_identity(),
     }
     encoded_identity = json.dumps(identity, sort_keys=True, separators=(",", ":"))

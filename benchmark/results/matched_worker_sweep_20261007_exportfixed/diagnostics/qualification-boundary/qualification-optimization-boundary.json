@@ -1,0 +1,15 @@
+{
+  "status": "OLD_SCHEDULER_RETIRED_AT_SUCCESSFUL_CAPTURE_BOUNDARY",
+  "utc": "2026-10-07T21:33:16.108376+00:00",
+  "scheduler_pid": 1717305,
+  "scheduler_command": "/home/ts/code/projects/openhcs/.venv/bin/python -B /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/run-revised-sweep.py --plan /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v4/protocol-manifest.json ",
+  "capture_terminal": {
+    "returncode": 0,
+    "source_head_before": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+    "source_head_after": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+    "source_status_after": ""
+  },
+  "completed_workflows": 30,
+  "next_old_mode_not_launched": true,
+  "reason": "Install user-requested qualified comparison fixes and use prepared v5 for remaining modes; preserve completed scientific captures."
+}
