@@ -1,7 +1,7 @@
 # OpenHCS manuscript
 
 Working author-review draft for **SLAS Technology**:
-*OpenHCS: autonomous, auditable image analysis for self-driving microscopy laboratories*.
+*OpenHCS: autonomous image analysis that domain experts can audit*.
 
 ## Versioned sources
 
@@ -43,11 +43,18 @@ to understand the scientific findings in the main text.
 The current main layout has six figures and Table 1: a full-width process
 architecture with integration logos and a native-editing continuation;
 an intended autonomous loop alongside a recorded repair trajectory;
-self-directed nuclear and retinal image review; translocation, 3-D localisation
-and retinal soma detection; public/laboratory neurite analysis with treatment
+self-directed nuclear and retinal image review; a six-panel task-specific
+quantitative summary with 3-D and retinal image evidence; public/laboratory neurite analysis with treatment
 responses; and matched CellProfiler execution and total time.
 Nine supplementary figures group wider views by assay and retain
 runtime explanations, historical measurements and prospective held-out results.
+
+`PYTHONPATH=paper/figures python paper/figures/build_slas_task_only.py --submission-summary`
+regenerates the heterogeneous results panels from the retained score and endpoint
+tables, without rerunning analysis. `--publish-briefs` exports the original
+instruction files and their trial mapping, and replaces the corresponding
+Supplementary Data 8 section. The archive preserves full operational TASK files;
+the typeset supplement consolidates scientific briefs and marks technical hints.
 The manuscript and [current supplementary source](supplementary/README.md)
 own the displayed numbering; older run reports retain their original numbering.
 

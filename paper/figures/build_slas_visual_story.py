@@ -793,7 +793,7 @@ def submission_neurite_results():
         sheet, ROOT / "paper/supplementary/personal_neurite_repaired_morphometry",
         metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="F",
     )
-    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching responses remain smaller than MetaXpress.",
+    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Concordant outgrowth responses; branching fold changes differ.",
                size=9.5, color=MUTED)
     sheet.save()
 
@@ -903,23 +903,19 @@ def submission_shared_workflow():
 
 
 def submission_quantitative_results():
-    """Show assay response, 3-D localisation and noisy retinal soma detection."""
-    sheet = FigureSheet("submission_quantitative_results", "", 10.5)
-    sheet.source(OUTPUT / "translocation_fresh23_provenance.json")
+    """Show the matched images supporting the separate quantitative summary."""
+    sheet = FigureSheet("submission_quantitative_results", "", 7.6)
     sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
-    sheet.panel("I", "Translocation response", 3, 97)
-    sheet.source_image(OUTPUT / "translocation_fresh23.png", (3, 67, 94, 26),
-                       crop=(50, 270, 2650, 1290))
-    sheet.panel("II", "Three-dimensional nuclear localisation", 3, 63)
-    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 31, 94, 29),
+    sheet.panel("G", "Three-dimensional nuclear localisation", 3, 97)
+    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 51, 94, 42),
                        crop=(50, 110, 2660, 1300))
-    sheet.panel("III", "Retinal somata in heterogeneous background", 3, 28)
+    sheet.panel("H", "Retinal somata in heterogeneous background", 3, 46)
     sheet.source(OUTPUT / "retinal_fresh_native_provenance.json")
-    sheet.text(3, 24, "Raw RBPMS", size=10.5, weight="bold")
-    sheet.text(52, 24, "Final outlines", size=10.5, weight="bold")
-    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (3, 2, 45, 21),
+    sheet.text(3, 40, "Raw RBPMS", size=10.5, weight="bold")
+    sheet.text(52, 40, "Final outlines", size=10.5, weight="bold")
+    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (3, 3, 45, 34),
                        crop=(24, 790, 747, 1185))
-    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (52, 2, 45, 21),
+    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (52, 3, 45, 34),
                        crop=(770, 790, 1493, 1185))
     sheet.save()
 

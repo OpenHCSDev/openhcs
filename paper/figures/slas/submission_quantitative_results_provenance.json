@@ -1,27 +1,12 @@
 {
-  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "generator_sha256": "4acb5fc9cff7f7bcc8e0c028824b10c9afc74bcbfd817bf851571767200b6b02",
   "source_sha256": {
-    "paper/figures/slas/translocation_fresh23_provenance.json": "67517ba57556fcb24dd0481f4cff9809f9bde9329736f9b455f473ac23362bf3",
     "paper/figures/slas/h002_measurement_first_provenance.json": "d948f5ccc0370f974c5ce0674842587496d49cf5244a82c5fad60d3e2fd46eba",
-    "paper/figures/slas/translocation_fresh23.png": "3bda8db7aa8ed962f730d46ab491bb87b9fab5349a750990f03f51f8d00ed11a",
     "paper/figures/slas/h002_measurement_first.png": "339b9e2e987ec7dd6b89ca8e9e17651e9c61774ed22a195cc4b90cf18baa276d",
     "paper/figures/slas/retinal_fresh_native_provenance.json": "4c5eb38b12132ad0211ce2fa5729d50a5235b2ca277c1a81c14f11aa719fe6c6",
     "paper/figures/slas/retinal_fresh_native.png": "93d7a85de7c0d64bb4cacd9f680f3bef6de1058312cc9a56e9b763b9d676efcc"
   },
   "ui_crops": [
-    {
-      "source": "paper/figures/slas/translocation_fresh23.png",
-      "xyxy_pixels": [
-        50,
-        270,
-        2650,
-        1290
-      ],
-      "source_size": [
-        2700,
-        2250
-      ]
-    },
     {
       "source": "paper/figures/slas/h002_measurement_first.png",
       "xyxy_pixels": [
@@ -63,9 +48,9 @@
     }
   ],
   "output_sha256": {
-    "submission_quantitative_results.png": "cbafffc06ea353c1dea52bfb675c2a3c849bf1611d68b441052291d81a2019fd",
-    "submission_quantitative_results.pdf": "82fee14622a4ab2fa7940ee6671453b351ba866a20324d80a366fc68f854192b",
-    "submission_quantitative_results.svg": "18e8d6bad17c65dd0d5da8f3949f6073fd3d03e627293c5b20a6782e1c238f4a"
+    "submission_quantitative_results.png": "401da35d1ab0c9fe17efda5dfff957dbaf7a3067aefd3725195ca016c917413c",
+    "submission_quantitative_results.pdf": "f04a4e69550737b73cd133d1d7416cddc2e22dc1176bd68c2204f156feac4e17",
+    "submission_quantitative_results.svg": "26bd51123369a073fcb499f424ac1517520b164301b2fae72033afb2af02a25c"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -20,7 +20,7 @@ class NeuriteEffectFigure(FigureSheet):
         self.text(3, 91, protocol_label, size=11, color=MUTED)
         self.text(3, 8, "Dots: two technical wells. Marks and whiskers: mean ± between-well SD, not confidence intervals.", size=10)
         self.text(3, 4.5, "Each curve uses its own zero-dose DMSO mean. Dose positions are equally spaced for display.", size=10)
-        self.text(3, 1, "Within-method ratios compare response; they do not establish equivalent segmentation or absolute lengths.", size=10)
+        self.text(3, 1, "Concordant outgrowth responses have different measured magnitudes; neither method is ground truth.", size=10)
 
     @staticmethod
     def draw_panels(sheet: FigureSheet, tables: Path, *, metrics=DEFAULT_METRICS,
