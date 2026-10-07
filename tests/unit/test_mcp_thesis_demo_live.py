@@ -450,8 +450,13 @@ def test_config_document_read_opens_its_declared_window_first(
                 {
                     "documents": [
                         {
-                            "document_id": "window_code_document:global_config",
+                            "schema_version": "openhcs.agent.v1",
+                            "identity": {
+                                "document_id": "window_code_document:global_config"
+                            },
                             "widget_id": "global_config",
+                            "title": "Global config",
+                            "readable": True,
                             "writable": True,
                         }
                     ]
@@ -622,12 +627,21 @@ def test_query_records_use_the_selected_plate_result_envelope() -> None:
     assert records == [{"relative_path": "result.csv"}]
 
 
-def test_window_catalog_uses_flat_canonical_window_ids() -> None:
+def test_window_catalog_uses_declared_nested_identity() -> None:
     assert demo.window_ids_from_catalog(
         [
-            {"window_id": demo.OpenHCSUiWindowId.plate_manager},
-            {"window_id": demo.OpenHCSUiWindowId.image_browser},
-            {"identity": {"window_id": "legacy-nested-shape"}},
+            {
+                "schema_version": "openhcs.agent.v1",
+                "identity": {"window_id": window_id},
+                "title": "Window",
+                "window_kind": "managed",
+                "visible": True,
+                "focusable": True,
+            }
+            for window_id in (
+                demo.OpenHCSUiWindowId.plate_manager,
+                demo.OpenHCSUiWindowId.image_browser,
+            )
         ]
     ) == frozenset(
         {
@@ -1034,10 +1048,17 @@ def test_plate_action_waits_for_accepted_receipt(monkeypatch) -> None:
     monkeypatch.setattr(
         demo,
         "plate_action_summary",
-        lambda _ctx, _action: {
-            "target_scope_ids": ["plate"],
-            "selection_revision_token": "revision",
-        },
+        lambda _ctx, _action: demo.UiActionSummary(
+            schema_version="openhcs.agent.v1",
+            identity=demo.UiActionIdentity(
+                widget_id="plate_manager", action_id=action.value
+            ),
+            title="Action",
+            enabled=True,
+            invocation_mode="sync",
+            target_scope_ids=("plate",),
+            selection_revision_token="revision",
+        ),
     )
     monkeypatch.setattr(
         demo,
@@ -1353,12 +1374,13 @@ def test_managed_window_action_uses_advertised_global_window_scope(
                         {
                             "actions": [
                                 {
-                                    "widget_id": (
-                                        demo.ManagedWindowWidgetIdentity.require_value()
-                                    ),
-                                    "action_id": (
-                                        demo.ManagedWindowAction.SAVE_WITHOUT_CLOSE.value
-                                    ),
+                                    "schema_version": "openhcs.agent.v1",
+                                    "identity": {
+                                        "widget_id": demo.ManagedWindowWidgetIdentity.require_value(),
+                                        "action_id": demo.ManagedWindowAction.SAVE_WITHOUT_CLOSE.value,
+                                    },
+                                    "title": "Save",
+                                    "invocation_mode": "sync",
                                     "enabled": True,
                                     "target_scope_ids": [advertised_scope],
                                 }
@@ -1377,7 +1399,7 @@ def test_managed_window_action_uses_advertised_global_window_scope(
         window_id=demo.OpenHCSUiWindowId.global_config,
     )
 
-    assert summary["target_scope_ids"] == [advertised_scope]
+    assert summary.target_scope_ids == (advertised_scope,)
     assert target_scope_id == advertised_scope
 
 

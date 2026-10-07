@@ -59,6 +59,13 @@ from openhcs.agent.capabilities import (
     ValidateViewerWindowStateCapability,
 )
 from openhcs.agent.ui_bridge_actions import PlateManagerAction
+from openhcs.agent.dto.ui_bridge import (
+    UiActionIdentity,
+    UiActionSummary,
+    UiCodeDocumentSummary,
+    UiWindowSummary,
+)
+from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
 from openhcs.agent.ui_bridge_identities import (
     ManagedWindowWidgetIdentity,
     PipelineEditorStateSurfaceIdentityDeclaration,
@@ -946,7 +953,7 @@ def managed_window_action_target(
     action: ManagedWindowAction,
     *,
     window_id: str,
-) -> tuple[dict[str, Any], str]:
+) -> tuple[UiActionSummary, str]:
     response = command_json(
         ctx,
         f"list_managed_{action.value}_action",
@@ -960,18 +967,20 @@ def managed_window_action_target(
     actions = first_payload(response, UiListActionsCapability.name).get("actions")
     if not isinstance(actions, list):
         raise RehearsalFailure("Managed-window action catalog is unavailable.")
+    summaries = (
+        AgentDtoJsonCodec.dataclass_from_json(UiActionSummary, row) for row in actions
+    )
     matches = [
         row
-        for row in actions
-        if isinstance(row, dict)
-        and row.get("widget_id") == ManagedWindowWidgetIdentity.require_value()
-        and row.get("action_id") == action.value
+        for row in summaries
+        if row.identity.widget_id == ManagedWindowWidgetIdentity.require_value()
+        and row.identity.action_id == action.value
     ]
-    if len(matches) != 1 or matches[0].get("enabled") is not True:
+    if len(matches) != 1 or not matches[0].enabled:
         raise RehearsalFailure(
             f"Managed-window action {action.value!r} is unavailable."
         )
-    target_scope_ids = matches[0].get("target_scope_ids")
+    target_scope_ids = matches[0].target_scope_ids
     window_scopes = frozenset(
         OpenHCSUiWindowId.manager_scopes_for_agent_window_id(window_id)
     )
@@ -1003,9 +1012,7 @@ def save_managed_window(ctx: RunContext, *, window_id: str, label: str) -> None:
                 "widget_id": ManagedWindowWidgetIdentity.require_value(),
                 "action_id": action.value,
                 "target_scope_ids": [target_scope_id],
-                "observed_selection_revision_token": summary.get(
-                    "selection_revision_token"
-                ),
+                "observed_selection_revision_token": summary.selection_revision_token,
                 "require_confirmation": False,
                 "connection": ui_connection_arguments(ctx),
             },
@@ -1092,18 +1099,20 @@ def exact_config_document_source(
     documents = first_payload(documents_response).get("documents")
     if not isinstance(documents, list):
         raise RehearsalFailure("Code-document catalog is unavailable.")
+    summaries = (
+        AgentDtoJsonCodec.dataclass_from_json(UiCodeDocumentSummary, row)
+        for row in documents
+    )
     matches = [
         document
-        for document in documents
-        if isinstance(document, dict)
-        and document.get("widget_id") == window_id
-        and document.get("writable") is True
+        for document in summaries
+        if document.widget_id == window_id and document.writable
     ]
-    if len(matches) != 1 or not isinstance(matches[0].get("document_id"), str):
+    if len(matches) != 1:
         raise RehearsalFailure(
             f"Expected one writable active config document for {window_id!r}."
         )
-    document_id = matches[0]["document_id"]
+    document_id = matches[0].document_id
     document_response = command_json(
         ctx,
         "inspect_ui_config_document",
@@ -1833,11 +1842,12 @@ def inspect_and_apply_code_document(
         ),
         timeout=30,
     )
-    documents = first_payload(docs).get("documents") or ()
+    documents = (
+        AgentDtoJsonCodec.dataclass_from_json(UiCodeDocumentSummary, row)
+        for row in first_payload(docs)["documents"]
+    )
     if not any(
-        isinstance(doc, dict)
-        and doc.get("document_id") == ORCHESTRATOR_DOCUMENT_ID
-        and doc.get("writable") is True
+        doc.document_id == ORCHESTRATOR_DOCUMENT_ID and doc.writable
         for doc in documents
     ):
         raise RehearsalFailure(
@@ -2737,15 +2747,14 @@ def visible_window_ids(ctx: RunContext, *, label: str) -> frozenset[str]:
 
 def window_ids_from_catalog(windows: list[Any]) -> frozenset[str]:
     return frozenset(
-        window_id
+        AgentDtoJsonCodec.dataclass_from_json(UiWindowSummary, window).window_id
         for window in windows
-        if isinstance(window, dict)
-        and isinstance((window_id := window.get("window_id")), str)
-        and window_id
     )
 
 
-def plate_action_summary(ctx: RunContext, action: PlateManagerAction) -> dict[str, Any]:
+def plate_action_summary(
+    ctx: RunContext, action: PlateManagerAction
+) -> UiActionSummary:
     response = command_json(
         ctx,
         f"list_{action.value}_action",
@@ -2759,18 +2768,20 @@ def plate_action_summary(ctx: RunContext, action: PlateManagerAction) -> dict[st
     actions = first_payload(response, UiListActionsCapability.name).get("actions")
     if not isinstance(actions, list):
         raise RehearsalFailure("PlateManager action catalog is unavailable.")
+    summaries = (
+        AgentDtoJsonCodec.dataclass_from_json(UiActionSummary, row) for row in actions
+    )
     matches = [
         row
-        for row in actions
-        if isinstance(row, dict)
-        and row.get("widget_id") == PlateManagerWidgetIdentity.require_value()
-        and row.get("action_id") == action.value
+        for row in summaries
+        if row.identity.widget_id == PlateManagerWidgetIdentity.require_value()
+        and row.identity.action_id == action.value
     ]
     if len(matches) != 1:
         raise RehearsalFailure(
             f"Expected one exact PlateManager action {action.value!r}, got {len(matches)}."
         )
-    if matches[0].get("enabled") is not True:
+    if not matches[0].enabled:
         raise RehearsalFailure(f"PlateManager action {action.value!r} is disabled.")
     return matches[0]
 
@@ -2785,10 +2796,8 @@ def invoke_plate_action(ctx: RunContext, action: PlateManagerAction) -> dict[str
             {
                 "widget_id": PlateManagerWidgetIdentity.require_value(),
                 "action_id": action.value,
-                "target_scope_ids": summary.get("target_scope_ids") or [],
-                "observed_selection_revision_token": summary.get(
-                    "selection_revision_token"
-                ),
+                "target_scope_ids": list(summary.target_scope_ids),
+                "observed_selection_revision_token": summary.selection_revision_token,
                 "require_confirmation": False,
                 "connection": ui_connection_arguments(ctx),
             },

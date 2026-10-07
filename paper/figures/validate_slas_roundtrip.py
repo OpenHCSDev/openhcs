@@ -13,6 +13,8 @@ import shutil
 import time
 
 from openhcs.mcp.dev_client import McpDevClient
+from openhcs.agent.dto.ui_bridge import UiWindowCatalog
+from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
 from pyqt_reactive.services.function_list_editor_actions import FunctionListEditorAction
 
 
@@ -180,17 +182,19 @@ def main():
             action_kind="button",
         )
         for _ in range(30):
-            windows = call("openhcs_ui_list_windows")
+            windows = AgentDtoJsonCodec.dataclass_from_json(
+                UiWindowCatalog, call("openhcs_ui_list_windows")
+            )
             code_windows = [
                 window
-                for window in windows["windows"]
-                if window["title"] == "Edit Function Pattern" and window["visible"]
+                for window in windows.windows
+                if window.title == "Edit Function Pattern" and window.visible
             ]
             if code_windows:
                 break
             time.sleep(0.2)
         assert len(code_windows) == 1, code_windows
-        capture("code", code_windows[0]["window_id"])
+        capture("code", code_windows[0].window_id)
         receipt["verified"] = True
         receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
         print("Verified source -> existing widget -> source; original 99.8 restored")

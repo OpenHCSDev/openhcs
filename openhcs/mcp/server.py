@@ -301,43 +301,6 @@ MCP_SERVER_PROCESS_LIFECYCLE = McpProcessLifecycle.from_environment(
 )
 
 
-@dataclass(frozen=True, slots=True)
-class McpUiCatalogPayloadProjection:
-    """MCP-facing projection that exposes nested identity ids as flat fields."""
-
-    item_key: str
-
-    def project(self, result) -> dict:
-        payload = to_jsonable(result)
-        if not isinstance(payload, Mapping):
-            raise TypeError("UI catalog serialization did not produce a mapping")
-        return self.compact_payload(payload)
-
-    def compact_payload(self, payload: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
-        items = payload.get(self.item_key)
-        if not isinstance(items, list):
-            return dict(payload)
-        compact = dict(payload)
-        compact[self.item_key] = [
-            self.compact_item(item) if isinstance(item, Mapping) else item
-            for item in items
-        ]
-        return compact
-
-    @staticmethod
-    def compact_item(item: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
-        compact = dict(item)
-        identity = compact.pop("identity", None)
-        if not isinstance(identity, Mapping):
-            if identity is not None:
-                compact["identity"] = identity
-            return compact
-        for key, value in identity.items():
-            if isinstance(key, str) and value is not None:
-                compact.setdefault(key, value)
-        return compact
-
-
 def _mcp_server_current_source_mtime_ns() -> int | None:
     try:
         return MCP_SERVER_SOURCE_PATH.stat().st_mtime_ns
@@ -878,9 +841,7 @@ class UiListCodeDocumentsMcpToolBinding(McpUiConnectionToolBindingABC):
         ctx: OpenHCSAgentContext,
         connection: UiBridgeConnectionSpec,
     ) -> dict:
-        return McpUiCatalogPayloadProjection("documents").project(
-            ctx.ui_bridge_service.list_documents(connection)
-        )
+        return to_jsonable(ctx.ui_bridge_service.list_documents(connection))
 
 
 class UiListStateSurfacesMcpToolBinding(McpUiConnectionToolBindingABC):
@@ -892,9 +853,7 @@ class UiListStateSurfacesMcpToolBinding(McpUiConnectionToolBindingABC):
         ctx: OpenHCSAgentContext,
         connection: UiBridgeConnectionSpec,
     ) -> dict:
-        return McpUiCatalogPayloadProjection("surfaces").project(
-            ctx.ui_bridge_service.list_state_surfaces(connection)
-        )
+        return to_jsonable(ctx.ui_bridge_service.list_state_surfaces(connection))
 
 
 class UiListActionsMcpToolBinding(McpUiConnectionToolBindingABC):
@@ -906,9 +865,7 @@ class UiListActionsMcpToolBinding(McpUiConnectionToolBindingABC):
         ctx: OpenHCSAgentContext,
         connection: UiBridgeConnectionSpec,
     ) -> dict:
-        return McpUiCatalogPayloadProjection("actions").project(
-            ctx.ui_bridge_service.list_actions(connection)
-        )
+        return to_jsonable(ctx.ui_bridge_service.list_actions(connection))
 
 
 class UiListWindowsMcpToolBinding(McpUiConnectionToolBindingABC):
@@ -920,9 +877,7 @@ class UiListWindowsMcpToolBinding(McpUiConnectionToolBindingABC):
         ctx: OpenHCSAgentContext,
         connection: UiBridgeConnectionSpec,
     ) -> dict:
-        return McpUiCatalogPayloadProjection("windows").project(
-            ctx.ui_bridge_service.list_windows(connection)
-        )
+        return to_jsonable(ctx.ui_bridge_service.list_windows(connection))
 
 
 class McpUiRequestToolBindingABC(
