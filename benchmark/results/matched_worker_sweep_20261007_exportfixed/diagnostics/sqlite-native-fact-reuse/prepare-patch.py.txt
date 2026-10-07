@@ -1,0 +1,58 @@
+"""Prepare a reviewable patch; do not edit any authoritative source."""
+import ast,difflib
+from pathlib import Path
+artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002')
+out=Path(__file__).parent
+texts={}
+name='benchmark/native_measurement_facts.py';old=(artifact/name).read_text();new=old.replace('    source_commit: str | None = None,\n','    source_commit: str | None = None,\n    projection_producer=None,\n',1).replace('        "policy": _policy_identity(policy),\n','        "policy": _policy_identity(policy),\n        "projection_producer": _policy_identity(projection_producer),\n',1);texts[name]=(old,new)
+name='benchmark/matched_cellprofiler_batch.py';old=(artifact/name).read_text();new=old.replace('        execution_axis_id=execution_axis_id,\n    )\n    native_exports =','        execution_axis_id=execution_axis_id,\n        native_measurement_cache_root=native_measurement_cache_root,\n        native_reference_report_sha256=native_reference_report_sha256,\n        production_source_commit=production_source_commit,\n    )\n    native_exports =',1);assert new!=old;texts[name]=(old,new)
+name='benchmark/cellprofiler_export_equivalence.py';old=(artifact/name).read_text();new=old.replace('from openhcs.core.equivalence.comparison import (','from benchmark.native_measurement_facts import retained_native_measurement_snapshot\n\nfrom openhcs.core.equivalence.comparison import (',1)
+params='    native_measurement_cache_root: Path | None = None,\n    native_reference_report_sha256: str | None = None,\n    production_source_commit: str | None = None,\n'
+# Existing SQLite call chain, with no changes to parser or scientific checks.
+new=new.replace('    execution_axis_id: str | None = None,\n) -> RuntimeEquivalenceReport:', '    execution_axis_id: str | None = None,\n'+params+') -> RuntimeEquivalenceReport:')
+new=new.replace('            execution_axis_id=execution_axis_id,\n        ),','            execution_axis_id=execution_axis_id,\n            native_measurement_cache_root=native_measurement_cache_root,\n            native_reference_report_sha256=native_reference_report_sha256,\n            production_source_commit=production_source_commit,\n        ),',1)
+# Inspect the exporter dispatch AST so keywords go into its actual database call.
+tree=ast.parse(new)
+function=next(node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name=='_sqlite_export_equivalence')
+call=next(node for node in ast.walk(function) if isinstance(node,ast.Call) and isinstance(node.func,ast.Name) and node.func.id=='_sqlite_database_differences')
+lines=new.splitlines(keepends=True);insert_index=call.end_lineno-1
+lines[insert_index:insert_index]=['                native_measurement_cache_root=native_measurement_cache_root,\n','                native_reference_report_sha256=native_reference_report_sha256,\n','                production_source_commit=production_source_commit,\n'];new=''.join(lines)
+new=new.replace('    candidate_image_number_domain: tuple[int, ...] | None = None,\n) -> tuple[RuntimeEquivalenceDifference, ...]:','    candidate_image_number_domain: tuple[int, ...] | None = None,\n'+params+') -> tuple[RuntimeEquivalenceDifference, ...]:',1)
+new=new.replace('                reference_measurements, candidate_measurements, policy\n','                reference_measurements, candidate_measurements, policy,\n                reference_source_path=reference_path,\n                reference_subjects=reference_subjects,\n                native_measurement_cache_root=native_measurement_cache_root,\n                native_reference_report_sha256=native_reference_report_sha256,\n                production_source_commit=production_source_commit,\n',1)
+start=new.index('def _sqlite_measurement_cohort_differences(');end=new.index('\n\ndef _sqlite_tables(',start)
+new=new[:start]+'''def _sqlite_measurement_cohort_differences(
+    reference_tables: tuple[RuntimeTableSnapshot, ...],
+    candidate_tables: tuple[RuntimeTableSnapshot, ...],
+    policy: RuntimeEquivalencePolicy,
+    *,
+    reference_source_path: Path | None = None,
+    reference_subjects: Mapping[str, MeasurementSubject] | None = None,
+'''+params+''') -> tuple[RuntimeEquivalenceDifference, ...]:
+    if native_measurement_cache_root is not None and reference_source_path is None:
+        raise ValueError("SQLite native fact reuse requires its physical database.")
+    snapshots = (
+        retained_native_measurement_snapshot(
+            RuntimeOutputSnapshot(tables=reference_tables),
+            policy=policy,
+            source_table_paths=(
+                () if reference_source_path is None else (reference_source_path,)
+            ),
+            cache_root=native_measurement_cache_root,
+            reference_report_sha256=native_reference_report_sha256,
+            source_commit=production_source_commit,
+            projection_producer=(_sqlite_tables, reference_subjects),
+        ),
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot(tables=candidate_tables), policy=policy
+        ),
+    )
+    for snapshot in snapshots:
+        snapshot.required_relationship_correlations()
+    return runtime_measurement_equivalence(*snapshots, policy=policy).differences
+'''+new[end:];texts[name]=(old,new)
+patch=[]
+for name,(old,new) in texts.items():
+ ast.parse(new)
+ patch.extend(difflib.unified_diff(old.splitlines(keepends=True),new.splitlines(keepends=True),fromfile='a/'+name,tofile='b/'+name))
+(out/'sqlite-fact-reuse.patch').write_text(''.join(patch))
+print(out/'sqlite-fact-reuse.patch')

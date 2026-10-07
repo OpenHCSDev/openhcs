@@ -1,0 +1,14 @@
+{
+  "status": "UNAPPLIED_PATCH_PENDING_RECEIVING_VALIDATION",
+  "files": {
+    "README.md": "24f9dcec7d09479873a9dd149134a460a69ec43f3f8ec6bc70fcb94dc7b33e5c",
+    "findings.json": "7e109f54cb1fe809f040da61ab7fe732c605619f057f0048bfa49f09a2f56105",
+    "output-prevalence.json": "f6d6a5f3283c710bdab24a788051b716d0ba86d34f9a1069b3b92d024d90322e",
+    "prepare-patch.py.txt": "c7cd479535843f07f6c5d45777a94884d215c886f176cf33a06cbddcca0cad91",
+    "price-sqlite.py.txt": "b33aeb55af4d37d7442c53945126c319b0d41041c42eff3fa672f0c5e1028b80",
+    "qualify-sqlite.py.txt": "7271b627d5189ed372647c013a1f21eb04d5efdc6d3769edf867e1f6eabd38b7",
+    "sqlite-cache-proof.json": "13eb948688fb4b28470d05f5ba1d7bceaa7ea4052d9d958c1ef8f72fb7c56b52",
+    "sqlite-fact-reuse.patch": "4a800f17ca5a0784f03316df89539d1b51243d436d2deaef27f6b4cd99442353",
+    "sqlite-prices.json": "6a48004de175bd186aa280d77af40001d8bce0545cc11113d5a44ff587210e45"
+  }
+}

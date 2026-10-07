@@ -1,0 +1,45 @@
+"""Bounded genuine saved SQLite axis replay; outside all pipeline timings."""
+import ast,gzip,hashlib,json,os,pickle,sys,time
+from pathlib import Path
+production=Path('/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source')
+artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002')
+sys.path.insert(0,str(production))
+import benchmark
+benchmark.__path__.insert(0,str(artifact/'benchmark'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.cellprofiler_export_equivalence import _sqlite_tables,_declared_sqlite_table_subjects
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot,runtime_measurement_equivalence
+from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
+from openhcs.interop.cellprofiler.analyst_export import CellProfilerRelationshipProjectionName
+root=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final')
+with gzip.open(root/'candidate_evidence/0/observation.pkl','rb') as stream:observation=pickle.load(stream)
+exports=observation.exports
+candidate=next(path for path in exports.output_files if path.suffix=='.db')
+native_root=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001')
+native=next(native_root.rglob('*.db'))
+policy=_strict_cellprofiler_runtime_equivalence_policy()
+subjects=[_declared_sqlite_table_subjects(tuple(native_root.rglob('*.properties'))),_declared_sqlite_table_subjects(tuple(path for path in exports.output_files if path.suffix=='.properties'))]
+timings={};facts=[];dimensions={}
+for label,path,subject_map in zip(('native','candidate'),(native,candidate),subjects):
+ subject_map=subject_map[path.name]
+ start=time.perf_counter();tables=_sqlite_tables(path,subject_map,policy);timings[label+'_read_normalize_seconds']=time.perf_counter()-start
+ if label=='candidate':
+  numbers=exports.outputs.image_numbers_by_export_path[path]['W001'];domain=tuple(n for ns in exports.outputs.image_numbers_by_export_path[path].values() for n in ns)
+  offset=RuntimeImageNumberOffset.from_table_rows(('image_number',),tuple((str(n),) for n in numbers))
+  start=time.perf_counter();tables={name:(schema,table.for_image_numbers(numbers,dialect=policy.measurement_dialect,image_identity_fields=CellProfilerRelationshipProjectionName.image_identity_fields(name),image_number_domain=domain,image_number_offset=offset if name not in subject_map else None)) for name,(schema,table) in tables.items()};timings['candidate_axis_filter_seconds']=time.perf_counter()-start
+ measurements=tuple(table for name,(_,table) in tables.items() if name in subject_map)
+ dimensions[label]=[{'table':str(t.path),'rows':len(t.rows),'columns':len(t.header)} for t in measurements]
+ start=time.perf_counter();snapshot=RuntimeMeasurementSnapshot.from_output_snapshot(RuntimeOutputSnapshot(tables=measurements),policy=policy);timings[label+'_semantic_projection_seconds']=time.perf_counter()-start
+ facts.append(snapshot)
+ print(label,timings,flush=True)
+ del tables,measurements
+start=time.perf_counter();comparison=runtime_measurement_equivalence(*facts,policy=policy);timings['equality_seconds']=time.perf_counter()-start
+assert not comparison.differences
+source_files=[artifact/'benchmark/cellprofiler_export_equivalence.py',production/'openhcs/core/equivalence/outputs.py',production/'openhcs/core/runtime_equivalence.py',production/'openhcs/core/equivalence/tables.py',production/'openhcs/core/equivalence/measurement_rows.py']
+inventory=[]
+for path in source_files:
+ tree=ast.parse(path.read_text());inventory.append({'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'definitions':[{'name':node.name,'line':node.lineno} for node in ast.walk(tree) if isinstance(node,(ast.FunctionDef,ast.ClassDef))]})
+result={'scope':'DIAGNOSTIC_ONLY CPU0 saved actual advanced8 rep0 W001; no science execution','timings':timings,'dimensions':dimensions,'differences':[],'source_database_paths':[str(native),str(candidate)],'native_relationship_feature_count':len(facts[0].correlated_relationships or {}),'candidate_relationship_feature_count':len(facts[1].correlated_relationships or {}),'cpu_affinity':sorted(os.sched_getaffinity(0)),'owner_inventory':inventory}
+(Path(__file__).parent/'sqlite-prices.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(timings),flush=True)

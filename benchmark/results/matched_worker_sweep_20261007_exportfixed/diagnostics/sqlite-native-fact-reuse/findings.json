@@ -1,0 +1,41 @@
+{
+  "status": "READY_FOR_POST_CAPTURE_REVIEW_NOT_DEPLOYED",
+  "scope": "Read-only owner audit and bounded saved-artifact replay; current scientific capture and harness unchanged",
+  "patch_path": "/home/ts/.local/state/openhcs-maintenance/20261007/candidate-projection-diagnostic-v1/sqlite-fact-reuse.patch",
+  "patch_sha256": "4a800f17ca5a0784f03316df89539d1b51243d436d2deaef27f6b4cd99442353",
+  "applied_file_preimage_sha256": {
+    "benchmark/native_measurement_facts.py": "f84ad9886ae7fafd3cf5679ce71d12e065db990a8fff9fddb164a15c22f2e39b",
+    "benchmark/matched_cellprofiler_batch.py": "77bada3feccbef0456c0d63bfa22cafa665de5cbe88f645a0c6de14748b16e1b",
+    "benchmark/cellprofiler_export_equivalence.py": "8cfc16945a9a0c5aad971199005799214a01ff2565c7ff8ee18631ea2ecba77c"
+  },
+  "benchmark_source_head": "8b8086c81a2172e010d5547910a8906ece6aeeb5",
+  "dominant_path": "advanced SQLite export comparator projects retained native facts anew for every assignment/repetition; existing CSV native fact cache has no SQLite consumer",
+  "invalidated_premise": "Fresh candidate semantic facts are already computed only after exporter-admitted per-axis row filtering. Full-batch semantic duplication is not the cause. Whole-batch read/filter savings are not dominant.",
+  "actual_sqlite_workflow_count": 3,
+  "actual_cohort_count": 30,
+  "actual_sqlite_workflows": [
+    "cp_tutorial_advanced_segmentation_final",
+    "cp_tutorial_quality_control",
+    "cp_tutorial_translocation_final"
+  ],
+  "advanced_comparator_fresh_seconds": 20.710061687976122,
+  "advanced_comparator_hit_seconds": 10.931361358147115,
+  "advanced_comparator_saved_fraction": 0.472171472840486,
+  "five_future_modes_total_assignments": 64,
+  "observations_per_assignment": 4,
+  "advanced_only_future_comparison_saving_minutes_extrapolated": 41.722454740603766,
+  "support_limits": [
+    "~47% saving is one genuine advanced comparator replay, not half full-suite qualification or a pipeline execution speedup.",
+    "~42min future-five-mode estimate extrapolates one saved axis, excludes cache miss/load variability and is not an observed optimized cohort.",
+    "Scratch prototype preserves full original reports, seven directed relationship groups,16 compared files, fresh candidate facts and all schema/cardinality/property/workspace checks.",
+    "Final text patch is syntax-qualified only; isolated replay qualified equivalent consumer wiring, not deployed production code.",
+    "Current live protocol is not restarted or revised. Post-capture implementation is our source-freeze/payoff decision; user authorized completing the fix, without specifying that timing.",
+    "Text patch is AST syntax-qualified; not executed. Actual three-file patch receiving against D06 core remains pending after capture. Prior isolated proof used core67 against genuine saved D06 candidate outputs and native67 references."
+  ],
+  "nominal_owner": "RuntimeMeasurementSnapshot via retained_native_measurement_snapshot; no second cache or outcome reuse.",
+  "minimal_wiring": "_saved_output_equivalence forwards existing cache/report/source fields through existing SQLite comparator chain. _sqlite_measurement_cohort_differences restores native snapshot through same helper, candidate snapshot remains fresh.",
+  "identity_scope": "Existing _policy_identity derives actual _sqlite_tables callable/module/source state plus actual reference MeasurementSubject declarations (CPA-derived), alongside DB file SHA, genuine retained reportSHA, sourceHEAD,policy state and existing projection module identities. No manual source roster.",
+  "remaining_candidate_cost": "Per-selected-cell materialization, alias ownership dedupe, object identity correlation, explicit keys and aggregate completion are real fresh comparison obligations. Static row planning/columnar specialization may be possible, but no saved replay here demonstrates>=50% total qualification saving; do not pursue speculative new authority.",
+  "comparator_core_source_head": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "saved_candidate_capture_source_head": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922"
+}
