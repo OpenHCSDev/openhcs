@@ -1,0 +1,729 @@
+{
+  "case": "ExampleVitra",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "3d1335d9aa58a4cefb13fe41214d60a0f3491ab5fa6fe520fbd038ce50565b36",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e251f313f45a568405e3987e77e4f89e18d934e1",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "Channel 1-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 1-01-A-01-00.tif",
+      "size_bytes": 1426912,
+      "sha256": "0e8a20a42e86c5160188f2c1f897a370dde1b3280f67b1078552b027dac95a0e"
+    },
+    {
+      "path": "Channel 2-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 2-01-A-01-00.tif",
+      "size_bytes": 1426120,
+      "sha256": "b402b814586eeb5fa0f7bd211153652fba495b23f052dd87fea497a26ce6f617"
+    },
+    {
+      "path": "VitraChannel1ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel1ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "101cc785bc0d7bf66f7abfe96f155a154c23f271755f4d3a5c2a92457dc96227"
+    },
+    {
+      "path": "VitraChannel2ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel2ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "8df277e136903f2456b1f02c402f6a661342fd0831353aae523c5e2618445b7e"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleVitra/native_report.json",
+  "native_reference_report_sha256": "804ba4e4d0d893bc25f566991f5d7ebcdb7c2c725b36ebad36797ad688aa07be",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/ExampleVitra.cppipe",
+      "sha256": "3d1335d9aa58a4cefb13fe41214d60a0f3491ab5fa6fe520fbd038ce50565b36"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Image.csv",
+      "sha256": "34e280d97fdabfb63add8c5df342b6746ea36233dbaa4cb933b5d5442a1c8076"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Image.csv",
+      "sha256": "bd8534ded34f020d129b699d229f3f96aafe827e6d04be8815373048eedd759b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Image.csv",
+      "sha256": "e00b246db7d6960cb2196f87aead9b1b87e55eb552811ad1bb25a40539a82a57"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Image.csv",
+      "sha256": "14e1461746b3c319ab15b3e0ae12a105e94b97e85470556e109d6478ed3e9d43"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleVitra/native_report.json",
+      "sha256": "804ba4e4d0d893bc25f566991f5d7ebcdb7c2c725b36ebad36797ad688aa07be"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleVitra/native_request.json",
+      "sha256": "04cc1b6f4bec2d4d55bc2f17538d2c8c07b90a2ab9e32b5c90cf90a1c974b937"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleVitra/pilot_provenance.json",
+      "sha256": "6bea45fd42a515f665418834e4cd81a2a2dd433545f5639d3b2906b818467add"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "Channel 1-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 1-01-A-01-00.tif",
+      "size_bytes": 1426912,
+      "sha256": "0e8a20a42e86c5160188f2c1f897a370dde1b3280f67b1078552b027dac95a0e"
+    },
+    {
+      "path": "Channel 2-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 2-01-A-01-00.tif",
+      "size_bytes": 1426120,
+      "sha256": "b402b814586eeb5fa0f7bd211153652fba495b23f052dd87fea497a26ce6f617"
+    },
+    {
+      "path": "VitraChannel1ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel1ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "101cc785bc0d7bf66f7abfe96f155a154c23f271755f4d3a5c2a92457dc96227"
+    },
+    {
+      "path": "VitraChannel2ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel2ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "8df277e136903f2456b1f02c402f6a661342fd0831353aae523c5e2618445b7e"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.7950828513130546,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/ExampleVitra.cppipe",
+      "input_dir": "/tmp/openhcsnativecellprofiler/hhcfpklghddnndnj/input",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native",
+      "expected_image_sets": null,
+      "repetitions": 3,
+      "file_list_path": null,
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native_report.json",
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": []
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/-1",
+        "image_set_count": 1,
+        "invocation_seconds": 3.443331778049469,
+        "pre_pipeline_seconds": 0.0017879782244563103,
+        "pipeline_execution_seconds": 3.4415437998250127,
+        "invocation_started_monotonic_seconds": 4031906.654916952,
+        "pipeline_started_monotonic_seconds": 4031906.65670493,
+        "completed_monotonic_seconds": 4031910.09824873,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/0",
+        "image_set_count": 1,
+        "invocation_seconds": 2.8754307022318244,
+        "pre_pipeline_seconds": 0.0007326998747885227,
+        "pipeline_execution_seconds": 2.874698002357036,
+        "invocation_started_monotonic_seconds": 4031910.098261023,
+        "pipeline_started_monotonic_seconds": 4031910.098993723,
+        "completed_monotonic_seconds": 4031912.973691725,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/1",
+        "image_set_count": 1,
+        "invocation_seconds": 3.377496301662177,
+        "pre_pipeline_seconds": 0.0007503428496420383,
+        "pipeline_execution_seconds": 3.376745958812535,
+        "invocation_started_monotonic_seconds": 4031912.973703347,
+        "pipeline_started_monotonic_seconds": 4031912.97445369,
+        "completed_monotonic_seconds": 4031916.351199649,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleVitra/native/2",
+        "image_set_count": 1,
+        "invocation_seconds": 2.9673558087088168,
+        "pre_pipeline_seconds": 0.0007260567508637905,
+        "pipeline_execution_seconds": 2.966629751957953,
+        "invocation_started_monotonic_seconds": 4031916.351210119,
+        "pipeline_started_monotonic_seconds": 4031916.351936176,
+        "completed_monotonic_seconds": 4031919.318565928,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  "native_shards": [],
+  "native_shard_equivalence": [],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "ed0e7be5-bef1-4d02-ad75-941c19b86b1f",
+      "compile_artifact_id": "f90b383b-1bc2-4c57-a614-f17228ff2a1b",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.8634636402130127,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791333824.3603408,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791333825.2238045,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791333824.3318934,
+      "first_axis_started_at_epoch_seconds": 1791333824.3603408,
+      "server_job_completed_at_epoch_seconds": 1791333825.3739486,
+      "server_job_seconds": 1.0420551300048828,
+      "execution_seconds": 0.8634636402130127,
+      "compile_seconds": 0.1741783618927002,
+      "total_seconds": 1.3136625331826508,
+      "first_axis_through_server_completion_seconds": 1.0136077404022217,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 5,
+      "candidate_output_file_count": 7,
+      "declared_output_file_count": 5,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+        },
+        {
+          "path": "Channel 1-01-A-01-00_Outlined.tiff",
+          "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+        },
+        {
+          "path": "Cytoplasm.csv",
+          "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "34e280d97fdabfb63add8c5df342b6746ea36233dbaa4cb933b5d5442a1c8076"
+        },
+        {
+          "path": "Nuclei.csv",
+          "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_Outlined.tiff",
+          "sha256": "26d2e5585c7084a53fede761f08e9bb04bc11baedba02b7aaa082c2ca9d5f22a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "34e3dd5b60042e1880817c760810c108f8e431bf7a310e3bd269ed605492eb15"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "0bb048fbaae10cc289d6791231b7f9f63e391c8630c2cf263d86e9e85b74ab7d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+          "sha256": "b9b49f071c5beafea0a52a6d0aa7538ca99f5b16e8b02fa92f9f0438641cf2e4"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "49ac91e88881a52042f9cc111cecb67656a847135a45c6db6c930fdcbacd1571"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+          "sha256": "9a18dd2b612853681766f6cdad52ccca66a37eee7a837b3bcf96aaf6d4116f39"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleVitra/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "13a9af5e-303e-4f33-91db-48caa32c5645",
+      "compile_artifact_id": "e7a22715-0d44-4d1a-8b91-c2873dc517c5",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.8193864822387695,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791333830.59332,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791333831.4127064,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791333830.564897,
+      "first_axis_started_at_epoch_seconds": 1791333830.59332,
+      "server_job_completed_at_epoch_seconds": 1791333831.5594146,
+      "server_job_seconds": 0.9945175647735596,
+      "execution_seconds": 0.8193864822387695,
+      "compile_seconds": 0.1680159568786621,
+      "total_seconds": 1.2637806721031666,
+      "first_axis_through_server_completion_seconds": 0.9660947322845459,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 5,
+      "candidate_output_file_count": 7,
+      "declared_output_file_count": 5,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+        },
+        {
+          "path": "Channel 1-01-A-01-00_Outlined.tiff",
+          "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+        },
+        {
+          "path": "Cytoplasm.csv",
+          "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "bd8534ded34f020d129b699d229f3f96aafe827e6d04be8815373048eedd759b"
+        },
+        {
+          "path": "Nuclei.csv",
+          "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_Outlined.tiff",
+          "sha256": "26d2e5585c7084a53fede761f08e9bb04bc11baedba02b7aaa082c2ca9d5f22a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "34e3dd5b60042e1880817c760810c108f8e431bf7a310e3bd269ed605492eb15"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "0bb048fbaae10cc289d6791231b7f9f63e391c8630c2cf263d86e9e85b74ab7d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+          "sha256": "b9b49f071c5beafea0a52a6d0aa7538ca99f5b16e8b02fa92f9f0438641cf2e4"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "49ac91e88881a52042f9cc111cecb67656a847135a45c6db6c930fdcbacd1571"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+          "sha256": "9a18dd2b612853681766f6cdad52ccca66a37eee7a837b3bcf96aaf6d4116f39"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleVitra/candidate_evidence/0/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 1,
+      "execution_id": "8a653140-e753-41a0-b8b9-98cf91e8b655",
+      "compile_artifact_id": "bb8c2998-6cb0-40d5-8fbf-a0cc7296b021",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.8106875419616699,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791333836.2647161,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791333837.0754037,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791333836.2348773,
+      "first_axis_started_at_epoch_seconds": 1791333836.2647161,
+      "server_job_completed_at_epoch_seconds": 1791333837.2221422,
+      "server_job_seconds": 0.98726487159729,
+      "execution_seconds": 0.8106875419616699,
+      "compile_seconds": 0.16748952865600586,
+      "total_seconds": 1.258656594902277,
+      "first_axis_through_server_completion_seconds": 0.9574260711669922,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 5,
+      "candidate_output_file_count": 7,
+      "declared_output_file_count": 5,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+        },
+        {
+          "path": "Channel 1-01-A-01-00_Outlined.tiff",
+          "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+        },
+        {
+          "path": "Cytoplasm.csv",
+          "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "e00b246db7d6960cb2196f87aead9b1b87e55eb552811ad1bb25a40539a82a57"
+        },
+        {
+          "path": "Nuclei.csv",
+          "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_Outlined.tiff",
+          "sha256": "26d2e5585c7084a53fede761f08e9bb04bc11baedba02b7aaa082c2ca9d5f22a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "34e3dd5b60042e1880817c760810c108f8e431bf7a310e3bd269ed605492eb15"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "0bb048fbaae10cc289d6791231b7f9f63e391c8630c2cf263d86e9e85b74ab7d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+          "sha256": "b9b49f071c5beafea0a52a6d0aa7538ca99f5b16e8b02fa92f9f0438641cf2e4"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "49ac91e88881a52042f9cc111cecb67656a847135a45c6db6c930fdcbacd1571"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+          "sha256": "9a18dd2b612853681766f6cdad52ccca66a37eee7a837b3bcf96aaf6d4116f39"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleVitra/candidate_evidence/1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 2,
+      "execution_id": "bcd4487b-5885-4ce4-b6d8-b0ace4b5c596",
+      "compile_artifact_id": "c7a22a66-e080-449c-af14-5f185e448a18",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.8284094333648682,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791333842.25291,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791333843.0813193,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791333842.133423,
+      "first_axis_started_at_epoch_seconds": 1791333842.25291,
+      "server_job_completed_at_epoch_seconds": 1791333843.2319357,
+      "server_job_seconds": 1.0985126495361328,
+      "execution_seconds": 0.8284094333648682,
+      "compile_seconds": 0.16816091537475586,
+      "total_seconds": 1.3688371456228197,
+      "first_axis_through_server_completion_seconds": 0.9790258407592773,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 5,
+      "candidate_output_file_count": 7,
+      "declared_output_file_count": 5,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+        },
+        {
+          "path": "Channel 1-01-A-01-00_Outlined.tiff",
+          "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+        },
+        {
+          "path": "Cytoplasm.csv",
+          "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "14e1461746b3c319ab15b3e0ae12a105e94b97e85470556e109d6478ed3e9d43"
+        },
+        {
+          "path": "Nuclei.csv",
+          "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_Outlined.tiff",
+          "sha256": "26d2e5585c7084a53fede761f08e9bb04bc11baedba02b7aaa082c2ca9d5f22a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "34e3dd5b60042e1880817c760810c108f8e431bf7a310e3bd269ed605492eb15"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "0bb048fbaae10cc289d6791231b7f9f63e391c8630c2cf263d86e9e85b74ab7d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+          "sha256": "b9b49f071c5beafea0a52a6d0aa7538ca99f5b16e8b02fa92f9f0438641cf2e4"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "49ac91e88881a52042f9cc111cecb67656a847135a45c6db6c930fdcbacd1571"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+          "sha256": "9a18dd2b612853681766f6cdad52ccca66a37eee7a837b3bcf96aaf6d4116f39"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleVitra/candidate_evidence/2/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "Observed complete selected batches: native pipeline-start through post-run and full invocation are separate; OpenHCS worker execution and complete client operation are separate. Repeated assignments are independently executed source copies, not projected timings or additional genuine wells. Native timings and output roots were reused from genuine retained observations; their original source and report SHA are recorded separately."
+}

@@ -1,0 +1,4 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+cp4_supplement_combine_objects,1,1,worker_0,A01,CombineObjects,1791333752.5793846,1791333752.60855,0.02916550636291504
+cp4_supplement_combine_objects,1,1,worker_0,A01,ConvertObjectsToImage,1791333752.6086328,1791333752.613799,0.005166292190551758
+cp4_supplement_combine_objects,1,1,worker_0,A01,SaveImages,1791333752.6138775,1791333752.6212456,0.0073680877685546875

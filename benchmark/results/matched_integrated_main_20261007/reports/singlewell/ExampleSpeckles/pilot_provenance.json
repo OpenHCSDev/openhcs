@@ -1,0 +1,131 @@
+{
+  "case": "ExampleSpeckles",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "6f1f0a6c2a26c99ade3a258b8dfe1cbbd741757400f632960f66bded1a7fb11c",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e251f313f45a568405e3987e77e4f89e18d934e1",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "1-162hrh2ax2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleSpeckles/images/1-162hrh2ax2.tif",
+      "size_bytes": 2402924,
+      "sha256": "24cc92ed76482639161711b1ae7fc57779d7cdb723be887b4d6a887b04dda680"
+    },
+    {
+      "path": "1-162hrhoe2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleSpeckles/images/1-162hrhoe2.tif",
+      "size_bytes": 2402924,
+      "sha256": "ea1874927a1448b6973d1689a694d29abaad62062fae83a8a58f8d790ad6d7c1"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleSpeckles/native_report.json",
+  "native_reference_report_sha256": "74ce0ebbe37a7662fd03691d3d01cc27fbdc0cf0aefa581c557a771b6bd9c41f",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/-1/Image.csv",
+      "sha256": "5dd5e58fb1bc8eebf89bfe3bb49de9daeaf50fed38e55dac048228e7d0f7d046"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/-1/Nuclei.csv",
+      "sha256": "15af7cac08d651c19b3e3f409b2b0d7fc4f96011c9b53394aa9a35969a8936a6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/-1/h2ax.csv",
+      "sha256": "0f54fc72ccdeb7e1a68bab9dc3a8d9d49788cdf81dbbc109ed119e589c09538a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/0/Image.csv",
+      "sha256": "35cad85ee9fa6bbe51cd4a5068d3bf1da9346251bc6ea4397ad0544abf3f3eb3"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/0/Nuclei.csv",
+      "sha256": "15af7cac08d651c19b3e3f409b2b0d7fc4f96011c9b53394aa9a35969a8936a6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/0/h2ax.csv",
+      "sha256": "0f54fc72ccdeb7e1a68bab9dc3a8d9d49788cdf81dbbc109ed119e589c09538a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/1/Image.csv",
+      "sha256": "7d46f8e5265efb33b34fa86bd2d8c47644cf376b512f171fabb90baf5afabfa8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/1/Nuclei.csv",
+      "sha256": "15af7cac08d651c19b3e3f409b2b0d7fc4f96011c9b53394aa9a35969a8936a6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/1/h2ax.csv",
+      "sha256": "0f54fc72ccdeb7e1a68bab9dc3a8d9d49788cdf81dbbc109ed119e589c09538a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/2/Image.csv",
+      "sha256": "ed2df7e58293c3c49c8fb7f5d7c3c8441c9616e9b05e0a3f5a46572f17b07273"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/2/Nuclei.csv",
+      "sha256": "15af7cac08d651c19b3e3f409b2b0d7fc4f96011c9b53394aa9a35969a8936a6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native/2/h2ax.csv",
+      "sha256": "0f54fc72ccdeb7e1a68bab9dc3a8d9d49788cdf81dbbc109ed119e589c09538a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "1adc0f16f42239d43fb944773e6b813c3c5596031b0f5977ec6ba241700506f5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleSpeckles/native_preparation/native_cellprofiler_headless/ExampleSpeckles.cppipe",
+      "sha256": "2dbe55a93a6356f495c954e4492e2d436d96f11f3b3074d5ed9f8df12f3c240a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleSpeckles/native_report.json",
+      "sha256": "74ce0ebbe37a7662fd03691d3d01cc27fbdc0cf0aefa581c557a771b6bd9c41f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleSpeckles/native_request.json",
+      "sha256": "355150b5486ad0a70deb963930a7b2809c2041a2b9c65c758884cee9ca095c29"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleSpeckles/pilot_provenance.json",
+      "sha256": "29c0851cfeeb54453ca448f9fd14fb74fc4191a8b47c528c95972dd50982d9e2"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "1-162hrh2ax2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleSpeckles/images/1-162hrh2ax2.tif",
+      "size_bytes": 2402924,
+      "sha256": "24cc92ed76482639161711b1ae7fc57779d7cdb723be887b4d6a887b04dda680"
+    },
+    {
+      "path": "1-162hrhoe2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleSpeckles/images/1-162hrhoe2.tif",
+      "size_bytes": 2402924,
+      "sha256": "ea1874927a1448b6973d1689a694d29abaad62062fae83a8a58f8d790ad6d7c1"
+    }
+  ]
+}

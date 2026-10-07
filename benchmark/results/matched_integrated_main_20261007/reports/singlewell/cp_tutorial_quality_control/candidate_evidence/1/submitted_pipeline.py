@@ -1,0 +1,579 @@
+# OpenHCS pipeline
+
+from openhcs.constants.constants import (
+    GroupBy,
+    Microscope,
+    VariableComponents,
+)
+from openhcs.constants.input_source import InputSource
+from openhcs.core.config import (
+    LazyAnalysisConsolidationConfig,
+    LazyCompilationDebugConfig,
+    LazyDtypeConfig,
+    LazyFijiDisplayConfig,
+    LazyFijiStreamingConfig,
+    LazyNapariDisplayConfig,
+    LazyNapariStreamingConfig,
+    LazyPathPlanningConfig,
+    LazyPlateMetadataConfig,
+    LazyProcessingConfig,
+    LazySequentialProcessingConfig,
+    LazyStepMaterializationConfig,
+    LazyStepWellFilterConfig,
+    LazyStreamingDefaults,
+    LazyTiffConfig,
+    LazyVFSConfig,
+    LazyWellFilterConfig,
+    LazyZarrConfig,
+    PipelineConfig,
+)
+from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source_bindings import (
+    LazySourceBindingsConfig,
+    LazyStepSourceBindingsConfig,
+    MetadataExtractionRule,
+    MetadataSource,
+    NamedSourceBinding,
+    SourceBindingMatchDimension,
+    SourceBindingMatchField,
+    SourceBindingMatchMethod,
+    SourceBindingMatchPlan,
+    SourceBindingOrigin,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceSelector,
+)
+from openhcs.core.source_metadata import (
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.interop.cellprofiler.analyst_export import (
+    CPAImageChannelSpec,
+    CellProfilerObjectTableMode,
+)
+from openhcs.interop.cellprofiler.workspace_export import (
+    CPAHistogramWorkspacePanel,
+    CPAImageWorkspaceAxis,
+    CPAIndexWorkspaceAxis,
+    CPAScatterWorkspacePanel,
+)
+from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerOtsuMethod
+from openhcs.processing.func_registry import get_function
+from pathlib import Path
+
+pipeline_config = PipelineConfig(
+    materialization_results_path=Path('results'),
+    materialize_runtime_artifacts=False,
+    microscope=Microscope.AUTO,
+    auto_add_output_plate_to_plate_manager=False,
+    napari_display_config=LazyNapariDisplayConfig(),
+    fiji_display_config=LazyFijiDisplayConfig(),
+    well_filter_config=LazyWellFilterConfig(
+        well_filter=[
+            'A01'
+        ]
+    ),
+    zarr_config=LazyZarrConfig(),
+    tiff_config=LazyTiffConfig(),
+    vfs_config=LazyVFSConfig(),
+    dtype_config=LazyDtypeConfig(),
+    processing_config=LazyProcessingConfig(
+        variable_components=[
+            VariableComponents.SITE
+        ],
+        group_by=GroupBy.CHANNEL,
+        input_source=InputSource.PREVIOUS_STEP
+    ),
+    source_bindings_config=LazySourceBindingsConfig(
+        metadata_rules=(
+            MetadataExtractionRule(
+                source=MetadataSource.FILE_NAME,
+                pattern='_(?P<Well>[A-P][0-9]{2})_s(?P<Site>[0-9])_w(?P<ChannelNumber>[0-9])'
+            ),
+            MetadataExtractionRule(
+                source=MetadataSource.FOLDER_NAME,
+                pattern='(?P<Plate>[0-9]{5})'
+            )
+        ),
+        match_plan=SourceBindingMatchPlan(
+            method=SourceBindingMatchMethod.METADATA,
+            dimensions=(
+                SourceBindingMatchDimension(
+                    fields=(
+                        SourceBindingMatchField(
+                            alias='OrigER',
+                            metadata_field='Plate'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigSyto',
+                            metadata_field='Plate'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigPh_golgi',
+                            metadata_field='Plate'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigMito',
+                            metadata_field='Plate'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigHoechst',
+                            metadata_field='Plate'
+                        )
+                    )
+                ),
+                SourceBindingMatchDimension(
+                    fields=(
+                        SourceBindingMatchField(
+                            alias='OrigER',
+                            metadata_field='Well'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigPh_golgi',
+                            metadata_field='Well'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigSyto',
+                            metadata_field='Well'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigHoechst',
+                            metadata_field='Well'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigMito',
+                            metadata_field='Well'
+                        )
+                    )
+                ),
+                SourceBindingMatchDimension(
+                    fields=(
+                        SourceBindingMatchField(
+                            alias='OrigER',
+                            metadata_field='Site'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigPh_golgi',
+                            metadata_field='Site'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigSyto',
+                            metadata_field='Site'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigHoechst',
+                            metadata_field='Site'
+                        ),
+                        SourceBindingMatchField(
+                            alias='OrigMito',
+                            metadata_field='Site'
+                        )
+                    )
+                )
+            )
+        ),
+        metadata_fields=(
+            FieldSpec(
+                name='FileLocation',
+                dtype=str,
+                required=False
+            ),
+            FieldSpec(
+                name='Frame',
+                dtype=str,
+                required=False
+            ),
+            FieldSpec(
+                name='Series',
+                dtype=str,
+                required=False
+            ),
+            FieldSpec(
+                name='Well',
+                dtype=str,
+                required=False
+            ),
+            FieldSpec(
+                name='Site',
+                dtype=str,
+                required=False
+            ),
+            FieldSpec(
+                name='ChannelNumber',
+                dtype=str,
+                required=False
+            ),
+            FieldSpec(
+                name='Plate',
+                dtype=str,
+                required=False
+            )
+        ),
+        source_filters=(
+            SourceFilterClause(
+                subject=SourceFilterSubject.EXTENSION,
+                match_type=SourceFilterMatchType.IS_IMAGE
+            ),
+            SourceFilterClause(
+                subject=SourceFilterSubject.FILE,
+                match_type=SourceFilterMatchType.CONTAINS,
+                value='_s1_',
+                any_group=0
+            ),
+            SourceFilterClause(
+                subject=SourceFilterSubject.FILE,
+                match_type=SourceFilterMatchType.CONTAINS,
+                value='_s2_',
+                any_group=0
+            )
+        ),
+        bindings=(
+            NamedSourceBinding(
+                alias='OrigER',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.CONTAINS,
+                            value='_w2'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                load_as_monochrome=True
+            ),
+            NamedSourceBinding(
+                alias='OrigHoechst',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.CONTAINS,
+                            value='_w1'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                load_as_monochrome=True
+            ),
+            NamedSourceBinding(
+                alias='OrigMito',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.CONTAINS,
+                            value='_w5'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                load_as_monochrome=True
+            ),
+            NamedSourceBinding(
+                alias='OrigPh_golgi',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.CONTAINS,
+                            value='_w4'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                load_as_monochrome=True
+            ),
+            NamedSourceBinding(
+                alias='OrigSyto',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.CONTAINS,
+                            value='_w3'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                load_as_monochrome=True
+            )
+        ),
+        image_plane_sources=(),
+        imported_metadata_tables=(),
+        source_stack_components=(),
+        source_spatial_domain=SourceSpatialDomain(),
+        grouping_metadata_fields=(),
+        source_voxel_spacing=SourceVoxelSpacing(
+            values_zyx=(
+                1.0,
+                1.0,
+                1.0
+            ),
+            unit=SourceVoxelSpacingUnit.RELATIVE
+        )
+    ),
+    step_source_bindings_config=LazyStepSourceBindingsConfig(),
+    sequential_processing_config=LazySequentialProcessingConfig(),
+    analysis_consolidation_config=LazyAnalysisConsolidationConfig(),
+    plate_metadata_config=LazyPlateMetadataConfig(),
+    path_planning_config=LazyPathPlanningConfig(
+        well_filter=0,
+        output_dir_suffix='_matched_pilot',
+        global_output_folder=Path('/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/cp_tutorial_quality_control/candidate/1')
+    ),
+    step_well_filter_config=LazyStepWellFilterConfig(),
+    step_materialization_config=LazyStepMaterializationConfig(),
+    streaming_defaults=LazyStreamingDefaults(),
+    napari_streaming_config=LazyNapariStreamingConfig(),
+    fiji_streaming_config=LazyFijiStreamingConfig(),
+    compilation_debug_config=LazyCompilationDebugConfig()
+)
+
+pipeline_steps = [
+    FunctionStep(
+        func=[
+            (get_function('openhcs:cellprofiler_measure_image_quality'), {
+                    'calculate_threshold': False,
+                    'blur_scales': (
+                        20,
+                        10,
+                        5,
+                        2
+                    )
+                }),
+            (get_function('openhcs:cellprofiler_measure_image_quality'), {
+                    'include_scaling': False,
+                    'calculate_blur': False,
+                    'calculate_saturation': False,
+                    'calculate_intensity': False,
+                    'select_images_to_measure': 'OrigHoechst'
+                }),
+            (get_function('openhcs:cellprofiler_measure_image_quality'), {
+                    'include_scaling': False,
+                    'calculate_blur': False,
+                    'calculate_saturation': False,
+                    'calculate_intensity': False,
+                    'otsu_class_count': CellProfilerOtsuMethod.THREE_CLASS,
+                    'select_images_to_measure': 'OrigPh_golgi'
+                })
+        ],
+        name='MeasureImageQuality',
+        processing_config=LazyProcessingConfig(
+            input_source=InputSource.PIPELINE_START
+        )
+    ),
+    FunctionStep(
+        func=(get_function('openhcs:cellprofiler_export_to_database'), {
+                'sqlite_file': 'BBBC022QC.db',
+                'experiment_name': 'BBBC022QC',
+                'add_table_prefix': True,
+                'table_prefix': 'BBBC022QC_',
+                'object_table_mode': CellProfilerObjectTableMode.COMBINED,
+                'wants_workspace_file': True,
+                'workspace_panels': (
+                    CPAScatterWorkspacePanel(
+                        x=CPAIndexWorkspaceAxis(
+                            object_name='None',
+                            measurement='Frame_[None]',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PowerLogLogSlope_OrigER',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAIndexWorkspaceAxis(
+                            object_name='None',
+                            measurement='Metadata_ImageNumber',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PowerLogLogSlope_OrigHoechst',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAIndexWorkspaceAxis(
+                            object_name='None',
+                            measurement='Metadata_ImageNumber',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PowerLogLogSlope_OrigMito',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAIndexWorkspaceAxis(
+                            object_name='None',
+                            measurement='Metadata_ImageNumber',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PowerLogLogSlope_OrigPh_golgi',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAIndexWorkspaceAxis(
+                            object_name='None',
+                            measurement='Metadata_ImageNumber',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PowerLogLogSlope_OrigSyto',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_StdIntensity_OrigSyto',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PercentMaximal_OrigSyto',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_StdIntensity_OrigPh_golgi',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PercentMaximal_OrigPh_golgi',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_StdIntensity_OrigMito',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PercentMaximal_OrigMito',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_StdIntensity_OrigHoechst',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PercentMaximal_OrigHoechst',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAScatterWorkspacePanel(
+                        x=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_StdIntensity_OrigER',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_PercentMaximal_OrigER',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAHistogramWorkspacePanel(
+                        x=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_ThresholdOtsu_OrigHoechst_2W',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='None',
+                            index='ImageNumber'
+                        )
+                    ),
+                    CPAHistogramWorkspacePanel(
+                        x=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='ImageQuality_ThresholdOtsu_OrigPh_golgi_3FW',
+                            index='ImageNumber'
+                        ),
+                        y=CPAImageWorkspaceAxis(
+                            object_name='None',
+                            measurement='None',
+                            index='ImageNumber'
+                        )
+                    )
+                ),
+                'image_channels': (
+                    CPAImageChannelSpec(
+                        alias='OrigER',
+                        image_name='Channel1',
+                        channel_color='green'
+                    ),
+                    CPAImageChannelSpec(
+                        alias='OrigHoechst',
+                        image_name='Channel2',
+                        channel_color='blue'
+                    ),
+                    CPAImageChannelSpec(
+                        alias='OrigMito',
+                        image_name='Channel3',
+                        channel_color='red'
+                    ),
+                    CPAImageChannelSpec(
+                        alias='OrigPh_golgi',
+                        image_name='Channel4',
+                        channel_color='yellow'
+                    ),
+                    CPAImageChannelSpec(
+                        alias='OrigSyto',
+                        image_name='Channel5',
+                        channel_color='magenta'
+                    )
+                ),
+                'location_object': 'None',
+                'thumbnail_image_names': (
+                    'OrigER',
+                    'OrigHoechst',
+                    'OrigMito',
+                    'OrigPh_golgi',
+                    'OrigSyto'
+                ),
+                'auto_scale_thumbnail_intensities': False,
+                'plate_type': '384',
+                'wants_group_fields': True,
+                'group_fields': (
+                    (
+                        'PerWell',
+                        'ImageNumber, Image_Metadata_Plate, Image_Metadata_Well'
+                    ),
+                ),
+                'phenotype_class_table': 'QCClassification',
+                'classification_type': 'image'
+            }),
+        name='ExportToDatabase',
+        processing_config=LazyProcessingConfig(
+            variable_components=[],
+            group_by=GroupBy.NONE
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=True
+        )
+    )
+]

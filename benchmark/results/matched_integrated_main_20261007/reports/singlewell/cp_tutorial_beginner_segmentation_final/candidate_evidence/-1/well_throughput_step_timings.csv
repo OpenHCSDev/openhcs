@@ -1,0 +1,14 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,IdentifyPrimaryObjects,1791333649.7991495,1791333649.9096851,0.1105356216430664
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,IdentifySecondaryObjects,1791333649.9101598,1791333650.1513803,0.24122047424316406
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,IdentifyTertiaryObjects,1791333650.1517613,1791333650.2010112,0.049249887466430664
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,EnhanceOrSuppressFeatures,1791333650.2014399,1791333650.2198682,0.018428325653076172
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,MaskImage,1791333650.220166,1791333650.2278252,0.007659196853637695
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,IdentifyPrimaryObjects,1791333650.228236,1791333650.3175597,0.08932375907897949
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,OverlayOutlines,1791333650.318159,1791333650.370945,0.05278587341308594
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,MeasureObjectIntensity,1791333650.3712616,1791333650.928844,0.5575823783874512
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,MeasureObjectSizeShape,1791333650.9292147,1791333651.4681249,0.5389101505279541
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,MeasureColocalization,1791333651.4685016,1791333651.9239233,0.45542168617248535
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,RelateObjects,1791333651.924533,1791333652.4097157,0.4851827621459961
+cp_tutorial_beginner_segmentation_final,1,1,worker_0,A14,SaveImages,1791333652.4103973,1791333652.4455383,0.0351409912109375
+cp_tutorial_beginner_segmentation_final,1,1,,,ExportToSpreadsheet,1791333652.448534,1791333652.881013,0.4324789047241211

@@ -1,0 +1,649 @@
+{
+  "case": "ExampleNeighbors",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "ee0ebab39ff3e621dd66bbac2ff59e8f7d6506010b21897f19a9f151256f8c66",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e251f313f45a568405e3987e77e4f89e18d934e1",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "Clones1.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleNeighbors/images/Clones1.JPG",
+      "size_bytes": 78831,
+      "sha256": "1a2754f0771c82b733fbb4a46334e42210e2655d954a6be98c4e4de89d094c25"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleNeighbors/native_report.json",
+  "native_reference_report_sha256": "3237687afaa0becd381c3654bbb00295c0aea9bea754af9ed214d96c67daa6a0",
+  "native_reference_source_commit": "58febb609b02cede0ad2f827bfc53ca2cc5ab067",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Image.csv",
+      "sha256": "cfc13a7fef343adbb559642b610b4e48901e758278b1f4bba171fb3efe40c4a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Image.csv",
+      "sha256": "831fa9362296bb8911a864a2ddf7ce11a5657c253742bb0a02b7615d857c4b2a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Image.csv",
+      "sha256": "ea4812c67cde85d19c3b79b0f9a129ed66fdcb6dfae7312da12011d84762db73"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Image.csv",
+      "sha256": "53fbe82a48da060d618c7d6de88f12183593685a40bb9d4c4f8b9b9e2881b528"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "2a80e5949bc283999e14c575276ffe817b03dab061abf3cf99be28fe5953a7b6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_preparation/native_cellprofiler_headless/ExampleNeighbors.cppipe",
+      "sha256": "53bd447b6bb96fb63588590838e0b74d9b3514615773b88c0e00437d15f82c64"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleNeighbors/native_report.json",
+      "sha256": "3237687afaa0becd381c3654bbb00295c0aea9bea754af9ed214d96c67daa6a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleNeighbors/native_request.json",
+      "sha256": "ea9b97769a5d8e7a7703d833943f0ec19477f0a6d49bb3cd175656575bcfb5bd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleNeighbors/pilot_provenance.json",
+      "sha256": "a8eb7fbc5e6efdf04809867d5cd8fb21bfc1e3deb22cdd6b742635037f1cca70"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "Clones1.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleNeighbors/images/Clones1.JPG",
+      "size_bytes": 78831,
+      "sha256": "1a2754f0771c82b733fbb4a46334e42210e2655d954a6be98c4e4de89d094c25"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.9570082766003907,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_preparation/native_cellprofiler_headless/ExampleNeighbors.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleNeighbors/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native",
+      "expected_image_sets": null,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_report.json",
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": []
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1",
+        "image_set_count": 1,
+        "invocation_seconds": 4.789026140701026,
+        "pre_pipeline_seconds": 0.003744110930711031,
+        "pipeline_execution_seconds": 4.785282029770315,
+        "invocation_started_monotonic_seconds": 4039146.9783326,
+        "pipeline_started_monotonic_seconds": 4039146.982076711,
+        "completed_monotonic_seconds": 4039151.767358741,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0",
+        "image_set_count": 1,
+        "invocation_seconds": 4.13754593860358,
+        "pre_pipeline_seconds": 0.0007138149812817574,
+        "pipeline_execution_seconds": 4.136832123622298,
+        "invocation_started_monotonic_seconds": 4039151.767371815,
+        "pipeline_started_monotonic_seconds": 4039151.76808563,
+        "completed_monotonic_seconds": 4039155.904917754,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1",
+        "image_set_count": 1,
+        "invocation_seconds": 3.6131544867530465,
+        "pre_pipeline_seconds": 0.0009669018909335136,
+        "pipeline_execution_seconds": 3.612187584862113,
+        "invocation_started_monotonic_seconds": 4039155.904933243,
+        "pipeline_started_monotonic_seconds": 4039155.905900145,
+        "completed_monotonic_seconds": 4039159.51808773,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2",
+        "image_set_count": 1,
+        "invocation_seconds": 3.6780822491273284,
+        "pre_pipeline_seconds": 0.0007162992842495441,
+        "pipeline_execution_seconds": 3.677365949843079,
+        "invocation_started_monotonic_seconds": 4039159.518099873,
+        "pipeline_started_monotonic_seconds": 4039159.518816172,
+        "completed_monotonic_seconds": 4039163.196182122,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  "native_shards": [],
+  "native_shard_equivalence": [],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "ce6b51b7-38cf-4bbd-a554-8ffcb1519f24",
+      "compile_artifact_id": "b7e60266-9cc6-4740-a01c-bad0bb2a4b0e",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5317397117614746,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334114.5401316,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334115.0718713,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334114.5125794,
+      "first_axis_started_at_epoch_seconds": 1791334114.5401316,
+      "server_job_completed_at_epoch_seconds": 1791334115.5386465,
+      "server_job_seconds": 1.0260670185089111,
+      "execution_seconds": 0.5317397117614746,
+      "compile_seconds": 0.1527111530303955,
+      "total_seconds": 1.2639905060641468,
+      "first_axis_through_server_completion_seconds": 0.9985148906707764,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+        },
+        {
+          "path": "Clones1_ColorNeighbors.png",
+          "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+        },
+        {
+          "path": "Clones1_InvertedRed.png",
+          "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "cfc13a7fef343adbb559642b610b4e48901e758278b1f4bba171fb3efe40c4a0"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_ColorNeighbors.png",
+          "sha256": "6e0544c0d6726b245030b29cad0b58b3a24c9688f213e804ed741f368f61b804"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_InvertedRed.png",
+          "sha256": "811ac4caea80828daeeb108916bf12e47e7c65838e3e8b5ab3ecd50fca1289f5"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "c2a7a4986b7208e3b2aa14431480a2d566757f842e9fef09ac5125dccf3c1fab"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "e9556b1688da72fa980eef872f9616641ba186a58358c631604dcbb65b55d17b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "879e630e7106640e7ff90c108de836d55d8c420d69c8083cd49d4d6ea7f6f35f"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleNeighbors/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "48c0ea3f-c447-4063-abd0-488c545217aa",
+      "compile_artifact_id": "caf1de38-504f-42ee-ae90-bac5c20c23b5",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5160574913024902,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334123.4609647,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334123.9770222,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334123.4323006,
+      "first_axis_started_at_epoch_seconds": 1791334123.4609647,
+      "server_job_completed_at_epoch_seconds": 1791334124.445877,
+      "server_job_seconds": 1.0135765075683594,
+      "execution_seconds": 0.5160574913024902,
+      "compile_seconds": 0.1511058807373047,
+      "total_seconds": 1.2607702938839793,
+      "first_axis_through_server_completion_seconds": 0.9849123954772949,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+        },
+        {
+          "path": "Clones1_ColorNeighbors.png",
+          "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+        },
+        {
+          "path": "Clones1_InvertedRed.png",
+          "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "831fa9362296bb8911a864a2ddf7ce11a5657c253742bb0a02b7615d857c4b2a"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_ColorNeighbors.png",
+          "sha256": "6e0544c0d6726b245030b29cad0b58b3a24c9688f213e804ed741f368f61b804"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_InvertedRed.png",
+          "sha256": "811ac4caea80828daeeb108916bf12e47e7c65838e3e8b5ab3ecd50fca1289f5"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "c2a7a4986b7208e3b2aa14431480a2d566757f842e9fef09ac5125dccf3c1fab"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "e9556b1688da72fa980eef872f9616641ba186a58358c631604dcbb65b55d17b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "879e630e7106640e7ff90c108de836d55d8c420d69c8083cd49d4d6ea7f6f35f"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleNeighbors/candidate_evidence/0/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 1,
+      "execution_id": "87faeddd-0e3d-488f-ae2e-89bca8461c72",
+      "compile_artifact_id": "3df9adba-93b9-4321-8b91-2308f9154911",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5175752639770508,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334132.0348973,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334132.5524726,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334132.00794,
+      "first_axis_started_at_epoch_seconds": 1791334132.0348973,
+      "server_job_completed_at_epoch_seconds": 1791334133.0172198,
+      "server_job_seconds": 1.009279727935791,
+      "execution_seconds": 0.5175752639770508,
+      "compile_seconds": 0.15378522872924805,
+      "total_seconds": 1.2576881814748049,
+      "first_axis_through_server_completion_seconds": 0.9823224544525146,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+        },
+        {
+          "path": "Clones1_ColorNeighbors.png",
+          "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+        },
+        {
+          "path": "Clones1_InvertedRed.png",
+          "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "ea4812c67cde85d19c3b79b0f9a129ed66fdcb6dfae7312da12011d84762db73"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_ColorNeighbors.png",
+          "sha256": "6e0544c0d6726b245030b29cad0b58b3a24c9688f213e804ed741f368f61b804"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_InvertedRed.png",
+          "sha256": "811ac4caea80828daeeb108916bf12e47e7c65838e3e8b5ab3ecd50fca1289f5"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "c2a7a4986b7208e3b2aa14431480a2d566757f842e9fef09ac5125dccf3c1fab"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "e9556b1688da72fa980eef872f9616641ba186a58358c631604dcbb65b55d17b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "879e630e7106640e7ff90c108de836d55d8c420d69c8083cd49d4d6ea7f6f35f"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleNeighbors/candidate_evidence/1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 2,
+      "execution_id": "95f8a043-0266-4073-bd47-6035177fa2f9",
+      "compile_artifact_id": "3b21adb3-7740-4a81-b083-74b1041c5147",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5177180767059326,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334140.8439145,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334141.3616326,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334140.816184,
+      "first_axis_started_at_epoch_seconds": 1791334140.8439145,
+      "server_job_completed_at_epoch_seconds": 1791334141.8272815,
+      "server_job_seconds": 1.0110974311828613,
+      "execution_seconds": 0.5177180767059326,
+      "compile_seconds": 0.1515183448791504,
+      "total_seconds": 1.256831951905042,
+      "first_axis_through_server_completion_seconds": 0.9833669662475586,
+      "native_image_count": 2,
+      "candidate_image_count": 2,
+      "native_physical_image_count": 2,
+      "candidate_physical_image_count": 2,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 6,
+      "declared_output_file_count": 4,
+      "native_output_inventory": [
+        {
+          "path": "Cells.csv",
+          "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+        },
+        {
+          "path": "Clones1_ColorNeighbors.png",
+          "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+        },
+        {
+          "path": "Clones1_InvertedRed.png",
+          "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "53fbe82a48da060d618c7d6de88f12183593685a40bb9d4c4f8b9b9e2881b528"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_ColorNeighbors.png",
+          "sha256": "6e0544c0d6726b245030b29cad0b58b3a24c9688f213e804ed741f368f61b804"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_InvertedRed.png",
+          "sha256": "811ac4caea80828daeeb108916bf12e47e7c65838e3e8b5ab3ecd50fca1289f5"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "c2a7a4986b7208e3b2aa14431480a2d566757f842e9fef09ac5125dccf3c1fab"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Cells.csv",
+          "sha256": "e9556b1688da72fa980eef872f9616641ba186a58358c631604dcbb65b55d17b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "879e630e7106640e7ff90c108de836d55d8c420d69c8083cd49d4d6ea7f6f35f"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleNeighbors/candidate_evidence/2/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "Observed complete selected batches: native pipeline-start through post-run and full invocation are separate; OpenHCS worker execution and complete client operation are separate. Repeated assignments are independently executed source copies, not projected timings or additional genuine wells. Native timings and output roots were reused from genuine retained observations; their original source and report SHA are recorded separately."
+}
