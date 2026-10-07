@@ -1,0 +1,17 @@
+{
+  "generator_sha256": "27a61b975c0e356a91ba687c42ee67e725fbbbe81c8f56b757604b674066c929",
+  "source_sha256": {
+    "paper/figures/build_slas_neurite_effects.py": "1e16fd503eca54a626c7acb4be0f890c365388f164248f78d8493537026f6bce",
+    "paper/figures/compare_personal_neurite.py": "33f4e26f83d1aff83527bee9a3a61f76b39db7c768d4eafddce693273bdd4ffd",
+    "paper/supplementary/personal_neurite_comparison/joined_wells.csv": "51f251977a700df2939bd2f4c015886ce91b1110e3b93acf20b9c7a6cac02146",
+    "paper/supplementary/personal_neurite_comparison/treatment_effects.csv": "65c223833d1d717f7c46eef10b3d3ef7640923b86535339d3e426b8391091b64",
+    "paper/supplementary/personal_neurite_comparison/source_evidence.json": "cdd4dadb846dbbb7d6c411afe372f9b10baf75c695e5da6db3fa91e671b384ee"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "personal_neurite_effects_retained.png": "818ed2917c8b4887009798dbeaf4a2b85ea3de7e1b228029b0902eb459d14f45",
+    "personal_neurite_effects_retained.pdf": "eefb7a435d1e4d68388e7ad9b523ba2668978407ec2d6312651c006d227f1fac",
+    "personal_neurite_effects_retained.svg": "421a0fad43ef09464501fb053f0fb9ec3834ca7a8f8b483cac746e0ee737909c"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

@@ -244,16 +244,16 @@ wells. Fold change is the treatment mean divided by the same curve's zero-dose
 DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth increased
 at every nonzero concentration in both methods:
 
-| Treatment | Concentration (µM) | MetaXpress outgrowth fold change | Retained OpenHCS outgrowth fold change |
-| --- | ---: | ---: | ---: |
-| FC-A | 5 | 1.348 | 1.127 |
-| FC-A | 10 | 1.508 | 1.227 |
-| FC-A | 20 | 1.859 | 1.112 |
-| FC-A | 40 | 1.977 | 1.361 |
-| Y27632 | 5 | 1.453 | 2.028 |
-| Y27632 | 10 | 1.564 | 1.805 |
-| Y27632 | 20 | 1.905 | 1.507 |
-| Y27632 | 40 | 2.053 | 1.293 |
+![Matched well-level outgrowth and cell-count responses to FC-A and Y27632.](../figures/slas/personal_neurite_effects_retained.png){width=6in}
+
+(A–B) Mean outgrowth per detected cell relative to the same drug curve's DMSO
+control; (C–D) cell-count ratios in those same wells. Dots show the two technical
+wells at each concentration. Marks and whiskers show their mean and sample
+standard deviation after division by the observed control mean; they do not
+propagate uncertainty in that denominator or represent confidence intervals.
+Dose positions are equally spaced for display, not a fitted concentration–response
+model. Paired treatment panels use the same vertical scale. The plot and
+numerical tables are generated from the same well measurements.
 
 Agreement is limited to effect direction: the magnitudes differ, and the
 OpenHCS Y27632 response does not reproduce the increasing MetaXpress dose trend.
