@@ -237,7 +237,7 @@ class CellProfilerImageSetNumbering:
             ColumnarRowColumnOverlay(projected.columns, MappingProxyType(replacements)),
             fields=projected.fields,
             declared_object_measurement_domain_covered=(
-                projected.declared_object_measurement_domain_covered
+                projected.covers_declared_object_measurement_domain
             ),
             object_row_identity=projected.object_row_identity,
         )

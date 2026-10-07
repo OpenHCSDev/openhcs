@@ -2042,7 +2042,10 @@ def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
 
 
 @pytest.mark.parametrize("long_form", (False, True))
-def test_image_number_references_follow_exact_source_numbering(long_form: bool) -> None:
+@pytest.mark.parametrize("concatenated", (False, True))
+def test_image_number_references_follow_exact_source_numbering(
+    long_form: bool, concatenated: bool
+) -> None:
     from openhcs.interop.cellprofiler.image_set_numbering import (
         CellProfilerImageSetNumbering,
     )
@@ -2063,19 +2066,30 @@ def test_image_number_references_follow_exact_source_numbering(long_form: bool) 
     else:
         columns[reference_name] = values
         value_column = reference_name
+    from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
+
+    fields = tuple(
+        FieldSpec(name, int)
+        if name in ("slice_index", "object_number")
+        else FieldSpec(name, required=False)
+        for name in columns
+    )
+    source_rows = (
+        ConcatenatedColumnarRows(tuple(
+            MeasurementSparseColumnarRows(
+                {name: values[start:start + 3] for name, values in columns.items()},
+                fields=fields,
+            )
+            for start in (0, 3)
+        ))
+        if concatenated
+        else MeasurementSparseColumnarRows(columns, fields=fields)
+    )
     record = _measurement_record(
         "references",
         axis_id="A01",
         subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
-        rows=MeasurementSparseColumnarRows(
-            columns,
-            fields=tuple(
-                FieldSpec(name, int)
-                if name in ("slice_index", "object_number")
-                else FieldSpec(name, required=False)
-                for name in columns
-            ),
-        ),
+        rows=source_rows,
         source_image_provenance_planes=provenance,
     )
     table = record.data
@@ -2093,7 +2107,11 @@ def test_image_number_references_follow_exact_source_numbering(long_form: bool) 
     assert math.isnan(actual[3])
     assert math.isinf(actual[4])
     assert actual[5] is MEASUREMENT_SPARSE_CELL
-    assert table.rows.column_values(value_column) is values
+    assert tuple(table.rows.column_values(value_column)) == values
+    assert (
+        projected.covers_declared_object_measurement_domain
+        == table.rows.covers_declared_object_measurement_domain
+    )
 
 
 def test_declared_reference_mean_uses_full_projected_objects_after_selection() -> None:
