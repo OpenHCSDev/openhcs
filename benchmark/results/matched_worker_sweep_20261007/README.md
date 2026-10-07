@@ -7,15 +7,15 @@ This is a draft archive plan, not a qualified result. At preparation no mode had
 | --- | ---: | ---: | ---: | --- |
 | singlewell | 1 | 1 | 1 | May point 1; fresh single-sample cohort |
 | 8assignments-2workers | 8 | 2 | 1 | May point 2 |
-| 12assignments-3workers | 12 | 3 | 1 | May point 3 |
-| 16assignments-4workers | 16 | 4 | 1 | May point 4; shared fixed-workload endpoint |
-| 16assignments-1worker | 16 | 1 | 1 | Fixed-workload reference |
-| 16assignments-2workers | 16 | 2 | 1 | Fixed-workload scaling |
-| 16assignments-3workers | 16 | 3 | 1 | Fixed-workload scaling |
+| 12assignments-3workers | 12 | 3 | 1 | May point 3; shared fixed-workload endpoint |
+| 16assignments-4workers | 16 | 4 | 1 | May point 4 |
+| 12assignments-1worker | 12 | 1 | 1 | Fixed-workload reference |
+| 12assignments-2workers | 12 | 2 | 1 | Fixed-workload scaling |
+| 12assignments-4workers | 12 | 4 | 1 | Fixed-workload scaling |
 
 All modes cover the same declared thirty workflows on one production revision, with one warmup and three measured repetitions. Each repeated assignment uses the selected source sample; repeated assignments are not independent biological wells. Primary denominators are actual one-process stock CellProfiler observations covering the identical assignment identities and outputs. No native timing projection or independently parallelized native-process calibration is used.
 
-The May schedule changes workload with worker count: 1/1, 2/8, 3/12 and 4/16 workers/assignments. Its CP-relative ratios reproduce the requested workload schedule, not fixed-workload parallel efficiency. The separate sixteen-assignment comparison uses OpenHCS one-worker execution time divided by its two-, three- or four-worker execution time; efficiency divides that speedup by worker count. Keep these interpretations separate. The four-worker/sixteen-assignment capture is shared rather than recaptured.
+The May schedule changes workload with worker count: 1/1, 2/8, 3/12 and 4/16 workers/assignments. Its CP-relative ratios reproduce the requested workload schedule, not fixed-workload parallel efficiency. The separate twelve-assignment comparison uses OpenHCS one-worker execution time divided by its two-, three- or four-worker execution time; efficiency divides that speedup by worker count. Keep these interpretations separate. The three-worker/twelve-assignment capture is shared rather than recaptured. Twelve is derived as the least common multiple of the May worker counts (1, 2, 3 and 4), so each fixed workload partitions evenly; sixteen assignments on three workers would have imposed a 6/5/5-task granularity limit.
 
 Execution covers CellProfiler's pipeline call, including prepare-run, prepare-group, module work and post-run, versus OpenHCS's complete server pipeline job, including saving/publication and plate exports. Total compares native prepared invocation with OpenHCS's disjoint compilation-plus-execution client submission/wait phases. Exclude process/JVM/server startup, function-library readiness, warmup and scientific comparison; never add nested server/worker durations again. Ratios use independent engine medians from three measured repetitions.
 
@@ -45,7 +45,7 @@ CONVERTER="$SWEEP/protocol/convert_matched_reports.py"
 
 # Fresh output namespace; rerunning must not overwrite an existing conversion.
 "$PYTHON" "$CONVERTER" --suite-dir "$SWEEP/1assignment-1worker/capture" --output-dir "$SWEEP/1assignment-1worker/converted"
-for MODE in 8assignments-2workers 12assignments-3workers 16assignments-1worker 16assignments-2workers 16assignments-3workers 16assignments-4workers; do
+for MODE in 8assignments-2workers 12assignments-3workers 12assignments-1worker 12assignments-2workers 12assignments-4workers 16assignments-4workers; do
   "$PYTHON" "$CONVERTER" --scaling --suite-dir "$SWEEP/$MODE/capture" --output-dir "$SWEEP/$MODE/converted"
 done
 ```
@@ -57,9 +57,9 @@ ARCHIVE_ROOT="$RECORD" "$PYTHON" "$SWEEP/protocol/archive_converted_modes.py" "$
   singlewell "$SWEEP/1assignment-1worker/capture" \
   8assignments-2workers "$SWEEP/8assignments-2workers/capture" \
   12assignments-3workers "$SWEEP/12assignments-3workers/capture" \
-  16assignments-1worker "$SWEEP/16assignments-1worker/capture" \
-  16assignments-2workers "$SWEEP/16assignments-2workers/capture" \
-  16assignments-3workers "$SWEEP/16assignments-3workers/capture" \
+  12assignments-1worker "$SWEEP/12assignments-1worker/capture" \
+  12assignments-2workers "$SWEEP/12assignments-2workers/capture" \
+  12assignments-4workers "$SWEEP/12assignments-4workers/capture" \
   16assignments-4workers "$SWEEP/16assignments-4workers/capture"
 ```
 
@@ -77,6 +77,6 @@ Once all seven modes qualify, archive `render_sweep.py` and the prepared protoco
 "$PYTHON" "$RECORD/protocol/render_sweep.py" --record "$RECORD" --protocol-manifest "$RECORD/protocol/protocol-manifest.json" --output-dir "$RECORD/figures"
 ```
 
-The script delegates details and distributions to `build_measured` and May bars/points to `FIGURE_STYLE.generate_average_point_figures`. It retains thirty real workflow points per mode, without the artificial Average row. Execution and total each receive separate May-schedule and fixed16 CP-relative plots. Fixed16 also receives OpenHCS-one-worker-relative scaling plots, with efficiency fractions in `derived_workflow_metrics.csv` under the `efficiency` directory (`efficiency_unit_fraction`, 1 = ideal). Efficiency is not drawn with the existing painter's x suffix. Every output retains source/code hash provenance. This script is the reproducible data-artifact consumer; the manuscript owner can integrate these assets without another plotting implementation.
+The script delegates details and distributions to `build_measured` and May bars/points to `FIGURE_STYLE.generate_average_point_figures`. It retains thirty real workflow points per mode, without the artificial Average row. Execution and total each receive separate May-schedule and fixed12 CP-relative plots. Fixed12 also receives OpenHCS-one-worker-relative scaling plots, with efficiency fractions in `derived_workflow_metrics.csv` under the `efficiency` directory (`efficiency_unit_fraction`, 1 = ideal). Efficiency is not drawn with the existing painter's x suffix. Every output retains source/code hash provenance. This script is the reproducible data-artifact consumer; the manuscript owner can integrate these assets without another plotting implementation.
 
 The archive owner is a byte-exact snapshot of the newer existing `/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-figure-preparation-v1/archive_converted_modes.py` (SHA256 `e9f19f615e9e52f55383a963933df7702ee0cfd185186d86945ea08986449522`). It derives native origin from the original `NativeBatchRequest.output_root` authority and retains command-selected case qualification. Fresh and reused native reports use that same existing authority; no archive patch or auxiliary reuse-path dependency is introduced. Historical archive code remains unchanged.

@@ -36,12 +36,14 @@ def main() -> None:
                   or (mode["openhcs_workers"] > 1
                       and mode["assignments"] == 4 * mode["openhcs_workers"])),
                  key=lambda mode: mode["openhcs_workers"])
-    fixed = sorted((mode for mode in modes if mode["assignments"] == 16),
+    fixed_assignments = math.lcm(*(mode["openhcs_workers"] for mode in may))
+    fixed_name = f"fixed{fixed_assignments}"
+    fixed = sorted((mode for mode in modes if mode["assignments"] == fixed_assignments),
                    key=lambda mode: mode["openhcs_workers"])
     if ([mode["openhcs_workers"] for mode in may] != [1, 2, 3, 4]
             or [mode["openhcs_workers"] for mode in fixed] != [1, 2, 3, 4]
             or len(modes) != 7):
-        raise ValueError("Prepared protocol must own the complete May and fixed16 schedule")
+        raise ValueError("Prepared protocol must own the complete May and evenly balanced fixed-workload schedule")
     if any(mode["native_processes"] != 1 for mode in modes):
         raise ValueError("Primary sweep requires actual one-process stock CellProfiler")
 
@@ -90,12 +92,14 @@ def main() -> None:
             for case in sources[fixed[0]["archive_mode"]].qualified_custody()["cases"]
         }
         for mode in fixed:
+            if fixed_assignments % mode["openhcs_workers"]:
+                raise ValueError("Fixed workload must divide evenly across each worker count")
             for case in sources[mode["archive_mode"]].qualified_custody()["cases"]:
                 for field in ("wells", "selected_source_wells", "assignment_scope"):
                     if case["mode"][field] != fixed_reference[case["case"]][field]:
-                        raise ValueError(f"Fixed16 assignment role differs: {field}")
+                        raise ValueError(f"{fixed_name} assignment role differs: {field}")
 
-        for schedule_name, schedule in (("may", may), ("fixed16", fixed)):
+        for schedule_name, schedule in (("may", may), (fixed_name, fixed)):
             destination = args.output_dir / schedule_name / scope
             selected = tuple(sources[mode["archive_mode"]] for mode in schedule)
             build_slas_benchmark.build_measured(
@@ -123,7 +127,7 @@ def main() -> None:
         reference = {name: reference_source.metric_rows(name, row, category_row=row)[1]
                      for name, row in tables[fixed[0]["archive_mode"]].items()}
         for metric in ("scaling", "efficiency"):
-            destination = args.output_dir / "fixed16" / scope / metric
+            destination = args.output_dir / fixed_name / scope / metric
             destination.mkdir(parents=True, exist_ok=True)
             rows, methods = [], []
             for mode in fixed:
@@ -152,13 +156,13 @@ def main() -> None:
             # explicitly named fraction CSV rather than a misleading x plot.
             outputs = () if metric == "efficiency" else FIGURE_STYLE.generate_average_point_figures(
                 rows, methods=methods, output_dir=destination,
-                output_formats=("png", "svg"), filename_stem=f"fixed16_{scope}_{metric}",
-                title=f"Sixteen assignments: OpenHCS {scope} {metric}",
+                output_formats=("png", "svg"), filename_stem=f"{fixed_name}_{scope}_{metric}",
+                title=f"{fixed_assignments} assignments: OpenHCS {scope} {metric}",
                 ylabel="OpenHCS one-worker / n-worker speedup",
                 value_key="speedup", target_line=1, log_variant=True)
             build_slas_benchmark.write_provenance(
                 destination, tuple(dict.fromkeys(inputs)), (table_path, *outputs),
-                {"interpretation": "OpenHCS one-worker duration / n-worker duration on the identical sixteen assignments; efficiency divides this ratio by worker count. This is not CellProfiler-relative speedup.",
+                {"interpretation": "OpenHCS one-worker duration / n-worker duration on the identical evenly balanced assignments; efficiency divides this ratio by worker count. This is not CellProfiler-relative speedup.",
                  "scope": scope, "source_revision": declaration["source_revision"]})
 
 
