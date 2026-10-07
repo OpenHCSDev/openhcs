@@ -1,0 +1,86 @@
+{
+  "status": "SAVED_OUTPUT_RECEIVING_PASS_NOT_APPLIED",
+  "scope": "Paired-v1 exact source/results/clock preserved separately from final schema-check relocation and admission controls. No pipeline speedup claimed; current capture untouched.",
+  "files": [
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/comparison-csv-reuse.patch.txt",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/comparison-csv-reuse.patch.txt",
+      "sha256": "aa7c2197c5db1b21ec0ba1cb8a84f5a927a036562caa52555bbf4c7c4df98113"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/comparison-csv-reuse-paired-v1.patch.txt",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/comparison-csv-reuse-paired-v1.patch.txt",
+      "sha256": "db826910d238e374645fe928b7c5309a18a425d84bda5083acd3343e6bbb700f"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/grid-pair-proof.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/grid-pair-proof.json",
+      "sha256": "32da4e30de5841d28c38fa9cab3599d7426a770dbdfec6c05a4956ce713f456f"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/qualification.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/qualification.json",
+      "sha256": "2de089da0e6318ec2ba7b83aad168de6546fa3ca129d208309394993a2312506"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/run_pair.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/run_pair.py.txt",
+      "sha256": "c6496dc2db4dc78e204e92efc412065ccd7d6f9df4677637e306282874e2f625"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/check_admission.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/check_admission.py.txt",
+      "sha256": "4a6d259f386dbb06735e0beb6e8bc8984de3d4fb9a790d6fdf4c3e15f9f3d9f2"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/ExampleImagingFlowCytometryObjectsInGrid-optimized-result.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/ExampleImagingFlowCytometryObjectsInGrid-optimized-result.json",
+      "sha256": "d21b6096249e4927a8f71068fa024c9c5593b05b34e827e7fa34f5b9b8953411"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/ExampleImagingFlowCytometryObjectsInGrid-optimized-timing.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/ExampleImagingFlowCytometryObjectsInGrid-optimized-timing.json",
+      "sha256": "8fc4222819d6489acb75d5021465c98ef8d4ec7a8e9d50c0a8adac7c44858a5b"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/ExampleImagingFlowCytometryObjectsInGrid-original-result.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/ExampleImagingFlowCytometryObjectsInGrid-original-result.json",
+      "sha256": "d21b6096249e4927a8f71068fa024c9c5593b05b34e827e7fa34f5b9b8953411"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/ExampleImagingFlowCytometryObjectsInGrid-original-timing.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/ExampleImagingFlowCytometryObjectsInGrid-original-timing.json",
+      "sha256": "6015f224786dadd4105016c8b03659d2c6071528a94d6de9b88676b36dbe6e6e"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/overlay/matched_cellprofiler_batch.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/overlay/matched_cellprofiler_batch.py.txt",
+      "sha256": "12b840201e948065c2c1a668afe1cc78f4e84dd15e0306b41308d9a045de6e07"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/overlay/measurement_rows.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/overlay/measurement_rows.py.txt",
+      "sha256": "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/overlay/tables.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/overlay/tables.py.txt",
+      "sha256": "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/overlay-paired-v1/matched_cellprofiler_batch.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/overlay-paired-v1/matched_cellprofiler_batch.py.txt",
+      "sha256": "12b840201e948065c2c1a668afe1cc78f4e84dd15e0306b41308d9a045de6e07"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/overlay-paired-v1/measurement_rows.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/overlay-paired-v1/measurement_rows.py.txt",
+      "sha256": "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/overlay-paired-v1/tables.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/snapshot-measurement-view-reuse/overlay-paired-v1/tables.py.txt",
+      "sha256": "ac1ad9fcc001eece763e3fdd4a7ca62c41560bf1692bdd2411917192095beb47"
+    }
+  ]
+}

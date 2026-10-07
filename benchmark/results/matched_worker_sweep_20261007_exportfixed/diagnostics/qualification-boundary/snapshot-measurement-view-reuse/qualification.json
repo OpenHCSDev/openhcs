@@ -1,0 +1,26 @@
+{
+  "final_patch": "comparison-csv-reuse.patch.txt",
+  "final_patch_sha256": "aa7c2197c5db1b21ec0ba1cb8a84f5a927a036562caa52555bbf4c7c4df98113",
+  "final_source_sha256": {
+    "openhcs/core/equivalence/tables.py": "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc",
+    "openhcs/core/equivalence/measurement_rows.py": "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2",
+    "benchmark/matched_cellprofiler_batch.py": "12b840201e948065c2c1a668afe1cc78f4e84dd15e0306b41308d9a045de6e07"
+  },
+  "paired_proof": "grid-pair-proof.json",
+  "paired_source_archive": "overlay-paired-v1",
+  "final_delta_after_pair": "Move existing selected-header duplicate check from _columnar_rows into shared schema view; no value/missing/identity/coalescing algorithm changes.",
+  "final_admission_checks": {
+    "existing_contextual_duplicate_checks": "3 passed in 1.36s",
+    "direct_controls": [
+      "cross-context duplicate selected-header rejected",
+      "Experiment conflicting coalesced observations rejected",
+      "frozen tuple source prevents stale view",
+      "repeated same-contract materialization returns same nominal view"
+    ]
+  },
+  "timed_production_source_and_environment_unchanged": true,
+  "limitations": [
+    "One sequential full-result Grid pair; not a full-cohort overhead headline.",
+    "Final schema-check relocation verified by source audit and admission checks; no second timing claim."
+  ]
+}

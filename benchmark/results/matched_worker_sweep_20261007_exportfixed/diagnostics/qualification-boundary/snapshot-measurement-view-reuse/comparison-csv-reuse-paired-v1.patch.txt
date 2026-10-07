@@ -1,0 +1,157 @@
+--- a/openhcs/core/equivalence/tables.py
++++ b/openhcs/core/equivalence/tables.py
+@@ -5,7 +5,7 @@
+ import csv
+ from collections import Counter
+ from collections.abc import Iterable, Mapping
+-from dataclasses import dataclass
++from dataclasses import dataclass, field
+ from pathlib import Path
+ from types import MappingProxyType
+ from typing import TYPE_CHECKING
+@@ -36,6 +36,7 @@
+     MeasurementScope,
+     MeasurementSubject,
+     MeasurementScalarLiteral,
++    RuntimeMeasurementRowIdentityContract,
+ )
+ from openhcs.core.runtime_measurements import (
+     MeasurementTable,
+@@ -75,7 +76,7 @@
+     return DEFAULT_MEASUREMENT_TABLE_PADDING_GROUP
+ 
+ 
+-@dataclass(slots=True)
++@dataclass(frozen=True, slots=True)
+ class RuntimeTableSnapshot:
+     """Semantic snapshot of one exported runtime table."""
+ 
+@@ -83,6 +84,11 @@
+     header: tuple[str, ...]
+     rows: tuple[tuple[str, ...], ...]
+     column_context: tuple[str | None, ...] = ()
++    _measurement_views: dict[
++        RuntimeMeasurementRowIdentityContract, tuple[MeasurementTable, ...]
++    ] = field(
++        default_factory=dict, init=False, repr=False, compare=False
++    )
+ 
+     def for_image_numbers(
+         self,
+@@ -247,10 +253,10 @@
+             rows = tuple(tuple(row[index] for index in retained) for row in rows)
+             if column_context:
+                 column_context = tuple(column_context[index] for index in retained)
+-        self.path = path
+-        self.header = header
+-        self.rows = rows
+-        self.column_context = column_context
++        object.__setattr__(self, "path", path)
++        object.__setattr__(self, "header", header)
++        object.__setattr__(self, "rows", rows)
++        object.__setattr__(self, "column_context", column_context)
+ 
+     @property
+     def schema_key(self) -> tuple[str, ...]:
+@@ -310,19 +316,29 @@
+         dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+     ) -> tuple[MeasurementTable, ...]:
+         """Expose exported columns as ordinary subject-owned measurement tables."""
++        identity_contract = dialect.row_identity_contract
++        cached = self._measurement_views.get(identity_contract)
++        if cached is not None:
++            return cached
++        tables = tuple(
++            MeasurementTable(
++                name=name,
++                rows=self._columnar_rows(indexes, subject, dialect),
++                subject=subject,
++            )
++            for name, subject, indexes in self.measurement_subject_columns(dialect)
++        )
++        self._measurement_views[identity_contract] = tables
++        return tables
++
++    def measurement_subject_columns(
++        self,
++        dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
++    ) -> tuple[tuple[str, MeasurementSubject, tuple[int, ...]], ...]:
++        """Derive subject ownership from the declared schema without reading cells."""
+         if not self.column_context:
+             subject = self._subject_for_columns(self.header)
+-            return (
+-                MeasurementTable(
+-                    name=self.path.stem,
+-                    rows=self._columnar_rows(
+-                        tuple(range(len(self.header))),
+-                        subject,
+-                        dialect,
+-                    ),
+-                    subject=subject,
+-                ),
+-            )
++            return ((self.path.stem, subject, tuple(range(len(self.header)))),)
+ 
+         image_identity_fields = (
+             dialect.row_identity_contract.selected_image_identity_fields(
+@@ -339,7 +355,7 @@
+                 context for context in self.column_context if context is not None
+             )
+         )
+-        tables: list[MeasurementTable] = []
++        subjects: list[tuple[str, MeasurementSubject, tuple[int, ...]]] = []
+         for context in contexts:
+             context_indexes = tuple(
+                 index
+@@ -360,14 +376,8 @@
+                     dict.fromkeys((*image_identity_indexes, *context_indexes))
+                 )
+                 subject = self._object_subject(context, indexes, dialect)
+-            tables.append(
+-                MeasurementTable(
+-                    name=f"{self.path.stem}:{context}",
+-                    rows=self._columnar_rows(indexes, subject, dialect),
+-                    subject=subject,
+-                )
+-            )
+-        return tuple(tables)
++            subjects.append((f"{self.path.stem}:{context}", subject, indexes))
++        return tuple(subjects)
+ 
+     def _subject_for_columns(
+         self,
+--- a/openhcs/core/equivalence/measurement_rows.py
++++ b/openhcs/core/equivalence/measurement_rows.py
+@@ -1522,13 +1522,13 @@
+             long_form=projection.long_form,
+             declared_anchor_groups=projection.declared_anchor_groups,
+         )
+-        row_facts = RuntimeMeasurementFactProjectionContract.dedupe_records(
+-            projection.records
+-        )
+         if projection.long_form:
+             return projection
+         if not self.derive_directional_pair_facts:
+             return projection
++        row_facts = RuntimeMeasurementFactProjectionContract.dedupe_records(
++            projection.records
++        )
+         derived_facts = RuntimeDirectionalPairMeasurementDerivationContract(
+             self.policy,
+             self.known_source_names,
+--- a/benchmark/matched_cellprofiler_batch.py
++++ b/benchmark/matched_cellprofiler_batch.py
+@@ -331,10 +331,10 @@
+             (
+                 tuple(
+                     (
+-                        measurement.subject.scope.value,
+-                        normalize_runtime_identifier(measurement.subject.name),
++                        subject.scope.value,
++                        normalize_runtime_identifier(subject.name),
+                     )
+-                    for measurement in table.measurement_tables()
++                    for _name, subject, _indexes in table.measurement_subject_columns()
+                 ),
+                 len(table.rows),
+             )

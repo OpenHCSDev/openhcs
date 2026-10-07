@@ -1,0 +1,30 @@
+import sys,os,time,json,gzip,pickle,importlib.abc,importlib.util,hashlib
+from pathlib import Path
+packet=Path(__file__).parent;mode=sys.argv[1];case_name=sys.argv[2] if len(sys.argv)>2 else 'ExampleImagingFlowCytometryObjectsInGrid'
+production=Path('/home/ts/code/projects/openhcs-cp-registry-control');artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002')
+sys.path.insert(0,str(production))
+class ExactSourceOverlay(importlib.abc.MetaPathFinder):
+ def find_spec(self,fullname,path=None,target=None):
+  names={'openhcs.core.equivalence.tables':'tables.py','openhcs.core.equivalence.measurement_rows':'measurement_rows.py','benchmark.matched_cellprofiler_batch':'matched_cellprofiler_batch.py'}
+  if fullname in names:return importlib.util.spec_from_file_location(fullname,packet/'overlay'/names[fullname])
+if mode=='optimized':sys.meta_path.insert(0,ExactSourceOverlay())
+import openhcs,benchmark
+benchmark.__path__.insert(0,str(artifact/'benchmark'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.matched_cellprofiler_batch import _saved_output_equivalence
+from openhcs.serialization.json import to_jsonable
+case=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases')/case_name
+reference=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1')/case_name
+with gzip.open(case/'candidate_evidence/-1/observation.pkl','rb') as stream:observation=pickle.load(stream)
+policy=_strict_cellprofiler_runtime_equivalence_policy();start=time.perf_counter()
+result=_saved_output_equivalence(reference/'native/-1/W001',observation.exports.for_execution_axis('W001'),policy=policy,source_workspaces=(case/'candidate/-1/source_workspace_matched_pilot',),execution_axis_id='W001')
+elapsed=time.perf_counter()-start
+assert not result[0].differences and not result[1].differences and not result[2]
+serialized=to_jsonable(result)
+(packet/f'{case_name}-{mode}-result.json').write_text(json.dumps(serialized,sort_keys=True,indent=2)+'\n')
+core_manifest={str(p.relative_to(production/'openhcs/core')):hashlib.sha256(p.read_bytes()).hexdigest() for p in (production/'openhcs/core').rglob('*.py')}
+if mode=='optimized':
+ for module,name in (("equivalence/tables.py","tables.py"),("equivalence/measurement_rows.py","measurement_rows.py")):
+  core_manifest[module]=hashlib.sha256((packet/'overlay'/name).read_bytes()).hexdigest()
+receipt={'full_qualifier_core_manifest':core_manifest,'mode':mode,'case':case_name,'full_comparison_seconds':elapsed,'all_differences_empty':True,'production_source':'D06 frozen','cpu_affinity':sorted(os.sched_getaffinity(0)),'numerical_threads':{k:os.environ[k] for k in ('OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS','NUMEXPR_NUM_THREADS','VECLIB_MAXIMUM_THREADS')},'qualifier_source_hashes':{name:hashlib.sha256(Path(sys.modules[name].__file__).read_bytes()).hexdigest() for name in ('openhcs.core.equivalence.tables','openhcs.core.equivalence.measurement_rows','benchmark.matched_cellprofiler_batch')}}
+(packet/f'{case_name}-{mode}-timing.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt),flush=True)
