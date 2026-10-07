@@ -116,8 +116,8 @@ class SiteMeanWellAggregation(WellAggregation):
                              mean(row.cell_count for row in rows))
 
 
-def compare(reference, key, summaries, output, aggregation, coded_plate):
-    inputs = [reference, key]
+def compare(reference, key, summaries, output, aggregation, coded_plate, pipeline):
+    inputs = [reference, key, pipeline]
     mapping = {}
     for image in json.loads(key.read_text())["images"]:
         plate, filename = image["coded_relative_path"].split("/")
@@ -185,6 +185,7 @@ def compare(reference, key, summaries, output, aggregation, coded_plate):
         "aggregation": aggregation.description,
         "coded_plate": coded_plate,
         "coordinate_unit": NativeSummary.coordinate_unit,
+        "pipeline_source": str(pipeline),
         "protocol_figure_label": aggregation.figure_label,
         "generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "baseline": "each drug curve's own zero-dose DMSO wells",
@@ -194,7 +195,7 @@ def compare(reference, key, summaries, output, aggregation, coded_plate):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("reference", "key", "summaries", "output"):
+    for name in ("reference", "key", "summaries", "output", "pipeline"):
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--coded-plate", required=True,
                         help="Source plate identity in the evaluation key, not the output directory name")
@@ -202,4 +203,4 @@ if __name__ == "__main__":
     parser.add_argument("--aggregation", choices=protocols, required=True)
     args = parser.parse_args()
     compare(args.reference, args.key, args.summaries, args.output,
-            protocols[args.aggregation](), args.coded_plate)
+            protocols[args.aggregation](), args.coded_plate, args.pipeline)
