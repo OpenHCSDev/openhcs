@@ -198,6 +198,68 @@ def main() -> None:
     if args.calibration_only:
         return
 
+    # The existing distribution owner supplies plots and the numerical include;
+    # no warm-native publication_values admission is reused for first-use data.
+    mode_statistics = {}
+    for mode in modes:
+        name = mode["archive_mode"]
+        scope_statistics = {}
+        for scope in ("execution", "total"):
+            source = sources[name, scope]
+            ratios = tuple(source.metric_rows(case_name, row, category_row=row)[1].speedup
+                           for case_name, row in tables[name, scope].items())
+            summary = figures.SpeedupSummaryStatistics.from_series(
+                figures.SpeedupDistributionSeries(source.label, ratios))
+            if summary is None or summary.sample_count != 30:
+                raise ValueError("Numerical include must retain all thirty finite positive workflow ratios")
+            scope_statistics[scope] = asdict(summary)
+        mode_statistics[name] = {
+            "assignment_count": mode["assignments"],
+            "openhcs_worker_count": mode["openhcs_workers"],
+            "native_reference_kind": kinds[name],
+            "native_source_first_observation_count": 1,
+            "native_target_observation_count": 1 if kinds[name] == "measured_first_batch" else 0,
+            "openhcs_observation_count": 3,
+            "scope_statistics": scope_statistics,
+        }
+    single_name = next(mode["archive_mode"] for mode in modes if mode["assignments"] == 1)
+    single_stats = mode_statistics[single_name]["scope_statistics"]
+    claims = {
+        "record_name": record.name,
+        "source_revision": declaration["source_revision"],
+        "status": "qualified-first-use-sweep",
+        "case_count": "30",
+        **{f"{scope}_{claim}": f"{single_stats[scope][field]:.3f}"
+           for scope in ("execution", "total")
+           for claim, field in (("min", "minimum"), ("median", "median"))},
+        "native_policy": interpretation["native_policy"],
+        "mode_statistics": mode_statistics,
+    }
+    include = args.output_dir / "benchmark_claims.json"
+    include.write_text(json.dumps(claims, indent=2) + "\n")
+    single_rows = tuple(
+        replace(sources[single_name, scope].metric_rows(name, row, category_row=row)[1], method=scope.title())
+        for scope in ("execution", "total")
+        for name, row in tables[single_name, scope].items())
+    composite = figures.FIGURE_STYLE.generate_average_point_figures(
+        single_rows, methods=("Execution", "Total"), output_dir=args.output_dir,
+        output_formats=("png", "svg"), filename_stem="measured_benchmark_publication",
+        title="Thirty workflows: measured CP first batch / OH median",
+        ylabel="CP first-use batch / OpenHCS speedup", value_key="speedup",
+        target_line=1, log_variant=True)
+    caption = args.output_dir / "measured_benchmark_publication_caption.md"
+    caption.write_text(
+        "Execution and compile-plus-run total speedups for thirty single-sample workflows. "
+        "CP is one complete measured first-use-inclusive native batch observation; OpenHCS is "
+        "the median of three measured runs. Internal native initialization is included. Bars "
+        "show arithmetic means, dots every workflow, and lines medians. Native source n=1 "
+        "and OpenHCS n=3 are explicit; these are not three cold native observations. "
+        f"Record {record.name}; source {declaration['source_revision']}. The separate May "
+        "worker schedule labels its twelve/sixteen-assignment CP references as projected; "
+        "fixed-workload OpenHCS scaling remains entirely actual.\n")
+    save(args.output_dir, (include, caption, *composite),
+         "Manuscript-compatible singlewell claims and Figure2 composite derive from the same admitted first-use thirty-workflow distributions; per-mode stats retain measured/projected kinds and observation counts.")
+
     fixed_name = f"fixed{fixed_count}"
     reference_cases = cases[fixed[0]["archive_mode"]]
     for mode in fixed:
