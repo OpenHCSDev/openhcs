@@ -2025,7 +2025,7 @@ def _incremental_quantized_hulls_numba(scaled: np.ndarray) -> np.ndarray:
     line_rows = np.empty(max(height, width), np.int64)
     line_columns = np.empty(line_rows.size, np.int64)
     output = np.full((height, width), levels[0], np.int32)
-    successor = np.empty((height + 1, width), np.int32)
+    successor = np.empty((height + 1, width), np.int64)
     for row in range(height + 1):
         for column in range(width):
             successor[row, column] = row
