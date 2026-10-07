@@ -1,29 +1,33 @@
 {
-  "generator_sha256": "2a4c520aff09e67ecd3c37e7ffd6237e0da94e2cfd16d0fdb342ab8d728ef996",
+  "generator_sha256": "0ecf72fcf9fd43dd345b234c33b96aa553f64eecd751d64c8f6170884c67d0f7",
   "source_sha256": {
-    "docs/source/architecture/quick_start.rst": "e0f403e65287bdd6b65bdafdcaee5fc54556205411a5cb988bcb95e2a67f7339",
-    "openhcs/core/pipeline_document.py": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
-    "openhcs/core/compiled_step_plan.py": "8bf2b30a367511c03915614d60bd6d3efacd036ce6b21cccc7240713d78779dc",
-    "openhcs/core/runtime_stores.py": "70bb51b0b02d92eaff6e7a5177cbc84b298e5d1c2b2697534be324288117eefe",
-    "openhcs/core/source_bindings.py": "fce49a28b8a41a7af1f6d33e326d77ab618eab2168ab33e6088db34bd5c72f9c",
-    "openhcs/agent/capabilities.py": "6928c4d2af41555a27dbbfe6ed2cc868d635fca6c2251a80ec2832336a9cab88",
+    "openhcs/runtime/zmq_execution_client.py": "df72db877fc54e236860b1c260238b542aa79cdaf3a5a0ef4582084b11181101",
+    "openhcs/runtime/zmq_execution_server.py": "44c308838a66fb4085abbbcb4f3af8b154140205a886f940b4589df5ef43e5e7",
+    "openhcs/runtime/zmq_worker_execution.py": "000a65d1619b75d802b3b38001e3e3787524e3859c9430b5d74813f197b29dcb",
+    "openhcs/core/orchestrator/worker_execution.py": "3c47a156ad65a42b0beb345b9144a3a5e1fa3b7c61e8ec6d7717b6f8c8bcb232",
+    "openhcs/core/steps/function_artifact_materialization.py": "d00c22bc884065c5b36b7f16fe006f2181a53553b7d2df9b60c93745969598a8",
+    "openhcs/runtime/napari_viewer_server.py": "a558fc8187e65bd80aa970bad386b06b0ad2c72b19fa132338c63bdd81befac9",
+    "openhcs/runtime/fiji_viewer_server.py": "56d9e929384a28dd7f5546d0533616fd533c2e8b533743891bb3f675726080b1",
+    "docs/source/architecture/zmq_execution_service_extracted.rst": "dcaf4e63eb604312edadcb3442479ac6e369842231bb5caeb3e5404ecf693155",
+    "docs/source/architecture/streaming_boundary_and_wrappers.rst": "b4943eeac6a59501b60ebfa16b0b093bc415b5bf8e4124409371b0d3641cbbfd",
+    "paper/figures/build_slas_processes.py": "42e176fcbbf52b7444b1fbc06aef787b833202e4858cc5ca5990ae5b3d912b1e",
     "website/assets/logos/README.md": "244baac8bc62478d51d3f50a750559edc1205763bcdb4c6fbab87e698a93e43b",
     "website/assets/logos/python.svg": "adca85e1d0bd6d796abea422d983fd131a432fe78efeac58af18461eb1548780",
     "website/assets/logos/mcp.svg": "05f47fb3ffb7323bdbf6b397330229a7f32a3a1f2d17365e748f8777a82dd6c0",
     "website/assets/logos/cellprofiler.png": "820dc710604ae6bfa5605b7a6c17817c484d91e289c15d5953e2769b083333b3",
-    "website/assets/logos/bioformats.svg": "19cfb3bc6a2274b98c76a1e9af43f1d94c56b5b5e718e60b1fecdb633c7ddf9a",
-    "website/assets/logos/zarr.svg": "4e7d278e12a6000c54ce3dfdee274d4dd98595bdf04d2afacda17b5a6e61ecf6",
+    "website/assets/logos/napari.svg": "e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d",
+    "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea",
     "website/assets/logos/cupy.svg": "30100286bd74ae633d2196b2d8ea175e405c258c22441582e6bb1715866d1756",
     "website/assets/logos/pytorch.svg": "fa653a3e79a36d6c8738c9c05e10c0265e466db23fc4b2d7ef65d32ff84cc839",
     "website/assets/logos/jax.png": "b336e0959efcf4835f1c4ab717398b4a8fe11dccac6790f2dcff504820d9b095",
-    "website/assets/logos/napari.svg": "e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d",
-    "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea"
+    "website/assets/logos/bioformats.svg": "19cfb3bc6a2274b98c76a1e9af43f1d94c56b5b5e718e60b1fecdb633c7ddf9a",
+    "website/assets/logos/zarr.svg": "4e7d278e12a6000c54ce3dfdee274d4dd98595bdf04d2afacda17b5a6e61ecf6"
   },
   "ui_crops": [],
   "output_sha256": {
-    "shared_workflow.png": "b9f2212837a1683187cb967b556874d7f2cc9743492edca490eaef3f8d65b443",
-    "shared_workflow.pdf": "9852bb7c0cdc6937454289313b021769c5206a6b6077cf3f0763534b44b4870a",
-    "shared_workflow.svg": "502e8f7a4a3b6c06756469b73554174f8b7ccb4253da1163f5c1d013fc009ffa"
+    "shared_workflow.png": "f86fc29ebdf139cd6dbcef714d2cb9965a4e8e9ff141b7ed74e9d33a7b3bb61e",
+    "shared_workflow.pdf": "4e40bfe28b062c710aef57f84fbe1eaf4f6280e7603519c5f5272d61387593b8",
+    "shared_workflow.svg": "fa770dbeb0389d209eb229bd46e6d8a426754806f91fe3811b7b49f4b685049e"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

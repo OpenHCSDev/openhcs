@@ -42,9 +42,19 @@ We evaluated OpenHCS using established CellProfiler workflows and agent-authored
 
 ### Figure 1. A shared, editable analysis connects agents, scientists and execution
 
-![Shared workflow and retained native editing evidence.](figures/slas/submission_shared_workflow.png){width=6in}
+![Shared editing, execution, workers, viewers and image storage.](figures/slas/shared_workflow.png){width=6in}
 
-(I) Forms, Python and MCP act on one workflow; CellProfiler imports and custom functions enter the same definition. The execution server prepares the catalog, compiles pipelines and coordinates workers, with results streamed to separate viewers. CPU/GPU support depends on the selected functions; OMERO support is experimental. (II) Native workflow editor. (III) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (IV, V) Native controls and Python show matching normalization settings after MCP edits in an OpenHCS 0.8.5 session. The complete editing record and capture provenance are retained in the supplementary package.
+(I) Forms, Python and MCP act on one editable workflow; CellProfiler imports enter the same definition. The ZeroMQ execution server compiles pipelines, coordinates workers and returns progress to the editor. Workers read source images, save outputs and stream results to separate napari or Fiji viewers. Logos identify import, storage, processing and viewing integrations, not separate analysis steps. CPU/GPU support depends on the selected functions; OMERO support is experimental.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+### Figure 1, continued. Native editing and execution controls
+
+![Retained native workflow editor, server browser and matching controls and Python.](figures/slas/submission_shared_workflow.png){width=6in}
+
+(II) Native workflow editor. (III) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (IV, V) Native controls and Python show matching normalization settings after MCP edits in an OpenHCS 0.8.5 session. The complete editing record and capture provenance are retained in the supplementary package.
 
 ### Workflow definition and image sources
 
@@ -308,9 +318,9 @@ Table 2 summarizes each task's endpoint and scope; Supplementary Data 8 retains 
 
 ### Figure 3. Autonomous image review improves nuclear segmentation
 
-![Native autonomous repair, paired scores and complete coverage.](figures/slas/task_only_visual.png){width=6in}
+![Native autonomous repair, paired reference scores, complete coverage and annotated-versus-predicted counts.](figures/slas/task_only_visual.png){width=6in}
 
-\(A) Matched H001 raw images and initial/final overlays show correction of a split elongated nucleus without reference feedback. (B) Whole-image agreement with a notebook-derived reference: excess predictions fall from four to two, while 59 of 64 reference objects remain matched and five remain missed. (C) BBBC039 pooled object F1 on three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line denotes pooled F1 rather than the mean of field scores; matching requires intersection over union of at least 0.5. Initial results precede the author's self-directed revisions. Colours do not identify objects across attempts. Wider views and capture records are retained in Supplementary Figure 3 and Supplementary Data 8. These development comparisons do not establish held-out generalization or isolate the contribution of the skill.
+\(A) Matched H001 raw images and initial/final overlays show correction of a split elongated nucleus without reference feedback. (B) Whole-image agreement with a notebook-derived reference: excess predictions fall from four to two, while 59 of 64 reference objects remain matched and five remain missed. (C) BBBC039 pooled object F1 on three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line denotes pooled F1 rather than the mean of field scores; matching requires intersection over union of at least 0.5. (E) Final predicted versus annotated nuclear counts for the same 200 fields; the diagonal denotes equal counts, not correct boundaries or object identities. Initial results precede the author's self-directed revisions. Colours do not identify objects across attempts. Wider views and capture records are retained in Supplementary Figure 3 and Supplementary Data 8. These development comparisons do not establish held-out generalization or isolate the contribution of the skill.
 
 The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
 run plotted above: 61 fields improved, 123 decreased and 16 were unchanged

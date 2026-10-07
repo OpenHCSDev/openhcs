@@ -40,8 +40,9 @@ to understand the scientific findings in the main text.
 
 ## Figures and validation
 
-The current main layout has five figures and Table 2: a shared workflow with
-native editing evidence; matched CellProfiler execution and total time;
+The current main layout has five figures and Table 2: a full-width process
+architecture with integration logos and a native-editing continuation;
+matched CellProfiler execution and total time;
 self-directed image review; translocation, 3-D localisation and retinal soma
 detection; and public/laboratory neurite analysis with treatment responses.
 Nine supplementary figures group wider views by assay and retain
@@ -54,7 +55,7 @@ environment, without rerunning scientific analyses:
 
 ```sh
 PYTHONPATH=paper/figures python -c \
-  'from build_slas_visual_story import submission_shared_workflow, submission_quantitative_results, submission_neurite_results; submission_shared_workflow(); submission_quantitative_results(); submission_neurite_results()'
+  'from build_slas_visual_story import architecture, submission_shared_workflow, submission_quantitative_results, submission_neurite_results; architecture(); submission_shared_workflow(); submission_quantitative_results(); submission_neurite_results()'
 ```
 
 The existing `FigureSheet` owns retained-image placement, crops and output

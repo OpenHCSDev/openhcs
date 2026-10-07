@@ -284,7 +284,7 @@ def task_only_story():
     h001, bbbc039 = load_evaluations(ROOT)
     with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
                          "axes.spines.top": False, "axes.spines.right": False}):
-        sheet = FigureSheet("task_only_visual", "", 8.2)
+        sheet = FigureSheet("task_only_visual", "", 9.8)
         for path in (H001_SOURCE, BBBC039_SOURCE,
                      Path("paper/figures/build_slas_task_only.py"),
                      Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
@@ -298,26 +298,37 @@ def task_only_story():
             sheet.text(x, 89, label, size=14)
             sheet.source_image(
                 OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
-                (x, 64, 30, 24), crop=(297, 28, 1037, 492),
+                (x, 70, 30, 20), crop=(297, 28, 1037, 492),
             )
-        sheet.text(50, 64, "Own image review; no reference feedback",
+        sheet.text(50, 70, "Own image review; no reference feedback",
                    size=14, ha="center", color=MUTED)
-        axes = (sheet.figure.add_axes((.09, .37, .35, .23)),
-                sheet.figure.add_axes((.60, .37, .35, .23)),
-                sheet.figure.add_axes((.09, .12, .86, .15)))
+        axes = (sheet.figure.add_axes((.09, .40, .35, .24)),
+                sheet.figure.add_axes((.60, .40, .35, .24)),
+                sheet.figure.add_axes((.09, .10, .43, .20)),
+                sheet.figure.add_axes((.64, .10, .31, .20)))
         first, final = h001["attempts"]
         plot_pair(axes[0], first["derived_f1"], final["derived_f1"],
-                  "B  H001: same whole image", "Notebook-derived reference", font_size=16)
+                  "B  H001: same whole image", "Notebook-derived reference", font_size=14)
         paired = bbbc039["first_vs_final_same_three"]
         plot_pair(axes[1], paired["first"]["micro_f1"], paired["final"]["micro_f1"],
-                  "C  BBBC039: same three fields", "Independent annotations", font_size=16)
-        plot_coverage(axes[2], bbbc039, font_size=14)
-        axes[2].set_title("D  BBBC039: final coverage, all 200 fields")
+                  "C  BBBC039: same three fields", "Independent annotations", font_size=14)
+        plot_coverage(axes[2], bbbc039, font_size=10)
+        axes[2].set_title("D  Final F1 across 200 fields", fontsize=12)
+        annotated = [field["reference_count"] for field in bbbc039["instance_metrics"]]
+        predicted = [field["predicted_count"] for field in bbbc039["instance_metrics"]]
+        count_limit = max(*annotated, *predicted) * 1.05
+        axes[3].scatter(annotated, predicted, s=13, color=TEAL, alpha=.65)
+        axes[3].plot((0, count_limit), (0, count_limit), linestyle="--", color=BLUE,
+                     linewidth=1.2, label="Equal counts")
+        axes[3].set(xlim=(0, count_limit), ylim=(0, count_limit),
+                    xlabel="Annotated nuclei", ylabel="Predicted nuclei")
+        axes[3].set_title("E  BBBC039 counts", fontsize=12)
+        axes[3].legend(frameon=False, fontsize=10, loc="upper left")
         for axis in axes:
             axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
             axis.set_axisbelow(True)
         sheet.text(50, 2,
-                   "Independent full-200 repeat: caption and Supplementary Figure 15",
+                   "All 200 fields included; counts complement, rather than replace, object matching.",
                    size=12, ha="center", color=MUTED)
         sheet.save()
 
@@ -784,23 +795,20 @@ def submission_neurite_results():
 
 
 def submission_shared_workflow():
-    """Combine the workflow diagram with its retained native editing evidence."""
-    sheet = FigureSheet("submission_shared_workflow", "", 9.1)
-    sheet.source(OUTPUT / "shared_workflow_provenance.json")
+    """Keep the native editing evidence readable beside the full-page diagram."""
+    sheet = FigureSheet("submission_shared_workflow", "", 4.8)
     sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
-    sheet.panel("I", "Shared analysis and execution", 3, 97)
-    sheet.source_image(OUTPUT / "shared_workflow.png", (3, 45, 94, 50))
-    sheet.panel("II", "Editable workflow", 3, 42)
-    sheet.native_image("authoring_main_verified_capture", (3, 6, 33, 34))
-    sheet.panel("III", "Execution server", 39, 42)
-    sheet.native_image("authoring_server_browser_verified_capture", (39, 30, 58, 10))
-    sheet.panel("IV", "Controls", 39, 27)
-    sheet.panel("V", "Matching Python", 68, 27)
+    sheet.panel("II", "Editable workflow", 3, 97)
+    sheet.native_image("authoring_main_verified_capture", (3, 5, 33, 88))
+    sheet.panel("III", "Execution server", 39, 97)
+    sheet.native_image("authoring_server_browser_verified_capture", (39, 68, 58, 24))
+    sheet.panel("IV", "Controls", 39, 62)
+    sheet.panel("V", "Matching Python", 68, 62)
     sheet.native_image(
-        "authoring_function_verified_capture", (39, 5, 25, 20), crop=(25, 153, 193, 290)
+        "authoring_function_verified_capture", (39, 5, 25, 51), crop=(25, 153, 193, 290)
     )
     sheet.native_image(
-        "authoring_code_verified_capture", (68, 5, 29, 20), crop=(74, 96, 292, 222)
+        "authoring_code_verified_capture", (68, 5, 29, 51), crop=(74, 96, 292, 222)
     )
     sheet.save()
 
@@ -828,124 +836,10 @@ def submission_quantitative_results():
 
 
 def architecture():
-    sheet = FigureSheet(
-        "shared_workflow", "OpenHCS: one editable workflow from images to results", 8.1
-    )
-    for source in (
-        "docs/source/architecture/quick_start.rst",
-        "openhcs/core/pipeline_document.py",
-        "openhcs/core/compiled_step_plan.py",
-        "openhcs/core/runtime_stores.py",
-        "openhcs/core/source_bindings.py",
-        "openhcs/agent/capabilities.py",
-    ):
-        sheet.source(ROOT / source)
+    """Use the process diagram layout with the retained integration marks."""
+    from build_slas_processes import processes
 
-    logos = ROOT / "website/assets/logos"
-    sheet.source(logos / "README.md")
-    sheet.panel("A", "Choose how to work: UI editors and MCP bridge", 3, 89)
-    # Original desktop pictogram; upstream product marks remain unmodified.
-    sheet.axis.add_patch(
-        Rectangle((8, 77), 14, 8, edgecolor=PURPLE, facecolor=PALE, linewidth=1.5)
-    )
-    for y in (79, 81, 83):
-        sheet.axis.plot([10, 13, 13, 20], [y, y, y, y], color=PURPLE, linewidth=1.5)
-        sheet.axis.add_patch(Circle((15, y), 0.5, color=PURPLE))
-    sheet.axis.plot([11, 19], [75.5, 75.5], color=PURPLE, linewidth=2)
-    sheet.asset(logos / "python.svg", (34, 77, 10, 9))
-    sheet.asset(logos / "mcp.svg", (59, 77, 8, 8))
-    sheet.asset(logos / "cellprofiler.png", (82, 77, 10, 9))
-    for x, label in (
-        (15, "Desktop forms"),
-        (39, "Python code"),
-        (63, "Agent conversation"),
-        (87, "CellProfiler import"),
-    ):
-        sheet.text(x, 73.5, label, size=10.5, ha="center", weight="bold")
-        sheet.arrow((x, 71.5), (x, 67.5), both=x != 87, color=PURPLE)
-        sheet.text(
-            x + 2, 69.5, "Import" if x == 87 else "Edit", size=10.5, color=PURPLE
-        )
-
-    sheet.axis.add_patch(
-        FancyBboxPatch(
-            (4, 39),
-            92,
-            28,
-            boxstyle="round,pad=0.4",
-            facecolor="#edf7f5",
-            edgecolor=TEAL,
-        )
-    )
-    sheet.text(
-        50,
-        63.5,
-        "SHARED PIPELINE  •  configuration + ordered function steps",
-        size=12,
-        ha="center",
-        weight="bold",
-        color=TEAL,
-    )
-    sheet.stack(7, 48)
-    for x, title in ((24, "Prepare"), (48, "Segment"), (72, "Measure")):
-        sheet.box(x, 49, 19, 9, title, "Python function", color=TEAL)
-    for start, end in ((19, 24), (43, 48), (67, 72)):
-        sheet.arrow((start, 53.5), (end, 53.5), color=TEAL)
-    sheet.text(12, 44, "Named images", size=11, ha="center")
-    sheet.text(
-        59,
-        43,
-        "Choose stack axes, processing groups,\nfunction chains and named results",
-        size=11,
-        ha="center",
-    )
-
-    sheet.panel("B", "Connect data and processing tools", 3, 34)
-    sheet.asset(logos / "bioformats.svg", (6, 24, 9, 7))
-    sheet.text(18, 28.5, "Image folders · Bio-Formats", size=10.5, va="center")
-    sheet.text(18, 24, "OME-Zarr · OMERO (experimental)", size=11, va="center")
-    sheet.asset(logos / "zarr.svg", (40, 23.5, 10, 8))
-    for name, x in (("cupy.svg", 58), ("pytorch.svg", 70), ("jax.png", 82)):
-        sheet.asset(logos / name, (x, 24, 8, 7))
-    sheet.text(74, 21, "Scientific Python + custom functions", size=11, ha="center")
-    sheet.route(((8, 31), (1.5, 31), (1.5, 53), (6, 53)), color=BLUE)
-    sheet.route(((93, 28), (98.5, 28), (98.5, 53), (92, 53)), color=ORANGE)
-    sheet.text(2.1, 45, "Images", size=11, color=BLUE, rotation=90)
-    sheet.text(97, 43, "Functions", size=11, color=ORANGE, rotation=90)
-
-    sheet.panel("C", "Separate execution and viewer processes", 3, 19)
-    sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=BLUE)
-    sheet.text(
-        35,
-        36.5,
-        "Submit workflow",
-        size=11,
-        color=BLUE,
-        ha="center",
-        va="center",
-        bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
-    )
-    sheet.text(11, 9, "ZMQ server", size=12, weight="bold", ha="center", color=BLUE)
-    sheet.text(11, 5.5, "Catalog · compile · schedule", size=9.5, ha="center")
-    sheet.arrow((20, 9), (26, 9), both=True, color=BLUE)
-    sheet.chip(28, 5, "CPU")
-    sheet.chip(45, 5, "GPU")
-    sheet.text(42.5, 15.5, "Worker processes", size=11, ha="center", weight="bold")
-    sheet.text(42.5, 2.3, "Prepared tasks ↔ progress", size=10.5, ha="center", color=BLUE)
-    sheet.arrow((59, 9), (65, 9), color=TEAL)
-    sheet.stack(67, 6, 6, 5)
-    sheet.axis.add_patch(Rectangle((77, 6), 7, 6, edgecolor=TEAL, facecolor="white"))
-    for y in (7.5, 9, 10.5):
-        sheet.axis.plot([77, 84], [y, y], color=TEAL, linewidth=0.7)
-    sheet.axis.plot([79.5, 79.5], [6, 12], color=TEAL, linewidth=0.7)
-    sheet.asset(logos / "napari.svg", (87, 6, 5, 6))
-    sheet.asset(logos / "fiji.svg", (93, 6, 5, 6))
-    sheet.text(81, 2.3, "Images · ROIs · tables", size=11, ha="center")
-    sheet.text(
-        81, 13.3, "Separate napari / Fiji viewers", size=10.5, ha="center", color=TEAL
-    )
-    sheet.text(11, 2.3, "Requests ↔ status", size=10.5, ha="center", color=BLUE)
-    sheet.save()
+    processes(stem="shared_workflow", with_logos=True)
 
 
 def authoring():
