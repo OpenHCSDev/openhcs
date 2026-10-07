@@ -3,6 +3,7 @@
 import pickle
 import queue
 from concurrent.futures import Future
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -261,3 +262,26 @@ def test_snapshot_original_deadline_releases_transport_without_cancelling_qt_wor
     assert not tuple(tmp_path.glob("*.png"))
     assert pickle.loads(replies.result()) == response  # Late callback cannot replace it.
     server._running = False
+
+
+@pytest.mark.parametrize("corrupted_fields", [
+    {"operation_deadline": "old positional slot value"},
+    {"frame_condition": 5.0},
+])
+def test_corrupted_snapshot_is_rejected_before_qt_queue(
+    queued_viewer, tmp_path, corrupted_fields
+):
+    from openhcs.runtime.napari_viewer_server import NapariControlTransportPump
+
+    _, _, server = queued_viewer
+    pump = NapariControlTransportPump(server)
+    request = replace(ViewerWindowSnapshotRequest.from_fields(
+        connection=ExecutionConnectionSpec(port=5584),
+        output_dir_path=str(tmp_path),
+    ), **corrupted_fields)
+    response = pickle.loads(pump._response_payload(pickle.dumps(
+        {"type": "screenshot", "payload": request}
+    )))
+    assert response["status"] == "error"
+    assert server.accepted_control_requests.empty()
+    assert not tuple(tmp_path.glob("*.png"))
