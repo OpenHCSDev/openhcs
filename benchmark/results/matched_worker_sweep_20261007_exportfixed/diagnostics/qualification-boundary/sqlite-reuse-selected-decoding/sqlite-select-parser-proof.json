@@ -1,0 +1,191 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY CPU0 during active science suite, process CPU isolates contention; no pipeline headline",
+  "production_root": "/home/ts/code/projects/openhcs-cp-registry-control",
+  "production_module": "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/__init__.py",
+  "comparer_path": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-overlay/benchmark/cellprofiler_export_equivalence.py",
+  "comparer_sha256": "3a8f5e0c01ab0f12c4a58e7cf8aad7e266c3846871da13216541fcb84720a8db",
+  "candidate_database_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022.db",
+  "candidate_database_sha256": "8faab6e1a451bc7ef5b26fec7e790ea028ac6a66e9eaf48f9440f7a3a51e3000",
+  "unfiltered_whole_database": {
+    "wall_seconds": 5.784807140938938,
+    "process_cpu_seconds": 3.0903841119999997
+  },
+  "results": {
+    "W001": {
+      "numbers": [
+        1,
+        2
+      ],
+      "legacy_axis_filter": {
+        "wall_seconds": 0.8618787871673703,
+        "process_cpu_seconds": 0.6768092229999993
+      },
+      "select_with_whole_domain_guard_and_filter": {
+        "wall_seconds": 1.1369820917025208,
+        "process_cpu_seconds": 0.5661346639999998
+      },
+      "tables": {
+        "Experiment": {
+          "row_count": 1,
+          "column_count": 2,
+          "ordered_rows_equal": true
+        },
+        "Experiment_Properties": {
+          "row_count": 0,
+          "column_count": 4,
+          "ordered_rows_equal": true
+        },
+        "Per_Cells": {
+          "row_count": 136,
+          "column_count": 503,
+          "ordered_rows_equal": true
+        },
+        "Per_Cytoplasm": {
+          "row_count": 136,
+          "column_count": 326,
+          "ordered_rows_equal": true
+        },
+        "Per_Experiment": {
+          "row_count": 1,
+          "column_count": 4,
+          "ordered_rows_equal": true
+        },
+        "Per_Image": {
+          "row_count": 2,
+          "column_count": 51,
+          "ordered_rows_equal": true
+        },
+        "Per_Mitochondria": {
+          "row_count": 1330,
+          "column_count": 171,
+          "ordered_rows_equal": true
+        },
+        "Per_MitochondriaChildObjects": {
+          "row_count": 1330,
+          "column_count": 6,
+          "ordered_rows_equal": true
+        },
+        "Per_Nuclei": {
+          "row_count": 136,
+          "column_count": 496,
+          "ordered_rows_equal": true
+        },
+        "Per_Nucleoli": {
+          "row_count": 194,
+          "column_count": 164,
+          "ordered_rows_equal": true
+        },
+        "Per_NucleoliChildObjects": {
+          "row_count": 194,
+          "column_count": 6,
+          "ordered_rows_equal": true
+        },
+        "Per_RelationshipTypes": {
+          "row_count": 7,
+          "column_count": 5,
+          "ordered_rows_equal": true
+        },
+        "Per_Relationships": {
+          "row_count": 12114,
+          "column_count": 5,
+          "ordered_rows_equal": true
+        },
+        "Per_RelationshipsView": {
+          "row_count": 12114,
+          "column_count": 8,
+          "ordered_rows_equal": true
+        }
+      },
+      "full_raw_rows_exact": true
+    },
+    "W002": {
+      "numbers": [
+        3,
+        4
+      ],
+      "legacy_axis_filter": {
+        "wall_seconds": 1.4144379002973437,
+        "process_cpu_seconds": 0.704111052
+      },
+      "select_with_whole_domain_guard_and_filter": {
+        "wall_seconds": 0.9666374577209353,
+        "process_cpu_seconds": 0.5995039890000005
+      },
+      "tables": {
+        "Experiment": {
+          "row_count": 1,
+          "column_count": 2,
+          "ordered_rows_equal": true
+        },
+        "Experiment_Properties": {
+          "row_count": 0,
+          "column_count": 4,
+          "ordered_rows_equal": true
+        },
+        "Per_Cells": {
+          "row_count": 136,
+          "column_count": 503,
+          "ordered_rows_equal": true
+        },
+        "Per_Cytoplasm": {
+          "row_count": 136,
+          "column_count": 326,
+          "ordered_rows_equal": true
+        },
+        "Per_Experiment": {
+          "row_count": 1,
+          "column_count": 4,
+          "ordered_rows_equal": true
+        },
+        "Per_Image": {
+          "row_count": 2,
+          "column_count": 51,
+          "ordered_rows_equal": true
+        },
+        "Per_Mitochondria": {
+          "row_count": 1330,
+          "column_count": 171,
+          "ordered_rows_equal": true
+        },
+        "Per_MitochondriaChildObjects": {
+          "row_count": 1330,
+          "column_count": 6,
+          "ordered_rows_equal": true
+        },
+        "Per_Nuclei": {
+          "row_count": 136,
+          "column_count": 496,
+          "ordered_rows_equal": true
+        },
+        "Per_Nucleoli": {
+          "row_count": 194,
+          "column_count": 164,
+          "ordered_rows_equal": true
+        },
+        "Per_NucleoliChildObjects": {
+          "row_count": 194,
+          "column_count": 6,
+          "ordered_rows_equal": true
+        },
+        "Per_RelationshipTypes": {
+          "row_count": 7,
+          "column_count": 5,
+          "ordered_rows_equal": true
+        },
+        "Per_Relationships": {
+          "row_count": 12114,
+          "column_count": 5,
+          "ordered_rows_equal": true
+        },
+        "Per_RelationshipsView": {
+          "row_count": 12114,
+          "column_count": 8,
+          "ordered_rows_equal": true
+        }
+      },
+      "full_raw_rows_exact": true
+    }
+  },
+  "semantic_guard": "Full DISTINCT image-ID tuples pass existing RuntimeTableSnapshot.for_image_numbers before selected wide query; caller retains original offset/scoping. Every table raw row multiplicity, schema, header, column context matches legacy scoped parse."
+}

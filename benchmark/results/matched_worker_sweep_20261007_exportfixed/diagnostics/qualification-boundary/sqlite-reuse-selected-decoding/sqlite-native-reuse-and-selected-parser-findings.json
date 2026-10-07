@@ -1,0 +1,30 @@
+{
+  "status": "RECEIVED_SCRATCH_ONLY",
+  "consumer": "existing _saved_output_equivalence -> cellprofiler_database_export_equivalence -> _sqlite_database_differences -> _sqlite_tables and retained_native_measurement_snapshot; root applies three-file patch at safe mode boundary",
+  "scope": "Benchmark SCI qualification only; no pipeline/native timing change",
+  "production_head": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "full_comparison_proof": "sqlite-select-actual-D06-receiving/proof.json",
+  "raw_table_proof": "sqlite-select-parser-proof.json",
+  "patch": "sqlite-native-reuse-and-selected-parser.patch",
+  "preimages": "sqlite-native-reuse-and-selected-parser-preimages.json",
+  "received_invariants": [
+    "Full original Advanced W001 SCI reports/counts/inventory/evidence equal, excluding only frozenset JSON file ordering",
+    "All 14 W001/W002 table schemas, semantic headers, contexts, raw row multiplicities and actual row ordering equal legacy scope",
+    "Native cached numerical counter exact and all seven directed relationship feature groups exact",
+    "Whole DISTINCT image-ID domain passes original positive/integer/ownership/cross-axis guards before query selection",
+    "Candidate projection, raw/schema/scalar/aggregate/correlation/property/workspace/image comparisons remain fresh"
+  ],
+  "parser_process_cpu": {
+    "legacy_whole_parse_plus_W001_scope_seconds": 3.767193334999999,
+    "selected_parse_plus_whole_ID_guard_and_scope_seconds": 0.5661346639999998,
+    "fraction_removed": 0.8497197744697115
+  },
+  "performance_limits": [
+    "Diagnostic CPU0 shared with current qualifier; full receiving wall clocks not controlled comparative speedup",
+    "SQL export scope three of 30 workflows; cannot claim half whole-cohort qualification",
+    "Native cache and selected parser remove repeated native projection and whole DB decode; remaining fresh candidate facts and equality are mandatory",
+    "Changing driver/core/producer source identity deliberately invalidates existing cache on first use; do not migrate unsafe old cache keys",
+    "Production science remains D06; patch modifies benchmark qualification only; no headline pipeline speedup"
+  ],
+  "archive_scope": "Small JSON/script/patch only, never native-fact PKLs or decoded outputs"
+}

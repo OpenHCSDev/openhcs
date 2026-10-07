@@ -1,0 +1,14 @@
+{
+  "benchmark/native_measurement_facts.py": {
+    "preimage_sha256": "f84ad9886ae7fafd3cf5679ce71d12e065db990a8fff9fddb164a15c22f2e39b",
+    "patched_sha256": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+  },
+  "benchmark/cellprofiler_export_equivalence.py": {
+    "preimage_sha256": "8cfc16945a9a0c5aad971199005799214a01ff2565c7ff8ee18631ea2ecba77c",
+    "patched_sha256": "3a8f5e0c01ab0f12c4a58e7cf8aad7e266c3846871da13216541fcb84720a8db"
+  },
+  "benchmark/matched_cellprofiler_batch.py": {
+    "preimage_sha256": "1b0d0687f3af7eebfdb5a0cfeaef0fc6401a3292a87bc48cd56e557d7e0a1153",
+    "patched_sha256": "74402cdd3089b7d616ca2a9da3690479150eccfc1b7c8fd2ba62219309a336e9"
+  }
+}
