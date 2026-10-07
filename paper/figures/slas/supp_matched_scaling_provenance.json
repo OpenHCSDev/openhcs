@@ -1,0 +1,74 @@
+{
+  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/slas/matched_latestmain_nine_20261006/primary-execution/figure2_provenance.json": "eb5cc13eac3a441fb1b5ce61b0fb5f6e14cec71bb11f66da807f9e1b3ebb8e8b",
+    "paper/figures/slas/matched_latestmain_nine_20261006/primary-execution/measured_execution_seconds.png": "595d6e2eccc56a56b7092ea76c7db9f7bfc26c2b9881f2f2e60cab2da7cd8c69",
+    "paper/figures/slas/matched_latestmain_nine_20261006/primary-total/figure2_provenance.json": "cdb276ceb9247c32a5f1d5ee94ff5090f6d9943bb1304e78b0151b13da138118",
+    "paper/figures/slas/matched_latestmain_nine_20261006/primary-total/measured_total_seconds.png": "2ba62e09dcff55612a378dc8619440103f76559e9607f3d2efde2f917779c1b3",
+    "paper/figures/slas/matched_lastconsumer_20261006/primary-execution/figure2_provenance.json": "b560c16dc124db8cc3e0fc068b8b95a375ca91d2a2ab987c940bcbded5942fd4",
+    "paper/figures/slas/matched_lastconsumer_20261006/primary-execution/measured_execution_seconds.png": "40c05b7a2a7f575c438c3365ffdcd29debfcd04591b43d17cc4fba0995814e5d",
+    "paper/figures/slas/matched_lastconsumer_20261006/primary-total/figure2_provenance.json": "c9295c6e3055d33fad02a26414a8abda8a39bb587f4fa2be973751f0c673188e",
+    "paper/figures/slas/matched_lastconsumer_20261006/primary-total/measured_total_seconds.png": "0fe9e700f99333f5185fdcb59acf07c7a70de8dcc42c6f79456ee5636a3d57cc"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/matched_latestmain_nine_20261006/primary-execution/measured_execution_seconds.png",
+      "xyxy_pixels": [
+        0,
+        105,
+        2075,
+        2633
+      ],
+      "source_size": [
+        2922,
+        2633
+      ]
+    },
+    {
+      "source": "paper/figures/slas/matched_latestmain_nine_20261006/primary-total/measured_total_seconds.png",
+      "xyxy_pixels": [
+        0,
+        105,
+        2075,
+        2633
+      ],
+      "source_size": [
+        2922,
+        2633
+      ]
+    },
+    {
+      "source": "paper/figures/slas/matched_lastconsumer_20261006/primary-execution/measured_execution_seconds.png",
+      "xyxy_pixels": [
+        0,
+        105,
+        2075,
+        2633
+      ],
+      "source_size": [
+        2922,
+        2633
+      ]
+    },
+    {
+      "source": "paper/figures/slas/matched_lastconsumer_20261006/primary-total/measured_total_seconds.png",
+      "xyxy_pixels": [
+        0,
+        105,
+        2075,
+        2633
+      ],
+      "source_size": [
+        2922,
+        2633
+      ]
+    }
+  ],
+  "output_sha256": {
+    "supp_matched_scaling.png": "83df0754a2d1a554e73df2332fd607fc49c3f922d477be50d18946e8b157165e",
+    "supp_matched_scaling.pdf": "a9dc821d8fb67b5d30923090b150c3ca65adf04301f44d521c80489e8714ac97",
+    "supp_matched_scaling.svg": "e08210f88a9640637cda6da5efb213d3fafa01f71b5293910b8f8a3b1c7c3cdc"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

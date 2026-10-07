@@ -42,8 +42,9 @@ to understand the scientific findings in the main text.
 
 The current main layout has five figures and Table 2: a shared workflow with
 native editing evidence; matched CellProfiler execution and total time;
-self-directed image review; quantitative translocation and 3-D localisation;
-and neurite analysis. Supplementary figures group wider views by assay and retain
+self-directed image review; translocation, 3-D localisation and retinal soma
+detection; and public/laboratory neurite analysis with treatment responses.
+Nine supplementary figures group wider views by assay and retain
 runtime explanations, historical measurements and prospective held-out results.
 The manuscript and [current supplementary source](supplementary/README.md)
 own the displayed numbering; older run reports retain their original numbering.
@@ -59,6 +60,9 @@ PYTHONPATH=paper/figures python -c \
 The existing `FigureSheet` owns retained-image placement, crops and output
 receipts. Figure 3 uses post-freeze evaluation records through
 `build_slas_task_only.py`; its wider assay views remain in the supplement.
+`PYTHONPATH=paper/figures python paper/figures/build_slas_supplement.py`
+regenerates the consolidated supplement from retained artwork without rerunning
+the analyses or changing their contrast settings.
 The legacy `supplementary/task_only_analysis.md` is a historical record, not
 the source of the current supplementary PDF.
 

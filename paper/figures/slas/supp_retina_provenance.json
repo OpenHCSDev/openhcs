@@ -1,0 +1,83 @@
+{
+  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/slas/retinal_fresh_native_provenance.json": "4c5eb38b12132ad0211ce2fa5729d50a5235b2ca277c1a81c14f11aa719fe6c6",
+    "paper/figures/slas/retinal_fresh_native.png": "93d7a85de7c0d64bb4cacd9f680f3bef6de1058312cc9a56e9b763b9d676efcc",
+    "paper/figures/slas/retina_fresh16_repair_provenance.json": "f39d713943b269186ab023e2573e85dec731590d78f8564666aefd07c6f159cd",
+    "paper/figures/slas/retina_fresh16_repair.png": "582fc7f615372ba12c1fa2dbc009e2b8ed1d218e94d8b5363abcd2420dda5c74"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/retinal_fresh_native.png",
+      "xyxy_pixels": [
+        15,
+        104,
+        1505,
+        675
+      ],
+      "source_size": [
+        1520,
+        1730
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retinal_fresh_native.png",
+      "xyxy_pixels": [
+        15,
+        796,
+        1505,
+        1176
+      ],
+      "source_size": [
+        1520,
+        1730
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retinal_fresh_native.png",
+      "xyxy_pixels": [
+        15,
+        1315,
+        1505,
+        1713
+      ],
+      "source_size": [
+        1520,
+        1730
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "xyxy_pixels": [
+        27,
+        389,
+        2673,
+        745
+      ],
+      "source_size": [
+        2700,
+        1620
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "xyxy_pixels": [
+        27,
+        1004,
+        2673,
+        1377
+      ],
+      "source_size": [
+        2700,
+        1620
+      ]
+    }
+  ],
+  "output_sha256": {
+    "supp_retina.png": "b61905205fb066cb126e0dab987d5c06bbcd08f90f268fa2ae71d70ecfe480b8",
+    "supp_retina.pdf": "73cde3b3cf71dd06ca323058b1d5be7043846bd018236ba2cab6293c2d1ad3fa",
+    "supp_retina.svg": "6793ff6148e1ab35360a41c1f9c4599148025b2fbbffd6ac79b0b0d759478019"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

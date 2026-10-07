@@ -1,0 +1,85 @@
+{
+  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/slas/runtime_composition_provenance.json": "c414adb479e97dffea0cab6bb146ba16671fd385223969c3bbb9a5c6326f4b34",
+    "paper/figures/slas/runtime_composition.png": "11abab9bbcccbf1cf83a7ec699815367c95f2c1ed39ec9b75411e43c2f6bbdc7",
+    "paper/figures/slas/compiler_preparation_provenance.json": "48050c49dbe30c0368e68b01a117ffd6046e72c30e477db03a6ce78c21e15171",
+    "paper/figures/slas/compiler_preparation.png": "41d45bf597ceb66aae1e83b990889976b99b651871ceba9e8aca47b3ce52ed60",
+    "paper/figures/slas/custom_function_extension_provenance.json": "ee0e49848a9a0f8017d5c1942bce5d5e870eee090f1936ec4cb6f2f0eb57043e",
+    "paper/figures/slas/custom_function_extension.png": "af4a67e06a817bad63ffaa96c0d2d7b7a779e7f85e8d183d0d4b398f872d0dcf"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/runtime_composition.png",
+      "xyxy_pixels": [
+        54,
+        279,
+        2646,
+        949
+      ],
+      "source_size": [
+        2700,
+        2790
+      ]
+    },
+    {
+      "source": "paper/figures/slas/compiler_preparation.png",
+      "xyxy_pixels": [
+        54,
+        918,
+        2646,
+        1134
+      ],
+      "source_size": [
+        2700,
+        2700
+      ]
+    },
+    {
+      "source": "paper/figures/slas/compiler_preparation.png",
+      "xyxy_pixels": [
+        54,
+        2268,
+        2646,
+        2592
+      ],
+      "source_size": [
+        2700,
+        2700
+      ]
+    },
+    {
+      "source": "paper/figures/slas/custom_function_extension.png",
+      "xyxy_pixels": [
+        54,
+        296,
+        2646,
+        730
+      ],
+      "source_size": [
+        2700,
+        2280
+      ]
+    },
+    {
+      "source": "paper/figures/slas/custom_function_extension.png",
+      "xyxy_pixels": [
+        54,
+        1550,
+        2646,
+        2143
+      ],
+      "source_size": [
+        2700,
+        2280
+      ]
+    }
+  ],
+  "output_sha256": {
+    "supp_workflow_infrastructure.png": "b6acaddbf3d071734ffb80431ddfacec06a407164284539111ca0ffb586fbc21",
+    "supp_workflow_infrastructure.pdf": "f79517883cf488dc3cb5f659823c6c41d3ae88a88e4191da3fe583c66bedeb46",
+    "supp_workflow_infrastructure.svg": "aa5f1eb32c1acbe2f37263da07a5240593bdd4409ee626ac2f7ad2e2680b152f"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

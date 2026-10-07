@@ -42,8 +42,10 @@ publication status [pending]{.benchmark-claim key=status}.
 ```
 
 `case_count` is also derived from the matched execution/total cohort.
-Final Figure 2 is one composite (A declared-output parity, B execution CDF,
-C total CDF), using the existing measured renderer/CDF painter:
+Final Figure 2 is one composite (A execution time, B compile-plus-run total),
+using the existing measured renderer. Paired bars show per-workflow median
+seconds; row annotations show the measured CellProfiler/OpenHCS ratios. The
+figure header retains the complete declared-output comparison count:
 
 * `figures/slas/benchmark-publication/measured_benchmark_publication.png`
 

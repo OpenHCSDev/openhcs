@@ -1,0 +1,70 @@
+{
+  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/slas/h003_native_repair_provenance.json": "9480c3cc31e520b9bbdd536c95492fa4460599e3feba6ef6140b87d68c450f48",
+    "paper/figures/slas/h003_native_repair.png": "ed147bd88b98fb817e7dd67e96e6582e8a244cfcf02a8c449a604b527ce54e47",
+    "paper/figures/slas/h003_fresh19_matched_provenance.json": "25af16164537fce5b7ccc137014941af191e42bd970137b92bcbbf4c0484f342",
+    "paper/figures/slas/h003_fresh19_matched.png": "af9234786b4103d75a57226ec5dab0e19000b5530a34eceb0285ebf7f7251a3f"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h003_native_repair.png",
+      "xyxy_pixels": [
+        16,
+        113,
+        1568,
+        592
+      ],
+      "source_size": [
+        1584,
+        1410
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_native_repair.png",
+      "xyxy_pixels": [
+        16,
+        705,
+        1568,
+        1198
+      ],
+      "source_size": [
+        1584,
+        1410
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_matched.png",
+      "xyxy_pixels": [
+        27,
+        955,
+        2673,
+        1376
+      ],
+      "source_size": [
+        2700,
+        2220
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_matched.png",
+      "xyxy_pixels": [
+        27,
+        1554,
+        2673,
+        1976
+      ],
+      "source_size": [
+        2700,
+        2220
+      ]
+    }
+  ],
+  "output_sha256": {
+    "supp_paired_channels.png": "c5d4e231d4905a1bd528da2f36be0806199b43f321629af1132cdd0be9490f12",
+    "supp_paired_channels.pdf": "28fb050d82c8d96205b950e9af6f0deecfb0887379a5802936285cd086b720a1",
+    "supp_paired_channels.svg": "b0267c2cb52cd0800772141556549c7769a8cab0d948a5352746c047f74e080b"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

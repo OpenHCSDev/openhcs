@@ -1,0 +1,57 @@
+{
+  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/slas/h004_main_shafts_provenance.json": "d015113ad56b6010cedaf6fd06096157f976ea467fc3586c2a9a6d3be307712f",
+    "paper/figures/slas/h004_main_shafts.png": "ff2451cec52fa68080e893e149921ca2668450b58a4ffafaa5c844551bb3caa8",
+    "paper/figures/slas/p001_stitched_dev13_native_provenance.json": "a48e2d20e3db398c595f2f9e6838c6ec62bf8b0cf1c5c23a002fc784e7b65345",
+    "paper/figures/slas/p001_stitched_dev13_native.png": "7805e95e313169db5e091d6269a029ce501206b5bc2b4b8ae369af1bb399e234"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h004_main_shafts.png",
+      "xyxy_pixels": [
+        27,
+        227,
+        2673,
+        1134
+      ],
+      "source_size": [
+        2700,
+        1260
+      ]
+    },
+    {
+      "source": "paper/figures/slas/p001_stitched_dev13_native.png",
+      "xyxy_pixels": [
+        27,
+        428,
+        2673,
+        837
+      ],
+      "source_size": [
+        2700,
+        1860
+      ]
+    },
+    {
+      "source": "paper/figures/slas/p001_stitched_dev13_native.png",
+      "xyxy_pixels": [
+        27,
+        1172,
+        2673,
+        1562
+      ],
+      "source_size": [
+        2700,
+        1860
+      ]
+    }
+  ],
+  "output_sha256": {
+    "supp_neurite_morphology.png": "570b821a0ee07cc065d838946c53017a727f04ccf374a10c668d1827719ef8d5",
+    "supp_neurite_morphology.pdf": "b47cc61d3779f3be52a8411fa0dbd12ec9108821fee665d895c5bdd9b52842c7",
+    "supp_neurite_morphology.svg": "eb30b9a4d11f9125f98685a3b1f3bab910a01b18fe875b040ce2d750db25b87d"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

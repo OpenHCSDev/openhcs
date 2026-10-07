@@ -3,15 +3,15 @@
     "benchmark/results/matched_min3_integrated_main_20261007/data/singlewell/execution_summary.csv": "453e580916ceb4f42226c70f62e5af0596f028b6e584243a4537855d4bd388af",
     "benchmark/results/matched_min3_integrated_main_20261007/data/singlewell/total_summary.csv": "116a5f74965e851db9bb743902044d81bcfbd85e5b3a4011db8ca1da52ea2af0",
     "benchmark/results/matched_min3_integrated_main_20261007/data/singlewell/summary_custody.json": "e24646894b89e0256822ebcf3a89a08ea5451307516f1361288af0be4292e24c",
-    "benchmark/reports/cppipe_figures.py": "ce554b30097841f85a0398f977e6c7c3d2a95a4718c844784b417c77c670038f",
-    "paper/figures/build_slas_benchmark.py": "6883fffb31bf0a02b2e8e79c485715c7fa8b821405d4d4506db6eb6abf30eace"
+    "benchmark/reports/cppipe_figures.py": "c0bf3c3eaeda19de7bec37f7374a86b6184a56d82d4e2faaf162db27198151c1",
+    "paper/figures/build_slas_benchmark.py": "8c6b05bf1d3154f9cf2e15361f2c676a6903f03b75ecd82b68991e8c58bd4b1e"
   },
-  "generator_sha256": "6883fffb31bf0a02b2e8e79c485715c7fa8b821405d4d4506db6eb6abf30eace",
+  "generator_sha256": "8c6b05bf1d3154f9cf2e15361f2c676a6903f03b75ecd82b68991e8c58bd4b1e",
   "output_sha256": {
     "benchmark_claims.json": "6895f6256157d481f78f32bc626793e2822e884443f8d276da17ca5de44a4618",
-    "measured_benchmark_publication.png": "7a7f8aa5a5489f575235a9da0edc7437f191411a5e61c571a66748703cd39c73",
-    "measured_benchmark_publication.svg": "eb68e35a058433e309d25647ebc0d8683918c3a128d939c0e034b305edad3bc8",
-    "measured_benchmark_publication_caption.md": "240210e33b18b49c71bb51fa12ac765732ef5bd7a2a7bca1fbe31163085425bc"
+    "measured_benchmark_publication.png": "b877be28d30f83363a6c21d60e37d7ac99c84c1d915cd81ea4fdca27410328e4",
+    "measured_benchmark_publication.svg": "df47d97c7be99c8c88df87daa966cecc2d3066bd07c8c5645be30568381d46b2",
+    "measured_benchmark_publication_caption.md": "8a02aa373e8c32b07f668c121a3a197ef78f73aa775a918ff7da4f202c8d1387"
   },
   "interpretation": "Single measured-owner projection; final claims require explicit owner freeze."
 }

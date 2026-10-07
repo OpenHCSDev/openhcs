@@ -751,7 +751,7 @@ def personal_stitched_development():
 
 def submission_neurite_results():
     """Show the retained shaft illustration without promoting an overextended repair."""
-    sheet = FigureSheet("submission_neurite_results", "", 7.3)
+    sheet = FigureSheet("submission_neurite_results", "", 10.1)
     public = OUTPUT / "h004_fresh20_sources"
     personal = OUTPUT / "p001_fresh13_sources"
     sheet.source(public / "QA-INDEX.json")
@@ -764,17 +764,22 @@ def submission_neurite_results():
         (52, "first-bottom-result", "B  Initial shaft result"),
     ):
         sheet.text(x, 91, title, size=10.5, weight="bold")
-        sheet.source_image(public / f"{name}.png", (x, 62, 45, 26), crop=(297, 28, 1250, 410))
-    sheet.text(3, 59, "Retained initial candidate; fine filopodia are outside the illustrated shaft endpoint.", size=10, color=MUTED)
-    sheet.panel("II", "Laboratory neurites: final autonomous field-by-field analysis", 3, 52)
+        sheet.source_image(public / f"{name}.png", (x, 70, 45, 18), crop=(297, 28, 1250, 410))
+    sheet.text(3, 67, "Retained shaft candidate; fine filopodia are outside this endpoint.", size=10, color=MUTED)
+    sheet.panel("II", "Laboratory neurites: final autonomous analysis", 3, 62)
     for x, name, title in (
         (3, "raw", "C  Raw FITC"),
         (35, "result", "D  Body and path result"),
         (67, "combined", "E  Combined"),
     ):
-        sheet.text(x, 46, title, size=10.5, weight="bold")
-        sheet.source_image(personal / f"site1-{name}.png", (x, 8, 30, 35), crop=(550, 28, 997, 437))
-    sheet.text(3, 5, "Matched site-1 crops; nine fields completed without stitching or overlap deduplication.", size=10, color=MUTED)
+        sheet.text(x, 57, title, size=10.5, weight="bold")
+        sheet.source_image(personal / f"site1-{name}.png", (x, 32, 30, 23), crop=(550, 28, 997, 437))
+    sheet.panel("III", "Fixed-recipe transfer: treatment responses", 3, 28)
+    sheet.source(OUTPUT / "personal_neurite_effects_transfer_provenance.json")
+    sheet.source_image(OUTPUT / "personal_neurite_effects_transfer.png", (3, 3, 94, 23),
+                       crop=(90, 280, 2640, 1125))
+    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching remains under investigation.",
+               size=9.5, color=MUTED)
     sheet.save()
 
 
@@ -801,16 +806,24 @@ def submission_shared_workflow():
 
 
 def submission_quantitative_results():
-    """Keep assay response and 3-D localisation in one quantitative result sheet."""
-    sheet = FigureSheet("submission_quantitative_results", "", 8.3)
+    """Show assay response, 3-D localisation and noisy retinal soma detection."""
+    sheet = FigureSheet("submission_quantitative_results", "", 10.5)
     sheet.source(OUTPUT / "translocation_fresh23_provenance.json")
     sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
     sheet.panel("I", "Translocation response", 3, 97)
-    sheet.source_image(OUTPUT / "translocation_fresh23.png", (3, 56, 94, 37),
+    sheet.source_image(OUTPUT / "translocation_fresh23.png", (3, 67, 94, 26),
                        crop=(50, 270, 2650, 1290))
-    sheet.panel("II", "Three-dimensional nuclear localisation", 3, 52)
-    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 4, 94, 45),
+    sheet.panel("II", "Three-dimensional nuclear localisation", 3, 63)
+    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 31, 94, 29),
                        crop=(50, 110, 2660, 1300))
+    sheet.panel("III", "Retinal somata in heterogeneous background", 3, 28)
+    sheet.source(OUTPUT / "retinal_fresh_native_provenance.json")
+    sheet.text(3, 24, "Raw RBPMS", size=10.5, weight="bold")
+    sheet.text(52, 24, "Final outlines", size=10.5, weight="bold")
+    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (3, 2, 45, 21),
+                       crop=(24, 790, 747, 1185))
+    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (52, 2, 45, 21),
+                       crop=(770, 790, 1493, 1185))
     sheet.save()
 
 
