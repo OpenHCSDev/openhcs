@@ -62,6 +62,14 @@ class AssaySeries:
     compound: str
     unit: str
     doses: tuple[DoseGroup, ...]
+    negative_control: DoseGroup
+    positive_control: DoseGroup
+
+    @property
+    def control_zprime(self) -> float:
+        negative = [well.median_log2 for well in self.negative_control.wells]
+        positive = [well.median_log2 for well in self.positive_control.wells]
+        return 1 - 3 * (stdev(negative) + stdev(positive)) / abs(mean(positive) - mean(negative))
 
     @classmethod
     def load(cls, path: Path) -> tuple["AssaySeries", ...]:
@@ -87,7 +95,21 @@ class AssaySeries:
             if any(units[well.well] != row["concentration_unit"] for well in wells):
                 raise ValueError("Dose units disagree with retained source metadata")
             grouped.setdefault((block, row["concentration_unit"]), []).append(DoseGroup.decode(row, wells))
-        series = tuple(cls(block, unit, tuple(sorted(doses, key=lambda dose: dose.concentration)))
+        def control(block: str, role: str) -> DoseGroup:
+            rows = [row for row in card["dose_response"]
+                    if row["assay_block"] == block and row["assay_role"] == role]
+            if len(rows) != 1:
+                raise ValueError("Expected one retained control group per role")
+            row = rows[0]
+            wells = tuple(sorted((well for well in endpoints
+                                  if design[well.well] == (block, role, float(row["concentration"]))),
+                                 key=lambda well: well.well))
+            if len(wells) != 4:
+                raise ValueError("Control separation requires four independent wells per group")
+            return DoseGroup.decode(row, wells)
+
+        series = tuple(cls(block, unit, tuple(sorted(doses, key=lambda dose: dose.concentration)),
+                           control(block, "negative_control"), control(block, "positive_control"))
                        for (block, unit), doses in sorted(grouped.items()))
         if len(series) != 2 or any(len(item.doses) != 9 for item in series):
             raise ValueError("Expected two nine-dose series")

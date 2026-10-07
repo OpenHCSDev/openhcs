@@ -1,17 +1,17 @@
 {
-  "generator_sha256": "04be6a60bb3bccf38e7778f13599f27cd5072a153dc4daf0643a976c9e20da63",
+  "generator_sha256": "4acb5fc9cff7f7bcc8e0c028824b10c9afc74bcbfd817bf851571767200b6b02",
   "source_sha256": {
     "paper/figures/build_slas_neurite_effects.py": "45eab33bd8dbb9d9df9c67e246584cbc41531a7ba84398ed434bc3d8ab6891fb",
-    "paper/figures/compare_personal_neurite.py": "444c14f3008d26b5d7febf8b095eeb738eda7dc24e584b97bdd160205eaaddfa",
-    "paper/supplementary/personal_neurite_repaired_morphometry/joined_wells.csv": "7da643d02f42cf9df01fe481d0b3b6fe82612bd9d3dba80e1b343075bbd0228e",
-    "paper/supplementary/personal_neurite_repaired_morphometry/treatment_effects.csv": "e0caee6719cee9e795170d0bcb7feb95962d95fcfb39bfb65e798c29f7450570",
-    "paper/supplementary/personal_neurite_repaired_morphometry/source_evidence.json": "3b9becaa140c4ec0e461f88bb0159bc84341bf462972a088bc11e401da405054"
+    "paper/figures/compare_personal_neurite.py": "56ebc5f582c4bcbc2384d6cf954e32ca86007fb8a91f63f403ee293a7c05a2eb",
+    "paper/supplementary/personal_neurite_repaired_morphometry/joined_wells.csv": "d059c5c35b7cdff94c411caaa29fcaefeff0f952baf63bb229b1c82c92773a2e",
+    "paper/supplementary/personal_neurite_repaired_morphometry/treatment_effects.csv": "0f76b81b6f69646df93d5c83676f40f8865a2897779588f907ffcd64d691c12f",
+    "paper/supplementary/personal_neurite_repaired_morphometry/source_evidence.json": "cffa65f25928b67298727d387c037e7f329d77375da761f6c5d30fa6203eb6bb"
   },
   "ui_crops": [],
   "output_sha256": {
-    "personal_neurite_effects_repaired.png": "dfadfde715ba85f1407739cc02899fb903d2b213b878b70cd1fb534646e507d7",
-    "personal_neurite_effects_repaired.pdf": "0055e8914ccc5e452d2e6b73a554f3aa1bffb5fc293dab91ed3e9b4089f4c527",
-    "personal_neurite_effects_repaired.svg": "6874e3076d67c92d084d2ddc60b6db28e7ec4ec51768ff833f84b76035159355"
+    "personal_neurite_effects_repaired.png": "b05e9987f528d3f442db5169da0afd139d9326ecb4771c3d560253593eb25fed",
+    "personal_neurite_effects_repaired.pdf": "8303c1555d949c03da53541b68dcffd0591ffef1806ceb077e00f9331c816bfb",
+    "personal_neurite_effects_repaired.svg": "39ece4d18fcd60e6047f4d2bb531301cf695229691ae5a04afdde787e7d583c1"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
