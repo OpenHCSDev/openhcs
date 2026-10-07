@@ -5,6 +5,7 @@ import json
 from math import isclose
 from pathlib import Path
 from statistics import mean, stdev
+from textwrap import fill
 
 from build_slas_visual_story import BLUE, TEAL, INK, MUTED, ROOT, FigureSheet
 from compare_personal_neurite import DEFAULT_METRICS, METRICS, endpoint_declarations, read_rows
@@ -14,7 +15,7 @@ class NeuriteEffectFigure(FigureSheet):
     """One well table supplies points for every requested endpoint panel."""
 
     def __init__(self, tables: Path, *, stem: str, metrics=DEFAULT_METRICS):
-        super().__init__(stem, "Neurite outgrowth: drug responses across methods", 3.4 * len(metrics) + .8)
+        super().__init__(stem, "Neurite outgrowth: drug responses across methods", 2.0 * len(metrics) + 1.4)
         self.source(Path(__file__))
         self.source(ROOT / "paper/figures/compare_personal_neurite.py")
         for name in ("joined_wells.csv", "treatment_effects.csv", "source_evidence.json"):
@@ -36,12 +37,16 @@ class NeuriteEffectFigure(FigureSheet):
             limits[metric] = (lower - padding, upper + padding)
         for column, condition in enumerate(conditions):
             for row, metric in enumerate(metrics):
-                left = .10 + column * (.90 / len(conditions))
-                bottom = .17 + (len(metrics) - 1 - row) * (.71 / len(metrics))
-                height = .48 / len(metrics)
-                axis = self.figure.add_axes((left, bottom, .72 / len(conditions), height))
-                self.panel(chr(65 + row * len(conditions) + column), condition,
-                           left * 100, (bottom + height + .02) * 100)
+                left = .14 + column * (.90 / len(conditions))
+                bottom = .12 + (len(metrics) - 1 - row) * (.75 / len(metrics))
+                height = .55 / len(metrics)
+                axis = self.figure.add_axes((left, bottom, .68 / len(conditions), height))
+                letter = chr(65 + row * len(conditions) + column)
+                if row == 0:
+                    self.panel(letter, condition, left * 100, (bottom + height + .02) * 100)
+                else:
+                    axis.text(.02, .98, letter, transform=axis.transAxes,
+                              va="top", fontsize=14, weight="bold", color=BLUE)
                 selected = sorted((item for item in effects
                                    if item["condition"] == condition and item["metric"] == metric),
                                   key=lambda item: float(item["dose_uM"]))
@@ -73,7 +78,7 @@ class NeuriteEffectFigure(FigureSheet):
                     axis.plot(positions, means, color=color, linewidth=1.1, label=label, zorder=1)
                 axis.axhline(1, color=MUTED, linewidth=0.8, linestyle="--", zorder=0)
                 axis.set(xlim=(-0.5, 4.5), ylim=limits[metric],
-                         ylabel=declarations[metric].label, xlabel="Concentration (µM)")
+                         ylabel=fill(declarations[metric].label, width=20), xlabel="Concentration (µM)")
                 axis.set_xticks(range(5), [item["dose_uM"] for item in selected])
                 axis.tick_params(labelsize=9, colors=INK)
                 axis.spines[["top", "right"]].set_visible(False)
