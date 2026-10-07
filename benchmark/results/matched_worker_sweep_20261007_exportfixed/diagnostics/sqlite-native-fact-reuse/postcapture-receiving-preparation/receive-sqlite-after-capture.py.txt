@@ -1,0 +1,118 @@
+"""Post-capture only: actual patched SQLite consumer on saved D06 outputs.
+
+This imports the real existing owners. It requires the patch to be applied;
+there are no cloned functions, module monkeypatches, science/server jobs or
+shared-cache writes. Numerical receiving must not run during official capture.
+"""
+import argparse
+import gzip
+import hashlib
+import inspect
+import json
+import os
+import pickle
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--production-root', type=Path, required=True)
+parser.add_argument('--benchmark-root', type=Path, required=True)
+parser.add_argument('--candidate-case-root', type=Path, required=True)
+parser.add_argument('--native-case-root', type=Path, required=True)
+parser.add_argument('--baseline-results', type=Path, required=True)
+parser.add_argument('--output-dir', type=Path, required=True)
+args = parser.parse_args()
+assert os.sched_getaffinity(0) == {0}
+assert all(os.environ[name] == '1' for name in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS'))
+production = args.production_root.resolve()
+artifact = args.benchmark_root.resolve()
+sys.path.insert(0, str(production))
+import openhcs
+import benchmark
+benchmark.__path__.insert(0, str(artifact / 'benchmark'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.cellprofiler_export_equivalence import _declared_sqlite_table_subjects, _sqlite_tables
+from benchmark.matched_cellprofiler_batch import _saved_output_equivalence
+from benchmark.native_batch_contracts import NativeBatchReport
+from benchmark.native_measurement_facts import _policy_identity, retained_native_measurement_snapshot
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot
+from openhcs.serialization.json import to_jsonable
+
+assert 'projection_producer' in inspect.signature(retained_native_measurement_snapshot).parameters, 'SQLite patch must be applied before receiving.'
+assert Path(openhcs.__file__).resolve().parent.parent == production
+sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+production_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=production, text=True).strip()
+assert production_head == 'd06b7226c82fc6de8ab6b644f3bec417f4b7b922'
+assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=production, text=True).strip()
+source_files = tuple(Path(inspect.getsourcefile(function)).resolve() for function in (_saved_output_equivalence, _sqlite_tables, retained_native_measurement_snapshot, RuntimeMeasurementSnapshot.from_output_snapshot))
+source_hashes = {str(path): sha(path) for path in source_files}
+source_report = args.native_case_root / 'native_report.json'
+report_sha = sha(source_report)
+report = NativeBatchReport.from_payload(json.loads(source_report.read_text()))
+report.require_complete(3)
+assert report.request.start_barrier_job_count == 1
+assert len(report.request.assignment_output_subdirectories) == 8
+candidate_provenance = json.loads((args.candidate_case_root / 'pilot_provenance.json').read_text())
+assert candidate_provenance['source_commit'] == production_head
+assert candidate_provenance['source_dirty'] is False
+assert candidate_provenance['native_reference_report_sha256'] == report_sha
+with gzip.open(args.candidate_case_root / 'candidate_evidence/0/observation.pkl', 'rb') as stream:
+    observation = pickle.load(stream)
+axis = 'W001'
+reference_root = args.native_case_root / 'native/0' / axis
+reference_database = next(reference_root.rglob('*.db'))
+reference_properties = tuple(sorted(reference_root.rglob('*.properties')))
+assert reference_properties
+reference_subjects = _declared_sqlite_table_subjects(reference_properties)[reference_database.name]
+assert reference_subjects
+producer = (_sqlite_tables, reference_subjects)
+producer_identity = _policy_identity(producer)
+original_inventory = {str(Path(item['path']).resolve()): item['sha256'] for item in candidate_provenance['native_reference_file_inventory']}
+used_files = (reference_database, *reference_properties)
+for path in used_files:
+    assert original_inventory[str(path.resolve())] == sha(path)
+
+policy = _strict_cellprofiler_runtime_equivalence_policy()
+exports = observation.exports.for_execution_axis(axis)
+kwargs = dict(policy=policy, execution_axis_id=axis, source_workspaces=(args.candidate_case_root / 'candidate/0/source_workspace_matched_pilot',))
+baseline = json.loads(args.baseline_results.read_text())[0]
+def admitted_json(result):
+    payload = to_jsonable(result)
+    # These exact fields are declared frozenset[Path] on the existing report.
+    for index in (0, 1):
+        values = payload[index]['compared_output_files']
+        assert len(values) == len(set(values))
+        payload[index]['compared_output_files'] = sorted(values)
+    return payload
+for index in (0, 1):
+    baseline[index]['compared_output_files'] = sorted(baseline[index]['compared_output_files'])
+args.output_dir.mkdir(parents=True, exist_ok=False)
+cache = args.output_dir / 'native-facts'
+results = {}
+for mode in ('cache_miss', 'cache_hit'):
+    start = time.perf_counter()
+    result = _saved_output_equivalence(reference_root, exports, **kwargs, native_measurement_cache_root=cache, native_reference_report_sha256=report_sha, production_source_commit=production_head)
+    elapsed = time.perf_counter() - start
+    payload = admitted_json(result)
+    assert payload == baseline
+    assert not result[0].differences and not result[1].differences and not result[2]
+    (args.output_dir / f'{mode}-full-results.json').write_text(json.dumps(to_jsonable(result), indent=2, sort_keys=True) + '\n')
+    results[mode] = {'seconds': elapsed, 'full_results_equal_retained_D06_baseline': True, 'result_sha256': hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()}
+
+# Receiving serialized facts explicitly includes exact directed correlations,
+# not merely tolerance-based SCI equality or relationship feature counts.
+tables = _sqlite_tables(reference_database, reference_subjects, policy)
+measurement_tables = tuple(table for name, (_, table) in tables.items() if name in reference_subjects)
+snapshot = RuntimeOutputSnapshot(tables=measurement_tables)
+fresh = RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=policy)
+cached = retained_native_measurement_snapshot(snapshot, policy=policy, source_table_paths=(reference_database,), cache_root=cache, reference_report_sha256=report_sha, source_commit=production_head, projection_producer=producer)
+assert fresh.measurement_fact_counts == cached.measurement_fact_counts
+assert fresh.correlated_relationships == cached.correlated_relationships
+assert len(fresh.correlated_relationships) == 7
+assert source_hashes == {str(path): sha(path) for path in source_files}
+proof = {'status': 'PASS', 'scope': 'DIAGNOSTIC_ONLY post-capture actual patched owners, saved D06 Advanced rep0 W001, no science/native/server jobs; cache timings not pipeline speedup', 'production_root': str(production), 'production_head': production_head, 'native_report_source_head': candidate_provenance['native_reference_source_commit'], 'native_report_path': str(source_report), 'native_report_sha256': report_sha, 'actual_owner_file_sha256': source_hashes, 'used_native_files_sha256': {str(path.resolve()): sha(path) for path in used_files}, 'producer_identity': producer_identity, 'producer_identity_authority': 'Existing _policy_identity of actual _sqlite_tables callable/module/state and CPA-derived nominal reference_subject declarations; no manual module roster or alternate cache owner.', 'results': results, 'exact_numeric_facts_equal': True, 'exact_directed_relationships_equal': True, 'directed_relationship_feature_count': 7, 'baseline_results_path': str(args.baseline_results), 'baseline_results_sha256': sha(args.baseline_results), 'cache_path': str(cache), 'archive_scope': 'Archive JSON proof/source only, never cache PKLs or decoded outputs.'}
+(args.output_dir / 'proof.json').write_text(json.dumps(proof, indent=2) + '\n')
+print(json.dumps({'status': 'PASS', 'proof': str(args.output_dir / 'proof.json')}))
