@@ -271,6 +271,21 @@ whole-well neuron counts. Unselected wells are not filled with zero.
 The [original frozen comparison](personal_neurite_baseline_morphometry/treatment_effects.csv)
 is retained separately for before/after evaluation; it was not overwritten.
 
+Additional [branch and primary-process totals](personal_neurite_branch_diagnostics/joined_wells.csv)
+and their [treatment responses](personal_neurite_branch_diagnostics/treatment_effects.csv)
+test whether the weaker branching response is explained by the cell denominator.
+At 40 µM, total-branch fold changes are 1.58 versus 3.01 for FC-A and 1.61
+versus 3.03 for Y27632 (OpenHCS versus MetaXpress). Branches per primary
+process likewise give smaller responses: 1.26 versus 2.48 and 1.21 versus
+2.23, respectively. The difference therefore persists without a cell-count
+denominator. OpenHCS totals are means of field totals, and its branch/process
+endpoint is the mean of the nine field ratios. The commercial comparison
+uses ratios of exported well totals; its internal site weighting and primary
+process definition remain unspecified. These diagnostic ratios are not proof
+of equivalent topology or of which method is more accurate. Their
+[source record](personal_neurite_branch_diagnostics/source_evidence.json)
+identifies the same assisted-development run, not a new segmentation attempt.
+
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```

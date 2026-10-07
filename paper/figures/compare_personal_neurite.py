@@ -30,12 +30,45 @@ class SummaryEndpoint:
     def native_value(self, summary, cells):
         return float(summary[self.native_column])
 
+    def reference_value(self, headers, values):
+        return float(values[headers.index(self.reference_column)])
+
+    def aggregate_values(self, values):
+        return mean(values)
+
 
 class CellMeanEndpoint(SummaryEndpoint):
     """Mean of per-cell endpoints, not a pooled graph-segment statistic."""
 
     def native_value(self, summary, cells):
         return mean(float(row[self.native_column]) for row in cells)
+
+
+@dataclass(frozen=True)
+class RatioEndpoint(SummaryEndpoint):
+    """A declared ratio of exported totals, not a ratio of cell means."""
+
+    reference_denominator: str
+    native_denominator: str
+
+    @staticmethod
+    def ratio(numerator, denominator):
+        if not math.isfinite(denominator) or denominator < 0:
+            raise ValueError("Endpoint ratio requires a nonnegative finite denominator")
+        if denominator == 0:
+            return None  # Undefined, not a zero ratio or a rejected zero-growth field.
+        return numerator / denominator
+
+    def aggregate_values(self, values):
+        return None if any(value is None for value in values) else mean(values)
+
+    def native_value(self, summary, cells):
+        return self.ratio(super().native_value(summary, cells),
+                          float(summary[self.native_denominator]))
+
+    def reference_value(self, headers, values):
+        return self.ratio(super().reference_value(headers, values),
+                          float(values[headers.index(self.reference_denominator)]))
 
 
 @dataclass(frozen=True)
@@ -52,6 +85,13 @@ class WellEndpoints:
         "Mean cell process length / control", "Cell: Mean Process Length (Neurite Outgrowth)", "mean_process_length")})
     median_process_length: float = field(metadata={"endpoint": CellMeanEndpoint(
         "Mean cell median process length / control", "Cell: Median Process Length (Neurite Outgrowth)", "median_process_length")})
+    total_branches: float = field(metadata={"endpoint": SummaryEndpoint(
+        "Total branches / control", "Total Branches (Neurite Outgrowth)", "total_branches")})
+    total_processes: float = field(metadata={"endpoint": SummaryEndpoint(
+        "Total primary processes / control", "Total Processes (Neurite Outgrowth)", "total_processes")})
+    branches_per_process: float | None = field(metadata={"endpoint": RatioEndpoint(
+        "Branches per primary process / control", "Total Branches (Neurite Outgrowth)", "total_branches",
+        "Total Processes (Neurite Outgrowth)", "total_processes")})
 
 
 METRICS = tuple(field.name for field in fields(WellEndpoints))
@@ -114,7 +154,8 @@ class NativeSummary:
                for cell in cells):
             raise ValueError(f"Cell measurements use another source or calibration: {path}")
         for cell_column, summary_column in (("total_outgrowth", "total_outgrowth"),
-                                            ("branches", "total_branches")):
+                                            ("branches", "total_branches"),
+                                            ("processes", "total_processes")):
             if not math.isclose(sum(float(cell[cell_column]) for cell in cells),
                                 float(row[summary_column]), rel_tol=1e-9, abs_tol=1e-9):
                 raise ValueError(f"Cell {cell_column} does not reconcile to summary: {path}")
@@ -123,7 +164,8 @@ class NativeSummary:
             raise ValueError(f"Inconsistent branch denominator: {path}")
         values = {name: declaration.native_value(row, cells)
                   for name, declaration in endpoint_declarations().items()}
-        if not all(math.isfinite(value) and value >= 0 for value in values.values()):
+        if not all(math.isfinite(value) and value >= 0
+                   for value in values.values() if value is not None):
             raise ValueError(f"Invalid native endpoint: {path}")
         return cls(row["well"], row.get("site"), WellEndpoints(**values))
 
@@ -175,8 +217,10 @@ class SiteMeanWellAggregation(WellAggregation):
     def aggregate(self, rows):
         if len(rows) != 9 or {row.site for row in rows} != {str(site) for site in range(1, 10)}:
             raise ValueError("Site-mean protocol requires nine unique measured sites, 1–9, for each well")
-        return WellEndpoints(**{metric: mean(getattr(row.endpoints, metric) for row in rows)
-                                for metric in METRICS})
+        return WellEndpoints(**{
+            metric: declaration.aggregate_values([getattr(row.endpoints, metric) for row in rows])
+            for metric, declaration in endpoint_declarations().items()
+        })
 
 
 def reference_rows(reference, workbook, metrics):
@@ -199,7 +243,7 @@ def reference_rows(reference, workbook, metrics):
                     if headers is None or values[0] != target["well"]:
                         raise ValueError(f"Workbook source row identity changed: {sheet.title}/{number}")
                     for metric in metrics:
-                        target[metric] = values[headers.index(declarations[metric].reference_column)]
+                        target[metric] = declarations[metric].reference_value(headers, values)
                     del wanted[(sheet.title, number)]
             if wanted:
                 raise ValueError("Reference metadata names missing workbook rows")
@@ -207,7 +251,7 @@ def reference_rows(reference, workbook, metrics):
             book.close()
     for row in rows:
         for metric in metrics:
-            if metric not in row or not math.isfinite(float(row[metric])) or float(row[metric]) < 0:
+            if row.get(metric) is None or not math.isfinite(float(row[metric])) or float(row[metric]) < 0:
                 raise ValueError(f"Missing or invalid reference endpoint {metric}: {row['plate']}/{row['well']}")
     return rows
 
@@ -239,6 +283,8 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
         identity = (row["plate"], row["well"])
         if identity not in native:
             continue
+        if any(native[identity][metric] is None for metric in metrics):
+            raise ValueError(f"Selected native ratio is undefined: {identity}")
         joined.append({**row, **{f"openhcs_{metric}": native[identity][metric]
                                 for metric in metrics}})
     effects = []
@@ -286,6 +332,8 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
         "metrics": list(metrics),
         "process_length_aggregation": aggregation.process_length_description,
         "total_outgrowth_aggregation": aggregation.total_outgrowth_description,
+        "branch_total_aggregation": "Total branches and total primary processes use the selected well aggregation; site-mean means field totals, not deduplicated whole-well counts.",
+        "branch_process_ratio_aggregation": "OpenHCS: declared total branches / total primary processes in each native plane, then selected well aggregation (unweighted site mean for site-mean). MetaXpress: ratio of exported well totals; its internal site weighting and primary-process definition are unspecified. These are response proxies, not identical endpoint definitions.",
         "coordinate_unit": NativeSummary.coordinate_unit,
         "pipeline_source": str(pipeline),
         "protocol_figure_label": aggregation.figure_label,
