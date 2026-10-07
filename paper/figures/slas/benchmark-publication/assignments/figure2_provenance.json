@@ -1,0 +1,43 @@
+{
+  "source_sha256": {
+    "benchmark/results/matched_min3_integrated_main_20261007/data/singlewell/total_summary.csv": "116a5f74965e851db9bb743902044d81bcfbd85e5b3a4011db8ca1da52ea2af0",
+    "benchmark/results/matched_min3_integrated_main_20261007/data/singlewell/summary_custody.json": "e24646894b89e0256822ebcf3a89a08ea5451307516f1361288af0be4292e24c",
+    "benchmark/results/matched_min3_integrated_main_20261007/protocol/singlewell/official30-prioritized-manifest.json": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+    "benchmark/results/matched_postgrid_20261006/data/16assignments-1worker/total_summary.csv": "1e7c418e07c4dc0264c99481adb305efb93498dea03d3b847ac9c29b578ff51b",
+    "benchmark/results/matched_postgrid_20261006/data/16assignments-1worker/summary_custody.json": "866569a4ef51138d155bc44f579a284f77cade5693f1b5cc6c76e57b0a837027",
+    "benchmark/results/matched_postgrid_20261006/protocol/16assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_postgrid_20261006/data/16assignments-4workers/total_summary.csv": "2209470116661720c607496978b7247dd3826885ffe9030fd1dae21655e3f49c",
+    "benchmark/results/matched_postgrid_20261006/data/16assignments-4workers/summary_custody.json": "298f2ccd13b55c8a946127942bcf09ee6c82b8887984aa2047f64f9d1db950ea",
+    "benchmark/results/matched_postgrid_20261006/protocol/16assignments-4workers/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_postgrid_20261006/data/9assignments-1worker/total_summary.csv": "330030e0dc4a27d0e050101edd4f117600a6100c36cce9f52d30ad37f0621ded",
+    "benchmark/results/matched_postgrid_20261006/data/9assignments-1worker/summary_custody.json": "d142fb3da99f05e36f39d98cd1543efb7a6509cfa9303a46a1629a76af38a084",
+    "benchmark/results/matched_postgrid_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_postgrid_20261006/data/9assignments-3workers/total_summary.csv": "67ed47af42a32917f33bd90a0ef118509132c86fec48b33ebb8a84e8357b107d",
+    "benchmark/results/matched_postgrid_20261006/data/9assignments-3workers/summary_custody.json": "b445f4595aff1e16e9d24c2dc7a2553e2bde7fcb74b5c0391b13c3838d7d2050",
+    "benchmark/results/matched_postgrid_20261006/protocol/9assignments-3workers/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_postgrid_20261006/data/singlewell/total_summary.csv": "49dc62ba47f016745e7e398d47e438de516abf9022d9c5a6b29b8879a17db1ca",
+    "benchmark/results/matched_postgrid_20261006/data/singlewell/summary_custody.json": "d501e5d5100450f50d1b2301630840e6693e06376897e0586ac513d380b2566a",
+    "benchmark/results/matched_postgrid_20261006/protocol/singlewell/official30-prioritized-manifest.json": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+    "benchmark/results/matched_latestmain_nine_20261006/data/9assignments-1worker/total_summary.csv": "068a6d6215ac5a3981e806af49c5787fd2d7df636ad1d83e79608b4721b9fccc",
+    "benchmark/results/matched_latestmain_nine_20261006/data/9assignments-1worker/summary_custody.json": "6602dfcfb32fcd1c8b55fd836e8e52a99a5d6d427e228d1b6658e65b83ae3671",
+    "benchmark/results/matched_latestmain_nine_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_latestmain_nine_20261006/data/9assignments-3workers/total_summary.csv": "f9b3c0d84a019a8e71d4242c40a27604e441d2db4e534781c438eb85e0af354a",
+    "benchmark/results/matched_latestmain_nine_20261006/data/9assignments-3workers/summary_custody.json": "824e9388fad9abef7431d44e6b25ba466436028f7720c058347e0885ba0c67cd",
+    "benchmark/results/matched_latestmain_nine_20261006/protocol/9assignments-3workers/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-1worker/total_summary.csv": "0e9866374583925a9d1198a49e70d39c471abee5440d4eecc7cc5acfc92ab11f",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-1worker/summary_custody.json": "4c5fd17dfbd25867d2ed003d2157c217fbf5ee9ad8bf5a7ae93f257910d45356",
+    "benchmark/results/matched_lastconsumer_20261006/protocol/16assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-4workers/total_summary.csv": "5520f4ae83f92efbaa2f96c9911599a5577a310dbc8aa96f4e6f82a2a22bf5e9",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-4workers/summary_custody.json": "63249f10384c7a1e8a29a9cb06a3c7c17ddb383ee91574283712f57b4615a0a9",
+    "benchmark/results/matched_lastconsumer_20261006/protocol/16assignments-4workers/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/reports/cppipe_figures.py": "7ab7a4636ec25b486b6803e2522f11ce080fdff1cf7032811ba352187a4f69db",
+    "paper/figures/build_slas_benchmark.py": "b02482c9b38e2746d70a0c4208ef4390f259d26a4515f64b58e7f1c80f724ae8"
+  },
+  "generator_sha256": "b02482c9b38e2746d70a0c4208ef4390f259d26a4515f64b58e7f1c80f724ae8",
+  "output_sha256": {
+    "assignment_total_speedups.csv": "0be3f1957d73541a28edae4acd270c1f05e238fd8b98fbe9ba9527b0cc176ebe",
+    "assignment_total_speedups.png": "a34ca4da262e08424303b48dd5a94a90d24e5e25719075263491aac05d4ca6eb",
+    "assignment_total_speedups.svg": "12ef918b3d3d6082e3b98bc3e9cab7efcf6192f13f2f0e7c6b8263545eee77d9"
+  },
+  "interpretation": "Actual total clocks; selected repeated assignments, not independent biological wells; revision and worker identities remain separate."
+}

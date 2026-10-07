@@ -162,7 +162,85 @@ def build_measured(
     print(f"Rendered measured benchmark panels and provenance to {output_dir}")
 
 
-def build_publication(record: Path, output_dir: Path, *, frozen: bool = False) -> None:
+def measured_sources(record: Path, scope: str):
+    """Select each record's actual serial baseline through its existing source type."""
+    from benchmark.reports.cppipe_figures import (
+        MeasuredBatchSummarySource, SerialCellProfilerBatchSummarySource,
+    )
+    measured = tuple(MeasuredBatchSummarySource(path.parent.name, path)
+                     for path in sorted((record.resolve() / "data").glob(f"*/{scope}_summary.csv")))
+    sources = []
+    for source in measured:
+        custody = source.qualified_custody()
+        counts = {case["mode"]["native_job_count"] for case in custody["cases"]}
+        if counts == {1}:
+            sources.append(source)
+        else:
+            baseline = next(candidate for candidate in measured
+                            if candidate.path.parent.name ==
+                            f"{len(custody['cases'][0]['mode']['wells'])}assignments-1worker")
+            sources.append(SerialCellProfilerBatchSummarySource(source.label, source.path, baseline))
+    return tuple(sources)
+
+
+def build_assignment_comparisons(records: tuple[Path, ...], output_dir: Path) -> None:
+    """Publish measured workload points without pooling distinct revisions."""
+    from benchmark.reports import cppipe_figures
+    from benchmark.reports.cppipe_figures import FIGURE_STYLE
+
+    sources = tuple(source for record in records for source in measured_sources(record, "total"))
+    inputs = tuple(path for source in sources for path in
+                   (source.path, source.custody_path, source.retained_manifest_path()))
+    outputs = FIGURE_STYLE.generate_assignment_speedup_figures(sources, output_dir=output_dir)
+    write_provenance(output_dir, tuple(dict.fromkeys((*inputs, Path(cppipe_figures.__file__), Path(__file__)))),
+                     outputs, {"interpretation": "Actual total clocks; selected repeated assignments, not independent biological wells; revision and worker identities remain separate."})
+
+
+def build_worker_comparisons(records: tuple[Path, ...], output_dir: Path) -> None:
+    """Compose full-width May-style clock comparisons for selected worker records."""
+    from dataclasses import replace
+    from benchmark.reports import cppipe_figures
+    from benchmark.reports.cppipe_figures import FIGURE_STYLE
+    from build_slas_visual_story import FigureSheet
+
+    sheet = FigureSheet("supp_matched_worker_speedups", "", height=10.4)
+    sheet.source(Path(__file__))
+    for index, record in enumerate(records):
+        sources = tuple(source for scope in ("execution", "total")
+                        for source in measured_sources(record, scope))
+        rows, methods, inputs = [], [], []
+        for source in sources:
+            custody = source.qualified_custody()
+            cases = custody["cases"]
+            workers = {case["mode"]["candidate_worker_count"] for case in cases}
+            assignments = {len(case["mode"]["wells"]) for case in cases}
+            if len(workers) != 1 or len(assignments) != 1:
+                raise ValueError("Worker comparison needs one declared workload and worker configuration per mode")
+            worker_count, assignment_count = workers.pop(), assignments.pop()
+            method = f"{source.clock_scope.title()}\n{worker_count} worker{'s' if worker_count != 1 else ''}"
+            methods.append(method)
+            with source.path.open(newline="", encoding="utf-8") as stream:
+                for row in csv.DictReader(stream):
+                    rows.append(replace(source.metric_rows(row["case_name"], row, category_row=row)[1], method=method))
+            inputs.extend((source.path, source.custody_path, source.retained_manifest_path()))
+        destination = output_dir / record.name
+        destination.mkdir(parents=True, exist_ok=True)
+        outputs = FIGURE_STYLE.generate_average_point_figures(
+            rows, methods=methods, output_dir=destination, output_formats=("png", "svg"),
+            filename_stem="measured_worker_speedups",
+            title=f"{'AB'[index]}  {assignment_count} assignments · {len(cases)} workflow{'s' if len(cases) != 1 else ''} · {custody['source_head'][:9]}",
+            ylabel="CellProfiler / OpenHCS speedup", value_key="speedup",
+            target_line=1, log_variant=True, font_scale=1.45,
+        )
+        write_provenance(destination, tuple(dict.fromkeys((*inputs, Path(cppipe_figures.__file__), Path(__file__)))),
+                         outputs, {"interpretation": "One measured stock CellProfiler process baseline; workflow dots, arithmetic mean bars and median lines; execution and total remain separate."})
+        sheet.source(destination / "figure2_provenance.json")
+        sheet.source_image(destination / "measured_worker_speedups.png", (0, 51 - index * 50, 100, 48))
+    sheet.save()
+
+
+def build_publication(record: Path, output_dir: Path, *, frozen: bool = False,
+                      assignment_records: tuple[Path, ...] = (), worker_records: tuple[Path, ...] = ()) -> None:
     """Regenerate Figure 2 and its single claim include from saved summaries only."""
     from benchmark.reports import cppipe_figures
     from benchmark.reports.cppipe_figures import MeasuredBatchSummarySource
@@ -175,11 +253,15 @@ def build_publication(record: Path, output_dir: Path, *, frozen: bool = False) -
     include = output_dir / "benchmark_claims.json"
     include.write_text(json.dumps(values, indent=2) + "\n", encoding="utf-8")
     composite = execution.publication_figure(total, output_dir=output_dir)
+    paired = execution.paired_runtime_figure(total, output_dir=output_dir)
     caption = output_dir / "measured_benchmark_publication_caption.md"
     caption.write_text(
-        "(A) Execution and (B) compile-plus-run total runtime for every workflow in the same saved cohort. "
-        "Paired bars show measured CellProfiler and OpenHCS median seconds on shared logarithmic axes; "
-        "row annotations show ratios of independent engine medians. Declared-output parity is not biological accuracy. "
+        "Execution and compile-plus-run total speedups for the same 30-workflow cohort, "
+        "one worker and one numerical thread. Each dot is one workflow's ratio of independent "
+        "engine medians from three measured repetitions. Bars show arithmetic means; black lines "
+        "show medians; annotations give minimum, median, mean and maximum. Linear and logarithmic "
+        "versions use the same measurements. Per-workflow paired runtimes are in the supplement. "
+        "Declared-output parity is not biological accuracy. "
         f"Record {values['record_name']}, production source {values['source_revision']}, "
         f"publication status {values['status']}. Execution minimum/median "
         f"{values['execution_min']}/{values['execution_median']}×; total minimum/median "
@@ -187,12 +269,16 @@ def build_publication(record: Path, output_dir: Path, *, frozen: bool = False) -
     write_provenance(
         output_dir, (execution.path, total.path, execution.custody_path,
                      Path(cppipe_figures.__file__), Path(__file__).resolve()),
-        (include, *composite, caption),
+        (include, *composite, *paired, caption),
         {"interpretation": "Single measured-owner projection; final claims require explicit owner freeze."},
     )
     for scope, source in (("execution", execution), ("total", total)):
         build_measured((f"{source.label}={source.path}",), scope, output_dir / scope,
                        claim_metadata=include)
+    if assignment_records or worker_records:
+        build_assignment_comparisons(tuple(dict.fromkeys((record, *assignment_records, *worker_records))), output_dir / "assignments")
+    if worker_records:
+        build_worker_comparisons(worker_records, output_dir / "workers")
 
 
 def load_tables(
@@ -637,6 +723,10 @@ if __name__ == "__main__":
                         help="Saved record root: derive Figure 2 and the single manuscript claim include.")
     parser.add_argument("--frozen", action="store_true",
                         help="Use only after the benchmark owner explicitly freezes this final publication record.")
+    parser.add_argument("--assignment-record", type=Path, action="append", default=[],
+                        help="Additional qualified record for separate revision/worker assignment plots; repeat.")
+    parser.add_argument("--worker-record", type=Path, action="append", default=[],
+                        help="Two selected qualified records for full-width worker comparison panels; repeat.")
     parser.add_argument("--native-baseline", type=Path,
                         help="Qualified one-process CP summary for the same assignments; primary comparison for built-in OpenHCS workers.")
     parser.add_argument("--scope", choices=("execution", "total", "amortization"),
@@ -645,12 +735,18 @@ if __name__ == "__main__":
                         help="Select unchanged cases declared by this manifest from each qualified measured source.")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     arguments = parser.parse_args()
+    if (arguments.assignment_record or arguments.worker_record) and not arguments.publication_record:
+        parser.error("Assignment and worker record panels require --publication-record")
+    if arguments.worker_record and len(arguments.worker_record) != 2:
+        parser.error("The worker comparison canvas displays two selected records")
     if arguments.publication_record:
         if arguments.scope is not None or arguments.cohort_manifest is not None or arguments.native_baseline is not None:
             parser.error("--publication-record owns both scopes and their complete saved cohort")
         if arguments.output_dir.resolve() == DEFAULT_OUTPUT.resolve():
             parser.error("--publication-record requires an explicit distinct --output-dir")
-        build_publication(arguments.publication_record, arguments.output_dir, frozen=arguments.frozen)
+        build_publication(arguments.publication_record, arguments.output_dir, frozen=arguments.frozen,
+                          assignment_records=tuple(arguments.assignment_record),
+                          worker_records=tuple(arguments.worker_record))
     elif arguments.summary_source:
         if arguments.frozen:
             parser.error("--frozen requires --publication-record")

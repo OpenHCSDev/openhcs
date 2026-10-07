@@ -673,6 +673,7 @@ class WellThroughputPresentationReport:
 
         from benchmark.reports.cppipe_figures import (
             SPEEDUP_TARGET,
+            FIGURE_STYLE,
             BenchmarkMetricRow,
             FigureMetricSpec,
             generate_grouped_benchmark_metric_figures,
@@ -690,7 +691,7 @@ class WellThroughputPresentationReport:
             )
         )
         outputs.extend(
-            self.generate_average_point_figures(
+            FIGURE_STYLE.generate_average_point_figures(
                 tuple(
                     BenchmarkMetricRow(
                         pipeline_name=row.pipeline_name,
@@ -705,6 +706,7 @@ class WellThroughputPresentationReport:
                     for row in metric_rows
                 ),
                 filename_stem="03_core_scaling_average_with_pipeline_points_speedup",
+                methods=methods, output_dir=self.output_dir, output_formats=self.output_formats,
                 title="Average execution speedup by core count",
                 ylabel="Execution speedup vs CellProfiler (x)",
                 value_key="speedup",
@@ -733,8 +735,9 @@ class WellThroughputPresentationReport:
             )
         )
         outputs.extend(
-            self.generate_average_point_figures(
+            FIGURE_STYLE.generate_average_point_figures(
                 metric_rows,
+                methods=methods, output_dir=self.output_dir, output_formats=self.output_formats,
                 filename_stem="04_core_scaling_average_with_pipeline_points_ram",
                 title="Average RAM usage by core count",
                 ylabel="Peak process-tree RSS (MB)",
@@ -1409,360 +1412,6 @@ class WellThroughputPresentationReport:
                 )
             )
         return tuple(average_rows)
-
-    def generate_average_point_figures(
-        self,
-        rows: Sequence["BenchmarkMetricRow"],
-        *,
-        filename_stem: str,
-        title: str,
-        ylabel: str,
-        value_key: str,
-        target_line: float | None = None,
-        log_variant: bool,
-    ) -> tuple[Path, ...]:
-        """Plot mean bars with all per-pipeline points for each method."""
-        import matplotlib.pyplot as plt
-        from matplotlib.ticker import (
-            FuncFormatter,
-            LogLocator,
-            NullFormatter,
-            NullLocator,
-        )
-
-        from benchmark.reports.cppipe_figures import (
-            FIGURE_STYLE,
-            LINEAR_AXIS_BREAK_POLICY,
-        )
-
-        methods = tuple(mode.label for mode in self.core_scaling_modes)
-        method_values = tuple(
-            (
-                method,
-                tuple(
-                    float(value)
-                    for row in rows
-                    if row.method == method
-                    and (value := getattr(row, value_key)) is not None
-                ),
-            )
-            for method in methods
-        )
-        values = tuple(
-            value
-            for _method, method_values_ in method_values
-            for value in method_values_
-        )
-        if not values:
-            return ()
-        value_suffix = " MB" if value_key == "peak_memory_mb" else "x"
-        outputs: list[Path] = []
-        for log_y in (False, True) if log_variant else (False,):
-            broken_range = (
-                None
-                if log_y or value_key == "peak_memory_mb"
-                else LINEAR_AXIS_BREAK_POLICY.range_for(values)
-            )
-            with FIGURE_STYLE.context():
-                if broken_range is None:
-                    fig, axis = plt.subplots(
-                        1,
-                        1,
-                        figsize=(max(5.6, 1.45 * len(method_values) + 3.2), 4.6),
-                        layout="constrained",
-                    )
-                    axes = (axis,)
-                else:
-                    fig, axes_ = plt.subplots(
-                        2,
-                        1,
-                        figsize=(max(5.6, 1.45 * len(method_values) + 3.2), 5.6),
-                        gridspec_kw={"height_ratios": (1.0, 3.2)},
-                        sharex=True,
-                        layout="constrained",
-                    )
-                    top_axis, bottom_axis = tuple(axes_)
-                    top_axis.set_ylim(broken_range[1], broken_range[2])
-                    bottom_axis.set_ylim(0.0, broken_range[0])
-                    LINEAR_AXIS_BREAK_POLICY.mark(top_axis, bottom_axis)
-                    axes = (top_axis, bottom_axis)
-                x_positions = tuple(range(len(method_values)))
-                if log_y:
-                    for axis in axes:
-                        axis.set_yscale("log")
-                        axis.yaxis.set_major_locator(LogLocator(base=10.0, numticks=6))
-                        axis.yaxis.set_minor_locator(NullLocator())
-                        axis.yaxis.set_major_formatter(
-                            FuncFormatter(_plain_numeric_tick_label)
-                        )
-                        axis.yaxis.set_minor_formatter(NullFormatter())
-                if target_line is not None:
-                    for axis in axes:
-                        axis.axhline(
-                            target_line,
-                            color=FIGURE_STYLE.target_color,
-                            linewidth=1.15,
-                            linestyle="--",
-                            alpha=0.86,
-                        )
-                    target_axis = next(
-                        (
-                            axis
-                            for axis in axes
-                            if axis.get_ylim()[0] <= target_line <= axis.get_ylim()[1]
-                        ),
-                        axes[-1],
-                    )
-                    target_axis.annotate(
-                        f"{target_line:g}x",
-                        xy=(-0.012, target_line),
-                        xycoords=("axes fraction", "data"),
-                        xytext=(-2, 3),
-                        textcoords="offset points",
-                        ha="right",
-                        va="bottom",
-                        fontsize=7.8,
-                        color=FIGURE_STYLE.target_color,
-                        annotation_clip=False,
-                    )
-
-                def visible_axis_for(value: float):
-                    return next(
-                        (
-                            axis
-                            for axis in axes
-                            if axis.get_ylim()[0] <= value <= axis.get_ylim()[1]
-                        ),
-                        None,
-                    )
-
-                def annotate_value(
-                    *,
-                    x: float,
-                    value: float,
-                    text: str,
-                    x_offset: float = 4.0,
-                    y_offset: float = 0.0,
-                    ha: str = "left",
-                    va: str = "center",
-                    color: str | None = None,
-                    weight: str = "normal",
-                ) -> None:
-                    axis = visible_axis_for(value)
-                    if axis is None:
-                        return
-                    axis.annotate(
-                        text,
-                        xy=(x, value),
-                        xytext=(x_offset, y_offset),
-                        textcoords="offset points",
-                        ha=ha,
-                        va=va,
-                        fontsize=6.2,
-                        color=color or FIGURE_STYLE.text_color,
-                        fontweight=weight,
-                        bbox={
-                            "boxstyle": "round,pad=0.08",
-                            "facecolor": FIGURE_STYLE.background,
-                            "edgecolor": "none",
-                            "alpha": 0.72,
-                        },
-                        clip_on=True,
-                        zorder=6,
-                    )
-
-                def adjusted_label_values(
-                    axis,
-                    stats: Sequence[tuple[str, float, str]],
-                    *,
-                    min_gap_points: float = 11.0,
-                    edge_padding_points: float = 5.0,
-                ) -> tuple[tuple[str, float, str], ...]:
-                    """Return stat label y-values adjusted to avoid text collisions."""
-                    if not stats:
-                        return ()
-                    renderer = fig.canvas.get_renderer()
-                    points_to_pixels = renderer.points_to_pixels
-                    min_gap_pixels = points_to_pixels(min_gap_points)
-                    edge_padding_pixels = points_to_pixels(edge_padding_points)
-                    axis_min = axis.bbox.y0 + edge_padding_pixels
-                    axis_max = axis.bbox.y1 - edge_padding_pixels
-
-                    positioned = sorted(
-                        (
-                            (
-                                label,
-                                value,
-                                weight,
-                                axis.transData.transform((0.0, value))[1],
-                            )
-                            for label, value, weight in stats
-                        ),
-                        key=lambda item: item[3],
-                    )
-                    adjusted_pixels: list[float] = []
-                    for _label, _value, _weight, original_pixels in positioned:
-                        adjusted_pixels.append(
-                            max(
-                                original_pixels,
-                                (
-                                    adjusted_pixels[-1] + min_gap_pixels
-                                    if adjusted_pixels
-                                    else axis_min
-                                ),
-                            )
-                        )
-                    if adjusted_pixels[-1] > axis_max:
-                        adjusted_pixels[-1] = axis_max
-                    for index in range(len(adjusted_pixels) - 2, -1, -1):
-                        adjusted_pixels[index] = min(
-                            adjusted_pixels[index],
-                            adjusted_pixels[index + 1] - min_gap_pixels,
-                        )
-                    for index in range(1, len(adjusted_pixels)):
-                        adjusted_pixels[index] = max(
-                            adjusted_pixels[index],
-                            adjusted_pixels[index - 1] + min_gap_pixels,
-                        )
-
-                    return tuple(
-                        (
-                            label,
-                            axis.transData.inverted().transform(
-                                (0.0, adjusted_pixels[index])
-                            )[1],
-                            weight,
-                        )
-                        for index, (label, _value, weight, _pixels) in enumerate(
-                            positioned
-                        )
-                    )
-
-                def annotate_stat_labels(
-                    *,
-                    method_index: int,
-                    color: str,
-                    stats: Sequence[tuple[str, float, str]],
-                ) -> None:
-                    label_x = method_index - 0.30
-                    for axis in axes:
-                        visible_stats = tuple(
-                            (label, value, weight)
-                            for label, value, weight in stats
-                            if axis.get_ylim()[0] <= value <= axis.get_ylim()[1]
-                        )
-                        for label, label_value, weight in adjusted_label_values(
-                            axis, visible_stats
-                        ):
-                            annotate_value(
-                                x=label_x,
-                                value=label_value,
-                                text=label,
-                                x_offset=-3.0,
-                                y_offset=0.0,
-                                ha="right",
-                                va="center",
-                                color=color,
-                                weight=weight,
-                            )
-
-                stat_label_groups: list[
-                    tuple[int, str, tuple[tuple[str, float, str], ...]]
-                ] = []
-                for method_index, (_method, values_) in enumerate(method_values):
-                    if not values_:
-                        continue
-                    mean = sum(values_) / len(values_)
-                    median = statistics.median(values_)
-                    minimum = min(values_)
-                    maximum = max(values_)
-                    color = FIGURE_STYLE.color_for_method(method_index + 1)
-                    stat_label_groups.append(
-                        (
-                            method_index,
-                            color,
-                            (
-                                (f"min {minimum:.1f}{value_suffix}", minimum, "normal"),
-                                (f"med {median:.1f}{value_suffix}", median, "normal"),
-                                (f"mean {mean:.1f}{value_suffix}", mean, "bold"),
-                                (f"max {maximum:.1f}{value_suffix}", maximum, "normal"),
-                            ),
-                        )
-                    )
-                    point_x = tuple(
-                        method_index + _deterministic_jitter(index, len(values_))
-                        for index in range(len(values_))
-                    )
-                    for axis in axes:
-                        axis.bar(
-                            [method_index],
-                            [mean],
-                            width=0.62,
-                            color=color,
-                            alpha=0.72,
-                            edgecolor=FIGURE_STYLE.background,
-                            linewidth=0.55,
-                        )
-                        axis.scatter(
-                            point_x,
-                            values_,
-                            s=28,
-                            color=FIGURE_STYLE.text_color,
-                            alpha=0.58,
-                            zorder=3,
-                        )
-                        axis.hlines(
-                            median,
-                            method_index - 0.31,
-                            method_index + 0.31,
-                            color=FIGURE_STYLE.text_color,
-                            linewidth=1.35,
-                            zorder=4,
-                            label=(
-                                "Median"
-                                if method_index == 0 and axis is axes[0]
-                                else None
-                            ),
-                        )
-                        axis.grid(
-                            axis="y",
-                            color=FIGURE_STYLE.grid_color,
-                            linewidth=0.8,
-                            alpha=0.8,
-                        )
-                        axis.set_axisbelow(True)
-                        axis.spines["top"].set_visible(False)
-                        axis.spines["right"].set_visible(False)
-                        axis.spines["left"].set_color(FIGURE_STYLE.spine_color)
-                        axis.spines["bottom"].set_color(FIGURE_STYLE.spine_color)
-                label_axis = axes[-1]
-                for axis in axes:
-                    axis.set_xlim(-0.80, len(method_values) - 0.48)
-                label_axis.set_xticks(list(x_positions))
-                label_axis.set_xticklabels(
-                    [method for method, _values in method_values]
-                )
-                label_axis.set_ylabel(ylabel)
-                axes[0].set_title(
-                    title + (" (log)" if log_y else ""), loc="left", pad=10
-                )
-                axes[0].legend(frameon=False, loc="upper left")
-                fig.canvas.draw()
-                for method_index, color, stats in stat_label_groups:
-                    annotate_stat_labels(
-                        method_index=method_index,
-                        color=color,
-                        stats=stats,
-                    )
-                suffix = "_log" if log_y else ""
-                for output_format in self.output_formats:
-                    output_path = (
-                        self.output_dir / f"{filename_stem}{suffix}.{output_format}"
-                    )
-                    FIGURE_STYLE.save(fig, output_path)
-                    outputs.append(output_path)
-                plt.close(fig)
-        return tuple(outputs)
 
     def wells_per_core_summary_rows(
         self,

@@ -134,6 +134,25 @@ The archived benchmark mode reproduces the May distribution figure, supplementar
 workflow heatmap and plotted-row CSVs. It retains the original one-observation
 tables, historical timing scopes and unresolved wound-healing exclusion.
 
+Regenerate the current main-text performance figure, its single numerical include,
+and the consolidated supplementary performance panels from the qualified records:
+
+```sh
+PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
+  --publication-record benchmark/results/matched_min3_integrated_main_20261007 \
+  --frozen \
+  --assignment-record benchmark/results/matched_postgrid_20261006 \
+  --worker-record benchmark/results/matched_latestmain_nine_20261006 \
+  --worker-record benchmark/results/matched_lastconsumer_20261006 \
+  --output-dir paper/figures/slas/benchmark-publication
+```
+
+This reads saved measurements; it does not run benchmarks. The main figure uses
+the logarithmic thirty-workflow view. Its linear counterpart, individual runtime
+panels, sample-count trends and selected worker comparisons share Supplementary
+Figure 9. Worker comparisons retain their own cohorts and revisions; repeated
+source assignments are not independent biological wells.
+
 For fresh measurements, first qualify the complete matched reports and convert
 them to execution or total summaries with their original `summary_custody.json`.
 Then use the same paper builder's explicit measured input mode:

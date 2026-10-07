@@ -1,0 +1,22 @@
+{
+  "source_sha256": {
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-1worker/execution_summary.csv": "182b7e3674de7be0da650c146c975c25984df7e1f08c4de7c7f85a01be733fb5",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-1worker/summary_custody.json": "4c5fd17dfbd25867d2ed003d2157c217fbf5ee9ad8bf5a7ae93f257910d45356",
+    "benchmark/results/matched_lastconsumer_20261006/protocol/16assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-4workers/execution_summary.csv": "330bf9baaed601dbdc984077083fb7ae0077af8486d59dc6429f155fd4657871",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-4workers/summary_custody.json": "63249f10384c7a1e8a29a9cb06a3c7c17ddb383ee91574283712f57b4615a0a9",
+    "benchmark/results/matched_lastconsumer_20261006/protocol/16assignments-4workers/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-1worker/total_summary.csv": "0e9866374583925a9d1198a49e70d39c471abee5440d4eecc7cc5acfc92ab11f",
+    "benchmark/results/matched_lastconsumer_20261006/data/16assignments-4workers/total_summary.csv": "5520f4ae83f92efbaa2f96c9911599a5577a310dbc8aa96f4e6f82a2a22bf5e9",
+    "benchmark/reports/cppipe_figures.py": "7ab7a4636ec25b486b6803e2522f11ce080fdff1cf7032811ba352187a4f69db",
+    "paper/figures/build_slas_benchmark.py": "b02482c9b38e2746d70a0c4208ef4390f259d26a4515f64b58e7f1c80f724ae8"
+  },
+  "generator_sha256": "b02482c9b38e2746d70a0c4208ef4390f259d26a4515f64b58e7f1c80f724ae8",
+  "output_sha256": {
+    "measured_worker_speedups.png": "7dd210080aa6b129107eb4b42dda0e366280118f6b3c55d2c5b6882db7073fdd",
+    "measured_worker_speedups.svg": "fda9ce5df0078b67747403a0b2abb0acd8443f333e617842cff40a7cddcf845c",
+    "measured_worker_speedups_log.png": "58a39b76365804da923924fcbd026e32460165e21bcb4e81289f8f866d41c38e",
+    "measured_worker_speedups_log.svg": "692106bda98f0de0f307318a7232249deb91446e2373c8a94ea3ee73b272ef76"
+  },
+  "interpretation": "One measured stock CellProfiler process baseline; workflow dots, arithmetic mean bars and median lines; execution and total remain separate."
+}

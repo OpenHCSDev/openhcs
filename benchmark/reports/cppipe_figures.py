@@ -10,7 +10,7 @@ import re
 import statistics
 from collections.abc import Iterable, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cached_property
 from pathlib import Path
 
@@ -228,6 +228,27 @@ class MeasuredBatchSummarySource(SummarySource):
         self, total: MeasuredBatchSummarySource, *, output_dir: Path,
         output_formats: Sequence[str] = DEFAULT_FORMATS,
     ) -> tuple[Path, ...]:
+        """Present both qualified clocks through the original May painter."""
+        self.publication_values(total, record_name=output_dir.name, frozen=False)
+        methods = ("Execution", "Compile + execution total")
+        rows = tuple(
+            replace(source.metric_rows(name, row, category_row=row)[1], method=method)
+            for method, source in zip(methods, (self, total), strict=True)
+            for name, row in _load_summary_table(source).items()
+        )
+        return FIGURE_STYLE.generate_average_point_figures(
+            rows, methods=methods,
+            output_dir=output_dir, output_formats=output_formats,
+            filename_stem="measured_benchmark_publication",
+            title=f"Matched speedups across {len(rows) // 2} imported workflows",
+            ylabel="CellProfiler / OpenHCS speedup", value_key="speedup",
+            target_line=1.0, log_variant=True, font_scale=1.25,
+        )
+
+    def paired_runtime_figure(
+        self, total: MeasuredBatchSummarySource, *, output_dir: Path,
+        output_formats: Sequence[str] = DEFAULT_FORMATS,
+    ) -> tuple[Path, ...]:
         """Show each qualified workflow's paired clocks and measured speedup."""
         # The same owner validates matching revision/cohort and every ratio.
         self.publication_values(total, record_name=output_dir.name, frozen=False)
@@ -291,11 +312,33 @@ class MeasuredBatchSummarySource(SummarySource):
                 for position, ratio in zip(positions, ratios, strict=True):
                     axis.text(1.03, position, f"{ratio:.2f}×", transform=axis.get_yaxis_transform(),
                               va="center", fontsize=8.5)
-            outputs = tuple(output_dir / f"measured_benchmark_publication.{extension}" for extension in output_formats)
+            outputs = tuple(output_dir / f"measured_benchmark_workflow_runtimes.{extension}" for extension in output_formats)
             for path in outputs:
                 FIGURE_STYLE.save(fig, path)
             plt.close(fig)
         return outputs
+
+    def assignment_speedup_rows(self) -> tuple[dict[str, object], ...]:
+        """Project actual assignments and clocks through this source's baseline."""
+        if self.clock_scope != "total":
+            raise ValueError("Assignment response uses qualified total-clock summaries")
+        custody = self.qualified_custody()
+        table = _load_summary_table(self)
+        rows = []
+        for case in custody["cases"]:
+            name, mode = case["case"], case["mode"]
+            native, candidate = self.metric_rows(name, table[name], category_row=table[name])
+            rows.append({
+                "workflow": name, "assignments": len(mode["wells"]),
+                "workers": mode["candidate_worker_count"],
+                "source_revision": custody["source_head"],
+                "assignment_scope": mode["assignment_scope"],
+                "native_total_seconds": native.raw_seconds,
+                "openhcs_total_seconds": candidate.raw_seconds,
+                "total_speedup": candidate.speedup,
+                "summary_source": str(self.path),
+            })
+        return tuple(rows)
 
     def amortization_points(self, pipeline_name: str) -> tuple[int, dict[str, float]]:
         """Derive single-core per-assignment clocks from qualified paired observations."""
@@ -593,9 +636,441 @@ class BenchmarkFigureStyle:
     def save(self, fig, output_path: Path) -> None:
         fig.savefig(output_path, dpi=FIGURE_DPI, bbox_inches="tight")
 
+    def generate_average_point_figures(
+        self,
+        rows: Sequence["BenchmarkMetricRow"],
+        *,
+        methods: Sequence[str],
+        output_dir: Path,
+        output_formats: Sequence[str],
+        filename_stem: str,
+        title: str,
+        ylabel: str,
+        value_key: str,
+        target_line: float | None = None,
+        log_variant: bool,
+        font_scale: float = 1.0,
+    ) -> tuple[Path, ...]:
+        """Plot mean bars with all per-pipeline points for each method."""
+        import matplotlib.pyplot as plt
+        from matplotlib.ticker import (
+            FuncFormatter,
+            LogLocator,
+            NullFormatter,
+            NullLocator,
+        )
+
+        method_values = tuple(
+            (
+                method,
+                tuple(
+                    float(value)
+                    for row in rows
+                    if row.method == method
+                    and (value := getattr(row, value_key)) is not None
+                ),
+            )
+            for method in methods
+        )
+        values = tuple(
+            value
+            for _method, method_values_ in method_values
+            for value in method_values_
+        )
+        if not values:
+            return ()
+        value_suffix = " MB" if value_key == "peak_memory_mb" else "x"
+        outputs: list[Path] = []
+        for log_y in (False, True) if log_variant else (False,):
+            broken_range = (
+                None
+                if log_y or value_key == "peak_memory_mb"
+                else LINEAR_AXIS_BREAK_POLICY.range_for(values)
+            )
+            with self.context():
+                plt.rcParams.update({key: float(value) * font_scale
+                                     for key, value in self.rc_params.items()
+                                     if key.endswith("size") and isinstance(value, (int, float))})
+                if broken_range is None:
+                    fig, axis = plt.subplots(
+                        1,
+                        1,
+                        figsize=(max(5.6, 1.45 * len(method_values) + 3.2), 4.6),
+                        layout="constrained",
+                    )
+                    axes = (axis,)
+                else:
+                    fig, axes_ = plt.subplots(
+                        2,
+                        1,
+                        figsize=(max(5.6, 1.45 * len(method_values) + 3.2), 5.6),
+                        gridspec_kw={"height_ratios": (1.0, 3.2)},
+                        sharex=True,
+                        layout="constrained",
+                    )
+                    top_axis, bottom_axis = tuple(axes_)
+                    top_axis.set_ylim(broken_range[1], broken_range[2])
+                    bottom_axis.set_ylim(0.0, broken_range[0])
+                    LINEAR_AXIS_BREAK_POLICY.mark(top_axis, bottom_axis)
+                    axes = (top_axis, bottom_axis)
+                x_positions = tuple(range(len(method_values)))
+                if log_y:
+                    for axis in axes:
+                        axis.set_yscale("log")
+                        axis.yaxis.set_major_locator(LogLocator(base=10.0, numticks=6))
+                        axis.yaxis.set_minor_locator(NullLocator())
+                        axis.yaxis.set_major_formatter(
+                            FuncFormatter(_plain_log_tick_label)
+                        )
+                        axis.yaxis.set_minor_formatter(NullFormatter())
+                if target_line is not None:
+                    for axis in axes:
+                        axis.axhline(
+                            target_line,
+                            color=self.target_color,
+                            linewidth=1.15,
+                            linestyle="--",
+                            alpha=0.86,
+                        )
+                    target_axis = next(
+                        (
+                            axis
+                            for axis in axes
+                            if axis.get_ylim()[0] <= target_line <= axis.get_ylim()[1]
+                        ),
+                        axes[-1],
+                    )
+                    target_axis.annotate(
+                        f"{target_line:g}x",
+                        xy=(-0.012, target_line),
+                        xycoords=("axes fraction", "data"),
+                        xytext=(-2, 3),
+                        textcoords="offset points",
+                        ha="right",
+                        va="bottom",
+                        fontsize=7.8 * font_scale,
+                        color=self.target_color,
+                        annotation_clip=False,
+                    )
+
+                def visible_axis_for(value: float):
+                    return next(
+                        (
+                            axis
+                            for axis in axes
+                            if axis.get_ylim()[0] <= value <= axis.get_ylim()[1]
+                        ),
+                        None,
+                    )
+
+                def annotate_value(
+                    *,
+                    x: float,
+                    value: float,
+                    text: str,
+                    x_offset: float = 4.0,
+                    y_offset: float = 0.0,
+                    ha: str = "left",
+                    va: str = "center",
+                    color: str | None = None,
+                    weight: str = "normal",
+                ) -> None:
+                    axis = visible_axis_for(value)
+                    if axis is None:
+                        return
+                    axis.annotate(
+                        text,
+                        xy=(x, value),
+                        xytext=(x_offset, y_offset),
+                        textcoords="offset points",
+                        ha=ha,
+                        va=va,
+                        fontsize=6.2 * font_scale,
+                        color=color or self.text_color,
+                        fontweight=weight,
+                        bbox={
+                            "boxstyle": "round,pad=0.08",
+                            "facecolor": self.background,
+                            "edgecolor": "none",
+                            "alpha": 0.72,
+                        },
+                        clip_on=True,
+                        zorder=6,
+                    )
+
+                def adjusted_label_values(
+                    axis,
+                    stats: Sequence[tuple[str, float, str]],
+                    *,
+                    min_gap_points: float = 11.0,
+                    edge_padding_points: float = 5.0,
+                ) -> tuple[tuple[str, float, str], ...]:
+                    """Return stat label y-values adjusted to avoid text collisions."""
+                    if not stats:
+                        return ()
+                    renderer = fig.canvas.get_renderer()
+                    points_to_pixels = renderer.points_to_pixels
+                    min_gap_pixels = points_to_pixels(min_gap_points)
+                    edge_padding_pixels = points_to_pixels(edge_padding_points)
+                    axis_min = axis.bbox.y0 + edge_padding_pixels
+                    axis_max = axis.bbox.y1 - edge_padding_pixels
+
+                    positioned = sorted(
+                        (
+                            (
+                                label,
+                                value,
+                                weight,
+                                axis.transData.transform((0.0, value))[1],
+                            )
+                            for label, value, weight in stats
+                        ),
+                        key=lambda item: item[3],
+                    )
+                    adjusted_pixels: list[float] = []
+                    for _label, _value, _weight, original_pixels in positioned:
+                        adjusted_pixels.append(
+                            max(
+                                original_pixels,
+                                (
+                                    adjusted_pixels[-1] + min_gap_pixels
+                                    if adjusted_pixels
+                                    else axis_min
+                                ),
+                            )
+                        )
+                    if adjusted_pixels[-1] > axis_max:
+                        adjusted_pixels[-1] = axis_max
+                    for index in range(len(adjusted_pixels) - 2, -1, -1):
+                        adjusted_pixels[index] = min(
+                            adjusted_pixels[index],
+                            adjusted_pixels[index + 1] - min_gap_pixels,
+                        )
+                    for index in range(1, len(adjusted_pixels)):
+                        adjusted_pixels[index] = max(
+                            adjusted_pixels[index],
+                            adjusted_pixels[index - 1] + min_gap_pixels,
+                        )
+
+                    return tuple(
+                        (
+                            label,
+                            axis.transData.inverted().transform(
+                                (0.0, adjusted_pixels[index])
+                            )[1],
+                            weight,
+                        )
+                        for index, (label, _value, weight, _pixels) in enumerate(
+                            positioned
+                        )
+                    )
+
+                def annotate_stat_labels(
+                    *,
+                    method_index: int,
+                    color: str,
+                    stats: Sequence[tuple[str, float, str]],
+                ) -> None:
+                    label_x = method_index - 0.30
+                    for axis in axes:
+                        visible_stats = tuple(
+                            (label, value, weight)
+                            for label, value, weight in stats
+                            if axis.get_ylim()[0] <= value <= axis.get_ylim()[1]
+                        )
+                        for label, label_value, weight in adjusted_label_values(
+                            axis, visible_stats
+                        ):
+                            annotate_value(
+                                x=label_x,
+                                value=label_value,
+                                text=label,
+                                x_offset=-3.0,
+                                y_offset=0.0,
+                                ha="right",
+                                va="center",
+                                color=color,
+                                weight=weight,
+                            )
+
+                stat_label_groups: list[
+                    tuple[int, str, tuple[tuple[str, float, str], ...]]
+                ] = []
+                for method_index, (_method, values_) in enumerate(method_values):
+                    if not values_:
+                        continue
+                    if value_key == "speedup":
+                        summary = SpeedupSummaryStatistics.from_series(
+                            SpeedupDistributionSeries(_method, values_)
+                        )
+                        assert summary is not None
+                        mean, median = summary.mean, summary.median
+                        minimum, maximum = summary.minimum, summary.maximum
+                    else:
+                        # Memory is a different metric: preserve zero observations.
+                        mean, median = statistics.mean(values_), statistics.median(values_)
+                        minimum, maximum = min(values_), max(values_)
+                    color = self.color_for_method(method_index + 1)
+                    stat_label_groups.append(
+                        (
+                            method_index,
+                            color,
+                            ((f"all {mean:.1f}{value_suffix}", mean, "bold"),) if len(values_) == 1 else (
+                                (f"min {minimum:.1f}{value_suffix}", minimum, "normal"),
+                                (f"med {median:.1f}{value_suffix}", median, "normal"),
+                                (f"mean {mean:.1f}{value_suffix}", mean, "bold"),
+                                (f"max {maximum:.1f}{value_suffix}", maximum, "normal"),
+                            ),
+                        )
+                    )
+                    point_x = tuple(
+                        method_index + _deterministic_jitter(index, len(values_))
+                        for index in range(len(values_))
+                    )
+                    for axis in axes:
+                        axis.bar(
+                            [method_index],
+                            [mean],
+                            width=0.62,
+                            color=color,
+                            alpha=0.72,
+                            edgecolor=self.background,
+                            linewidth=0.55,
+                        )
+                        axis.scatter(
+                            point_x,
+                            values_,
+                            s=28,
+                            color=self.text_color,
+                            alpha=0.58,
+                            zorder=3,
+                        )
+                        axis.hlines(
+                            median,
+                            method_index - 0.31,
+                            method_index + 0.31,
+                            color=self.text_color,
+                            linewidth=1.35,
+                            zorder=4,
+                            label=(
+                                "Median"
+                                if method_index == 0 and axis is axes[0]
+                                else None
+                            ),
+                        )
+                        axis.grid(
+                            axis="y",
+                            color=self.grid_color,
+                            linewidth=0.8,
+                            alpha=0.8,
+                        )
+                        axis.set_axisbelow(True)
+                        axis.spines["top"].set_visible(False)
+                        axis.spines["right"].set_visible(False)
+                        axis.spines["left"].set_color(self.spine_color)
+                        axis.spines["bottom"].set_color(self.spine_color)
+                label_axis = axes[-1]
+                for axis in axes:
+                    axis.set_xlim(-0.80, len(method_values) - 0.48)
+                label_axis.set_xticks(list(x_positions))
+                label_axis.set_xticklabels(
+                    [method for method, _values in method_values]
+                )
+                label_axis.set_ylabel(ylabel)
+                axes[0].set_title(
+                    title + (" (log)" if log_y else ""), loc="left", pad=10
+                )
+                fig.legend(frameon=False, loc="outside lower center")
+                fig.canvas.draw()
+                for method_index, color, stats in stat_label_groups:
+                    annotate_stat_labels(
+                        method_index=method_index,
+                        color=color,
+                        stats=stats,
+                    )
+                suffix = "_log" if log_y else ""
+                for output_format in output_formats:
+                    output_path = (
+                        output_dir / f"{filename_stem}{suffix}.{output_format}"
+                    )
+                    self.save(fig, output_path)
+                    outputs.append(output_path)
+                plt.close(fig)
+        return tuple(outputs)
+
     def decorate_legend(self, axis) -> None:
         """Keep grouped method identities outside the measured bar domain."""
         axis.legend(frameon=False, loc="upper left", bbox_to_anchor=(1.02, 1.0))
+
+    def generate_assignment_speedup_figures(
+        self, sources: Sequence[MeasuredBatchSummarySource], *,
+        output_dir: Path, output_formats: Sequence[str] = DEFAULT_FORMATS,
+    ) -> tuple[Path, ...]:
+        """Keep each workflow, worker configuration and revision distinct."""
+        rows = tuple(row for source in sources for row in source.assignment_speedup_rows())
+        names = tuple(sorted({row["workflow"] for row in rows if row["assignments"] > 1}))
+        rows = tuple(row for row in rows if row["workflow"] in names)
+        keys = tuple(dict.fromkeys((row["source_revision"], row["workers"]) for row in rows))
+        revisions = tuple(dict.fromkeys(revision for revision, _workers in keys))
+        worker_counts = tuple(sorted({workers for _revision, workers in keys}))
+        markers = dict(zip(worker_counts, ("o", "^", "s", "D"), strict=False))
+        output_dir.mkdir(parents=True, exist_ok=True)
+        table_path = output_dir / "assignment_total_speedups.csv"
+        with table_path.open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=tuple(rows[0]))
+            writer.writeheader()
+            writer.writerows(rows)
+        with self.context():
+            fig, axes = plt.subplots(len(names), 2, figsize=(8.2, 10.5), squeeze=False)
+            fig.subplots_adjust(left=.11, right=.98, top=.91, bottom=.20, hspace=.55, wspace=.36)
+            fig.suptitle("Total speedup versus assigned samples", x=.11, y=.99,
+                         ha="left", fontsize=14, fontweight="bold")
+            fig.text(.11, .955, "Each workflow shown separately; actual one-process CellProfiler baseline",
+                     fontsize=9)
+            handles = {}
+            for index, name in enumerate(names):
+                for column, axis in enumerate(axes[index]):
+                    for revision, workers in keys:
+                        points = sorted((row for row in rows if row["workflow"] == name
+                                         and row["source_revision"] == revision and row["workers"] == workers),
+                                        key=lambda row: row["assignments"])
+                        if not points:
+                            continue
+                        label = f"{revision[:9]} · {workers} worker{'s' if workers != 1 else ''}"
+                        line, = axis.plot([row["assignments"] for row in points],
+                                          [row["total_speedup"] for row in points],
+                                          marker=markers[workers], markersize=6,
+                                          linestyle="-" if len(points) > 1 else "none",
+                                          color=self.color_for_method(revisions.index(revision) + 1),
+                                          markerfacecolor="white" if workers == 1 else None,
+                                          linewidth=1.4, label=label)
+                        handles[label] = line
+                    axis.axhline(1, linestyle="--", color=self.target_color, linewidth=.8)
+                    if column:
+                        axis.set_yscale("log")
+                        axis.yaxis.set_major_locator(LogLocator(base=10, subs=(1, 2, 3, 5)))
+                        axis.yaxis.set_major_formatter(FuncFormatter(_plain_log_tick_label))
+                        axis.yaxis.set_minor_formatter(NullFormatter())
+                    else:
+                        axis.set_ylim(bottom=0)
+                    axis.set_xticks(sorted({row["assignments"] for row in rows}))
+                    axis.set_xlim(0, max(row["assignments"] for row in rows) + 1)
+                    axis.grid(axis="y", color=self.grid_color)
+                    axis.spines[["top", "right"]].set_visible(False)
+                    axis.set_title(f"{chr(65 + index)}{column + 1}  {PIPELINE_LABEL_LAYOUT.split_label(name)}",
+                                   loc="left", fontsize=10)
+                    axis.set_ylabel("Total speedup" + (" (log)" if column else ""), fontsize=9)
+                    if index == len(names) - 1:
+                        axis.set_xlabel("Assigned samples", fontsize=10)
+            fig.legend(handles.values(), handles.keys(), loc="lower left",
+                       bbox_to_anchor=(.10, .045), ncol=2, frameon=False, fontsize=9)
+            fig.text(.11, .015, "9 and 16 assignments repeat the same source sample; they are not independent biological wells.",
+                     fontsize=8)
+            outputs = tuple(output_dir / f"assignment_total_speedups.{extension}" for extension in output_formats)
+            for path in outputs:
+                self.save(fig, path)
+            plt.close(fig)
+        return (table_path, *outputs)
 
 
 @dataclass(frozen=True)
@@ -1993,9 +2468,9 @@ def _speedup_point_series(
         SpeedupPoint(pipeline_name, speedup)
         for pipeline_name in pipeline_names
         if (
-            speedup := SUMMARY_ROW_NUMERICS.speedup_from_summary_row(
-                table.get(pipeline_name)
-            )
+            speedup := source.metric_rows(
+                pipeline_name, table.get(pipeline_name), category_row=table.get(pipeline_name)
+            )[1].speedup
         )
         is not None
     )
