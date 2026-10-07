@@ -242,16 +242,16 @@ An imaging-based self-driving laboratory needs an analysis step that can execute
 
 ## Supplementary Data
 
-The supplementary package indexes retained files and describes their fields and interpretation. Archive DOI: [pending Zenodo publication].
+The supplement describes the comparisons, reference definitions and trial evidence. Archive DOI: [TODO: Zenodo archive DOI, publication].
 
-1. **CellProfiler workflow comparison:** unified 30-workflow current-source observations, reference inventory and exact run provenance; historical OpenHCS 0.8.5 release-CI evidence; the five-workflow export definitions and per-artifact audit; and separate historical timing records.
+1. **CellProfiler workflow comparison:** unified 30-workflow results, output inventories and five-workflow export definitions.
 2. **CellProfiler coverage:** module-to-workflow associations, individual setting handling, and archived processing-registration coverage.
 3. **Worker and memory measurements:** measured execution and memory by workflow, worker count and repeated-image assignment count, including completion status.
-4. **Recorded agent workflow:** evaluated client, model and software versions; input checksums; exact prompt; tool trace and error counts; original outputs; and separately identified later corrections.
+4. **Recorded agent workflow:** earlier method-directed NeuronCyto demonstration, model and software versions, outputs and comparison references.
 5. **Complex CellProfiler workflows:** source-derived step sequences, function-call counts and editable Python for advanced segmentation and 3D monolayer analysis.
 6. **Workflow regression tests:** representative configuration, generated-Python and compiler-validation checks, with source and CI-job references.
-7. **Prospective agent-authored assays:** frozen pipelines and held-out score receipts for BBBC039, BBBC007 and BBBC013, with quantitative results and operational findings.
-8. **Task-only authoring and independent repair:** first/final reference agreement on the same inputs, full-corpus BBBC039 coverage, computational versus biological reference definitions, and retained post-freeze evaluation receipts.
+7. **Prospective agent-authored assays:** final pipelines and held-out BBBC039, BBBC007 and BBBC013 scores.
+8. **Task-only authoring and independent repair:** first/final comparisons, full-corpus nuclear evaluation, original brief summaries and trial measurements.
 
 ## Code and Data Availability
 
@@ -259,15 +259,15 @@ OpenHCS source code: <https://github.com/OpenHCSDev/OpenHCS>.
 
 OpenHCS documentation: <https://openhcs.readthedocs.io/>.
 
-The supplementary archive contains the figure inputs and generation scripts, frozen analysis pipelines, scoring records and benchmark evidence. Archive DOI: [pending Zenodo publication]. Repository copies are available at <https://github.com/OpenHCSDev/openhcs/tree/main/paper/supplementary> and <https://github.com/OpenHCSDev/openhcs/tree/main/benchmark/results>.
+The supplementary archive contains figure inputs and generation scripts, final pipelines, scores and benchmark measurements. Repository copies are available at <https://github.com/OpenHCSDev/openhcs/tree/main/paper/supplementary> and <https://github.com/OpenHCSDev/openhcs/tree/main/benchmark/results>.
 
-The benchmark uses biological images and pipelines distributed by the CellProfiler project rather than OpenHCS-authored benchmark data. Original sources:
+The benchmark uses biological images and pipelines distributed by the CellProfiler project. Original sources:
 
 - official CellProfiler example pipelines and images: <https://github.com/CellProfiler/examples> [@CellProfilerExamples]
 - official CellProfiler tutorial pipelines and images: <https://github.com/CellProfiler/tutorials> [@CellProfilerTutorials]
 - CellProfiler 4 benchmark supplement: <https://github.com/carpenterlab/2021_Stirling_BMCBioInformatics> [@Stirling2021]
 
-The benchmark manifest pins the source collections. The selected matched record, [pending]{.benchmark-claim key=record_name}, retains the measured repetitions, original reports and figure inputs. Earlier unified comparisons and OpenHCS 0.8.5 release-CI evidence remain separately identified in the supplementary archive; they are not combined with the final matched timing record.
+The benchmark manifest specifies the source collections. [TODO: refreshed matched benchmark identifier, final benchmark publication.] Original timing reports and historical comparisons are available in the archive.
 
 Supplementary Table 1 links the source repositories for the eight reusable libraries.
 
