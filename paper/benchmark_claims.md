@@ -10,7 +10,7 @@ the final publication freeze.
 The current benchmark owner is the frozen seven-mode protocol in
 `benchmark/results/matched_worker_sweep_20261007_exportfixed`. Its controller
 qualifies and archives all 30 workflows in each requested mode before rendering.
-The single-well, eight-assignment/two-worker and twelve-assignment one-, two- and three-worker modes are qualified; two modes remain pending.
+The single-well, eight-assignment/two-worker and twelve-assignment one-, two-, three- and four-worker modes are qualified; the sixteen-assignment/four-worker mode remains pending.
 Do not publish a complete-sweep claim until every mode has passed.
 
 After the complete sweep is qualified, use its existing renderer to produce the
