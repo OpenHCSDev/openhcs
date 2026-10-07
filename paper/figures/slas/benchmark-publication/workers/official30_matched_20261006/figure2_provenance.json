@@ -1,0 +1,21 @@
+{
+  "source_sha256": {
+    "benchmark/results/official30_matched_20261006/data/8assignments-1worker/execution_summary.csv": "0c02352dfb1ff1940852e5d4e3ad1cc8c017e9594c1ed96182b0d13e3eef3c09",
+    "benchmark/results/official30_matched_20261006/data/8assignments-1worker/summary_custody.json": "d875f402a5c391168ddff5f4a42d63e9132eba0491b710b0d9fcaffd54715d8f",
+    "benchmark/results/official30_matched_20261006/protocol/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/official30_matched_20261006/data/8assignments-2workers/execution_summary.csv": "1094aecfc0b1dce5c5e07e5d43d7bbb2e0151622dfea58c713d14619642df163",
+    "benchmark/results/official30_matched_20261006/data/8assignments-2workers/summary_custody.json": "006c020d91a16a0b27b34d4d43f6ad888c51ab80e41ad0281adae9958e369463",
+    "benchmark/results/official30_matched_20261006/data/8assignments-1worker/total_summary.csv": "19c4e036c380955dc40c1847b6746f890c4d777b7ae9dacdab3a2a0648787643",
+    "benchmark/results/official30_matched_20261006/data/8assignments-2workers/total_summary.csv": "48928e0fc330615d8c1d1c1989f4d5317c375cdcc0ee8b341dac2a0d57bc0cd1",
+    "benchmark/reports/cppipe_figures.py": "5cb343ad28debeb2a4cf7500c221c1eab684b6fa2ffc909a4feb3fe9d72a3f43",
+    "paper/figures/build_slas_benchmark.py": "4f510fe6d23b3d8a5213c030b6270c9d9b00fa9f9b9d816deda1250979a23840"
+  },
+  "generator_sha256": "4f510fe6d23b3d8a5213c030b6270c9d9b00fa9f9b9d816deda1250979a23840",
+  "output_sha256": {
+    "measured_worker_speedups.png": "d01166d2cf9eb2087663671daadaea32ee9fec47cb6d82487c4fefdde794e273",
+    "measured_worker_speedups.svg": "4acfd43fb1afbc78ffa9205f241b6f0459834b7724642a156f5da6b58b5ed424",
+    "measured_worker_speedups_log.png": "c31dcb302493657c54b4ee60fe0d1feb9bdc1edbf81971bd13b74ac7a87626c8",
+    "measured_worker_speedups_log.svg": "e5d9c3d859ae514a00dd14690fc9fcdb26af4da1363bd27a29aebd2316443a87"
+  },
+  "interpretation": "One measured stock CellProfiler process baseline; workflow dots, arithmetic mean bars and median lines; execution and total remain separate."
+}

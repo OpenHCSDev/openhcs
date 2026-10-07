@@ -185,10 +185,13 @@ class MeasuredBatchSummarySource(SummarySource):
         """Bind the archived declaration to the converter's original digest."""
         declaration = self.qualified_custody()["manifest"]
         original = Path(declaration["path"])
-        retained = self.path.parents[2] / "protocol" / self.path.parent.name / original.name
-        if hashlib.sha256(retained.read_bytes()).hexdigest() != declaration["sha256"]:
-            raise ValueError(f"Archived qualified manifest has changed: {retained}")
-        return retained
+        protocol = self.path.parents[2] / "protocol"
+        # Archive placement differs by record; the original name and digest own identity.
+        retained = tuple(sorted(path for path in protocol.rglob(original.name)
+                                if hashlib.sha256(path.read_bytes()).hexdigest() == declaration["sha256"]))
+        if not retained:
+            raise ValueError(f"Original qualified manifest is not retained under {protocol}: {original.name}")
+        return retained[0]
 
     def publication_values(
         self, total: MeasuredBatchSummarySource, *, record_name: str, frozen: bool,
@@ -1064,7 +1067,9 @@ class BenchmarkFigureStyle:
                         axis.set_xlabel("Assigned samples", fontsize=10)
             fig.legend(handles.values(), handles.keys(), loc="lower left",
                        bbox_to_anchor=(.10, .045), ncol=2, frameon=False, fontsize=9)
-            fig.text(.11, .015, "9 and 16 assignments repeat the same source sample; they are not independent biological wells.",
+            repeated_counts = ", ".join(str(count) for count in sorted(
+                {row["assignments"] for row in rows if row["assignments"] > 1}))
+            fig.text(.11, .015, f"{repeated_counts} assignments repeat the same source sample; they are not independent biological wells.",
                      fontsize=8)
             outputs = tuple(output_dir / f"assignment_total_speedups.{extension}" for extension in output_formats)
             for path in outputs:

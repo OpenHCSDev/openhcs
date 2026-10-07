@@ -23,11 +23,12 @@ from openhcs.core.source_workspace_projection import (
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
-    MetaXpressCellBodySettings,
-    MetaXpressNuclearSettings,
-    MetaXpressOutgrowthSettings,
+    PixelCellBodySettings,
+    PixelNuclearSettings,
+    PixelOutgrowthSettings,
     NeuriteAdmissionPlanes,
-    neurite_outgrowth_metaxpress,
+    NeuriteOwnershipPlanes,
+    neurite_outgrowth_metaxpress_pixels,
 )
 from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize_plane,
@@ -63,9 +64,7 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
     assert pipeline_config.well_filter_config.well_filter == "Image15"
     assert pipeline_config.path_planning_config.well_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
-    assert pipeline_config.materialization_results_path == (
-        inputs.output_root.resolve() / "results"
-    )
+    assert pipeline_config.materialization_results_path == Path("results")
 
     bindings = pipeline_config.source_bindings_config.bindings
     assert [binding.alias for binding in bindings] == [
@@ -87,7 +86,7 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
 
     assert len(steps) == 1
     step = steps[0]
-    assert get_core_callable(step.func) is neurite_outgrowth_metaxpress
+    assert get_core_callable(step.func) is neurite_outgrowth_metaxpress_pixels
     assert step.processing_config.variable_components == [VariableComponents.CHANNEL]
     assert step.processing_config.group_by is GroupBy.NONE
     assert step.processing_config.input_source is InputSource.PIPELINE_START
@@ -97,13 +96,13 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
 
     kwargs = step.func[1]
     assert kwargs["neurite_channel_index"] == 0
-    assert kwargs["cell_body"] == MetaXpressCellBodySettings(
+    assert kwargs["cell_body"] == PixelCellBodySettings(
         approximate_max_width=36.0,
         minimum_area=45.0,
         intensity_above_local_background=20.0,
         channel_index=0,
     )
-    assert kwargs["outgrowth"] == MetaXpressOutgrowthSettings(
+    assert kwargs["outgrowth"] == PixelOutgrowthSettings(
         maximum_width=5.0,
         intensity_above_local_background=8.0,
         minimum_cell_growth_to_log_as_significant=8.0,
@@ -111,14 +110,14 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         candidate_hysteresis_seed_correction_factor=0.25,
     )
     assert kwargs["use_nuclear_stain"] is True
-    assert kwargs["nuclear_stain"] == MetaXpressNuclearSettings(
+    assert kwargs["nuclear_stain"] == PixelNuclearSettings(
         channel_index=1,
         approx_min_width=5.0,
         approx_max_width=32.0,
         intensity_above_local_background=24.0,
     )
     artifact_outputs = CallableContract.from_callable(
-        neurite_outgrowth_metaxpress
+        neurite_outgrowth_metaxpress_pixels
     ).artifact_outputs
     assert artifact_outputs.names() == (
         "neurite_outgrowth_summary",
@@ -133,6 +132,7 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         "neurite_topology_dropped_trace",
         "neurite_topology_added_trace",
         *(spec.name for spec in NeuriteAdmissionPlanes.artifact_specs()),
+        *(spec.name for spec in NeuriteOwnershipPlanes.artifact_specs()),
         "neurite_morphology",
     )
     assert {spec.name: spec.viewer_streaming for spec in artifact_outputs} == {
@@ -149,6 +149,8 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
         **{spec.name: ArtifactViewerStreaming.ON_DEMAND
            for spec in NeuriteAdmissionPlanes.artifact_specs()},
+        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
+           for spec in NeuriteOwnershipPlanes.artifact_specs()},
         "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
     }
 
@@ -205,6 +207,8 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
         "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
         **{spec.name: ArtifactViewerStreaming.ON_DEMAND
            for spec in NeuriteAdmissionPlanes.artifact_specs()},
+        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
+           for spec in NeuriteOwnershipPlanes.artifact_specs()},
         "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
     }
 
@@ -343,7 +347,7 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
     contrast_step, analysis_step = contribution.pipeline_steps
     assert get_core_callable(contrast_step.func) is percentile_normalize_plane
     assert contrast_step.processing_config.input_source is InputSource.PIPELINE_START
-    assert get_core_callable(analysis_step.func) is neurite_outgrowth_metaxpress
+    assert get_core_callable(analysis_step.func) is neurite_outgrowth_metaxpress_pixels
     assert analysis_step.processing_config.input_source is InputSource.PREVIOUS_STEP
     assert contribution.presentation_identity.output_key == "neurite_morphology"
     assert contribution.presentation_identity.artifact_kind == "spatial_graph"

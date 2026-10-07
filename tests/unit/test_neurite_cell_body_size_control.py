@@ -9,6 +9,7 @@ from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     MetaXpressCellBodySettings,
+    MetaXpressOutgrowthSettings,
     _derive_signal_cell_bodies,
     _identify_cell_bodies_cellprofiler,
     _identify_nuclear_seeded_cell_bodies_cellprofiler,
@@ -40,6 +41,29 @@ def test_default_gate_rejects_area_qualified_small_body_and_declared_gate_accept
     assert settings.minimum_inscribed_diameter_px == (
         CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_min_diameter_px
     )
+
+
+def test_signal_growth_applies_the_same_independent_body_contract():
+    calibration = 1.3556
+    image = _small_body_image()
+    nuclei = np.zeros(image.shape, dtype=np.int32)
+    nuclei[30:33, 30:33] = 1
+    settings = MetaXpressCellBodySettings(
+        minimum_area=100.0,
+        approximate_max_width=30.0,
+        intensity_above_local_background=100.0,
+    )
+    rejected = _derive_signal_cell_bodies(
+        nuclei, image, settings, calibration, bright_objects=True,
+        maximum_shaft_width_px=MetaXpressOutgrowthSettings().maximum_width_px(calibration),
+    )
+    accepted = _derive_signal_cell_bodies(
+        nuclei, image, replace(settings, minimum_inscribed_diameter_px=5.0),
+        calibration, bright_objects=True,
+        maximum_shaft_width_px=MetaXpressOutgrowthSettings().maximum_width_px(calibration),
+    )
+    assert not np.any(rejected)
+    np.testing.assert_array_equal(accepted, (image > 0).astype(np.int32))
 
 
 @pytest.mark.parametrize(
@@ -177,7 +201,8 @@ def test_independent_body_projection_composes_through_existing_detectors(detecto
     def detect(settings):
         if detector == "signal_body":
             return _derive_signal_cell_bodies(
-                nuclei, image, settings, calibration, bright_objects=True
+                nuclei, image, settings, calibration, bright_objects=True,
+                maximum_shaft_width_px=MetaXpressOutgrowthSettings().maximum_width_px(calibration),
             )
         if detector == "nuclear_seeded":
             payload = _identify_nuclear_seeded_cell_bodies_cellprofiler(

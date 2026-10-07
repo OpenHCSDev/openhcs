@@ -138,7 +138,7 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
         name="Native ROIs",
     )
 
-    class ResultSelectionController:
+    class ResultSelectionController(napari_viewer_server.NapariResultSelectionController):
         @staticmethod
         def bind(_layer) -> None:
             return None
@@ -147,7 +147,7 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
         napari_viewer_server.NapariViewerServer
     )
     server.viewer = viewer
-    server.result_selection_controller = ResultSelectionController()
+    server.result_selection_controller = ResultSelectionController(server)
     server.result_selection_surface = None
     original_layers = tuple(viewer.layers)
 
@@ -180,6 +180,87 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
     assert server.require_result_selection_surface().manager is original_manager
     assert manager._layer is second_layer
     assert manager._roilist._roi_model.column_values(RoiTableColumn.NAME) == ["third"]
+    viewer.close()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("destroy", [
+    "napari_close", "manager", "immediate_manager", "window",
+    "manager_then_dock", "manager_then_window",
+])
+def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy):
+    napari = pytest.importorskip("napari")
+    module = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    from qtpy import sip
+    from qtpy.QtCore import QCoreApplication, QEvent
+    from qtpy.QtWidgets import QToolBar
+    from napari.settings import get_settings
+
+    viewer = napari.Viewer(show=False)
+    if destroy not in ("window", "manager_then_window"):
+        qtbot.addWidget(viewer.window._qt_window)
+    server = module.NapariViewerServer.__new__(module.NapariViewerServer)
+    server.viewer = viewer
+    server.result_selection_surface = None
+    server.layer_route_state = module.NapariLayerRouteStateStore.empty()
+    server.result_selection_controller = module.NapariResultSelectionController(server)
+    controller = server.result_selection_controller
+    layer = viewer.add_shapes(
+        [np.array([[0, 0], [0, 4], [4, 4]], dtype=float)],
+        shape_type="polygon", features={"name": ["first"]}, name="First result",
+    )
+    server.layer_route_state.set_layer("first", layer)
+    server.bind_result_selection_layer(layer)
+    original = server.require_result_selection_surface()
+    toolbars = viewer.window._qt_window.findChildren(QToolBar, "openhcs_roi_selection_toolbar")
+    assert len(toolbars) == 1
+    assert len(controller._selection_observers) == 1
+    original.manager.hide()
+    original.manager.show()
+    assert server.require_result_selection_surface() is original
+
+    if destroy == "napari_close":
+        viewer.window.remove_dock_widget(original.dock)
+    elif destroy == "manager":
+        original.manager.deleteLater()
+    elif destroy == "immediate_manager":
+        sip.delete(original.manager)
+        QCoreApplication.processEvents()
+    elif destroy == "manager_then_dock":
+        sip.delete(original.manager)
+        viewer.window.remove_dock_widget(original.dock)
+    elif destroy == "manager_then_window":
+        sip.delete(original.manager)
+        sip.delete(viewer.window._qt_window)
+    else:
+        sip.delete(viewer.window._qt_window)
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert server.result_selection_surface is None
+    assert controller._selection_observers == []
+    assert original.manager._layer_connections == []
+    assert not original.manager._viewer_selection_connected
+    assert sip.isdeleted(original.dock)
+    assert sip.isdeleted(original.manager)
+    assert sip.isdeleted(toolbars[0])
+
+    if destroy in ("window", "manager_then_window"):
+        return
+
+    next_layer = viewer.add_shapes(
+        [np.array([[8, 8], [8, 12], [12, 12]], dtype=float)],
+        shape_type="polygon", features={"name": ["next"]}, name="Next streamed result",
+    )
+    server.layer_route_state.set_layer("next", next_layer)
+    server.bind_result_selection_layer(next_layer)
+    replacement = server.require_result_selection_surface()
+    assert replacement is not original
+    assert replacement.manager._layer is next_layer
+    assert replacement.manager._roilist.rowCount() == 1
+    assert len(controller._selection_observers) == 1
+    assert len(viewer.window._qt_window.findChildren(QToolBar, "openhcs_roi_selection_toolbar")) == 1
+    get_settings().appearance.highlight.highlight_thickness = 5
+    controller._notify_selection_observers()
     viewer.close()
 
 

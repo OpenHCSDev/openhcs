@@ -761,6 +761,8 @@ def personal_stitched_development():
 
 
 def submission_neurite_results():
+    from build_slas_neurite_effects import NeuriteEffectFigure
+
     """Show the retained shaft illustration without promoting an overextended repair."""
     sheet = FigureSheet("submission_neurite_results", "", 10.1)
     public = OUTPUT / "h004_fresh20_sources"
@@ -786,9 +788,10 @@ def submission_neurite_results():
         sheet.text(x, 57, title, size=10.5, weight="bold")
         sheet.source_image(personal / f"site1-{name}.png", (x, 32, 30, 23), crop=(550, 28, 997, 437))
     sheet.panel("III", "Fixed-recipe transfer: treatment responses", 3, 28)
-    sheet.source(OUTPUT / "personal_neurite_effects_transfer_provenance.json")
-    sheet.source_image(OUTPUT / "personal_neurite_effects_transfer.png", (3, 3, 94, 23),
-                       crop=(90, 280, 2640, 1125))
+    NeuriteEffectFigure.draw_panels(
+        sheet, ROOT / "paper/supplementary/personal_neurite_transfer",
+        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="F",
+    )
     sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching remains under investigation.",
                size=9.5, color=MUTED)
     sheet.save()
@@ -796,19 +799,26 @@ def submission_neurite_results():
 
 def submission_shared_workflow():
     """Keep the native editing evidence readable beside the full-page diagram."""
-    sheet = FigureSheet("submission_shared_workflow", "", 4.8)
+    sheet = FigureSheet("submission_shared_workflow", "", 10.4)
     sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
-    sheet.panel("II", "Editable workflow", 3, 97)
-    sheet.native_image("authoring_main_verified_capture", (3, 5, 33, 88))
-    sheet.panel("III", "Execution server", 39, 97)
-    sheet.native_image("authoring_server_browser_verified_capture", (39, 68, 58, 24))
-    sheet.panel("IV", "Controls", 39, 62)
-    sheet.panel("V", "Matching Python", 68, 62)
+    sheet.panel("II", "Main window", 3, 97)
+    sheet.native_image("authoring_main_verified_capture", (3, 43, 94, 51))
+    sheet.panel("III", "Plate manager detail", 3, 41)
+    sheet.panel("IV", "Pipeline editor detail", 52, 41)
+    sheet.native_image("authoring_main_verified_capture", (3, 26, 45, 13),
+                       crop=(0, 204, 510, 360))
+    sheet.native_image("authoring_main_verified_capture", (52, 26, 45, 13),
+                       crop=(516, 204, 1024, 318))
+    sheet.panel("V", "Execution server", 3, 22)
+    sheet.native_image("authoring_server_browser_verified_capture", (3, 2, 34, 16))
+    sheet.panel("VI", "Controls", 39, 22)
+    sheet.panel("VII", "", 68, 22)
+    sheet.text(74, 22, "Matching Python", size=12, weight="bold")
     sheet.native_image(
-        "authoring_function_verified_capture", (39, 5, 25, 51), crop=(25, 153, 193, 290)
+        "authoring_function_verified_capture", (39, 2, 25, 16), crop=(25, 153, 193, 290)
     )
     sheet.native_image(
-        "authoring_code_verified_capture", (68, 5, 29, 51), crop=(74, 96, 292, 222)
+        "authoring_code_verified_capture", (68, 2, 29, 16), crop=(74, 96, 292, 222)
     )
     sheet.save()
 

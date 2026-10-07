@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from enum import IntEnum
+from functools import partial
 from pathlib import Path
 
 import napari
@@ -284,6 +285,8 @@ class QRoiListWidget(QtW.QTableView):
 class QRoiManager(QtW.QWidget):
     """Fiji-style manager bound directly to an ordinary native Shapes layer."""
 
+    about_to_destroy = QtCore.Signal()
+
     def __init__(self, napari_viewer: napari.Viewer):
         super().__init__()
         self._viewer = napari_viewer
@@ -294,6 +297,7 @@ class QRoiManager(QtW.QWidget):
         self._data_mutating = False
         self._viewer_selection_emitter = self._viewer.layers.selection.events.active
         self._viewer_selection_connected = False
+        self.destroyed.connect(partial(QRoiManager._release_event_connections, self))
         self._show_all = True
         self.setAcceptDrops(True)
 
@@ -368,8 +372,8 @@ class QRoiManager(QtW.QWidget):
 
     def _disconnect_layer(self) -> None:
         self._restore_presentation()
-        for emitter, callback in self._layer_connections:
-            emitter.disconnect(callback)
+        for emitter, _callback in self._layer_connections:
+            emitter.disconnect(self)
         self._layer_connections.clear()
         self._layer = None
         self._roilist.bind_layer(None)
@@ -393,8 +397,23 @@ class QRoiManager(QtW.QWidget):
     def _disconnect_viewer_events(self) -> None:
         if not self._viewer_selection_connected:
             return
-        self._viewer_selection_emitter.disconnect(self._on_active_layer_changed)
+        self._viewer_selection_emitter.disconnect(self)
         self._viewer_selection_connected = False
+
+    def _release_event_connections(self, _destroyed: object = None) -> None:
+        """Release native-layer observers without touching destroyed widgets."""
+
+        for emitter, _callback in self._layer_connections:
+            emitter.disconnect(self)
+        self._layer_connections.clear()
+        self._disconnect_viewer_events()
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.Type.DeferredDelete:
+            # Napari can orphan this inner widget. Retire its mount before Qt
+            # destroys it; removing a dock inside QWidget's destructor is unsafe.
+            self.about_to_destroy.emit()
+        return super().event(event)
 
     def _bind_active_layer(self) -> None:
         active = _native_object(self._viewer.layers.selection.active)

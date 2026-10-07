@@ -203,11 +203,16 @@ def build_worker_comparisons(records: tuple[Path, ...], output_dir: Path) -> Non
     from benchmark.reports.cppipe_figures import FIGURE_STYLE
     from build_slas_visual_story import FigureSheet
 
-    sheet = FigureSheet("supp_matched_worker_speedups", "", height=10.4)
-    sheet.source(Path(__file__))
     for index, record in enumerate(records):
+        if index % 2 == 0:
+            suffix = "" if index == 0 else f"_continued_{index // 2 + 1}"
+            page_rows = min(2, len(records) - index)
+            sheet = FigureSheet(f"supp_matched_worker_speedups{suffix}", "", height=5.2 * page_rows)
+            sheet.source(Path(__file__))
         sources = tuple(source for scope in ("execution", "total")
-                        for source in measured_sources(record, scope))
+                        for source in measured_sources(record, scope)
+                        if all(len(case["mode"]["wells"]) > 1
+                               for case in source.qualified_custody()["cases"]))
         rows, methods, inputs = [], [], []
         for source in sources:
             custody = source.qualified_custody()
@@ -228,15 +233,19 @@ def build_worker_comparisons(records: tuple[Path, ...], output_dir: Path) -> Non
         outputs = FIGURE_STYLE.generate_average_point_figures(
             rows, methods=methods, output_dir=destination, output_formats=("png", "svg"),
             filename_stem="measured_worker_speedups",
-            title=f"{'AB'[index]}  {assignment_count} assignments · {len(cases)} workflow{'s' if len(cases) != 1 else ''} · {custody['source_head'][:9]}",
+            title=f"{chr(65 + index)}  {assignment_count} assignments · {len(cases)} workflow{'s' if len(cases) != 1 else ''} · {custody['source_head'][:9]}",
             ylabel="CellProfiler / OpenHCS speedup", value_key="speedup",
             target_line=1, log_variant=True, font_scale=1.45,
         )
         write_provenance(destination, tuple(dict.fromkeys((*inputs, Path(cppipe_figures.__file__), Path(__file__)))),
                          outputs, {"interpretation": "One measured stock CellProfiler process baseline; workflow dots, arithmetic mean bars and median lines; execution and total remain separate."})
         sheet.source(destination / "figure2_provenance.json")
-        sheet.source_image(destination / "measured_worker_speedups.png", (0, 51 - index * 50, 100, 48))
-    sheet.save()
+        bounds = (0, 1, 100, 98) if page_rows == 1 else (0, 51 - (index % 2) * 50, 100, 48)
+        sheet.source_image(destination / "measured_worker_speedups.png", bounds)
+        if index % 2 == 1 or index == len(records) - 1:
+            sheet.save()
+
+
 
 
 def build_publication(record: Path, output_dir: Path, *, frozen: bool = False,
@@ -726,7 +735,7 @@ if __name__ == "__main__":
     parser.add_argument("--assignment-record", type=Path, action="append", default=[],
                         help="Additional qualified record for separate revision/worker assignment plots; repeat.")
     parser.add_argument("--worker-record", type=Path, action="append", default=[],
-                        help="Two selected qualified records for full-width worker comparison panels; repeat.")
+                        help="Selected qualified records for full-width worker comparison panels and continuations; repeat.")
     parser.add_argument("--native-baseline", type=Path,
                         help="Qualified one-process CP summary for the same assignments; primary comparison for built-in OpenHCS workers.")
     parser.add_argument("--scope", choices=("execution", "total", "amortization"),
@@ -737,8 +746,6 @@ if __name__ == "__main__":
     arguments = parser.parse_args()
     if (arguments.assignment_record or arguments.worker_record) and not arguments.publication_record:
         parser.error("Assignment and worker record panels require --publication-record")
-    if arguments.worker_record and len(arguments.worker_record) != 2:
-        parser.error("The worker comparison canvas displays two selected records")
     if arguments.publication_record:
         if arguments.scope is not None or arguments.cohort_manifest is not None or arguments.native_baseline is not None:
             parser.error("--publication-record owns both scopes and their complete saved cohort")

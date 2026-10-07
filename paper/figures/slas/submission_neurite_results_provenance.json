@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "generator_sha256": "04be6a60bb3bccf38e7778f13599f27cd5072a153dc4daf0643a976c9e20da63",
   "source_sha256": {
     "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
     "paper/figures/slas/p001_fresh13_sources/source-record.rst": "d01fb0758a57f9971f17c80c82db3d2dd2ccd487df83164a5fd57381882830a3",
@@ -10,8 +10,11 @@
     "paper/figures/slas/p001_fresh13_sources/site1-raw.png": "9c936e4f1c87298c21460351b83a6f913a3acdc5c392802eebf955b85e765a82",
     "paper/figures/slas/p001_fresh13_sources/site1-result.png": "5acf284c8b75c8c0dbcbe3c40ddf3487ca22cee2aa66cfd71ac1195423e8dbc8",
     "paper/figures/slas/p001_fresh13_sources/site1-combined.png": "d9b7b694ac356238d26c92a349f422e654a444045320196503c0a8bb7c5363b6",
-    "paper/figures/slas/personal_neurite_effects_transfer_provenance.json": "dbc33ed250bb72084969a1c706e3cdbdafc24e3f21f1d07e952cc8ae7a8b5085",
-    "paper/figures/slas/personal_neurite_effects_transfer.png": "fdd69b8c5c79d3ccd3014eb0ea170e1d411c6e8be0e2ad8ccc4c5ee62539a4fb"
+    "paper/figures/build_slas_neurite_effects.py": "45eab33bd8dbb9d9df9c67e246584cbc41531a7ba84398ed434bc3d8ab6891fb",
+    "paper/figures/compare_personal_neurite.py": "444c14f3008d26b5d7febf8b095eeb738eda7dc24e584b97bdd160205eaaddfa",
+    "paper/supplementary/personal_neurite_transfer/joined_wells.csv": "d7746a15b8f992e022e39ab8143370dd9744c74d7eedd42c3bf01c7c30d0ce76",
+    "paper/supplementary/personal_neurite_transfer/treatment_effects.csv": "42f8a24f83640e79e19a41658b066dbc83005df0529a66221284358e248cbbad",
+    "paper/supplementary/personal_neurite_transfer/source_evidence.json": "bc907898e519a4e43c158894881d0e241bca733168b82f664a77a6f26a39ec90"
   },
   "ui_crops": [
     {
@@ -78,25 +81,12 @@
         1440,
         944
       ]
-    },
-    {
-      "source": "paper/figures/slas/personal_neurite_effects_transfer.png",
-      "xyxy_pixels": [
-        90,
-        280,
-        2640,
-        1125
-      ],
-      "source_size": [
-        2700,
-        2280
-      ]
     }
   ],
   "output_sha256": {
-    "submission_neurite_results.png": "051a7c21c0b183dded4f9733bd3dcdba4ff728e67dfe827d3206bffd9087dd5a",
-    "submission_neurite_results.pdf": "bc478b3a586236c0f3455e8dbc3378118ef89de955735c2c2528bd65d7bb2729",
-    "submission_neurite_results.svg": "e1c4572ca6cc0b56a876ca935af1803af892e066321e424dcf782e0bca10ac36"
+    "submission_neurite_results.png": "9c05197072b244216fca6dd6c2dd50f4069c9093bb0049d4d047658e1b784cfa",
+    "submission_neurite_results.pdf": "31b1ca1772c79adbae0237675d6364d142ee777f179d2ef98f025034dee6f8bc",
+    "submission_neurite_results.svg": "940ae272bce7b50c0661833d074af9ae43614d5645143f15f4646b32c130c691"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

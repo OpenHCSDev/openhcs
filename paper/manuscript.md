@@ -52,9 +52,9 @@ We evaluated OpenHCS using established CellProfiler workflows and agent-authored
 
 ### Figure 1, continued. Native editing and execution controls
 
-![Retained native workflow editor, server browser and matching controls and Python.](figures/slas/submission_shared_workflow.png){width=6in}
+![Large native main window, plate-manager and pipeline-editor detail views, server browser and matching controls and Python.](figures/slas/submission_shared_workflow.png){width=6in}
 
-(II) Native workflow editor. (III) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (IV, V) Native controls and Python show matching normalization settings after MCP edits in an OpenHCS 0.8.5 session. The complete editing record and capture provenance are retained in the supplementary package.
+(II) Native main window. (III, IV) Enlarged details of its plate manager and pipeline editor. (V) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (VI, VII) Matching normalization controls and Python after MCP edits in OpenHCS 0.8.5. The supplementary package retains the editing record and capture provenance.
 
 ### Workflow definition and image sources
 
@@ -142,12 +142,25 @@ were not recorded.
 For the laboratory neurite comparison, we applied the frozen recipe settings
 to nine fields in each of 20 FC-A and Y27632 wells using the current production
 backend. An evaluation-only source key linked coded inputs to physical wells.
-Each well's endpoint was the unweighted mean of field-level outgrowth per
-detected cell; cell counts were averaged over the same fields. Treatment means
+Each well's endpoint was the unweighted mean of nine field-level measurements:
+outgrowth per detected cell, cell count, total outgrowth, branches per cell,
+and mean and median process length. For the last two endpoints, we first
+averaged the corresponding per-cell values within each field, including
+zero-growth cells. Overlapping fields were not deduplicated; total outgrowth
+therefore denotes a mean field total, not unique whole-well length. Treatment means
 were divided by the same drug curve's zero-dose DMSO mean, with two technical
 wells at each concentration. Existing MetaXpress well exports supplied the
 comparison response, not manual tracing truth. This fixed-recipe transfer was
 separate from autonomous pipeline authoring.
+
+We retained these predictions when subsequent visual inspection identified
+shafts included in soma masks, spurious soma-edge branches and supported paths
+lost during tracing. Repairs informed by those external observations were
+evaluated separately as assisted development, not autonomous authoring. The
+comparison retained the same channels, pixel calibration, field sampling and
+well aggregation. Matched raw-image, soma-mask and path views were used to
+check recovered shafts and genuine branches alongside unsupported routes;
+agreement with MetaXpress fold changes was not a tuning criterion.
 
 ### Performance measurements and reproducibility
 

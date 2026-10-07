@@ -1,17 +1,17 @@
 {
-  "generator_sha256": "8d9d0fd143d90eefe14223f53f1bc4bb77305a23773de0402f64451621c6079b",
+  "generator_sha256": "5ebb80d63f294ba45e01e36092a2856187bd529ae9262844052a3c9ade28790d",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark.py": "b02482c9b38e2746d70a0c4208ef4390f259d26a4515f64b58e7f1c80f724ae8",
-    "paper/figures/slas/benchmark-publication/workers/matched_latestmain_nine_20261006/figure2_provenance.json": "0943fe1c47601fb1e25b55f21dade4bcbc2d30c8876990761b29e1e1728d3aea",
-    "paper/figures/slas/benchmark-publication/workers/matched_latestmain_nine_20261006/measured_worker_speedups.png": "da2098eedbeea4ea9c52123dbcf37946cd62616ba9554c406683dbd83cc9067d",
-    "paper/figures/slas/benchmark-publication/workers/matched_lastconsumer_20261006/figure2_provenance.json": "e1fa086968bea8f29121bc04d366fb63cfcbf97da9f6da9d2e5bc1fb307b17a9",
-    "paper/figures/slas/benchmark-publication/workers/matched_lastconsumer_20261006/measured_worker_speedups.png": "7dd210080aa6b129107eb4b42dda0e366280118f6b3c55d2c5b6882db7073fdd"
+    "paper/figures/build_slas_benchmark.py": "4f510fe6d23b3d8a5213c030b6270c9d9b00fa9f9b9d816deda1250979a23840",
+    "paper/figures/slas/benchmark-publication/workers/official30_matched_20261006/figure2_provenance.json": "a2ec5de8ae8a1e85fe9641e1fa972ec58b2428413d7bb6be551d955bead0bce2",
+    "paper/figures/slas/benchmark-publication/workers/official30_matched_20261006/measured_worker_speedups.png": "d01166d2cf9eb2087663671daadaea32ee9fec47cb6d82487c4fefdde794e273",
+    "paper/figures/slas/benchmark-publication/workers/matched_latestmain_nine_20261006/figure2_provenance.json": "85dc725bc194c3f6829445788def42de905e299aff2f79fe2b63841a0f1da12a",
+    "paper/figures/slas/benchmark-publication/workers/matched_latestmain_nine_20261006/measured_worker_speedups.png": "2082a1763d50074a2dea97b8132c0caeef1b50e55fd487012f05a878918a743c"
   },
   "ui_crops": [],
   "output_sha256": {
-    "supp_matched_worker_speedups.png": "b91259dd3db068bd4fe7cb7409bb41a9c4c9a43aeeaeff60991da4d4cc602e2b",
-    "supp_matched_worker_speedups.pdf": "4112dc58bf54cbe515a6d767fcd8ef840fb30e85756d80e9241d0ee0a8f32a33",
-    "supp_matched_worker_speedups.svg": "d17a9319a9de0fd4ddfd17178b68db972c530774a42b61ed16a037ee417469f4"
+    "supp_matched_worker_speedups.png": "5e552d27534ff74e4b4980429e7060ffcade19fb8e97199b4c696fb4da82478b",
+    "supp_matched_worker_speedups.pdf": "00b68216e2605d7cd3852756b5ef2c1618fd6c360ba5b5dc8b4cad99c5665a77",
+    "supp_matched_worker_speedups.svg": "f18fe966d8aa818452b2e5699fdd54ecfec7378961fc88d12b3c6d681dfaecc8"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
