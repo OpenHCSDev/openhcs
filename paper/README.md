@@ -142,8 +142,31 @@ The archived benchmark mode reproduces the May distribution figure, supplementar
 workflow heatmap and plotted-row CSVs. It retains the original one-observation
 tables, historical timing scopes and unresolved wound-healing exclusion.
 
-Regenerate the current main-text performance figure, its single numerical include,
-and the consolidated supplementary performance panels from the qualified records:
+The current publication sweep is
+`benchmark/results/matched_worker_sweep_20261007_exportfixed`. Once all seven
+modes pass qualification, regenerate its main-text figure, numerical include,
+May-style worker panels and fixed-workload scaling through the existing owner:
+
+```sh
+python benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/render_sweep.py \
+  --record benchmark/results/matched_worker_sweep_20261007_exportfixed \
+  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v4/protocol-manifest.json \
+  --output-dir paper/figures/slas/benchmark-publication
+```
+
+This reads qualified saved reports and refuses an incomplete seven-mode sweep.
+All thirty workflows share the frozen production revision. Native CP1/CP8
+references are one genuine complete first batch each; OpenHCS uses the median
+of three measured repetitions after warmup. CP12/CP16 are explicitly projected
+from the retained CP8 first batch and subsequent rate, with zero actual target
+native observations. Fixed-twelve OpenHCS scaling is entirely measured. External
+server startup is excluded; process-tree memory is unavailable. Repeated source
+assignments are copies of the selected sample, not independent biological wells.
+See [the claim and manuscript contract](benchmark_claims.md) for numerical spans,
+stable asset paths and source validation. Final assets remain pending until the
+complete sweep qualifies.
+
+Reproduce the earlier measured-median publication checkpoint separately:
 
 ```sh
 PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
@@ -156,15 +179,16 @@ PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
   --output-dir paper/figures/slas/benchmark-publication
 ```
 
-This reads saved measurements; it does not run benchmarks. The main figure uses
+This historical command reads saved measurements. That checkpoint uses
 the logarithmic thirty-workflow view. Its linear counterpart, individual runtime
 panels, sample-count trends and selected worker comparisons share Supplementary
 Figure 9. Worker comparisons retain their own cohorts and revisions; repeated
 source assignments are not independent biological wells.
 
-For fresh measurements, first qualify the complete matched reports and convert
-them to execution or total summaries with their original `summary_custody.json`.
-Then use the same paper builder's explicit measured input mode:
+The generic measured-median input mode below supports earlier records with that
+baseline policy; the current first-batch/projection sweep uses its renderer above.
+First qualify complete matched reports and convert them to execution or total
+summaries with their original `summary_custody.json`:
 
 ```sh
 PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
