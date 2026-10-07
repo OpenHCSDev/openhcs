@@ -41,7 +41,7 @@
       "openhcs_workers": 1,
       "native_processes": 1,
       "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/12assignments-1worker/capture/command.json",
-      "command_sha256": "a18e4e11811baf7f589fcecb0c9268b9fa1b96b12225bf313df524b7de8b3569",
+      "command_sha256": "401eb09b6717410b2ae10484133ffdf8e7ba0767bed14831bcd16292b305ae86",
       "terminal_present_at_preparation": false,
       "qualification": "pending; no qualified summaries yet"
     },
@@ -52,7 +52,7 @@
       "openhcs_workers": 2,
       "native_processes": 1,
       "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/12assignments-2workers/capture/command.json",
-      "command_sha256": "6857e5f752057bedb75986c54e95a3bff391edf2f8b5c3e858cc929a4b223fe7",
+      "command_sha256": "58992662da029fb373b58a1ea212eb41b272ec4c75185f1404d79f751b450719",
       "terminal_present_at_preparation": false,
       "qualification": "pending; no qualified summaries yet"
     },
@@ -74,7 +74,7 @@
       "openhcs_workers": 4,
       "native_processes": 1,
       "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/12assignments-4workers/capture/command.json",
-      "command_sha256": "a4f644d3bc1694bc3f35433f20cd30978026b0ce7ecc713b7d7c682112eb8519",
+      "command_sha256": "1a0f3ce0ef92faf67e49de59c943f54277caec45e3e6fe3077d2716a8a739a3b",
       "terminal_present_at_preparation": false,
       "qualification": "pending; no qualified summaries yet"
     },
