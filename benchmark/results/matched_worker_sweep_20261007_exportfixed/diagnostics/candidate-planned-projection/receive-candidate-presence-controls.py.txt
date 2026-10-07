@@ -1,0 +1,16 @@
+"""Cheap exact receiving of changed presence semantics; no scientific replay."""
+import ast,itertools,json,sys
+from pathlib import Path
+import numpy as np
+root=Path(__file__).parent;prod=Path('/home/ts/code/projects/openhcs-cp-registry-control');sys.path.insert(0,str(prod))
+import openhcs,openhcs.core
+openhcs.core.__path__.insert(0,str(root/'candidate-original-overlay/openhcs/core'))
+import openhcs.core.equivalence.cells as original
+p=root/'candidate-planned-overlay/openhcs/core/equivalence/cells.py';nodes=[n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name in ('runtime_measurement_cell_is_present','runtime_measurement_value_is_present')];namespace=dict(original.__dict__);exec(compile(ast.Module(body=nodes,type_ignores=[]),str(p),'exec'),namespace)
+values=[None,'',' ','none','None','nanosecond','nan(payload)','++nan','+-nan','1_0','False','True','0','1e99999','-inf','+infinity',0,False,True,1,-1,0.,float('nan'),float('inf'),float('-inf'),{}, {'x':float('nan')},{'x':0},[],[float('nan')],np.array([]),np.ones((0,3)),np.array([float('nan')])]
+values += [space+sign+''.join(chars)+space for chars in itertools.product(('n','N'),('a','A'),('n','N')) for sign in ('','+','-') for space in ('',' ','\t')]
+for value in values:
+ for name in ('runtime_measurement_cell_is_present','runtime_measurement_value_is_present'):
+  assert getattr(original,name)(value)==namespace[name](value),(name,repr(value))
+proof={'status':'PASS','scope':'Exact existing vs staged presence function bodies via AST receiving only; no science, no timing','value_cases':len(values),'covered':'None, empty/whitespace, all signed case variants of nan, nonnumeric text and invalid numeric spellings, bool/int, zero, infinity, mappings with missing children, empty/list/array shapes','functions':['runtime_measurement_cell_is_present','runtime_measurement_value_is_present'],'nominal_metadata':'All RuntimeRowProjectionRecord constructors require explicit measured_object_anchor; the previously implicit directional-derived producer now computes it in its existing row context; no runtime fallback classifier'}
+(root/'candidate-presence-controls-proof.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof))

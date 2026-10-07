@@ -1,0 +1,18 @@
+{
+  "scope": "DIAGNOSTIC_ONLY single saved native Grid reference cold fact construction/checksum/cache write, current planned semantic owner; CPU0 shared, no science",
+  "wall_seconds": 16.433807040564716,
+  "process_cpu_seconds": 9.177434888,
+  "source_report_sha256": "c7ea873f98bcde016b59901c2288d2736e33938e27c0f25a02cb3976282c72d2",
+  "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-grid-net-price-native-cache",
+  "native_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+  "actual_retained_native_assignment_count": 8,
+  "native_reference_repetition": -1,
+  "native_reference_assignment": "W001",
+  "native_physical_csv_files": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/native/-1/W001/BF_cells_on_grid.csv": {
+      "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c",
+      "bytes": 11117397
+    }
+  },
+  "physical_source_scope": "Actual retained serial-eight report and assignment W001 output, not native singlewell benchmark, private cache root did not exist before cold constructor."
+}

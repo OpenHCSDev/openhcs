@@ -1,0 +1,144 @@
+{
+  "status": "PASS",
+  "scope": "Byte-preserved diagnostic receiving packet; staged patch not yet installed in live qualifier source. No benchmark execution performance claim.",
+  "files": [
+    {
+      "path": "README.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/README.txt",
+      "sha256": "37fcfb239d90514a4a02b957c1fb0a4c1933aa85586e36be2723c82a84919cc0",
+      "bytes": 1545
+    },
+    {
+      "path": "attachment-sha256.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/attachment-sha256.json",
+      "sha256": "4c1de315148eb7f7015ab91f6f9e6233e1697e8957f797e65adce3652d47776b",
+      "bytes": 2257
+    },
+    {
+      "path": "candidate-advanced-optimized-receipt.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-advanced-optimized-receipt.json",
+      "sha256": "e6b3caa268d6cfe01b156a2104cd9f8fc230ecc70f4097b096a81a06001d2a48",
+      "bytes": 1389
+    },
+    {
+      "path": "candidate-advanced-original-receipt.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-advanced-original-receipt.json",
+      "sha256": "cb13fce0458b821103cf08a47dc17f4f946b4146b6bd4e3bc773e6d50c0b29e0",
+      "bytes": 1400
+    },
+    {
+      "path": "candidate-original-receipt.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-original-receipt.json",
+      "sha256": "5f2e81ebc6d625dd2f12c41fdcd1c9a488f30ae8f5f1c82314ac27ca69b3ba02",
+      "bytes": 1136
+    },
+    {
+      "path": "candidate-planned-advanced-proof.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-planned-advanced-proof.json",
+      "sha256": "e502ffde5f6a52c991184bc310173289b0eaf07d87227f295c984628dc9117c4",
+      "bytes": 3894
+    },
+    {
+      "path": "candidate-planned-anchor-producer-inventory.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-planned-anchor-producer-inventory.json",
+      "sha256": "daab6ba739fed89c6b1ba6189506943541e2640d16d144925513481f64883e6c",
+      "bytes": 3745
+    },
+    {
+      "path": "candidate-planned-grid-native-cold-price.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-planned-grid-native-cold-price.json",
+      "sha256": "2d627d25b7e6b28ddabe95177f05e035a9485d6663269166f9020dd2ad1be0d0",
+      "bytes": 1346
+    },
+    {
+      "path": "candidate-planned-net-payoff.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-planned-net-payoff.json",
+      "sha256": "1b217e45bd4ad1f0039f8ee7e186d8d1e0090bc843adac1531cff8e802d7d683",
+      "bytes": 1429
+    },
+    {
+      "path": "candidate-planned-optimized-receipt.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-planned-optimized-receipt.json",
+      "sha256": "cd8d6efc34ade2b7d622e7b39280e2c7212026df82b1327e09c808c8ce4ca9d6",
+      "bytes": 1145
+    },
+    {
+      "path": "candidate-planned-projection-proof.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-planned-projection-proof.json",
+      "sha256": "fe133a0e21cf918e2dfa6ed8af22e6919d29a6a4d1130721969b955b121423ce",
+      "bytes": 5091
+    },
+    {
+      "path": "candidate-planned-projection.patch",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-planned-projection.patch",
+      "sha256": "74a9fdf956236ceb0d1a15b0890dd4242c87b46ed793632f783879aa4119d7ef",
+      "bytes": 6265
+    },
+    {
+      "path": "candidate-presence-controls-proof.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/candidate-presence-controls-proof.json",
+      "sha256": "cf3ef9d2fc4d1b2853e59c4e9c34900c94f493ee10e753c879a06a6b6639d105",
+      "bytes": 704
+    },
+    {
+      "path": "cells.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/cells.py.txt",
+      "sha256": "b5a6e479b5ef072d3f6803b888e4b171853509a68aadf0f930ecd96e0fd3d8f2",
+      "bytes": 26144
+    },
+    {
+      "path": "measurement_facts.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/measurement_facts.py.txt",
+      "sha256": "262a5d223f3925e41970fb132253cee9eb7c47e0bc4b1ce8edc895f2c6ef8f71",
+      "bytes": 18411
+    },
+    {
+      "path": "measurement_rows.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/measurement_rows.py.txt",
+      "sha256": "6f5c39e10bd52dc0e82f059a3f9c702a475ae9e7858f1c5a5b4576be69b29659",
+      "bytes": 92014
+    },
+    {
+      "path": "prepare-candidate-planned.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/prepare-candidate-planned.py.txt",
+      "sha256": "29cc414d8670f346c92eb67dbcc0f4cce07dba1af893ff6cb4093adfb5c0e0c5",
+      "bytes": 4176
+    },
+    {
+      "path": "price-planned-native-grid.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/price-planned-native-grid.py.txt",
+      "sha256": "cbcc68b7eda0c5dafb100da18d87fcde38b0b4f4a0dd0612c8c5a3a54b0f40cd",
+      "bytes": 2866
+    },
+    {
+      "path": "profile-fresh-candidate-scope.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/profile-fresh-candidate-scope.json",
+      "sha256": "078df1b8e73affc00aa5335db7d196d71846e02ed10ddea1d9c8aed6a4e015d6",
+      "bytes": 411
+    },
+    {
+      "path": "receive-candidate-advanced.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/receive-candidate-advanced.py.txt",
+      "sha256": "79746f7bfe42360fca1aadb726be39384860d243eecc344425824ddca229215f",
+      "bytes": 5164
+    },
+    {
+      "path": "receive-candidate-planned.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/receive-candidate-planned.py.txt",
+      "sha256": "b54f90a0576dc5b83924988534bdaeaa78fe7bd9f2134ef90c5dd349186aa649",
+      "bytes": 4458
+    },
+    {
+      "path": "receive-candidate-presence-controls.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-proofpacket/receive-candidate-presence-controls.py.txt",
+      "sha256": "e542591345259d415098caacfb39122bf698bee8090b87c7c51aebacafae8b5c",
+      "bytes": 2240
+    },
+    {
+      "path": "candidate-projection-optimization-scheduler-hold.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/candidate-projection-optimization-scheduler-hold.json",
+      "sha256": "d171c1407f27b177ef52b5a071bd428bf53e0eea4b978156fb4b721d4ea6125b",
+      "bytes": 878
+    }
+  ]
+}
