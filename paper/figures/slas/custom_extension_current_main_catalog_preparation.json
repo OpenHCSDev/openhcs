@@ -1,0 +1,30 @@
+{
+  "mcp_error": false,
+  "payloads": [
+    {
+      "errors": [],
+      "handle": {
+        "connection": {
+          "host": "localhost",
+          "persistent": true,
+          "port": 7895,
+          "transport_mode": "ipc"
+        },
+        "server_identity": {
+          "create_time": 1791395472.83,
+          "pid": 3569107
+        }
+      },
+      "outcome": "ready",
+      "progress": {
+        "message": "Function catalog ready",
+        "phase": "connected",
+        "sequence": 991,
+        "timestamp": 1791395519.4143727
+      },
+      "schema_version": "openhcs.agent.v1",
+      "warnings": []
+    }
+  ],
+  "tool": "openhcs_start_function_catalog_preparation"
+}

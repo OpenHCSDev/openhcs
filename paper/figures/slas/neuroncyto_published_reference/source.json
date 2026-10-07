@@ -1,0 +1,22 @@
+{
+  "article": "Ong et al. (2016), NeuronCyto II: An automatic and quantitative solution for crossover neural cells in high throughput screening",
+  "doi": "10.1002/cyto.a.22872",
+  "article_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/cyto.a.22872",
+  "source_url": "https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/CYTO-89-747-g002.jpg",
+  "license_evidence_url": "https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/PMC5089663.1.xml",
+  "license": "CC BY-NC 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
+  "copyright": "2016 The Authors; published by Wiley Periodicals, Inc. on behalf of ISAC",
+  "source_file": "CYTO-89-747-g002.jpg",
+  "sha256": "613b7356ff007ed8e541ee469f9955afadc27a47f8f6906b985bbffb2f42bbad",
+  "source_size_pixels": [502, 475],
+  "published_figure": "2D",
+  "crop_xyxy_pixels": [273, 244, 502, 475],
+  "crop_convention": "PIL left, top, right, bottom; right and bottom exclusive",
+  "modifications": "Editorial crop of panel D and placement only; no recolouring, retouching or spatial registration. Author red circles and arrow retained.",
+  "reference_kind": "Published NeuronCyto II algorithm result, not manual ground truth",
+  "field_correspondence": "Visual comparison of published Figure 2C and the retained image-1 input establishes the same source scene. No pixel transform, cell correspondence or display matching across authors is claimed.",
+  "input_w1_sha256": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7",
+  "input_w2_sha256": "ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847",
+  "reuse_status": "Attributed manuscript draft comparison only; commercial journal reproduction permission/licence compatibility requires review before publication. No journal upload authorised."
+}

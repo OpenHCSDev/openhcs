@@ -30,7 +30,7 @@ def extension(*, main_panel=False):
     sheet = FigureSheet(
         "submission_custom_function" if main_panel else "custom_function_extension",
         "" if main_panel else "One function declaration reaches the whole workflow",
-        5.2 if main_panel else 7.6,
+        7.6,
     )
     source_path = OUTPUT / "custom_signal_example.py"
     tree = ast.parse(source_path.read_text())
@@ -124,27 +124,33 @@ def extension(*, main_panel=False):
         sheet.source(ROOT / path)
 
     if main_panel:
-        sheet.text(3, 96, "VIII", size=14, weight="bold", color=BLUE)
-        sheet.text(11, 96, "Lab Python becomes an editable analysis step", size=12, weight="bold")
+        sheet.text(3, 96, "III", size=14, weight="bold", color=BLUE)
+        sheet.text(11, 96, "Function definition → generated form; live code mode", size=12, weight="bold")
         # The actual declaration, including its array-backend decorator, is
         # the source of the shown defaults and descriptions, not a mock API.
-        sheet.axis.add_patch(Rectangle((3, 13), 52, 75, color=PALE))
+        sheet.axis.add_patch(Rectangle((3, 26), 52, 63, color=PALE))
         sheet.text(5, 84, excerpt, size=11.5, family="DejaVu Sans Mono",
                    va="top", linespacing=1.15)
-        sheet.text(5, 17, "Docstring excerpt; full registered source retained", size=9, color=MUTED)
-        sheet.arrow((56, 51), (61, 51), color=BLUE)
-        sheet.text(58.5, 63, "Register\nsource", size=9, ha="center")
+        sheet.text(5, 29, "Docstring excerpt; full registered source retained", size=9, color=MUTED)
+        sheet.arrow((56, 70), (61, 70), color=BLUE)
+        sheet.text(58.5, 79, "Register\nsource", size=9, ha="center")
         sheet.text(64, 84, "Generated form controls", size=12, weight="bold")
         sheet.native_image("custom_extension_parameters_capture",
-                           (64, 50, 33, 29), crop=(15, 337, 310, 445))
-        sheet.text(64, 43, "Agent-facing catalog description", size=11, weight="bold")
+                           (64, 57, 33, 23), crop=(15, 337, 310, 445))
+        sheet.text(64, 50, "The same editor also exposes", size=10, color=MUTED)
+        sheet.text(64, 46, "Live editable Python", size=12, weight="bold")
+        sheet.native_image("authoring_code_verified_capture", (61, 25, 36, 18),
+                           crop=(74, 96, 292, 222))
+        sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
+        sheet.text(64, 23, "Normalization example (different function)", size=9, color=PURPLE)
+        sheet.text(3, 20, "The same declaration also supplies the agent-facing catalog", size=11, weight="bold")
         for index, name in enumerate(parameter_names):
             parameter = parameters[name]
-            y = 34 - index * 12
-            sheet.text(64, y, f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
-                       size=9, family="DejaVu Sans Mono", color=TEAL)
-            sheet.text(64, y-5, parameter["description"], size=9, color=MUTED)
-        sheet.text(50, 4, "One registered source • no function-specific form or MCP tool",
+            x = 3 + index * 48
+            sheet.text(x, 14, f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
+                       size=10, family="DejaVu Sans Mono", color=TEAL)
+            sheet.text(x, 10, parameter["description"], size=10, color=MUTED)
+        sheet.text(50, 4, "Declaration-derived controls and catalog • editable Python uses the same workflow",
                    size=11, ha="center", color=MUTED)
         sheet.save()
         return

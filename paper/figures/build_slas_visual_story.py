@@ -765,33 +765,45 @@ def submission_neurite_results():
     from build_slas_neurite_effects import NeuriteEffectFigure
 
     """Show the retained shaft illustration without promoting an overextended repair."""
-    sheet = FigureSheet("submission_neurite_results", "", 10.1)
+    sheet = FigureSheet("submission_neurite_results", "", 9.1)
     public = OUTPUT / "h004_fresh20_sources"
     personal = OUTPUT / "p001_fresh13_sources"
+    published = OUTPUT / "neuroncyto_published_reference"
+    reference_path = published / "source.json"
+    reference = json.loads(reference_path.read_text())
+    reference_image = published / reference["source_file"]
+    if digest(reference_image) != reference["sha256"]:
+        raise ValueError("Published NeuronCyto II figure source hash mismatch")
+    sheet.source(reference_path)
     sheet.source(public / "QA-INDEX.json")
     sheet.source(personal / "source-record.rst")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
     sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
-    sheet.panel("I", "Public neurites: thick-shaft recovery", 3, 97)
+    sheet.panel("I", "Public neurites: OpenHCS and published NeuronCyto II", 3, 97)
     for x, name, title in (
-        (3, "first-bottom-raw", "A  Raw process channel"),
-        (52, "first-bottom-result", "B  Initial shaft result"),
+        (3, "first-bottom-raw", "A  Raw detail"),
+        (35, "first-bottom-result", "B  OpenHCS initial detail"),
     ):
         sheet.text(x, 91, title, size=10.5, weight="bold")
-        sheet.source_image(public / f"{name}.png", (x, 70, 45, 18), crop=(297, 28, 1250, 410))
-    sheet.text(3, 67, "Retained shaft candidate; fine filopodia are outside this endpoint.", size=10, color=MUTED)
+        sheet.source_image(public / f"{name}.png", (x, 70, 30, 18), crop=(297, 28, 1250, 410))
+    sheet.text(67, 91, "C  Published NeuronCyto II", size=10.5, weight="bold")
+    sheet.source_image(reference_image, (67, 70, 30, 18),
+                       crop=tuple(reference["crop_xyxy_pixels"]))
+    sheet.text(67, 68, "Whole field • algorithm, not manual GT", size=8.5, color=MUTED)
+    sheet.text(3, 65, "A–B: retained shaft detail. C: Ong et al., Fig. 2D; attribution CC BY-NC 4.0.",
+               size=9, color=MUTED)
     sheet.panel("II", "Laboratory neurites: final autonomous analysis", 3, 62)
     for x, name, title in (
-        (3, "raw", "C  Raw FITC"),
-        (35, "result", "D  Body and path result"),
-        (67, "combined", "E  Combined"),
+        (3, "raw", "D  Raw FITC"),
+        (35, "result", "E  Body and path result"),
+        (67, "combined", "F  Combined"),
     ):
         sheet.text(x, 57, title, size=10.5, weight="bold")
         sheet.source_image(personal / f"site1-{name}.png", (x, 32, 30, 23), crop=(550, 28, 997, 437))
     sheet.panel("III", "Assisted repair: treatment responses", 3, 28)
     NeuriteEffectFigure.draw_panels(
         sheet, ROOT / "paper/supplementary/personal_neurite_repaired_morphometry",
-        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="F",
+        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="G",
     )
     sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Concordant outgrowth responses; branching fold changes differ.",
                size=9.5, color=MUTED)
@@ -822,7 +834,7 @@ def submission_repair_examples():
 
 def submission_autonomous_loop():
     """Separate intended skill workflow from the retained H001 trajectory."""
-    sheet = FigureSheet("submission_autonomous_loop", "", 7.2)
+    sheet = FigureSheet("submission_autonomous_loop", "", 8.8)
     resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
     with resources.open(newline="") as stream:
         rows = [row for row in csv.DictReader(stream)
@@ -839,24 +851,115 @@ def submission_autonomous_loop():
     sheet.source(resources)
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md")
+    sheet.source(ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")
+    sheet.source(OUTPUT / "h001_scored_native_provenance.json")
+
+    # These vector pictograms explain the procedure, not synthetic assay results.
+    # Native captures below retain their separate, observed-source identities.
+    def document(x, y, width, height, lines, color=BLUE):
+        sheet.axis.add_patch(Rectangle(
+            (x, y), width, height, facecolor="white", edgecolor=color,
+            linewidth=1.4, zorder=3,
+        ))
+        sheet.axis.plot([x + width - 3, x + width - 3, x + width],
+                        [y + height, y + height - 3, y + height - 3],
+                        color=color, linewidth=1.2, zorder=4)
+        for index, line in enumerate(lines):
+            sheet.text(x + 1.2, y + height - 3.5 - index * 2.7, line,
+                       size=9, color=color, va="top", zorder=4)
+
+    def field(x, y, view):
+        sheet.axis.add_patch(Rectangle(
+            (x, y), 7.3, 7.3, facecolor="#17212b", edgecolor=MUTED,
+            linewidth=0.8, zorder=3,
+        ))
+        for dx, dy, radius, color in (
+            (2.0, 4.7, 1.1, TEAL), (5.2, 2.3, 1.3, PURPLE),
+        ):
+            if view != "result":
+                sheet.axis.add_patch(Circle(
+                    (x + dx, y + dy), radius, facecolor="#aeb9c5",
+                    edgecolor="none", zorder=4,
+                ))
+            if view != "raw":
+                sheet.axis.add_patch(Circle(
+                    (x + dx, y + dy), radius + 0.15, facecolor="none",
+                    edgecolor=color, linewidth=2, zorder=5,
+                ))
+
     sheet.panel("A", "Intended specialist workflow in the packaged skill", 3, 96)
-    for x, y, title, detail in (
-        (3, 72, "Biological brief", "Target • outputs • acquisition facts"),
-        (36, 72, "Inspect and measure", "Channels • raw signal • feature scales"),
-        (69, 72, "Build and execute", "Discover functions • editable pipeline"),
-        (69, 44, "Compare matched views", "Raw only • result only • combined"),
-        (36, 44, "Diagnose and repair", "Earliest failed stage\nRecheck a regression control"),
-        (3, 44, "Freeze selected result", "Pipeline • outputs • known limitations"),
+    for x, y, title, color in (
+        (3, 69, "1  Biological brief", BLUE),
+        (36, 69, "2  Inspect and measure", BLUE),
+        (69, 69, "3  Build and execute", BLUE),
+        (69, 41, "4  Compare matched views", TEAL),
+        (36, 41, "5  Repair earliest failure", ORANGE),
+        (3, 41, "6  Freeze selected result", TEAL),
     ):
-        sheet.box(x, y, 28, 16, title, detail)
+        sheet.axis.add_patch(FancyBboxPatch(
+            (x, y), 28, 23, boxstyle="round,pad=0.2,rounding_size=0.65",
+            facecolor=PALE, edgecolor=color, linewidth=1.2, zorder=2,
+        ))
+        sheet.text(x + 14, y + 20.5, title, size=11, weight="bold",
+                   color=color, ha="center", va="center")
+
+    document(6, 73, 12, 13, ("Target", "Outputs", "Acquisition"))
+    sheet.text(20, 81, "Biological\nquestion", size=10, va="center")
+    sheet.text(17, 70.5, "Scientist defines the task", size=9, ha="center")
+
+    # Channel stack, magnifier and native-distance ruler are schematic symbols.
+    for offset, color in ((2, PURPLE), (1, TEAL), (0, BLUE)):
+        sheet.axis.add_patch(Rectangle(
+            (39 + offset, 77 + offset), 8, 6, facecolor="white",
+            edgecolor=color, linewidth=1.2, zorder=3 + (2 - offset) * 0.1,
+        ))
+    for x, y in ((41, 80), (45, 79)):
+        sheet.axis.add_patch(Circle((x, y), 0.7, color=BLUE, zorder=4))
+    sheet.text(40, 74, "Channels", size=9)
+    sheet.axis.add_patch(Circle((56, 81), 3.1, facecolor="white",
+                               edgecolor=BLUE, linewidth=1.5, zorder=3))
+    sheet.axis.plot([58.2, 60.5], [78.8, 76.5], color=BLUE, linewidth=2, zorder=4)
+    sheet.axis.plot([53.6, 58.4], [81, 81], color=TEAL, linewidth=1.5, zorder=4)
+    for x in (53.6, 56, 58.4):
+        sheet.axis.plot([x, x], [80.3, 81.7], color=TEAL, linewidth=1, zorder=4)
+    sheet.text(56, 74, "Native scales", size=9, ha="center")
+    sheet.text(50, 70.5, "Bright / dim • centre / edge", size=9, ha="center")
+
+    sheet.native_image("authoring_main_verified_capture", (71, 74, 24, 12),
+                       crop=(516, 204, 1024, 318))
+    sheet.text(83, 70.5, "Real editable pipeline • MCP", size=9, ha="center")
+
+    for x, view, label in ((71, "raw", "Raw"), (79.7, "result", "Result"),
+                            (88.4, "combined", "Combined")):
+        field(x, 48, view)
+        sheet.text(x + 3.65, 46, label, size=8.5, ha="center")
+    sheet.text(83, 42.5, "Same position, scale and window", size=9, ha="center")
+
+    for x, title, selected in ((38, "Input", False), (46, "Markers", True),
+                                (54, "Split", False)):
+        sheet.axis.add_patch(Rectangle(
+            (x, 49), 7.5, 7, facecolor="#fff0df" if selected else "white",
+            edgecolor=ORANGE if selected else MUTED,
+            linewidth=2 if selected else 1, zorder=3,
+        ))
+        sheet.text(x + 3.75, 52.5, title, size=8.5, ha="center", va="center")
+    sheet.text(50, 46, "Change one stage; recheck", size=9, ha="center")
+    sheet.text(50, 42.5, "Failure + regression control", size=9, ha="center")
+
+    for x, y, name in ((6, 47, "Pipeline.py"), (15, 45, "Results"), (23, 47, "QA")):
+        document(x, y, 7, 10, (), color=TEAL)
+        sheet.text(x + 3.5, y + 4, name, size=8, ha="center", color=TEAL,
+                   rotation=90 if name == "Pipeline.py" else 0, zorder=4)
+    sheet.text(17, 42.5, "Files + measurements + limitations", size=8.5, ha="center")
+
     for start, end in (((31,80),(36,80)), ((64,80),(69,80)),
-                       ((83,72),(83,60)), ((69,52),(64,52)), ((36,52),(31,52))):
+                       ((83,69),(83,64)), ((69,52),(64,52)), ((36,52),(31,52))):
         sheet.arrow(start, end)
-    sheet.route(((50,60),(50,65),(83,65),(83,72)), color=ORANGE, dashed=True)
-    sheet.text(50, 66, "Inspect the revised candidate", size=9, ha="center", color=ORANGE)
-    sheet.text(50, 38, "Scientist can inspect images, masks and measurements and revise the same pipeline",
-               size=11, ha="center", weight="bold", color=TEAL)
-    sheet.panel("B", "Nuclear segmentation: the observed repair sequence", 3, 29)
+    sheet.route(((50,64),(50,66),(83,66),(83,69)), color=ORANGE, dashed=True)
+    sheet.text(50, 67, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
+    sheet.text(50, 37, "Scientist audits images, masks and measurements; the same pipeline remains editable",
+               size=10.5, ha="center", weight="bold", color=TEAL)
+    sheet.panel("B", "Nuclear segmentation: observed H001 repair sequence", 3, 32)
     candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
     if len(candidates) != 4:
         raise ValueError("Expected the four original reported H001 candidates")
@@ -864,41 +967,56 @@ def submission_autonomous_loop():
         "Split body", "Split fixed; pair lost", "Pair still lost", "Pair recovered",
     ))):
         x = 3 + index * 24
-        sheet.box(x, 15, 22, 11, f"{int(candidate)} • {count} objects", decision, color=TEAL)
+        sheet.box(x, 23, 22, 7, f"{int(candidate)} • {count} objects", decision, color=TEAL)
         if index < 3:
-            sheet.arrow((x+22,20.5), (x+24,20.5))
+            sheet.arrow((x+22,26.5), (x+24,26.5))
+    for x, stage, title in ((3, "raw", "Retained raw field"),
+                            (35, "first", "Initial candidate, a01"),
+                            (67, "final", "Selected candidate, a04")):
+        sheet.text(x, 21, title, size=10, weight="bold")
+        sheet.source_image(OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
+                           (x, 7, 30, 13), crop=(297, 28, 1037, 492))
     first = float(trial["first_elapsed_s"]) / 60
     final = float(trial["final_elapsed_s"]) / 60
-    sheet.text(4, 8, f"Initial run completed: {first:.0f} min • whole task: {final:.0f} min",
-               size=11, color=TEAL)
-    sheet.text(4, 3, "Whole task includes image review, reporting and cleanup; times start at brief instruction.",
-               size=9, color=MUTED)
+    sheet.text(4, 4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four completed candidates",
+               size=10.5, color=TEAL)
+    sheet.text(4, 1, "Counts and repair decisions: retained author report. Whole task includes review, reporting and cleanup.",
+               size=8.5, color=MUTED)
     sheet.save()
 
 
 def submission_shared_workflow():
-    """Keep the native editing evidence readable beside the full-page diagram."""
-    sheet = FigureSheet("submission_shared_workflow", "", 10.4)
+    """Enlarge the application and put detail callouts on its unused canvas."""
+    sheet = FigureSheet("submission_shared_workflow", "", 7.7)
     sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
-    sheet.panel("II", "Main window", 3, 97)
-    sheet.native_image("authoring_main_verified_capture", (3, 43, 94, 51))
-    sheet.panel("III", "Plate manager detail", 3, 41)
-    sheet.panel("IV", "Pipeline editor detail", 52, 41)
-    sheet.native_image("authoring_main_verified_capture", (3, 26, 45, 13),
-                       crop=(0, 204, 510, 360))
-    sheet.native_image("authoring_main_verified_capture", (52, 26, 45, 13),
-                       crop=(516, 204, 1024, 318))
-    sheet.panel("V", "Execution server", 3, 22)
-    sheet.native_image("authoring_server_browser_verified_capture", (3, 2, 34, 16))
-    sheet.panel("VI", "Controls", 39, 22)
-    sheet.panel("VII", "", 68, 22)
-    sheet.text(74, 22, "Matching Python", size=12, weight="bold")
-    sheet.native_image(
-        "authoring_function_verified_capture", (39, 2, 25, 16), crop=(25, 153, 193, 290)
-    )
-    sheet.native_image(
-        "authoring_code_verified_capture", (68, 2, 29, 16), crop=(74, 96, 292, 222)
-    )
+    sheet.panel("II", "Main window with enlarged native details", 3, 97)
+    sheet.native_image("authoring_main_verified_capture", (2, 6, 96, 87))
+    sheet.figure.axes[-1].set_zorder(-2)
+    # Borders identify editorial enlargements rather than extra native windows.
+    # The editor insets use its empty canvas; the server retains its own capture.
+    for title, name, bounds, crop, anchor in (
+        ("Plate manager", "authoring_main_verified_capture", (4, 31, 45, 20),
+         (0, 204, 360, 360), (16, 66)),
+        ("Pipeline editor", "authoring_main_verified_capture", (52, 34, 44, 16),
+         (516, 204, 860, 318), (75, 67)),
+        ("Execution-server browser", "authoring_server_browser_verified_capture",
+         (4, 10, 45, 18), None, (17, 21)),
+    ):
+        x, y, width, height = bounds
+        sheet.native_image(name, bounds, crop=crop)
+        inset = sheet.figure.axes[-1]
+        inset.set_zorder(-1)
+        inset.set_axis_on()
+        inset.set_xticks([])
+        inset.set_yticks([])
+        for spine in inset.spines.values():
+            spine.set_color(BLUE)
+            spine.set_linewidth(1.6)
+        sheet.text(x + 1, y + height + 1, title, size=11, weight="bold", color=BLUE,
+                   bbox={"facecolor": "white", "edgecolor": "none", "pad": 2})
+        sheet.arrow(anchor, (x + width / 2, y + height), color=BLUE, dashed=True)
+    sheet.text(3, 2, "Native captures • outlined insets enlarge retained controls, not extra application windows",
+               size=9, color=MUTED)
     sheet.save()
 
 

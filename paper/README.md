@@ -43,8 +43,8 @@ to understand the scientific findings in the main text.
 The current main layout has six figures and Table 1: a full-width process
 architecture with integration logos and a native-editing continuation;
 an intended autonomous loop alongside a recorded repair trajectory;
-self-directed nuclear and retinal image review; a six-panel task-specific
-quantitative summary with 3-D and retinal image evidence; public/laboratory neurite analysis with treatment
+a six-panel task-specific quantitative summary with 3-D and retinal image
+evidence followed by self-directed nuclear and retinal repair examples; public/laboratory neurite analysis with treatment
 responses; and matched CellProfiler execution and total time.
 Nine supplementary figures group wider views by assay and retain
 runtime explanations, historical measurements and prospective held-out results.

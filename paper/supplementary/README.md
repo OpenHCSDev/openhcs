@@ -109,7 +109,7 @@ full native overviews and per-field scores.
 
 ![Orthogonal volume views and independently authored body-separation results.](../figures/slas/supp_volume.png){width=6in}
 
-(A–C, upper block) The volume trial shown in main Figure 4: native XY and
+(A–C, upper block) The volume trial shown in main Figure 3: native XY and
 post-freeze XZ/YZ intersections of the unchanged raw volume and saved labels.
 Yellow outlines expose the masks and magenta marks show centres within half a
 voxel of each plane. Raw contrast limits are shared across orthogonal planes.
@@ -827,14 +827,25 @@ catalog-refresh and selector-lifetime fixes recorded there. It demonstrates
 registration and editor integration; the example function was not run on the
 analysis dataset.
 
+The [7 October current-main authoring record](../figures/slas/custom_extension_current_main_evidence.json)
+retains a separate OpenHCS 0.8.7 [registration](../figures/slas/custom_extension_current_main_registration.json)
+and [catalog description](../figures/slas/custom_extension_current_main_function_detail.json):
+the unchanged custom source registered with gain 1.2 and offset 0.0 without
+source patches. The isolated GUI launched, but its window/action catalogs
+failed MCP decoding (`window_id`, `action_id`, `widget_id`); no new custom-step
+form/code capture or code-document readback was established. Main Figure 1III
+therefore retains the earlier custom-function form, alongside a separately
+labelled normalization code example. Registration is not evidence of a new
+GUI editing round trip or analysis execution.
+
 The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
-the retained Fiji/napari panels. Figure 1 panels A, C and D use matching captures
-from one OpenHCS 0.8.5 editing session. Its
+the retained Fiji/napari panels. Figure 1II's main window and Figure 1III's
+normalization code use captures from one OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
-Panel B is a separate OpenHCS 0.8.7 native capture of the ZeroMQ server browser
+The server inset is a separate OpenHCS 0.8.7 native capture of the ZeroMQ server browser
 on an isolated display; its [original MCP receipt](../figures/slas/authoring_server_browser_verified_capture_provenance.json)
 records the unmodified widget image and checksum. The browser lists observed
 endpoints; the status ticks alone do not establish client/server version compatibility.
@@ -1566,7 +1577,7 @@ The resource catalogue contains no recoverable original instruction file for `BB
 
 The current skill describes intended inspection and repair practice. Its later additions are not evidence that earlier authors followed those instructions. Main Figure 2 separates this intended workflow from a recorded H001 example; its wall times come from the original resource catalogue, and its candidate sequence comes from the author's retained report. No universal count of review rounds is inferred from screenshot totals.
 
-Supplementary Figures 3–8 group native views by assay. Main Figure 4 shows
+Supplementary Figures 3–8 group native views by assay. Main Figure 3 shows
 translocation and volume localisation; main Figure 5 shows public and personal
 field-by-field neurite analysis. The assisted mosaic appears only in
 Supplementary Figure 7. Reference evaluation
@@ -1637,7 +1648,7 @@ settings while relocating destinations and use an isolated viewer endpoint.
 These are frozen analysis artifacts, not additions to the processing library.
 The retinal and volume sources in this table correspond to Data 8's named
 trials, not the different retinal trial in Supplementary Figure 5 or the
-volume trial in main Figure 4.
+volume trial in main Figure 3.
 
 The personal mosaic and explicitly labelled development examples retain assisted
 provenance; they are not counted as fresh unguided trials. Recovery of principal

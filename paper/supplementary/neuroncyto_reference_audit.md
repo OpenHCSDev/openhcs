@@ -13,6 +13,29 @@ It supports aggregate reference entries, not available pixel/path annotations.
 The manuscript's main-shaft illustration does not require exhaustive filopodial
 tracing and is not assigned a spatial reference accuracy score.
 
+For the 7 October 2026 Figure 5(I) revision, the published NeuronCyto II
+Figure 2C/D was inspected: it shows the same field, but D is the algorithm's
+tracing result, not a manual annotation. Supplements 8–10 contain manual
+reference tables without embedded annotation images; sampled frames of the
+four demonstration videos show software operation and algorithm results.
+The published tracing can support an explicitly labelled algorithm comparison,
+not a ground-truth overlay or a spatial manual-reference accuracy claim.
+
+Main Figure 5(I) now includes the published algorithm result beside the retained
+raw detail and OpenHCS initial shaft result. Its source is the unmodified
+[PMC Figure 2 JPEG](https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/CYTO-89-747-g002.jpg),
+SHA-256 `613b7356ff007ed8e541ee469f9955afadc27a47f8f6906b985bbffb2f42bbad`.
+Panel D is cropped at `(273, 244, 502, 475)` in source-image XYXY pixels;
+the original red circles and arrow are retained. This is the same source field,
+not a spatially registered or display-matched comparison across authors.
+The [article XML](https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/PMC5089663.1.xml)
+declares CC BY-NC 4.0; the panel is attributed to Ong et al. (2016), Figure 2D,
+with the crop identified. Commercial journal reproduction permission and licence
+compatibility need review before publication; no journal upload has been made.
+The original JPEG and its source/licence/crop declaration are retained under
+`paper/figures/slas/neuroncyto_published_reference/`. The comparison neither
+modifies the frozen OpenHCS predictions nor supplies a manual accuracy score.
+
 Checked 15 September 2026. This is a retrospective inspection of retained
 outputs and published references, not a new execution or an accuracy benchmark.
 

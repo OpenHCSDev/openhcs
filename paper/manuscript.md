@@ -50,15 +50,15 @@ We evaluated OpenHCS using established CellProfiler workflows and agent-authored
 
 ### Figure 1, continued. Native editing and execution controls
 
-![Large native main window, plate-manager and pipeline-editor detail views, server browser and matching controls and Python.](figures/slas/submission_shared_workflow.png){width=6in}
+![Enlarged native main window with plate-manager, pipeline-editor and execution-server detail overlays.](figures/slas/submission_shared_workflow.png){width=6in}
 
-**(II)** Native main window. (III, IV) Enlarged details of its plate manager and pipeline editor. (V) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (VI, VII) Matching normalization controls and Python after MCP edits in OpenHCS 0.8.5. The supplementary package retains the editing record and capture provenance.
+**(II)** Native main window with outlined editorial enlargements of its plate manager, pipeline editor and real ZeroMQ server browser. Insets cover unused workspace and are not extra application windows. The server browser was captured in OpenHCS 0.8.7; the authoring window in 0.8.5. The supplementary package retains the editing record and capture provenance.
 
 ### Figure 1, continued. The laboratory's own Python joins the shared analysis
 
-![Real Python declaration and docstring beside generated controls and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6in}
+![Real Python declaration and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6in}
 
-**(VIII)** The typed `paper_rescale_signal` declaration, including its NumPy backend decorator and parameter docstring, supplies the defaults and descriptions shown in the native form and MCP catalog. Its source was registered through the existing custom-function route and selected in an ordinary pipeline step; no function-specific form or MCP tool was written. The retained demonstration used a patched OpenHCS 0.8.5 development installation and establishes registration and editing, not execution of this function on the assay images. Supplementary Data 4 retains the registration, installation changes and capture records.
+**(III)** The typed `paper_rescale_signal` declaration, including its NumPy backend decorator and docstring, supplies the shown form defaults and MCP descriptions; no function-specific form or tool was written. Live code shows a separate normalization step from the recorded form/Python check, not this custom function. Native captures are from OpenHCS 0.8.5; the custom-function session used a patched development installation. Registration and catalog defaults were separately rechecked on 0.8.7. These records establish authoring, not assay execution. Supplementary Data 3 retains capture records and limitations.
 
 ## Materials and Methods
 
@@ -70,7 +70,7 @@ Compilation identifies each step's inputs, checks compatibility and prepares fun
 
 Function signatures supply parameter names, types and defaults for the controls and editable Python. Backend declarations permit conversions between compatible CPU, GPU and deep-learning libraries. Functions declare whether they support volumes or image planes.
 
-Registering a custom function adds it to the editor and MCP catalog; its signature and docstring supply controls and searchable descriptions (Figure 1VIII).
+Registering a custom function adds it to the editor and MCP catalog; its signature and docstring supply controls and searchable descriptions (Figure 1III).
 
 Source mappings select channels, planes or stacks and divide images into processing groups. Later steps inherit or replace these choices. Sample, site, channel, plane and time identities remain separate from storage paths, linking measurements to their source images through stacking and processing.
 
@@ -224,7 +224,7 @@ fields show that useful overall agreement does not imply uniform accuracy.
 
 In three dimensions, a measurement-first author recovered all 15 annotated
 centres within the predeclared 30-voxel matching distance, with mean matched
-error of 4.80 voxels (Figure 4). All 15 also matched within 20 voxels.
+error of 4.80 voxels (Figure 3). All 15 also matched within 20 voxels.
 Eleven further predictions were unmatched to annotations of unestablished
 coverage. Native orthogonal views reveal supported body locations and remaining
 lobed-body ambiguity; a separate author repaired an internal partition without
@@ -239,7 +239,7 @@ or complete cell boundaries. Local controls include recovered crowded nuclei
 and unsupported body candidates.
 
 In the noisy retinal images, agents detected bright RBPMS-positive cell bodies
-against heterogeneous background. Figure 4 and Supplementary Figure 5 show an agent
+against heterogeneous background. Figure 3 and Supplementary Figure 5 show an agent
 repairing a divided cell body while keeping a neighbouring pair separate;
 its final segmentation contained 102 objects. A separate completed analysis
 retained 136 candidates, including ten touching the image border
@@ -295,7 +295,7 @@ The public BBBC013 translocation analysis completed all 96 wells. It retained
 The agent selected each well's median eligible-cell log2 nuclear-to-cytoplasmic
 GFP ratio; the task brief did not prescribe this summary. All 96 wells include
 the four development wells. Four wells contribute to each treatment group. Control Z-prime was
-0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 4).
+0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 3).
 Eligibility varies with treatment, so the response describes contributing cells,
 not an unbiased estimate for every detected cell. Supplementary Figure 2 shows complementary
 compartment-level inspection from assisted development. Frozen records and
@@ -322,13 +322,7 @@ Predictions were frozen before reference comparison; scores were not returned to
 
 ![Skill-directed analysis workflow and a separately identified recorded H001 repair trajectory.](figures/slas/submission_autonomous_loop.png){width=6in}
 
-**(A)** Intended inspection and repair workflow from the packaged skill. Scientists can inspect and edit the resulting analysis. (B) An observed nuclear-segmentation trajectory: four completed executions are confirmed by original MCP records; the author's report describes the split repair and recovery of a pair lost during revision. Times derive from the original trial catalogue; whole-task time includes review, reporting and cleanup. The example does not establish universal adherence to the current skill.
-
-### Figure 3. Image review repairs a split and preserves retinal neighbours
-
-![Matched raw, first and final views of an elongated-body split and neighbouring retinal somata.](figures/slas/submission_repair_examples.png){width=6in}
-
-**(A)** Matched H001 initial/final overlays show correction of a split body without reference feedback. (B) The retained retinal author smoothed fragmented footprints while preserving neighbouring somata; raw captures are byte-identical. Weak-body coverage and a possible border split remain uncertain. This is a self-directed continuation, not a fresh trial. Colours do not identify objects across attempts. Wider views and score/capture records remain in Supplementary Figures 3 and 5 and Supplementary Data 8.
+**(A)** Pictograms explain the packaged skill's intended workflow; the pipeline inset is a native capture. Raw/result/combined symbols illustrate matched viewing, not assay data. (B) Recorded nuclear-segmentation repair with raw, initial and selected-result images. Original MCP records confirm four executions; the author's report describes split repair and recovery of a pair lost during revision. Catalogue times include review, reporting and cleanup. This example does not establish universal adherence to the current skill.
 
 The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
 earlier author: 61 fields improved, 123 decreased and 16 were unchanged
@@ -337,17 +331,23 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 
 
-### Figure 4. Task-specific quantitative checks and biological results
+### Figure 3. Task-specific quantitative checks and biological results
 
 ![Separate reference and assay endpoints for nuclear, boundary, volume, translocation and neurite analyses.](figures/slas/submission_analysis_summary.png){width=6in}
 
-**(A)** H001 first/final computational-reference F1. (B) BBBC039 final F1: all 200 fields and the common 175 images opened by none of three agents; authors 1–3 are fresh612, fresh10 and fresh13. The paired first/final score covers only author 1's three original fields. (C) BBBC007 directed boundary agreement: dots are fields, lines pooled pixels. (D) H002 mean matched-centre error; labels give recovered references. (E) BBBC013 dose means and sample standard deviations, four wells per dose. Z-prime uses four positive and four negative controls per block; both positive groups received 150 nM Wortmannin. (F) Retained assisted-checkpoint outgrowth-per-cell fold response at 40 µM against each drug's DMSO wells, compared with MetaXpress. References and endpoints differ; Figures 3 and 5 provide visual evidence.
+**(A)** H001 paired first/final computational-reference F1, three fields from author 1. (B) Three independent BBBC039 authors: final F1 across all 200 fields and the common 175 opened by none. Author identities and records are in Supplementary Data 8. (C) BBBC007 directed boundary agreement: field dots and pooled-pixel lines. (D) H002 mean matched-centre error; labels give recovered references. (E) BBBC013 dose means/sample SD, four wells per dose. Z-prime uses four positive and four negative controls per block; both positive groups received 150 nM Wortmannin. (F) Assisted outgrowth-per-cell fold response at 40 µM versus each drug's DMSO wells and MetaXpress. Endpoints and references differ; Figures 4–5 provide visual evidence.
 
-### Figure 4, continued. Matched image evidence
+### Figure 3, continued. Matched image evidence
 
 ![Translocation response, three-dimensional nuclear localisation and retinal soma detection.](figures/slas/submission_quantitative_results.png){width=6in}
 
 **(G)** Native XY nuclear extents and post-freeze XZ/YZ views of unchanged raw voxels, saved-mask outlines (yellow) and in-plane centres (magenta). Centres more than half a voxel outside each plane are hidden. Matching to 15 manual centres followed freezing; eleven predictions were unmatched to annotations of unestablished coverage. Distances are unscaled voxels, not micrometres. (H) Matched RBPMS raw images and final outlines show retinal somata against heterogeneous background. These views support localisation, not validated boundaries or a manual count. Wider views and evaluation records remain in the supplement.
+
+### Figure 4. Image review repairs a split and preserves retinal neighbours
+
+![Matched raw, first and final views of an elongated-body split and neighbouring retinal somata.](figures/slas/submission_repair_examples.png){width=6in}
+
+**(A)** Matched H001 initial/final overlays show correction of a split body without reference feedback. (B) The retained retinal author smoothed fragmented footprints while preserving neighbouring somata; raw captures are byte-identical. Weak-body coverage and a possible border split remain uncertain. This is a self-directed continuation, not a fresh trial. Colours do not identify objects across attempts. Wider views and score/capture records remain in Supplementary Figures 3 and 5 and Supplementary Data 8.
 
 
 
@@ -360,7 +360,7 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 ![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
-**(I, A–B)** NeuronCyto II raw image and retained initial shaft candidate [@NeuronCytoII]; later repair overextended the target. (II, C–E) Matched views from the nine-field P001 autonomous trial; overlapping fields were not deduplicated. (III, F–G) Assisted 20-well comparison: concordant positive outgrowth responses with different measured magnitudes. Dots: two technical wells per dose; marks/whiskers: mean/sample standard deviation relative to each drug's DMSO mean. Supplementary Figure 8 retains all six endpoints; wider QA and the assisted mosaic remain separate.
+**(I, A–C)** Raw detail, initial OpenHCS shaft result and published NeuronCyto II whole-field result (Ong et al., Figure 2D [@NeuronCytoII], cropped; CC BY-NC 4.0). C is an algorithm result, not manual ground truth; red annotations are original. The field is the same, but crops/displays differ. Later OpenHCS repair overextended the target. (II, D–F) Matched P001 autonomous views; overlapping fields were not deduplicated. (III, G–H) Assisted 20-well comparison: concordant positive responses with different magnitudes. Dots: two technical wells per dose; marks/whiskers: mean/sample SD relative to each drug's DMSO mean. Supplementary Figure 8 retains all six endpoints.
 
 
 ### Matched execution and total time across 30 workflows
