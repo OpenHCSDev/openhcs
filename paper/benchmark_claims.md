@@ -11,7 +11,7 @@ Use the existing figure script and installed numerical environment:
 
 ```sh
 python paper/figures/build_slas_benchmark.py \
-  --publication-record benchmark/results/matched_integrated_main_20261007 \
+  --publication-record benchmark/results/matched_min3_integrated_main_20261007 \
   --output-dir paper/figures/slas/benchmark-publication --frozen
 ```
 

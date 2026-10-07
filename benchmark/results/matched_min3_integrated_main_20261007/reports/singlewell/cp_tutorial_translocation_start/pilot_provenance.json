@@ -1,0 +1,107 @@
+{
+  "case": "cp_tutorial_translocation_start",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "15d95afa1821526e5b58cc76fc33916ee0107ba5a3123cba33fa91ac319e5708",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "3894ca3a053c949d3d39760067ea0edc43a427df",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "BBBC013_A01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "d1a476e362e356653cbf5779663b7fd8376f88b462f1d68b89ad4bfab94558c7"
+    },
+    {
+      "path": "BBBC013_A01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "282da6c3c82c8df9bd04ae44a1c96c051054f9fcf8a54df49d350e8d0d24ca45"
+    },
+    {
+      "path": "Translocation_doses_and_controls.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/okjkoadfmhkdbegb/input/Translocation_doses_and_controls.csv",
+      "size_bytes": 522,
+      "sha256": "f9f40e0fe664a60b2dfeaf4d5706cf723f244517f047d3c7951e695cc22278d2"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/cp_tutorial_translocation_start/native_report.json",
+  "native_reference_report_sha256": "70f72be51f6ae0b00fd392894db3a67a4d74ac040a063d6386f13f0c015d7788",
+  "native_reference_source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/-1/reference_labels__Nuclei.tiff",
+      "sha256": "eaa520c6b780dcf61899b0018ae4f1e610b3cdcd9048cd3ec1202669c03ee6e2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/0/reference_labels__Nuclei.tiff",
+      "sha256": "eaa520c6b780dcf61899b0018ae4f1e610b3cdcd9048cd3ec1202669c03ee6e2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/1/reference_labels__Nuclei.tiff",
+      "sha256": "eaa520c6b780dcf61899b0018ae4f1e610b3cdcd9048cd3ec1202669c03ee6e2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/2/reference_labels__Nuclei.tiff",
+      "sha256": "eaa520c6b780dcf61899b0018ae4f1e610b3cdcd9048cd3ec1202669c03ee6e2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native_preparation/native_cellprofiler_headless/cp_tutorial_translocation_start.cppipe",
+      "sha256": "0d54e5e737885efde1b2d0887919c8e7efb67a14ed94be6f085464d4d1903ef7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/cp_tutorial_translocation_start/native_report.json",
+      "sha256": "70f72be51f6ae0b00fd392894db3a67a4d74ac040a063d6386f13f0c015d7788"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/cp_tutorial_translocation_start/native_request.json",
+      "sha256": "3ca37a4e6c0e4da7137d7482dacd44fe2e21d1928505cd685194729c28457b80"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/cp_tutorial_translocation_start/pilot_provenance.json",
+      "sha256": "a81215f28334acd0f80a57eacd087b50d4e033c249a02c9f94d1d90d532050e7"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "BBBC013_A01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "d1a476e362e356653cbf5779663b7fd8376f88b462f1d68b89ad4bfab94558c7"
+    },
+    {
+      "path": "BBBC013_A01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "282da6c3c82c8df9bd04ae44a1c96c051054f9fcf8a54df49d350e8d0d24ca45"
+    },
+    {
+      "path": "Translocation_doses_and_controls.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/okjkoadfmhkdbegb/input/Translocation_doses_and_controls.csv",
+      "size_bytes": 522,
+      "sha256": "f9f40e0fe664a60b2dfeaf4d5706cf723f244517f047d3c7951e695cc22278d2"
+    }
+  ]
+}

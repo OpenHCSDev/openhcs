@@ -1,10 +1,10 @@
 {
-  "record_name": "matched_integrated_main_20261007",
-  "source_revision": "e251f313f45a568405e3987e77e4f89e18d934e1",
+  "record_name": "matched_min3_integrated_main_20261007",
+  "source_revision": "3894ca3a053c949d3d39760067ea0edc43a427df",
   "status": "frozen",
   "case_count": "30",
-  "execution_min": "2.882",
-  "execution_median": "4.314",
-  "total_min": "1.342",
-  "total_median": "3.310"
+  "execution_min": "3.136",
+  "execution_median": "4.276",
+  "total_min": "1.424",
+  "total_median": "3.253"
 }

@@ -1,0 +1,10 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+ExampleTrackObjects,1,1,worker_0,Sequence1,ColorToGray,1791342212.0827491,1791342212.3013742,0.21862506866455078
+ExampleTrackObjects,1,1,worker_0,Sequence1,IdentifyPrimaryObjects,1791342212.3015442,1791342212.7872963,0.4857521057128906
+ExampleTrackObjects,1,1,worker_0,Sequence1,MeasureObjectSizeShape,1791342212.78786,1791342212.9377885,0.14992856979370117
+ExampleTrackObjects,1,1,worker_0,Sequence1,MeasureObjectIntensity,1791342212.9379814,1791342212.9948401,0.05685877799987793
+ExampleTrackObjects,1,1,worker_0,Sequence1,TrackObjects,1791342212.9950345,1791342213.6608098,0.6657752990722656
+ExampleTrackObjects,1,1,worker_0,Sequence1,OverlayOutlines,1791342213.6610157,1791342213.817534,0.15651822090148926
+ExampleTrackObjects,1,1,worker_0,Sequence1,Tile,1791342213.8201516,1791342214.2551262,0.43497467041015625
+ExampleTrackObjects,1,1,worker_0,Sequence1,SaveImages,1791342214.2578995,1791342214.7108312,0.45293164253234863
+ExampleTrackObjects,1,1,,,ExportToSpreadsheet,1791342214.7299614,1791342214.7693472,0.03938579559326172

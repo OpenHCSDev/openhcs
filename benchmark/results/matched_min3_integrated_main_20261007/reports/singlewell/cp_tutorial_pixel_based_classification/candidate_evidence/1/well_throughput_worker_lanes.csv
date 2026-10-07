@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+cp_tutorial_pixel_based_classification,1,1,worker_0,1,1791341790.3069804,1791341790.866057,0.5590765476226807

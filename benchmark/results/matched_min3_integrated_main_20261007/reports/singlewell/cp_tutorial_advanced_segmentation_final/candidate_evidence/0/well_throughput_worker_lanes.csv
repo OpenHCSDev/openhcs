@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,1,1791341623.6178305,1791341628.071768,4.453937530517578

@@ -1,0 +1,163 @@
+{
+  "case": "ExamplePercentPositive",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "5497bd4788f94719a519e5c0b5b7be2726a701c43aa7dd51de279de38a92944c",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "3894ca3a053c949d3d39760067ea0edc43a427df",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "AS_09125_050116030001_D03f00d0.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExamplePercentPositive/images/AS_09125_050116030001_D03f00d0.tif",
+      "size_bytes": 233336,
+      "sha256": "2751ba667c4067c5d30817cff004aa06f6f6287f1cdbb5b8c9c6a500308cb456"
+    },
+    {
+      "path": "AS_09125_050116030001_D03f00d1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExamplePercentPositive/images/AS_09125_050116030001_D03f00d1.tif",
+      "size_bytes": 240924,
+      "sha256": "141d66a67e8e9892be822465b0197c268e94c809d0213013d06cfc8c759453b4"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExamplePercentPositive/native_report.json",
+  "native_reference_report_sha256": "7cf52c35ae2e385d6b11d21fdfff15385ff8e5d24a0e535bc765f508e964c7af",
+  "native_reference_source_commit": "58febb609b02cede0ad2f827bfc53ca2cc5ab067",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/-1/Experiment.csv",
+      "sha256": "28a2f5dc99346fd35f067ba78e3df814fc9b9bfc902a3af3807a2e55fcdcf058"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/-1/Image.csv",
+      "sha256": "b6e78c69d4d4e932699bbf4f8f4b9fd4aee4e32bce347c3f10a8986efd011855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/-1/Nuclei.csv",
+      "sha256": "8784edd1a232864fe18a71bd78eca1214e63fa8ca4b8789926605e0e75cbd7c7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/-1/PH3.csv",
+      "sha256": "2396591af9c4bdd277060be915bf096797eb0820887817645cdc60aadbe6bd21"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/-1/PH3PosNuclei.csv",
+      "sha256": "edb4ffb53dbbb581dacc22bc36eaa1c8da55005972d1d4c923960f6db56754f7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/0/Experiment.csv",
+      "sha256": "f636004c2afc4d93f3253d73e2611d9245df92218f4510fb704acb5c9dc4cd37"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/0/Image.csv",
+      "sha256": "06f225ba722cfd88ad9f483db315d5ae147a6cdf68eb79444d8657182f4c571a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/0/Nuclei.csv",
+      "sha256": "8784edd1a232864fe18a71bd78eca1214e63fa8ca4b8789926605e0e75cbd7c7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/0/PH3.csv",
+      "sha256": "2396591af9c4bdd277060be915bf096797eb0820887817645cdc60aadbe6bd21"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/0/PH3PosNuclei.csv",
+      "sha256": "edb4ffb53dbbb581dacc22bc36eaa1c8da55005972d1d4c923960f6db56754f7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/1/Experiment.csv",
+      "sha256": "3260b8f58cd0e7981951ce4a0f27bd1952b1ce2927b3ff51983012cd980488b9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/1/Image.csv",
+      "sha256": "cd2d3927fd0b8c6bc81d7606c01e3abc1692658d03d6da7bf9eb0bc24ee575ba"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/1/Nuclei.csv",
+      "sha256": "8784edd1a232864fe18a71bd78eca1214e63fa8ca4b8789926605e0e75cbd7c7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/1/PH3.csv",
+      "sha256": "2396591af9c4bdd277060be915bf096797eb0820887817645cdc60aadbe6bd21"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/1/PH3PosNuclei.csv",
+      "sha256": "edb4ffb53dbbb581dacc22bc36eaa1c8da55005972d1d4c923960f6db56754f7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/2/Experiment.csv",
+      "sha256": "210b2e519ad26468cf5cc9b982ff2ded5bcb5fdf305544b7fb4ba876ae589137"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/2/Image.csv",
+      "sha256": "f4cb508d6e74b87b2495707fac025ee8e89112d5eb9dc3be200d898977874fb2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/2/Nuclei.csv",
+      "sha256": "8784edd1a232864fe18a71bd78eca1214e63fa8ca4b8789926605e0e75cbd7c7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/2/PH3.csv",
+      "sha256": "2396591af9c4bdd277060be915bf096797eb0820887817645cdc60aadbe6bd21"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native/2/PH3PosNuclei.csv",
+      "sha256": "edb4ffb53dbbb581dacc22bc36eaa1c8da55005972d1d4c923960f6db56754f7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "50e6dda932f1f8c22e9ff02529d94df54cb3a254e869fbb781bb2311b4507320"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExamplePercentPositive/native_preparation/native_cellprofiler_headless/ExamplePercentPositive.cppipe",
+      "sha256": "17c5308d3f2ddbb26e3418c9b1f9937dab9b14f4da330d7dcdce08e0aad1c600"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExamplePercentPositive/native_report.json",
+      "sha256": "7cf52c35ae2e385d6b11d21fdfff15385ff8e5d24a0e535bc765f508e964c7af"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExamplePercentPositive/native_request.json",
+      "sha256": "c6ed2c6b99c70a6b324316f0c48efe0585614fccbfe6b1b0d143b5c525545e15"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExamplePercentPositive/pilot_provenance.json",
+      "sha256": "bfb02bd515e8c9cd9f6fe9192261afea754a137fa9fda57bb43b8c7378330a8d"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "AS_09125_050116030001_D03f00d0.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExamplePercentPositive/images/AS_09125_050116030001_D03f00d0.tif",
+      "size_bytes": 233336,
+      "sha256": "2751ba667c4067c5d30817cff004aa06f6f6287f1cdbb5b8c9c6a500308cb456"
+    },
+    {
+      "path": "AS_09125_050116030001_D03f00d1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExamplePercentPositive/images/AS_09125_050116030001_D03f00d1.tif",
+      "size_bytes": 240924,
+      "sha256": "141d66a67e8e9892be822465b0197c268e94c809d0213013d06cfc8c759453b4"
+    }
+  ]
+}

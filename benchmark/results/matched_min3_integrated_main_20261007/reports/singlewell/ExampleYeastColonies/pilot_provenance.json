@@ -1,0 +1,131 @@
+{
+  "case": "ExampleYeastColonies",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "ba5fdcad6541572451c1299699180026c954f8f2d86942420b286d85b355764d",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "3894ca3a053c949d3d39760067ea0edc43a427df",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "6-1.jpg",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastColonies/images/6-1.jpg",
+      "size_bytes": 210324,
+      "sha256": "17f6ba003f87bb20e51a661c5c1fdb8d908a1dee802e0c19b0ea2e6e9fc8b2d8"
+    },
+    {
+      "path": "PlateTemplate.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastColonies/images/PlateTemplate.png",
+      "size_bytes": 6666,
+      "sha256": "3d7285797dc6d1c0b7ddd56f26eb34e69b74b2120e5371e7925aa531ab8ad40f"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleYeastColonies/native_report.json",
+  "native_reference_report_sha256": "d8055c70cc05b4d1268cfb50e80ca493bd0c1dc35b23ebe4653c030c636c9c68",
+  "native_reference_source_commit": "65bc037274d2b769943139a858723999690e9a26",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/-1/6-1_outlines.png",
+      "sha256": "359ecfa9aed57495df2b3896bcaa6d499762314ad8a2525b1ca14a5d7d0d340e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/-1/Colonies.csv",
+      "sha256": "09f90ace61b192086d2dd57e5565ad82a117386251a4d92f154dcb0c7c5abbc6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/-1/Image.csv",
+      "sha256": "a53d607b9fb7bdd1aedc0b390cc129356bcaf04d92845dceb851ab0395c65d9a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/0/6-1_outlines.png",
+      "sha256": "359ecfa9aed57495df2b3896bcaa6d499762314ad8a2525b1ca14a5d7d0d340e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/0/Colonies.csv",
+      "sha256": "09f90ace61b192086d2dd57e5565ad82a117386251a4d92f154dcb0c7c5abbc6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/0/Image.csv",
+      "sha256": "368e7be3d137c1b2fdf2da53609aaa9b11d367e8b1afa737b2c440958769e0d8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/1/6-1_outlines.png",
+      "sha256": "359ecfa9aed57495df2b3896bcaa6d499762314ad8a2525b1ca14a5d7d0d340e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/1/Colonies.csv",
+      "sha256": "09f90ace61b192086d2dd57e5565ad82a117386251a4d92f154dcb0c7c5abbc6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/1/Image.csv",
+      "sha256": "ddf123e3cc8ec5e15a772126fa53945adec2cd1908b0eba27a9e04812cce7b47"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/2/6-1_outlines.png",
+      "sha256": "359ecfa9aed57495df2b3896bcaa6d499762314ad8a2525b1ca14a5d7d0d340e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/2/Colonies.csv",
+      "sha256": "09f90ace61b192086d2dd57e5565ad82a117386251a4d92f154dcb0c7c5abbc6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native/2/Image.csv",
+      "sha256": "b719f4bff363c6321ebf6937998e84642e3a009afb837e1c6ad08e09c540f83d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "efc7e3daaa355ae68efebf397620be8f51725929a50f3aed6fb94512cfcf1ef9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleYeastColonies/native_preparation/native_cellprofiler_headless/ExampleYeastColonies.cppipe",
+      "sha256": "dcd88ecaa4109da46752b15596f1caa3f41db96e3f6baa960c693d96c9fae436"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleYeastColonies/native_report.json",
+      "sha256": "d8055c70cc05b4d1268cfb50e80ca493bd0c1dc35b23ebe4653c030c636c9c68"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleYeastColonies/native_request.json",
+      "sha256": "efad2df6d9aa46daabaf84f797b0833b61ce95b49cb162f3325fdfc98d72e479"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleYeastColonies/pilot_provenance.json",
+      "sha256": "8d2ff99bb316ba29e2cbcfdc235f4433696b954d788f583588af8f5614a34284"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "6-1.jpg",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastColonies/images/6-1.jpg",
+      "size_bytes": 210324,
+      "sha256": "17f6ba003f87bb20e51a661c5c1fdb8d908a1dee802e0c19b0ea2e6e9fc8b2d8"
+    },
+    {
+      "path": "PlateTemplate.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastColonies/images/PlateTemplate.png",
+      "size_bytes": 6666,
+      "sha256": "3d7285797dc6d1c0b7ddd56f26eb34e69b74b2120e5371e7925aa531ab8ad40f"
+    }
+  ]
+}
