@@ -115,7 +115,7 @@
   "archive_owner": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007/protocol/v2/archive_converted_modes.py",
   "archive_owner_sha256": "e8c12eb7d1ce20f6bfcfeb0c50afd9697e67b3e4fcd21aadb3e1dd3e77aa94ca",
   "render_owner": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007/protocol/render_sweep.py",
-  "render_owner_sha256": "3f50fceee511264869d71c8fba05da447c119eb9672e7f61b98f4c51773bd0e8",
+  "render_owner_sha256": "f82fa9bd398dae3ed9896f27f689544ee49b1cfa630f45e8afc462b93e3230bf",
   "fixed_workload_rationale": "12 is the least common multiple of1/2/3/4 workers: equal task counts perworker; oldunlaunched16controls superseded toavoid6/5/5 imbalanceat3workers. PrimaryMay scheduleunchanged.",
   "protocol_version": 2,
   "data_directory": "data/first_use",
