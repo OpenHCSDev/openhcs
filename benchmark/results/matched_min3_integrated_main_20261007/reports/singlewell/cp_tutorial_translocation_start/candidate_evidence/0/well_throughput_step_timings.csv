@@ -1,0 +1,4 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+cp_tutorial_translocation_start,1,1,worker_0,A01,IdentifyPrimaryObjects,1791341798.9049513,1791341799.0198386,0.11488723754882812
+cp_tutorial_translocation_start,1,1,worker_0,A01,ConvertObjectsToImage,1791341799.0200603,1791341799.025907,0.005846738815307617
+cp_tutorial_translocation_start,1,1,worker_0,A01,SaveImages,1791341799.0259817,1791341799.0339236,0.007941961288452148

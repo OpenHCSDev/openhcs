@@ -1,0 +1,10 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+ExamplePercentPositive,1,1,worker_0,A01,IdentifyPrimaryObjects,1791342201.885917,1791342201.9868336,0.10091662406921387
+ExamplePercentPositive,1,1,worker_0,A01,RelateObjects,1791342201.9874604,1791342201.998921,0.011460542678833008
+ExamplePercentPositive,1,1,worker_0,A01,FilterObjects,1791342201.9993396,1791342202.01662,0.01728034019470215
+ExamplePercentPositive,1,1,worker_0,A01,MeasureObjectIntensity,1791342202.0170078,1791342202.0421748,0.025166988372802734
+ExamplePercentPositive,1,1,worker_0,A01,OverlayOutlines,1791342202.0424674,1791342202.058552,0.016084671020507812
+ExamplePercentPositive,1,1,worker_0,A01,DisplayDataOnImage,1791342202.0588393,1791342202.0864012,0.02756190299987793
+ExamplePercentPositive,1,1,worker_0,A01,ClassifyObjects,1791342202.0868578,1791342202.0976198,0.01076197624206543
+ExamplePercentPositive,1,1,worker_0,A01,CalculateMath,1791342202.0979435,1791342202.1039793,0.006035804748535156
+ExamplePercentPositive,1,1,,,ExportToSpreadsheet,1791342202.1058931,1791342202.1387243,0.03283119201660156

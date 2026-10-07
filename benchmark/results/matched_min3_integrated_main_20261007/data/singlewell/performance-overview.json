@@ -1,0 +1,78 @@
+{
+  "execution": {
+    "min": 3.1361916583843388,
+    "median": 4.275936310103196,
+    "weakest": [
+      {
+        "case_name": "ExampleVitra",
+        "median_speedup": "3.1361916583843388",
+        "median_native_execution_seconds": "2.966629751957953",
+        "median_openhcs_execution_seconds": "0.9459338188171387"
+      },
+      {
+        "case_name": "ExampleWoundHealing",
+        "median_speedup": "3.1495601000919353",
+        "median_native_execution_seconds": "3.708399044815451",
+        "median_openhcs_execution_seconds": "1.177433967590332"
+      },
+      {
+        "case_name": "cp_tutorial_translocation_final",
+        "median_speedup": "3.2817023361872466",
+        "median_native_execution_seconds": "1.5709279640577734",
+        "median_openhcs_execution_seconds": "0.47869300842285156"
+      },
+      {
+        "case_name": "ExampleTrackObjects",
+        "median_speedup": "3.304904195229073",
+        "median_native_execution_seconds": "8.400638001970947",
+        "median_openhcs_execution_seconds": "2.541870355606079"
+      },
+      {
+        "case_name": "ExampleIlluminationCorrection_Example3",
+        "median_speedup": "3.5013478535970877",
+        "median_native_execution_seconds": "0.5975759867578745",
+        "median_openhcs_execution_seconds": "0.1706702709197998"
+      }
+    ],
+    "below2": 0,
+    "below3": 0
+  },
+  "total": {
+    "min": 1.4237547362791518,
+    "median": 3.2526718273825583,
+    "weakest": [
+      {
+        "case_name": "ExampleIlluminationCorrection_Example3",
+        "median_speedup": "1.4237547362791518",
+        "median_native_execution_seconds": "0.5983075951226056",
+        "median_openhcs_execution_seconds": "0.42023220704868436"
+      },
+      {
+        "case_name": "cp4_supplement_combine_objects",
+        "median_speedup": "1.597495195021252",
+        "median_native_execution_seconds": "0.30337135633453727",
+        "median_openhcs_execution_seconds": "0.18990439362823963"
+      },
+      {
+        "case_name": "ExamplePercentPositive",
+        "median_speedup": "2.013719314738888",
+        "median_native_execution_seconds": "1.0700789638794959",
+        "median_openhcs_execution_seconds": "0.5313942991197109"
+      },
+      {
+        "case_name": "cp_tutorial_translocation_final",
+        "median_speedup": "2.050441450121982",
+        "median_native_execution_seconds": "1.5716421687975526",
+        "median_openhcs_execution_seconds": "0.7664896594360471"
+      },
+      {
+        "case_name": "cp_tutorial_translocation_start",
+        "median_speedup": "2.207220675849351",
+        "median_native_execution_seconds": "0.6565783619880676",
+        "median_openhcs_execution_seconds": "0.29746838146820664"
+      }
+    ],
+    "below2": 2,
+    "below3": 14
+  }
+}

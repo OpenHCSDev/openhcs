@@ -1,0 +1,17 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,CorrectIlluminationApply,1791341663.6562455,1791341663.9773514,0.32110595703125
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,IdentifyPrimaryObjects,1791341663.9779491,1791341664.0820534,0.10410428047180176
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,IdentifySecondaryObjects,1791341664.082843,1791341664.3213365,0.2384934425354004
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,IdentifyTertiaryObjects,1791341664.322001,1791341664.3695483,0.047547340393066406
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,EnhanceOrSuppressFeatures,1791341664.3702607,1791341664.3816957,0.01143503189086914
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,MaskImage,1791341664.3822405,1791341664.3903658,0.00812530517578125
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,IdentifyPrimaryObjects,1791341664.391078,1791341664.467826,0.07674789428710938
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,MaskImage,1791341664.4692876,1791341664.480881,0.011593341827392578
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,IdentifyPrimaryObjects,1791341664.4814513,1791341664.5696232,0.08817195892333984
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,MeasureColocalization,1791341664.570576,1791341665.9451442,1.374568223953247
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,MeasureObjectIntensity,1791341665.9463599,1791341666.510274,0.5639140605926514
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,MeasureObjectIntensityDistribution,1791341666.5111341,1791341666.680312,0.16917777061462402
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,MeasureObjectSizeShape,1791341666.6812167,1791341667.3161776,0.6349608898162842
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,MeasureObjectNeighbors,1791341667.3175864,1791341667.5588791,0.24129271507263184
+cp_tutorial_advanced_segmentation_final,1,1,worker_0,A01,RelateObjects,1791341667.5595303,1791341668.169946,0.6104156970977783
+cp_tutorial_advanced_segmentation_final,1,1,,,ExportToDatabase,1791341668.1784675,1791341669.2235267,1.0450592041015625

@@ -1,0 +1,32 @@
+{
+  "status": "PREPARED_FINAL_COHORT_NOT_LAUNCHED",
+  "argv": [
+    "taskset",
+    "-c",
+    "5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "-B",
+    "-c",
+    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
+    "--manifest",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json",
+    "--all-cases",
+    "--well-count",
+    "1",
+    "--openhcs-workers",
+    "1",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--output-dir",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/min3-integrated-main-official30-v1/capture/cases",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases"
+  ],
+  "protocol": "Fresh full official30 after qualified shared outline/hull/shrink optimizations, on mergedmain. One genuinewell, oneOHworker/numericalthreadCPU5; normalserver/kernelready excluded. Warm+3completeSERVER_PIPELINE_JOB observations with original SCI, guarded unchangedoriginalstockCP observations; no partialrowsplicing/privateobserver/projectednative timing. Target minimum3x execution.",
+  "source_freeze_head": "3894ca3a053c949d3d39760067ea0edc43a427df",
+  "native_reference_scope": "Original same-mode actual native observations only through1045 strict admission; no projected times, manual report relocation or assumed cross-mode equivalence."
+}
