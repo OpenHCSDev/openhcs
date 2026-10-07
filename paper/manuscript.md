@@ -278,16 +278,16 @@ Following externally informed repairs, analysis of all 180 fields in 20 matched
 wells recovered increasing outgrowth-per-cell responses to FC-A and Y27632
 (Figures 4–5; Supplementary Figure 8). At 40 µM, OpenHCS fold changes were
 1.77 and 1.76, respectively, versus MetaXpress's 1.98 and 2.05. Total-outgrowth
-responses were also smaller. Branches-per-cell fold changes were 1.65 versus
+estimated fold changes were also smaller. Branches-per-cell fold changes were 1.65 versus
 3.00 for FC-A and 1.82 versus 3.26 for Y27632. OpenHCS control branch counts
 per cell were approximately 10–11% higher, but treated counts were 38–39%
 lower. Cell counts were unchanged in all 180 fields across the latest
 ownership/junction fix relative to the preceding assisted checkpoint;
 the difference persisted in total branches and branches per primary process.
-Control excess alone therefore does not explain the weaker response. Remaining
+Control excess alone therefore does not explain the smaller estimated branching fold changes. Remaining
 branch recall, assignment and measurement-definition differences cannot be
-separated without spatial ground truth. Both methods detected increasing
-outgrowth, but their morphology measurements were not equivalent. This is an
+separated without spatial ground truth. Both methods recovered concordant
+positive outgrowth responses with different measured magnitudes. This is an
 assisted-development evaluation, separate from autonomous authoring.
 
 The public BBBC013 translocation analysis completed all 96 wells. It retained
@@ -311,7 +311,7 @@ being treated as additional experiments.
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Retained initial principal-shaft recovery; final repair exceeded the shaft target, and per-neuron crossing ownership remains unresolved |
 | Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
-| Laboratory neurites, 20-well transfer | MetaXpress well responses; two technical wells per drug/concentration | Fixed recipe recovered both increasing outgrowth dose trends with smaller fold changes; not a separate autonomous authoring trial or manual-trace score |
+| Laboratory neurites, 20-well transfer | MetaXpress well responses; two technical wells per drug/concentration | Concordant positive outgrowth responses with smaller estimated fold changes; assisted transfer, not a separate autonomous authoring trial or manual-trace score |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
 Table 1. Endpoints, references and scope of autonomous image analysis.
@@ -360,7 +360,7 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 ![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
-**(I, A–B)** NeuronCyto II raw image and retained initial shaft candidate [@NeuronCytoII]; later repair overextended the target. (II, C–E) Matched raw, body/path and combined views from the nine-field P001 autonomous trial; overlapping fields were not deduplicated. (III, F–G) Separately assisted responses across 20 wells. Dots: two technical wells per dose; marks/whiskers: mean/sample standard deviation relative to each drug's DMSO mean. Supplementary Figure 8 retains all six endpoints; wider QA and the assisted mosaic remain separate.
+**(I, A–B)** NeuronCyto II raw image and retained initial shaft candidate [@NeuronCytoII]; later repair overextended the target. (II, C–E) Matched views from the nine-field P001 autonomous trial; overlapping fields were not deduplicated. (III, F–G) Assisted 20-well comparison: concordant positive outgrowth responses with different measured magnitudes. Dots: two technical wells per dose; marks/whiskers: mean/sample standard deviation relative to each drug's DMSO mean. Supplementary Figure 8 retains all six endpoints; wider QA and the assisted mosaic remain separate.
 
 
 ### Matched execution and total time across 30 workflows

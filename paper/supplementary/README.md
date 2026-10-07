@@ -242,12 +242,13 @@ Dose positions are equally spaced for display, not a fitted concentration–resp
 model. Paired treatment panels use the same vertical scale. The plot and
 numerical tables are generated from the same well measurements.
 
-Both methods reproduce increasing mean outgrowth across the four nonzero doses
-for each drug. OpenHCS fold changes are smaller at every nonzero concentration.
-Agreement did not improve for every endpoint: relative to the original frozen
-recipe, mean-process-length fold changes moved farther from MetaXpress after
-repair. Improved outgrowth responses therefore do not establish a general
-improvement in morphological agreement.
+Both methods recover concordant positive biological responses: mean outgrowth
+increases across the four nonzero doses for each drug, with different measured
+magnitudes. OpenHCS estimates smaller fold changes at every nonzero concentration.
+The magnitude difference did not narrow for every endpoint: relative to the
+original frozen recipe, mean-process-length fold changes moved farther from
+MetaXpress after repair. Closer outgrowth fold changes therefore do not imply
+closer estimates for every morphological endpoint.
 Each OpenHCS well endpoint is the unweighted mean of its nine field-level
 measurements. Total outgrowth is therefore a mean field total, not unique
 whole-well length.
@@ -290,10 +291,10 @@ is retained separately for before/after evaluation; it was not overwritten.
 
 Additional [branch and primary-process totals](personal_neurite_branch_diagnostics/joined_wells.csv)
 and their [treatment responses](personal_neurite_branch_diagnostics/treatment_effects.csv)
-test whether the weaker branching response is explained by the cell denominator.
+test whether smaller estimated branching fold changes are explained by the cell denominator.
 At 40 µM, total-branch fold changes are 1.65 versus 3.01 for FC-A and 1.73
 versus 3.03 for Y27632 (OpenHCS versus MetaXpress). Branches per primary
-process likewise give smaller responses: 1.31 versus 2.48 and 1.29 versus
+process likewise give smaller estimated fold changes: 1.31 versus 2.48 and 1.29 versus
 2.23, respectively. The difference therefore persists without a cell-count
 denominator. OpenHCS totals are means of field totals, and its branch/process
 endpoint is the mean of the nine field ratios. The commercial comparison
@@ -308,8 +309,9 @@ branches in both cohorts. OpenHCS branches per cell in Y27632 control and
 40 µM wells were 1.417 and 2.573, versus MetaXpress's 1.283 and 4.182;
 corresponding FC-A values were 1.628 and 2.684, versus 1.471 and 4.408.
 Thus control counts were approximately 10–11% higher while treated counts
-were 38–39% lower. The response gap includes a treated-well deficit, not
-merely a larger denominator. Without spatial tracing truth, remaining branch
+were 38–39% lower. The difference in estimated branching fold changes reflects
+lower measured counts in treated wells, not merely higher control counts.
+Without spatial tracing truth, remaining branch
 recall, neurite assignment and differences between measurement definitions
 cannot be distinguished. These results are from the completed assisted
 evaluation, not a fresh autonomous success.

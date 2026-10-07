@@ -793,7 +793,7 @@ def submission_neurite_results():
         sheet, ROOT / "paper/supplementary/personal_neurite_repaired_morphometry",
         metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="F",
     )
-    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching responses remain smaller than MetaXpress.",
+    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Concordant outgrowth responses; branching fold changes differ.",
                size=9.5, color=MUTED)
     sheet.save()
 
