@@ -153,15 +153,9 @@ Historical performance protocols and their different timing and output policies 
 
 ## Results
 
-### Scientists and agents can revise the same analysis
+### Scientists and agents revise the same analysis
 
-The desktop interface, generated Python and MCP operations read and modify the same workflow definition (Figure 1). A pipeline created by an agent can be opened in the editor, revised by a scientist and run again. Source mappings connect folders, Bio-Formats containers and managed images to named inputs. Intermediate images and measurements retain their source coordinates and producing step, allowing a displayed result to be traced back to its processing choices.
-
-A separately retained authoring check demonstrates this connection directly (Supplementary Data 3). An MCP request applied edited Python to the normalization step, changing its high percentile from 99.8 to 99.6; the control then showed 99.6. A subsequent MCP field-edit request restored 99.8, and regenerated Python contained that value. The full application view, parameter controls and function-code window were captured in the same session, using the source commit released as OpenHCS 0.8.5. Forms show the values that will be used, including shared defaults; clearing a step's override restores its shared setting.
-
-The UI submits work to a separate execution server using ZeroMQ messaging. The server prepares the function catalog, compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Figure 2).
-
-Scientists can inspect streamed images and objects in Fiji or napari (Supplementary Data 4). napari also exposes layer and ROI information to agents; selected objects remain linked to their measurements.
+One workflow supplies the desktop controls, generated Python and MCP operations (Figure 1). In a code-to-control check, an MCP request changed the normalization step's high percentile from 99.8 to 99.6 and the form showed 99.6. A field-edit request restored 99.8, and generated Python contained the restored value (Supplementary material, Figure assembly and interface records). Scientists can open an agent-authored pipeline, inspect linked images and measurements in napari or Fiji, and revise the settings before rerunning it. Figure 2 shows how the editor, execution server and viewers share this workflow.
 
 ### Figure 1. Scientists can inspect and edit the agent's analysis
 
@@ -204,91 +198,19 @@ Table 2. Autonomous-analysis trial summary. Uninspected fields were selected ret
 
 The earlier prospective trials recovered nuclear foreground and translocation responses but over-segmented nuclear instances and left uncertain actin-defined boundaries. On held-out fields, BBBC039 pooled object F1 was 0.746 and foreground Dice was 0.935; BBBC007's directed boundary fraction was 0.671. Across 92 BBBC013 held-out wells, control Z-prime was 0.751 for Wortmannin and 0.554 for LY294002. These single-attempt trials are distinct from the later self-repair evaluations below. Supplementary Figures 2–3 and Supplementary Data 7 provide counts, scoring definitions and treatment summaries.
 
-Agents used only a task brief, the packaged skill and MCP to select parameters,
-inspect matched raw and result views, and repair their own pipelines. The final
-pipeline was frozen before reference evaluation. The examples below distinguish
-instance detection, localisation, cell-body support and assay measurements;
-these endpoints should not be combined into a single accuracy percentage.
+Three independent nuclear-analysis authors reached pooled object F1 of 0.906 to 0.910 on the 175 BBBC039 fields none of them opened. Across all 200 fields, including development fields, F1 was 0.898 to 0.906 (Figure 4B). A same-input repair raised F1 from 0.908 to 0.934 on three fields. In the full-corpus repeat, 61 fields improved, 123 decreased and 16 were unchanged (Supplementary Figure 3). The earlier gpt-5.6-sol trial reached F1 0.746 and foreground Dice 0.935 on 50 prospectively held-out fields (Table 2). [TODO: field-level error pattern, from the per-field scores and matched images.]
 
-For bright-object segmentation, the H001 author matched 59 of 64
-notebook-reference objects while reducing excess predictions from four to two,
-raising object F1 from 0.929 to 0.944 (Figures 3B and 4A). The reference is computational,
-not a manual cell census. Independent BBBC039 authors achieved final pooled
-object F1 of 0.898–0.906 over the same 200 annotated fields. On the common
-175 fields opened by none of the three agents, final F1 was 0.906–0.910.
-The lower-scoring
-fields show that useful overall agreement does not imply uniform accuracy.
+Two later BBBC007 authors reached directed boundary fractions of 0.743 and 0.740 across 16 DNA/actin fields; the earlier held-out trial reached 0.671 across 12 fields (Figure 4C; Table 2). In one paired-field analysis, the agent detected 56 nuclei and kept 54 actin-supported cells after removing two seed-only candidates. Each cell mask included all pixels of its associated nucleus. Figure 4F shows a same-region merge repair.
 
-The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
-earlier author: 61 fields improved, 123 decreased and 16 were unchanged
-(Supplementary Figure 3). This repeat retains useful agreement but shows that
-within-run repair does not guarantee a better result from the next fresh author.
+The later BBBC013 author completed all 96 wells and obtained control Z′ of 0.849 for LY294002 and 0.726 for Wortmannin (Figure 4E). Cytoplasmic compartments were eligible for 14,631 of 17,320 nuclei (84.5%). The agent selected the per-well median eligible-cell log2 nuclear-to-cytoplasmic GFP ratio. Four wells contributed to each treatment group. The earlier held-out trial obtained Z′ of 0.751 for Wortmannin and 0.554 for LY294002 across 92 wells (Table 2).
 
+The H002 author recovered all 15 annotated 3D centres within 30 voxels, with mean matched error of 4.80 voxels (Figure 4D,I). Eleven predictions had no matching annotation. A different author repaired an internal body partition at Z=36 while keeping its neighbour separate (Figure 4H). [TODO: precision, from classification of the eleven unmatched predictions.]
 
+The retinal repair trial detected 102 objects after improving fragmented soma footprints while keeping a neighbouring pair separate (Figure 4G). A repeat detected 136 candidates, including ten at the border. Distributed raw/result review covered bright somata, diffuse rings and crowded regions (Supplementary Figure 4). [TODO: independent versus inherited-context classification of these trials, from original launch records and Tristan's decision.] [TODO: manual-reference result, from annotated soma centres.]
 
-In three dimensions, a measurement-first author recovered all 15 annotated
-centres within the predeclared 30-voxel matching distance, with mean matched
-error of 4.80 voxels (Figure 4D,I). All 15 also matched within 20 voxels.
-Eleven further predictions were unmatched to annotations of unestablished
-coverage. Native orthogonal views reveal supported body locations and remaining
-lobed-body ambiguity; a separate author repaired an internal partition without
-merging the neighbouring body (Figure 4H; Supplementary Figure 4 shows a separate author).
+One autonomous author analysed all nine laboratory neurite fields and revised its neurite admission settings after inspecting thin processes (Figure 5II). Matched sparse and dense views showed recovery of raw-visible paths with the same soma labels in the reviewed field. In the public NeuronCyto II field, the initial pipeline recovered principal shafts and junctions (Figure 5I); the final repair extended beyond that target. The initial result is shown alongside the published algorithm output. [TODO: spatial ownership comparison, from crossing annotations.]
 
-Paired DNA/actin analysis separates nuclear detection from supported cell-body
-growth (Supplementary Figure 4). A completed autonomous field analysis
-recovered 56 nuclei and retained 54 actin-supported cells after removing two
-seed-only candidates. Every retained cell contains all pixels of its associated
-nucleus. This is a geometric consistency check, not proof of biological identity
-or complete cell boundaries. Local controls include recovered crowded nuclei
-and unsupported body candidates.
-
-In the noisy retinal images, agents detected bright RBPMS-positive cell bodies
-against heterogeneous background. Figure 4G and Supplementary Figure 4 show an agent
-repairing a divided cell body while keeping a neighbouring pair separate;
-its final segmentation contained 102 objects. A separate completed analysis
-retained 136 candidates, including ten touching the image border
-(Supplementary Data 8). Diffuse rings and crowded outlines remained uncertain
-(Supplementary Figure 4). No exhaustive manual count was available, so retinal
-performance was assessed by comparing the detections with the underlying
-signal in several regions rather than assigning an accuracy percentage.
-
-For public neurite images, autonomous analysis recovered principal shafts and
-raw-supported junctions (Figure 5 and Supplementary Data 8). Main-shaft coverage is the
-relevant illustrative endpoint: exhaustive filopodial tracing is not required.
-Additional threshold lowering can add uncertain short twigs without improving
-that endpoint. The last repair expanded tracing beyond the intended thick-shaft
-target; Figure 5 therefore illustrates the retained initial shaft candidate,
-not a successful final repaired result. The shaft-specific target was clarified
-after the run and is not credited to its original brief. Crossings remain a
-limitation for assigning length to individual
-neurons. The representative shaft result is not presented as a manual-trace
-accuracy measurement. Its inputs matched the published NeuronCyto II image-1
-field, but the manual-reference tables did not specify length units and the
-available reference lacked spatial traces for matching (Supplementary Data 8).
-
-A separate autonomous author analysed all nine fields of the laboratory neurite
-dataset using only its task brief, MCP and packaged guidance. During image
-review, it detected that its initial settings excluded thin processes and
-adjusted neurite admission while retaining the same cell-body labels in the
-reviewed field. The final analysis recovered many raw-visible paths in sampled
-sparse and dense regions, although some fine branches and cell assignments at
-crossings remained uncertain. Fields were analysed separately; overlapping
-positions were not deduplicated, so their counts do not represent unique
-neurons. The frozen pipeline, outputs and independent image review are linked
-in Supplementary Data 8. This trial used development images rather than an
-unseen test set.
-
-The public BBBC013 translocation analysis completed all 96 wells. It retained
-14,631 of 17,320 detected nuclei with eligible cytoplasmic compartments (84.5%).
-The agent selected each well's median eligible-cell log2 nuclear-to-cytoplasmic
-GFP ratio; the task brief did not prescribe this summary. All 96 wells include
-the four development wells. Four wells contribute to each treatment group. Control Z-prime was
-0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 4E).
-Eligibility varies with treatment, so the response describes contributing cells,
-not an unbiased estimate for every detected cell. Supplementary Figure 2 shows complementary
-compartment-level inspection from assisted development. Frozen records and
-individual unsuccessful attempts remain in Supplementary Data 8 rather than
-being treated as additional experiments.
+The H001 author matched 59 of 64 computational-reference objects and raised F1 from 0.929 to 0.944 through self-directed repair (Figures 3B and 4A). The matched views show correction of an elongated object's split and recovery of a pair lost during an intermediate revision.
 
 ### Figure 3. Delegated specialist work leaves an analysis the scientist can inspect
 
