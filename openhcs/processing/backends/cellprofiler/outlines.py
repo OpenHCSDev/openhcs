@@ -1083,9 +1083,11 @@ def _draw_object_labels(
             labels_2d, mode=line_mode.skimage_mode
         )
         if np.any(boundaries):
-            output = skimage.segmentation.mark_boundaries(
-                output, labels_2d, color=outline_color, mode=line_mode.skimage_mode
-            )
+            # The rendering context owns this canvas. Reuse the boundary mask
+            # instead of finding it again and copying the entire RGB image.
+            if output.ndim == 2:
+                output = skimage.color.gray2rgb(output)
+            output[boundaries] = outline_color
     return output
 
 
