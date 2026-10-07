@@ -230,6 +230,53 @@ Upper: matched DNA, actin, seeded territories and combined outlines following au
 
 ## Supplementary Figure 12. Neurite main-shaft recovery
 
+### Treatment-response comparison with MetaXpress
+
+The existing commercial export contains 120 well summaries from two plates.
+An evaluation-only source key links the coded images to their physical wells.
+Sixty wells on the controls plate have retained OpenHCS mosaic summaries from
+one earlier complete run (A018). These provide a treatment-response comparison,
+not a score for the current nine-field autonomous pipeline illustrated in
+main Figure 5. The latter covers one DMSO well and cannot establish drug effects.
+
+Each FC-A and Y27632 (export label Y27) concentration has two technical-replicate
+wells. Fold change is the treatment mean divided by the same curve's zero-dose
+DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth increased
+at every nonzero concentration in both methods:
+
+| Treatment | Concentration (µM) | MetaXpress outgrowth fold change | Retained OpenHCS outgrowth fold change |
+| --- | ---: | ---: | ---: |
+| FC-A | 5 | 1.348 | 1.127 |
+| FC-A | 10 | 1.508 | 1.227 |
+| FC-A | 20 | 1.859 | 1.112 |
+| FC-A | 40 | 1.977 | 1.361 |
+| Y27632 | 5 | 1.453 | 2.028 |
+| Y27632 | 10 | 1.564 | 1.805 |
+| Y27632 | 20 | 1.905 | 1.507 |
+| Y27632 | 40 | 2.053 | 1.293 |
+
+Agreement is limited to effect direction: the magnitudes differ, and the
+OpenHCS Y27632 response does not reproduce the increasing MetaXpress dose trend.
+The commercial endpoint is a well export apparently averaging separate sites;
+OpenHCS measures total retained process length divided by detected cells in a
+stitched mosaic. Differences in segmentation and aggregation can therefore
+affect the comparison. Exported MetaXpress length units and exact site weighting
+are unspecified, so absolute lengths and counts are not treated as equivalent.
+Within-method ratios avoid a constant unit conversion but do not remove those
+measurement differences. Neither method is manual ground truth, and two
+technical wells do not establish biological replication or significance.
+
+The [joined physical-well table](personal_neurite_comparison/joined_wells.csv)
+and [treatment-effect table](personal_neurite_comparison/treatment_effects.csv)
+retain well identities, means, sample standard deviations, counts, raw deltas,
+fold changes and fractional-change differences. Cell-count changes accompany
+outgrowth to expose denominator changes without inferring toxicity. The
+[source hashes](personal_neurite_comparison/source_evidence.json) identify the
+exact retained inputs; missing wells from the other plate are not filled with
+zero. The comparison script processes tables only and does not tune images.
+The current field pipeline must be applied unchanged to the matching drug and
+control wells before these effects can be attributed to that pipeline.
+
 ### Assisted laboratory neurite mosaic
 
 ![Matched seam and field-core raw, body/path result and combined views.](../figures/slas/p001_stitched_dev13_native.png){width=6in}
