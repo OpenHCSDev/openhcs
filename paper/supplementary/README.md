@@ -207,16 +207,18 @@ review remains in the [full shaft/junction sheet](../figures/slas/h004_assay_rev
 
 ## Supplementary Figure 8. Laboratory treatment responses compared with MetaXpress
 
-![Matched well-level outgrowth and cell-count responses to FC-A and Y27632.](../figures/slas/personal_neurite_effects_transfer.png){width=6in}
+![Six matched well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/personal_neurite_effects_repaired.png){width=6in}
 
 The existing commercial export contains 120 well summaries from two plates.
 An evaluation-only source key links the coded images to their physical wells.
-The frozen recipe settings from the nine-field autonomous analysis illustrated
-in main Figure 5 were applied to 20 drug and control wells on one plate using
-the current production backend. All nine fields in each well were analysed,
-giving 180 field summaries. Source-file hashes, physical well identities and
+Following externally informed soma and tracing repairs, 20 drug and control
+wells on one plate were analysed using one fixed repaired pipeline. All nine
+fields in each well were analysed, giving 180 field summaries. The repaired
+run retained DAPI channel w1 and calcein channel w2, while neurite response
+and candidate admission settings changed from 60 and 0.10 to 30 and 0.03.
+Source-file hashes, physical well identities and
 the 1.3556 µm pixel calibration were checked against the retained source key.
-This fixed-recipe transfer evaluates treatment responses; it is not an
+This assisted-development evaluation measures treatment responses; it is not an
 additional autonomous authoring trial.
 
 Each FC-A and Y27632 (export label Y27) concentration has two technical-replicate
@@ -224,8 +226,10 @@ wells. Fold change is the treatment mean divided by the same curve's zero-dose
 DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth increased
 at every nonzero concentration in both methods:
 
-(A–B) Mean outgrowth per detected cell relative to the same drug curve's DMSO
-control; (C–D) cell-count ratios in those same wells. Dots show the two technical
+(A–B) Mean outgrowth per detected cell; (C–D) detected cells; (E–F) total
+outgrowth; (G–H) branches per cell; (I–J) mean cell process length; (K–L) mean
+cell median process length. Every endpoint is divided by the same drug
+curve's DMSO mean. Dots show the two technical
 wells at each concentration. Marks and whiskers show their mean and sample
 standard deviation after division by the observed control mean; they do not
 propagate uncertainty in that denominator or represent confidence intervals.
@@ -235,8 +239,9 @@ numerical tables are generated from the same well measurements.
 
 Both methods reproduce increasing mean outgrowth across the four nonzero doses
 for each drug. OpenHCS fold changes are smaller at every nonzero concentration.
-Each OpenHCS well summary is the unweighted mean of its nine field-level
-outgrowth-per-cell measurements; cell counts are averaged over those same fields.
+Each OpenHCS well endpoint is the unweighted mean of its nine field-level
+measurements. Total outgrowth is therefore a mean field total, not unique
+whole-well length.
 The commercial endpoint is an existing well export whose exact site weighting
 and length units are unspecified. Absolute lengths and counts are therefore
 not treated as equivalent.
@@ -253,16 +258,18 @@ same neuron; resolved crossings are not automatically branches. These
 definitions specify the OpenHCS measurements without asserting that the
 commercial algorithm uses identical topology or aggregation.
 
-The [joined physical-well table](personal_neurite_transfer/joined_wells.csv)
-and [treatment-effect table](personal_neurite_transfer/treatment_effects.csv)
+The [joined physical-well table](personal_neurite_repaired_morphometry/joined_wells.csv)
+and [treatment-effect table](personal_neurite_repaired_morphometry/treatment_effects.csv)
 retain well identities, means, sample standard deviations, counts, raw deltas,
 fold changes and fractional-change differences. Cell-count changes accompany
 outgrowth to expose denominator changes without inferring toxicity. The
-[source hashes](personal_neurite_transfer/source_evidence.json) identify the
+[source hashes](personal_neurite_repaired_morphometry/source_evidence.json) identify the
 exact submitted pipeline, source key, commercial export and all 180 native
 summaries. The comparison script processes tables only and does not tune images.
 Overlapping fields are not deduplicated, so averaged field counts are not unique
 whole-well neuron counts. Unselected wells are not filled with zero.
+The [original frozen comparison](personal_neurite_baseline_morphometry/treatment_effects.csv)
+is retained separately for before/after evaluation; it was not overwritten.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>

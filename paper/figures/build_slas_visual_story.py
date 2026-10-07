@@ -787,12 +787,12 @@ def submission_neurite_results():
     ):
         sheet.text(x, 57, title, size=10.5, weight="bold")
         sheet.source_image(personal / f"site1-{name}.png", (x, 32, 30, 23), crop=(550, 28, 997, 437))
-    sheet.panel("III", "Fixed-recipe transfer: treatment responses", 3, 28)
+    sheet.panel("III", "Assisted repair: treatment responses", 3, 28)
     NeuriteEffectFigure.draw_panels(
-        sheet, ROOT / "paper/supplementary/personal_neurite_transfer",
+        sheet, ROOT / "paper/supplementary/personal_neurite_repaired_morphometry",
         metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="F",
     )
-    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching remains under investigation.",
+    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching responses remain smaller than MetaXpress.",
                size=9.5, color=MUTED)
     sheet.save()
 

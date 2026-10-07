@@ -288,15 +288,17 @@ neurons. The frozen pipeline, outputs and independent image review are linked
 in Supplementary Data 8. This trial used development images rather than an
 unseen test set.
 
-Applying the fixed recipe to 20 matched drug and control wells recovered the
-treatment responses measured by commercial MetaXpress analysis (Figure 5 and
-Supplementary Figure 8). Both methods showed increased mean outgrowth at every nonzero FC-A
-and Y27632 concentration, with increasing treatment means across the four doses
-in each drug curve. OpenHCS outgrowth fold changes were smaller at every nonzero
-concentration. This comparison tests recovery of a treatment response, not
-equivalence of individual cell masks or lengths. The transfer used unchanged
-recipe settings on the current production backend and was separate from the
-autonomous authoring trial.
+Following the externally informed repairs, analysis of all 180 fields in 20
+matched wells recovered increasing outgrowth-per-cell responses to FC-A and
+Y27632 (Figure 5 and Supplementary Figure 8). At 40 µM, OpenHCS fold changes
+rose from 1.48 to 1.77 for FC-A and from 1.56 to 1.76 for Y27632; MetaXpress
+reported 1.98 and 2.05, respectively. Total-outgrowth responses also moved
+closer to the commercial measurements. Branching responses remained smaller:
+1.59 versus 3.00 for FC-A and 1.70 versus 3.26 for Y27632. Both methods
+detected the same direction of response at every nonzero dose, but they did
+not produce equivalent morphology measurements. This assisted evaluation is
+separate from the autonomous authoring trial; no spatial tracing reference was
+available for these laboratory images.
 
 Supplementary Data 8 separately reports an assisted stitched-mosaic analysis of the laboratory dataset.
 
@@ -359,11 +361,11 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 
 
-### Figure 5. Autonomous neurite analysis on public and laboratory images
+### Figure 5. Autonomous neurite analysis and assisted treatment evaluation
 
-![Public neurite shafts, matched laboratory-field analysis and measured drug responses after fixed-recipe transfer.](figures/slas/submission_neurite_results.png){width=6in}
+![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
-(I, A–B) Matched NeuronCyto II process-channel view and the H004 author's retained initial shaft result [@NeuronCytoII]. The intended structures are thick neurite shafts, including their dim stretches, rather than fine filopodia. The later repair overextended tracing and is not shown as a successful final result. Colours represent assigned identities, not independently established ownership at crossings. (II, C–E) Byte-identical native captures from the final P001 autonomous analysis show raw FITC, body/path output and their combination at matched site-1 coordinates. The run completed all nine fields without stitching or overlap deduplication. (III) Applying the same recipe settings to 20 matched wells recovered increasing outgrowth-per-cell responses to FC-A and Y27632, with smaller fold changes than MetaXpress. Dots represent two technical wells per dose; marks and whiskers show their mean and sample standard deviation relative to the same curve's DMSO mean. This is fixed-recipe transfer, not additional autonomous authoring or equivalent segmentation. Branching and total-outgrowth discrepancies remain under investigation. Wider views, cell-count responses, full numerical tables and the separate assisted mosaic are retained in the supplement.
+(I, A–B) Matched NeuronCyto II process-channel view and the H004 author's retained initial shaft result [@NeuronCytoII]. The intended structures are thick neurite shafts, including their dim stretches, rather than fine filopodia. The later repair overextended tracing and is not shown as a successful final result. Colours represent assigned identities, not independently established ownership at crossings. (II, C–E) Byte-identical native captures from the final P001 autonomous analysis show raw FITC, body/path output and their combination at matched site-1 coordinates. The run completed all nine fields without stitching or overlap deduplication. (III, F–G) Separate, externally informed soma and tracing repairs were evaluated across 20 matched wells, yielding increasing outgrowth-per-cell responses to FC-A and Y27632. Dots represent two technical wells per dose; marks and whiskers show their mean and sample standard deviation relative to the same curve's DMSO mean. These curves are assisted-development results, not additional autonomous authoring or equivalent segmentation. All six endpoint responses, numerical tables and the separate assisted mosaic are retained in the supplement.
 
 
 ## Discussion
