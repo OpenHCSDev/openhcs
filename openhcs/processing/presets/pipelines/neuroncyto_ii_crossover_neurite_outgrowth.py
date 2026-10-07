@@ -9,8 +9,9 @@ biological meaning from ``w1`` or ``w2`` globally.
 
 The compact analysis streams the final source planes, cell bodies, owned
 neurites, unified neurons, nuclei, morphology graph, and live measurement
-tables to Napari.  Typed measurements, ROI labels, graph ROI paths, and SWC are
-also materialized.  The top-level well filter bounds loading to the selected
+tables to Napari. Typed measurements, ROI labels and graph ROI paths are
+materialized in source-pixel units; the loose TIFFs provide no physical
+calibration. The top-level well filter bounds loading to the selected
 field; the path-planning filter suppresses an otherwise redundant final image
 copy while runtime artifacts remain materialized.
 """
@@ -48,11 +49,11 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NEURITE_MORPHOLOGY_OUTPUT,
-    MetaXpressCellBodySettings,
-    MetaXpressNuclearSettings,
-    MetaXpressOutgrowthSettings,
+    PixelCellBodySettings,
+    PixelNuclearSettings,
+    PixelOutgrowthSettings,
     NeuriteIllumination,
-    neurite_outgrowth_metaxpress,
+    neurite_outgrowth_metaxpress_pixels,
 )
 from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize_plane,
@@ -129,24 +130,24 @@ def build_neuroncyto_ii_crossover_demo(
             well_filter=0,
             global_output_folder=output_root,
         ),
-        materialization_results_path=output_root / "results",
+        materialization_results_path=Path("results"),
         materialize_runtime_artifacts=True,
         source_bindings_config=LazySourceBindingsConfig(bindings=source_bindings),
     )
     step = FunctionStep(
         name="NeuronCyto II Crossover Neurite Outgrowth",
         func=(
-            neurite_outgrowth_metaxpress,
+            neurite_outgrowth_metaxpress_pixels,
             {
                 "neurite_channel_index": 0,
                 "illumination": NeuriteIllumination.FLUORESCENCE,
-                "cell_body": MetaXpressCellBodySettings(
+                "cell_body": PixelCellBodySettings(
                     approximate_max_width=36.0,
                     minimum_area=45.0,
                     intensity_above_local_background=20.0,
                     channel_index=0,
                 ),
-                "outgrowth": MetaXpressOutgrowthSettings(
+                "outgrowth": PixelOutgrowthSettings(
                     maximum_width=5.0,
                     intensity_above_local_background=8.0,
                     minimum_cell_growth_to_log_as_significant=8.0,
@@ -154,7 +155,7 @@ def build_neuroncyto_ii_crossover_demo(
                     candidate_hysteresis_seed_correction_factor=0.25,
                 ),
                 "use_nuclear_stain": True,
-                "nuclear_stain": MetaXpressNuclearSettings(
+                "nuclear_stain": PixelNuclearSettings(
                     channel_index=1,
                     approx_min_width=5.0,
                     approx_max_width=32.0,
