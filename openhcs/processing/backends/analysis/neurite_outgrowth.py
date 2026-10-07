@@ -777,8 +777,8 @@ class MetaXpressCellBodySettings:
 
         Original inscribed discs project that decision back to the boundary.
         Shared disc support, nuclear pixels and boundary pixels not represented
-        by removed discs survive. No reconstruction through the original mask
-        can regrow the removed shaft.
+        by removed discs survive only while connected to the nuclear seed.
+        No reconstruction through the original mask can regrow the removed shaft.
         """
         body = np.asarray(body, dtype=bool)
         radius = ndi.distance_transform_edt(np.pad(body, 1))[1:-1, 1:-1]
@@ -833,7 +833,10 @@ class MetaXpressCellBodySettings:
                 removed_support if removed_medial[row, column] else retained_support
             )
             support[row_start:row_stop, column_start:column_stop] |= disc
-        return body & (~removed_support | retained_support | nuclear_seed)
+        retained = body & (~removed_support | retained_support | nuclear_seed)
+        components, _ = ndi.label(retained, connectivity)
+        seeded_components = np.unique(components[retained & nuclear_seed])
+        return retained & np.isin(components, seeded_components)
 
     def contract_candidates(
         self,

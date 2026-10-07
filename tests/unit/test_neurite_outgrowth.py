@@ -2006,6 +2006,12 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
     assert cell_bodies[1, 80, 25] > 0
     assert cell_bodies[1, 80, 37] == 0
     assert neurites[1, 80, 37] > 0
+    for owner in (1, 2):
+        components, count = ndi.label(
+            cell_bodies[1] == owner, structure=np.ones((3, 3), dtype=bool),
+        )
+        assert count == 1
+        assert np.any((components > 0) & (nuclei[0] == owner))
     lengths = sorted(row["total_outgrowth"] for row in cell_rows)
     assert lengths[0] == 0.0
     assert lengths[1] > 89.0
