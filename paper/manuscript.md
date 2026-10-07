@@ -143,18 +143,18 @@ Table 2. Autonomous-analysis trial summary. Uninspected fields were selected ret
 | BBBC039, earlier trial | gpt-5.6-sol | 50 held-out fields | Object F1; foreground Dice | 0.746; 0.935 |
 | BBBC039, three later authors | gpt-6.1-sol | 175 commonly uninspected fields | Pooled object F1 | 0.906 to 0.910 |
 | BBBC039, three later authors | gpt-6.1-sol | 200 fields including development | Pooled object F1 | 0.898 to 0.906 |
-| BBBC039, paired repair | [TODO: model, Supplementary Data 8] | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
+| BBBC039, paired repair | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
 | BBBC007, earlier trial | gpt-5.6-sol | 12 held-out fields | Directed boundary fraction | 0.671 |
-| BBBC007, two later authors | [TODO: models, Supplementary Data 8] | 16 fields including development | Directed boundary fraction | 0.743 and 0.740 |
-| BBBC007, paired field | [TODO: model, Supplementary Data 8] | One development field | Nuclei; actin-supported cells | 56; 54 |
+| BBBC007, two later authors | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 and 0.740 |
+| BBBC007, paired field | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
 | BBBC013, earlier trial | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
-| BBBC013, later trial | [TODO: model, Supplementary Data 8] | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
-| H001 | [TODO: model, Supplementary Data 8] | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
-| H002 | [TODO: model, Supplementary Data 8] | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
-| Retina, repair trial | [TODO: model and context classification, original launch] | One development field | Detected objects; image review | 102 |
-| Retina, repeat trial | [TODO: model and context classification, original launch] | One development field | Candidates; border candidates | 136; 10 |
-| Public neurites | [TODO: model, Supplementary Data 8] | One development field | Principal-shaft recovery | Matched image review |
-| Laboratory neurites | [TODO: model, Supplementary Data 8] | Nine development fields | Soma and path recovery | Matched image review |
+| BBBC013, later trial | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
+| H001 | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
+| H002 | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
+| Retina, repair trial | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
+| Retina, repeat trial | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
+| Public neurites | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
+| Laboratory neurites | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
 | Additional authors and models | [TODO: new trial sources] | [TODO: partition] | [TODO: endpoint] | [TODO: result] |
 
 Three independent nuclear-analysis authors reached pooled object F1 of 0.906 to 0.910 on the 175 BBBC039 fields none of them opened. Across all 200 fields, including development fields, F1 was 0.898 to 0.906 (Figure 4B). A same-input repair raised F1 from 0.908 to 0.934 on three fields. In the full-corpus repeat, 61 fields improved, 123 decreased and 16 were unchanged (Supplementary Figure 3). The earlier gpt-5.6-sol trial reached F1 0.746 and foreground Dice 0.935 on 50 prospectively held-out fields (Table 2). [TODO: field-level error pattern, from the per-field scores and matched images.]
@@ -165,7 +165,7 @@ The later BBBC013 author completed all 96 wells and obtained control Z′ of 0.8
 
 The H002 author recovered all 15 annotated 3D centres within 30 voxels, with mean matched error of 4.80 voxels (Figure 4D,I). Eleven predictions had no matching annotation. A different author repaired an internal body partition at Z=36 while keeping its neighbour separate (Figure 4H). [TODO: precision, from classification of the eleven unmatched predictions.]
 
-The retinal repair trial detected 102 objects after improving fragmented soma footprints while keeping a neighbouring pair separate (Figure 4G). A repeat detected 136 candidates, including ten at the border. Distributed raw/result review covered bright somata, diffuse rings and crowded regions (Supplementary Figure 4). [TODO: independent versus inherited-context classification of these trials, from original launch records and Tristan's decision.] [TODO: manual-reference result, from annotated soma centres.]
+The retinal repair trial detected 102 objects after improving fragmented soma footprints while keeping a neighbouring pair separate (Figure 4G). A repeat detected 136 candidates, including ten at the border. Distributed raw/result review covered bright somata, diffuse rings and crowded regions (Supplementary Figure 4). [TODO: manual-reference result, from annotated soma centres.]
 
 One autonomous author analysed all nine laboratory neurite fields and revised its neurite admission settings after inspecting thin processes (Figure 5II). Matched sparse and dense views showed recovery of raw-visible paths with the same soma labels in the reviewed field. In the public NeuronCyto II field, the initial pipeline recovered principal shafts and junctions (Figure 5I); the final repair extended beyond that target. The initial result is shown alongside the published algorithm output. [TODO: spatial ownership comparison, from crossing annotations.]
 
@@ -236,7 +236,7 @@ Blind agents built and repaired microscopy analyses from task briefs and reached
 
 Agentic-J generates scripts and coordinates Fiji tools through specialized agents [@Johanns2026]. OpenHCS exposes a shared pipeline to both agents and scientists and evaluates the agent's final analysis against references after authoring ends. [TODO: BIABench mechanism, findings and comparison, from the primary paper.] Imported CellProfiler workflows and custom functions use the same authoring and execution interfaces, allowing an existing laboratory analysis to be revised through either route.
 
-The trials have several limits. Models and skill versions changed together, and the number of authors varied by assay, so their contributions to reliability cannot be isolated. Some development images were inspected during authoring; the 175-field nuclear subset was selected retrospectively. [TODO: retinal inherited-context disposition, from original launch records.] Nuclear agreement varied across fields and self-repair could introduce regional errors. Retinal counts and neurite recovery lack exhaustive spatial references; unresolved crossings limit per-neuron length and branch assignment. The public neurite final repair exceeded its principal-shaft target, which was clarified after the run. H002 annotations cover a subset of centres, so precision awaits classification of unmatched predictions. DNA/actin outlines support directed boundary proximity, and eligible-cell translocation responses may differ from the full cell population because compartment eligibility varies with treatment. Overlapping laboratory neurite fields were analysed independently. Ease of use by scientists without image-analysis training remains untested. [TODO: independent frozen-skill evaluation on an unused nuclear dataset, from the new trial.]
+The trials have several limits. Models and skill versions changed together, and the number of authors varied by assay, so their contributions to reliability cannot be isolated. Some development images were inspected during authoring; the 175-field nuclear subset was selected retrospectively. Nuclear agreement varied across fields and self-repair could introduce regional errors. Retinal counts and neurite recovery lack exhaustive spatial references; unresolved crossings limit per-neuron length and branch assignment. The public neurite final repair exceeded its principal-shaft target, which was clarified after the run. H002 annotations cover a subset of centres, so precision awaits classification of unmatched predictions. DNA/actin outlines support directed boundary proximity, and eligible-cell translocation responses may differ from the full cell population because compartment eligibility varies with treatment. Overlapping laboratory neurite fields were analysed independently. Ease of use by scientists without image-analysis training remains untested. [TODO: independent frozen-skill evaluation on an unused nuclear dataset, from the new trial.]
 
 An imaging-based self-driving laboratory needs an analysis step that can execute and repair its processing while leaving scientific decisions with the domain expert. OpenHCS supplies editable pipelines and inspectable intermediate results for that division of work. The next experiment can be selected from measurements whose source images and settings remain available for review.
 
