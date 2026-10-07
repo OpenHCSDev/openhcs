@@ -8,26 +8,15 @@ link-bibliography: true
 
 # OpenHCS supplementary material
 
-## Supplementary Figure 1. Process architecture, runtime composition and extension
+Figure assemblies reuse unmodified Lucide icons under the retained
+[licence](../figures/assets/lucide/LICENSE); the
+[source record](../figures/assets/lucide/SOURCE.txt) pins revision `b56741c`.
 
-![Separate editing, execution and inspection processes.](../figures/slas/process_architecture.png){width=6in}
+## Supplementary Figure 1. Runtime composition and preparation
 
-(I) The graphical editor and MCP bridge submit compilation and execution
-requests to the ZMQ server and receive status updates. The server assigns
-compiled work to CPU/GPU workers, which read source images, save outputs and
-stream images and ROIs to separate napari or Fiji viewers. Worker and viewer
-counts are configurable. This diagram shows process responsibilities and data
-flow, rather than a particular deployment's process count.
+![Array grouping, named results, scheduling and preparation.](../figures/slas/supp_workflow_infrastructure.png){width=6in}
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-### Supplementary Figure 1, continued: complete runtime composition
-
-![Array axes, function chains, named results and scheduling.](../figures/slas/runtime_composition.png){width=5.6in}
-
-(II, A–D) Array axes and processing groups determine the image views supplied
+(I, A–D) Array axes and processing groups determine the image views supplied
 to each function. Functions declare per-plane, whole-stack or stack-reduction
 behaviour. A dictionary assigns function chains to groups; a list supplies a
 shared ordered chain. Named segmentation labels remain available to later
@@ -35,18 +24,18 @@ measurements alongside the image flow, independently of saving to disk. When
 time is sequential, each timepoint completes the pipeline before the next
 begins; wells can run in parallel. Selected functions determine CPU/GPU support.
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-### Supplementary Figure 1, continued: preparation and typed extension
-
-![Shared configuration and a typed extension across the workflow.](../figures/slas/supp_workflow_infrastructure.png){width=6in}
-
-(III, A–B) Selected array-grouping and preparation details. (C–D) One custom
-function declaration supplies typed parameters and defaults to both the editor
-and MCP catalog. Supplementary Data 4 retains further compiler, output-routing,
-importer and viewer illustrations.
+(II) Preparation supplies frozen plans, prepared functions and a worker map
+as the execution bundle. The full preparation illustration linked below
+also shows input resolution and output storage.
+The typed custom-function example is shown once in main Figure 1, rather than
+repeated here. Main Figure 2 shows the editing/execution/viewer topology with
+integration logos; the original [process architecture](../figures/slas/process_architecture.png)
+is retained in the supplementary archive without embedding that topology twice.
+Supplementary Data 4 retains the original
+[runtime composition](../figures/slas/runtime_composition.png),
+[compiler preparation](../figures/slas/compiler_preparation.png) and
+[typed extension](../figures/slas/custom_function_extension.png) illustrations
+with their source records.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -54,14 +43,15 @@ importer and viewer illustrations.
 
 ## Supplementary Figure 2. Translocation response and compartment eligibility
 
-![Full-plate and prospective held-out translocation measurements.](../figures/slas/supp_translocation.png){width=6in}
+![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=6in}
 
-(A–D, upper block) Final BBBC013 full-plate analysis: LY294002 and wortmannin
-responses, with the contributing-cell fractions below the same dose panels.
+(A–B, upper block) Final BBBC013 full-plate analysis: fractions of nuclei
+contributing eligible-cell measurements for LY294002 and wortmannin.
 The agent selected the well-level median eligible-cell log2 nuclear/cytoplasmic
-GFP ratio. All 96 wells include development wells. Dots are four wells per dose;
+GFP ratio, whose dose-response curves appear only in main Figure 4E.
+All 96 wells include development wells. Dots are four wells per dose;
 marks and whiskers show their mean and sample standard deviation.
-(E–F, lower block) A separate prospective held-out trial uses well means of
+(C–D, lower block) A separate prospective held-out trial uses well means of
 cell-level nuclear/cytoplasmic GFP ratios, not the median log2 endpoint above.
 Four development wells preceded pipeline freeze; held-out wells and controls
 were disclosed only afterward. Control means and Z-prime use four independent
@@ -69,6 +59,8 @@ wells per condition. These are different authors and endpoints, not successive
 stages of one run. Treatment labels support response evaluation; BBBC013 does
 not supply manual segmentation truth.
 
+The [original full-plate sheet](../figures/slas/translocation_fresh23.png)
+retains both response and eligibility panels as archived source artwork.
 Nuclear-repair and uncertain-compartment examples remain in the
 [retained development sheet](../figures/slas/bbbc013_development_repair.png).
 Their source proof and display settings are retained in Supplementary Data 8.
@@ -79,114 +71,71 @@ Their source proof and display settings are retained in Supplementary Data 8.
 
 ## Supplementary Figure 3. Nuclear-instance evaluation and object separation
 
-![Independent-author scores, prospective held-out assays and a native repair example.](../figures/slas/supp_nuclear_instances.png){width=6in}
+![Independent-author scores and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=6in}
 
-(A–B, upper block) Two independent BBBC039 authors evaluated on the same 200
+(I, A–B, upper block) Two independent BBBC039 authors evaluated on the same 200
 fields. The repeat matched 20,207 of 23,615 reference instances, with 1,164
 excess predictions and 3,408 misses; the earlier author matched 20,521, with
 1,153 excess predictions and 3,094 misses. Intersection over union is at least
 0.5. Pooled F1 is 0.898 and 0.906, respectively. Annotation-empty fields coincide
 at the scatter origin. This comparison tests independent final methods, not a
 controlled skill change or first-to-final repair.
-(C–D, middle block) Separate prospective trials: BBBC039 object F1 and foreground
+(II, A–B, lower block) Separate prospective trials: BBBC039 object F1 and foreground
 Dice on 50 held-out fields, and directed BBBC007 boundary support on 12 held-out
 fields. Four development fields preceded each freeze. Boundary support is the
 fraction of predicted boundary pixels within two pixels of a manual outline;
 it does not establish object correspondence.
-(E–G, lower block) H001 raw image, first segmentation and final segmentation at
-one matched elongated-body region. Whole-image object F1 improved from 0.929
-to 0.944 against a notebook-derived computational reference. That reference
-is not manual biological annotation. Raw windows are 8–152 and 8–248, gamma 1.
-The three blocks are separate datasets and trials; scores were computed only
-after pipeline selection. Supplementary Data 7–8 retain reference identities,
-full native overviews and per-field scores.
+These are separate datasets and trials; scores were computed only after
+pipeline selection. The H001 repair belongs in main Figure 4; its
+[original scored sheet](../figures/slas/h001_scored_native.png) remains linked
+in Supplementary Data 8 rather than repeated as another visual panel.
+Supplementary Data 7–8 retain reference identities, full native overviews and
+per-field scores.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 4. Volumetric localisation and body separation
+## Supplementary Figure 4. Independent morphology checks and remaining ambiguities
 
-![Orthogonal volume views and independently authored body-separation results.](../figures/slas/supp_volume.png){width=6in}
+![Independent orthogonal localisation, retinal borders and unsupported body growth.](../figures/slas/supp_morphology_checks.png){width=6in}
 
-(A–C, upper block) The volume trial shown in main Figure 3: native XY and
-post-freeze XZ/YZ intersections of the unchanged raw volume and saved labels.
-Yellow outlines expose the masks and magenta marks show centres within half a
-voxel of each plane. Raw contrast limits are shared across orthogonal planes.
-The trial matched 14 of 15 manual centres within 10 voxels and all 15 within
-the primary 30-voxel distance; mean matched error was 4.80 voxels. Eleven
-predictions were unmatched to annotations whose completeness is unestablished.
-(D–G, middle row, left to right) An independent author at Z index 36: raw,
-first labels, repaired labels and combined view. Local seed suppression removes
-an internal body split while retaining its neighbour. All 15 manual centres
-matched within 20 voxels in post-freeze evaluation.
-(H–J, lower row) A third author’s centres on raw source in XY, XZ and YZ.
-Centre localisation and complete volume boundaries are distinct endpoints;
-lobed-body identity remains uncertain. Categorical colours are not shared
-identities across authors. No detector or reference score was rerun to lay out
-these retained panels. Original captures and matching records are in
-Supplementary Data 8.
+(A–C) A separate volume author's centres in XY, XZ
+and YZ. Centre localisation does not establish complete volume boundaries;
+lobed-body identity remains uncertain.
+(D–F) A retinal author's raw, first and final outlines at an acquisition
+border, with raw window 0–42 and gamma 1. A possible split remains; no manual
+count accuracy is assigned. (G–I) A faint DNA pair remains merged in the
+final raw/labels/combined views (window 0–151). (J–L) A separate author's
+nuclear seed lacks supported actin body growth (actin window 0–104, gamma 1).
+These are separate trials, not stages of one repair history; colours are not
+shared identities across authors.
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-## Supplementary Figure 5. Retinal soma localisation across spatial scales
-
-![Whole-field retinal detections, regional final outlines and independent repairs.](../figures/slas/supp_retina.png){width=6in}
-
-(A–B, upper block) Matched whole-field RBPMS raw image and final outlines from
-the autonomous 102-instance result. (C–F, second row) Northwest neighbours
-remain separate; the southeast partition becomes one continuous body.
-The author detected a pair-merging regression and retained both corrections.
-Raw and outlined views use different stretches at matched positions.
-(G–I, third row) An independent autonomous author’s matched raw, initial and
-repaired outlines at neighbouring somata. (J–L, lower row) The same independent
-author at the acquisition border. Its raw window is 0–42, gamma 1.
-These are separate autonomous trials, not a continuous repair history.
-Faint profiles and crowded boundaries remain uncertain; no manual-count
-accuracy is assigned. Assisted developmental examples and their original
-0–55 window remain in the [retained development sheet](../figures/slas/retinal_development_repair.png).
-Source: user-provided R0010 RBPMS-labelled retina; physical calibration is
-unverified. Supplementary Data 8 retains pipelines, capture identities and
-original display settings.
+The H001 repair, neighbouring retinal repair, fresh22 volume-body repair and
+measurement-first volume overview appear only in main Figure 4, not as
+additional panels here.
+Original [volume repair](../figures/slas/h002_fresh22_split_repair.png),
+[orthogonal localisation](../figures/slas/h002_fresh10_native.png),
+[retinal review](../figures/slas/retina_fresh16_repair.png),
+[paired DNA repair](../figures/slas/h003_native_repair.png), and
+[actin support checks](../figures/slas/h003_fresh19_matched.png) retain the wider
+context. Assisted retinal development remains in the
+[development sheet](../figures/slas/retinal_development_repair.png).
+Source retina: user-provided R0010 RBPMS images, physical calibration unverified.
+Source DNA/actin: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
+Supplementary Data 8 retains original captures, pipelines and matching records.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 6. Nuclear repair and actin-defined body support
+## Supplementary Figure 5. Assisted laboratory mosaic at overlaps and field cores
 
-![Matched DNA repair, a remaining merge, and independent actin support checks.](../figures/slas/supp_paired_channels.png){width=6in}
+![Matched laboratory mosaic overlap and field-core regions.](../figures/slas/supp_neurite_morphology.png){width=6in}
 
-(A–C, upper row) Matched raw DNA, first and final overlays separate a joined
-nuclear pair while retaining its compact neighbour; DNA window 0–255.
-(D–F, second row) A final raw/labels/combined triplet shows a faint pair still
-merged; window 0–151. The same author revised without reference feedback.
-(G–I, third row) An independent author’s actin raw, labels and combined outlines
-in a matched dense region. (J–L, lower row) A nuclear seed has no supported
-actin body growth. The actin window is 0–104, gamma 1; these outputs belong to
-a different author from the first two rows.
-Nuclear separation and body extent require separate validation. Wider paired
-DNA/actin views and full first/final records remain in Supplementary Data 8.
-Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
-
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-## Supplementary Figure 7. Neurite morphology in a public field and laboratory mosaic
-
-![Public main-shaft recovery and matched laboratory mosaic regions.](../figures/slas/supp_neurite_morphology.png){width=6in}
-
-(A–B, upper block) NeuronCyto II process-channel raw image and the autonomous
-shaft-focused result. Raw window 0–12, gamma 1, reveals processes while saturating
-bright somata. Later revisions adding uncertain fine twigs are not the
-representative result. Faint protrusions and neuron-specific crossing ownership
-remain limitations.
-(C–E, middle row) Laboratory dataset: overlap region in an acquisition-placed
+(A–C, upper row) Laboratory dataset: overlap region in an acquisition-placed
 nine-field mosaic, showing raw FITC, body envelopes plus process paths, and
-their combination. (F–H, lower row) The same views in the lower-right field core.
+their combination. (D–F, lower row) The same views in the lower-right field core.
 Each triplet uses the same native crop. One pooled percentile pair is fitted
 per complete nine-field channel stack before assembly. Supported long paths
 remain visible; faint segments and crowded ownership remain incomplete.
@@ -199,15 +148,17 @@ Those aggregate outputs are not assigned to the earlier sampled panels here.
 They are algorithmic measurements rather than a unique biological census or
 ground-truth length. Supplementary Data 8 retains the separate continuation,
 original captures and selected pipelines. The independent public junction
-review remains in the [full shaft/junction sheet](../figures/slas/h004_assay_review.png).
+review remains in the [full shaft/junction sheet](../figures/slas/h004_assay_review.png),
+and the public [main-shaft illustration](../figures/slas/h004_main_shafts.png)
+is shown in main Figure 5 rather than repeated here.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 8. Laboratory treatment responses compared with MetaXpress
+## Supplementary Figure 6. Laboratory treatment responses compared with MetaXpress
 
-![Six matched well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/personal_neurite_effects_repaired.png){width=6in}
+![Five additional well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=6in}
 
 The existing commercial export contains 120 well summaries from two plates.
 An evaluation-only source key links the coded images to their physical wells.
@@ -228,11 +179,13 @@ additional autonomous authoring trial.
 
 Each FC-A and Y27632 (export label Y27) concentration has two technical-replicate
 wells. Fold change is the treatment mean divided by the same curve's zero-dose
-DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth increased
-at every nonzero concentration in both methods:
+DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth per
+detected cell appears only in main Figure 5G–H. The
+[original six-endpoint sheet](../figures/slas/personal_neurite_effects_repaired.png)
+remains linked as archived artwork, not another displayed copy.
 
-(A–B) Mean outgrowth per detected cell; (C–D) detected cells; (E–F) total
-outgrowth; (G–H) branches per cell; (I–J) mean cell process length; (K–L) mean
+(A–B) Detected cells; (C–D) total outgrowth; (E–F) branches per cell;
+(G–H) mean cell process length; (I–J) mean
 cell median process length. Every endpoint is divided by the same drug
 curve's DMSO mean. Dots show the two technical
 wells at each concentration. Marks and whiskers show their mean and sample
@@ -320,7 +273,7 @@ evaluation, not a fresh autonomous success.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 9. Total speedup by workflow and assigned sample count
+## Supplementary Figure 7. Total speedup by workflow and assigned sample count
 
 ![Total speedups for each workflow, revision and worker configuration on linear and logarithmic axes.](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.png){width=6in}
 
@@ -359,9 +312,9 @@ workflows do not replace the full single-sample cohort of main Figure 6.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 9 (continued). Matched worker comparisons
+## Supplementary Figure 7 (continued). Matched worker comparisons
 
-![May-style mean bars and workflow points for the retained eight- and nine-assignment worker records.](../figures/slas/supp_matched_worker_speedups.png){width=6in}
+![Matched one- versus two-, three- and four-worker comparisons, retaining separate capture revisions.](../figures/slas/supp_worker_comparisons.png){width=6in}
 
 (A) Eight assignments of three workflows on revision `d8678dbd4`: one versus
 two OpenHCS workers. (B) Nine assignments of the same three workflow identities
@@ -374,49 +327,34 @@ cohort and are not pooled. Warmup and three measured repetitions passed each
 workflow's declared-output comparisons. Repeated assignments are computational
 replicates, not biological replicates.
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-## Supplementary Figure 9 (continued). Four-worker comparison
-
-![Matched one- versus four-worker clocks for sixteen repeated 3D monolayer assignments.](../figures/slas/supp_matched_worker_speedups_continued_2.png){width=6in}
-
 (C) Sixteen assignments of the 3D monolayer workflow on revision `2cda84a369`:
 one versus four OpenHCS workers, with execution and total measured separately
 against one actual stock CellProfiler process. There is one workflow, so
 minimum, median, mean and maximum coincide and are marked “all”. This capture
 does not extend the eight- or nine-assignment records into a common scaling sweep.
+The original [eight-/nine-assignment sheet](../figures/slas/supp_matched_worker_speedups.png)
+and [four-worker sheet](../figures/slas/supp_matched_worker_speedups_continued_2.png)
+retain the source records used for this consolidated layout.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 9 (continued). Individual workflow runtimes
+## Supplementary Figure 7 (continued). Individual workflow runtimes
 
 ![Paired execution and total runtime for all thirty workflows.](../figures/slas/benchmark-publication/measured_benchmark_workflow_runtimes.png){width=6in}
 
 (A) Execution; (B) compile-plus-run total. Paired bars show measured median
 CellProfiler and OpenHCS durations for each of the thirty workflows in main
-Figure 2, with one worker and one numerical thread. Both panels use the same
+Figure 6, with one worker and one numerical thread. Both panels use the same
 logarithmic seconds scale. Row annotations give CellProfiler/OpenHCS ratios of
 independent engine medians from three measured repetitions. These are measured
 native clocks, not projected many-well baselines. All thirty workflows passed
 their declared-output comparisons; that agreement does not establish biological
 segmentation accuracy.
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-## Supplementary Figure 9 (continued). Aggregate speedups on a linear scale
-
-![Linear-scale counterpart of the main-text thirty-workflow execution and total speedup distributions.](../figures/slas/benchmark-publication/measured_benchmark_publication.png){width=6in}
-
-The same workflow ratios, mean bars, median lines and extrema as main Figure 6,
-on a linear vertical scale. The marked axis break keeps the bulk of the cohort
-visible without excluding the large speedup observations. Each clock contains
-the same thirty workflows; no many-worker measurements enter either distribution.
+The [linear-scale aggregate view](../figures/slas/benchmark-publication/measured_benchmark_publication.png)
+is retained as a source link, not another displayed copy of main Figure 6.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -651,7 +589,7 @@ retained summary alone does not establish which path produced it.
 The committed source establishes these timer definitions. The separate timing
 source audit document is not retained in this archive; the original run
 environment and per-run phase traces still need recovery to establish the
-executed snapshot. The subsequent matched comparison in Figure 2 uses separately
+executed snapshot. The subsequent matched comparison in Figure 6 uses separately
 declared execution and total intervals with three measured observations per
 engine; it does not reconstruct the missing historical timing provenance.
 
@@ -672,7 +610,7 @@ current-version compatibility matrix.
 
 ### Retained measured panels and numerical tables
 
-- [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 6 and the paired-runtime continuation of Supplementary Figure 9.
+- [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 6 and the paired-runtime continuation of Supplementary Figure 7.
 - [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
 - [Eight-assignment measured source record](../../benchmark/results/official30_matched_20261006/README.md), including the matched one-process baseline used for the two-worker comparison.
 - [Retained nine- and sixteen-assignment paired clock panels](../figures/slas/supp_matched_scaling.png), with the original separate capture heads.
@@ -699,7 +637,7 @@ owner or establish that later fixes eliminate paging.
 
 #### Matched scaling and archived comparisons
 
-Historical single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (the linked single-core amortization plots). Supplementary Figure 9 presents total-speedup observations by workflow, assignment count, worker count and capture revision, keeping the older same-revision series distinct from the later nine- and sixteen-assignment checkpoints. All primary ratios use one actual stock CellProfiler process. OpenHCS uses its built-in workers, including their coordination, saving, exports and finalization. Externally parallel CP processes are an additional calibration, not a native CellProfiler multiprocessing feature or the primary product baseline. Exact qualified clocks and ratios remain in the linked figure tables and original records; loss against ideal worker scaling is distinct from speedup over stock single-process CP.
+Historical single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (the linked single-core amortization plots). Supplementary Figure 7 presents total-speedup observations by workflow, assignment count, worker count and capture revision, keeping the older same-revision series distinct from the later nine- and sixteen-assignment checkpoints. All primary ratios use one actual stock CellProfiler process. OpenHCS uses its built-in workers, including their coordination, saving, exports and finalization. Externally parallel CP processes are an additional calibration, not a native CellProfiler multiprocessing feature or the primary product baseline. Exact qualified clocks and ratios remain in the linked figure tables and original records; loss against ideal worker scaling is distinct from speedup over stock single-process CP.
 
 The earlier analysis-focused throughput and memory measurements remain archived in Supplementary Data 3 and the archived per-workflow throughput/memory plot. Their configured worker and output policies differ from this output-complete matched evaluation, so their rates and memory values are not combined with the fresh timing distributions.
 
@@ -833,16 +771,21 @@ and [catalog description](../figures/slas/custom_extension_current_main_function
 the unchanged custom source registered with gain 1.2 and offset 0.0 without
 source patches. The isolated GUI launched, but its window/action catalogs
 failed MCP decoding (`window_id`, `action_id`, `widget_id`); no new custom-step
-form/code capture or code-document readback was established. Main Figure 1III
-therefore retains the earlier custom-function form, alongside a separately
-labelled normalization code example. Registration is not evidence of a new
-GUI editing round trip or analysis execution.
+form/code capture or code-document readback was established in that attempt.
+Its failure receipts remain unchanged. After repairing the MCP catalog
+projection, a fresh isolated authoring session produced the
+[native custom-function form](../figures/slas/custom_extension_live_parameters_capture_provenance.json)
+and [same-function code view](../figures/slas/custom_extension_live_code_capture_provenance.json)
+now shown in main Figure 1II. The
+[live code-document readback](../figures/slas/custom_extension_live_code_document.json)
+identifies `openhcs:paper_rescale_signal` with gain 1.2 and offset 0.0.
+This is authoring and capture evidence, not an editing round trip or assay execution.
 
 The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
-the retained Fiji/napari panels. Figure 1II's main window and Figure 1III's
-normalization code use captures from one OpenHCS 0.8.5 editing session. Its
+the retained Fiji/napari panels. Figure 1II's main window uses a capture from
+an OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
 The server inset is a separate OpenHCS 0.8.7 native capture of the ZeroMQ server browser
@@ -1575,12 +1518,12 @@ Technical guidance: RBPMS/Hoechst channel hints, instance/count outputs and dist
 The resource catalogue contains no recoverable original instruction file for `BBBC007_PROSPECTIVE_20260916`, `BBBC013_PROSPECTIVE_20260916`, `BBBC039_PROSPECTIVE_20260916`. Their published prospective protocol and partitions remain in Supplementary Data 7; author-written candidate plans are not relabelled as original prompts.
 
 
-The current skill describes intended inspection and repair practice. Its later additions are not evidence that earlier authors followed those instructions. Main Figure 2 separates this intended workflow from a recorded H001 example; its wall times come from the original resource catalogue, and its candidate sequence comes from the author's retained report. No universal count of review rounds is inferred from screenshot totals.
+The current skill describes intended inspection and repair practice. Its later additions are not evidence that earlier authors followed those instructions. Main Figure 3 separates this intended workflow from a recorded H001 example; its wall times come from the original resource catalogue, and its candidate sequence comes from the author's retained report. No universal count of review rounds is inferred from screenshot totals.
 
-Supplementary Figures 3–8 group native views by assay. Main Figure 3 shows
+Supplementary Figures 2–6 group additional evidence by assay. Main Figure 4 shows
 translocation and volume localisation; main Figure 5 shows public and personal
 field-by-field neurite analysis. The assisted mosaic appears only in
-Supplementary Figure 7. Reference evaluation
+Supplementary Figure 5. Reference evaluation
 follows pipeline selection; examples lacking exhaustive annotations do not
 receive an accuracy percentage.
 
@@ -1647,8 +1590,8 @@ the recorded inputs, metadata and software version. Preserve scientific
 settings while relocating destinations and use an isolated viewer endpoint.
 These are frozen analysis artifacts, not additions to the processing library.
 The retinal and volume sources in this table correspond to Data 8's named
-trials, not the different retinal trial in Supplementary Figure 5 or the
-volume trial in main Figure 3.
+trials, not the different retinal trial in Supplementary Figure 4 or the
+volume trial in main Figure 4.
 
 The personal mosaic and explicitly labelled development examples retain assisted
 provenance; they are not counted as fresh unguided trials. Recovery of principal
@@ -1709,9 +1652,10 @@ without treating uncertain cell boundaries as a failure of useful localisation.
 | Workflow regression tests | `7a7d21fee`; named test files unchanged from 0.8.5 | Successful unit-test job; representative authoring and validation cases |
 | Original unattended neurite run; Figure 5 | OpenHCS 0.7.13, `f1c1d9b670`; Codex 0.146.0, gpt-5.6-sol | Recorded construction, execution, saved outputs and viewer checks |
 | Later corrected neurite demonstration; the linked output/object inspection illustration | OpenHCS 0.7.14; correction `0eb5f77c02` | Separately recorded corrected outputs and object-to-measurement links |
-| Parameter/code round trip; Figure 1 | OpenHCS 0.8.5 release commit `e867013a8` | Same-session code/field edits and matching native controls |
+| Retained parameter/code round trip; Supplementary Data 3 | OpenHCS 0.8.5 release commit `e867013a8` | Same-session code/field edits and matching native controls |
+| Custom-function form and code; Figure 1II | OpenHCS 0.8.7; source/capture identities in `custom_extension_live_evidence.json` | Native views and code-document readback for the same function; no editing round trip or assay execution |
 | Comet Assay translation; the linked CellProfiler translation illustration | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
-| Custom-function registration; Supplementary Figure 1 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
+| Retained custom-function registration source; Supplementary Data 4 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
 | Prospective agent-authored assays; Supplementary Figures 2–3 | OpenHCS 0.8.5 current-source trials on 15-16 September 2026; frozen source and score receipts retained | Three single-attempt pipelines frozen before held-out scoring; BBBC039/007 annotations and BBBC013 treatment response |
 | Task-only authoring; Supplementary Data 8 | Separately qualified OpenHCS bundles; gpt-6.1-sol trials on 4 October 2026; original source, freeze and scorer identities in evaluation receipts | H001 first/final computational reference agreement; BBBC039 paired three-field repair and separate final full-200 reference agreement; no reference-score feedback |
 

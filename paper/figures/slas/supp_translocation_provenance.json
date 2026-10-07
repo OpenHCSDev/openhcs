@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/build_slas_supplement.py": "2256616b5111420bb4789748466ca224f8e13a1750316edad975dc93484f23e0",
     "paper/figures/slas/translocation_fresh23_provenance.json": "67517ba57556fcb24dd0481f4cff9809f9bde9329736f9b455f473ac23362bf3",
     "paper/figures/slas/translocation_fresh23.png": "3bda8db7aa8ed962f730d46ab491bb87b9fab5349a750990f03f51f8d00ed11a",
     "paper/figures/slas/independent_agent_validation_provenance.json": "8a26e3dcd1589dc31b6f4713148acf4cdcc7f9ee8a041a728d1dc5bfb7757bc8",
@@ -12,7 +12,7 @@
       "source": "paper/figures/slas/translocation_fresh23.png",
       "xyxy_pixels": [
         27,
-        270,
+        1328,
         2673,
         1980
       ],
@@ -35,10 +35,11 @@
       ]
     }
   ],
+  "display_transforms": [],
   "output_sha256": {
-    "supp_translocation.png": "ee4feabd857a3e55aff8cf70beb2b1f374be9c2f8fb59ed0792b5de0310f0275",
-    "supp_translocation.pdf": "b585438540ef82152f5338d17f07f7b988c817e8d2edce7bf6f776db0504bac1",
-    "supp_translocation.svg": "d5cd270e314167fcd26b299447659f47c2524a7627998fc86efb206753be0560"
+    "supp_translocation.png": "c8571c46bd1e94d2fcc971ed7e34cafb96fa9337ba7a37fd7110f38c1a909be5",
+    "supp_translocation.pdf": "78942bf8ef918e221d838a3cf672cfde00aed1ea23be0b351f572406ba658dc7",
+    "supp_translocation.svg": "f8be567a312d7f4f996005fc25a5ac14e678a1f2708d7faf8a6ac2ff5ce98f24"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

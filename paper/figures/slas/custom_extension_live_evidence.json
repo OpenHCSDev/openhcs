@@ -1,0 +1,55 @@
+{
+  "function_id": "openhcs:paper_rescale_signal",
+  "function_source": "paper/figures/slas/custom_signal_example.py",
+  "function_source_sha256": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
+  "settings": {
+    "gain": 1.2,
+    "offset": 0,
+    "enabled": true
+  },
+  "form": {
+    "image": "custom_extension_live_parameters_capture.png",
+    "native_envelope": "custom_extension_live_parameters_capture_provenance.json",
+    "crop_xyxy": [
+      20,
+      113,
+      310,
+      224
+    ]
+  },
+  "code": {
+    "image": "custom_extension_live_code_capture.png",
+    "native_envelope": "custom_extension_live_code_capture_provenance.json",
+    "crop_xyxy": [
+      70,
+      38,
+      500,
+      194
+    ],
+    "document": "custom_extension_live_code_document.json",
+    "button_receipt": "custom_extension_live_code_button.json"
+  },
+  "catalog_defaults": "custom_extension_live_function_detail.json",
+  "registration": "custom_extension_fixed_openhcs_register_custom_function.json",
+  "source_publication": {
+    "openhcs": "07684312615dd16691546470922bcfbd0627d08d",
+    "pyqt_reactive": "11924d92f654c88e1a11205e555b1726f30153f9"
+  },
+  "verification": {
+    "native_form_and_code_capture": true,
+    "same_function_settings_readback": true,
+    "roundtrip_edit_apply_tested": false,
+    "analysis_executed": false,
+    "installed_packages_modified": false,
+    "default_compact_widget_tree": "Succeeded in fresh MCP with PYTHONPATH=/home/ts/code/projects/openhcs/external/pyqt-reactive/src:/home/ts/code/projects/openhcs against unchanged live GUI",
+    "dependency_tests": "4 passed",
+    "openhcs_tests": "39 passed; 4 unrelated viewer-render fixture failures: missing McpDevToolBatchResponse.server"
+  },
+  "cleanup": {
+    "gui_pid": 3767566,
+    "execution_runtime_pid": 3763836,
+    "gui_exited": true,
+    "execution_runtime_process_exited": true,
+    "receipt": "custom_extension_fixed_cleanup.json"
+  }
+}

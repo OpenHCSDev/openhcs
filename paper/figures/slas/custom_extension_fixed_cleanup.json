@@ -1,0 +1,56 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "handle": {
+            "connection": {
+              "host": "localhost",
+              "persistent": true,
+              "port": 7895,
+              "transport_mode": "ipc"
+            },
+            "launch_plan": {
+              "log_file": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/data/openhcs/logs/openhcs_zmq_server_port_7895_1791399906258259821.log",
+              "registry_cache_dir": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/cache/metaclass-registry",
+              "runtime_dir": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/data/openhcs",
+              "startup_status_file": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/data/openhcs/logs/openhcs_zmq_server_port_7895_1791399906258259821.startup.jsonl",
+              "storage_dir": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/data/openhcs/custom_functions",
+              "transport_write_paths": [
+                "/home/ts/.openhcs/ipc/openhcs-zmq-8895.sock.startup.lock",
+                "/home/ts/.openhcs/ipc/openhcs-zmq-7895.sock.startup.lock",
+                "/home/ts/.openhcs/ipc/openhcs-zmq-8895.sock",
+                "/home/ts/.openhcs/ipc/openhcs-zmq-7895.sock"
+              ]
+            },
+            "process_identity": {
+              "create_time": 1791399905.45,
+              "pid": 3763836
+            }
+          },
+          "outcome": {
+            "acknowledged": true,
+            "endpoint_terminated": true,
+            "process_exited": true,
+            "process_identity": {
+              "create_time": 1791399905.45,
+              "pid": 3763836
+            },
+            "request_attempted": true,
+            "succeeded": true
+          },
+          "schema_version": "openhcs.agent.v1",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_close_owned_runtime"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

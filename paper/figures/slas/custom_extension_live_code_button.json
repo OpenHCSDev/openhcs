@@ -1,0 +1,32 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "action_kind": "auto",
+          "errors": [],
+          "invoked": true,
+          "path_id": "1.0.0.1.1.1",
+          "receipt": {
+            "accepted": true,
+            "bridge_operation_id": "ae3dd4f7-3d1f-4c0c-87f2-3ac8abe395f2",
+            "request_token": {
+              "value": null
+            }
+          },
+          "schema_version": "openhcs.agent.v1",
+          "summary": null,
+          "warnings": [],
+          "window_id": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0"
+        }
+      ],
+      "tool": "openhcs_ui_invoke_widget_action"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

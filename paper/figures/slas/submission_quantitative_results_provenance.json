@@ -1,12 +1,113 @@
 {
-  "generator_sha256": "4acb5fc9cff7f7bcc8e0c028824b10c9afc74bcbfd817bf851571767200b6b02",
+  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
   "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "2256616b5111420bb4789748466ca224f8e13a1750316edad975dc93484f23e0",
+    "paper/figures/slas/retina_fresh16_repair_provenance.json": "f39d713943b269186ab023e2573e85dec731590d78f8564666aefd07c6f159cd",
+    "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst": "6ef4dc1a8f79379c19d5309cc77e133aa8d11da971470e70511830b780cefb72",
+    "paper/figures/slas/retina_fresh16_sources/nw-raw.png": "d38ca5c3901a95fad0e4006859d7a374f4a048b9f320648d875717900202bf4b",
+    "paper/figures/slas/retina_fresh16_sources/nw-first.png": "1112cafcd58ae2e09e15d409b7233dd9987177801a915cd91d287f0061f75666",
+    "paper/figures/slas/retina_fresh16_sources/nw-final.png": "5879f9e9a4614e3213c3ee9f8b0d2c36e47c9c39b48fb9fcbccad2ac7c1fc25a",
+    "paper/figures/slas/h002_fresh22_sources/source-receipt.json": "0a88c11dab6a204e62ded7360bdf99533a26c83d20eeb278a8dc9d010fc40d07",
+    "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst": "4c5b7a81deea6da32eb2f20423b0e975ca3e778dee5cd813060db13a1749e001",
+    "paper/figures/slas/h002_fresh22_sources/raw.png": "d4a5e1aeb3ad88bf4426f8028ecf0aecd74d6796b2e92e6fb5257deff1da52f5",
+    "paper/figures/slas/h002_fresh22_sources/first-labels.png": "1137aa91bd978124271de44e7f4fcf40e1868a0c5170a75f9239ce39f968e6cf",
+    "paper/figures/slas/h002_fresh22_sources/final-labels.png": "a184fa75bf18c6d215539ac5fbad6ba05b68fc6f778a6a912b3de371061592e7",
+    "paper/figures/slas/h002_fresh22_sources/final-combined.png": "62e3132a9c086a7a5e3f0fa4b9b639836510f80755e499ff2111a7e7c9401e87",
     "paper/figures/slas/h002_measurement_first_provenance.json": "d948f5ccc0370f974c5ce0674842587496d49cf5244a82c5fad60d3e2fd46eba",
-    "paper/figures/slas/h002_measurement_first.png": "339b9e2e987ec7dd6b89ca8e9e17651e9c61774ed22a195cc4b90cf18baa276d",
-    "paper/figures/slas/retinal_fresh_native_provenance.json": "4c5eb38b12132ad0211ce2fa5729d50a5235b2ca277c1a81c14f11aa719fe6c6",
-    "paper/figures/slas/retinal_fresh_native.png": "93d7a85de7c0d64bb4cacd9f680f3bef6de1058312cc9a56e9b763b9d676efcc"
+    "paper/figures/slas/h002_measurement_first.png": "339b9e2e987ec7dd6b89ca8e9e17651e9c61774ed22a195cc4b90cf18baa276d"
   },
   "ui_crops": [
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-raw.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-first.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-final.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_sources/raw.png",
+      "xyxy_pixels": [
+        610,
+        28,
+        1250,
+        448
+      ],
+      "source_size": [
+        1440,
+        950
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_sources/first-labels.png",
+      "xyxy_pixels": [
+        610,
+        28,
+        1250,
+        448
+      ],
+      "source_size": [
+        1440,
+        950
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_sources/final-labels.png",
+      "xyxy_pixels": [
+        610,
+        28,
+        1250,
+        448
+      ],
+      "source_size": [
+        1440,
+        950
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_sources/final-combined.png",
+      "xyxy_pixels": [
+        610,
+        28,
+        1250,
+        448
+      ],
+      "source_size": [
+        1440,
+        950
+      ]
+    },
     {
       "source": "paper/figures/slas/h002_measurement_first.png",
       "xyxy_pixels": [
@@ -19,38 +120,13 @@
         2700,
         2190
       ]
-    },
-    {
-      "source": "paper/figures/slas/retinal_fresh_native.png",
-      "xyxy_pixels": [
-        24,
-        790,
-        747,
-        1185
-      ],
-      "source_size": [
-        1520,
-        1730
-      ]
-    },
-    {
-      "source": "paper/figures/slas/retinal_fresh_native.png",
-      "xyxy_pixels": [
-        770,
-        790,
-        1493,
-        1185
-      ],
-      "source_size": [
-        1520,
-        1730
-      ]
     }
   ],
+  "display_transforms": [],
   "output_sha256": {
-    "submission_quantitative_results.png": "401da35d1ab0c9fe17efda5dfff957dbaf7a3067aefd3725195ca016c917413c",
-    "submission_quantitative_results.pdf": "f04a4e69550737b73cd133d1d7416cddc2e22dc1176bd68c2204f156feac4e17",
-    "submission_quantitative_results.svg": "26bd51123369a073fcb499f424ac1517520b164301b2fae72033afb2af02a25c"
+    "submission_quantitative_results.png": "52760f7e709e62f58f1163068107d38f3a4afe150aa071f1f4e9bb5c6d0aadea",
+    "submission_quantitative_results.pdf": "0d10d4af82a225e0c5384c23da3a74b7b1f39d4aa3c64b44a398a8b73cd4ea58",
+    "submission_quantitative_results.svg": "e4f86f0ef1fc91cf3d84c3a766f6fac6ca50ba1109437959f0b520f426e95986"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

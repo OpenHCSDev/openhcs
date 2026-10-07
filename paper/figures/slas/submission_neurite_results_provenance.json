@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "d62b9f7589c983f68e5c9a54e1225f572e46aa5ba854e8988fb8b67d91108e2f",
+  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
   "source_sha256": {
     "paper/figures/slas/neuroncyto_published_reference/source.json": "a6dc5d23e6abf7aabc676bddc8feab7c8ac264c9a31ca9071db1088d32608c26",
     "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
@@ -98,10 +98,62 @@
       ]
     }
   ],
+  "display_transforms": [
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/first-full-raw.png",
+      "operation": "RGB complement (255 - channel); display only",
+      "crop_xyxy_pixels": [
+        574,
+        39,
+        973,
+        438
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_fresh20_sources/first-full-result.png",
+      "operation": "RGB complement (255 - channel); display only",
+      "crop_xyxy_pixels": [
+        574,
+        39,
+        973,
+        438
+      ]
+    },
+    {
+      "source": "paper/figures/slas/p001_fresh13_sources/site1-raw.png",
+      "operation": "RGB complement (255 - channel); display only",
+      "crop_xyxy_pixels": [
+        550,
+        28,
+        997,
+        437
+      ]
+    },
+    {
+      "source": "paper/figures/slas/p001_fresh13_sources/site1-result.png",
+      "operation": "RGB complement (255 - channel); display only",
+      "crop_xyxy_pixels": [
+        550,
+        28,
+        997,
+        437
+      ]
+    },
+    {
+      "source": "paper/figures/slas/p001_fresh13_sources/site1-combined.png",
+      "operation": "RGB complement (255 - channel); display only",
+      "crop_xyxy_pixels": [
+        550,
+        28,
+        997,
+        437
+      ]
+    }
+  ],
   "output_sha256": {
-    "submission_neurite_results.png": "6012a4a9403943d444ca3976d5ebb70fb9e890304bb5301fc88484e084858420",
-    "submission_neurite_results.pdf": "76646fbf2686be7c975311fdced865820904a4b3a497a6ad936b88deb7cfa9f3",
-    "submission_neurite_results.svg": "f08294b4d9390732090af8a98d26cd850e35fc912c2a01be76f1c8cc17b0ed2c"
+    "submission_neurite_results.png": "f8b0ee0659e6c0f04a626b0eeaedaf7d758752c503461c33dc5544ee47e6c907",
+    "submission_neurite_results.pdf": "eaf2eb3564f792ff0196ace270dba4e4d5ba18962fc129d9f0e0754adc1532ac",
+    "submission_neurite_results.svg": "afa77521151cd174666e3b2f38d02acf420172e252b4b3b32ea9536618a4d4e8"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
