@@ -16,14 +16,24 @@ class NeuriteEffectFigure(FigureSheet):
 
     def __init__(self, tables: Path, *, stem: str, metrics=DEFAULT_METRICS):
         super().__init__(stem, "Neurite outgrowth: drug responses across methods", 2.0 * len(metrics) + 1.4)
-        self.source(Path(__file__))
-        self.source(ROOT / "paper/figures/compare_personal_neurite.py")
+        protocol_label = self.draw_panels(self, tables, metrics=metrics)
+        self.text(3, 91, protocol_label, size=11, color=MUTED)
+        self.text(3, 8, "Dots: two technical wells. Marks and whiskers: mean ± between-well SD, not confidence intervals.", size=10)
+        self.text(3, 4.5, "Each curve uses its own zero-dose DMSO mean. Dose positions are equally spaced for display.", size=10)
+        self.text(3, 1, "Within-method ratios compare response; they do not establish equivalent segmentation or absolute lengths.", size=10)
+
+    @staticmethod
+    def draw_panels(sheet: FigureSheet, tables: Path, *, metrics=DEFAULT_METRICS,
+                    bounds=(0, 0, 100, 100), start_letter="A"):
+        """Draw measured panels directly into a standalone or composite sheet."""
+        sheet.source(Path(__file__))
+        sheet.source(ROOT / "paper/figures/compare_personal_neurite.py")
         for name in ("joined_wells.csv", "treatment_effects.csv", "source_evidence.json"):
-            self.source(tables / name)
+            sheet.source(tables / name)
         wells = read_rows(tables / "joined_wells.csv")
         effects = read_rows(tables / "treatment_effects.csv")
         evidence = json.loads((tables / "source_evidence.json").read_text())
-        self.text(3, 91, evidence["protocol_figure_label"], size=11, color=MUTED)
+        x, y, width, extent = (value / 100 for value in bounds)
         declarations = endpoint_declarations()
         conditions = tuple(sorted({item["condition"] for item in effects}))
         limits = {}
@@ -37,13 +47,13 @@ class NeuriteEffectFigure(FigureSheet):
             limits[metric] = (lower - padding, upper + padding)
         for column, condition in enumerate(conditions):
             for row, metric in enumerate(metrics):
-                left = .14 + column * (.90 / len(conditions))
-                bottom = .12 + (len(metrics) - 1 - row) * (.75 / len(metrics))
-                height = .55 / len(metrics)
-                axis = self.figure.add_axes((left, bottom, .68 / len(conditions), height))
-                letter = chr(65 + row * len(conditions) + column)
+                left = x + width * (.14 + column * (.90 / len(conditions)))
+                bottom = y + extent * (.12 + (len(metrics) - 1 - row) * (.75 / len(metrics)))
+                height = extent * .55 / len(metrics)
+                axis = sheet.figure.add_axes((left, bottom, width * .68 / len(conditions), height))
+                letter = chr(ord(start_letter) + row * len(conditions) + column)
                 if row == 0:
-                    self.panel(letter, condition, left * 100, (bottom + height + .02) * 100)
+                    sheet.panel(letter, condition, left * 100, (bottom + height + extent * .02) * 100)
                 else:
                     axis.text(.02, .98, letter, transform=axis.transAxes,
                               va="top", fontsize=14, weight="bold", color=BLUE)
@@ -86,9 +96,7 @@ class NeuriteEffectFigure(FigureSheet):
                 axis.set_axisbelow(True)
                 if row == 0 and column == 0:
                     axis.legend(fontsize=9, frameon=False)
-        self.text(3, 8, "Dots: two technical wells. Marks and whiskers: mean ± between-well SD, not confidence intervals.", size=10)
-        self.text(3, 4.5, "Each curve uses its own zero-dose DMSO mean. Dose positions are equally spaced for display.", size=10)
-        self.text(3, 1, "Within-method ratios compare response; they do not establish equivalent segmentation or absolute lengths.", size=10)
+        return evidence["protocol_figure_label"]
 
 
 if __name__ == "__main__":

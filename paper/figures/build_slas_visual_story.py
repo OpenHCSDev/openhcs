@@ -761,6 +761,8 @@ def personal_stitched_development():
 
 
 def submission_neurite_results():
+    from build_slas_neurite_effects import NeuriteEffectFigure
+
     """Show the retained shaft illustration without promoting an overextended repair."""
     sheet = FigureSheet("submission_neurite_results", "", 10.1)
     public = OUTPUT / "h004_fresh20_sources"
@@ -786,9 +788,10 @@ def submission_neurite_results():
         sheet.text(x, 57, title, size=10.5, weight="bold")
         sheet.source_image(personal / f"site1-{name}.png", (x, 32, 30, 23), crop=(550, 28, 997, 437))
     sheet.panel("III", "Fixed-recipe transfer: treatment responses", 3, 28)
-    sheet.source(OUTPUT / "personal_neurite_effects_transfer_provenance.json")
-    sheet.source_image(OUTPUT / "personal_neurite_effects_transfer.png", (3, 3, 94, 23),
-                       crop=(90, 280, 2640, 1125))
+    NeuriteEffectFigure.draw_panels(
+        sheet, ROOT / "paper/supplementary/personal_neurite_transfer",
+        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="F",
+    )
     sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching remains under investigation.",
                size=9.5, color=MUTED)
     sheet.save()

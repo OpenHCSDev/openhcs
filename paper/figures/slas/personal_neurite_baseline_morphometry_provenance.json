@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "5ebb80d63f294ba45e01e36092a2856187bd529ae9262844052a3c9ade28790d",
+  "generator_sha256": "04be6a60bb3bccf38e7778f13599f27cd5072a153dc4daf0643a976c9e20da63",
   "source_sha256": {
-    "paper/figures/build_slas_neurite_effects.py": "255c8a2013fb77c80f9b947b68e5edf282b9c92391f5e25744200bd4451b13d3",
+    "paper/figures/build_slas_neurite_effects.py": "45eab33bd8dbb9d9df9c67e246584cbc41531a7ba84398ed434bc3d8ab6891fb",
     "paper/figures/compare_personal_neurite.py": "444c14f3008d26b5d7febf8b095eeb738eda7dc24e584b97bdd160205eaaddfa",
     "paper/supplementary/personal_neurite_baseline_morphometry/joined_wells.csv": "b7e31d2da1b2b16834fde76104ca9c5e4c45d2d6967ecb7c31caf35f42fb0841",
     "paper/supplementary/personal_neurite_baseline_morphometry/treatment_effects.csv": "a754583329a3d0696112e5f5efa336ba259bc42904591c6683a1063d089c2931",
@@ -10,8 +10,8 @@
   "ui_crops": [],
   "output_sha256": {
     "personal_neurite_baseline_morphometry.png": "4ed47a484dc0c71229fad8a83fc474d907410cf4c77c4593e792dcdc4ea7a929",
-    "personal_neurite_baseline_morphometry.pdf": "34553dff842e3ee340f53de15a912c688dec06fbb94626d46379c34bedc3c76e",
-    "personal_neurite_baseline_morphometry.svg": "3706f0bd2ebd48f0c1b976fbb6f906a2fcce9877059161bce0bdc54c53e650ba"
+    "personal_neurite_baseline_morphometry.pdf": "ad4b0f445b724472300ac3f3d967d0cb5ad1a454f368c519e1e2672672e51fa3",
+    "personal_neurite_baseline_morphometry.svg": "686b966d70f7b861c6f4e000b1a18b17295535e5a97be9f5a4c9ab131a6b131c"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
