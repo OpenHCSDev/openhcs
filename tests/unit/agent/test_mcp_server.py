@@ -1015,7 +1015,7 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
     assert "napari_streaming_config" not in add_step_properties
 
 
-def test_mcp_widget_tree_projection_compacts_empty_action_fields():
+def test_mcp_widget_tree_projection_preserves_required_empty_action_fields():
     result = UiWidgetTreeResult(
         schema_version=SCHEMA_VERSION,
         window_id="plate_manager",
@@ -1061,9 +1061,22 @@ def test_mcp_widget_tree_projection_compacts_empty_action_fields():
         "global_geometry",
         "action_kinds",
         "clickable",
+        "object_name",
+        "accessible_name",
+        "accessible_description",
+        "checkable",
+        "checked",
+        "current_index",
+        "current_text",
+        "item_count",
+        "tool_tip",
     }
     assert action["label"] == "Compile"
     assert action["geometry"] == {"x": 8, "y": 160, "width": 72, "height": 24}
+    from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+
+    decoded = AgentDtoJsonCodec.dataclass_from_json(UiWidgetTreeResult, payload)
+    assert decoded == result
 
 
 def test_mcp_widget_tree_projection_preserves_semantic_action_values():
