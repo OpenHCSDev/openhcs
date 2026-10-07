@@ -39,6 +39,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ArtifactSpecRef,
 )
+from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
@@ -682,6 +683,11 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         if self._input_memory_type is None:
             image_payload_data(payload)
             self.contract.require_memory_types()
+        if isinstance(payload, ImagePayloadStackComposition):
+            return payload.compose(
+                memory_type=self._input_memory_type.value,
+                device_id=self.input_device_id,
+            )
         source = MemoryType(source_memory_type)
         if source is self._input_memory_type and not source.is_gpu:
             mask = image_payload_mask(payload)

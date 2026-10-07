@@ -399,3 +399,59 @@ def test_pure_2d_executor_selection_retains_exact_declared_executor():
         RuntimeBatchExecutionDomain.PURE_2D_SLICES: declared,
     })
     assert selected is declared
+
+
+def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(monkeypatch):
+    from openhcs.core.aligned_image_payload import (
+        AlignedImageSliceContext, ImageOutputBundle,
+    )
+    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.core.runtime_image_values import image_payload_mask
+    from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
+
+    pixels = tuple(np.full((3, 4), value, dtype=np.float32) for value in (0.25, 0.75))
+    masks = tuple(np.full((3, 4), value, dtype=bool) for value in (True, False))
+    source = ImageOutputBundle(
+        tuple(ImagePayloadMetadata().payload_with(data, mask)
+              for data, mask in zip(pixels, masks, strict=True)),
+        tuple(AlignedImageSliceContext.independent_main_flow(name)
+              for name in ("DNA", "Membrane")),
+    )
+    calls = []
+    original = ImageOutputBundle.compose
+
+    def observed(value, **destination):
+        calls.append(destination)
+        return original(value, **destination)
+
+    monkeypatch.setattr(ImageOutputBundle, "compose", observed)
+    invocation = compile_function_pattern(gaussian_blur, {}, {}).default_group.invocations[0]
+    placed = invocation.convert_input(source, "numpy")
+    invocation.main_flow_call_argument(placed)
+    image_payload_data(placed)
+    image_payload_mask(placed)
+
+    assert calls == [{"memory_type": "numpy", "device_id": None}]
+    np.testing.assert_array_equal(image_payload_data(placed), np.stack(pixels))
+    assert image_payload_data(placed).shape == (2, 3, 4)
+    assert image_payload_mask(placed).shape == (2, 3, 4)
+    assert placed.metadata.source_image_names == ("DNA", "Membrane")
+    np.testing.assert_array_equal(image_payload_mask(placed), np.stack(masks))
+
+
+def test_compiled_input_reuses_produced_stack_realization_without_copy():
+    from openhcs.core.aligned_image_payload import (
+        AlignedImageSliceContext, ProducedImageStack,
+    )
+    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
+
+    source = ProducedImageStack(
+        tuple(np.full((3, 4), value, dtype=np.float32) for value in (1, 2)),
+        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    invocation = compile_function_pattern(gaussian_blur, {}, {}).default_group.invocations[0]
+    placed = invocation.convert_input(source, "numpy")
+    assert invocation.convert_input(source, "numpy") is placed
+    assert image_payload_data(placed) is image_payload_data(source)
+    assert np.shares_memory(source.slices[0], image_payload_data(placed))
