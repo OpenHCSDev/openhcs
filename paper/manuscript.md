@@ -276,7 +276,7 @@ unseen test set.
 
 Following externally informed repairs, analysis of all 180 fields in 20 matched
 wells recovered increasing outgrowth-per-cell responses to FC-A and Y27632
-(Figure 5; Supplementary Figure 6). At 40 µM, OpenHCS fold changes were
+(Figure 5; Supplementary Figure 5). At 40 µM, OpenHCS fold changes were
 1.77 and 1.76, respectively, versus MetaXpress's 1.98 and 2.05. Total-outgrowth
 estimated fold changes were also smaller. Branches-per-cell fold changes were 1.65 versus
 3.00 for FC-A and 1.82 versus 3.26 for Y27632. OpenHCS control branch counts
@@ -354,7 +354,7 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 ![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
-**(I, A–C)** Same field and display scale: raw, initial OpenHCS and published NeuronCyto II (Ong et al., Figure 2D [@NeuronCytoII]; CC BY-NC 4.0). C is an algorithm comparison, not manual ground truth; its red annotations are original and exact pixel registration is unestablished. Later OpenHCS repair overextended the target. (II, D–F) Matched autonomous P001 views; overlapping fields were not deduplicated. A/B and D–F are display-inverted only; paths and measurements are unchanged. (III, G–H) Assisted 20-well responses, relative to each drug's DMSO mean. Dots: two technical wells/dose; whiskers: sample SD. Five additional endpoints: Supplementary Figure 6.
+**(I, A–C)** Same field and display scale: raw, initial OpenHCS and published NeuronCyto II (Ong et al., Figure 2D [@NeuronCytoII]; CC BY-NC 4.0). C is an algorithm comparison, not manual ground truth; its red annotations are original and exact pixel registration is unestablished. Later OpenHCS repair overextended the target. (II, D–F) Matched autonomous P001 views; overlapping fields were not deduplicated. A/B and D–F are display-inverted only; paths and measurements are unchanged. (III, G–H) Assisted 20-well responses, relative to each drug's DMSO mean. Dots: two technical wells/dose; whiskers: sample SD. Five additional endpoints: Supplementary Figure 5.
 
 
 ### Matched execution and total time across 30 workflows
@@ -363,7 +363,7 @@ The matched single-sample evaluation used [pending]{.benchmark-claim key=case_co
 
 Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=total_min}-fold and a median of [pending]{.benchmark-claim key=total_median}-fold. This comparison includes OpenHCS compilation and client coordination, separately from execution. Exact per-workflow times and the clock definitions accompany the same record.
 
-Measured multi-worker comparisons, total speedup versus assigned sample count, and individual workflow runtimes are shown in Supplementary Figure 7. Single-core amortization and exact efficiencies are retained in Supplementary Data 3.
+Measured multi-worker comparisons, total speedup versus assigned sample count, and individual workflow runtimes are shown in Supplementary Figure 6. Single-core amortization and exact efficiencies are retained in Supplementary Data 3.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -373,7 +373,7 @@ Measured multi-worker comparisons, total speedup versus assigned sample count, a
 
 ![Execution and compile-plus-run total speedups, showing means, medians and every matched workflow.](figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
 
-Execution and compile-plus-run total speedups for [pending]{.benchmark-claim key=case_count} workflows, using one selected source sample, one worker and one numerical thread. Coloured bars show mean speedup, grey points show individual workflows, and black lines show medians on a logarithmic scale. Each workflow's speedup is the ratio of independent engine medians from three repetitions after warmup; the dashed line marks equal runtime. All workflows passed the declared-output comparisons; this is workflow parity, not biological segmentation accuracy. Minimum and median execution speedups are [pending]{.benchmark-claim key=execution_min}-fold and [pending]{.benchmark-claim key=execution_median}-fold; corresponding total speedups are [pending]{.benchmark-claim key=total_min}-fold and [pending]{.benchmark-claim key=total_median}-fold. Record [pending]{.benchmark-claim key=record_name} supplies every panel and manuscript claim. The linear view, individual runtimes and sample-count comparisons appear in Supplementary Figure 7.
+Execution and compile-plus-run total speedups for [pending]{.benchmark-claim key=case_count} workflows, using one selected source sample, one worker and one numerical thread. Coloured bars show mean speedup, grey points show individual workflows, and black lines show medians on a logarithmic scale. Each workflow's speedup is the ratio of independent engine medians from three repetitions after warmup; the dashed line marks equal runtime. All workflows passed the declared-output comparisons; this is workflow parity, not biological segmentation accuracy. Minimum and median execution speedups are [pending]{.benchmark-claim key=execution_min}-fold and [pending]{.benchmark-claim key=execution_median}-fold; corresponding total speedups are [pending]{.benchmark-claim key=total_min}-fold and [pending]{.benchmark-claim key=total_median}-fold. Record [pending]{.benchmark-claim key=record_name} supplies every panel and manuscript claim. The linear view, individual runtimes and sample-count comparisons appear in Supplementary Figure 6.
 
 
 ## Discussion

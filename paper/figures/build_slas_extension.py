@@ -179,7 +179,15 @@ def extension(*, main_panel=False):
                        if isinstance(node, ast.Assign)
                        and any(isinstance(target, ast.Name) and target.id == "pattern"
                                for target in node.targets))
-        if ast.literal_eval(pattern.elts[0].args[0]) != entry["function_id"]:
+        imported_names = {
+            alias.asname or alias.name: (node.module, alias.name)
+            for node in code_tree.body if isinstance(node, ast.ImportFrom)
+            for alias in node.names
+        }
+        callable_expression = pattern.elts[0]
+        if not isinstance(callable_expression, ast.Name) or imported_names.get(
+            callable_expression.id
+        ) != (detail["entry"]["module"], entry["name"]):
             raise ValueError("Live code identifies a different function")
         live_parameters = ast.literal_eval(pattern.elts[1])
         if any(live_parameters[name] != value for name, value in source_defaults.items()):
@@ -205,7 +213,7 @@ def extension(*, main_panel=False):
         sheet.text(53, 54, "The same function and parameters", size=10, color=MUTED)
         sheet.text(53, 49, "Live editable Python", size=12, weight="bold")
         sheet.native_image("custom_extension_live_code_capture", (53, 25, 44, 23.3),
-                           crop=(70, 38, 500, 194), response_path=())
+                           crop=(70, 38, 530, 194), response_path=())
         sheet.text(53, 23, "Native form and code • OpenHCS 0.8.7", size=9, color=PURPLE)
         sheet.text(3, 20, "The same declaration also supplies the agent-facing catalog", size=11, weight="bold")
         for index, name in enumerate(parameter_names):

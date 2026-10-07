@@ -11,7 +11,7 @@
           "path_id": "1.0.0.1.1.1",
           "receipt": {
             "accepted": true,
-            "bridge_operation_id": "ae3dd4f7-3d1f-4c0c-87f2-3ac8abe395f2",
+            "bridge_operation_id": "293f8978-81dd-4da5-8b15-4d8c1b4bbee1",
             "request_token": {
               "value": null
             }
@@ -19,7 +19,7 @@
           "schema_version": "openhcs.agent.v1",
           "summary": null,
           "warnings": [],
-          "window_id": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0"
+          "window_id": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0"
         }
       ],
       "tool": "openhcs_ui_invoke_widget_action"

@@ -129,9 +129,18 @@ def test_public_canonical_source_evaluation_and_render_roundtrip_use_selected_ow
     assert document.pipeline_steps[0].func is function
     assert FunctionReferenceTransportAuthority.function_reference(function).resolve() is function
     rendered = PipelineDocumentAuthority.render(document)
-    assert f"get_function('openhcs:{name}')" in rendered
+    assert f"from openhcs.processing.custom_functions import {name}" in rendered
+    assert "get_function" not in rendered
     restored = PipelineDocumentAuthority.from_source(rendered)
     assert restored.pipeline_steps[0].func is function
+    reference = FunctionReferenceTransportAuthority.function_reference(function)
+    from openhcs.core.function_reference import ModuleExportRegistryFunctionReference
+    assert isinstance(reference, ModuleExportRegistryFunctionReference)
+    assert reference.composite_key == f"openhcs:{name}"
+    assert reference.resolve() is function
+    namespace = {}
+    exec(compile(rendered, '<direct-custom-source>', 'exec'), namespace)
+    assert namespace['pipeline_steps'][0].func is function
 
 
 def test_catalog_key_cannot_contradict_original_metadata_identity(source_owner, monkeypatch):

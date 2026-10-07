@@ -86,16 +86,6 @@ def morphology_checks():
     sheet.save()
 
 
-def neurite_morphology():
-    sheet = SupplementFigure("supp_neurite_morphology", 4.6)
-    sheet.heading("A–C  Assisted laboratory mosaic: sampled tile overlap", 99)
-    sheet.artwork("p001_stitched_dev13_native", (2, 52, 96, 43), crop=(1, 23, 99, 45))
-    sheet.heading("D–F  Field core: raw, bodies/paths and combined", 49)
-    sheet.artwork("p001_stitched_dev13_native", (2, 5, 96, 40), crop=(1, 63, 99, 84))
-    sheet.text(3, 1, "Assisted mosaic development; not an additional autonomous trial.", size=11)
-    sheet.save()
-
-
 def treatment_endpoints():
     """Additional endpoints from the existing well tables, not new analysis."""
     from build_slas_neurite_effects import NeuriteEffectFigure
@@ -126,6 +116,5 @@ if __name__ == "__main__":
     translocation()
     nuclear_instances()
     morphology_checks()
-    neurite_morphology()
     treatment_endpoints()
     scaling()

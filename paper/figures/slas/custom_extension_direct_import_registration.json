@@ -1,0 +1,70 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "connection": {
+            "host": "localhost",
+            "persistent": true,
+            "port": 7895,
+            "transport_mode": "ipc"
+          },
+          "errors": [],
+          "functions": [
+            {
+              "backend_tags": [
+                "openhcs",
+                "custom"
+              ],
+              "function_id": "openhcs:paper_rescale_signal",
+              "import_path": "openhcs.processing.custom_functions.paper_rescale_signal",
+              "library": "openhcs",
+              "module": "openhcs.processing.custom_functions",
+              "name": "paper_rescale_signal",
+              "signature": "paper_rescale_signal(gain=1.2, offset=0.0, *, enabled=True)",
+              "summary": "Rescale image intensities with a gain and offset."
+            }
+          ],
+          "next_steps": [
+            "Call openhcs_describe_function(function_id='openhcs:paper_rescale_signal'), then use openhcs_add_function_step or draft-pipeline-step."
+          ],
+          "observation_handle": {
+            "connection": {
+              "host": "localhost",
+              "persistent": true,
+              "port": 7895,
+              "transport_mode": "ipc"
+            },
+            "content_sha256": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
+            "function_name": "paper_rescale_signal",
+            "persist": true,
+            "server_identity": {
+              "create_time": 1791404742.44,
+              "pid": 3989094
+            },
+            "storage_dir": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/data/openhcs/custom_functions"
+          },
+          "persisted": true,
+          "registered_count": 1,
+          "schema_version": "openhcs.agent.v1",
+          "server_identity": {
+            "create_time": 1791404742.44,
+            "pid": 3989094
+          },
+          "source_file_paths": [
+            "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/data/openhcs/custom_functions/paper_rescale_signal.py"
+          ],
+          "storage_dir": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/data/openhcs/custom_functions",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_register_custom_function"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

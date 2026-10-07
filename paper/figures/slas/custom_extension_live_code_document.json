@@ -5,35 +5,35 @@
       "mcp_error": false,
       "payloads": [
         {
-          "current_revision_token": "5eb2d870eb8750b3538bc1428afe266c7726b7f9e8935e3ec70513afcd9cadf5",
+          "current_revision_token": "c68dd8530f468f7d6cb0ca0f97f132d2317284f47ca87bdef954fb329e552bd7",
           "current_snapshot": {
             "branch": "main",
             "index": 1,
             "is_current": true,
             "is_head": true,
-            "label": "edit plate_manager.orchestrator_config via MCP [/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate]",
+            "label": "edit plate_manager.orchestrator_config via MCP [/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate]",
             "num_states": 7,
-            "parent_snapshot_id": "861011ac-9882-4ed1-bf46-6e4c55463c07",
+            "parent_snapshot_id": "cfcfb33c-6e7b-4943-b442-28ff5228a743",
             "schema_version": "openhcs.agent.v1",
-            "snapshot_id": "cb049d2b-3eaa-4910-b3a7-e9f1b620697a",
-            "timestamp": "2026-10-07T15:13:41.987",
-            "timestamp_unix": 1791400421.9877012,
-            "uri": "openhcs://ui/snapshots/cb049d2b-3eaa-4910-b3a7-e9f1b620697a"
+            "snapshot_id": "798852c2-4175-41ca-b50d-b9423b2dd229",
+            "timestamp": "2026-10-07T16:28:37.079",
+            "timestamp_unix": 1791404917.0797312,
+            "uri": "openhcs://ui/snapshots/798852c2-4175-41ca-b50d-b9423b2dd229"
           },
           "errors": [],
           "mime_type": "text/x-python",
           "schema_version": "openhcs.agent.v1",
           "selected_scope_ids": [
-            "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0::func_0"
+            "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0"
           ],
           "selection_mode": "selected",
-          "sha256": "8b8cac281d4bd1a0728076517f25a814d5fc8c7f13382a27585116b67349fbe1",
-          "size_bytes": 248,
-          "source": "# Edit this function pattern and save to apply changes\n\nfrom openhcs.processing.func_registry import get_function\n\npattern = (get_function('openhcs:paper_rescale_signal'), {\n        'gain': 1.2,\n        'offset': 0.0,\n        'enabled': True\n    })",
+          "sha256": "f5b94fc621317ff0eefb9869e77b2d24c77266755df5e90d78a3ed1ccd60a3c5",
+          "size_bytes": 235,
+          "source": "# Edit this function pattern and save to apply changes\n\nfrom openhcs.processing.custom_functions import paper_rescale_signal\n\npattern = (paper_rescale_signal, {\n        'gain': 1.2,\n        'offset': 0.0,\n        'enabled': True\n    })",
           "summary": {
             "current_selection_count": 1,
             "identity": {
-              "document_id": "object_state_scope:/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0::func_0"
+              "document_id": "object_state_scope:/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0"
             },
             "readable": true,
             "schema_version": "openhcs.agent.v1",

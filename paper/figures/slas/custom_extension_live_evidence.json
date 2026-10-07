@@ -23,33 +23,56 @@
     "crop_xyxy": [
       70,
       38,
-      500,
+      530,
       194
     ],
-    "document": "custom_extension_live_code_document.json",
+    "leaf_document": "custom_extension_live_code_document.json",
+    "visible_editor_scope": "FunctionStep function-pattern list editor",
+    "visible_editor_window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139952243201584",
+    "visible_pattern_shape": "pattern = [(paper_rescale_signal, {...})]",
+    "leaf_document_scope": "object_state_scope:/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0",
+    "leaf_pattern_shape": "pattern = (paper_rescale_signal, {...})",
+    "scope_relation": "Screenshot shows the step-level one-element list; document receipt reads its selected callable tuple. Callable and settings match, but source bytes and scope differ. No exact-byte screenshot/document equivalence is claimed.",
     "button_receipt": "custom_extension_live_code_button.json"
   },
   "catalog_defaults": "custom_extension_live_function_detail.json",
-  "registration": "custom_extension_fixed_openhcs_register_custom_function.json",
-  "source_publication": {
-    "openhcs": "07684312615dd16691546470922bcfbd0627d08d",
-    "pyqt_reactive": "11924d92f654c88e1a11205e555b1726f30153f9"
+  "registration": "custom_extension_direct_import_registration.json",
+  "source_execution": {
+    "checkout": "/home/ts/code/projects/openhcs",
+    "base_main_head": "fd167f437f3f02bac0a134fd0b01fd3458c733e3",
+    "source_file": "openhcs/core/function_reference.py",
+    "source_state": "Working source changes on canonical main; not committed, deployed or installed",
+    "uncommitted_source_sha256": "04d1a70151825645e193eeae07fd9b888811d4044958e06b2a95c6f478071a56",
+    "PYTHONPATH": "/home/ts/code/projects/openhcs/external/pyqt-reactive/src:/home/ts/code/projects/openhcs",
+    "gui_pid": 3993763,
+    "bridge_port": 7896,
+    "runtime_pid": 3989094,
+    "runtime_port": 7895,
+    "bridge_receipt": "custom_extension_direct_import_bridge.json"
   },
   "verification": {
     "native_form_and_code_capture": true,
     "same_function_settings_readback": true,
-    "roundtrip_edit_apply_tested": false,
+    "unchanged_source_apply_tested": true,
+    "changed_parameter_ui_roundtrip_tested": false,
+    "roundtrip_outcome": "Selected leaf tuple document validated, then submitted unchanged once. Native operation completed unchanged (no-op); leaf source and revision readback identical. This is not a changed-parameter UI roundtrip.",
+    "roundtrip_receipts": ["custom_extension_direct_import_roundtrip_validate.json", "custom_extension_direct_import_roundtrip_apply.json", "custom_extension_direct_import_roundtrip_status.json"],
+    "direct_import_verified": true,
+    "leaf_document_source_sha256": "f5b94fc621317ff0eefb9869e77b2d24c77266755df5e90d78a3ed1ccd60a3c5",
+    "visible_editor_source_bytes_readback_retained": false,
+    "source_checks": "84 focused identity, formatter, transport, canonical custom lifecycle and authoring-roundtrip checks passed",
     "analysis_executed": false,
     "installed_packages_modified": false,
     "default_compact_widget_tree": "Succeeded in fresh MCP with PYTHONPATH=/home/ts/code/projects/openhcs/external/pyqt-reactive/src:/home/ts/code/projects/openhcs against unchanged live GUI",
-    "dependency_tests": "4 passed",
-    "openhcs_tests": "39 passed; 4 unrelated viewer-render fixture failures: missing McpDevToolBatchResponse.server"
+    "limitation": "Same generated source validated and applied as unchanged; no edited-value roundtrip claimed. Proven exact module exports use direct imports; reconstructed external wrappers retain get_function for exact registry identity."
   },
   "cleanup": {
-    "gui_pid": 3767566,
-    "execution_runtime_pid": 3763836,
+    "gui_pid": 3993763,
+    "execution_runtime_pid": 3989094,
     "gui_exited": true,
     "execution_runtime_process_exited": true,
-    "receipt": "custom_extension_fixed_cleanup.json"
+    "mcp_exited": true,
+    "xvfb_exited": true,
+    "receipt": "custom_extension_direct_import_cleanup.json"
   }
 }

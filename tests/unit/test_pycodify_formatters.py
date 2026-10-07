@@ -23,6 +23,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.function_reference import (
     FunctionReferenceTransportAuthority,
+    ModuleExportRegistryFunctionReference,
     RegistryFunctionReference,
 )
 from openhcs.core.function_step_document import FunctionStepDocumentAuthority
@@ -120,6 +121,23 @@ def test_function_reference_formats_from_declared_identity_without_resolution(
     assert "from openhcs.processing.func_registry import get_function" in source
     assert "config = get_function('remote_gpu:gpu_filter')" in source
     assert "remote_backend.filters" not in source
+
+
+def test_module_export_registry_reference_uses_direct_import_without_resolution(monkeypatch):
+    reference = ModuleExportRegistryFunctionReference(
+        import_identity=CallableImportIdentity(
+            module_name="declared.functions", function_name="exported_filter",
+        ),
+        composite_key="registry:exported_filter",
+    )
+    monkeypatch.setattr(
+        RegistryFunctionReference, "resolve",
+        lambda self: (_ for _ in ()).throw(AssertionError("must not resolve")),
+    )
+    source = _source(reference)
+    assert "from declared.functions import exported_filter" in source
+    assert "config = exported_filter" in source
+    assert "get_function" not in source
 
 
 def test_clean_pipeline_config_omits_empty_inherited_lazy_config_groups():

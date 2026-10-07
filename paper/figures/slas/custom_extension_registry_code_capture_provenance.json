@@ -13,14 +13,14 @@
           "observation": null,
           "observation_timeout_s": 5,
           "operation_id": null,
-          "output_dir_path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures",
+          "output_dir_path": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/captures",
           "resource": {
             "mime_type": "image/png",
-            "path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures/20261007T203207861469Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png",
-            "sha256": "3c61d091c21e73a8580db50f14c94cfff336661e31dad8b8fef95c40d6966b82",
-            "size_bytes": 25411,
+            "path": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/captures/20261007T192121680391Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png",
+            "sha256": "1f8f88df76f43db07fce32168686b8bb19f0571ae278df740edfc1c5da96a9b1",
+            "size_bytes": 27754,
             "title": "Edit Function Pattern",
-            "uri": "file:///home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures/20261007T203207861469Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png"
+            "uri": "file:///home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/captures/20261007T192121680391Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png"
           },
           "schema_version": "openhcs.agent.v1",
           "summary": {
@@ -28,11 +28,11 @@
             "dirty_field_count": 0,
             "focusable": true,
             "identity": {
-              "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139952243201584"
+              "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139736840707664"
             },
             "managed_action_ids": [],
             "manager_scope": {
-              "value": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139952243201584"
+              "value": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139736840707664"
             },
             "object_state_scope_id": null,
             "schema_version": "openhcs.agent.v1",
@@ -45,7 +45,7 @@
           },
           "warnings": [],
           "width": 900,
-          "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139952243201584"
+          "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139736840707664"
         }
       ],
       "tool": "openhcs_ui_snapshot_window"

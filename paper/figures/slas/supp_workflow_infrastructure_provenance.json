@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "c104b73ce497f0c5c61ad2975b92d76a9e358e1a4fef5aeceab55bf012aa5b52",
+  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "265f2d1fdb57d7e9c09894cfe1bfa1c98b33279c4df77d7799adc7b3fee4b2b1",
+    "paper/figures/build_slas_supplement.py": "9ec518be210e042acb002d837c74babd1dcc7e9df4b49f9c24dc6fa13d788abb",
     "paper/figures/slas/runtime_composition_provenance.json": "c414adb479e97dffea0cab6bb146ba16671fd385223969c3bbb9a5c6326f4b34",
     "paper/figures/slas/runtime_composition.png": "11abab9bbcccbf1cf83a7ec699815367c95f2c1ed39ec9b75411e43c2f6bbdc7",
     "paper/figures/slas/compiler_preparation_provenance.json": "48050c49dbe30c0368e68b01a117ffd6046e72c30e477db03a6ce78c21e15171",
@@ -38,8 +38,8 @@
   "display_transforms": [],
   "output_sha256": {
     "supp_workflow_infrastructure.png": "e94c220e9c4819389a1dce0c85a02b68cfa08751e5fa1c42a0ee4cd83a081d3c",
-    "supp_workflow_infrastructure.pdf": "7b579fd18ac6bb07bbe8ba8d66292e7c6b0d16b3cc17b1fd916bd21440fadf4a",
-    "supp_workflow_infrastructure.svg": "7b98de37359caf9408b59a70ff013c0c1b26894701c98c4e994dacf8fa3ef264"
+    "supp_workflow_infrastructure.pdf": "3c75c7fcee30c54b24027acbdefa4aa1b96bc8628ef3b93d8c149007e37b1bea",
+    "supp_workflow_infrastructure.svg": "bb28001e3315ac0728b1c14fa250d786020f6e6f16403ae207c1208ad8183335"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

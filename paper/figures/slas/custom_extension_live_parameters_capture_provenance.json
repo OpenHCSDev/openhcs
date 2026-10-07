@@ -13,14 +13,14 @@
           "observation": null,
           "observation_timeout_s": 5,
           "operation_id": null,
-          "output_dir_path": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/captures",
+          "output_dir_path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures",
           "resource": {
             "mime_type": "image/png",
-            "path": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/captures/20261007T191545881050Z_home_ts_.cache_agent-scratch_custom-authoring-fixed-20261007_plate_functionstep__Edit_Step_1._Rescale_signal.png",
+            "path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures/20261007T203222276255Z_home_ts_.cache_agent-scratch_direct-import-authoring-20261007_plate_functionstep_Edit_Step_1._Rescale_signal.png",
             "sha256": "b0b01254363ecf87c321a6ed734be099cdda914668a57a7e01038b429787447d",
             "size_bytes": 24462,
             "title": "Edit Step: 1. Rescale signal",
-            "uri": "file:///home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/captures/20261007T191545881050Z_home_ts_.cache_agent-scratch_custom-authoring-fixed-20261007_plate_functionstep__Edit_Step_1._Rescale_signal.png"
+            "uri": "file:///home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures/20261007T203222276255Z_home_ts_.cache_agent-scratch_direct-import-authoring-20261007_plate_functionstep_Edit_Step_1._Rescale_signal.png"
           },
           "schema_version": "openhcs.agent.v1",
           "summary": {
@@ -28,7 +28,7 @@
             "dirty_field_count": 0,
             "focusable": true,
             "identity": {
-              "window_id": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0::func_0"
+              "window_id": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0"
             },
             "managed_action_ids": [
               "save_and_close",
@@ -36,9 +36,9 @@
               "discard_and_close"
             ],
             "manager_scope": {
-              "value": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0"
+              "value": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0"
             },
-            "object_state_scope_id": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0",
+            "object_state_scope_id": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0",
             "schema_version": "openhcs.agent.v1",
             "semantic_markers": [
               "_"
@@ -51,7 +51,7 @@
           },
           "warnings": [],
           "width": 550,
-          "window_id": "/home/ts/.cache/agent-scratch/custom-authoring-fixed-20261007/plate::functionstep_0::func_0"
+          "window_id": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0"
         }
       ],
       "tool": "openhcs_ui_snapshot_window"
