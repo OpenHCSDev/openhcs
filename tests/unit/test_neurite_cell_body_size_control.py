@@ -42,6 +42,27 @@ def test_default_gate_rejects_area_qualified_small_body_and_declared_gate_accept
     )
 
 
+def test_signal_growth_applies_the_same_independent_body_contract():
+    calibration = 1.3556
+    image = _small_body_image()
+    nuclei = np.zeros(image.shape, dtype=np.int32)
+    nuclei[30:33, 30:33] = 1
+    settings = MetaXpressCellBodySettings(
+        minimum_area=100.0,
+        approximate_max_width=30.0,
+        intensity_above_local_background=100.0,
+    )
+    rejected = _derive_signal_cell_bodies(
+        nuclei, image, settings, calibration, bright_objects=True
+    )
+    accepted = _derive_signal_cell_bodies(
+        nuclei, image, replace(settings, minimum_inscribed_diameter_px=5.0),
+        calibration, bright_objects=True,
+    )
+    assert not np.any(rejected)
+    np.testing.assert_array_equal(accepted, (image > 0).astype(np.int32))
+
+
 @pytest.mark.parametrize(
     "overrides",
     (

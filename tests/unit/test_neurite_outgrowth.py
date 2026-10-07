@@ -960,6 +960,31 @@ def test_owned_geometric_crossing_uses_nominal_owner_as_branch():
     assert len(topology.branch_nodes_by_cell[1]) == 1
 
 
+def test_crossing_cluster_counts_three_owned_arms_across_physical_nodes():
+    labels = np.zeros((70, 70), dtype=np.int32)
+    first, second = (32, 30), (35, 34)
+    terminals = ((32, 5), (55, 15), (35, 60), (10, 50))
+    rows, columns = line(*first, *second)
+    labels[rows, columns] = 1
+    for junction, terminal, owner in zip(
+        (first, first, second, second), terminals, (1, 1, 1, 2), strict=True
+    ):
+        rows, columns = line(*junction, *terminal)
+        labels[rows, columns] = owner
+    bodies = np.zeros_like(labels)
+    bodies[30:35, 3:9] = 1
+    bodies[7:13, 47:53] = 2
+    topology = _analyze_topology(
+        labels > 0, bodies, 1.0, 8.0, assigned_path_labels=labels,
+    )
+    # Three same-owner arms are now a branch, not a retained two-arm crossover.
+    assert topology.crossing_nodes == frozenset()
+    assert set(topology.branch_nodes_by_cell) == {1}
+    assert len(topology.branch_nodes_by_cell[1]) == 1
+    assert set(topology.path_branch_types[topology.path_owners == 1]) == {1}
+    assert set(topology.path_branch_types[topology.path_owners == 2]) == {0}
+
+
 @pytest.mark.parametrize("pixel_size_um", [0.5, 1.0, 1.3556, 2.0])
 def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_um):
     skeleton = np.zeros((70, 70), dtype=bool)
@@ -2031,7 +2056,9 @@ def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch)
 
     assert set(np.unique(bodies)) == {0, 1, 2}
     assert observed_shapes[0] == shape
-    assert len(observed_shapes) == 3
+    # One global foreground transform, then bounded nearest-seed and final
+    # inscribed-diameter qualification transforms for each admitted body.
+    assert len(observed_shapes) == 5
     assert all(
         rows < shape[0] and columns < shape[1] for rows, columns in observed_shapes[1:]
     )
@@ -2077,6 +2104,9 @@ def test_signal_body_derivation_enforces_maximum_width_from_nuclear_centroid():
             minimum_area=10.0,
             intensity_above_local_background=100.0,
             channel_index=1,
+            # This fixture tests the upper extent; its thin rectangular body
+            # does not meet the independently tested default lower-size gate.
+            minimum_inscribed_diameter_px=0.0,
         ),
         1.0,
         bright_objects=True,

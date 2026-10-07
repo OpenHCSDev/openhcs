@@ -340,7 +340,6 @@ class CellProfilerNeuriteEngineProfile:
             bright_objects=bright_objects,
         )
         outgrowth_binary = admission.mask
-        outgrowth_skeleton = admission.skeleton
         outgrowth_response = admission.response
         outgrowth_width_px = outgrowth.maximum_width_px(coordinate_scale)
         nuclear_seed_mode = use_nuclear_stain and body_detection_channel_index == int(
@@ -376,6 +375,7 @@ class CellProfilerNeuriteEngineProfile:
                 bright_objects=bright_objects,
             )
 
+        outgrowth_skeleton = admission.skeleton_for(cell_body_labels)
         topology = _analyze_topology(
             outgrowth_skeleton,
             cell_body_labels,
@@ -1153,12 +1153,28 @@ class NeuriteAdmissionResult:
     """Detection and diagnostic consumers share one original execution."""
 
     mask: np.ndarray
-    skeleton: np.ndarray
     planes: NeuriteAdmissionPlanes
 
     @property
     def response(self) -> np.ndarray:
         return self.planes.local_response
+
+    def skeleton_for(self, cell_body_labels: np.ndarray) -> np.ndarray:
+        """Thin admitted shafts with accepted somas as solid root support.
+
+        Tubeness can respond to a soma's perimeter without its interior. Thinning
+        that hollow response first invents a ring which survives later soma
+        exclusion as fringe junctions. The accepted body labels already own
+        soma support; use them before thinning, without filling genuine shaft
+        loops or changing the independently retained admission evidence.
+        """
+        bodies = np.asarray(cell_body_labels)
+        if bodies.shape != self.mask.shape:
+            raise ValueError("cell bodies and neurite admission must share a shape")
+        payload = _raw_processing_leaf(medialaxis)(
+            (self.mask | (bodies > 0)).astype(np.float32, copy=False)
+        )
+        return np.asarray(image_payload_data(payload)) > 0
 
 
 # Both callable ABIs derive diagnostic slots from the same stage declaration.
@@ -1216,6 +1232,52 @@ class _TopologyResult:
     root_paths_by_cell: Mapping[int, tuple[int, ...]]
     branch_nodes_by_cell: Mapping[int, tuple[int, ...]]
     resolved_crossings: tuple[_ResolvedCrossing, ...]
+
+    @staticmethod
+    def classify_owned_endpoints(
+        path_owners: np.ndarray,
+        path_endpoint_groups: Sequence[Sequence[int]],
+        crossing_core_paths: set[int],
+        endpoint_group_coordinates: Mapping[int, tuple[float, float]],
+        *,
+        merge_radius: float,
+    ) -> tuple[np.ndarray, dict[int, tuple[int, ...]]]:
+        """Derive path types and branch events from the same final ownership.
+
+        Logical crossing groups can span several physical skeleton nodes. A
+        physical anchor's incidence is therefore not their degree. Count
+        distinct owned paths at each logical endpoint, excluding crossing
+        cores and counting a closed path only once for branch eligibility.
+        Branch identities are endpoint-group IDs, like the exported graph.
+        """
+        endpoint_paths: dict[tuple[int, int], set[int]] = defaultdict(set)
+        for path_index, groups in enumerate(path_endpoint_groups):
+            owner = int(path_owners[path_index])
+            if owner > 0 and path_index not in crossing_core_paths:
+                for group in set(groups):
+                    endpoint_paths[owner, group].add(path_index)
+        branch_groups: dict[int, list[int]] = defaultdict(list)
+        for (owner, group), paths in endpoint_paths.items():
+            if len(paths) >= 3:
+                branch_groups[owner].append(group)
+        branch_types = np.zeros(len(path_owners), dtype=np.int32)
+        for path_index, groups in enumerate(path_endpoint_groups):
+            owner = int(path_owners[path_index])
+            if owner <= 0 or path_index in crossing_core_paths:
+                continue
+            branch_types[path_index] = (
+                3 if groups[0] == groups[1] else sum(
+                    len(endpoint_paths[owner, group]) >= 3 for group in groups
+                )
+            )
+        coordinates = {
+            group: np.asarray(coordinate)
+            for group, coordinate in endpoint_group_coordinates.items()
+        }
+        return branch_types, {
+            owner: _merge_nearby_nodes(groups, coordinates, radius=merge_radius)
+            for owner, groups in branch_groups.items()
+        }
 
     @property
     def crossing_nodes(self) -> frozenset[int]:
@@ -1785,13 +1847,8 @@ def _identify_neurites_cellprofiler(
     )
     local_support = response >= settings.intensity_above_local_background
     outgrowth_mask = cp_mask & local_support
-    skeleton_payload = _raw_processing_leaf(medialaxis)(
-        outgrowth_mask.astype(np.float32, copy=False)
-    )
-    skeleton = np.asarray(image_payload_data(skeleton_payload)) > 0
     return NeuriteAdmissionResult(
         outgrowth_mask,
-        skeleton,
         NeuriteAdmissionPlanes(
             np.asarray(image_payload_data(enhanced)), threshold_support, cp_mask,
             response, local_support,
@@ -2022,14 +2079,11 @@ def _derive_signal_cell_bodies(
         local_bodies = bodies[owner_slice]
         local_bodies[body] = owner
 
-    # Later seeds can overwrite shared pixels after an earlier body passed the
-    # area check. Reapply the public minimum-area contract to the final masks.
-    final_areas = np.bincount(
-        bodies.ravel(),
-        minlength=int(seeds.max()) + 1,
-    )
-    keep = final_areas >= minimum_area_px
-    keep[0] = False
+    # Hole filling and later seeds can change an admitted region's geometry and
+    # response. Qualify the final masks through the same declared body contract
+    # as compact and propagated bodies, including the independent lower-size
+    # gate. Keep nuclear identities here; the caller owns dense relabelling.
+    keep = settings.contract_candidates(bodies, response, coordinate_scale)
     return np.where(keep[bodies], bodies, 0).astype(np.int32, copy=False)
 
 
@@ -2303,7 +2357,6 @@ def _analyze_topology(
     path_euclidean_lengths = branch_table["euclidean_distance"].to_numpy(dtype=float)
     node_incidence: dict[int, list[int]] = defaultdict(list)
     node_endpoints: dict[int, list[tuple[int, int]]] = defaultdict(list)
-    node_coordinates: dict[int, np.ndarray] = {}
     path_endpoint_nodes: list[tuple[int, int]] = []
     for path_index, row in branch_table.iterrows():
         source = int(row["node_id_src"])
@@ -2313,17 +2366,10 @@ def _analyze_topology(
         node_incidence[destination].append(path_index)
         node_endpoints[source].append((path_index, 0))
         node_endpoints[destination].append((path_index, 1))
-        node_coordinates[source] = np.array(
-            [row["image_coord_src_0"], row["image_coord_src_1"]], dtype=float
-        )
-        node_coordinates[destination] = np.array(
-            [row["image_coord_dst_0"], row["image_coord_dst_1"]], dtype=float
-        )
 
     transitions: dict[int, set[int]] = {
         path_index: set() for path_index in range(path_count)
     }
-    branch_nodes: set[int] = set()
     crossing_nodes: set[int] = set()
     path_endpoint_groups = [[0, 0] for _ in range(path_count)]
     endpoint_group_coordinates: dict[int, tuple[float, float]] = {}
@@ -2399,10 +2445,6 @@ def _analyze_topology(
         elif node in crossing_cluster_nodes:
             continue
         else:
-            incident_paths = node_incidence[node]
-            unique_paths = sorted(set(incident_paths))
-            if len(unique_paths) >= 3:
-                branch_nodes.add(node)
             endpoint_groups = (tuple(node_endpoints[node]),)
 
         for endpoint_group in endpoint_groups:
@@ -2485,8 +2527,6 @@ def _analyze_topology(
             merged_group = min(endpoint_groups)
             for path_index, endpoint_index in endpoints:
                 path_endpoint_groups[path_index][endpoint_index] = merged_group
-            if len(owner_paths) >= 3:
-                branch_nodes.add(node)
     roots_by_cell: dict[int, list[int]] = defaultdict(list)
     for path_index, labels in root_labels_by_path.items():
         owner = int(path_owners[path_index])
@@ -2498,22 +2538,13 @@ def _analyze_topology(
         transitions,
         roots_by_cell,
     )
-    path_branch_types = _owner_qualified_path_branch_types(
+    path_branch_types, branch_nodes_by_cell = _TopologyResult.classify_owned_endpoints(
         path_owners,
         path_endpoint_groups,
         crossing_core_paths,
+        endpoint_group_coordinates,
+        merge_radius=max(1.0, outgrowth_width_px),
     )
-
-    branch_nodes_by_cell: dict[int, list[int]] = defaultdict(list)
-    for node in branch_nodes:
-        owned_degrees = Counter(
-            int(path_owners[path_index])
-            for path_index in set(node_incidence[node])
-            if path_owners[path_index] > 0
-        )
-        for owner, degree in owned_degrees.items():
-            if degree >= 3:
-                branch_nodes_by_cell[owner].append(node)
 
     resolved_crossings = tuple(
         _ResolvedCrossing(node, crossing_paths_by_node[node],
@@ -2535,14 +2566,7 @@ def _analyze_topology(
         root_paths_by_cell={
             cell: tuple(sorted(set(paths))) for cell, paths in roots_by_cell.items()
         },
-        branch_nodes_by_cell={
-            owner: _merge_nearby_nodes(
-                nodes,
-                node_coordinates,
-                radius=max(1.0, outgrowth_width_px),
-            )
-            for owner, nodes in branch_nodes_by_cell.items()
-        },
+        branch_nodes_by_cell=branch_nodes_by_cell,
         resolved_crossings=tuple(
             crossing for crossing in resolved_crossings
             if crossing.crossover_paths(path_owners)
@@ -2671,12 +2695,9 @@ def _analyze_owned_topology(
             root_paths_by_cell[int(cell)] = tuple(root + path_offset for root in roots)
 
         local_node_ids = set(local.crossing_nodes)
-        local_node_ids.update(
-            node for nodes in local.branch_nodes_by_cell.values() for node in nodes
-        )
         branch_nodes_by_cell.update(
             {
-                int(cell): tuple(node + node_offset for node in nodes)
+                int(cell): tuple(group_mapping[group] for group in nodes)
                 for cell, nodes in local.branch_nodes_by_cell.items()
             }
         )
@@ -2875,34 +2896,6 @@ def _retain_soma_rooted_path_owners(
     if detached_paths:
         path_owners[detached_paths] = 0
         path_distances[detached_paths] = np.inf
-
-
-def _owner_qualified_path_branch_types(
-    path_owners: np.ndarray,
-    path_endpoint_groups: Sequence[Sequence[int]],
-    crossing_core_paths: set[int],
-) -> np.ndarray:
-    """Classify paths from final owner-specific logical endpoint degrees."""
-
-    endpoint_degrees = Counter(
-        (int(path_owners[path_index]), group_id)
-        for path_index, endpoint_groups in enumerate(path_endpoint_groups)
-        if path_owners[path_index] > 0 and path_index not in crossing_core_paths
-        for group_id in endpoint_groups
-    )
-    branch_types = np.zeros(len(path_owners), dtype=np.int32)
-    for path_index, endpoint_groups in enumerate(path_endpoint_groups):
-        owner = int(path_owners[path_index])
-        if owner <= 0 or path_index in crossing_core_paths:
-            continue
-        source_group, destination_group = endpoint_groups
-        if source_group == destination_group:
-            branch_types[path_index] = 3
-            continue
-        branch_types[path_index] = sum(
-            endpoint_degrees[owner, group_id] >= 3 for group_id in endpoint_groups
-        )
-    return branch_types
 
 
 def _propagate_path_owners(
