@@ -101,7 +101,8 @@ PAPER = PaperDefinition(
     declaration=Path(__file__).resolve(),
     documents=(
         DocumentDefinition(DocumentRole.MANUSCRIPT, (Path("manuscript.md"),),
-                           layout=CaptionedFiguresLayout(caption_font_size_pt=10)),
+                           layout=CaptionedFiguresLayout(caption_font_size_pt=10,
+                                                         fill_text_width=True)),
         DocumentDefinition(DocumentRole.SUPPLEMENT, (
             Path("supplementary/README.md"),
             Path("supplementary/task_only_analysis/trial_resource_tables.md"),

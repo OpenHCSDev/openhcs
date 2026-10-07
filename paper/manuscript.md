@@ -59,10 +59,10 @@ Microscope handlers interpret acquisition-specific layouts and metadata. Bio-For
 
 ### Figure 1. Scientists can inspect and edit the agent's analysis
 
-![Full-width native main window with boxes marking the plate manager, pipeline editor and execution servers.](figures/slas/submission_shared_workflow.png){width=6.5in}
+![Full-width high-resolution native workspace with two example plates and a nine-step pipeline; boxes mark its existing controls.](figures/slas/submission_shared_workflow.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(I)** One native OpenHCS 0.8.5 main window, with boxes identifying its plate manager, pipeline editor and execution-server list. The full-width view has no duplicated cutouts or extra application windows. The supplementary package retains the editing record and capture provenance.
+**(I)** Native OpenHCS 0.8.7 workspace with ExampleHuman and ExampleFly folders loaded and the editor displaying the nine-step ExampleHuman recipe. One continuous crop of the 2048 × 1536 capture excludes the monitoring dashboard; no stitching, vertical stretching or duplicate insets are used. Blue outlines identify existing controls. This authoring demonstration did not execute analysis or restart the execution service. Full original capture and earlier editing records: Supplementary Data 3.
 :::
 
 

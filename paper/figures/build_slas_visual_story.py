@@ -180,10 +180,11 @@ class FigureSheet:
         self.source(record_path)
         self.source_image(path, bounds, crop=crop)
 
-    def native_image(self, name, bounds, *, crop=None, response_path=("response",)):
+    def native_image(self, name, bounds, *, crop=None, response_path=("response",),
+                     provenance_path=None):
         """Use an unmodified screenshot checked against its native MCP receipt."""
         path = OUTPUT / f"{name}.png"
-        record_path = OUTPUT / f"{name}_provenance.json"
+        record_path = provenance_path or OUTPUT / f"{name}_provenance.json"
         envelope = json.loads(record_path.read_text())
         # Retained CLI command records wrap the native execution response;
         # direct shell receipts retain that response at the document root.
@@ -960,26 +961,31 @@ def submission_autonomous_loop():
 
 def submission_shared_workflow():
     """Show the full-width native application once, with region outlines."""
-    sheet = FigureSheet("submission_shared_workflow", "", 8.0)
-    sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
-    sheet.panel("I", "One native window: plates, pipeline and execution servers", 2, 97)
-    sheet.native_image("authoring_main_verified_capture", (1, 7, 98, 83))
+    folder = OUTPUT / "figure1_two_plate_native_20261007"
+    evidence_path = folder / "capture_evidence.json"
+    evidence = json.loads(evidence_path.read_text())
+    capture = folder / Path(evidence["selected_png"]).name
+    with Image.open(capture) as pixels:
+        width_px, height_px = pixels.size
+    _, _, logical_width, logical_height = evidence["logical_window_xywh"]
+    sx, sy = width_px / logical_width, height_px / logical_height
+    workspace_top = min(evidence["boxes_xywh"][region][1]
+                        for region in ("plate_manager", "pipeline_editor"))
+    crop = (0, round(workspace_top * sy), width_px, height_px)
+    sheet = FigureSheet("submission_shared_workflow", "",
+                        9 * (crop[3] - crop[1]) / width_px)
+    sheet.source(evidence_path)
+    sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
+                       (0, 0, 100, 100), response_path=(), crop=crop,
+                       provenance_path=folder / evidence["selected_capture"])
     window = sheet.figure.axes[-1]
-    # Coordinates are in the original screenshot; no duplicated or magnified
-    # screenshot fragments obscure the actual application.
-    for title, bounds, label_position in (
-        ("Plate manager", (2, 236, 503, 123), (12, 381)),
-        ("Pipeline editor", (518, 236, 504, 81), (530, 341)),
-        ("Execution servers", (2, 602, 503, 90), (12, 592)),
-    ):
-        x, y, width, height = bounds
+    # Derive native-pixel outlines from the recorded Qt logical rectangles.
+    for region in ("plate_manager", "pipeline_editor", "zmq_servers"):
+        x, y, width, height = evidence["boxes_xywh"][region]
+        x, width, y, height = x * sx, width * sx, y * sy - crop[1], height * sy
         window.add_patch(Rectangle((x, y), width, height, fill=False,
                                    edgecolor=BLUE, linewidth=2))
-        window.text(*label_position, title, fontsize=11, weight="bold", color=BLUE,
-                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 2})
-    sheet.text(3, 2, "Native screenshot • boxes identify existing controls; no duplicate cutouts",
-               size=9, color=MUTED)
-    sheet.save()
+    sheet.save(dpi=600)
 
 
 def submission_quantitative_results():

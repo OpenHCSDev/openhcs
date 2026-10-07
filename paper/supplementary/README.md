@@ -642,12 +642,25 @@ This is authoring and capture evidence, not an editing round trip or assay execu
 The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
-the retained Fiji/napari panels. Figure 1II's main window uses a capture from
+the retained Fiji/napari panels. The earlier main-window capture came from
 an OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
-Figure 1I now uses the full native main window with boxes on its existing controls,
-not duplicate enlarged cutouts. The separate OpenHCS 0.8.7 server-browser capture
+Figure 1I now uses a fresh 2048 × 1536 native OpenHCS 0.8.7 capture with the
+real ExampleHuman and ExampleFly folders loaded and Human's nine-step recipe
+displayed in the editor. The [capture evidence](../figures/slas/figure1_two_plate_native_20261007/capture_evidence.json)
+records source pipeline hashes, native geometry, display scale and cleanup;
+the [original snapshot receipt](../figures/slas/figure1_two_plate_native_20261007/main_window_nine_steps_capture_provenance.json)
+owns the image checksum. Outlines derive from the recorded logical widget
+rectangles. The main figure uses one continuous workspace crop below the
+monitoring dashboard, with native proportions, no duplicated insets, heading
+or outer padding. The
+[full original PNG](../figures/slas/figure1_two_plate_native_20261007/20261007T232717800671Z_main_window_OpenHCS.png)
+retains the dashboard and original status messages.
+No analysis was initialized, compiled or executed. The existing 0.8.6 execution
+service was preserved; its startup version mismatch and the CPU-only session's
+NVIDIA SMI warning are not evidence of GPU or execution compatibility.
+The separate OpenHCS 0.8.7 server-browser capture
 and its [original MCP receipt](../figures/slas/authoring_server_browser_verified_capture_provenance.json)
 remain retained evidence but are not displayed in Figure 1. Status ticks alone
 do not establish client/server version compatibility.
