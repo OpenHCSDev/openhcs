@@ -15,8 +15,17 @@ from dataclasses import dataclass, field
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.measurement_row_materialization import (
     MeasurementRowsAxisProjection,
+    ColumnarRowColumnOverlay,
+    MeasurementProjectedColumnarRows,
+    is_structural_missing_measurement_cell,
 )
-from openhcs.core.runtime_measurements import MeasurementScope
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementRowValueField,
+    aggregate_image_number_reference_measurement_field,
+    image_number_reference_measurement_field,
+    measurement_axis_integer_value,
+)
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -168,9 +177,69 @@ class CellProfilerImageSetNumbering:
             # Image- and object-scoped axisless rows remain ambiguous and fail
             # above when their provenance spans multiple image sets.
             axisless_image_number = source_image_numbers[0]
-        return projection.remap_runtime_slice_indices(
+        projected = projection.remap_runtime_slice_indices(
             image_numbers_by_slice,
             axisless_value=axisless_image_number,
+        )
+
+        # References describe the producer's original image domain, just like
+        # slice_index. Project their correlated values before the wide join;
+        # precomputed reference means are derived from these object values by
+        # the spreadsheet aggregate owner instead of offsetting a mean.
+        replacements = {}
+        feature_columns = tuple(
+            table.rows.column_values(name)
+            for name in MeasurementRowAxisField.feature_name_field_names_ordered()
+            if name in table.rows.columns
+        )
+        features = feature_columns[0] if feature_columns else None
+        value_fields = MeasurementRowValueField.field_names()
+        for name in table.rows.columns:
+            wide_reference = image_number_reference_measurement_field(name)
+            if aggregate_image_number_reference_measurement_field(name):
+                continue
+            if not wide_reference and (features is None or name not in value_fields):
+                continue
+            values = table.rows.column_values(name)
+            updated = None
+            for index, value in enumerate(values):
+                if not wide_reference:
+                    feature = features[index]
+                    if is_structural_missing_measurement_cell(feature):
+                        continue
+                    feature = str(feature)
+                    if (
+                        not image_number_reference_measurement_field(feature)
+                        or aggregate_image_number_reference_measurement_field(feature)
+                    ):
+                        continue
+                if is_structural_missing_measurement_cell(value):
+                    continue
+                number = measurement_axis_integer_value(
+                    value, MeasurementRowAxisField.SLICE_INDEX
+                )
+                if number is None or number <= 0:
+                    continue
+                global_number = self.for_source_slice(
+                    scope=scope,
+                    provenance=table.source_provenance,
+                    slice_index=number - 1,
+                    owner=table.name,
+                )
+                if updated is None:
+                    updated = list(values)
+                updated[index] = global_number
+            if updated is not None:
+                replacements[name] = updated
+        if not replacements:
+            return projected
+        return MeasurementProjectedColumnarRows(
+            ColumnarRowColumnOverlay(projected.columns, MappingProxyType(replacements)),
+            fields=projected.fields,
+            declared_object_measurement_domain_covered=(
+                projected.covers_declared_object_measurement_domain
+            ),
+            object_row_identity=projected.object_row_identity,
         )
 
     @staticmethod
