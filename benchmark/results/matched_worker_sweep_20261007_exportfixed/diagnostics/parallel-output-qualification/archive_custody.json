@@ -1,0 +1,66 @@
+{
+  "status": "PASS",
+  "scope": "Benchmark saved-output qualification only; no production pipeline speedup or headline RAM claim",
+  "files": [
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/findings.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/findings.json",
+      "sha256": "d9e2b8aee783adc5f9d46e20eb0b673cc4bec735be79c90d6fa9d063d90fe830"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/grid-memory-proof.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/grid-memory-proof.json",
+      "sha256": "d272edf2d83132024dc99f4350746497bb9adbb3fd5ccdf0da264bd3d6c80c83"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/parallel-proof.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/parallel-proof.json",
+      "sha256": "92bb1f55819702a84c7885f2d8f2e9bac5b2c94b08ca4ac199a63f8214f7cc46"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/patch-preimage.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/patch-preimage.json",
+      "sha256": "8484b9de8cf95749f769217cba19d59026d386ae7b93e351578db7c8d8c39ac8"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-driver.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/receiving-driver.json",
+      "sha256": "64e992fb3de622e2c62da869a74328373c3b66c0988e94249e3a5e766d2970db"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-proof.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/receiving-proof.json",
+      "sha256": "eb4182914217715f2c102e1539c8098b69dab3770fcca1d28afc1c77a7ed9eb2"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-ExampleImagingFlowCytometryObjectsInGrid-results.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/receiving-ExampleImagingFlowCytometryObjectsInGrid-results.json",
+      "sha256": "782056366edccee3036217ec3f3ae33e02a81069b2f79198e855efd88fe9a3ae"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-cp_tutorial_advanced_segmentation_final-results.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/receiving-cp_tutorial_advanced_segmentation_final-results.json",
+      "sha256": "c74731b7c86e85e2763b24dd72f7ac0b4f676622c4321ac04264e50446854061"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/parallel-comparison.patch",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/parallel-comparison.patch",
+      "sha256": "a94c82d64f2931d4955381ad538edd82f13b86539410016c343ecf73263b5ac5"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/replay.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/replay.py.txt",
+      "sha256": "026f93cd06ef0ee06268c7a142de2f43a4365bd8cc8de9950c67f482cb780f95"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receive-applied.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/receive-applied.py.txt",
+      "sha256": "67b4859f6f2c67e3a14eb20ab0e69fd467e5ad09bc697815411a892d69cc7bb8"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/grid-memory-replay.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/grid-memory-replay.py.txt",
+      "sha256": "1ced91bc6a4c150e627f5fbc47806b70418c8e7ede693e730464cd57692f1c91"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "scope": "DIAGNOSTIC_ONLY two saved completed Grid warmup axes; comparer operational PSS/USS, NOT pipeline RAM or science timing",
+  "production_module_path": "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/__init__.py",
+  "production_head": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "benchmark_head": "76dc7997167affa308679642e9c109f44f84da00",
+  "code_sources": {
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "77bada3feccbef0456c0d63bfa22cafa665de5cbe88f645a0c6de14748b16e1b",
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "f84ad9886ae7fafd3cf5679ce71d12e065db990a8fff9fddb164a15c22f2e39b",
+    "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/core/runtime_equivalence.py": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+  },
+  "axes": [
+    "W001",
+    "W002"
+  ],
+  "serial_seconds": 62.96667597070336,
+  "two_process_seconds": 41.37693562032655,
+  "speedup": 1.5217820031063582,
+  "qualification_saved_fraction": 0.3428756563300549,
+  "exact_entire_ordered_results_equal": true,
+  "all_differences_empty": true,
+  "parallel_process_count_max": 3,
+  "initial_self_memory": {
+    "pss_bytes": 152022016,
+    "uss_bytes": 132403200,
+    "rss_bytes": 205983744,
+    "swap_bytes": 0
+  },
+  "parallel_parent_before": {
+    "pss_bytes": 511497216,
+    "uss_bytes": 482484224,
+    "rss_bytes": 583806976,
+    "swap_bytes": 0
+  },
+  "serial_peak_tree_pss_bytes": 833049600,
+  "parallel_peak_tree_pss_bytes": 1745656832,
+  "parallel_peak_tree_uss_bytes": 1612783616,
+  "parallel_peak_tree_rss_bytes": 2217033728,
+  "parallel_peak_tree_swap_bytes": 0,
+  "minimum_host_available_bytes": 9513164800,
+  "initial_host": {
+    "available_bytes": 11428761600,
+    "swap_used_bytes": 11823480832,
+    "pswpin": 41086623,
+    "pswpout": 67089013,
+    "pgmajfault": 120955388
+  },
+  "parallel_before_host": {
+    "available_bytes": 11031220224,
+    "swap_used_bytes": 11822063616,
+    "pswpin": 41086665,
+    "pswpout": 67089013,
+    "pgmajfault": 120956006
+  },
+  "final_host": {
+    "available_bytes": 10986078208,
+    "swap_used_bytes": 11821150208,
+    "pswpin": 41086771,
+    "pswpout": 67089013,
+    "pgmajfault": 120957682
+  },
+  "self_major_fault_delta": 0,
+  "children_major_faults": 0,
+  "cpu_affinity": [
+    0,
+    1
+  ],
+  "numerical_threads": 1,
+  "native_cache": "disabled equally for fresh comparison scope; active cache untouched",
+  "memory_scope_limit": "Host deltas include concurrent official capture/system activity; PSS tree includes only this diagnostic parent+2children. No host-delta causal attribution."
+}

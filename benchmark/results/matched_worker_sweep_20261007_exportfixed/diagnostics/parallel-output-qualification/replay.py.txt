@@ -1,0 +1,40 @@
+"""Two saved axis tasks through the unchanged comparator; no science execution."""
+import concurrent.futures,functools,gzip,hashlib,json,multiprocessing,operator,os,pickle,resource,subprocess,sys,threading,time
+from pathlib import Path
+production=Path('/home/ts/code/projects/openhcs-cp-registry-control');artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');sys.path.insert(0,str(production))
+import openhcs,benchmark
+benchmark.__path__.insert(0,str(artifact/'benchmark'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.matched_cellprofiler_batch import _saved_output_equivalence
+case=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final')
+reference=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final')
+with gzip.open(case/'candidate_evidence/0/observation.pkl','rb') as stream:observation=pickle.load(stream)
+policy=_strict_cellprofiler_runtime_equivalence_policy()
+axes=('W001','W002')
+tasks=[functools.partial(_saved_output_equivalence,reference/'native/0'/axis,observation.exports.for_execution_axis(axis),policy=policy,source_workspaces=(case/'candidate/0/source_workspace_matched_pilot',),execution_axis_id=axis) for axis in axes]
+assert all(os.environ[name]=='1' for name in ('OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS','NUMEXPR_NUM_THREADS','VECLIB_MAXIMUM_THREADS'))
+start=time.perf_counter();serial=[task() for task in tasks];serial_seconds=time.perf_counter()-start
+assert all(not row[0].differences and not row[1].differences and not row[2] for row in serial)
+print('serial',serial_seconds,flush=True)
+stop=threading.Event();peaks={'child_rss_sum_bytes':0,'child_count':0}
+def observe():
+ while not stop.is_set():
+  path=Path(f'/proc/{os.getpid()}/task/{os.getpid()}/children')
+  pids=path.read_text().split();rss=0
+  for pid in pids:
+   status=Path('/proc')/pid/'status'
+   if not status.exists():continue
+   values=status.read_text().splitlines()
+   rss+=sum(int(line.split()[1])*1024 for line in values if line.startswith('VmRSS:'))
+  peaks['child_rss_sum_bytes']=max(peaks['child_rss_sum_bytes'],rss);peaks['child_count']=max(peaks['child_count'],len(pids))
+  stop.wait(.25)
+thread=threading.Thread(target=observe,daemon=True);thread.start()
+start=time.perf_counter()
+with concurrent.futures.ProcessPoolExecutor(max_workers=2,mp_context=multiprocessing.get_context('fork'),initializer=os.sched_setaffinity,initargs=(0,{0,1})) as executor:
+ parallel=list(executor.map(operator.call,tasks))
+parallel_seconds=time.perf_counter()-start;stop.set();thread.join()
+assert parallel==serial
+assert peaks['child_count']==2
+result={'scope':'DIAGNOSTIC_ONLY genuine saved advanced8 rep0 W001/W002; no native/science/server jobs, original comparer unchanged','production_root':str(production),'production_module_path':openhcs.__file__,'production_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=production,text=True).strip(),'benchmark_root':str(artifact),'benchmark_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=artifact,text=True).strip(),'comparer_sha256':hashlib.sha256((artifact/'benchmark/matched_cellprofiler_batch.py').read_bytes()).hexdigest(),'axes':axes,'serial_seconds':serial_seconds,'two_process_seconds':parallel_seconds,'speedup':serial_seconds/parallel_seconds,'qualification_time_saved_fraction':1-parallel_seconds/serial_seconds,'entire_per_axis_result_equal':True,'ordered_result_equal':True,'all_science_differences_empty':True,'result_pickle_bytes':[len(pickle.dumps(row)) for row in parallel],'max_child_rss_sum_bytes':peaks['child_rss_sum_bytes'],'parent_peak_rss_bytes':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss*1024,'parallel_affinity':[0,1],'start_method':'fork','numerical_threads':1,'native_fact_cache':'disabled both modes; equal fresh native facts scope','limits':'One representative two-axis diagnostic, not a measured full-suite speedup; SQL retained native caching is still absent in the unchanged official comparator.'}
+(Path(__file__).parent/'parallel-proof.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(result),flush=True)

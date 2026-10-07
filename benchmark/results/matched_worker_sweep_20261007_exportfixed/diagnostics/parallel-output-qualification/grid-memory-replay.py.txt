@@ -1,0 +1,48 @@
+"""One genuine saved wide-CSV comparison pair; operational memory evidence."""
+import concurrent.futures,functools,gzip,hashlib,json,multiprocessing,operator,os,pickle,resource,subprocess,sys,threading,time
+from pathlib import Path
+production=Path('/home/ts/code/projects/openhcs-cp-registry-control');artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');sys.path.insert(0,str(production))
+import openhcs,benchmark
+benchmark.__path__.insert(0,str(artifact/'benchmark'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.matched_cellprofiler_batch import _saved_output_equivalence
+import openhcs.core.runtime_equivalence as semantics
+case=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid')
+reference=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/ExampleImagingFlowCytometryObjectsInGrid')
+with gzip.open(case/'candidate_evidence/-1/observation.pkl','rb') as stream:observation=pickle.load(stream)
+policy=_strict_cellprofiler_runtime_equivalence_policy();axes=('W001','W002')
+tasks=[functools.partial(_saved_output_equivalence,reference/'native/-1'/axis,observation.exports.for_execution_axis(axis),policy=policy,source_workspaces=(case/'candidate/-1/source_workspace_matched_pilot',),execution_axis_id=axis) for axis in axes]
+assert all(os.environ[name]=='1' for name in ('OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS','NUMEXPR_NUM_THREADS','VECLIB_MAXIMUM_THREADS'))
+def memory(pid):
+ path=Path('/proc')/str(pid)/'smaps_rollup'
+ if not path.exists():return None
+ values={line.split(':')[0]:int(line.split()[1])*1024 for line in path.read_text().splitlines() if ':' in line and line.split()[1].isdigit()}
+ return {'pss_bytes':values.get('Pss',0),'uss_bytes':values.get('Private_Clean',0)+values.get('Private_Dirty',0),'rss_bytes':values.get('Rss',0),'swap_bytes':values.get('Swap',0)}
+def host():
+ values={line.split(':')[0]:int(line.split()[1])*1024 for line in Path('/proc/meminfo').read_text().splitlines()}
+ vm=dict(line.split() for line in Path('/proc/vmstat').read_text().splitlines())
+ return {'available_bytes':values['MemAvailable'],'swap_used_bytes':values['SwapTotal']-values['SwapFree'],'pswpin':int(vm['pswpin']),'pswpout':int(vm['pswpout']),'pgmajfault':int(vm['pgmajfault'])}
+stop=threading.Event();phase=['serial'];samples=[]
+def observe():
+ while not stop.is_set():
+  children=Path(f'/proc/{os.getpid()}/task/{os.getpid()}/children').read_text().split();rows=[memory(pid) for pid in [os.getpid(),*children]];rows=[r for r in rows if r is not None]
+  samples.append({'monotonic_seconds':time.monotonic(),'phase':phase[0],'process_count':len(rows),'process_tree_pss_bytes':sum(r['pss_bytes'] for r in rows),'process_tree_uss_bytes':sum(r['uss_bytes'] for r in rows),'process_tree_rss_bytes':sum(r['rss_bytes'] for r in rows),'process_tree_swap_bytes':sum(r['swap_bytes'] for r in rows),'host':host()})
+  stop.wait(.5)
+initial_host=host();initial_memory=memory(os.getpid());self_majors=resource.getrusage(resource.RUSAGE_SELF).ru_majflt
+thread=threading.Thread(target=observe,daemon=True);thread.start()
+start=time.perf_counter();serial=[task() for task in tasks];serial_seconds=time.perf_counter()-start
+assert all(not row[0].differences and not row[1].differences and not row[2] for row in serial)
+print('serial',serial_seconds,flush=True)
+phase[0]='parallel';parallel_before_host=host();parallel_parent_before=memory(os.getpid())
+start=time.perf_counter()
+with concurrent.futures.ProcessPoolExecutor(max_workers=2,mp_context=multiprocessing.get_context('fork'),initializer=os.sched_setaffinity,initargs=(0,{0,1})) as executor:
+ parallel=list(executor.map(operator.call,tasks))
+parallel_seconds=time.perf_counter()-start;stop.set();thread.join()
+assert parallel==serial
+last_host=host();serial_samples=[r for r in samples if r['phase']=='serial'];parallel_samples=[r for r in samples if r['phase']=='parallel']
+sha=lambda path:hashlib.sha256(path.read_bytes()).hexdigest()
+result={'scope':'DIAGNOSTIC_ONLY two saved completed Grid warmup axes; comparer operational PSS/USS, NOT pipeline RAM or science timing','production_module_path':openhcs.__file__,'production_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=production,text=True).strip(),'benchmark_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=artifact,text=True).strip(),'code_sources':{str(p):sha(p) for p in (artifact/'benchmark/matched_cellprofiler_batch.py',artifact/'benchmark/native_measurement_facts.py',Path(semantics.__file__))},'axes':axes,'serial_seconds':serial_seconds,'two_process_seconds':parallel_seconds,'speedup':serial_seconds/parallel_seconds,'qualification_saved_fraction':1-parallel_seconds/serial_seconds,'exact_entire_ordered_results_equal':True,'all_differences_empty':True,'parallel_process_count_max':max(r['process_count'] for r in parallel_samples),'initial_self_memory':initial_memory,'parallel_parent_before':parallel_parent_before,'serial_peak_tree_pss_bytes':max(r['process_tree_pss_bytes'] for r in serial_samples),'parallel_peak_tree_pss_bytes':max(r['process_tree_pss_bytes'] for r in parallel_samples),'parallel_peak_tree_uss_bytes':max(r['process_tree_uss_bytes'] for r in parallel_samples),'parallel_peak_tree_rss_bytes':max(r['process_tree_rss_bytes'] for r in parallel_samples),'parallel_peak_tree_swap_bytes':max(r['process_tree_swap_bytes'] for r in parallel_samples),'minimum_host_available_bytes':min(r['host']['available_bytes'] for r in samples),'initial_host':initial_host,'parallel_before_host':parallel_before_host,'final_host':last_host,'self_major_fault_delta':resource.getrusage(resource.RUSAGE_SELF).ru_majflt-self_majors,'children_major_faults':resource.getrusage(resource.RUSAGE_CHILDREN).ru_majflt,'cpu_affinity':[0,1],'numerical_threads':1,'native_cache':'disabled equally for fresh comparison scope; active cache untouched','memory_scope_limit':'Host deltas include concurrent official capture/system activity; PSS tree includes only this diagnostic parent+2children. No host-delta causal attribution.'}
+out=Path(__file__).parent
+(out/'grid-memory-proof.json').write_text(json.dumps(result,indent=2)+'\n')
+(out/'grid-memory-samples.jsonl').write_text(''.join(json.dumps(row)+'\n' for row in samples))
+print(json.dumps(result),flush=True)

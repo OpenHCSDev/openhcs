@@ -8,12 +8,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import operator
 import os
 import subprocess
 from collections import Counter
 from collections.abc import Mapping
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import asdict, replace
+from functools import partial
+from multiprocessing import get_context
 from pathlib import Path
 from typing import Any
 
@@ -142,6 +145,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--openhcs-workers", type=int, default=1)
     parser.add_argument("--native-jobs", type=int, default=1)
+    parser.add_argument("--comparison-workers", type=int, default=1)
+    parser.add_argument(
+        "--comparison-cpus", type=int, nargs="+",
+        help="Explicit CPU affinity for saved-output qualification workers.",
+    )
     parser.add_argument("--native-python", type=Path, required=True)
     parser.add_argument(
         "--native-reference-root",
@@ -1065,6 +1073,18 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.repetitions < 1 or args.openhcs_workers < 1 or args.native_jobs < 1:
         raise ValueError("Repetitions and worker counts must be positive.")
+    if args.comparison_workers < 1:
+        raise ValueError("Comparison worker count must be positive.")
+    if args.comparison_workers > 1 and (
+        args.repeat_assignments is None
+        or not args.comparison_cpus
+        or len(set(args.comparison_cpus)) < args.comparison_workers
+        or any(cpu < 0 or cpu >= os.cpu_count() for cpu in args.comparison_cpus)
+    ):
+        raise ValueError(
+            "Parallel saved comparisons require repeated assignments and "
+            "explicit CPU affinity with at least one CPU per worker."
+        )
     if args.native_jobs > 1 and args.native_jobs != args.openhcs_workers:
         raise ValueError(
             "Native and OpenHCS worker counts must match in a concurrency pilot."
@@ -1217,6 +1237,8 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         ),
         "source_commit": source_commit,
         "source_dirty": source_dirty,
+        "comparison_workers": args.comparison_workers,
+        "comparison_cpus": args.comparison_cpus,
         "native_measurement_cache_root": (
             str(args.native_measurement_cache_root.expanduser().resolve())
             if args.native_measurement_cache_root is not None else None
@@ -1629,8 +1651,9 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 raise RuntimeError(
                     "Assignment comparison does not cover every declared output file."
                 )
-            comparisons = tuple(
-                _saved_output_equivalence(
+            comparison_tasks = tuple(
+                partial(
+                    _saved_output_equivalence,
                     native_root / directory,
                     exports,
                     policy=policy,
@@ -1648,6 +1671,17 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                     strict=True,
                 )
             )
+            if args.comparison_workers == 1:
+                comparisons = tuple(task() for task in comparison_tasks)
+            else:
+                with ProcessPoolExecutor(
+                    max_workers=args.comparison_workers,
+                    mp_context=get_context("fork"),
+                    initializer=os.sched_setaffinity,
+                    initargs=(0, set(args.comparison_cpus)),
+                ) as executor:
+                    comparisons = tuple(executor.map(operator.call, comparison_tasks))
+
         database_report = RuntimeEquivalenceReport(
             tuple(
                 difference

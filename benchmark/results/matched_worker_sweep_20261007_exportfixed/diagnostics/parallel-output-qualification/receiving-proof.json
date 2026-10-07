@@ -1,0 +1,71 @@
+{
+  "scope": "DIAGNOSTIC_ONLY actual applied comparison task/serial/executor AST receiving, no science/server/native execution",
+  "driver_path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py",
+  "driver_sha256": "1b0d0687f3af7eebfdb5a0cfeaef0fc6401a3292a87bc48cd56e557d7e0a1153",
+  "production_module_path": "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/__init__.py",
+  "production_source_head": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "artifact_source_head": "76dc7997167affa308679642e9c109f44f84da00",
+  "actual_ast_line_range": [
+    1654,
+    1683
+  ],
+  "parser_explicit_flags_accepted": true,
+  "numerical_threads": 1,
+  "parallel_affinity": [
+    0,
+    1
+  ],
+  "native_measurement_cache": null,
+  "results": [
+    {
+      "case": "cp_tutorial_advanced_segmentation_final",
+      "saved_repetition": 0,
+      "serial_vs_two_fork_entire_results_equal": true,
+      "all_differences_empty": true,
+      "ordered_axes": [
+        "W001",
+        "W002"
+      ],
+      "native_image_counts": [
+        0,
+        0
+      ],
+      "candidate_image_counts": [
+        0,
+        0
+      ],
+      "seconds": {
+        "1": 36.68704961007461,
+        "2": 19.14774332102388
+      },
+      "results_json_path": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-cp_tutorial_advanced_segmentation_final-results.json",
+      "canonical_results_sha256": "fbc1da8ff6a555032c472ca3134073c365d2b1c77a12c9d1207ebccd5cf84b29"
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "saved_repetition": -1,
+      "serial_vs_two_fork_entire_results_equal": true,
+      "all_differences_empty": true,
+      "ordered_axes": [
+        "W001",
+        "W002"
+      ],
+      "native_image_counts": [
+        0,
+        0
+      ],
+      "candidate_image_counts": [
+        0,
+        0
+      ],
+      "seconds": {
+        "1": 60.13393472600728,
+        "2": 31.967346443329006
+      },
+      "results_json_path": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-ExampleImagingFlowCytometryObjectsInGrid-results.json",
+      "canonical_results_sha256": "4ab6e27ee233391002c5acbfc4f0e95d030662e4847db92ce39224df9b633d3b"
+    }
+  ],
+  "memory_admission_receipt": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/grid-memory-proof.json",
+  "memory_scope": "Prior operational diagnostic PSS/USS/headroom, not pipeline headline RAM."
+}

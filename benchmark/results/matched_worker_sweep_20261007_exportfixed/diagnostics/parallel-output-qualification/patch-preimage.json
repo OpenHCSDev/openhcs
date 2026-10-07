@@ -1,0 +1,5 @@
+{
+  "path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py",
+  "sha256": "77bada3feccbef0456c0d63bfa22cafa665de5cbe88f645a0c6de14748b16e1b",
+  "patch_scope": "Single existing benchmark driver; syntax-qualified only, no authoritative edits. Native/science clocks and comparator algorithm remain unchanged. Explicit workers/affinity recorded in case provenance."
+}

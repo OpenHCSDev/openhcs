@@ -1,0 +1,108 @@
+[
+  [
+    {
+      "compared_output_files": [
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022.db",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Nuclei.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Cytoplasm.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Cells.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_MitochondriaChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022.db",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Nucleoli.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Mitochondria.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_NucleoliChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties"
+      ],
+      "differences": []
+    },
+    {
+      "compared_output_files": [],
+      "differences": []
+    },
+    [],
+    {
+      "image_outputs": [],
+      "output_files": [
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022.db",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Cells.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Cytoplasm.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Mitochondria.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_MitochondriaChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Nuclei.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Nucleoli.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_NucleoliChildObjects.properties"
+      ],
+      "outputs": {
+        "analysis_inputs": null,
+        "image_numbers_by_export_path": {},
+        "materialized_locations_by_address": {},
+        "runtime_export_paths": [],
+        "source_projection_entries_by_target": {}
+      },
+      "table_headers_by_path": {},
+      "table_outputs": [],
+      "table_row_counts_by_path": {}
+    },
+    0,
+    0
+  ],
+  [
+    {
+      "compared_output_files": [
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Cytoplasm.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022.db",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_NucleoliChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_MitochondriaChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Nucleoli.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022.db",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Cells.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Nuclei.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Mitochondria.properties"
+      ],
+      "differences": []
+    },
+    {
+      "compared_output_files": [],
+      "differences": []
+    },
+    [],
+    {
+      "image_outputs": [],
+      "output_files": [
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022.db",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Cells.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Cytoplasm.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Mitochondria.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_MitochondriaChildObjects.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Nuclei.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_Nucleoli.properties",
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022_NucleoliChildObjects.properties"
+      ],
+      "outputs": {
+        "analysis_inputs": null,
+        "image_numbers_by_export_path": {},
+        "materialized_locations_by_address": {},
+        "runtime_export_paths": [],
+        "source_projection_entries_by_target": {}
+      },
+      "table_headers_by_path": {},
+      "table_outputs": [],
+      "table_row_counts_by_path": {}
+    },
+    0,
+    0
+  ]
+]

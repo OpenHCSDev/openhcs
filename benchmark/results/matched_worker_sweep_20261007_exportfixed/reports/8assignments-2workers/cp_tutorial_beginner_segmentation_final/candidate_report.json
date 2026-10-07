@@ -1,0 +1,2726 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "1d22e491-ba28-4eb4-b938-29c5f36baab6",
+    "compile_artifact_id": "46795fd9-27bf-4562-b9dd-b12eb032cf4a",
+    "endpoint_pid": 1195891,
+    "axis_count": 8,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      }
+    ],
+    "worker_process_ids": [
+      1271415,
+      1271422
+    ],
+    "worker_interval_overlap_seconds": 10.668529272079468,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791394806.1431572,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791394806.1643398,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791394808.9612389,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791394808.961299,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791394809.040951,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791394809.041003,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791394811.6035867,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791394811.6036339,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791394811.7747214,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791394811.7747633,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791394814.2524195,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791394814.2524633,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791394814.5329874,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791394814.5330307,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791394816.832869,
+        "pid": 1271415,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791394817.222465,
+        "pid": 1271422,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791394806.0956872,
+    "first_axis_started_at_epoch_seconds": 1791394806.1431572,
+    "server_job_completed_at_epoch_seconds": 1791394821.678287,
+    "server_job_seconds": 15.582599878311157,
+    "execution_seconds": 11.079307794570923,
+    "compile_seconds": 0.6432468891143799,
+    "total_seconds": 16.346669751685113,
+    "first_axis_through_server_completion_seconds": 15.53512978553772,
+    "native_image_count": 16,
+    "candidate_image_count": 16,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 16,
+    "native_output_file_count": 72,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "W001/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W001/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W001/MyExpt_Experiment.csv",
+        "sha256": "ec87b153155b5633f17988cc737707a22056f020d3d81afb37fca1cc3b747fb2"
+      },
+      {
+        "path": "W001/MyExpt_Image.csv",
+        "sha256": "f0b594543fff9780ff3df3cc77eb8b0004fd5bee9a46ac89afd6e32e56f4f3eb"
+      },
+      {
+        "path": "W001/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W001/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W001/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W002/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W002/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W002/MyExpt_Experiment.csv",
+        "sha256": "80ce034272189ba9ee7760c605fe30e2955c04687b2f7e8179ab974b980565db"
+      },
+      {
+        "path": "W002/MyExpt_Image.csv",
+        "sha256": "4b7f83845d75c3d0b2678c25c6afbfe3e97bc29bb0b75245893c48b8cafafa00"
+      },
+      {
+        "path": "W002/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W002/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W002/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W003/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W003/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W003/MyExpt_Experiment.csv",
+        "sha256": "08d7b4da4aaa61eef7494d18b3f4a5a9640263a5db52aaf07449f655ea989f9a"
+      },
+      {
+        "path": "W003/MyExpt_Image.csv",
+        "sha256": "4ac8b28b73f5ad219a6e9256e4d57d949f68edf39796c203ae3be129083ab01c"
+      },
+      {
+        "path": "W003/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W003/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W003/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W004/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W004/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W004/MyExpt_Experiment.csv",
+        "sha256": "041db613492c4e2b9a861ebb6fd0e5d1232cf2a9baefc5718c8b8470699cf941"
+      },
+      {
+        "path": "W004/MyExpt_Image.csv",
+        "sha256": "f975f219de55ba40e49eb56f15c33f49314a1a4ff9cce2dd780cc57f75f253ef"
+      },
+      {
+        "path": "W004/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W004/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W004/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W005/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W005/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W005/MyExpt_Experiment.csv",
+        "sha256": "08eb6dcec0932dcd58c9223fdcb931d8be9d0b5bf1a5ba6cef96c2d59fe4d57d"
+      },
+      {
+        "path": "W005/MyExpt_Image.csv",
+        "sha256": "f0600d15841bf735be8481b6d7db632c9a3e8e3187e94bab3c5f54cb7e189e59"
+      },
+      {
+        "path": "W005/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W005/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W005/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W006/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W006/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W006/MyExpt_Experiment.csv",
+        "sha256": "ed310265d09baf2c5d7d52697004024d132043a2fb2f4d22bdbf81d966ec6f25"
+      },
+      {
+        "path": "W006/MyExpt_Image.csv",
+        "sha256": "7bbc0c8ec871a9e2a47cb8efe6749fda9c637d5621ca32055d7b38b795a0912f"
+      },
+      {
+        "path": "W006/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W006/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W006/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W007/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W007/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W007/MyExpt_Experiment.csv",
+        "sha256": "21deab8585cacfefdaab2b7b963e0249064fb81c0b9b1a9db8043485e3670eca"
+      },
+      {
+        "path": "W007/MyExpt_Image.csv",
+        "sha256": "c4450ce5c77bc759422793b5fa88429d75a72e4f57bda68533937e6305f1ff43"
+      },
+      {
+        "path": "W007/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W007/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W007/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W008/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W008/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W008/MyExpt_Experiment.csv",
+        "sha256": "db6674f2f76697177c23996ef681ba8b0dcacdcf077f49931e6a54b535570148"
+      },
+      {
+        "path": "W008/MyExpt_Image.csv",
+        "sha256": "1b6a7196def20f916dd230805836d6683f1d9aac7a307eb75b39f47080465414"
+      },
+      {
+        "path": "W008/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W008/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W008/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "d51908de7c2211b69b7e98e7f8cf40835e813b7ef72422edf1decc5870a7fcc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "b9be2743d0f38850056ef3b8bd1c8ca91a1417777ff9415ff748b740c6def087"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "2844e5ee6f4743920187854575a272fb56a7ea0e4a126bf37e33b769e0a51680"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "8984b3d0e2c2d13e042b249f6211a63a21af94a370b599554178400d4356b2c2"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "162a193ce4aad42eefa6b5c07ae3a3e34bb77a3b57c6699d83855b9a1b8b874c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "074a3a09437f26e575d0a956ee806aeaa3764a80ebf4288e19854107ca9d7a76"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "ff320600b52d13523e69cc1ca72af78b5650b923cc9317d605a8ffd8b960269a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "8075e8b0c6e869815cd2a50648de78387cfc039fe9894ee2a85b138ab50e3e4a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "a1e41c66-1c33-40e0-8226-e101388ededb",
+    "compile_artifact_id": "46cc6ba0-b07a-4db1-ae20-d4e2cffcd2b4",
+    "endpoint_pid": 1195891,
+    "axis_count": 8,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      }
+    ],
+    "worker_process_ids": [
+      1287550,
+      1287552
+    ],
+    "worker_interval_overlap_seconds": 10.841411113739014,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791394987.2373722,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791394987.2575464,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791394990.1506314,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791394990.1506832,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791394990.1545165,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791394990.1545677,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791394992.74894,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791394992.748982,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791394992.7657008,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791394992.7657425,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791394995.4175436,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791394995.4175858,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791394995.4239738,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791394995.4240205,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791394998.0989575,
+        "pid": 1287552,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791394998.1328418,
+        "pid": 1287550,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791394987.1402805,
+    "first_axis_started_at_epoch_seconds": 1791394987.2373722,
+    "server_job_completed_at_epoch_seconds": 1791395002.7330582,
+    "server_job_seconds": 15.592777729034424,
+    "execution_seconds": 10.895469665527344,
+    "compile_seconds": 0.6126937866210938,
+    "total_seconds": 16.312722182366997,
+    "first_axis_through_server_completion_seconds": 15.495686054229736,
+    "native_image_count": 16,
+    "candidate_image_count": 16,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 16,
+    "native_output_file_count": 72,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "W001/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W001/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W001/MyExpt_Experiment.csv",
+        "sha256": "9ca6458e76c1af8138bbb990f3404a9c18e5949a32b4964fa16c331f6aeab42b"
+      },
+      {
+        "path": "W001/MyExpt_Image.csv",
+        "sha256": "302fe4b00cacde5c5f51a35d2d8eedc50901ca27121ce5711e995767129b092f"
+      },
+      {
+        "path": "W001/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W001/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W001/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W002/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W002/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W002/MyExpt_Experiment.csv",
+        "sha256": "36dcbf1f7ad7446fb6cf3304d4e2b35a461d4d4762d6950f3b6db2af202f67d3"
+      },
+      {
+        "path": "W002/MyExpt_Image.csv",
+        "sha256": "f38b7c9dae5c44d03bd6a89f29a24dc9feff9c1eb7270e1dec63590a10c2254f"
+      },
+      {
+        "path": "W002/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W002/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W002/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W003/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W003/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W003/MyExpt_Experiment.csv",
+        "sha256": "16be68731cbd598ce6cf1a6673fa73ac4babfd6b40e651d9b1dcd257e6f3bfe3"
+      },
+      {
+        "path": "W003/MyExpt_Image.csv",
+        "sha256": "d074c9f3f3ad8efe160bab2673feb4440e0d173f8f5d0ec732fcb0a46a37d291"
+      },
+      {
+        "path": "W003/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W003/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W003/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W004/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W004/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W004/MyExpt_Experiment.csv",
+        "sha256": "f5e4473a750787facb05b1d365ec3052643e8e22bd09782b1315b66d1285c041"
+      },
+      {
+        "path": "W004/MyExpt_Image.csv",
+        "sha256": "2478a44b9e59ae291edd96e3fcbd199da2c33144503b830b730d13a71331784f"
+      },
+      {
+        "path": "W004/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W004/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W004/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W005/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W005/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W005/MyExpt_Experiment.csv",
+        "sha256": "d7beb02994431092bed126ed06aec75e46879e40d279403bc652cb19e8b5601d"
+      },
+      {
+        "path": "W005/MyExpt_Image.csv",
+        "sha256": "bca28c2f74d284860f22676350c5255ac52b4690953128600f63e0ec5922e8c9"
+      },
+      {
+        "path": "W005/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W005/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W005/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W006/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W006/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W006/MyExpt_Experiment.csv",
+        "sha256": "5ebde2b9b96569e5b0c745ff45bbe9d0609c7f9d491c7df56bf24744f2b83002"
+      },
+      {
+        "path": "W006/MyExpt_Image.csv",
+        "sha256": "927362818043e77a47edf559dfb506cd075c7ba209fdd1c9beec59cceb374640"
+      },
+      {
+        "path": "W006/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W006/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W006/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W007/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W007/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W007/MyExpt_Experiment.csv",
+        "sha256": "647479243b4117362916e833586f1d757499b9d70a58b89d016075baa5d90b12"
+      },
+      {
+        "path": "W007/MyExpt_Image.csv",
+        "sha256": "581a52e7d972bd0ff317fa66e49f83d03966ae4a7de2257bcb1582a766e32684"
+      },
+      {
+        "path": "W007/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W007/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W007/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W008/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W008/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W008/MyExpt_Experiment.csv",
+        "sha256": "a98948f2baabc08cef215a3c7f4cf2401b82e8a258eb673d60acbe10a8f65a52"
+      },
+      {
+        "path": "W008/MyExpt_Image.csv",
+        "sha256": "1cabbca626c00a7a25173fed1958ce59a7e99021fa86e92d01d0e94221d1bd4e"
+      },
+      {
+        "path": "W008/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W008/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W008/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "d51908de7c2211b69b7e98e7f8cf40835e813b7ef72422edf1decc5870a7fcc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "b9be2743d0f38850056ef3b8bd1c8ca91a1417777ff9415ff748b740c6def087"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "2844e5ee6f4743920187854575a272fb56a7ea0e4a126bf37e33b769e0a51680"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "8984b3d0e2c2d13e042b249f6211a63a21af94a370b599554178400d4356b2c2"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "162a193ce4aad42eefa6b5c07ae3a3e34bb77a3b57c6699d83855b9a1b8b874c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "074a3a09437f26e575d0a956ee806aeaa3764a80ebf4288e19854107ca9d7a76"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "ff320600b52d13523e69cc1ca72af78b5650b923cc9317d605a8ffd8b960269a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "8075e8b0c6e869815cd2a50648de78387cfc039fe9894ee2a85b138ab50e3e4a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "b974b95e-a678-4dde-a3f2-7c817e04d011",
+    "compile_artifact_id": "67888534-0ae7-426b-bc81-dfecfa57649e",
+    "endpoint_pid": 1195891,
+    "axis_count": 8,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      }
+    ],
+    "worker_process_ids": [
+      1303456,
+      1303458
+    ],
+    "worker_interval_overlap_seconds": 11.016639947891235,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791395168.502966,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791395168.5244493,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791395171.402472,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791395171.4025195,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791395171.4031758,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791395171.403224,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791395174.1436124,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791395174.1436572,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791395174.1577437,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791395174.1577845,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791395176.9140987,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791395176.9141412,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791395176.9243894,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791395176.9244297,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791395179.5410893,
+        "pid": 1303458,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791395179.5687141,
+        "pid": 1303456,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791395168.4532623,
+    "first_axis_started_at_epoch_seconds": 1791395168.502966,
+    "server_job_completed_at_epoch_seconds": 1791395184.1523106,
+    "server_job_seconds": 15.699048280715942,
+    "execution_seconds": 11.06574821472168,
+    "compile_seconds": 0.646099328994751,
+    "total_seconds": 16.454603753983974,
+    "first_axis_through_server_completion_seconds": 15.649344682693481,
+    "native_image_count": 16,
+    "candidate_image_count": 16,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 16,
+    "native_output_file_count": 72,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "W001/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W001/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W001/MyExpt_Experiment.csv",
+        "sha256": "d1625a69215667ecbd490c4e9e79460cbd4d1747a98846e4783de8c5c98285e3"
+      },
+      {
+        "path": "W001/MyExpt_Image.csv",
+        "sha256": "9a5ca28bb429ceb474cb3bb892239ecadb35625f15247c83adeb063ea93667d1"
+      },
+      {
+        "path": "W001/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W001/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W001/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W002/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W002/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W002/MyExpt_Experiment.csv",
+        "sha256": "f9bc1587d29bf998f7f4e93bb966b8d4352fa551c7740383c14bb6c58cc02917"
+      },
+      {
+        "path": "W002/MyExpt_Image.csv",
+        "sha256": "91a4f876ec940c16974a432e758c166f03b20d9a63e0cbc5d515746f829aa557"
+      },
+      {
+        "path": "W002/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W002/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W002/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W003/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W003/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W003/MyExpt_Experiment.csv",
+        "sha256": "677af681fc34aec8ad7b77e053226d089197c68593990d5b7630738e4ea3fd1d"
+      },
+      {
+        "path": "W003/MyExpt_Image.csv",
+        "sha256": "4cdc7cb9e75ee71a663cd8be48e6471812d1678966f8b304fd241b33527c8522"
+      },
+      {
+        "path": "W003/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W003/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W003/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W004/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W004/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W004/MyExpt_Experiment.csv",
+        "sha256": "204119a1f93311fa593533dfdb539f235b59bee0a4a1e692f4a79e1aecb2b1d4"
+      },
+      {
+        "path": "W004/MyExpt_Image.csv",
+        "sha256": "d27abbbb72805918d749914e632152e7f6ef4e483a627b9a7f1d8def6b5532b4"
+      },
+      {
+        "path": "W004/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W004/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W004/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W005/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W005/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W005/MyExpt_Experiment.csv",
+        "sha256": "b341b291a79e4ea7b3379f204cf9eb37fe3be4572bf8b48ca619a8cfe3859f56"
+      },
+      {
+        "path": "W005/MyExpt_Image.csv",
+        "sha256": "d462fa95ba16bb94fcf3dec3e579c5e38f47f3c573d9650aa906b566821b1316"
+      },
+      {
+        "path": "W005/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W005/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W005/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W006/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W006/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W006/MyExpt_Experiment.csv",
+        "sha256": "145f728c8e00c99ed22329a9749a98e5fff1f7ea28667c5c7e48e28f2b4a539f"
+      },
+      {
+        "path": "W006/MyExpt_Image.csv",
+        "sha256": "f24cf62dec90bee2e91ac6dadcbab65461fe9f99bb12c18b9b573739a63f553f"
+      },
+      {
+        "path": "W006/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W006/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W006/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W007/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W007/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W007/MyExpt_Experiment.csv",
+        "sha256": "8e2cbadb4776b05cc51860632fd33fd41a05277fda2298f41d0adcac8d2b364e"
+      },
+      {
+        "path": "W007/MyExpt_Image.csv",
+        "sha256": "477a39248b1e8d35a8e0297b7e0c2cb090f8ae5d1b1c3f1db125045b44a2d7ef"
+      },
+      {
+        "path": "W007/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W007/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W007/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W008/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W008/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W008/MyExpt_Experiment.csv",
+        "sha256": "2b303cd2ef3bdb20de87057279be90e9e08cba6283fdb1f9a07b22e01f7ea5e6"
+      },
+      {
+        "path": "W008/MyExpt_Image.csv",
+        "sha256": "98b30a0125927cfe4cafe5330032ceffe26fe0db73907db0124f9e251382613e"
+      },
+      {
+        "path": "W008/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W008/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W008/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "d51908de7c2211b69b7e98e7f8cf40835e813b7ef72422edf1decc5870a7fcc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "b9be2743d0f38850056ef3b8bd1c8ca91a1417777ff9415ff748b740c6def087"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "2844e5ee6f4743920187854575a272fb56a7ea0e4a126bf37e33b769e0a51680"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "8984b3d0e2c2d13e042b249f6211a63a21af94a370b599554178400d4356b2c2"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "162a193ce4aad42eefa6b5c07ae3a3e34bb77a3b57c6699d83855b9a1b8b874c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "074a3a09437f26e575d0a956ee806aeaa3764a80ebf4288e19854107ca9d7a76"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "ff320600b52d13523e69cc1ca72af78b5650b923cc9317d605a8ffd8b960269a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "8075e8b0c6e869815cd2a50648de78387cfc039fe9894ee2a85b138ab50e3e4a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "ea26bc36-2021-4bf0-887b-2a1a67e98e27",
+    "compile_artifact_id": "5e24da01-3a7e-4b25-9760-897ce654f4e0",
+    "endpoint_pid": 1195891,
+    "axis_count": 8,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      }
+    ],
+    "worker_process_ids": [
+      1319271,
+      1319273
+    ],
+    "worker_interval_overlap_seconds": 10.888590812683105,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791395348.6219683,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791395348.64555,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791395351.5248733,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791395351.5249217,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791395351.5645807,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791395351.5646732,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791395354.2143414,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791395354.2143831,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791395354.2944624,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791395354.2945051,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791395356.8722,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791395356.8722403,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791395356.9966407,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791395356.9966857,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791395359.5341408,
+        "pid": 1319273,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W004",
+          "W006",
+          "W008"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791395359.677278,
+        "pid": 1319271,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W003",
+          "W005",
+          "W007"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791395348.5689354,
+    "first_axis_started_at_epoch_seconds": 1791395348.6219683,
+    "server_job_completed_at_epoch_seconds": 1791395364.1701424,
+    "server_job_seconds": 15.60120701789856,
+    "execution_seconds": 11.055309772491455,
+    "compile_seconds": 0.6275534629821777,
+    "total_seconds": 16.340214651077986,
+    "first_axis_through_server_completion_seconds": 15.548174142837524,
+    "native_image_count": 16,
+    "candidate_image_count": 16,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 16,
+    "native_output_file_count": 72,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "W001/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W001/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W001/MyExpt_Experiment.csv",
+        "sha256": "43e3ed41469e4efbd59f35c904933fbd975d205bf3fbb5ab903b922ecdf2be2c"
+      },
+      {
+        "path": "W001/MyExpt_Image.csv",
+        "sha256": "c0f7ade81770ba81038ef0bec262bea7d92f8c3a1261da7f8fa9a2ece36dbf14"
+      },
+      {
+        "path": "W001/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W001/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W001/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W001/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W002/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W002/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W002/MyExpt_Experiment.csv",
+        "sha256": "694d4ed5a03662530a966583df94d07828c77b29ce19fd63810e7fba81bba268"
+      },
+      {
+        "path": "W002/MyExpt_Image.csv",
+        "sha256": "3203a7fc22612020d83aa4283fc924b3cce10f59802c93614f34206a47a44d4f"
+      },
+      {
+        "path": "W002/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W002/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W002/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W002/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W003/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W003/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W003/MyExpt_Experiment.csv",
+        "sha256": "97d12e73202927fbc741d6254534125f164210ab8104d9f184224105d3627ea1"
+      },
+      {
+        "path": "W003/MyExpt_Image.csv",
+        "sha256": "33aca728dce5fa14dde46b77d3e6b73a4e31ba2de7f7ed31262a625eeb4815c1"
+      },
+      {
+        "path": "W003/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W003/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W003/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W003/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W004/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W004/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W004/MyExpt_Experiment.csv",
+        "sha256": "5c240cb9072b5c844fd38bb9d9e55eba52a81dd354eb03727e37162bb021304b"
+      },
+      {
+        "path": "W004/MyExpt_Image.csv",
+        "sha256": "8f8d001f93d4ca9d37d1187acc3d063c20dd5607148ac82192cc2d5fb1da74c4"
+      },
+      {
+        "path": "W004/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W004/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W004/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W004/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W005/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W005/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W005/MyExpt_Experiment.csv",
+        "sha256": "d2f8d6cce4bbd4333ce712c4c3e9fb8a6602a9b65337397ae9b8ed7bbf411181"
+      },
+      {
+        "path": "W005/MyExpt_Image.csv",
+        "sha256": "ca3b7275873506cb086a9b182f14ffae600ee303652bc7207e9a39ddac3eaca9"
+      },
+      {
+        "path": "W005/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W005/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W005/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W005/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W006/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W006/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W006/MyExpt_Experiment.csv",
+        "sha256": "83941a6d90433c7b210db9300bb3d3c12d79c378bee4e5ffe44ed401703b10d7"
+      },
+      {
+        "path": "W006/MyExpt_Image.csv",
+        "sha256": "1f16f5eb87d89eefb9ad67cb53a23c17b731528e7f281b4975da1beaf321e0b7"
+      },
+      {
+        "path": "W006/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W006/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W006/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W006/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W007/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W007/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W007/MyExpt_Experiment.csv",
+        "sha256": "998942e9d1e9d4b94eaee7c1c05086701586e3f9221c78e346f3d4cc46f43bf0"
+      },
+      {
+        "path": "W007/MyExpt_Image.csv",
+        "sha256": "d89093eadd2dedf9423d68131afe0f8d9dfd38ef4b22f3219e540f0f31c17154"
+      },
+      {
+        "path": "W007/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W007/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W007/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W007/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      },
+      {
+        "path": "W008/MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "W008/MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "W008/MyExpt_Experiment.csv",
+        "sha256": "9ddf12da58ae5929081ce73c9dd65c289f230f713a33053bfa79630d394bc8c1"
+      },
+      {
+        "path": "W008/MyExpt_Image.csv",
+        "sha256": "3312c81918e0339baab59cacd3eddc0e0104937a58f2dd3aaff9ebd63952d1bc"
+      },
+      {
+        "path": "W008/MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "W008/MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "W008/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "W008/overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "d51908de7c2211b69b7e98e7f8cf40835e813b7ef72422edf1decc5870a7fcc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "b9be2743d0f38850056ef3b8bd1c8ca91a1417777ff9415ff748b740c6def087"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "2844e5ee6f4743920187854575a272fb56a7ea0e4a126bf37e33b769e0a51680"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "8984b3d0e2c2d13e042b249f6211a63a21af94a370b599554178400d4356b2c2"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "162a193ce4aad42eefa6b5c07ae3a3e34bb77a3b57c6699d83855b9a1b8b874c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "074a3a09437f26e575d0a956ee806aeaa3764a80ebf4288e19854107ca9d7a76"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "ff320600b52d13523e69cc1ca72af78b5650b923cc9317d605a8ffd8b960269a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "8075e8b0c6e869815cd2a50648de78387cfc039fe9894ee2a85b138ab50e3e4a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]
