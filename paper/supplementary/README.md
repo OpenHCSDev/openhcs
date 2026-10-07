@@ -228,9 +228,11 @@ Upper: matched DNA, actin, seeded territories and combined outlines following au
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 12. Neurite main-shaft recovery
+## Supplementary Figure 12. Neurite morphology and treatment responses
 
 ### Treatment-response comparison with MetaXpress
+
+![Matched well-level outgrowth and cell-count responses to FC-A and Y27632.](../figures/slas/personal_neurite_effects_transfer.png){width=6in}
 
 The existing commercial export contains 120 well summaries from two plates.
 An evaluation-only source key links the coded images to their physical wells.
@@ -246,8 +248,6 @@ Each FC-A and Y27632 (export label Y27) concentration has two technical-replicat
 wells. Fold change is the treatment mean divided by the same curve's zero-dose
 DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth increased
 at every nonzero concentration in both methods:
-
-![Matched well-level outgrowth and cell-count responses to FC-A and Y27632.](../figures/slas/personal_neurite_effects_transfer.png){width=6in}
 
 (A–B) Mean outgrowth per detected cell relative to the same drug curve's DMSO
 control; (C–D) cell-count ratios in those same wells. Dots show the two technical

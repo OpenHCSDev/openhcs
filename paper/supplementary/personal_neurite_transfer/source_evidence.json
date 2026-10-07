@@ -192,6 +192,6 @@
   "coordinate_unit": "micrometers",
   "pipeline_source": "/run/media/ts/hdd/openhcs-science/personal-neurite-treatment-transfer-20261006/control/full20-hdd-workspace.py",
   "protocol_figure_label": "Nine-field well means from a fixed-pipeline transfer evaluation",
-  "generator_sha256": "70507baba15f98344592aca3acca3b342ed1e6a6f32b2ce5b7c1db96c899e8a2",
+  "generator_sha256": "6261d6d7d6c70c253d8b33591ec0f53e76afcbac39ab41e7a1b873c6a10fa1fe",
   "baseline": "each drug curve's own zero-dose DMSO wells"
 }

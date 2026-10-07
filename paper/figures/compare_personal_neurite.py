@@ -35,7 +35,7 @@ def read_rows(path):
 
 def write_rows(path, rows):
     with path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=tuple(rows[0]))
+        writer = csv.DictWriter(stream, fieldnames=tuple(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 

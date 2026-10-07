@@ -2,16 +2,16 @@
   "generator_sha256": "27a61b975c0e356a91ba687c42ee67e725fbbbe81c8f56b757604b674066c929",
   "source_sha256": {
     "paper/figures/build_slas_neurite_effects.py": "1e16fd503eca54a626c7acb4be0f890c365388f164248f78d8493537026f6bce",
-    "paper/figures/compare_personal_neurite.py": "70507baba15f98344592aca3acca3b342ed1e6a6f32b2ce5b7c1db96c899e8a2",
-    "paper/supplementary/personal_neurite_transfer/joined_wells.csv": "68d67452704fa3295d54c6bc267d798b772ea300365fa2c9d4b120bbe234c5b7",
-    "paper/supplementary/personal_neurite_transfer/treatment_effects.csv": "85c771260f0f9d8762653d0cef2a85c66594b693bdfee7e2ea55c6561fc874d8",
-    "paper/supplementary/personal_neurite_transfer/source_evidence.json": "207b309a8bf8d71c0c2d1f9dff47d1b4d2e0104698bcd1cf153da3d1fffc677b"
+    "paper/figures/compare_personal_neurite.py": "6261d6d7d6c70c253d8b33591ec0f53e76afcbac39ab41e7a1b873c6a10fa1fe",
+    "paper/supplementary/personal_neurite_transfer/joined_wells.csv": "d7746a15b8f992e022e39ab8143370dd9744c74d7eedd42c3bf01c7c30d0ce76",
+    "paper/supplementary/personal_neurite_transfer/treatment_effects.csv": "42f8a24f83640e79e19a41658b066dbc83005df0529a66221284358e248cbbad",
+    "paper/supplementary/personal_neurite_transfer/source_evidence.json": "bc907898e519a4e43c158894881d0e241bca733168b82f664a77a6f26a39ec90"
   },
   "ui_crops": [],
   "output_sha256": {
     "personal_neurite_effects_transfer.png": "fdd69b8c5c79d3ccd3014eb0ea170e1d411c6e8be0e2ad8ccc4c5ee62539a4fb",
-    "personal_neurite_effects_transfer.pdf": "50e384dfb81b69faf8cffb7ac39ba4e923d45d57aaf9bd167ab6c459e076c5c8",
-    "personal_neurite_effects_transfer.svg": "3d404f07ef2f71c561d45fe1859426ef9302e827490ce37d93de1bdb34241c56"
+    "personal_neurite_effects_transfer.pdf": "57629b3559f35e6452d1ac329955c375a596135b8d104a22c46134f6cc2f34f1",
+    "personal_neurite_effects_transfer.svg": "65176f1ddb42eb0d5b12029d30d4cf6695f070ed65547226f678d6a6b337c601"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
