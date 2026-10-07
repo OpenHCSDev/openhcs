@@ -244,6 +244,15 @@ Within-method ratios avoid a constant unit conversion but do not remove those
 measurement differences. Neither method is manual ground truth, and two
 technical wells do not establish biological replication or significance.
 
+OpenHCS process lengths describe the connected paths assigned to a
+soma-adjacent root, including daughter branches, rather than individual
+segments between graph junctions. Per-cell mean and median process lengths
+are averaged within each field, including zero-growth cells, then across its
+nine fields. Branches are junctions with at least three paths assigned to the
+same neuron; resolved crossings are not automatically branches. These
+definitions specify the OpenHCS measurements without asserting that the
+commercial algorithm uses identical topology or aggregation.
+
 The [joined physical-well table](personal_neurite_transfer/joined_wells.csv)
 and [treatment-effect table](personal_neurite_transfer/treatment_effects.csv)
 retain well identities, means, sample standard deviations, counts, raw deltas,
