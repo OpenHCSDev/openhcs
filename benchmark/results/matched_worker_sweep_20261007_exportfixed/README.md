@@ -1,6 +1,6 @@
 # Export-fixed matched worker sweep
 
-Prepared production freeze: `d06b7226c82fc6de8ab6b644f3bec417f4b7b922`, published on main. The seven capture commands are sealed. The single-well and eight-assignment/two-worker modes have completed strict qualification and immutable archive for all 30 workflows each; five remaining modes and final figures remain pending. The original `matched_worker_sweep_20261007` record remains preserved.
+Prepared production freeze: `d06b7226c82fc6de8ab6b644f3bec417f4b7b922`, published on main. The seven capture commands are sealed. The single-well, eight-assignment/two-worker and twelve-assignment/one-worker modes have completed strict qualification and immutable archive for all 30 workflows each; four remaining modes and final figures remain pending. The original `matched_worker_sweep_20261007` record remains preserved.
 
 The generic exporter fix projects row identities and image references through the same source-numbering authority, with aggregate reference values derived from projected object measurements. The [fresh tracking integration](diagnostics/export-reference-repair/integration-summary.json) passes all 32 warmup/measured well-level comparisons with complete image, CSV, database and output coverage. This diagnostic is not a full-cohort benchmark result.
 
@@ -19,3 +19,5 @@ Projection validation is limited to three short workflows under matched four-slo
 Actual eight-assignment/two-worker execution speedup has minimum 2.660870× and median 6.804396×; total has minimum 2.539697× and median 6.071119×. All 30 workflows pass strict qualification. See `data/first_use/8assignments-2workers/`. These completed points do not establish the unfinished four-worker or fixed-twelve scaling results.
 
 The active full seven-mode manifest is `protocol/v4/protocol-manifest.json`. The first two modes retain original serial qualification. Remaining modes use the same complete comparer with two forked tasks on CPUs 0/1, outside pipeline clocks. The existing scientific production revision, execution settings, tolerances and output coverage are unchanged. Saved-output receiving proofs are in [parallel-output-qualification](diagnostics/parallel-output-qualification/README.md). An early original twelve-assignment attempt was intentionally retired with zero completed workflows; its partial files and terminal remain preserved.
+
+The fixed-twelve one-worker baseline is now qualified for all 30 workflows. Relative to the explicitly projected CP12 first-batch reference (zero actual target native observations), execution speedup has minimum 2.557394× and median 4.559899×; total has minimum 2.334863× and median 4.274260×. See `data/first_use/12assignments-1worker/`. Actual multiworker fixed-twelve scaling remains pending.
