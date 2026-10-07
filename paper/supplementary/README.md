@@ -646,10 +646,11 @@ the retained Fiji/napari panels. Figure 1II's main window uses a capture from
 an OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
-The server inset is a separate OpenHCS 0.8.7 native capture of the ZeroMQ server browser
-on an isolated display; its [original MCP receipt](../figures/slas/authoring_server_browser_verified_capture_provenance.json)
-records the unmodified widget image and checksum. The browser lists observed
-endpoints; the status ticks alone do not establish client/server version compatibility.
+Figure 1I now uses the full native main window with boxes on its existing controls,
+not duplicate enlarged cutouts. The separate OpenHCS 0.8.7 server-browser capture
+and its [original MCP receipt](../figures/slas/authoring_server_browser_verified_capture_provenance.json)
+remain retained evidence but are not displayed in Figure 1. Status ticks alone
+do not establish client/server version compatibility.
 These captures are distinct from the original unattended agent run.
 
 `paper/figures/build_slas_visual_story.py` checks the published media hashes and
@@ -762,6 +763,16 @@ alignment and agreement on the definition of neurite length are needed before
 computing per-cell accuracy. The public testing archive contains the images;
 downloadable manual trace coordinates have not been located. The published
 crossover count and the OpenHCS branch count measure different quantities.
+
+Main Figure 5A/B and D–F are full-resolution presentations of the frozen raw
+arrays, body-label planes and graph-path archives, rather than reduced native
+viewer screenshots. The [source manifest](../figures/slas/frozen_neurite_views.json)
+records the six original file hashes and the recorded raw display windows.
+Dark label colours and vector strokes are display choices only; no analysis
+was rerun or coordinates changed. Figure 5C uses an unmodified embedded JPEG
+from page 4 of the published article PDF, giving a 450-pixel panel crop instead
+of the earlier 225-pixel web crop. Its source, extraction and attribution are
+recorded in the [published-reference record](../figures/slas/neuroncyto_published_reference/source.json).
 
 The [reference audit](neuroncyto_reference_audit.md) records the source links,
 file checksums and ROI identifiers. These measurements were examined after the

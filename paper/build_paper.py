@@ -16,6 +16,7 @@ from paper_build.declarations import (
     PaperDefinition,
     Preparation,
 )
+from paper_build.word import CaptionedFiguresLayout
 
 ROOT = Path(__file__).resolve().parent
 BENCHMARK_INCLUDE = Path("figures/slas/benchmark-publication/benchmark_claims.json")
@@ -99,7 +100,8 @@ PAPER = PaperDefinition(
     root=ROOT,
     declaration=Path(__file__).resolve(),
     documents=(
-        DocumentDefinition(DocumentRole.MANUSCRIPT, (Path("manuscript.md"),)),
+        DocumentDefinition(DocumentRole.MANUSCRIPT, (Path("manuscript.md"),),
+                           layout=CaptionedFiguresLayout(caption_font_size_pt=10)),
         DocumentDefinition(DocumentRole.SUPPLEMENT, (
             Path("supplementary/README.md"),
             Path("supplementary/task_only_analysis/trial_resource_tables.md"),

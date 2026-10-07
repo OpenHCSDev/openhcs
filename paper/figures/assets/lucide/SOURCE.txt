@@ -2,6 +2,9 @@ Unmodified Lucide SVG pictograms.
 Source: https://github.com/lucide-icons/lucide
 Revision: b56741cf30c08fc7248bf41ddd3a261367aa9579
 License: ISC, with Feather-derived icons under MIT; see LICENSE.
+Figure 3 additions from icons/ at the same pinned revision:
+user-round.svg, circle-question-mark.svg, list-tree.svg,
+clipboard-check.svg, circle-check-big.svg.
 Editorial diagram references (layout inspiration only; no copied artwork):
 https://arxiv.org/html/2606.02080v1 (Agentic-J, workflow Figure 3)
 https://pmc.ncbi.nlm.nih.gov/articles/PMC8916956/ (MCMICRO, Figure 1)

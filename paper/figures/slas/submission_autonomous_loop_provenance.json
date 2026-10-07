@@ -1,25 +1,73 @@
 {
-  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
+  "generator_sha256": "cfe60dc98631164b2cbd4bf841f2040152a9999eb6109142720669d79b962391",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md": "6e82fabd8cab6332229b05c9ef5c24830b702328db6a5b760f7b7ca631071a3c",
     "paper/supplementary/task_only_analysis/trial_resources.csv": "ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9",
     "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md": "cb14d533fb87b91f80d6f8c647bb833b0444f2239357af6732b93485eae8cfd9",
     "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md": "6aff1f00a2cfb11a658850831c511298010339acba99c080cabed437c544e28b",
-    "paper/figures/assets/lucide/SOURCE.txt": "3cc794eb0ccbd9c433b95d2d3435edc198b81f384127602323572f0ad0eefbcc",
+    "paper/figures/assets/lucide/SOURCE.txt": "83d7b3d855f6372686be51a365cd99027d13c3a7c3f5fb5bc271560733fae1e9",
     "paper/figures/assets/lucide/LICENSE": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+    "paper/figures/assets/lucide/user-round.svg": "84870f26f3faf8da45da84174517519e81b9e8f00319c78954fcbb74f50038a1",
+    "paper/figures/assets/lucide/circle-question-mark.svg": "975db087da041530dbf59ba1e61a7b99c3519fad43dae6375e42ccc74ba63924",
     "paper/figures/assets/lucide/clipboard-list.svg": "2b91abc2e8ee8ba4c2e0f77d506a47a7a9774b0d4de3fa4b27e822a6376ab892",
-    "paper/figures/assets/lucide/microscope.svg": "72fab65c4fdd0a7d784485dc7aaa8bf8c4fba9a4dc9ae38a6538e58bdd8b5f42",
-    "paper/figures/assets/lucide/workflow.svg": "ae99ea8f56a2835a2cca35b2fbb57643ab73443610970dba23e24bd9df75cfec",
-    "paper/figures/assets/lucide/scan-eye.svg": "343741486dfe4188a80628e3b8ae7a71f6ac63e0de5fbf474674b053c8f80721",
+    "website/assets/logos/README.md": "244baac8bc62478d51d3f50a750559edc1205763bcdb4c6fbab87e698a93e43b",
+    "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea",
+    "website/assets/logos/napari.svg": "e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d",
+    "paper/figures/assets/lucide/list-tree.svg": "f816da37682467b872d18ef239b9f107b91dbee3212629c7b756ba881ae385f1",
+    "paper/figures/assets/lucide/clipboard-check.svg": "e2bac86a6b24caa0d7d0dcc2719ec6b7870ec5eef2d21afae498d8cb5eefda96",
     "paper/figures/assets/lucide/wrench.svg": "b5f3bf792743edb9e81b543dd1b13ccc26d3afe1d33500a1cd8dee2e052d6197",
-    "paper/figures/assets/lucide/files.svg": "97adf06fc0511e7a40be93ecda04466ed196718ab4a5e3a62b1148cc49697775"
+    "paper/figures/assets/lucide/circle-check-big.svg": "25f075fd621df48282ace8326680a4cd165965e61458d2fd0cc1303cefc179ac",
+    "paper/figures/slas/h001_scored_native_provenance.json": "4e5916a2ae5c51aae90ebb7061ec35b8bb669eb446401c67119624c728a7e787",
+    "paper/figures/slas/h001_scored_sources/detail_raw.png": "34958e4887af3e065de33bf2bf614b2a167c494fbcbe93e3028d7f4ad3185d3e",
+    "paper/figures/slas/h001_scored_sources/detail_first.png": "715f9fce1e6abfd1fbd2b96eb0b7485ce13f5efa1ae9538c5a56ad5296d63a93",
+    "paper/figures/slas/h001_scored_sources/detail_final.png": "492c079aafd4c7d157e59b9eb276e61ddfaa0610aae88c09a4b1a87e35eecea6"
   },
-  "ui_crops": [],
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h001_scored_sources/detail_raw.png",
+      "xyxy_pixels": [
+        620,
+        90,
+        980,
+        355
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h001_scored_sources/detail_first.png",
+      "xyxy_pixels": [
+        620,
+        90,
+        980,
+        355
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h001_scored_sources/detail_final.png",
+      "xyxy_pixels": [
+        620,
+        90,
+        980,
+        355
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    }
+  ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_autonomous_loop.png": "ad6fb90b4edc8ff604412b16ec834d456d4847f67d3a70e7d99628d9d34a939e",
-    "submission_autonomous_loop.pdf": "4d3adbe0dcdc5ffe0a67e2e2df25d5a4ea925c3c4f21d389c921851ea999b18a",
-    "submission_autonomous_loop.svg": "64093fc520b815a4e1e0cc9079d2255e3007455a9f2f621e68f6d7db92a62bc1"
+    "submission_autonomous_loop.png": "0173616e7a4086fc748a9df9628718739608424fdc8e2fc6a1c625d356750e52",
+    "submission_autonomous_loop.pdf": "34c6554d504427f41290915a4d5aef4b427d2b794132e09b3ebdcd8de3eeca16",
+    "submission_autonomous_loop.svg": "33f5d4559cac7d1a391a4ded3519975127517e01d1162216bc8bf5f02a4d8e8d"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

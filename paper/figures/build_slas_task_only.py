@@ -338,7 +338,7 @@ def build(root: Path, output: Path) -> None:
 
 
 def submission_summary() -> None:
-    """Combine distinct frozen endpoints with their matched nuclear repair witness."""
+    """Combine distinct frozen endpoints with an independent local repair witness."""
     from build_slas_visual_story import MUTED
     from build_slas_supplement import SupplementFigure
     from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
@@ -355,9 +355,9 @@ def submission_summary() -> None:
     sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
     for path in sources:
         sheet.source(ROOT / path)
-    axes = [sheet.figure.add_axes((0.09 + col * 0.49, bottom, 0.37, 0.17))
-            for bottom in (0.74, 0.49) for col in (0, 1)]
-    axes.append(sheet.figure.add_axes((0.09, 0.25, 0.86, 0.14)))
+    axes = [sheet.figure.add_axes((0.09 + col * 0.49, bottom, 0.37, 0.15))
+            for bottom in (0.79, 0.55) for col in (0, 1)]
+    axes.append(sheet.figure.add_axes((0.09, 0.32, 0.86, 0.12)))
     titles = ("A  Bright objects", "B  Independent nuclear analyses",
             "C  DNA / actin cell boundaries", "D  Three-dimensional centres",
               "E  Protein translocation")
@@ -447,9 +447,13 @@ def submission_summary() -> None:
     axes[4].tick_params(axis="x", labelsize=8)
     axes[4].legend(frameon=False, fontsize=9, loc="upper left")
 
-    sheet.text(3, 17.5, "F  Nuclear repair on the same input: raw → first → final",
+    sheet.text(3, 24, "F  Independent DNA / actin analysis: local merge repair",
                size=12, weight="bold")
-    sheet.artwork("h001_scored_native", (2, 0, 96, 15.5), crop=(2, 61, 98, 91))
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")
+    sheet.artwork("h003_native_repair", (2, 2, 96, 21), crop=(1, 4, 99, 42))
+    sheet.text(3, 0.5, "Uncoached H003 author, same C4 region; local separation repaired, not complete segmentation accuracy.",
+               size=8.5, color=MUTED)
     sheet.save()
 
 

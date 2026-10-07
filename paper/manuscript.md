@@ -38,27 +38,8 @@ MCMICRO combines interchangeable processing modules for multiplexed tissue imagi
 
 We evaluated OpenHCS using established CellProfiler workflows and agent-authored analyses of nuclei, cell bodies, neurites and protein translocation. Comparisons with native CellProfiler tested whether imported workflows preserved their selected outputs. Autonomous trials tested whether agents could construct an analysis, inspect its results and correct segmentation errors without access to reference scores. We assessed frozen analyses using annotations, well-level assay responses and matched image review. Separate experiments compared execution and total time across the 30 imported workflows.
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
 
-### Figure 1. Scientists can inspect and edit the agent's analysis
 
-![Enlarged native main window with plate-manager, pipeline-editor and execution-server detail overlays.](figures/slas/submission_shared_workflow.png){width=6.5in}
-
-**(I)** Native main window with outlined editorial enlargements of its plate manager, pipeline editor and real ZeroMQ server browser. Insets cover unused workspace and are not extra application windows. The server browser was captured in OpenHCS 0.8.7; the authoring window in 0.8.5. The supplementary package retains the editing record and capture provenance.
-
-### Figure 1, continued. The laboratory's own Python joins the shared analysis
-
-![Real Python declaration and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6.5in}
-
-**(II)** The syntax-highlighted `paper_rescale_signal` declaration, including its NumPy backend decorator and docstring, supplies the shown form defaults and MCP descriptions; no function-specific form or tool was written. Native OpenHCS 0.8.7 form and code views show the same function with gain 1.2 and offset 0.0, verified against its code-document readback. These records establish authoring, not assay execution or a parameter-editing round trip. Supplementary Data 3 retains capture records and limitations.
-
-### Figure 2. One editable workflow connects editing, execution and inspection
-
-![Shared editing, execution, workers, viewers and image storage.](figures/slas/shared_workflow.png){width=6.5in}
-
-Forms, Python and MCP act on one editable workflow; CellProfiler imports enter the same definition. The ZeroMQ execution server compiles pipelines, coordinates workers and returns progress to the editor. Workers read source images, save outputs and stream results to separate napari or Fiji viewers. Logos identify import, storage, processing and viewing integrations, not separate analysis steps. CPU/GPU support depends on the selected functions; OMERO support is experimental. Supplementary Figure 1 expands the runtime and preparation details.
 
 ## Materials and Methods
 
@@ -76,6 +57,15 @@ Source mappings select channels, planes or stacks and divide images into process
 
 Microscope handlers interpret acquisition-specific layouts and metadata. Bio-Formats-backed discovery provides image-plane records from microscopy containers. The OME-Zarr source reads declared axes, channels, pixel scale and image or plate structure. Explicit source mappings assign roles where acquisition metadata are insufficient. Experimental OMERO support supplies managed images and metadata through the same source model.
 
+### Figure 1. Scientists can inspect and edit the agent's analysis
+
+![Full-width native main window with boxes marking the plate manager, pipeline editor and execution servers.](figures/slas/submission_shared_workflow.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(I)** One native OpenHCS 0.8.5 main window, with boxes identifying its plate manager, pipeline editor and execution-server list. The full-width view has no duplicated cutouts or extra application windows. The supplementary package retains the editing record and capture provenance.
+:::
+
+
 ### Execution, intermediate results and viewers
 
 Steps produce named images, labels, measurements, object relationships and files. Function contracts declare inputs and outputs; compilation connects later operations to their sources. Results retain the producing step, source coordinates and processing group. Saving and viewer delivery are independent choices (Supplementary Data 4).
@@ -83,6 +73,8 @@ Steps produce named images, labels, measurements, object relationships and files
 napari and Fiji receive selected outputs together with their source coordinates and producing step. The streaming service checks that each viewer is ready and waits for pending display updates to finish. Viewer sessions remain available for inspection after execution. Local files, in-memory data, Zarr-backed stores and OMERO provide storage routes; the OME-Zarr array source is read-only.
 
 The execution server coordinates analysis runs and remains available between requests. Within a run, each worker processes its assigned samples using the prepared plan and reuses loaded libraries and initialized array backends. Worker resources are released when that execution finishes. Worker count controls how many samples can be processed concurrently. Workers normally run in separate processes; a configuration option selects threads instead.
+
+
 
 ### Agent access through MCP
 
@@ -92,6 +84,16 @@ Function-discovery operations return descriptions derived from registered proces
 
 Desktop operations edit and run the live workflow; headless operations use a separate execution context. Local clients use standard input/output. Desktop connections are authenticated, stale workflow revisions are rejected, and file access is restricted to permitted paths. Hosted HTTP provides selected read-only operations in isolated workspaces.
 
+
+
+### Figure 1, continued. The laboratory's own Python joins the shared analysis
+
+![Real Python declaration and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(II)** The syntax-highlighted `paper_rescale_signal` declaration, including its NumPy backend decorator and docstring, supplies the shown form defaults and MCP descriptions; no function-specific form or tool was written. Native OpenHCS 0.8.7 form and code views show the same function with gain 1.2 and offset 0.0, verified against its code-document readback. These records establish authoring, not assay execution or a parameter-editing round trip. Supplementary Data 3 retains capture records and limitations.
+:::
+
 ### Reusable workflow infrastructure
 
 Reusable libraries supply discovery, settings, generated interfaces, array conversion, storage and process coordination; OpenHCS supplies microscopy functions, source handlers and viewers (Supplementary Table 1).
@@ -99,6 +101,14 @@ Reusable libraries supply discovery, settings, generated interfaces, array conve
 ### Agent-operated analysis
 
 A separate, earlier gpt-5.6-sol demonstration analysed NeuronCyto II field 1 through desktop MCP [@NeuronCytoII]. Its prompt explicitly requested normalization and dim-neurite enhancement, unlike the later task-only trials. Supplementary Data 4 retains the complete prompt, input and software identities, tool trace, wall time, saved outputs and subsequent comparison with published manual measurements. This method-directed demonstration is not included as a task-only trial.
+
+### Figure 2. One editable workflow connects editing, execution and inspection
+
+![Shared editing, execution, workers, viewers and image storage.](figures/slas/shared_workflow.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+Forms, Python and MCP act on one editable workflow; CellProfiler imports enter the same definition. The ZeroMQ execution server compiles pipelines, coordinates workers and returns progress to the editor. Workers read source images, save outputs and stream results to separate napari or Fiji viewers. Logos identify import, storage, processing and viewing integrations, not separate analysis steps. CPU/GPU support depends on the selected functions; OMERO support is experimental. Supplementary Figure 1 expands the runtime and preparation details.
+:::
 
 ### Prospective agent-authored assay evaluation
 
@@ -132,6 +142,23 @@ The packaged skill describes the specialist workflow: inspect channels and repre
 Fresh gpt-6.1-sol agents received the brief, packaged skill and MCP, but no reference labels or accepted settings. Public assay briefs included catalogue tracks and typed source bindings; BBBC007 specifically requested seeded-cell segmentation. Authors retained attempts, tool calls and matched views. The coordinator evaluated frozen predictions after authoring ended, without returning scores. These trials are distinct from the earlier prospective held-out evaluation (Supplementary Data 8).
 
 We compared first completed scientific settings with the final settings on exactly the same inputs. Technical corrections needed to submit or execute a pipeline remain part of the record; the first completed prediction is not necessarily the first tool call. H001 used a single notebook-derived bright-object image and its predeclared computational label reference. BBBC039 used independent nuclear annotations, with a paired first/final comparison on three fields and a separate final evaluation across all 200 fields. Some of those fields were inspected during development, so the 200-field result measures reference agreement rather than unseen generalization. Existing instance scorers used one-to-one matching at intersection over union at least 0.5.
+
+| Input and task | Evaluation evidence | Supported result and limit |
+|---|---|---|
+| H001 bright objects | Pinned notebook instance labels | Object F1 after one-to-one matching; computational reference, not manual biological truth |
+| BBBC039 nuclei | Independent instance annotations; full corpus and retrospective image-uninspected subset | Pooled object F1; development and retrospective uninspected subsets distinguished |
+| BBBC007 DNA/actin | Manual-outline union | Fraction of predicted boundary pixels near the reference; not boundary recall or exhaustive instance accuracy |
+| H002 3-D centres | Manual centre annotations | Matched-centre voxel distance; annotations not established as exhaustive |
+| R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
+| H004 public neurites | Matched raw shafts and nuisance controls | Retained initial principal-shaft recovery; final repair exceeded the shaft target, and per-neuron crossing ownership remains unresolved |
+| Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
+| Laboratory neurites, 20-well transfer | MetaXpress well responses; two technical wells per drug/concentration | Concordant positive outgrowth responses with smaller estimated fold changes; assisted transfer, not a separate autonomous authoring trial or manual-trace score |
+| BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
+
+Table 1. Endpoints, references and scope of autonomous image analysis.
+
+Predictions were frozen before reference comparison; scores were not returned to authors. Visual-review rows provide no numerical accuracy estimate.
+
 
 For BBBC039, we also scored the frozen final predictions on fields whose images
 were not opened by the analysis agents. Original image-delivery records excluded
@@ -205,6 +232,15 @@ The assays include DNA-damage measurement, human and Drosophila cell morphology,
 
 The advanced segmentation and 3D monolayer imports retain their named structures, measurements and processing sequences in editable Python (Supplementary Data 5).
 
+### Figure 3. Delegated specialist work leaves an analysis the scientist can inspect
+
+![Skill-directed workflow with Fiji and napari inspection, followed by the recorded H001 decisions and matched raw/repair images.](figures/slas/submission_autonomous_loop.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(A)** Licensed pictograms and Fiji/napari logos show the packaged skill's intended workflow: biological brief, input inspection, pipeline execution, matched-view audit, targeted repair and delivery. (B) Recorded H001 decisions across four executions, with the same region shown raw, first (a01) and final (a04). The elongated body's split is repaired; colours are not shared object identities. The report also records recovery of a pair lost during revision. Catalogue times include review, reporting and cleanup. This example does not establish universal adherence to the current skill.
+:::
+
+
 ### Autonomous analysis across distinct biological tasks
 
 Agents used only a task brief, the packaged skill and MCP to select parameters,
@@ -215,12 +251,19 @@ these endpoints should not be combined into a single accuracy percentage.
 
 For bright-object segmentation, the H001 author matched 59 of 64
 notebook-reference objects while reducing excess predictions from four to two,
-raising object F1 from 0.929 to 0.944 (Figure 4A,F). The reference is computational,
+raising object F1 from 0.929 to 0.944 (Figures 3B and 4A). The reference is computational,
 not a manual cell census. Independent BBBC039 authors achieved final pooled
 object F1 of 0.898–0.906 over the same 200 annotated fields. On the common
 175 fields opened by none of the three agents, final F1 was 0.906–0.910.
 The lower-scoring
 fields show that useful overall agreement does not imply uniform accuracy.
+
+The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
+earlier author: 61 fields improved, 123 decreased and 16 were unchanged
+(Supplementary Figure 3). This repeat retains useful agreement but shows that
+within-run repair does not guarantee a better result from the next fresh author.
+
+
 
 In three dimensions, a measurement-first author recovered all 15 annotated
 centres within the predeclared 30-voxel matching distance, with mean matched
@@ -302,46 +345,26 @@ compartment-level inspection from assisted development. Frozen records and
 individual unsuccessful attempts remain in Supplementary Data 8 rather than
 being treated as additional experiments.
 
-| Input and task | Evaluation evidence | Supported result and limit |
-|---|---|---|
-| H001 bright objects | Pinned notebook instance labels | Object F1 after one-to-one matching; computational reference, not manual biological truth |
-| BBBC039 nuclei | Independent instance annotations; full corpus and retrospective image-uninspected subset | Pooled object F1; development and retrospective uninspected subsets distinguished |
-| BBBC007 DNA/actin | Manual-outline union | Fraction of predicted boundary pixels near the reference; not boundary recall or exhaustive instance accuracy |
-| H002 3-D centres | Manual centre annotations | Matched-centre voxel distance; annotations not established as exhaustive |
-| R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
-| H004 public neurites | Matched raw shafts and nuisance controls | Retained initial principal-shaft recovery; final repair exceeded the shaft target, and per-neuron crossing ownership remains unresolved |
-| Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
-| Laboratory neurites, 20-well transfer | MetaXpress well responses; two technical wells per drug/concentration | Concordant positive outgrowth responses with smaller estimated fold changes; assisted transfer, not a separate autonomous authoring trial or manual-trace score |
-| BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
-Table 1. Endpoints, references and scope of autonomous image analysis.
 
-Predictions were frozen before reference comparison; scores were not returned to authors. Visual-review rows provide no numerical accuracy estimate.
-
-### Figure 3. Delegated specialist work leaves an analysis the scientist can inspect
-
-![Skill-directed analysis workflow and a separately identified recorded H001 decision sequence.](figures/slas/submission_autonomous_loop.png){width=6.5in}
-
-**(A)** Licensed Lucide pictograms explain the packaged skill's intended workflow, not assay data: a biological brief leads to input inspection, execution, matched-view audit, targeted repair and delivery. The scientist can audit the delivered images, masks, settings and measurements. (B) Recorded nuclear-segmentation decisions across four executions: the author's report describes split repair and recovery of a pair lost during revision (matched repair images, Figure 4F). Catalogue times include review, reporting and cleanup. This example does not establish universal adherence to the current skill.
-
-The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
-earlier author: 61 fields improved, 123 decreased and 16 were unchanged
-(Supplementary Figure 3). This repeat retains useful agreement but shows that
-within-run repair does not guarantee a better result from the next fresh author.
 
 
 
 ### Figure 4. Quantitative results and matched image-repair evidence
 
-![Task-specific nuclear, boundary, volume and translocation endpoints alongside matched nuclear repair views.](figures/slas/submission_analysis_summary.png){width=6in}
+![Task-specific nuclear, boundary, volume and translocation endpoints alongside an independent DNA/actin merge repair.](figures/slas/submission_analysis_summary.png){width=6in}
 
-**(A)** H001 first/final computational-reference F1 (three fields). (B) Three BBBC039 authors, all 200 and 175 commonly uninspected fields. (C) BBBC007 boundary agreement: field dots and pooled-pixel lines. (D) H002 matched-centre errors and recovered references. (E) BBBC013 dose means/sample SD, four wells per dose; control Z-prime uses four positive/four negative wells. (F) Same-input H001 raw, a01 and a04: a split body is repaired without reference feedback. Colours are not shared object identities. References differ across endpoints; none is a pooled accuracy score. Evaluation records: Supplementary Data 8.
+::: {custom-style="ImageCaption"}
+**(A)** H001 first/final computational-reference F1 (one image). (B) Three BBBC039 authors, all 200 and 175 commonly uninspected fields. (C) BBBC007 boundary agreement: field dots and pooled-pixel lines. (D) H002 matched-centre errors and recovered references. (E) BBBC013 dose means/sample SD, four wells per dose; control Z-prime uses four positive/four negative wells. (F) An independent, uncoached BBBC007 author (H003_POSTPAUSE_88) repairs a local merge in the same C4 region, from candidate01_retry01 to candidate06. The lower object retains bridge support and another regional merge remains unresolved; this is within-run repair, not ground-truth segmentation accuracy. Colours are not shared identities. References differ across endpoints; none is a pooled accuracy score. Evaluation records: Supplementary Data 8.
+:::
 
 ### Figure 4, continued. Repairs and volumetric localisation
 
 ![Matched retinal and volumetric body repairs, with separate frozen three-dimensional localisation evidence.](figures/slas/submission_quantitative_results.png){width=6in}
 
+::: {custom-style="ImageCaption"}
 **(G)** Same-input retinal raw/first/final views: fragmented footprints improve while neighbours remain separate. Border and weak-body coverage remain uncertain; this is continuation, not a fresh trial. (H) An independent 3-D author repairs a body partition at Z=36, not the complete volume. (I) A separate frozen analysis: XY labels and post-freeze XZ/YZ outlines (yellow), with in-plane centres (magenta). Fifteen manual centres were recovered; eleven further predictions have no matching annotation of established coverage. Distances are voxels, not micrometres. Colours do not identify objects across attempts. Wider views and remaining errors: Supplementary Figures 3–4 and Data 8.
+:::
 
 
 
@@ -350,11 +373,13 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 
 
-### Figure 5. Autonomous neurite analysis and assisted treatment evaluation
+### Figure 5. Neurite analysis and assisted drug responses
 
 ![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
-**(I, A–C)** Same field and display scale: raw, initial OpenHCS and published NeuronCyto II (Ong et al., Figure 2D [@NeuronCytoII]; CC BY-NC 4.0). C is an algorithm comparison, not manual ground truth; its red annotations are original and exact pixel registration is unestablished. Later OpenHCS repair overextended the target. (II, D–F) Matched autonomous P001 views; overlapping fields were not deduplicated. A/B and D–F are display-inverted only; paths and measurements are unchanged. (III, G–H) Assisted 20-well responses, relative to each drug's DMSO mean. Dots: two technical wells/dose; whiskers: sample SD. Five additional endpoints: Supplementary Figure 5.
+::: {custom-style="ImageCaption"}
+**(I)** Same field and scale: raw, initial OpenHCS and published NeuronCyto II [@NeuronCytoII] (CC BY-NC 4.0), not manual ground truth or exact registration. Later repair overextended the target. (II) Matched autonomous P001 field. Frozen arrays/vector paths replace reduced screenshots; display changes leave geometry and measurements unchanged (Supplementary Data 8). (III) Assisted 20-well responses relative to each drug's DMSO mean; dots: two technical wells/dose; whiskers: sample SD. Additional endpoints: Supplementary Figure 5.
+:::
 
 
 ### Matched execution and total time across 30 workflows
@@ -365,15 +390,13 @@ Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=t
 
 Measured multi-worker comparisons, total speedup versus assigned sample count, and individual workflow runtimes are shown in Supplementary Figure 6. Single-core amortization and exact efficiencies are retained in Supplementary Data 3.
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
 ### Figure 6. Matched single-sample speedup over native CellProfiler
 
 ![Execution and compile-plus-run total speedups, showing means, medians and every matched workflow.](figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
 
+::: {custom-style="ImageCaption"}
 Execution and compile-plus-run total speedups for [pending]{.benchmark-claim key=case_count} workflows, using one selected source sample, one worker and one numerical thread. Coloured bars show mean speedup, grey points show individual workflows, and black lines show medians on a logarithmic scale. Each workflow's speedup is the ratio of independent engine medians from three repetitions after warmup; the dashed line marks equal runtime. All workflows passed the declared-output comparisons; this is workflow parity, not biological segmentation accuracy. Minimum and median execution speedups are [pending]{.benchmark-claim key=execution_min}-fold and [pending]{.benchmark-claim key=execution_median}-fold; corresponding total speedups are [pending]{.benchmark-claim key=total_min}-fold and [pending]{.benchmark-claim key=total_median}-fold. Record [pending]{.benchmark-claim key=record_name} supplies every panel and manuscript claim. The linear view, individual runtimes and sample-count comparisons appear in Supplementary Figure 6.
+:::
 
 
 ## Discussion

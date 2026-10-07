@@ -1,17 +1,14 @@
 {
-  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
+  "generator_sha256": "d04c3f4234beb66a9ca2334b05472412b2cd3f2085e2fe97b61760362a282cd6",
   "source_sha256": {
-    "paper/figures/slas/neuroncyto_published_reference/source.json": "a6dc5d23e6abf7aabc676bddc8feab7c8ac264c9a31ca9071db1088d32608c26",
+    "paper/figures/slas/neuroncyto_published_reference/source.json": "d4c3babdb926fc91c7bde48182fcc4990634989a66275f6c371839904871f15c",
     "paper/figures/slas/h004_fresh20_sources/QA-INDEX.json": "be4368ce33df338f7791587e2f3b7427594516d0e299f21394ba1d50310d6964",
     "paper/figures/slas/p001_fresh13_sources/source-record.rst": "d01fb0758a57f9971f17c80c82db3d2dd2ccd487df83164a5fd57381882830a3",
     "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst": "e9611782366b393c3c580a371b8f2928a19997e90e238c80045f75dfa6156d72",
     "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst": "80264382d71633044cde49a929e874a6b2c2586c22295b67dcc62202528d9978",
-    "paper/figures/slas/h004_fresh20_sources/first-full-raw.png": "a5ff357b010c1869732c54890aa611b6ed9f6ab674086a911c2bbb8c11a3a3e2",
-    "paper/figures/slas/h004_fresh20_sources/first-full-result.png": "8526d5be0e23deff03407e8b78a18d4b5f5e4f9cc1b7ce3f35a148b5b8c45ba2",
-    "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002.jpg": "613b7356ff007ed8e541ee469f9955afadc27a47f8f6906b985bbffb2f42bbad",
-    "paper/figures/slas/p001_fresh13_sources/site1-raw.png": "9c936e4f1c87298c21460351b83a6f913a3acdc5c392802eebf955b85e765a82",
-    "paper/figures/slas/p001_fresh13_sources/site1-result.png": "5acf284c8b75c8c0dbcbe3c40ddf3487ca22cee2aa66cfd71ac1195423e8dbc8",
-    "paper/figures/slas/p001_fresh13_sources/site1-combined.png": "d9b7b694ac356238d26c92a349f422e654a444045320196503c0a8bb7c5363b6",
+    "paper/figures/slas/frozen_neurite_views.json": "149320267461bbe4e6738dd2b45015ff6fbfc4a6ce29c193c8cfff33e1ee251e",
+    "paper/figures/build_slas_neurite_views.py": "6655c6c46a3a30b9437fe17624e93d96df45943eee18adf65730d29ffe4019e1",
+    "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg": "cebc8010f38e0d1e3c25a8de658e6a6b5f3ec60d90564ba6df1087b80630f687",
     "paper/figures/build_slas_neurite_effects.py": "76da934abd432d78215f94b3c0651d10a807fd4b99a5c2272a8f8e81c7727218",
     "paper/figures/compare_personal_neurite.py": "56ebc5f582c4bcbc2384d6cf954e32ca86007fb8a91f63f403ee293a7c05a2eb",
     "paper/supplementary/personal_neurite_repaired_morphometry/joined_wells.csv": "d059c5c35b7cdff94c411caaa29fcaefeff0f952baf63bb229b1c82c92773a2e",
@@ -20,140 +17,57 @@
   },
   "ui_crops": [
     {
-      "source": "paper/figures/slas/h004_fresh20_sources/first-full-raw.png",
-      "xyxy_pixels": [
-        574,
-        39,
-        973,
-        438
-      ],
-      "source_size": [
-        1440,
-        944
-      ]
-    },
-    {
-      "source": "paper/figures/slas/h004_fresh20_sources/first-full-result.png",
-      "xyxy_pixels": [
-        574,
-        39,
-        973,
-        438
-      ],
-      "source_size": [
-        1440,
-        944
-      ]
-    },
-    {
-      "source": "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002.jpg",
-      "xyxy_pixels": [
-        275,
-        248,
-        500,
-        473
-      ],
-      "source_size": [
-        502,
-        475
-      ]
-    },
-    {
-      "source": "paper/figures/slas/p001_fresh13_sources/site1-raw.png",
+      "source": "paper/figures/slas/neuroncyto_published_reference/CYTO-89-747-g002-pdf.jpg",
       "xyxy_pixels": [
         550,
-        28,
-        997,
-        437
+        496,
+        1000,
+        946
       ],
       "source_size": [
-        1440,
-        944
-      ]
-    },
-    {
-      "source": "paper/figures/slas/p001_fresh13_sources/site1-result.png",
-      "xyxy_pixels": [
-        550,
-        28,
-        997,
-        437
-      ],
-      "source_size": [
-        1440,
-        944
-      ]
-    },
-    {
-      "source": "paper/figures/slas/p001_fresh13_sources/site1-combined.png",
-      "xyxy_pixels": [
-        550,
-        28,
-        997,
-        437
-      ],
-      "source_size": [
-        1440,
-        944
+        1004,
+        950
       ]
     }
   ],
   "display_transforms": [
     {
-      "source": "paper/figures/slas/h004_fresh20_sources/first-full-raw.png",
-      "operation": "RGB complement (255 - channel); display only",
-      "crop_xyxy_pixels": [
-        574,
-        39,
-        973,
-        438
-      ]
+      "author_run": "H004_FRESH20_95",
+      "attempt": "first",
+      "operation": "Full-resolution frozen arrays; dark label colours and vector graph strokes; inverted raw display",
+      "source_shape_yx": [
+        800,
+        800
+      ],
+      "raw_window": [
+        0,
+        100
+      ],
+      "gamma": 1,
+      "path_stroke_points": 0.55,
+      "analysis_rerun": false
     },
     {
-      "source": "paper/figures/slas/h004_fresh20_sources/first-full-result.png",
-      "operation": "RGB complement (255 - channel); display only",
-      "crop_xyxy_pixels": [
-        574,
-        39,
-        973,
-        438
-      ]
-    },
-    {
-      "source": "paper/figures/slas/p001_fresh13_sources/site1-raw.png",
-      "operation": "RGB complement (255 - channel); display only",
-      "crop_xyxy_pixels": [
-        550,
-        28,
-        997,
-        437
-      ]
-    },
-    {
-      "source": "paper/figures/slas/p001_fresh13_sources/site1-result.png",
-      "operation": "RGB complement (255 - channel); display only",
-      "crop_xyxy_pixels": [
-        550,
-        28,
-        997,
-        437
-      ]
-    },
-    {
-      "source": "paper/figures/slas/p001_fresh13_sources/site1-combined.png",
-      "operation": "RGB complement (255 - channel); display only",
-      "crop_xyxy_pixels": [
-        550,
-        28,
-        997,
-        437
-      ]
+      "author_run": "P001_FRESH13_96",
+      "attempt": "final-attempt, site 1",
+      "operation": "Full-resolution frozen arrays; dark label colours and vector graph strokes; inverted raw display",
+      "source_shape_yx": [
+        1024,
+        1024
+      ],
+      "raw_window": [
+        144,
+        3500
+      ],
+      "gamma": 1,
+      "path_stroke_points": 0.55,
+      "analysis_rerun": false
     }
   ],
   "output_sha256": {
-    "submission_neurite_results.png": "f8b0ee0659e6c0f04a626b0eeaedaf7d758752c503461c33dc5544ee47e6c907",
-    "submission_neurite_results.pdf": "eaf2eb3564f792ff0196ace270dba4e4d5ba18962fc129d9f0e0754adc1532ac",
-    "submission_neurite_results.svg": "afa77521151cd174666e3b2f38d02acf420172e252b4b3b32ea9536618a4d4e8"
+    "submission_neurite_results.png": "8cc00dd999ad65703b8b9ebc5bbf7da97c4694bba083f7b29b3adb30ce6c1e5f",
+    "submission_neurite_results.pdf": "24e80b6aa66c11bdb41ae8844f31dd1d889eb796c159f6876f4cc965500c9583",
+    "submission_neurite_results.svg": "79321033fa08d50b3fe9bd6b07e14be00f93b29e95cd3f20545b7772637a41be"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

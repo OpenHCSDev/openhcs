@@ -226,12 +226,12 @@ class FigureSheet:
         axis.imshow(pixels, interpolation="nearest")
         axis.set_axis_off()
 
-    def save(self):
+    def save(self, *, dpi=300):
         OUTPUT.mkdir(parents=True, exist_ok=True)
         outputs = []
         for extension in ("png", "pdf", "svg"):
             path = OUTPUT / f"{self.stem}.{extension}"
-            self.figure.savefig(path, dpi=300)
+            self.figure.savefig(path, dpi=dpi)
             if extension == "svg":
                 normalize_generated_svg(path)
             outputs.append(path)
@@ -775,6 +775,7 @@ def personal_stitched_development():
 
 def submission_neurite_results():
     from build_slas_neurite_effects import NeuriteEffectFigure
+    from build_slas_neurite_views import FrozenNeuriteView
 
     """Show the retained shaft illustration without promoting an overextended repair."""
     sheet = FigureSheet("submission_neurite_results", "", 10.4)
@@ -791,6 +792,12 @@ def submission_neurite_results():
     sheet.source(personal / "source-record.rst")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
     sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
+    views_path = OUTPUT / "frozen_neurite_views.json"
+    sheet.source(views_path)
+    sheet.source(ROOT / "paper/figures/build_slas_neurite_views.py")
+    views = json.loads(views_path.read_text())
+    public_view = FrozenNeuriteView(sheet, views["public"])
+    laboratory_view = FrozenNeuriteView(sheet, views["laboratory"])
     sheet.panel("I", "Public neurites: OpenHCS and published NeuronCyto II", 3, 97)
     matched = reference["matched_wholefield_layout"]
     for x, name, title, record in (
@@ -801,12 +808,13 @@ def submission_neurite_results():
         if digest(path) != record["sha256"]:
             raise ValueError(f"Whole-field native capture hash mismatch: {name}")
         sheet.text(x, 91, title, size=10.5, weight="bold")
-        sheet.source_image(path, (x, 61, 30, 26), crop=tuple(record["crop_xyxy_pixels"]), invert=True)
+        public_view.draw((x, 61, 30, 26), raw=name == "first-full-raw",
+                         result=name == "first-full-result")
     sheet.text(67, 91, "C  Published NeuronCyto II", size=10.5, weight="bold")
     sheet.source_image(reference_image, (67, 61, 30, 26),
                        crop=tuple(reference["crop_xyxy_pixels"]))
     sheet.text(67, 59, "Algorithm comparison, not manual GT", size=8.5, color=MUTED)
-    sheet.text(3, 56, "A–C: equal field scale; A/B display inverted. C: Ong et al., Fig. 2D; CC BY-NC 4.0.",
+    sheet.text(3, 56, "A/B: frozen 800-pixel field and vector paths. C: Ong et al., Fig. 2D; 450-pixel PDF crop; CC BY-NC 4.0.",
                size=9, color=MUTED)
     sheet.panel("II", "Laboratory neurites: final autonomous analysis", 3, 52)
     for x, name, title in (
@@ -815,8 +823,7 @@ def submission_neurite_results():
         (67, "combined", "F  Combined"),
     ):
         sheet.text(x, 48, title, size=10.5, weight="bold")
-        sheet.source_image(personal / f"site1-{name}.png", (x, 27, 30, 19.5),
-                           crop=(550, 28, 997, 437), invert=True)
+        laboratory_view.draw((x, 27, 30, 19.5), raw=name != "result", result=name != "raw")
     sheet.panel("III", "Assisted repair: treatment responses", 3, 24)
     NeuriteEffectFigure.draw_panels(
         sheet, ROOT / "paper/supplementary/personal_neurite_repaired_morphometry",
@@ -824,7 +831,8 @@ def submission_neurite_results():
     )
     sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Concordant outgrowth responses; branching fold changes differ.",
                size=9.5, color=MUTED)
-    sheet.save()
+    # Preserve the 1024-pixel field in the manuscript's raster embedding too.
+    sheet.save(dpi=600)
 
 
 def submission_repair_examples():
@@ -851,7 +859,7 @@ def submission_repair_examples():
 
 def submission_autonomous_loop():
     """Separate intended skill workflow from the retained H001 trajectory."""
-    sheet = FigureSheet("submission_autonomous_loop", "", 7.4)
+    sheet = FigureSheet("submission_autonomous_loop", "", 9.6)
     resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
     with resources.open(newline="") as stream:
         rows = [row for row in csv.DictReader(stream)
@@ -883,7 +891,7 @@ def submission_autonomous_loop():
         (69, 69, "3  Build and execute", "workflow",
          "Editable pipeline\nDeclared functions\nCompile and run", BLUE),
         (69, 41, "4  Audit the result", "scan-eye",
-         "Raw / result / overlay\nSame position and scale\nMasks and measurements", TEAL),
+         "Raw / result / overlay\nMatched position / scale\nMasks / measurements", TEAL),
         (36, 41, "5  Repair and recheck", "wrench",
          "Earliest failing stage\nOne change at a time\nFailure + control view", ORANGE),
         (3, 41, "6  Freeze and deliver", "files",
@@ -896,7 +904,22 @@ def submission_autonomous_loop():
         ))
         sheet.text(x + 14, y + 20.5, title, size=11, weight="bold",
                    color=color, ha="center", va="center")
-        sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 7, 8, 10))
+        if icon == "clipboard-list":
+            sheet.asset(icons / "user-round.svg", (x+1, y+8, 6, 9))
+            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+13, 3, 4))
+            sheet.asset(icons / "clipboard-list.svg", (x+7, y+6, 3, 5))
+        elif icon == "microscope":
+            sheet.source(ROOT / "website/assets/logos/README.md")
+            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+11, 9, 6))
+            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+4, 9, 6))
+        elif icon == "workflow":
+            sheet.asset(icons / "list-tree.svg", (x+1.8, y+7, 8, 10))
+        elif icon == "scan-eye":
+            sheet.asset(icons / "clipboard-check.svg", (x+1.8, y+7, 8, 10))
+        elif icon == "files":
+            sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+7, 8, 10))
+        else:
+            sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 7, 8, 10))
         sheet.text(x + 11, y + 12, detail, size=9, va="center",
                    linespacing=1.5, zorder=4)
     for start, end in (((31,80),(36,80)), ((64,80),(69,80)),
@@ -914,51 +937,47 @@ def submission_autonomous_loop():
         "Split body", "Split fixed; pair lost", "Pair still lost", "Pair recovered",
     ))):
         x = 3 + index * 24
-        sheet.box(x, 23, 22, 7, f"{int(candidate)} • {count} objects", decision, color=TEAL)
+        sheet.box(x, 24, 22, 6, f"{int(candidate)} • {count} objects", decision, color=TEAL)
         if index < 3:
-            sheet.arrow((x+22,26.5), (x+24,26.5))
+            sheet.arrow((x+22,27), (x+24,27))
     first = float(trial["first_elapsed_s"]) / 60
     final = float(trial["final_elapsed_s"]) / 60
-    sheet.text(4, 17, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four completed candidates",
-               size=10.5, color=TEAL)
-    sheet.text(4, 11, "Matched raw and repair overlays: Figure 4F.",
-               size=10.5, color=BLUE)
-    sheet.text(4, 5, "Counts and repair decisions: retained author report. Whole task includes review, reporting and cleanup.",
+    sheet.source(OUTPUT / "h001_scored_native_provenance.json")
+    for column, (view, label) in enumerate((
+        ("raw", "Raw • same input"), ("first", "First a01 • split body"),
+        ("final", "Final a04 • split repaired"),
+    )):
+        x = 3 + column * 32
+        sheet.text(x, 22, label, size=11, weight="bold")
+        sheet.source_image(OUTPUT / "h001_scored_sources" / f"detail_{view}.png",
+                           (x, 5, 30, 16), crop=(620, 90, 980, 355))
+    sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four completed candidates",
+               size=10, color=TEAL)
+    sheet.text(4, 1.4, "Counts and decisions: author report; whole task includes review, reporting and cleanup.",
                size=8.5, color=MUTED)
     sheet.save()
 
 
 def submission_shared_workflow():
-    """Enlarge the application and put detail callouts on its unused canvas."""
-    sheet = FigureSheet("submission_shared_workflow", "", 6.4)
+    """Show the full-width native application once, with region outlines."""
+    sheet = FigureSheet("submission_shared_workflow", "", 8.0)
     sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
-    sheet.panel("I", "Main window with enlarged native details", 2, 97)
-    sheet.native_image("authoring_main_verified_capture", (1, 5, 98, 89))
-    sheet.figure.axes[-1].set_zorder(-2)
-    # Borders identify editorial enlargements rather than extra native windows.
-    # The editor insets use its empty canvas; the server retains its own capture.
-    for title, name, bounds, crop, anchor in (
-        ("Plate manager", "authoring_main_verified_capture", (4, 31, 45, 20),
-         (0, 204, 360, 360), (16, 66)),
-        ("Pipeline editor", "authoring_main_verified_capture", (52, 34, 44, 16),
-         (516, 204, 860, 318), (75, 67)),
-        ("Execution-server browser", "authoring_server_browser_verified_capture",
-         (4, 10, 45, 18), None, (17, 21)),
+    sheet.panel("I", "One native window: plates, pipeline and execution servers", 2, 97)
+    sheet.native_image("authoring_main_verified_capture", (1, 7, 98, 83))
+    window = sheet.figure.axes[-1]
+    # Coordinates are in the original screenshot; no duplicated or magnified
+    # screenshot fragments obscure the actual application.
+    for title, bounds, label_position in (
+        ("Plate manager", (2, 236, 503, 123), (12, 381)),
+        ("Pipeline editor", (518, 236, 504, 81), (530, 341)),
+        ("Execution servers", (2, 602, 503, 90), (12, 592)),
     ):
         x, y, width, height = bounds
-        sheet.native_image(name, bounds, crop=crop)
-        inset = sheet.figure.axes[-1]
-        inset.set_zorder(-1)
-        inset.set_axis_on()
-        inset.set_xticks([])
-        inset.set_yticks([])
-        for spine in inset.spines.values():
-            spine.set_color(BLUE)
-            spine.set_linewidth(1.6)
-        sheet.text(x + 1, y + height + 1, title, size=11, weight="bold", color=BLUE,
-                   bbox={"facecolor": "white", "edgecolor": "none", "pad": 2})
-        sheet.arrow(anchor, (x + width / 2, y + height), color=BLUE, dashed=True)
-    sheet.text(3, 2, "Native captures • outlined insets enlarge retained controls, not extra application windows",
+        window.add_patch(Rectangle((x, y), width, height, fill=False,
+                                   edgecolor=BLUE, linewidth=2))
+        window.text(*label_position, title, fontsize=11, weight="bold", color=BLUE,
+                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 2})
+    sheet.text(3, 2, "Native screenshot • boxes identify existing controls; no duplicate cutouts",
                size=9, color=MUTED)
     sheet.save()
 
