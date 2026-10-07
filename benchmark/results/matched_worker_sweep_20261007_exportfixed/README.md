@@ -1,6 +1,6 @@
 # Export-fixed matched worker sweep
 
-Prepared production freeze: `d06b7226c82fc6de8ab6b644f3bec417f4b7b922`, published on main. The seven capture commands are sealed; full-cohort measurements and final figures remain pending. The original `matched_worker_sweep_20261007` record remains preserved.
+Prepared production freeze: `d06b7226c82fc6de8ab6b644f3bec417f4b7b922`, published on main. The seven capture commands are sealed. The single-well mode has completed strict qualification and immutable archive for all 30 workflows; the six remaining modes and final figures remain pending. The original `matched_worker_sweep_20261007` record remains preserved.
 
 The generic exporter fix projects row identities and image references through the same source-numbering authority, with aggregate reference values derived from projected object measurements. The [fresh tracking integration](diagnostics/export-reference-repair/integration-summary.json) passes all 32 warmup/measured well-level comparisons with complete image, CSV, database and output coverage. This diagnostic is not a full-cohort benchmark result.
 
@@ -9,3 +9,7 @@ Fresh OpenHCS measurements cover May’s 1/1, 2/8, 3/12 and 4/16 worker/assignme
 Actual CP1 and complete actual CP8 reports are retained through strict ordinary native-reference admission. The actual8 source collection includes independently completed tail cases; the original matched suite’s failed terminal is preserved. CP12/CP16 references use the declared first-batch-plus-warm-assignments projection and have zero actual target native observations. Original native clocks and outputs remain unchanged, and every fresh OpenHCS output must pass complete parity.
 
 The supplied plan owns paths and modes. The existing capture/conversion/archive/render runner is parameterized by `--plan`; the same converter, archiver and May-style renderer supply qualified data and manuscript numerical includes. Native semantic-fact reuse restores only unchanged native measurement evidence. Candidate facts and all comparisons remain fresh. Historical calibration and original custody are retained with their original source scope.
+
+The qualified single-well execution speedup has minimum 3.542092× and median 6.392542×; compilation-plus-execution has minimum 2.660239× and median 4.066473×. Native references are genuine first batches (one observation), OpenHCS uses the median of three measured repetitions, and all workflows pass output parity. These are single-well results, not completed multicore claims. See `data/first_use/singlewell/`.
+
+The [actual native calibration](diagnostics/native-full30-calibration/README.md) preserves all60 native-report identities and explicitly documents the affinity difference and original tracking inventory absence.
