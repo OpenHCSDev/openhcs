@@ -294,7 +294,10 @@ Y27632 (Figure 5 and Supplementary Figure 8). At 40 µM, OpenHCS fold changes
 rose from 1.48 to 1.77 for FC-A and from 1.56 to 1.76 for Y27632; MetaXpress
 reported 1.98 and 2.05, respectively. Total-outgrowth responses also moved
 closer to the commercial measurements. Branching responses remained smaller:
-1.59 versus 3.00 for FC-A and 1.70 versus 3.26 for Y27632. Both methods
+1.59 versus 3.00 for FC-A and 1.70 versus 3.26 for Y27632. OpenHCS reported
+more branches in both controls and treated wells, with a larger relative
+difference in controls. Similar cell counts therefore did not explain the
+weaker branching fold changes. Both methods
 detected the same direction of response at every nonzero dose, but they did
 not produce equivalent morphology measurements. This assisted evaluation is
 separate from the autonomous authoring trial; no spatial tracing reference was
