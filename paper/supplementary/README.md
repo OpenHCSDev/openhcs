@@ -243,8 +243,14 @@ Each OpenHCS well endpoint is the unweighted mean of its nine field-level
 measurements. Total outgrowth is therefore a mean field total, not unique
 whole-well length.
 The commercial endpoint is an existing well export whose exact site weighting
-and length units are unspecified. Absolute lengths and counts are therefore
-not treated as equivalent.
+and software settings are not retained. The
+[MetaXpress 6 Neurite Outgrowth guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf)
+defines total outgrowth in micrometres with diagonal-length correction, primary
+processes as outgrowths attached to cell bodies, and branches as branching
+junctions rather than daughter-process counts. It does not specify how the
+module distinguishes crossings from branches. These documented definitions
+do not establish identical segmentation or topology for the retained export;
+absolute lengths and counts are not treated as equivalent.
 Within-method ratios avoid a constant unit conversion but do not remove those
 measurement differences. Neither method is manual ground truth, and two
 technical wells do not establish biological replication or significance.
