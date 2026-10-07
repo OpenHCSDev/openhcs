@@ -1,0 +1,118 @@
+{
+  "startup_seconds": 0.8101659519597888,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      0
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp4_supplement_combine_objects/native_preparation/native_cellprofiler_headless/cp4_supplement_combine_objects.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/mnpbgacjfefomjkm/input",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/outputs",
+    "expected_image_sets": null,
+    "repetitions": 1,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/outputs/-1",
+      "image_set_count": 2,
+      "invocation_seconds": 1.0793127682991326,
+      "pre_pipeline_seconds": 0.0015130001120269299,
+      "pipeline_execution_seconds": 1.0777997681871057,
+      "invocation_started_monotonic_seconds": 4177898.416598328,
+      "pipeline_started_monotonic_seconds": 4177898.418111328,
+      "completed_monotonic_seconds": 4177899.495911096,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/outputs/0",
+      "image_set_count": 2,
+      "invocation_seconds": 0.5557314809411764,
+      "pre_pipeline_seconds": 0.0007067606784403324,
+      "pipeline_execution_seconds": 0.5550247202627361,
+      "invocation_started_monotonic_seconds": 4177899.495923309,
+      "pipeline_started_monotonic_seconds": 4177899.49663007,
+      "completed_monotonic_seconds": 4177900.05165479,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ]
+      ]
+    }
+  ],
+  "diagnostic_assignment_timings": [
+    {
+      "repetition": -1,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4177898.418111328,
+          "completed_monotonic_seconds": 4177899.220479139,
+          "seconds": 0.8023678110912442
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4177899.220479139,
+          "completed_monotonic_seconds": 4177899.495908571,
+          "seconds": 0.27542943181470037
+        }
+      ]
+    },
+    {
+      "repetition": 0,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4177899.49663007,
+          "completed_monotonic_seconds": 4177899.767580714,
+          "seconds": 0.2709506442770362
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4177899.767580714,
+          "completed_monotonic_seconds": 4177900.051651925,
+          "seconds": 0.2840712107717991
+        }
+      ]
+    }
+  ]
+}
