@@ -46,6 +46,7 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
+    aggregate_image_number_reference_measurement_field,
     MeasurementScope,
     MeasurementSubject,
     measurement_axis_integer_value,
@@ -518,6 +519,7 @@ def prepare_spreadsheet_bundle(
         "Image", MeasurementSparseColumnarRows({}, fields=())
     )
 
+    source_tables = tables
     tables = _selected_table_columns(
         tables,
         selected_columns=selected_columns,
@@ -529,6 +531,7 @@ def prepare_spreadsheet_bundle(
         mean=bool(calculate_aggregate_means),
         median=bool(calculate_aggregate_medians),
         standard_deviation=bool(calculate_aggregate_standard_deviations),
+        source_tables=source_tables,
     )
     tables = _with_image_columns_on_objects(
         tables,
@@ -956,8 +959,16 @@ def _with_requested_aggregates(
     mean: bool,
     median: bool,
     standard_deviation: bool,
+    source_tables: OrderedDict[str, ColumnarRows] | None = None,
 ) -> OrderedDict[str, ColumnarRows]:
-    if not (mean or median or standard_deviation):
+    source_tables = tables if source_tables is None else source_tables
+    source_image = source_tables.get("Image")
+    reference_means = frozenset(
+        name
+        for name in (() if source_image is None else source_image.columns)
+        if aggregate_image_number_reference_measurement_field(name)
+    )
+    if not (mean or median or standard_deviation or reference_means):
         return tables
     image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
     image = tables.get("Image")
@@ -983,13 +994,26 @@ def _with_requested_aggregates(
     )
     fields = [] if image is None else list(image.fields)
     for subject in object_subjects:
-        rows = tables.get(subject)
+        rows = source_tables.get(subject)
+        selected_rows = tables.get(subject)
         if rows is None:
             continue
         if image_field not in rows.columns:
             raise ValueError(
                 f"Object measurement aggregation requires image_number in every {subject!r} row."
             )
+        feature_names = frozenset(
+            feature
+            for feature in rows.columns
+            if (
+                (mean or median or standard_deviation)
+                and selected_rows is not None
+                and feature in selected_rows.columns
+            )
+            or f"Mean_{subject}_{feature}" in reference_means
+        )
+        if not feature_names:
+            continue
         groups: OrderedDict[object, list[int]] = OrderedDict()
         for index, number in enumerate(rows.column_values(image_field)):
             if is_structural_missing_measurement_cell(number):
@@ -1005,16 +1029,27 @@ def _with_requested_aggregates(
                     f"Image measurement row for {image_field}={number!r}."
                 )
             for feature, values in _numeric_features(
-                rows, np.asarray(indexes, dtype=np.intp)
+                rows,
+                np.asarray(indexes, dtype=np.intp),
+                feature_names=feature_names,
             ):
                 for prefix, enabled, calculate in (
                     ("Mean", mean, statistics.fmean),
                     ("Median", median, statistics.median),
                     ("StDev", standard_deviation, statistics.pstdev),
                 ):
-                    if not enabled:
-                        continue
                     name = f"{prefix}_{subject}_{feature}"
+                    reference_mean = prefix == "Mean" and name in reference_means
+                    if reference_mean:
+                        # Preserve selection: recompute only retained declared means.
+                        if name not in columns:
+                            continue
+                    elif (
+                        not enabled
+                        or selected_rows is None
+                        or feature not in selected_rows.columns
+                    ):
+                        continue
                     if name not in columns:
                         columns[name] = np.full(
                             len(image_numbers),
@@ -1034,6 +1069,8 @@ def _with_requested_aggregates(
 def _numeric_features(
     rows: ColumnarRows,
     indexes: np.ndarray,
+    *,
+    feature_names: frozenset[str],
 ) -> tuple[tuple[str, np.ndarray], ...]:
     """Derive numerical columns in first-present-cell order for one image."""
     axis_fields = frozenset(
@@ -1044,7 +1081,7 @@ def _numeric_features(
     )
     features = []
     for position, name in enumerate(rows.columns):
-        if name in axis_fields:
+        if name in axis_fields or name not in feature_names:
             continue
         values = ColumnarRows.column_array(rows.column_values(name))[indexes]
         if values.dtype.hasobject:

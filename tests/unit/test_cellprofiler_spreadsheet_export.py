@@ -5,6 +5,8 @@ from __future__ import annotations
 import csv
 import inspect
 import io
+import math
+from collections import OrderedDict
 
 import pytest
 
@@ -32,6 +34,7 @@ from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outpu
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
+    MEASUREMENT_SPARSE_CELL,
 )
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
@@ -2036,3 +2039,107 @@ def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
         restored_grid.source_provenance.equality_identity
         == grid.source_provenance.equality_identity
     )
+
+
+@pytest.mark.parametrize("long_form", (False, True))
+@pytest.mark.parametrize("concatenated", (False, True))
+def test_image_number_references_follow_exact_source_numbering(
+    long_form: bool, concatenated: bool
+) -> None:
+    from openhcs.interop.cellprofiler.image_set_numbering import (
+        CellProfilerImageSetNumbering,
+    )
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+
+    provenance = SourceImageProvenancePlanes.from_components(
+        paths=("/inputs/first.tif", "/inputs/second.tif", "/inputs/third.tif"),
+        component_metadata=({"site": "1"}, {"site": "2"}, {"site": "3"}),
+    )
+    values = (0, 1, 2, float("nan"), float("inf"), MEASUREMENT_SPARSE_CELL)
+    reference_name = "Tracking_ParentImageNumber_50"
+    columns = {"slice_index": (2,) * len(values), "object_number": tuple(range(1, 7))}
+    if long_form:
+        columns.update(
+            feature_name=(reference_name,) * len(values), measurement_value=values
+        )
+        value_column = "measurement_value"
+    else:
+        columns[reference_name] = values
+        value_column = reference_name
+    from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
+
+    fields = tuple(
+        FieldSpec(name, int)
+        if name in ("slice_index", "object_number")
+        else FieldSpec(name, required=False)
+        for name in columns
+    )
+    source_rows = (
+        ConcatenatedColumnarRows(tuple(
+            MeasurementSparseColumnarRows(
+                {name: values[start:start + 3] for name, values in columns.items()},
+                fields=fields,
+            )
+            for start in (0, 3)
+        ))
+        if concatenated
+        else MeasurementSparseColumnarRows(columns, fields=fields)
+    )
+    record = _measurement_record(
+        "references",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+        rows=source_rows,
+        source_image_provenance_planes=provenance,
+    )
+    table = record.data
+    numbering = CellProfilerImageSetNumbering(SourceImageSetIdentityPolicy())
+    scope = RuntimeExecutionAxisScope("A01")
+    numbering.for_source_slices(
+        scope=scope,
+        provenance=table.source_provenance,
+        slice_indices=(1, 0),
+        owner=table.name,
+    )
+    projected = numbering.project_measurement_rows(scope=scope, table=table)
+    actual = projected.column_values(value_column)
+    assert tuple(actual[:3]) == (0, 2, 1)
+    assert math.isnan(actual[3])
+    assert math.isinf(actual[4])
+    assert actual[5] is MEASUREMENT_SPARSE_CELL
+    assert tuple(table.rows.column_values(value_column)) == values
+    assert (
+        projected.covers_declared_object_measurement_domain
+        == table.rows.covers_declared_object_measurement_domain
+    )
+
+
+def test_declared_reference_mean_uses_full_projected_objects_after_selection() -> None:
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        _with_requested_aggregates,
+    )
+
+    def columns(**values):
+        return MeasurementSparseColumnarRows(
+            values,
+            fields=tuple(FieldSpec(name, required=False) for name in values),
+        )
+
+    name = "Mean_Cells_Tracking_ParentImageNumber_50"
+    source = OrderedDict(
+        Image=columns(image_number=(23,), **{name: (0.5,)}),
+        Cells=columns(
+            image_number=(23, 23), Tracking_ParentImageNumber_50=(0, 22)
+        ),
+    )
+    selected = OrderedDict(Image=source["Image"])
+    result = _with_requested_aggregates(
+        selected,
+        object_subjects=("Cells",),
+        mean=False,
+        median=False,
+        standard_deviation=False,
+        source_tables=source,
+    )
+    assert result["Image"].column_values(name)[0] == 11
+    assert source["Image"].column_values(name)[0] == 0.5

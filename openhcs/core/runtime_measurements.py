@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from functools import lru_cache
 from dataclasses import dataclass
 
 from openhcs.constants.constants import AllComponents
@@ -1880,3 +1881,33 @@ class MeasurementSubject:
                 self.id_field or "",
             )
         )
+
+
+@lru_cache(maxsize=32768)
+def aggregate_image_number_reference_measurement_field(field_name: str) -> bool:
+    parts = tuple(
+        part for part in normalize_runtime_identifier(field_name).split("_") if part
+    )
+    return (
+        bool(parts)
+        and parts[0] == MeasurementStatistic.MEAN.value
+        and image_number_reference_measurement_field(field_name)
+    )
+
+
+def image_number_reference_measurement_field(field_name: str) -> bool:
+    normalized = normalize_runtime_identifier(field_name)
+    if (
+        normalized
+        in DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT.image_identity_fields
+    ):
+        return False
+    parts = tuple(part for part in normalized.split("_") if part)
+    return parts_contain_adjacent_image_number(parts)
+
+
+def parts_contain_adjacent_image_number(parts: tuple[str, ...]) -> bool:
+    return any(
+        parts[index] == "image" and parts[index + 1] == "number"
+        for index in range(len(parts) - 1)
+    )
