@@ -1,0 +1,105 @@
+{
+  "startup_seconds": 0.8281149039976299,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native_preparation/native_cellprofiler_headless/cp_tutorial_translocation_start.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/okjkoadfmhkdbegb/input",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": []
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/-1",
+      "image_set_count": 1,
+      "invocation_seconds": 1.624423447996378,
+      "pre_pipeline_seconds": 0.0015894928947091103,
+      "pipeline_execution_seconds": 1.6228339551016688,
+      "invocation_started_monotonic_seconds": 4043554.531185885,
+      "pipeline_started_monotonic_seconds": 4043554.532775378,
+      "completed_monotonic_seconds": 4043556.155609333,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/0",
+      "image_set_count": 1,
+      "invocation_seconds": 0.7419694042764604,
+      "pre_pipeline_seconds": 0.0007136641070246696,
+      "pipeline_execution_seconds": 0.7412557401694357,
+      "invocation_started_monotonic_seconds": 4043556.155621696,
+      "pipeline_started_monotonic_seconds": 4043556.15633536,
+      "completed_monotonic_seconds": 4043556.8975911,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/1",
+      "image_set_count": 1,
+      "invocation_seconds": 0.6565783619880676,
+      "pre_pipeline_seconds": 0.0007063900120556355,
+      "pipeline_execution_seconds": 0.655871971976012,
+      "invocation_started_monotonic_seconds": 4043556.89760175,
+      "pipeline_started_monotonic_seconds": 4043556.89830814,
+      "completed_monotonic_seconds": 4043557.554180112,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_translocation_start/native/2",
+      "image_set_count": 1,
+      "invocation_seconds": 0.5564598399214447,
+      "pre_pipeline_seconds": 0.0007040658965706825,
+      "pipeline_execution_seconds": 0.555755774024874,
+      "invocation_started_monotonic_seconds": 4043557.554192195,
+      "pipeline_started_monotonic_seconds": 4043557.554896261,
+      "completed_monotonic_seconds": 4043558.110652035,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    }
+  ]
+}

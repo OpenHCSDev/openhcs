@@ -1,0 +1,645 @@
+{
+  "case": "ExampleTumor",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "583e36992b2446b1dde2b44b8900924c924326a34033353e6696062551681f0a",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e251f313f45a568405e3987e77e4f89e18d934e1",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "30-2A1b.jpg",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images/30-2A1b.jpg",
+      "size_bytes": 771350,
+      "sha256": "ece03befc46d132ce03091f5ed979ce48e99c113cb34b3a888b64800dbb6172b"
+    },
+    {
+      "path": "30-2A1f.jpg",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images/30-2A1f.jpg",
+      "size_bytes": 143326,
+      "sha256": "6bda0e7a09686b00c6651d2108ca064b2670c6708e20df43eb5e055b5b112033"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleTumor/native_report.json",
+  "native_reference_report_sha256": "5f5813598fe6e06dfbba1f5a43046fcc033d00ed9df1967dfd63d8336455ca82",
+  "native_reference_source_commit": "354be9f9ff71cc8f6f2bb89b21c92eeea12504c5",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/-1/30-2A1f_Tumors.png",
+      "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/-1/Experiment.csv",
+      "sha256": "1d6b677536c7efcf58ee962e3512ba97e6888441083640b3f736c1c243723163"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/-1/Image.csv",
+      "sha256": "93540a1ccf7a107bbf24d4ac1682ced76862eff66b3c7d8463fb5b2a82834c7e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/-1/tumor.csv",
+      "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/0/30-2A1f_Tumors.png",
+      "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/0/Experiment.csv",
+      "sha256": "c43e4e62c6071e4b3acb3110c3c28899739ec7e66de1b8ebd55dd680ebb45980"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/0/Image.csv",
+      "sha256": "68aa9b8e0f0e7f777afaeb3501b5a42dadb544da3f6790c5cda3c0cebf6efd0f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/0/tumor.csv",
+      "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/1/30-2A1f_Tumors.png",
+      "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/1/Experiment.csv",
+      "sha256": "f4cbc7c2f446f24828a95730f94a5e7e12ef44bda89cb960008d2a2ee26776e2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/1/Image.csv",
+      "sha256": "30055ea06f7cdc92682dfbb589e03544796e5db3af204e24509177b6a6c8d2e5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/1/tumor.csv",
+      "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/2/30-2A1f_Tumors.png",
+      "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/2/Experiment.csv",
+      "sha256": "910e9c123eeb0298be6c400c00ca05cf6745533beb0d399e327463530946e377"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/2/Image.csv",
+      "sha256": "180d171c9b9a05340eec60c190415f1575d982803b874c679540a44c4338c8ab"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/2/tumor.csv",
+      "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "234cb63fa27f4086a95a6a1474edcb7fc2fb86c934be683afd753bb79066dd5b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_preparation/native_cellprofiler_headless/ExampleTumor.cppipe",
+      "sha256": "f45ae0a3969cb8f0ab7e1d346c1f7df76ddcda110b081d98835996a6a7c41997"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleTumor/native_report.json",
+      "sha256": "5f5813598fe6e06dfbba1f5a43046fcc033d00ed9df1967dfd63d8336455ca82"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleTumor/native_request.json",
+      "sha256": "49112487b2886a7facb26bdcee62cf8b53234dc8541b11abb35df74f58acf784"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleTumor/pilot_provenance.json",
+      "sha256": "649157dcdd11c79f78469628bae3bb3a215dcfc77cc8b870ae1ea747b4a4b58a"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "30-2A1b.jpg",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images/30-2A1b.jpg",
+      "size_bytes": 771350,
+      "sha256": "ece03befc46d132ce03091f5ed979ce48e99c113cb34b3a888b64800dbb6172b"
+    },
+    {
+      "path": "30-2A1f.jpg",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images/30-2A1f.jpg",
+      "size_bytes": 143326,
+      "sha256": "6bda0e7a09686b00c6651d2108ca064b2670c6708e20df43eb5e055b5b112033"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.8715249998494983,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_preparation/native_cellprofiler_headless/ExampleTumor.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native",
+      "expected_image_sets": null,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native_report.json",
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": []
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/-1",
+        "image_set_count": 1,
+        "invocation_seconds": 5.064322372898459,
+        "pre_pipeline_seconds": 0.0018646116368472576,
+        "pipeline_execution_seconds": 5.062457761261612,
+        "invocation_started_monotonic_seconds": 4040301.25438152,
+        "pipeline_started_monotonic_seconds": 4040301.256246132,
+        "completed_monotonic_seconds": 4040306.318703893,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/0",
+        "image_set_count": 1,
+        "invocation_seconds": 3.870020435191691,
+        "pre_pipeline_seconds": 0.0007161390967667103,
+        "pipeline_execution_seconds": 3.869304296094924,
+        "invocation_started_monotonic_seconds": 4040306.318717369,
+        "pipeline_started_monotonic_seconds": 4040306.319433508,
+        "completed_monotonic_seconds": 4040310.188737804,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/1",
+        "image_set_count": 1,
+        "invocation_seconds": 3.5573198129422963,
+        "pre_pipeline_seconds": 0.0007718228735029697,
+        "pipeline_execution_seconds": 3.5565479900687933,
+        "invocation_started_monotonic_seconds": 4040310.188748845,
+        "pipeline_started_monotonic_seconds": 4040310.189520668,
+        "completed_monotonic_seconds": 4040313.746068658,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/2",
+        "image_set_count": 1,
+        "invocation_seconds": 3.262004958000034,
+        "pre_pipeline_seconds": 0.0007449230179190636,
+        "pipeline_execution_seconds": 3.261260034982115,
+        "invocation_started_monotonic_seconds": 4040313.746080521,
+        "pipeline_started_monotonic_seconds": 4040313.746825444,
+        "completed_monotonic_seconds": 4040317.008085479,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  "native_shards": [],
+  "native_shard_equivalence": [],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "87a452d7-eee3-4638-a0ab-cb49d75382d0",
+      "compile_artifact_id": "6f4a8c43-8c4b-400b-93f1-a3b758111724",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5962176322937012,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334172.4813144,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334173.077532,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334172.453701,
+      "first_axis_started_at_epoch_seconds": 1791334172.4813144,
+      "server_job_completed_at_epoch_seconds": 1791334173.0916288,
+      "server_job_seconds": 0.637927770614624,
+      "execution_seconds": 0.5962176322937012,
+      "compile_seconds": 0.11532855033874512,
+      "total_seconds": 0.8316476582549512,
+      "first_axis_through_server_completion_seconds": 0.6103143692016602,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 5,
+      "declared_output_file_count": 3,
+      "native_output_inventory": [
+        {
+          "path": "30-2A1f_Tumors.png",
+          "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+        },
+        {
+          "path": "Experiment.csv",
+          "sha256": "1d6b677536c7efcf58ee962e3512ba97e6888441083640b3f736c1c243723163"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "93540a1ccf7a107bbf24d4ac1682ced76862eff66b3c7d8463fb5b2a82834c7e"
+        },
+        {
+          "path": "tumor.csv",
+          "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_Tumors.png",
+          "sha256": "f03003adc10b15d0039d2282dd84c53e2c9e4a3000b5a0c9c1b1fe3492256c51"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "6770add69b0ba3d77d03e3bd672d00f0d5aa51af37fb0b9134db35794e20be6e"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "fb3f07b2bde33dd30b696c73bb045ee3fe0bc5e47b21c85327bc3ceb83503b9a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/tumor.csv",
+          "sha256": "96b7fabc3b098920ae72b8674a11c30268a99ea6663e31a9ac5845be76c8e300"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleTumor/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "256c010c-43f4-4cf2-ba2a-c0dc8e4b099d",
+      "compile_artifact_id": "31063911-8a64-4f41-8299-15bd7538fcb5",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5501081943511963,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334173.6363525,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334174.1864607,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334173.6081855,
+      "first_axis_started_at_epoch_seconds": 1791334173.6363525,
+      "server_job_completed_at_epoch_seconds": 1791334174.2000804,
+      "server_job_seconds": 0.5918948650360107,
+      "execution_seconds": 0.5501081943511963,
+      "compile_seconds": 0.1144566535949707,
+      "total_seconds": 0.7855217242613435,
+      "first_axis_through_server_completion_seconds": 0.563727855682373,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 5,
+      "declared_output_file_count": 3,
+      "native_output_inventory": [
+        {
+          "path": "30-2A1f_Tumors.png",
+          "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+        },
+        {
+          "path": "Experiment.csv",
+          "sha256": "c43e4e62c6071e4b3acb3110c3c28899739ec7e66de1b8ebd55dd680ebb45980"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "68aa9b8e0f0e7f777afaeb3501b5a42dadb544da3f6790c5cda3c0cebf6efd0f"
+        },
+        {
+          "path": "tumor.csv",
+          "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_Tumors.png",
+          "sha256": "f03003adc10b15d0039d2282dd84c53e2c9e4a3000b5a0c9c1b1fe3492256c51"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "6770add69b0ba3d77d03e3bd672d00f0d5aa51af37fb0b9134db35794e20be6e"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "fb3f07b2bde33dd30b696c73bb045ee3fe0bc5e47b21c85327bc3ceb83503b9a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/tumor.csv",
+          "sha256": "96b7fabc3b098920ae72b8674a11c30268a99ea6663e31a9ac5845be76c8e300"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleTumor/candidate_evidence/0/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 1,
+      "execution_id": "74394da2-5c37-4677-b2ab-f6bae63126ce",
+      "compile_artifact_id": "1264a182-a963-4378-97a7-40530bd26455",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5493617057800293,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334174.6117167,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334175.1610785,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334174.5844486,
+      "first_axis_started_at_epoch_seconds": 1791334174.6117167,
+      "server_job_completed_at_epoch_seconds": 1791334175.175523,
+      "server_job_seconds": 0.5910744667053223,
+      "execution_seconds": 0.5493617057800293,
+      "compile_seconds": 0.11425256729125977,
+      "total_seconds": 0.7841883725486696,
+      "first_axis_through_server_completion_seconds": 0.5638062953948975,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 5,
+      "declared_output_file_count": 3,
+      "native_output_inventory": [
+        {
+          "path": "30-2A1f_Tumors.png",
+          "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+        },
+        {
+          "path": "Experiment.csv",
+          "sha256": "f4cbc7c2f446f24828a95730f94a5e7e12ef44bda89cb960008d2a2ee26776e2"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "30055ea06f7cdc92682dfbb589e03544796e5db3af204e24509177b6a6c8d2e5"
+        },
+        {
+          "path": "tumor.csv",
+          "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_Tumors.png",
+          "sha256": "f03003adc10b15d0039d2282dd84c53e2c9e4a3000b5a0c9c1b1fe3492256c51"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "6770add69b0ba3d77d03e3bd672d00f0d5aa51af37fb0b9134db35794e20be6e"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "fb3f07b2bde33dd30b696c73bb045ee3fe0bc5e47b21c85327bc3ceb83503b9a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/tumor.csv",
+          "sha256": "96b7fabc3b098920ae72b8674a11c30268a99ea6663e31a9ac5845be76c8e300"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleTumor/candidate_evidence/1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 2,
+      "execution_id": "35db6c12-262a-4c3c-ad39-ef6379936d4f",
+      "compile_artifact_id": "d2cad411-4801-439c-a634-38c34c8e4e0e",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.5401322841644287,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334175.585914,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334176.1260462,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334175.557975,
+      "first_axis_started_at_epoch_seconds": 1791334175.585914,
+      "server_job_completed_at_epoch_seconds": 1791334176.1393628,
+      "server_job_seconds": 0.5813877582550049,
+      "execution_seconds": 0.5401322841644287,
+      "compile_seconds": 0.11334562301635742,
+      "total_seconds": 0.7752138068899512,
+      "first_axis_through_server_completion_seconds": 0.5534489154815674,
+      "native_image_count": 1,
+      "candidate_image_count": 1,
+      "native_physical_image_count": 1,
+      "candidate_physical_image_count": 1,
+      "native_output_file_count": 4,
+      "candidate_output_file_count": 5,
+      "declared_output_file_count": 3,
+      "native_output_inventory": [
+        {
+          "path": "30-2A1f_Tumors.png",
+          "sha256": "eaa154d347361f8347db3c444d74a0708bd4f77964ec6d60a529438f047d5d6c"
+        },
+        {
+          "path": "Experiment.csv",
+          "sha256": "910e9c123eeb0298be6c400c00ca05cf6745533beb0d399e327463530946e377"
+        },
+        {
+          "path": "Image.csv",
+          "sha256": "180d171c9b9a05340eec60c190415f1575d982803b874c679540a44c4338c8ab"
+        },
+        {
+          "path": "tumor.csv",
+          "sha256": "12e9012f45d055273dc2f63e356eb0e99f40b9c6b7851041252fbdd87b1ce211"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_Tumors.png",
+          "sha256": "f03003adc10b15d0039d2282dd84c53e2c9e4a3000b5a0c9c1b1fe3492256c51"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "6770add69b0ba3d77d03e3bd672d00f0d5aa51af37fb0b9134db35794e20be6e"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/Image.csv",
+          "sha256": "fb3f07b2bde33dd30b696c73bb045ee3fe0bc5e47b21c85327bc3ceb83503b9a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/tumor.csv",
+          "sha256": "96b7fabc3b098920ae72b8674a11c30268a99ea6663e31a9ac5845be76c8e300"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleTumor/candidate_evidence/2/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "Observed complete selected batches: native pipeline-start through post-run and full invocation are separate; OpenHCS worker execution and complete client operation are separate. Repeated assignments are independently executed source copies, not projected timings or additional genuine wells. Native timings and output roots were reused from genuine retained observations; their original source and report SHA are recorded separately."
+}

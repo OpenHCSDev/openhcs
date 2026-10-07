@@ -1,0 +1,565 @@
+{
+  "case": "ExampleImagingFlowCytometryObjectsInGrid",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "9f0de0630d2d07210c4ffc640b0e64c637565ea6850a3746c7f6759744830500",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e251f313f45a568405e3987e77e4f89e18d934e1",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "Ch1_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch1_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "02987163847f1345b0ef2d110cabb7b962182f7aaf12938a0217749512c3814f"
+    },
+    {
+      "path": "Ch1_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch1_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "3e072df6c9aa7871a88961190fbd3dbfe329b44ba3cb367894c5abe9b488164f"
+    },
+    {
+      "path": "Ch6_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch6_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "54f7f7d0eca2933c1ee903f838dcd86b83f7b99a57b9cfd1d8e51b06a53a0695"
+    },
+    {
+      "path": "Ch6_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch6_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "5f3a09ad2277ab921f1cca13ae63067c897c8a5ba98193131e9919eb4591094f"
+    },
+    {
+      "path": "Ch7_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch7_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "adfc4e0337ec7a9da2fc5eaeb01e78919d1947497ac919df286434a83688c350"
+    },
+    {
+      "path": "Ch7_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch7_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "117482f9e0dca2e47d5716da2ecf2653e2c097a7619f7e671741c3a2f4468a53"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+  "native_reference_report_sha256": "a035e50171096c8497d33f309a5ba393211a893d03e6e1e5ce81c3708120323b",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/-1/BF_cells_on_grid.csv",
+      "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/0/BF_cells_on_grid.csv",
+      "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/1/BF_cells_on_grid.csv",
+      "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/2/BF_cells_on_grid.csv",
+      "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "0413a52c486a36ca8534e50a246952c35b44b640c722b00189bd60f2fa575541"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native_preparation/native_cellprofiler_headless/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+      "sha256": "391c846497690c51db29ce728383fdf7327aecef9922e9069414ab28c7b9577c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+      "sha256": "a035e50171096c8497d33f309a5ba393211a893d03e6e1e5ce81c3708120323b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/native_request.json",
+      "sha256": "f93352f51cbc778247d5c69942107aa8722c1bea2ef2dd61de047d363b04f41c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/pilot_provenance.json",
+      "sha256": "c77ae459dc5a173af683c87372afa8d6df65e8034f17904ba8847ed0c0e1b672"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "Ch1_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch1_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "02987163847f1345b0ef2d110cabb7b962182f7aaf12938a0217749512c3814f"
+    },
+    {
+      "path": "Ch1_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch1_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "3e072df6c9aa7871a88961190fbd3dbfe329b44ba3cb367894c5abe9b488164f"
+    },
+    {
+      "path": "Ch6_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch6_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "54f7f7d0eca2933c1ee903f838dcd86b83f7b99a57b9cfd1d8e51b06a53a0695"
+    },
+    {
+      "path": "Ch6_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch6_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "5f3a09ad2277ab921f1cca13ae63067c897c8a5ba98193131e9919eb4591094f"
+    },
+    {
+      "path": "Ch7_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch7_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "adfc4e0337ec7a9da2fc5eaeb01e78919d1947497ac919df286434a83688c350"
+    },
+    {
+      "path": "Ch7_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch7_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "117482f9e0dca2e47d5716da2ecf2653e2c097a7619f7e671741c3a2f4468a53"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.8047457248903811,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native_preparation/native_cellprofiler_headless/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native",
+      "expected_image_sets": null,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": []
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/-1",
+        "image_set_count": 2,
+        "invocation_seconds": 76.30296519584954,
+        "pre_pipeline_seconds": 0.0015933820977807045,
+        "pipeline_execution_seconds": 76.30137181375176,
+        "invocation_started_monotonic_seconds": 4036128.623794028,
+        "pipeline_started_monotonic_seconds": 4036128.62538741,
+        "completed_monotonic_seconds": 4036204.926759224,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/0",
+        "image_set_count": 2,
+        "invocation_seconds": 78.2329774252139,
+        "pre_pipeline_seconds": 0.0010396093130111694,
+        "pipeline_execution_seconds": 78.23193781590089,
+        "invocation_started_monotonic_seconds": 4036204.926776597,
+        "pipeline_started_monotonic_seconds": 4036204.927816206,
+        "completed_monotonic_seconds": 4036283.159754022,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/1",
+        "image_set_count": 2,
+        "invocation_seconds": 65.5230812439695,
+        "pre_pipeline_seconds": 0.0008886740542948246,
+        "pipeline_execution_seconds": 65.5221925699152,
+        "invocation_started_monotonic_seconds": 4036283.15976905,
+        "pipeline_started_monotonic_seconds": 4036283.160657724,
+        "completed_monotonic_seconds": 4036348.682850294,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/2",
+        "image_set_count": 2,
+        "invocation_seconds": 68.10753927007318,
+        "pre_pipeline_seconds": 0.0009532961994409561,
+        "pipeline_execution_seconds": 68.10658597387373,
+        "invocation_started_monotonic_seconds": 4036348.682864822,
+        "pipeline_started_monotonic_seconds": 4036348.683818118,
+        "completed_monotonic_seconds": 4036416.790404092,
+        "assignment_image_set_counts": [
+          [
+            "",
+            2
+          ]
+        ]
+      }
+    ]
+  },
+  "native_shards": [],
+  "native_shard_equivalence": [],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "8ab12393-96ee-45d9-b923-aa47bf498301",
+      "compile_artifact_id": "9c65a018-542a-49b6-8fb8-cae1c426a72c",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 9.761135578155518,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791333961.7751887,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791333971.5363243,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791333961.7458303,
+      "first_axis_started_at_epoch_seconds": 1791333961.7751887,
+      "server_job_completed_at_epoch_seconds": 1791333972.6958895,
+      "server_job_seconds": 10.950059175491333,
+      "execution_seconds": 9.761135578155518,
+      "compile_seconds": 0.5200855731964111,
+      "total_seconds": 11.631389297544956,
+      "first_axis_through_server_completion_seconds": 10.920700788497925,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "BF_cells_on_grid.csv",
+          "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BF_cells_on_grid.csv",
+          "sha256": "4c98a66b0da0bcfa8eb8cf7dd103dff4bd9da25d0bdc3eb2fc8a2adc69faef89"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "29f7719b-41bf-486a-8bb2-603a0c6fd3a0",
+      "compile_artifact_id": "f40c4669-500b-4905-be6a-29a34e95db75",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 6.688159465789795,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334002.969783,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334009.6579425,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334002.9400008,
+      "first_axis_started_at_epoch_seconds": 1791334002.969783,
+      "server_job_completed_at_epoch_seconds": 1791334010.7650821,
+      "server_job_seconds": 7.8250813484191895,
+      "execution_seconds": 6.688159465789795,
+      "compile_seconds": 0.418658971786499,
+      "total_seconds": 8.397376730106771,
+      "first_axis_through_server_completion_seconds": 7.795299053192139,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "BF_cells_on_grid.csv",
+          "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BF_cells_on_grid.csv",
+          "sha256": "4c98a66b0da0bcfa8eb8cf7dd103dff4bd9da25d0bdc3eb2fc8a2adc69faef89"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/0/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 1,
+      "execution_id": "96346a0f-0f60-4662-8b5c-ae4e112f01a0",
+      "compile_artifact_id": "d771131d-bf0b-4f33-bc2c-552ff8a79694",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 6.559962272644043,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334040.020214,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334046.5801764,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334039.9903998,
+      "first_axis_started_at_epoch_seconds": 1791334040.020214,
+      "server_job_completed_at_epoch_seconds": 1791334047.7157948,
+      "server_job_seconds": 7.72539496421814,
+      "execution_seconds": 6.559962272644043,
+      "compile_seconds": 0.42629146575927734,
+      "total_seconds": 8.306540739256889,
+      "first_axis_through_server_completion_seconds": 7.695580720901489,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "BF_cells_on_grid.csv",
+          "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BF_cells_on_grid.csv",
+          "sha256": "4c98a66b0da0bcfa8eb8cf7dd103dff4bd9da25d0bdc3eb2fc8a2adc69faef89"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 2,
+      "execution_id": "83a53161-bec4-49c6-95af-ca4717fdec8d",
+      "compile_artifact_id": "db81be1a-6aa2-4bc5-833f-aae5b086aa35",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 6.786843776702881,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334076.9329696,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334083.7198133,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334076.9021907,
+      "first_axis_started_at_epoch_seconds": 1791334076.9329696,
+      "server_job_completed_at_epoch_seconds": 1791334084.948046,
+      "server_job_seconds": 8.045855283737183,
+      "execution_seconds": 6.786843776702881,
+      "compile_seconds": 0.4258577823638916,
+      "total_seconds": 8.631066928617656,
+      "first_axis_through_server_completion_seconds": 8.015076398849487,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "BF_cells_on_grid.csv",
+          "sha256": "2bcaa9b643cfe217a5709fe35a47783177f352fb36716bfc01f369e3da7d585c"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BF_cells_on_grid.csv",
+          "sha256": "4c98a66b0da0bcfa8eb8cf7dd103dff4bd9da25d0bdc3eb2fc8a2adc69faef89"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/2/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "Observed complete selected batches: native pipeline-start through post-run and full invocation are separate; OpenHCS worker execution and complete client operation are separate. Repeated assignments are independently executed source copies, not projected timings or additional genuine wells. Native timings and output roots were reused from genuine retained observations; their original source and report SHA are recorded separately."
+}

@@ -1,0 +1,529 @@
+{
+  "case": "ExampleUntangleAndStraightenWorms",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "e95e55fa74b685a882ac625884d2e7d67a8d99b5b05fbaeb184678c15b58000b",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "e251f313f45a568405e3987e77e4f89e18d934e1",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "size_bytes": 725978,
+      "sha256": "d11c3aa8ebfa68eb6cc6844c1e32540255fa40b38365b69ec73435546a9c7f25"
+    },
+    {
+      "path": "101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "size_bytes": 725953,
+      "sha256": "d41296747cc0a5ce9535d169ccc32e94399778616cb1fc0c326baf6d50f886b4"
+    },
+    {
+      "path": "101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "size_bytes": 725959,
+      "sha256": "0bcd92b613c40a21d9d4e909cef9b373b20d4b026da54710240916e0061fd83c"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleAndStraightenWorms/native_report.json",
+  "native_reference_report_sha256": "03fe6c7c658001768259672c4a9f58440ca2e86be946d4ca839ffe6f9612a520",
+  "native_reference_source_commit": "354be9f9ff71cc8f6f2bb89b21c92eeea12504c5",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/-1/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/0/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/1/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/2/StraightenedWorms.csv",
+      "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "0427f41525037dcd997d181aaad3025ad96d6feea44f5ce0de4a2f42bea9faba"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_preparation/native_cellprofiler_headless/ExampleUntangleAndStraightenWorms.cppipe",
+      "sha256": "bf1076e58498cedcec86edcc2154067dc6e84fbdc8cbb3f7622efe301a10a742"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleAndStraightenWorms/native_report.json",
+      "sha256": "03fe6c7c658001768259672c4a9f58440ca2e86be946d4ca839ffe6f9612a520"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleAndStraightenWorms/native_request.json",
+      "sha256": "038de3d380b4c7f164e80719e0ac526efa1f63654e90a5f70cd0f2aab2dbf609"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleAndStraightenWorms/pilot_provenance.json",
+      "sha256": "512326e474ab7daa803278da0d7af0d328c931f746730d27cdc8b129dcefafdc"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w1_[9AA4D9EA-18E4-4354-8C7D-0202029A8048].tif",
+      "size_bytes": 725978,
+      "sha256": "d11c3aa8ebfa68eb6cc6844c1e32540255fa40b38365b69ec73435546a9c7f25"
+    },
+    {
+      "path": "101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w2_[EFB0F53A-F40F-46D8-A61A-51C2BE61E460].tif",
+      "size_bytes": 725953,
+      "sha256": "d41296747cc0a5ce9535d169ccc32e94399778616cb1fc0c326baf6d50f886b4"
+    },
+    {
+      "path": "101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images/101210OranePlt1_C16_w3_[E3E9B145-D9B7-49E1-8159-496F065708F7].tif",
+      "size_bytes": 725959,
+      "sha256": "0bcd92b613c40a21d9d4e909cef9b373b20d4b026da54710240916e0061fd83c"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.9177612070925534,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_preparation/native_cellprofiler_headless/ExampleUntangleAndStraightenWorms.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native",
+      "expected_image_sets": null,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native_report.json",
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": []
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/-1",
+        "image_set_count": 1,
+        "invocation_seconds": 3.112386585213244,
+        "pre_pipeline_seconds": 0.0017813751474022865,
+        "pipeline_execution_seconds": 3.1106052100658417,
+        "invocation_started_monotonic_seconds": 4040324.946618741,
+        "pipeline_started_monotonic_seconds": 4040324.948400116,
+        "completed_monotonic_seconds": 4040328.059005326,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/0",
+        "image_set_count": 1,
+        "invocation_seconds": 1.9140900583006442,
+        "pre_pipeline_seconds": 0.0007651611231267452,
+        "pipeline_execution_seconds": 1.9133248971775174,
+        "invocation_started_monotonic_seconds": 4040328.059020044,
+        "pipeline_started_monotonic_seconds": 4040328.059785205,
+        "completed_monotonic_seconds": 4040329.973110102,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/1",
+        "image_set_count": 1,
+        "invocation_seconds": 1.7405145377852023,
+        "pre_pipeline_seconds": 0.0007279310375452042,
+        "pipeline_execution_seconds": 1.739786606747657,
+        "invocation_started_monotonic_seconds": 4040329.973122566,
+        "pipeline_started_monotonic_seconds": 4040329.973850497,
+        "completed_monotonic_seconds": 4040331.713637104,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/2",
+        "image_set_count": 1,
+        "invocation_seconds": 1.7743034199811518,
+        "pre_pipeline_seconds": 0.0007680761627852917,
+        "pipeline_execution_seconds": 1.7735353438183665,
+        "invocation_started_monotonic_seconds": 4040331.713649638,
+        "pipeline_started_monotonic_seconds": 4040331.714417714,
+        "completed_monotonic_seconds": 4040333.487953058,
+        "assignment_image_set_counts": [
+          [
+            "",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  "native_shards": [],
+  "native_shard_equivalence": [],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "3f71075d-079c-43e4-9c5c-800bd2ca2094",
+      "compile_artifact_id": "95e3e9b1-3091-4bd5-a5aa-9c0e6b52ed6c",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.46826624870300293,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334177.6922312,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334178.1604974,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334177.6645823,
+      "first_axis_started_at_epoch_seconds": 1791334177.6922312,
+      "server_job_completed_at_epoch_seconds": 1791334178.1797647,
+      "server_job_seconds": 0.5151824951171875,
+      "execution_seconds": 0.46826624870300293,
+      "compile_seconds": 0.20070505142211914,
+      "total_seconds": 0.8273484734818339,
+      "first_axis_through_server_completion_seconds": 0.4875335693359375,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "StraightenedWorms.csv",
+          "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/StraightenedWorms.csv",
+          "sha256": "ec42d07f1278058976107e8f627f4ad0e123fce2f96af7780fb149aff3a82ca4"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "f317a4a0-1c32-4657-8a66-184d051b234c",
+      "compile_artifact_id": "74c10394-f381-408b-8141-f145036e0575",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.4684176445007324,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334178.5777428,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334179.0461605,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334178.5495818,
+      "first_axis_started_at_epoch_seconds": 1791334178.5777428,
+      "server_job_completed_at_epoch_seconds": 1791334179.0646496,
+      "server_job_seconds": 0.5150678157806396,
+      "execution_seconds": 0.4684176445007324,
+      "compile_seconds": 0.20215964317321777,
+      "total_seconds": 0.8376399031840265,
+      "first_axis_through_server_completion_seconds": 0.4869067668914795,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "StraightenedWorms.csv",
+          "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/StraightenedWorms.csv",
+          "sha256": "ec42d07f1278058976107e8f627f4ad0e123fce2f96af7780fb149aff3a82ca4"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/0/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 1,
+      "execution_id": "d36490b7-3a4c-4d0e-958d-4f292ad232d7",
+      "compile_artifact_id": "4f38e50d-b362-4b77-a3fb-e643a6587e44",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.4650256633758545,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334179.4606156,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334179.9256413,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334179.4310904,
+      "first_axis_started_at_epoch_seconds": 1791334179.4606156,
+      "server_job_completed_at_epoch_seconds": 1791334179.9446778,
+      "server_job_seconds": 0.513587474822998,
+      "execution_seconds": 0.4650256633758545,
+      "compile_seconds": 0.200639009475708,
+      "total_seconds": 0.8334240638650954,
+      "first_axis_through_server_completion_seconds": 0.48406219482421875,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "StraightenedWorms.csv",
+          "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/StraightenedWorms.csv",
+          "sha256": "ec42d07f1278058976107e8f627f4ad0e123fce2f96af7780fb149aff3a82ca4"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 2,
+      "execution_id": "2eed0800-0410-4194-97c4-aeda6b5ce609",
+      "compile_artifact_id": "1f21dc09-455f-44cb-a440-3b9aabc30f17",
+      "endpoint_pid": 89444,
+      "axis_count": 1,
+      "observation_scope": "outcomes",
+      "assignment_scope": "genuine source wells",
+      "compared_assignments": [],
+      "worker_process_ids": [
+        89444
+      ],
+      "worker_interval_overlap_seconds": 0.4659922122955322,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1791334180.3293958,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1791334180.795388,
+          "pid": 89444,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791334180.299822,
+      "first_axis_started_at_epoch_seconds": 1791334180.3293958,
+      "server_job_completed_at_epoch_seconds": 1791334180.813466,
+      "server_job_seconds": 0.5136439800262451,
+      "execution_seconds": 0.4659922122955322,
+      "compile_seconds": 0.20391845703125,
+      "total_seconds": 0.8289733729325235,
+      "first_axis_through_server_completion_seconds": 0.4840703010559082,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_physical_image_count": 0,
+      "candidate_physical_image_count": 0,
+      "native_output_file_count": 1,
+      "candidate_output_file_count": 3,
+      "declared_output_file_count": 1,
+      "native_output_inventory": [
+        {
+          "path": "StraightenedWorms.csv",
+          "sha256": "f5f6b1cf5bc764e7a4779489847508a9945490ef597b2a3178182355d78ab750"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/StraightenedWorms.csv",
+          "sha256": "ec42d07f1278058976107e8f627f4ad0e123fce2f96af7780fb149aff3a82ca4"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/2/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "Observed complete selected batches: native pipeline-start through post-run and full invocation are separate; OpenHCS worker execution and complete client operation are separate. Repeated assignments are independently executed source copies, not projected timings or additional genuine wells. Native timings and output roots were reused from genuine retained observations; their original source and report SHA are recorded separately."
+}

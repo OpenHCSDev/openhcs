@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+ExampleTumor,1,1,worker_0,1,1791334173.6363525,1791334174.1864607,0.5501081943511963
