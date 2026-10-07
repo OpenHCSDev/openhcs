@@ -4661,6 +4661,23 @@ def _binary_shrink_2d_numba(
             coords_x[count] = padded_x
             count += 1
     iterations = count if maximum_iterations < 0 else min(count, maximum_iterations)
+    # A deletion only changes the eight neighboring patterns. Keep their bits
+    # within this invocation instead of rebuilding every surviving neighborhood
+    # in each of the four ordered subpasses.
+    patterns = np.zeros(current.shape, dtype=np.uint16)
+    if iterations:
+        for coord_index in range(count):
+            y = coords_y[coord_index]
+            x = coords_x[coord_index]
+            center_value = current[y, x]
+            pattern_index = 0
+            bit = 1
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+                    if current[y + dy, x + dx] == center_value:
+                        pattern_index += bit
+                    bit <<= 1
+            patterns[y, x] = pattern_index
     for _iteration in range(iterations):
         pixel_count = count
         for table_index in range(4):
@@ -4670,17 +4687,7 @@ def _binary_shrink_2d_numba(
             for coord_index in range(count):
                 y = coords_y[coord_index]
                 x = coords_x[coord_index]
-                if not current[y, x]:
-                    continue
-                center_value = current[y, x]
-                pattern_index = 0
-                bit = 1
-                for dy in range(-1, 2):
-                    for dx in range(-1, 2):
-                        if current[y + dy, x + dx] == center_value:
-                            pattern_index += bit
-                        bit <<= 1
-                if table[pattern_index]:
+                if table[patterns[y, x]]:
                     coords_y[new_count] = y
                     coords_x[new_count] = x
                     new_count += 1
@@ -4689,7 +4696,15 @@ def _binary_shrink_2d_numba(
                     removed_x[removed_count] = x
                     removed_count += 1
             for removed_index in range(removed_count):
-                current[removed_y[removed_index], removed_x[removed_index]] = 0
+                y = removed_y[removed_index]
+                x = removed_x[removed_index]
+                center_value = current[y, x]
+                current[y, x] = 0
+                for dy in range(-1, 2):
+                    for dx in range(-1, 2):
+                        if current[y + dy, x + dx] == center_value:
+                            bit = 1 << ((1 - dy) * 3 + (1 - dx))
+                            patterns[y + dy, x + dx] &= 511 ^ bit
             count = new_count
         if count == pixel_count:
             break
