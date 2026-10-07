@@ -1,0 +1,573 @@
+{
+  "status": "DIAGNOSTIC_CALIBRATION_ONLY_NOT_FULL_COHORT_OR_PARITY_CAPTURE",
+  "production_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "native_processes": 1,
+  "numeric_threads": 1,
+  "scope": "Three short workflows: three fresh two-assignment trials under each of one/four allowed CPUs, and fresh8/12/16 with four allowed CPUs. Actual observed per-assignment clocks; first-use cost retained. Current original captures compared separately to expose cross-campaign drift. No module algorithms or canonical source/environment changed. Large scientific outputs remain local, excluded from this timing-diagnostic archive.",
+  "files": [
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-projection-hypothesis-replay.json",
+      "archive_path": "calibration/cold_first/cold-first-projection-hypothesis-replay.json",
+      "sha256": "0f587919d2cf8b4fc3319a561ba1a86bf7f7714aec557c8111e50de451a9adce",
+      "bytes": 11906
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-model-validation.json",
+      "archive_path": "calibration/cold_first/cold-first-model-validation.json",
+      "sha256": "3fc1d12731272138e54487d3cc06cafe04e89154e10e850c61769f0fe2d780a8",
+      "bytes": 6067
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics/run_probe.py",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics/run_probe.py",
+      "sha256": "6575685d5d60a695280c5fafaa6ebcad95cbb013356922526df55e5e7310ec6a",
+      "bytes": 5007
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/protocol.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/protocol.json",
+      "sha256": "15d21ee9087a645cb6f55da15995fdaa8864e3217142ffe7e8c8b0ebf4d320cc",
+      "bytes": 471
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/instrumented_native_worker.py",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/instrumented_native_worker.py",
+      "sha256": "6450ad9a32b870b688b1fc4931fcde8f0441b414f3cec982e70d0b55adf0f798",
+      "bytes": 8198
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/2/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/2/request.json",
+      "sha256": "3f1d3611433c0092d96c2e92ec1e563e52f98170b5c4c5d36f48b230e461cc64",
+      "bytes": 1189
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/2/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/2/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/2/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/2/report.json",
+      "sha256": "8cb75542797e5ef3c2d3494d8c45b7581e98eef4ecf60a33b666c0532b9fb98e",
+      "bytes": 4545
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/1/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/1/request.json",
+      "sha256": "c8357135316428f94a25d61ebbd0c53d0210ab899eedb4ae591d86e665153f29",
+      "bytes": 1189
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/1/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/1/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/1/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/1/report.json",
+      "sha256": "3206de70cc8d0da95d395827a2c606f2ec5235340f896d49a969a617707722f7",
+      "bytes": 4546
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/request.json",
+      "sha256": "cdc7e7caaa3ce8df1f8cd054163a7e8e2a7a17bdfa7bee83f1685be5983ed117",
+      "bytes": 1189
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/report.json",
+      "sha256": "b94f0d1878bc156c0cf0b9724e85f1f205e48e1dc39e7c07bf59daa9a6ffdb4f",
+      "bytes": 4540
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/2/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/2/request.json",
+      "sha256": "8d05581666d8aedb2a010003d4808a2eb2855eae22e16ef8950c88df427c30fd",
+      "bytes": 944
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/2/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/2/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/2/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/2/report.json",
+      "sha256": "bbc9eb74906d2a4ba7be94937357c5eda076825a651a026f0db77e2c04a095d3",
+      "bytes": 4284
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/request.json",
+      "sha256": "107ae50e1c52259c9093f7f3239bd98f11eb2ca814ed70ca3257819e2dfdc588",
+      "bytes": 944
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/1/report.json",
+      "sha256": "a0888a7ce1db7c4dee003a9fd2e28b94e2b730f26ef89dfd437ffffb55b886c1",
+      "bytes": 4284
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/0/request.json",
+      "sha256": "96f2b4e8724307ac4e68a5c373ad876aa1df992f74a50c36e9c1de23f10033d9",
+      "bytes": 944
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/cp4_supplement_combine_objects/0/report.json",
+      "sha256": "4788343397cda15947c8a6a4b68de1d095dc166862af79f7a03f84d6c4796fef",
+      "bytes": 4286
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/2/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/2/request.json",
+      "sha256": "3254283805e41fca1728421e9d19f2aac257f6c9260d14d8b73ffd8539050405",
+      "bytes": 1042
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/2/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/2/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/2/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/2/report.json",
+      "sha256": "91d939371997b80afc06497237311aa8eefaf377c51d3081e7a94af9dda1117f",
+      "bytes": 4343
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/1/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/1/request.json",
+      "sha256": "ce7e66566cbd3fdd94a2d2108938a869798fe4e8d632ababed28f565e8f8bd3a",
+      "bytes": 1042
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/1/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/1/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/1/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/1/report.json",
+      "sha256": "09db03e8bf1afe3c851daa08e94a32e0c03fcaf0828904b89291b46411ef5374",
+      "bytes": 4343
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/0/request.json",
+      "sha256": "8f3700d4715dc0f1a7e6ae2a2857725a73ea0567d98eb43c04f4d8b921f2f8db",
+      "bytes": 1042
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleHuman/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-java-v2/ExampleHuman/0/report.json",
+      "sha256": "2a01078c26d16a88a1286ddc14c04e21db33ec9578ef9c6ce5fa935d15832aca",
+      "bytes": 4338
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/protocol.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/protocol.json",
+      "sha256": "4d97819cdeccb55db51fc7e56fd3011d884371811994903ab31012ba8d6ee616",
+      "bytes": 492
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/instrumented_native_worker.py",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/instrumented_native_worker.py",
+      "sha256": "6450ad9a32b870b688b1fc4931fcde8f0441b414f3cec982e70d0b55adf0f798",
+      "bytes": 8198
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/2/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/2/request.json",
+      "sha256": "01dfe35e0ccec6def511b1c4cfcf02c16709528c1bbb2a8b4d902332ade01b38",
+      "bytes": 1199
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/2/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/2/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/2/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/2/report.json",
+      "sha256": "5960ada3e7dc1368d4bcf76299c8f419ba87845df16b0faaee317dfd8ab50442",
+      "bytes": 4598
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/1/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/1/request.json",
+      "sha256": "4a317c041efe6932278fc19776d44d73834f4ab76b9127c0866222f054d3e9c4",
+      "bytes": 1199
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/1/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/1/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/1/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/1/report.json",
+      "sha256": "6c82e77961afc49096ee13acf172fa4ecb8eab887870652875063ff335f8d052",
+      "bytes": 4600
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/0/request.json",
+      "sha256": "bffce45be7a3a180ea0196ed9ba00da036c0b5d9b2ee73363ed50a96baf3a29b",
+      "bytes": 1199
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleIlluminationCorrection_Example3/0/report.json",
+      "sha256": "25a5a500320ca9962dedd8e52b3adac7f1139a460647972774c92cfd80871169",
+      "bytes": 4596
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/2/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/2/request.json",
+      "sha256": "79051537682ca48b9c2f25b18ef45927a591e1354ec888dcd6c82e68b3996395",
+      "bytes": 954
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/2/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/2/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/2/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/2/report.json",
+      "sha256": "73f2e801aa683c97352489e6151067b8b6ed01a37da3750b88ff7a813a2b5a52",
+      "bytes": 4335
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/1/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/1/request.json",
+      "sha256": "f26885a21dddb630792cbe46e36d24d19cf325fcee0aa8354aaecfa49366dd18",
+      "bytes": 954
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/1/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/1/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/1/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/1/report.json",
+      "sha256": "e5184a02a88e2c2d62b26a6f8da44e48f91846fd3dcc13de4deb3b34657b1ff9",
+      "bytes": 4337
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/0/request.json",
+      "sha256": "154e638fe63b2914b0f54ab5ba688f82a774d400b4e55e733486b53e580a7546",
+      "bytes": 954
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/cp4_supplement_combine_objects/0/report.json",
+      "sha256": "588844d677463f0e330b2429ef730c89fb6b8d78f99152825c60c06feb97074a",
+      "bytes": 4338
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/2/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/2/request.json",
+      "sha256": "1e2e938a151a2e8254ddbbdb9fdf19469aa41c01b8d7993cba27fbe7bd61debe",
+      "bytes": 1052
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/2/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/2/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/2/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/2/report.json",
+      "sha256": "b71f0733af293ab07e4cca852ff8f4fa3f673c742c06e5775da10783cccae211",
+      "bytes": 4390
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/1/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/1/request.json",
+      "sha256": "540a08bc06e0832a260962be38cc64d5239aa106200e02dce56209e40e0400db",
+      "bytes": 1052
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/1/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/1/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/1/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/1/report.json",
+      "sha256": "c667a3f82788a59bad7743ad6bb431bf68278b756fb9e043f9ec9362cb0de521",
+      "bytes": 4389
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/0/request.json",
+      "sha256": "bf5e16ee84cd03eb21dac2829efc74646df85c3aa68e7f8430cbc217bc222743",
+      "bytes": 1052
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-v3/ExampleHuman/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-v3/ExampleHuman/0/report.json",
+      "sha256": "68cff3c600855fbe67d9b1fe89b5b7e6b0ddab7a9edeb2891a3b202d5ee1be23",
+      "bytes": 4391
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/protocol.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/protocol.json",
+      "sha256": "d364a6e8569f5760b79a026c8571a329f6cdbb4967461c3af570a2968ceb030d",
+      "bytes": 514
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/instrumented_native_worker.py",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/instrumented_native_worker.py",
+      "sha256": "6450ad9a32b870b688b1fc4931fcde8f0441b414f3cec982e70d0b55adf0f798",
+      "bytes": 8198
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleIlluminationCorrection_Example3/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/ExampleIlluminationCorrection_Example3/0/request.json",
+      "sha256": "711463e2de01f6ccbfa0846546fd4f348458285055c52b313680f16d6a94c950",
+      "bytes": 1297
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleIlluminationCorrection_Example3/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/ExampleIlluminationCorrection_Example3/0/report.json",
+      "sha256": "5beceac801edba178e43941d0954e51d81f0613cb3a9e96e5cce6656df66f1cb",
+      "bytes": 7886
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/cp4_supplement_combine_objects/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/cp4_supplement_combine_objects/0/request.json",
+      "sha256": "a1d25084ba2b5310b1124aa4ac4bc68656214f08c6d9ce49b1174304024978e8",
+      "bytes": 1052
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/cp4_supplement_combine_objects/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/cp4_supplement_combine_objects/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/cp4_supplement_combine_objects/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/cp4_supplement_combine_objects/0/report.json",
+      "sha256": "6179ddbccaf2113e20409bb805a52448dd3992e60ddc835a10a0a82203f08297",
+      "bytes": 7638
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/request.json",
+      "sha256": "e3795065eb966faefa18b69db7ede1ad4b7cdbf71dfb9fa4796fdc05555e5df9",
+      "bytes": 1150
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/report.json",
+      "sha256": "2f80e3d58a32f13422a3f42e71de0d3bcc076ac694e46ec698b74259ea924cd4",
+      "bytes": 7678
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/protocol.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/protocol.json",
+      "sha256": "efd0d1e71a846092f40e489a3a954717eea39169d90c9cb88d7280d37cc5b973",
+      "bytes": 515
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/instrumented_native_worker.py",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/instrumented_native_worker.py",
+      "sha256": "6450ad9a32b870b688b1fc4931fcde8f0441b414f3cec982e70d0b55adf0f798",
+      "bytes": 8198
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/ExampleIlluminationCorrection_Example3/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/ExampleIlluminationCorrection_Example3/0/request.json",
+      "sha256": "07c6aa2bc8193503fc453446c2f221f3d6787e19f72a6417c80b9db742fa9c19",
+      "bytes": 1347
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/ExampleIlluminationCorrection_Example3/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/ExampleIlluminationCorrection_Example3/0/report.json",
+      "sha256": "1d72a93d1f98ad49bc2dbc0ef88397111a02701f4afb3a76b7bd889b0271d056",
+      "bytes": 10052
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/cp4_supplement_combine_objects/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/cp4_supplement_combine_objects/0/request.json",
+      "sha256": "7b87ec6952e877e01398e52616c5259d67d3507b8d3d9a850c5bdfc86852b4e0",
+      "bytes": 1102
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/cp4_supplement_combine_objects/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/cp4_supplement_combine_objects/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/cp4_supplement_combine_objects/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/cp4_supplement_combine_objects/0/report.json",
+      "sha256": "4ac3bfaeb05ac3b6e484c6610f7ce11376fa9611e2c816e84e889d957435a9c2",
+      "bytes": 9801
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/ExampleHuman/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/ExampleHuman/0/request.json",
+      "sha256": "bc9399561e2d64bebf6fa482976b7ff80eb4ed576bc4ff62784ec3f9c500894c",
+      "bytes": 1200
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/ExampleHuman/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/ExampleHuman/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-12assignments-v4/ExampleHuman/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-12assignments-v4/ExampleHuman/0/report.json",
+      "sha256": "2e1dec7e22d255868648a1f00287048a6b2108c580a448d81cdf603043334f5b",
+      "bytes": 9830
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/protocol.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/protocol.json",
+      "sha256": "a5b74d5b8aee8c843deb2914bb11914d988c831253dd02d0f3851bd63425bf45",
+      "bytes": 515
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/instrumented_native_worker.py",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/instrumented_native_worker.py",
+      "sha256": "6450ad9a32b870b688b1fc4931fcde8f0441b414f3cec982e70d0b55adf0f798",
+      "bytes": 8198
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/request.json",
+      "sha256": "2a12a3fa977de6173363e61a422e62da4ac8b1db3013cee3b2e8f450ff7c451a",
+      "bytes": 1395
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/report.json",
+      "sha256": "4323c41231c49e8b2a5c2a6624dea9b0109b8e8b6e7a53d7f80e8a23bd8e9172",
+      "bytes": 12204
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/request.json",
+      "sha256": "43b48fbca53a2557e67ddbcb3cff6eb6b0f207a4abc66d5e779b2f1baf0c477a",
+      "bytes": 1150
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/report.json",
+      "sha256": "c388b9b1e3e5fbc071c2c3dbf887d96794ecfaa8c7e4c6a97ef9c62a1de513bb",
+      "bytes": 11950
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleHuman/0/request.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/ExampleHuman/0/request.json",
+      "sha256": "34e9e26bde7c342120cab1f729942b73108e56de653c48eba379c7363c485f3c",
+      "bytes": 1248
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleHuman/0/terminal.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/ExampleHuman/0/terminal.json",
+      "sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "bytes": 18
+    },
+    {
+      "source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleHuman/0/report.json",
+      "archive_path": "calibration/cold_first/cold-first-diagnostics-affinity4-16assignments-v4/ExampleHuman/0/report.json",
+      "sha256": "cb58ead59a6886c6a7ae53dd9980c139b1cf633cfee483681729a6750bf377f5",
+      "bytes": 11981
+    }
+  ]
+}

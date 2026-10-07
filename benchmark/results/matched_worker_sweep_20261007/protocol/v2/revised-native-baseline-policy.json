@@ -1,0 +1,13 @@
+{
+  "decided_at_utc": "2026-10-07T14:14:31.834393+00:00",
+  "reason": "User requested a defensible delivery route avoiding multiple days of serial CP repetitions.",
+  "current_capture": "8assignments-2workers continues unchanged; retain its actual full-cohort CP timing and parity.",
+  "future_native_baseline": "Project 12 and 16 assignment CP execution from measured eight-assignment timing, explicitly labelled projected; retain actual one- and eight-assignment records.",
+  "future_openhcs": "Measure all remaining worker configurations and fixed twelve-assignment controls on the frozen production revision.",
+  "status": "PREPARED_REVISED_CAPTURE_PROTOCOL",
+  "forbidden": "Never present projected times as measured native observations.",
+  "native_headline": "One complete first-use-inclusive CP batch; first/subsequent breakdown used only to justify projections",
+  "model_identity": "retained-first-batch-plus-warm-assignments-v1",
+  "model_formula": "T(N) = T(8, first) + (N - 8) * median(T(8, subsequent)) / 8",
+  "projection_evidence": "Three workflows at matched CPU affinity; diagnostic coverage is limited and cross-campaign variation disclosed, not full-cohort measured target validation"
+}

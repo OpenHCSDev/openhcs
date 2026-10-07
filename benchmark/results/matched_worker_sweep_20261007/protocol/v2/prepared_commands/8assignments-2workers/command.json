@@ -1,0 +1,32 @@
+{
+  "status": "PREPARED_FINAL_COHORT_NOT_LAUNCHED",
+  "argv": [
+    "taskset",
+    "-c",
+    "2,3,4,5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "-B",
+    "-c",
+    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
+    "--manifest",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/official30-manifest.json",
+    "--all-cases",
+    "--well-count",
+    "1",
+    "--openhcs-workers",
+    "2",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--output-dir",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases",
+    "--repeat-assignments",
+    "8"
+  ],
+  "protocol": "Issue1100 full30 8independentcopiesoforiginalfirst-sourceassignment,OHworkers2; stockCP1process1numericalthread serialsameassignments (allowedCPUs2,3,4,5). Warm+3 fullSERVER execution, disjointcompile+executiontotal,completeSCI. No projections/nativeparallelcalibration. RAM unavailable: existingmatchedharnesshasnoperengineRSSclock.",
+  "source_freeze_head": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "native_reference_scope": "Originalstrictwhole-nativeguard; reuseonlymatchingassignmentcount/jobcount/physicalenvironment/input/nativeworker. Fixed16modesreuseactualserial16CPfromfirst16capture."
+}
