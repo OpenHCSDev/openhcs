@@ -1918,12 +1918,24 @@ def _cellprofiler_convex_hull_transform(
     return scale[output_levels]
 
 
+@njit(cache=True, inline="always")
+def _next_unpainted_column_row_numba(
+    successor: np.ndarray, row: int, column: int
+) -> int:
+    """Find the next unpainted row, compressing already-painted column runs."""
+    while successor[row, column] != row:
+        following = successor[row, column]
+        successor[row, column] = successor[following, column]
+        row = following
+    return row
+
+
 @njit(cache=True)
 def _paint_column_envelope_level_numba(
     vertices: np.ndarray,
     vertex_count: int,
     output: np.ndarray,
-    assigned: np.ndarray,
+    successor: np.ndarray,
     level: int,
     line_rows: np.ndarray,
     line_columns: np.ndarray,
@@ -1951,10 +1963,13 @@ def _paint_column_envelope_level_numba(
     for column in range(width):
         if low[column] == np.iinfo(np.int64).max:
             continue
-        for row in range(low[column], high[column] + 1):
-            if not assigned[row, column]:
-                output[row, column] = level
-                assigned[row, column] = True
+        row = _next_unpainted_column_row_numba(successor, low[column], column)
+        while row <= high[column]:
+            output[row, column] = level
+            successor[row, column] = _next_unpainted_column_row_numba(
+                successor, row + 1, column
+            )
+            row = successor[row, column]
 
 
 @njit(cache=True)
@@ -1962,19 +1977,46 @@ def _incremental_quantized_hulls_numba(scaled: np.ndarray) -> np.ndarray:
     """Reuse cumulative column extrema for descending quantized level sets."""
     height, width = scaled.shape
     flat = scaled.ravel()
-    levels = np.unique(flat)
-    # Index the observed codes, rather than allocating across a possibly sparse
-    # or invalid int32 range produced by the original floating-point cast.
-    counts = np.zeros(levels.size, np.int64)
-    for value in flat:
-        counts[np.searchsorted(levels, value)] += 1
+    minimum_code = np.int64(np.min(flat))
+    span = np.int64(np.max(flat)) - minimum_code + 1
+    # Bound dense indexing by the pixel domain; arbitrary sparse int32 codes
+    # retain the observed-code calculation without allocating across their range.
+    dense = span <= flat.size
+    if dense:
+        histogram = np.zeros(span, np.int64)
+        observed_count = 0
+        for value in flat:
+            histogram[np.int64(value) - minimum_code] += 1
+        for count in histogram:
+            if count:
+                observed_count += 1
+        levels = np.empty(observed_count, np.int32)
+        counts = np.empty(observed_count, np.int64)
+        lookup = np.empty(span, np.int64)
+        index = 0
+        for code in range(span):
+            if histogram[code]:
+                levels[index] = minimum_code + code
+                counts[index] = histogram[code]
+                lookup[code] = index
+                index += 1
+    else:
+        levels = np.unique(flat)
+        counts = np.zeros(levels.size, np.int64)
+        lookup = np.empty(0, np.int64)
+        for value in flat:
+            counts[np.searchsorted(levels, value)] += 1
     offsets = np.zeros(levels.size + 1, np.int64)
     for index in range(levels.size):
         offsets[index + 1] = offsets[index] + counts[index]
     cursors = offsets.copy()
     positions = np.empty(flat.size, np.int64)
     for position in range(flat.size):
-        index = np.searchsorted(levels, flat[position])
+        index = (
+            lookup[np.int64(flat[position]) - minimum_code]
+            if dense
+            else np.searchsorted(levels, flat[position])
+        )
         positions[cursors[index]] = position
         cursors[index] += 1
     row_minimum = np.full(width, np.iinfo(np.int64).max, np.int64)
@@ -1983,7 +2025,10 @@ def _incremental_quantized_hulls_numba(scaled: np.ndarray) -> np.ndarray:
     line_rows = np.empty(max(height, width), np.int64)
     line_columns = np.empty(line_rows.size, np.int64)
     output = np.full((height, width), levels[0], np.int32)
-    assigned = np.zeros((height, width), np.bool_)
+    successor = np.empty((height + 1, width), np.int64)
+    for row in range(height + 1):
+        for column in range(width):
+            successor[row, column] = row
     for level_index in range(levels.size - 1, 0, -1):
         changed = False
         for cursor in range(offsets[level_index], offsets[level_index + 1]):
@@ -2003,7 +2048,7 @@ def _incremental_quantized_hulls_numba(scaled: np.ndarray) -> np.ndarray:
                 vertices,
                 vertex_count,
                 output,
-                assigned,
+                successor,
                 levels[level_index],
                 line_rows,
                 line_columns,
