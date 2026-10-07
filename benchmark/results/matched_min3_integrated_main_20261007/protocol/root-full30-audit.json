@@ -1,0 +1,16 @@
+{
+  "cases": 30,
+  "SCI": 120,
+  "execution_min": [
+    3.1361916583843388,
+    "ExampleVitra"
+  ],
+  "execution_median": 4.275936310103196,
+  "total_min": [
+    1.4237547362791518,
+    "ExampleIlluminationCorrection_Example3"
+  ],
+  "total_median": 3.2526718273825583,
+  "source": "3894ca3a053c949d3d39760067ea0edc43a427df",
+  "scope": "full official30 independent run median ratios; not partial substitution"
+}

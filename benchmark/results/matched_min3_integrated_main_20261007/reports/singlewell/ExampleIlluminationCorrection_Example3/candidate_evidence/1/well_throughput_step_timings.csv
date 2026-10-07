@@ -1,0 +1,11 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,IdentifyPrimaryObjects,1791341868.176578,1791341868.2163455,0.03976750373840332
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,ExpandOrShrinkObjects,1791341868.2165744,1791341868.2311988,0.014624357223510742
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,ImageMath,1791341868.2313147,1791341868.237927,0.006612300872802734
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,MaskImage,1791341868.2379637,1791341868.2438962,0.00593256950378418
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,CorrectIlluminationCalculate,1791341868.24399,1791341868.25313,0.0091400146484375
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,CorrectIlluminationApply,1791341868.2531753,1791341868.2612631,0.008087873458862305
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,MaskImage,1791341868.2613988,1791341868.2681682,0.006769418716430664
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,CorrectIlluminationCalculate,1791341868.26826,1791341868.2910976,0.02283763885498047
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,CorrectIlluminationApply,1791341868.2911358,1791341868.3001125,0.00897669792175293
+ExampleIlluminationCorrection_Example3,1,1,worker_0,A01,SaveImages,1791341868.3002396,1791341868.3135977,0.013358116149902344

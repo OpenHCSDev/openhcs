@@ -1,0 +1,11 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+cp_tutorial_translocation_final,1,1,worker_0,A01,IdentifyPrimaryObjects,1791341795.364231,1791341795.4375415,0.07331037521362305
+cp_tutorial_translocation_final,1,1,worker_0,A01,IdentifySecondaryObjects,1791341795.437931,1791341795.4916193,0.05368828773498535
+cp_tutorial_translocation_final,1,1,worker_0,A01,IdentifyTertiaryObjects,1791341795.4919038,1791341795.5308516,0.03894782066345215
+cp_tutorial_translocation_final,1,1,worker_0,A01,MeasureObjectIntensity,1791341795.5312,1791341795.5894458,0.05824589729309082
+cp_tutorial_translocation_final,1,1,worker_0,A01,MeasureColocalization,1791341795.5896807,1791341795.660261,0.07058024406433105
+cp_tutorial_translocation_final,1,1,worker_0,A01,CalculateMath,1791341795.6605217,1791341795.6738176,0.013295888900756836
+cp_tutorial_translocation_final,1,1,worker_0,A01,GrayToColor,1791341795.674175,1791341795.6933112,0.01913619041442871
+cp_tutorial_translocation_final,1,1,worker_0,A01,OverlayOutlines,1791341795.6935613,1791341795.7071064,0.013545036315917969
+cp_tutorial_translocation_final,1,1,worker_0,A01,SaveImages,1791341795.7075164,1791341795.71904,0.01152348518371582
+cp_tutorial_translocation_final,1,1,,,ExportToDatabase,1791341795.7209833,1791341795.8091385,0.08815526962280273

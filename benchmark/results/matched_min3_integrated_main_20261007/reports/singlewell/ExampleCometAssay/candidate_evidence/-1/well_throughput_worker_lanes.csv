@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+ExampleCometAssay,1,1,worker_0,1,1791341924.0742643,1791341926.1239192,2.049654960632324
