@@ -251,6 +251,16 @@ neurons. The frozen pipeline, outputs and independent image review are linked
 in Supplementary Data 8. This trial used development images rather than an
 unseen test set.
 
+Retained measurements from an earlier complete laboratory-plate analysis also
+allowed comparison with commercial MetaXpress results in matched physical wells.
+Both methods recovered increased mean outgrowth at the nonzero FC-A and Y27632
+concentrations, but the response magnitudes differed and OpenHCS did not reproduce
+the increasing Y27632 dose trend (Supplementary Figure 12). This comparison
+tests recovery of a treatment response, not equivalence of individual cell masks
+or lengths. The earlier run used stitched mosaics rather than the separate-field
+pipeline illustrated in Figure 5; its measurements are not credited to that
+autonomous trial.
+
 Supplementary Data 8 separately reports an assisted stitched-mosaic analysis of the laboratory dataset.
 
 The public BBBC013 translocation analysis completed all 96 wells. It retained
