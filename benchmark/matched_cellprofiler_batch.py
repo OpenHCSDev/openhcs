@@ -47,6 +47,7 @@ from benchmark.native_batch_contracts import (
     NativeBatchRequest,
 )
 from benchmark.native_execution_projection import RepeatedSourceNativeBatchReport
+from benchmark.native_measurement_facts import retained_native_measurement_snapshot
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline_on_client,
@@ -159,6 +160,11 @@ def _parser() -> argparse.ArgumentParser:
         "--native-execution-model",
         choices=("retained-first-batch-plus-warm-assignments-v1",),
         help="Explicitly project a fresh native batch; no new native observations.",
+    )
+    parser.add_argument(
+        "--native-measurement-cache-root",
+        type=Path,
+        help="Reuse retained native semantic snapshots; candidate SCI remains fresh.",
     )
     parser.add_argument(
         "--production-source-root",
@@ -345,6 +351,9 @@ def _saved_output_equivalence(
     execution_axis_id: str | None = None,
     actual_candidate_files: frozenset[Path] | None = None,
     candidate_managed_files: frozenset[Path] = frozenset(),
+    native_measurement_cache_root: Path | None = None,
+    native_reference_report_sha256: str | None = None,
+    production_source_commit: str | None = None,
 ) -> tuple[
     RuntimeEquivalenceReport,
     RuntimeEquivalenceReport,
@@ -370,7 +379,14 @@ def _saved_output_equivalence(
         measurement_dialect=policy.measurement_dialect,
     )
     csv_report = runtime_measurement_equivalence(
-        RuntimeMeasurementSnapshot.from_output_snapshot(native_snapshot, policy=policy),
+        retained_native_measurement_snapshot(
+            native_snapshot,
+            policy=policy,
+            source_table_paths=native_exports.table_outputs,
+            cache_root=native_measurement_cache_root,
+            reference_report_sha256=native_reference_report_sha256,
+            source_commit=production_source_commit,
+        ),
         RuntimeMeasurementSnapshot.from_output_snapshot(
             candidate_snapshot, policy=policy
         ),
@@ -1058,6 +1074,8 @@ def main(argv: list[str] | None = None) -> int:
             raise FileNotFoundError("Native reference cases root does not exist.")
     if args.repeat_assignments is not None and args.repeat_assignments < 1:
         raise ValueError("Repeated assignment count must be positive.")
+    if args.native_measurement_cache_root is not None and args.native_reference_root is None:
+        raise ValueError("Native semantic cache requires retained native source custody.")
     if args.native_execution_model is not None and not args.candidate_only:
         raise ValueError("A native execution model requires candidate-only capture.")
     if args.candidate_only and (
@@ -1199,6 +1217,10 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         ),
         "source_commit": source_commit,
         "source_dirty": source_dirty,
+        "native_measurement_cache_root": (
+            str(args.native_measurement_cache_root.expanduser().resolve())
+            if args.native_measurement_cache_root is not None else None
+        ),
         "production_source_root": str(production_root),
         "benchmark_harness": {
             "source_root": str(project_root),
@@ -1588,6 +1610,9 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                     native_root,
                     candidate_exports,
                     policy=policy,
+                    native_measurement_cache_root=args.native_measurement_cache_root,
+                    native_reference_report_sha256=provenance.get("native_reference_report_sha256"),
+                    production_source_commit=source_commit,
                     source_workspaces=completed.output_roots,
                     image_set_policy=image_set_policy,
                     actual_candidate_files=actual_output_files,
@@ -1609,6 +1634,9 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                     native_root / directory,
                     exports,
                     policy=policy,
+                    native_measurement_cache_root=args.native_measurement_cache_root,
+                    native_reference_report_sha256=provenance.get("native_reference_report_sha256"),
+                    production_source_commit=source_commit,
                     source_workspaces=completed.output_roots,
                     image_set_policy=image_set_policy,
                     execution_axis_id=well,

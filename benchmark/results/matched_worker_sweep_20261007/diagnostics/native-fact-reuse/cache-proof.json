@@ -1,0 +1,68 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY saved-artifact complete SCI, no native/server execution or benchmark timing",
+  "results": [
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "full_science_comparison_seconds": {
+        "fresh": 35.92800365528092,
+        "cache_miss": 31.129810037091374,
+        "cache_hit": 21.94159312080592
+      },
+      "outputs": {
+        "database_differences": [],
+        "csv_differences": [],
+        "image_differences": [],
+        "reference_image_count": 0,
+        "candidate_image_count": 0
+      },
+      "all_numeric_facts_equal": true,
+      "all_directed_relationships_equal": true,
+      "directed_relationship_feature_count": 0,
+      "source_report_sha256": "c7ea873f98bcde016b59901c2288d2736e33938e27c0f25a02cb3976282c72d2",
+      "source_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+      "candidate_observation_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/0/observation.pkl",
+      "candidate_observation_sha256": "501e70b7e9cbce63a7fc0f365aba283ae73cec6af8fa9dbd7c1da46468dac009",
+      "reference_output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/native/0/W001",
+      "full_comparison_equal_fresh_cache_miss_cache_hit": true
+    },
+    {
+      "case": "ExampleHuman",
+      "full_science_comparison_seconds": {
+        "fresh": 6.089240389876068,
+        "cache_miss": 5.535743525251746,
+        "cache_hit": 3.3330890270881355
+      },
+      "outputs": {
+        "database_differences": [],
+        "csv_differences": [],
+        "image_differences": [],
+        "reference_image_count": 1,
+        "candidate_image_count": 1
+      },
+      "all_numeric_facts_equal": true,
+      "all_directed_relationships_equal": true,
+      "directed_relationship_feature_count": 4,
+      "source_report_sha256": "d6a814f6d5c89dae45e4b807db1c9f50023f5e4d368002bc029555ce031e0e24",
+      "source_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleHuman/native_report.json",
+      "candidate_observation_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleHuman/candidate_evidence/0/observation.pkl",
+      "candidate_observation_sha256": "9fce9eab4c4776b4f4234fd3cc4ab7f6193c8b0aba307bd59b2e594023492af1",
+      "reference_output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleHuman/native/0/W001",
+      "full_comparison_equal_fresh_cache_miss_cache_hit": true
+    }
+  ],
+  "helper_sha256": "f84ad9886ae7fafd3cf5679ce71d12e065db990a8fff9fddb164a15c22f2e39b",
+  "production_source_commit": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "production_source_clean": true,
+  "production_module_path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/__init__.py",
+  "benchmark_code_sha256": {
+    "benchmark/native_measurement_facts.py": "f84ad9886ae7fafd3cf5679ce71d12e065db990a8fff9fddb164a15c22f2e39b",
+    "benchmark/matched_cellprofiler_batch.py": "77bada3feccbef0456c0d63bfa22cafa665de5cbe88f645a0c6de14748b16e1b"
+  },
+  "unsupported_stateful_callable_rejected": "Unsupported stateful native comparison policy provider.",
+  "cpu_affinity": [
+    0
+  ],
+  "timing_limit": "Local saved-artifact diagnostic wall clocks, outside all science benchmark intervals; fresh Grid replay overlapped approximately seven seconds of CPU0 behavior checks. Cache miss/hit comparisons likewise are diagnostic samples, not a qualified full-cohort speedup.",
+  "reuse_scope": "Only retained native numeric facts and directed relationships are restored. Each fresh/miss/hit call recomputes candidate facts, output inventories, image and database comparisons."
+}
