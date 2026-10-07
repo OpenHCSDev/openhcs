@@ -1514,7 +1514,6 @@ class RuntimeRowProjectionContext:
         ):
             records = RuntimeMeasurementFactProjectionContract.observed_records(
                 records,
-                self.policy,
                 declared_anchor_groups=projection.declared_anchor_groups,
             )
         projection = runtime_row_projection(
@@ -1547,6 +1546,7 @@ class RuntimeRowProjectionContext:
                         ),
                         key,
                         value,
+                        self._measured_object_anchor(key),
                     )
                     for key, value in derived_facts
                     if (key, value) not in explicit_facts
@@ -1936,7 +1936,7 @@ class RuntimeRowProjectionContext:
                     return ()
                 padding_group_presence[column.padding_group] = True
                 return cast(
-                    RuntimeRowProjectionRecords[RuntimeRowProjectionValueT],
+                    "RuntimeRowProjectionRecords[RuntimeRowProjectionValueT]",
                     (
                         RuntimeRowProjectionRecord(
                             column.padding_group,

@@ -448,14 +448,13 @@ def runtime_measurement_cell_is_present(value: object) -> bool:
     value = canonical_scalar(value)
     if value is None:
         return False
-    if isinstance(value, (str, bool, int, float)):
-        text = str(value).strip()
-        if not text:
-            return False
-        numeric = runtime_numeric_text_value(text)
-        if numeric is None:
-            return True
-        return not math.isnan(numeric)
+    if isinstance(value, str):
+        text = value.strip()
+        return bool(text) and text.lower() not in ("nan", "+nan", "-nan")
+    if isinstance(value, (bool, int)):
+        return True
+    if isinstance(value, float):
+        return not math.isnan(value)
     array_shape = semantic_array_shape(value)
     if array_shape is not None:
         return any(axis > 0 for axis in array_shape)
@@ -464,10 +463,7 @@ def runtime_measurement_cell_is_present(value: object) -> bool:
     text = str(value).strip()
     if not text:
         return False
-    numeric = runtime_numeric_text_value(text)
-    if numeric is None:
-        return True
-    return not math.isnan(numeric)
+    return text.lower() not in ("nan", "+nan", "-nan")
 
 
 def runtime_measurement_value_is_present(value: object) -> bool:

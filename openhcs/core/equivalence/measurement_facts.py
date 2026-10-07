@@ -19,16 +19,12 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementSourcePair,
     RuntimeMeasurementSubjectKey,
 )
-from openhcs.core.equivalence.measurement_features import (
-    object_measurement_feature_matches_marker,
-)
 from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
     RuntimeMeasurementDialect,
     normalize_runtime_identifier,
 )
 from openhcs.core.runtime_measurements import (
-    MeasuredObjectAnchorFeatureMarker,
     MeasurementScope,
 )
 
@@ -63,7 +59,7 @@ class RuntimeRowProjectionRecord(Generic[RuntimeRowProjectionValueT]):
     padding_group: RuntimeMeasurementPaddingGroup
     key: RuntimeMeasurementFeatureKey
     value: RuntimeRowProjectionValueT
-    measured_object_anchor: bool = False
+    measured_object_anchor: bool
     producer_owned_feature: bool = False
 
 
@@ -372,12 +368,10 @@ class RuntimeMeasurementFactProjectionContract:
     def observed_padding_groups(
         cls,
         records: Iterable[RuntimeRowProjectionRecord[RuntimeCellSignature]],
-        policy: RuntimeEquivalencePolicy,
         *,
         declared_anchor_groups: frozenset[RuntimeMeasurementPaddingGroup] = frozenset(),
     ) -> frozenset[RuntimeMeasurementPaddingGroup]:
         """Return padding groups that carry observed measurement facts."""
-        anchor_key_cache: dict[RuntimeMeasurementFeatureKey, bool] = {}
         has_anchor = set(declared_anchor_groups)
         observed_anchors: set[RuntimeMeasurementPaddingGroup] = set()
         observed_values: set[RuntimeMeasurementPaddingGroup] = set()
@@ -385,15 +379,7 @@ class RuntimeMeasurementFactProjectionContract:
             observed = cls.is_observed_value(record.value)
             if observed:
                 observed_values.add(record.padding_group)
-            is_anchor = anchor_key_cache.get(record.key)
-            if is_anchor is None:
-                is_anchor = object_measurement_feature_matches_marker(
-                    record.key,
-                    MeasuredObjectAnchorFeatureMarker,
-                    policy,
-                )
-                anchor_key_cache[record.key] = is_anchor
-            if not is_anchor:
+            if not record.measured_object_anchor:
                 continue
             has_anchor.add(record.padding_group)
             if observed:
@@ -421,7 +407,6 @@ class RuntimeMeasurementFactProjectionContract:
     def observed_records(
         cls,
         records: Iterable[RuntimeRowProjectionRecord[RuntimeCellSignature]],
-        policy: RuntimeEquivalencePolicy,
         *,
         declared_anchor_groups: frozenset[RuntimeMeasurementPaddingGroup] = frozenset(),
     ) -> RuntimeRowProjectionRecords[RuntimeCellSignature]:
@@ -429,7 +414,6 @@ class RuntimeMeasurementFactProjectionContract:
         materialized = tuple(records)
         observed_padding_groups = cls.observed_padding_groups(
             materialized,
-            policy,
             declared_anchor_groups=declared_anchor_groups,
         )
         return tuple(
@@ -442,25 +426,22 @@ class RuntimeMeasurementFactProjectionContract:
     def dedupe_observed_alias_records(
         cls,
         records: Iterable[RuntimeRowProjectionRecord[RuntimeCellSignature]],
-        policy: RuntimeEquivalencePolicy,
     ) -> RuntimeMeasurementFacts:
         """Filter unobserved padding groups and collapse same-row aliases."""
         return cls.dedupe_alias_facts(
             (record.key, record.value)
-            for record in cls.observed_records(records, policy)
+            for record in cls.observed_records(records)
         )
 
     @classmethod
     def dedupe_observed_records(
         cls,
         records: Iterable[RuntimeRowProjectionRecord[RuntimeCellSignature]],
-        policy: RuntimeEquivalencePolicy,
     ) -> RuntimeMeasurementFacts:
         """Filter unobserved padding groups and collapse declared aliases."""
         materialized = tuple(records)
         observed_padding_groups = cls.observed_padding_groups(
             materialized,
-            policy,
         )
         return cls.dedupe_records(
             record

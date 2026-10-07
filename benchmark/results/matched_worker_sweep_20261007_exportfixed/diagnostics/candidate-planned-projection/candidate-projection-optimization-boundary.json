@@ -1,0 +1,18 @@
+{
+  "utc": "2026-10-07T22:45:00.389769+00:00",
+  "retired_scheduler_pid": 2546893,
+  "retired_scheduler_command": "/home/ts/code/projects/openhcs/.venv/bin/python -B /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/run-revised-sweep.py --plan /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v5/protocol-manifest.json ",
+  "signals": [
+    "SIGTERM",
+    "SIGCONT"
+  ],
+  "completed_capture": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture",
+  "completed_capture_terminal": {
+    "returncode": 0,
+    "source_head_before": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+    "source_head_after": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+    "source_status_after": ""
+  },
+  "completed_cases": 30,
+  "reason": "Clean completed-mode boundary; new v6 will reuse all first five captures and install received candidate projection optimization only for final two qualifier cohorts. Timed scientific production remains D06."
+}

@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "timed_production_revision": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "loaded_root": "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/__init__.py",
+  "timed_import_authority": "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/runtime/import_authority.py",
+  "fresh_child_files": [
+    "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/__init__.py",
+    "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/core/equivalence/cells.py"
+  ],
+  "qualifier_files": {
+    "openhcs.core.equivalence.cells": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/cells.py",
+    "openhcs.core.equivalence.measurement_facts": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/measurement_facts.py",
+    "openhcs.core.equivalence.measurement_rows": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/measurement_rows.py"
+  },
+  "core_search_roots": [
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core",
+    "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/core"
+  ],
+  "harness_inventory_count": 1345,
+  "repeated_inventory_exact": true,
+  "harness_inventory_sha256": "009682d63c7699f5b3728599ac1cbb72c0a0c4df69b0e9c74361e214175b15b0",
+  "anchor_metadata_required": true,
+  "previous_completed_capture_report": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example1_AllMethod/report.json",
+  "same_inventory_file_set_as_completed_capture": true,
+  "changed_source_files_since_completed_capture": [
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/measurement_rows.py",
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/measurement_facts.py",
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/cells.py"
+  ]
+}
