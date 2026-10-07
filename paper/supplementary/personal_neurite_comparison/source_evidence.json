@@ -64,7 +64,10 @@
     "/run/media/ts/0BA20E780BA20E78/blind-neurite-analysis-20260916/blind-full-A018/P001_openhcs/images_results/A60_z_index-1_timepoint-1_neurite_outgrowth_summary_step4_details.csv": "36ba42d6bafd0ff339e423b6c975bc1cca3c241b8afc5bc6d784fc4d73a28ddf"
   },
   "matched_wells": 60,
-  "comparison": "retained mosaic-run evaluation; not current field-pipeline validation",
-  "aggregation": "MetaXpress well export versus OpenHCS mosaic total length / detected cells",
+  "comparison": "fixed-run treatment evaluation; not a manual accuracy score",
+  "aggregation_protocol": "mosaic",
+  "aggregation": "OpenHCS mosaic total length / detected cells; MetaXpress well export",
+  "protocol_figure_label": "Retained mosaic measurements; not the current field pipeline",
+  "generator_sha256": "33f4e26f83d1aff83527bee9a3a61f76b39db7c768d4eafddce693273bdd4ffd",
   "baseline": "each drug curve's own zero-dose DMSO wells"
 }

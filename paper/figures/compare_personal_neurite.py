@@ -1,13 +1,14 @@
 """Compare retained well measurements, without processing or tuning images.
 
 The identity key is evaluation-only: never give it to a blind analysis author.
-This entrypoint deliberately selects one retained mosaic run, not a mixture of
-attempts. Its outputs do not establish segmentation accuracy or autonomous
-acceptance. MetaXpress site averaging and OpenHCS mosaic measurement differ.
+This entrypoint selects one run and an explicit well-aggregation protocol, never
+a mixture of attempts. Its outputs do not establish segmentation accuracy.
 """
 
 import argparse
+from abc import ABC, abstractmethod
 import csv
+from dataclasses import asdict, dataclass, fields
 import hashlib
 import json
 import math
@@ -15,10 +16,13 @@ from pathlib import Path
 from statistics import mean, stdev
 
 
-METRICS = {
-    "mean_outgrowth": "mean_outgrowth_per_cell_um",
-    "cell_count": "number_of_cells",
-}
+@dataclass(frozen=True)
+class WellEndpoints:
+    mean_outgrowth: float
+    cell_count: float
+
+
+METRICS = tuple(field.name for field in fields(WellEndpoints))
 
 
 def read_rows(path):
@@ -33,7 +37,80 @@ def write_rows(path, rows):
         writer.writerows(rows)
 
 
-def compare(reference, key, summaries, output):
+@dataclass(frozen=True)
+class NativeSummary:
+    """The measured endpoint projection of one exported native plane."""
+
+    well: str
+    site: str | None
+    cell_count: int
+    mean_outgrowth: float
+
+    @classmethod
+    def read(cls, path):
+        rows = read_rows(path)
+        if len(rows) != 1:
+            raise ValueError(f"Expected one native plane summary: {path}")
+        row = rows[0]
+        if (int(row["neurite_channel_index"]), int(row["cell_body_channel_index"]),
+                int(row["nuclear_channel_index"])) != (1, 1, 0):
+            raise ValueError(f"Unexpected channel assignment: {path}")
+        count, length = int(row["number_of_cells"]), float(row["total_outgrowth_um"])
+        measured_mean = float(row["mean_outgrowth_per_cell_um"])
+        if count <= 0 or not math.isfinite(length) or not math.isfinite(measured_mean):
+            raise ValueError(f"No valid per-cell length denominator: {path}")
+        if not math.isclose(length / count, measured_mean, rel_tol=1e-9):
+            raise ValueError(f"Inconsistent mean outgrowth: {path}")
+        if (int(row["z_index"]), int(row["timepoint"])) != (1, 1):
+            raise ValueError(f"Unexpected acquisition plane: {path}")
+        return cls(row["well"], row.get("site"), count, measured_mean)
+
+
+class WellAggregation(ABC):
+    """Each sampling protocol owns its well endpoint and coverage rule."""
+
+    name: str
+    description: str
+    figure_label: str
+
+    @abstractmethod
+    def aggregate(self, rows):
+        """Return well endpoints without silently changing sampled area."""
+
+    def load(self, summaries):
+        grouped, paths = {}, []
+        for path in sorted(summaries.glob("*_neurite_outgrowth_summary_*details.csv")):
+            row = NativeSummary.read(path)
+            grouped.setdefault(row.well, []).append(row)
+            paths.append(path)
+        return {well: self.aggregate(rows) for well, rows in grouped.items()}, paths
+
+
+class MosaicWellAggregation(WellAggregation):
+    name = "mosaic"
+    description = "OpenHCS mosaic total length / detected cells; MetaXpress well export"
+    figure_label = "Retained mosaic measurements; not the current field pipeline"
+
+    def aggregate(self, rows):
+        if len(rows) != 1 or rows[0].site is not None:
+            raise ValueError("Mosaic protocol requires exactly one site-collapsed summary per well")
+        row = rows[0]
+        return WellEndpoints(row.mean_outgrowth, row.cell_count)
+
+
+class SiteMeanWellAggregation(WellAggregation):
+    name = "site-mean"
+    description = "Unweighted mean of nine native site mean-outgrowth/cell-count endpoints; MetaXpress well export"
+    figure_label = "Nine-field well means from a fixed-pipeline transfer evaluation"
+
+    def aggregate(self, rows):
+        if len(rows) != 9 or {row.site for row in rows} != {str(site) for site in range(1, 10)}:
+            raise ValueError("Site-mean protocol requires nine unique measured sites, 1–9, for each well")
+        return WellEndpoints(mean(row.mean_outgrowth for row in rows),
+                             mean(row.cell_count for row in rows))
+
+
+def compare(reference, key, summaries, output, aggregation):
     inputs = [reference, key]
     mapping = {}
     for image in json.loads(key.read_text())["images"]:
@@ -47,31 +124,19 @@ def compare(reference, key, summaries, output):
         if coded in mapping and mapping[coded] != identity:
             raise ValueError(f"Inconsistent source identity: {coded}")
         mapping[coded] = identity
-    native = {}
-    for path in sorted(summaries.glob("*_neurite_outgrowth_summary_*details.csv")):
-        records = read_rows(path)
-        if len(records) != 1:
-            raise ValueError(f"Expected one mosaic summary: {path}")
-        row = records[0]
-        if "site" in row or "_site-" in path.name:
-            raise ValueError("Field summaries require a declared site aggregation, not this mosaic comparison")
-        identity = mapping[(summaries.parent.name.removesuffix("_openhcs"), row["well"])]
-        if identity in native:
-            raise ValueError(f"Duplicate well: {identity}")
-        if (int(row["neurite_channel_index"]), int(row["nuclear_channel_index"])) != (1, 0):
-            raise ValueError(f"Unexpected channel assignment: {path}")
-        count, length = float(row["number_of_cells"]), float(row["total_outgrowth_um"])
-        if count <= 0 or not math.isclose(length / count, float(row["mean_outgrowth_per_cell_um"]), rel_tol=1e-9):
-            raise ValueError(f"Inconsistent mean outgrowth: {path}")
-        native[identity] = row
-        inputs.append(path)
+    coded_plate = summaries.parent.name.removesuffix("_openhcs")
+    measured, paths = aggregation.load(summaries)
+    native = {mapping[(coded_plate, well)]: asdict(endpoints) for well, endpoints in measured.items()}
+    if len(native) != len(measured):
+        raise ValueError("Multiple coded wells map to the same physical well")
+    inputs.extend(paths)
     joined = []
     for row in read_rows(reference):
         identity = (row["plate"], row["well"])
         if identity not in native:
             continue
-        joined.append({**row, **{f"openhcs_{metric}": native[identity][column]
-                                for metric, column in METRICS.items()}})
+        joined.append({**row, **{f"openhcs_{metric}": native[identity][metric]
+                                for metric in METRICS}})
     effects = []
     for condition in ("FC-A", "Y27"):
         curve = [row for row in joined if row["condition"] == condition]
@@ -110,8 +175,11 @@ def compare(reference, key, summaries, output):
     hashes = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in inputs}
     (output / "source_evidence.json").write_text(json.dumps({
         "sources_sha256": hashes, "matched_wells": len(joined),
-        "comparison": "retained mosaic-run evaluation; not current field-pipeline validation",
-        "aggregation": "MetaXpress well export versus OpenHCS mosaic total length / detected cells",
+        "comparison": "fixed-run treatment evaluation; not a manual accuracy score",
+        "aggregation_protocol": aggregation.name,
+        "aggregation": aggregation.description,
+        "protocol_figure_label": aggregation.figure_label,
+        "generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "baseline": "each drug curve's own zero-dose DMSO wells",
     }, indent=2) + "\n")
     print(f"Compared {len(joined)} physical wells; wrote {len(effects)} endpoint/dose rows to {output}")
@@ -121,5 +189,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("reference", "key", "summaries", "output"):
         parser.add_argument(f"--{name}", type=Path, required=True)
+    protocols = {protocol.name: protocol for protocol in WellAggregation.__subclasses__()}
+    parser.add_argument("--aggregation", choices=protocols, required=True)
     args = parser.parse_args()
-    compare(args.reference, args.key, args.summaries, args.output)
+    compare(args.reference, args.key, args.summaries, args.output, protocols[args.aggregation]())
