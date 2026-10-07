@@ -1,0 +1,43 @@
+"""Read-only actual CSV selection receiving; no fact projection or science."""
+import gzip,hashlib,inspect,json,os,pickle,sys
+from pathlib import Path
+assert os.sched_getaffinity(0)=={0}
+prod=Path('/home/ts/code/projects/openhcs-cp-registry-control');artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');sys.path.insert(0,str(prod))
+import openhcs,openhcs.core,benchmark
+openhcs.core.__path__.insert(0,str(artifact/'openhcs/core'));benchmark.__path__.insert(0,str(artifact/'benchmark'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from openhcs.core.equivalence.relationships import ExportedRelationshipMeasurementSemantics
+from openhcs.core.equivalence.policy import normalize_runtime_identifier
+case=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid')
+with gzip.open(case/'candidate_evidence/-1/observation.pkl','rb') as f:observation=pickle.load(f)
+exports=observation.exports.for_execution_axis('W001');policy=_strict_cellprofiler_runtime_equivalence_policy();seen=[]
+def record(table,stage):
+ indexes=tuple(i for i,h in enumerate(table.header) if normalize_runtime_identifier(h)=='image_number')
+ ids=sorted({row[i] for row in table.rows for i in indexes})
+ seen.append({'stage':stage,'path':str(table.path),'rows':len(table.rows),'columns':len(table.header),'image_number_columns':indexes,'image_ids':ids,'raw_cell_count':len(table.rows)*len(table.header)})
+def local_trace(frame,event,arg):
+ if event=='return' and arg is not None:record(arg,'raw_csv' if frame.f_code is RuntimeTableSnapshot.from_csv.__func__.__code__ else 'selected_table')
+ return local_trace
+def global_trace(frame,event,arg):
+ if event=='call' and frame.f_code in (RuntimeTableSnapshot.from_csv.__func__.__code__,RuntimeTableSnapshot.for_image_numbers.__code__):return local_trace
+ return None
+sys.settrace(global_trace)
+snapshot=RuntimeOutputSnapshot.from_export_observation(exports,source_workspaces=(case/'candidate/-1/source_workspace_matched_pilot',),execution_axis_id='W001',measurement_dialect=policy.measurement_dialect)
+sys.settrace(None)
+scoped,offset=ExportedRelationshipMeasurementSemantics.validated_output_tables(snapshot.tables,policy)
+producer=[]
+for entry in scoped:
+ table=entry.table;field_names=tuple(f.name for f in table.rows.fields);indexes=tuple(i for i,name in enumerate(field_names) if normalize_runtime_identifier(name)=='image_number');count=0;ids=set()
+ for row in table.rows.iter_row_mappings():
+  count+=1
+  for i in indexes:ids.add(str(row.get(field_names[i])))
+ producer.append({'table_name':table.name,'subject_scope':table.subject.scope.value,'subject_name':table.subject.name,'rows':count,'fields':len(field_names),'image_ids':sorted(ids),'maximum_raw_field_cells':count*len(field_names)})
+assert seen and producer
+allowed={str(n) for mapping in exports.outputs.image_numbers_by_export_path.values() for n in mapping['W001']}
+assert allowed=={'1','2'}
+assert all(set(e['image_ids'])<=allowed for e in producer)
+assert sum(e['rows'] for e in producer)==3602
+proof={'status':'PASS','scope':'DIAGNOSTIC_ONLY actual saved12Grid warmupW001 selection; current qualifier source, actual D06 science; no RuntimeMeasurementSnapshot fact projection, profiler, server or science jobs','candidate_case':str(case),'candidate_production_head':json.loads((case/'pilot_provenance.json').read_text())['source_commit'],'assignment_count':12,'axis':'W001','allowed_images':sorted(allowed),'table_selection_events':seen,'tables_supplied_to_actual_fact_producer':producer,'producer_object_rows':sum(t['rows'] for t in producer if t['subject_scope']=='object'),'maximum_supplied_scalar_cells':sum(t['maximum_raw_field_cells'] for t in producer),'module_hashes':{str(Path(inspect.getsourcefile(owner))):hashlib.sha256(Path(inspect.getsourcefile(owner)).read_bytes()).hexdigest() for owner in (RuntimeOutputSnapshot,RuntimeTableSnapshot,ExportedRelationshipMeasurementSemantics)},'conclusion':'Whole combined12-axis CSV is decoded before row filtering, but only selected2-image rows reach validated table/fact producer. Hypothesis of whole12 semantic projection per axis disproved. Repeated whole CSV decoding remains a distinct smaller cost, previously measured~1.60CPU-s at8 assignments versus13.44CPU-s fresh semantic projection.'}
+out=Path(__file__).parent/'saved12-grid-selection-proof.json';out.write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps({'status':'PASS','events':seen,'producer':producer,'proof':str(out)}))
