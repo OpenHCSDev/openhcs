@@ -349,7 +349,7 @@ class CellProfilerNeuriteEngineProfile:
         )
         if nuclear_seeded_signal_body_mode:
             secondary_owner_regions = _propagate_neurite_owner_regions(
-                outgrowth_response,
+                admission,
                 cell_body_labels,
                 minimum_response=outgrowth.intensity_above_local_background,
             )
@@ -2219,24 +2219,32 @@ def _identify_secondary_owner_regions_cellprofiler(
 
 
 def _propagate_neurite_owner_regions(
-    signal_response: np.ndarray,
+    admission: NeuriteAdmissionResult,
     cell_body_labels: np.ndarray,
     *,
     minimum_response: float,
 ) -> np.ndarray:
-    """Propagate soma identities through the declared neurite foreground."""
+    """Propagate provisional soma identities through admitted shaft/root support.
 
-    response = np.asarray(signal_response, dtype=float)
+    Local response alone admits background corridors that repair deliberately
+    excludes. A territory reached through those corridors can cut an admitted
+    shaft into labels with no connection to their own soma. Use the original
+    admission and its bounded soma attachment contract for propagation too;
+    rooted topology remains the stronger nominal ownership evidence.
+    """
+
+    response = np.asarray(admission.response, dtype=float)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
-    if response.shape != bodies.shape:
+    if not response.shape == bodies.shape == admission.mask.shape:
         raise ValueError(
-            "signal_response and cell_body_labels must have the same shape"
+            "neurite admission and cell_body_labels must have the same shape"
         )
     if not np.isfinite(minimum_response) or minimum_response < 0:
         raise ValueError("minimum_response must be finite and >= 0")
     if not np.any(bodies):
         return np.zeros_like(bodies)
-    support = (response >= minimum_response) | (bodies > 0)
+    attachments = admission.soma_attachment_labels(bodies, minimum_response)
+    support = admission.mask | (attachments > 0) | (bodies > 0)
     return secondary_propagation_backend().propagate(
         response,
         bodies,

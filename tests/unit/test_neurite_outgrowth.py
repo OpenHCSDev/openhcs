@@ -2123,7 +2123,7 @@ def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
     bodies[16, 28] = 2
 
     owner_regions = _propagate_neurite_owner_regions(
-        response,
+        _declared_shaft_admission(response),
         bodies,
         minimum_response=100.0,
     )
@@ -2133,6 +2133,24 @@ def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
     assert np.all(owner_regions[4:17, 3] == 1)
     assert np.all(owner_regions[response < 100.0] == 0)
     assert set(np.unique(owner_regions)) == {0, 1, 2}
+
+
+def test_provisional_owner_cannot_reach_a_shaft_through_unadmitted_background():
+    response = np.zeros((32, 32), dtype=float)
+    response[16, 3:29] = 150.0
+    response[4:17, 15] = 150.0
+    bodies = np.zeros(response.shape, dtype=np.int32)
+    bodies[16, 3] = 1
+    bodies[4, 15] = 2
+    support = np.zeros(response.shape, dtype=bool)
+    support[16, 3:29] = True
+    owner_regions = _propagate_neurite_owner_regions(
+        _declared_shaft_admission(response, support), bodies,
+        minimum_response=100.0,
+    )
+    assert np.all(owner_regions[16, 3:29] == 1)
+    assert owner_regions[4, 15] == 2
+    assert owner_regions[12, 15] == 0
 
 
 def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch):
