@@ -760,6 +760,26 @@ class MetaXpressCellBodySettings:
         """Project this declaration's minimum body area into image pixels."""
         return self.minimum_area / coordinate_scale**2
 
+    @staticmethod
+    def _inscribed_disc_support(
+        radius: np.ndarray, medial_support: np.ndarray,
+    ) -> np.ndarray:
+        """Project original medial discs without adding a new geometric rule."""
+        support = np.zeros(radius.shape, dtype=bool)
+        for row, column in np.argwhere(medial_support):
+            disc_radius = float(radius[row, column])
+            extent = int(np.ceil(disc_radius))
+            row_start, row_stop = (
+                max(0, row - extent), min(radius.shape[0], row + extent + 1),
+            )
+            column_start, column_stop = (
+                max(0, column - extent), min(radius.shape[1], column + extent + 1),
+            )
+            rows, columns = np.ogrid[row_start:row_stop, column_start:column_stop]
+            disc = (rows - row) ** 2 + (columns - column) ** 2 < disc_radius**2
+            support[row_start:row_stop, column_start:column_stop] |= disc
+        return support
+
     def separate_terminal_shafts(
         self,
         body: np.ndarray,
@@ -770,7 +790,9 @@ class MetaXpressCellBodySettings:
 
         The outgrowth declaration supplies shaft width; the independent minimum
         inscribed-diameter acceptance gate does not classify local cytoplasm.
-        Broad medial support and discs overlapping the nucleus are protected.
+        Broad medial discs are soma support only in a projected support region
+        connected to the nucleus. A locally wide shaft junction cannot protect
+        itself merely by joining the soma through a thin shaft.
         Thin connections between protected regions and short irregular boundary
         lobes remain soma. Only terminal thin components extending farther than
         one shaft width from their sole attachment are removed.
@@ -787,11 +809,16 @@ class MetaXpressCellBodySettings:
         )
         skeleton = np.asarray(image_payload_data(skeleton_payload))[1:-1, 1:-1] > 0
         distance_to_nucleus = ndi.distance_transform_edt(~nuclear_seed)
-        protected = skeleton & (
+        broad_medial = skeleton & (
             (2.0 * radius - 1.0 > maximum_shaft_width_px)
             | (distance_to_nucleus < radius)
         )
         connectivity = np.ones((3, 3), dtype=bool)
+        broad_support = body & self._inscribed_disc_support(radius, broad_medial)
+        broad_regions, _ = ndi.label(broad_support, connectivity)
+        nuclear_regions = np.unique(broad_regions[broad_support & nuclear_seed])
+        soma_support = broad_support & np.isin(broad_regions, nuclear_regions)
+        protected = skeleton & soma_support
         degrees = ndi.convolve(
             skeleton.astype(np.int32), connectivity, mode="constant", cval=0
         ) - skeleton
@@ -811,25 +838,10 @@ class MetaXpressCellBodySettings:
         if not np.any(removed_medial):
             return body
 
-        retained_support = np.zeros(body.shape, dtype=bool)
-        removed_support = np.zeros(body.shape, dtype=bool)
-        for row, column in np.argwhere(skeleton):
-            disc_radius = float(radius[row, column])
-            extent = int(np.ceil(disc_radius))
-            row_start, row_stop = (
-                max(0, row - extent),
-                min(body.shape[0], row + extent + 1),
-            )
-            column_start, column_stop = (
-                max(0, column - extent),
-                min(body.shape[1], column + extent + 1),
-            )
-            rows, columns = np.ogrid[row_start:row_stop, column_start:column_stop]
-            disc = (rows - row) ** 2 + (columns - column) ** 2 < disc_radius**2
-            support = (
-                removed_support if removed_medial[row, column] else retained_support
-            )
-            support[row_start:row_stop, column_start:column_stop] |= disc
+        retained_support = self._inscribed_disc_support(
+            radius, skeleton & ~removed_medial,
+        )
+        removed_support = self._inscribed_disc_support(radius, removed_medial)
         retained = body & (~removed_support | retained_support | nuclear_seed)
         components, _ = ndi.label(retained, connectivity)
         seeded_components = np.unique(components[retained & nuclear_seed])
