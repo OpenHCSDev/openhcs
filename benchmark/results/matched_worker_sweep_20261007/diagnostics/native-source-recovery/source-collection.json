@@ -1,0 +1,429 @@
+{
+  "status": "COMPLETE_NATIVE_REPORT_COLLECTION_REQUIRES_FRESH_CANDIDATE_PARITY",
+  "policy": "Unchanged actual8 serial stock CP observations; original full-cohort terminal remains failed, while remaining two cases have independent successful terminals. This collection is not a successful original matched suite or a projection. New OpenHCS capture must requalify all outputs against these sources.",
+  "cases": [
+    {
+      "case": "ExampleYeastPatches",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleYeastPatches",
+      "native_report_sha256": "6450e1969231c7e4458f4fdd78665bc3894ed68ab86ef8eda56814f9bbce8e59",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_3d_monolayer",
+      "native_report_sha256": "4e36fe7eb73da65b79ba7df223c95d3e6c47b10f885ee44b29b9cfe130aba857",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp_tutorial_advanced_segmentation_final",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final",
+      "native_report_sha256": "b09bfc05ef1ee6629c62f65a817d32b00216c05d216707ff9a5ce745bdae31d4",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp_tutorial_quality_control",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_quality_control",
+      "native_report_sha256": "63279bddba3bd5a969bd384e442ec7f23df02f114e1097c8a81239a271d30f38",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_beginner_segmentation_final",
+      "native_report_sha256": "13767eb1c52b823ac5762dc0f31ed23b7a4ca2515dab27fbe0facf0ea149661e",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp_tutorial_pixel_based_classification",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_pixel_based_classification",
+      "native_report_sha256": "a64c1958bff2166998fe076836713d5e3406569887fae719942c40992596390a",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp_tutorial_translocation_final",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_translocation_final",
+      "native_report_sha256": "c03a41de417e8e4948a1eda7b26707c7fe3f9808e13f1f6ccc58749ee563a865",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp4_supplement_combine_objects",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp4_supplement_combine_objects",
+      "native_report_sha256": "d23479e1dbe1b5bcb6579625826c23e3bd257da86b3608470d0f08428fdad4a4",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "cp_tutorial_translocation_start",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_translocation_start",
+      "native_report_sha256": "3d8a742e0b2423372e7e49ccd40b89cf88cef076b980ec8c82d202c40a66bbb1",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleUntangleWorms",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleUntangleWorms",
+      "native_report_sha256": "1cdc098f443505065aa990fd21240758491be04b10c37b79e14596b13a6a7b58",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleUntangleWormsBrightField",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleUntangleWormsBrightField",
+      "native_report_sha256": "aaf946c3ca3eda5901910e7b349db7f817a13175efbb38448176d04054ad21c9",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleYeastColonies",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleYeastColonies",
+      "native_report_sha256": "5c3de13e8c583e03b2eb9edc00d8e5e30be4aad780a97458538661c50c9a1e89",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing",
+      "native_report_sha256": "aac7574136e315465afaf097329077ab8474d8a06a0b1e1ac340288f19d3caea",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleSpeckles",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleSpeckles",
+      "native_report_sha256": "419cdee63d8347188b6e65d606b0e790c4f333a8942bbe16ba01df0afd1c3998",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3",
+      "native_report_sha256": "1262229a7dceb982838000203ac81de5dd53425dd298dc53bf8b3d3693a44a7e",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleVitra",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleVitra",
+      "native_report_sha256": "f3d5e8481369a47b2ff50fa36294148b1437282cc35bba835c479d6592c93358",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleFlyURL",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL",
+      "native_report_sha256": "8ac98ce338ed0de27277815210dd726fced2219b7269b4d01564964321e1fc98",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleColocalization",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization",
+      "native_report_sha256": "1a2f86d7fe7e3748e1a9f0dbc8c53ee24dd33a0a0fec32c4dea1908592ad624c",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleCometAssay",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleCometAssay",
+      "native_report_sha256": "d98b911c8c3f9c4fe86532ae37ffe07fb67df6a96648c5281299e2b11410b5e2",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleFly",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFly",
+      "native_report_sha256": "bf1537d7d109071fddb78d5a710203f5fb80e1a351c652a1ad32a36b2884a6ce",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleHuman",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleHuman",
+      "native_report_sha256": "d6a814f6d5c89dae45e4b807db1c9f50023f5e4d368002bc029555ce031e0e24",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example1_AllMethod",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example1_AllMethod",
+      "native_report_sha256": "1dac35e4c5dad4464bd1e7443fe4170580b6e16e56c356a50c1aa71a957345e3",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example1_EachMethod",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example1_EachMethod",
+      "native_report_sha256": "7c5fa8556dd1f4c87360f998661d8c09c1ded21779a69a5cd5f6b9776b8248b3",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example2",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example2",
+      "native_report_sha256": "5546f711ff36ea22aa5066d964d1ba28bf92cce78b20c23ca3b4e64636c1741d",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid",
+      "native_report_sha256": "c7ea873f98bcde016b59901c2288d2736e33938e27c0f25a02cb3976282c72d2",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleNeighbors",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleNeighbors",
+      "native_report_sha256": "18dbee77436c0d4fbcbb4904b87445592fc6d4b86d10947a62d2049cadbb74a2",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExamplePercentPositive",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExamplePercentPositive",
+      "native_report_sha256": "1721be00e2479337fa88abc22cce8d6a3112c7481c935dda13abab7e3a1ec839",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleTrackObjects",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleTrackObjects",
+      "native_report_sha256": "28cf06a0307640145a010d0a06263d3fd8cc63415eb9a66ef4ccff7cecc0ec83",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleTumor",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor",
+      "native_report_sha256": "27dfa376cc65f4e3f8d3d8a8e8312991651df44721fd5de00f854a99ad5b5382",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    },
+    {
+      "case": "ExampleUntangleAndStraightenWorms",
+      "original_case_directory": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleUntangleAndStraightenWorms/capture/cases/ExampleUntangleAndStraightenWorms",
+      "native_report_sha256": "aa76d797bc4cd7b0a74432f694da6d814e534d7912b85eed7d334dfdb254388a",
+      "repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "assignments": 8,
+      "native_job_count": 1,
+      "native_source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46"
+    }
+  ],
+  "case_count": 30,
+  "source_manifest_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/official30-manifest.json",
+  "source_manifest_sha256": "4836dad9a07a57d9e70e34e7f1edd6fb07ddc42f4dcf6e7f4736a6d57581daa9"
+}
