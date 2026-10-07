@@ -10,7 +10,7 @@ the final publication freeze.
 The current benchmark owner is the frozen seven-mode protocol in
 `benchmark/results/matched_worker_sweep_20261007_exportfixed`. Its controller
 qualifies and archives all 30 workflows in each requested mode before rendering.
-The single-well mode is already qualified; the remaining modes are still running.
+The single-well and eight-assignment/two-worker modes are qualified; five modes remain pending.
 Do not publish a complete-sweep claim until every mode has passed.
 
 After the complete sweep is qualified, use its existing renderer to produce the
@@ -19,7 +19,7 @@ manuscript assets directly at the consumer path:
 ```sh
 python benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/render_sweep.py \
   --record benchmark/results/matched_worker_sweep_20261007_exportfixed \
-  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/protocol-manifest.json \
+  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v3/protocol-manifest.json \
   --output-dir paper/figures/slas/benchmark-publication
 ```
 
