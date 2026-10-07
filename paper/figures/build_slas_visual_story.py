@@ -780,17 +780,21 @@ def submission_neurite_results():
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
     sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
     sheet.panel("I", "Public neurites: OpenHCS and published NeuronCyto II", 3, 97)
-    for x, name, title in (
-        (3, "first-bottom-raw", "A  Raw detail"),
-        (35, "first-bottom-result", "B  OpenHCS initial detail"),
+    matched = reference["matched_wholefield_layout"]
+    for x, name, title, record in (
+        (3, "first-full-raw", "A  Raw field", matched["raw"]),
+        (35, "first-full-result", "B  OpenHCS initial result", matched["openhcs_initial"]),
     ):
+        path = public / f"{name}.png"
+        if digest(path) != record["sha256"]:
+            raise ValueError(f"Whole-field native capture hash mismatch: {name}")
         sheet.text(x, 91, title, size=10.5, weight="bold")
-        sheet.source_image(public / f"{name}.png", (x, 70, 30, 18), crop=(297, 28, 1250, 410))
+        sheet.source_image(path, (x, 70, 30, 18), crop=tuple(record["crop_xyxy_pixels"]))
     sheet.text(67, 91, "C  Published NeuronCyto II", size=10.5, weight="bold")
     sheet.source_image(reference_image, (67, 70, 30, 18),
                        crop=tuple(reference["crop_xyxy_pixels"]))
-    sheet.text(67, 68, "Whole field • algorithm, not manual GT", size=8.5, color=MUTED)
-    sheet.text(3, 65, "A–B: retained shaft detail. C: Ong et al., Fig. 2D; attribution CC BY-NC 4.0.",
+    sheet.text(67, 68, "Algorithm comparison, not manual GT", size=8.5, color=MUTED)
+    sheet.text(3, 65, "A–C: same whole field and display scale. C: Ong et al., Fig. 2D; CC BY-NC 4.0.",
                size=9, color=MUTED)
     sheet.panel("II", "Laboratory neurites: final autonomous analysis", 3, 62)
     for x, name, title in (
@@ -834,7 +838,7 @@ def submission_repair_examples():
 
 def submission_autonomous_loop():
     """Separate intended skill workflow from the retained H001 trajectory."""
-    sheet = FigureSheet("submission_autonomous_loop", "", 8.8)
+    sheet = FigureSheet("submission_autonomous_loop", "", 7.4)
     resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
     with resources.open(newline="") as stream:
         rows = [row for row in csv.DictReader(stream)
@@ -851,8 +855,6 @@ def submission_autonomous_loop():
     sheet.source(resources)
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md")
-    sheet.source(ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")
-    sheet.source(OUTPUT / "h001_scored_native_provenance.json")
 
     # These vector pictograms explain the procedure, not synthetic assay results.
     # Native captures below retain their separate, observed-source identities.
@@ -970,17 +972,13 @@ def submission_autonomous_loop():
         sheet.box(x, 23, 22, 7, f"{int(candidate)} • {count} objects", decision, color=TEAL)
         if index < 3:
             sheet.arrow((x+22,26.5), (x+24,26.5))
-    for x, stage, title in ((3, "raw", "Retained raw field"),
-                            (35, "first", "Initial candidate, a01"),
-                            (67, "final", "Selected candidate, a04")):
-        sheet.text(x, 21, title, size=10, weight="bold")
-        sheet.source_image(OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
-                           (x, 7, 30, 13), crop=(297, 28, 1037, 492))
     first = float(trial["first_elapsed_s"]) / 60
     final = float(trial["final_elapsed_s"]) / 60
-    sheet.text(4, 4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four completed candidates",
+    sheet.text(4, 17, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four completed candidates",
                size=10.5, color=TEAL)
-    sheet.text(4, 1, "Counts and repair decisions: retained author report. Whole task includes review, reporting and cleanup.",
+    sheet.text(4, 11, "Matched raw and repair overlays: Figure 4A.",
+               size=10.5, color=BLUE)
+    sheet.text(4, 5, "Counts and repair decisions: retained author report. Whole task includes review, reporting and cleanup.",
                size=8.5, color=MUTED)
     sheet.save()
 

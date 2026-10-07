@@ -320,9 +320,9 @@ Predictions were frozen before reference comparison; scores were not returned to
 
 ### Figure 2. Delegated specialist work leaves an analysis the scientist can inspect
 
-![Skill-directed analysis workflow and a separately identified recorded H001 repair trajectory.](figures/slas/submission_autonomous_loop.png){width=6in}
+![Skill-directed analysis workflow and a separately identified recorded H001 decision sequence.](figures/slas/submission_autonomous_loop.png){width=6in}
 
-**(A)** Pictograms explain the packaged skill's intended workflow; the pipeline inset is a native capture. Raw/result/combined symbols illustrate matched viewing, not assay data. (B) Recorded nuclear-segmentation repair with raw, initial and selected-result images. Original MCP records confirm four executions; the author's report describes split repair and recovery of a pair lost during revision. Catalogue times include review, reporting and cleanup. This example does not establish universal adherence to the current skill.
+**(A)** Pictograms explain the packaged skill's intended workflow; the pipeline inset is a native capture. Raw/result/combined symbols illustrate matched viewing, not assay data. (B) Recorded nuclear-segmentation decisions across four executions: the author's report describes split repair and recovery of a pair lost during revision (matched repair images, Figure 4A). Catalogue times include review, reporting and cleanup. This example does not establish universal adherence to the current skill.
 
 The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
 earlier author: 61 fields improved, 123 decreased and 16 were unchanged
@@ -360,7 +360,7 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 ![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
-**(I, A–C)** Raw detail, initial OpenHCS shaft result and published NeuronCyto II whole-field result (Ong et al., Figure 2D [@NeuronCytoII], cropped; CC BY-NC 4.0). C is an algorithm result, not manual ground truth; red annotations are original. The field is the same, but crops/displays differ. Later OpenHCS repair overextended the target. (II, D–F) Matched P001 autonomous views; overlapping fields were not deduplicated. (III, G–H) Assisted 20-well comparison: concordant positive responses with different magnitudes. Dots: two technical wells per dose; marks/whiskers: mean/sample SD relative to each drug's DMSO mean. Supplementary Figure 8 retains all six endpoints.
+**(I, A–C)** Raw field, initial OpenHCS result and published NeuronCyto II result (Ong et al., Figure 2D [@NeuronCytoII], cropped; CC BY-NC 4.0), showing the same whole field at equal display scale. C is an algorithm result, not manual ground truth; red annotations are original. Contrast and cell colours differ; exact pixel registration is not established. Later OpenHCS repair overextended the target. (II, D–F) Matched P001 autonomous views; overlapping fields were not deduplicated. (III, G–H) Assisted 20-well comparison: concordant positive responses with different magnitudes. Dots: two technical wells per dose; marks/whiskers: mean/sample SD relative to each drug's DMSO mean. Supplementary Figure 8 retains all six endpoints.
 
 
 ### Matched execution and total time across 30 workflows

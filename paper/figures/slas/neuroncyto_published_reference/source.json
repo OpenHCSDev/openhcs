@@ -11,11 +11,31 @@
   "sha256": "613b7356ff007ed8e541ee469f9955afadc27a47f8f6906b985bbffb2f42bbad",
   "source_size_pixels": [502, 475],
   "published_figure": "2D",
-  "crop_xyxy_pixels": [273, 244, 502, 475],
+  "crop_xyxy_pixels": [275, 248, 500, 473],
   "crop_convention": "PIL left, top, right, bottom; right and bottom exclusive",
-  "modifications": "Editorial crop of panel D and placement only; no recolouring, retouching or spatial registration. Author red circles and arrow retained.",
+  "modifications": "Editorial square crop of panel D's whole-field image, excluding its border, and placement only; no recolouring, retouching, sharpening or spatial registration. Author red circles and arrow retained.",
   "reference_kind": "Published NeuronCyto II algorithm result, not manual ground truth",
-  "field_correspondence": "Visual comparison of published Figure 2C and the retained image-1 input establishes the same source scene. No pixel transform, cell correspondence or display matching across authors is claimed.",
+  "field_correspondence": "Published Figure 2C/D and the retained first-full raw/result captures depict the same image-1 whole field in the same orientation. The lower soma, upper-right soma and diagonal chain of somas provide visual correspondence. Square whole-field crops displayed at equal physical widths give comparable field of view and magnification; this is not subpixel registration or contrast matching across authors.",
+  "matched_wholefield_layout": {
+    "native_input_size_xy_pixels": [800, 800],
+    "raw": {
+      "capture_group": "first-full-raw",
+      "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-full-raw/20261006T000247964251Z_napari_6015_OpenHCS_Napari_Visualization.png",
+      "sha256": "a5ff357b010c1869732c54890aa611b6ed9f6ab674086a911c2bbb8c11a3a3e2",
+      "crop_xyxy_pixels": [574, 39, 973, 438]
+    },
+    "openhcs_initial": {
+      "capture_group": "first-full-result",
+      "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-full-result/20261006T000248330147Z_napari_6015_OpenHCS_Napari_Visualization.png",
+      "sha256": "8526d5be0e23deff03407e8b78a18d4b5f5e4f9cc1b7ce3f35a148b5b8c45ba2",
+      "crop_xyxy_pixels": [574, 39, 973, 438]
+    },
+    "capture_center_yx": [399.5, 399.5],
+    "capture_zoom": 0.49875,
+    "crop_sizes_xy_pixels": {"raw": [399, 399], "openhcs_initial": [399, 399], "published_neuroncyto": [225, 225]},
+    "layout": "Use equal square physical image bounds for all three crops, not the former wide native-detail bounds.",
+    "limitations": "The publication JPEG is a separately rasterized low-resolution result; exact subpixel registration is not established. The retained raw/result screenshots include a viewer annotation in the lower-right field; it must not be painted out. Colours are not shared cell identities and contrast/backgrounds differ."
+  },
   "input_w1_sha256": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7",
   "input_w2_sha256": "ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847",
   "reuse_status": "Attributed manuscript draft comparison only; commercial journal reproduction permission/licence compatibility requires review before publication. No journal upload authorised."

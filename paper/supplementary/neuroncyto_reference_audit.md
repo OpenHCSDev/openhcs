@@ -22,12 +22,15 @@ The published tracing can support an explicitly labelled algorithm comparison,
 not a ground-truth overlay or a spatial manual-reference accuracy claim.
 
 Main Figure 5(I) now includes the published algorithm result beside the retained
-raw detail and OpenHCS initial shaft result. Its source is the unmodified
+raw whole field and OpenHCS initial result at equal display scale. Its source is the unmodified
 [PMC Figure 2 JPEG](https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/CYTO-89-747-g002.jpg),
 SHA-256 `613b7356ff007ed8e541ee469f9955afadc27a47f8f6906b985bbffb2f42bbad`.
-Panel D is cropped at `(273, 244, 502, 475)` in source-image XYXY pixels;
+Panel D is cropped at `(275, 248, 500, 473)` in source-image XYXY pixels;
 the original red circles and arrow are retained. This is the same source field,
-not a spatially registered or display-matched comparison across authors.
+shown in the same orientation and field of view. The native whole-field captures
+are cropped at `(574, 39, 973, 438)` and placed in equal square bounds. This
+matches field magnification, not subpixel registration, contrast or cell colours.
+The published result has only 225 × 225 source pixels; no sharpening is applied.
 The [article XML](https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/PMC5089663.1.xml)
 declares CC BY-NC 4.0; the panel is attributed to Ong et al. (2016), Figure 2D,
 with the crop identified. Commercial journal reproduction permission and licence
