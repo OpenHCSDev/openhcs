@@ -809,7 +809,7 @@ def test_edgeless_skeleton_has_empty_topology(coordinates):
         skeleton[coordinate] = True
     original = skeleton.copy()
     topology = _analyze_topology(
-        skeleton, np.zeros(skeleton.shape, np.int32), 1.3556, 3.0
+        skeleton, np.zeros(skeleton.shape, np.int32), 1.3556, 3.0, branch_support=skeleton,
     )
     assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
     assert np.array_equal(skeleton, original)
@@ -832,6 +832,7 @@ def test_sparse_owned_singleton_regression_has_no_neurite_paths():
         1.3556,
         4.0 / 1.3556,
         assigned_path_labels=cell_bodies,
+        branch_support=skeleton,
     )
     assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
 
@@ -846,9 +847,9 @@ def test_isolated_pixels_do_not_change_connected_path_geometry_or_ownership(diag
     bodies = np.zeros(skeleton.shape, np.int32)
     bodies[6:10, 6:10] = 1
     bodies[14:19, 6:10] = 1
-    expected = _analyze_topology(skeleton, bodies, 1.3556, 3.0)
+    expected = _analyze_topology(skeleton, bodies, 1.3556, 3.0, branch_support=skeleton)
     skeleton[0, 0] = skeleton[0, 32] = skeleton[32, 0] = True
-    actual = _analyze_topology(skeleton, bodies, 1.3556, 3.0)
+    actual = _analyze_topology(skeleton, bodies, 1.3556, 3.0, branch_support=skeleton)
     assert np.array_equal(actual.path_lengths, expected.path_lengths)
     assert np.array_equal(actual.path_owners, expected.path_owners)
     assert np.array_equal(actual.path_distances, expected.path_distances)
@@ -871,6 +872,7 @@ def test_three_pixel_cycle_has_empty_topology():
         np.zeros(skeleton.shape, dtype=np.int32),
         coordinate_scale=1.0,
         outgrowth_width_px=3.0,
+        branch_support=skeleton,
     )
 
     assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
@@ -882,10 +884,10 @@ def test_three_pixel_cycle_does_not_change_valid_path_topology():
     skeleton[16, 8:25] = True
     bodies = np.zeros(skeleton.shape, dtype=np.int32)
     bodies[14:19, 6:10] = 1
-    expected = _analyze_topology(skeleton, bodies, 1.0, 3.0)
+    expected = _analyze_topology(skeleton, bodies, 1.0, 3.0, branch_support=skeleton)
 
     skeleton[2, 2] = skeleton[2, 3] = skeleton[3, 2] = True
-    actual = _analyze_topology(skeleton, bodies, 1.0, 3.0)
+    actual = _analyze_topology(skeleton, bodies, 1.0, 3.0, branch_support=skeleton)
 
     np.testing.assert_array_equal(actual.path_lengths, expected.path_lengths)
     np.testing.assert_array_equal(actual.path_owners, expected.path_owners)
@@ -912,6 +914,7 @@ def test_owned_topology_ignores_three_pixel_cycle_for_separate_owner():
         coordinate_scale=1.0,
         outgrowth_width_px=3.0,
         crossing_topology=_empty_topology(),
+        branch_support=owned > 0,
     )
     rendered = _render_owned_skeleton(owned.shape, topology)
 
@@ -932,6 +935,7 @@ def test_crossing_resolution_retains_two_logical_endpoint_groups():
         cell_bodies,
         coordinate_scale=1.0,
         outgrowth_width_px=3.0,
+        branch_support=skeleton,
     )
 
     crossing_groups = []
@@ -965,6 +969,7 @@ def test_owned_geometric_crossing_uses_nominal_owner_as_branch():
         coordinate_scale=1.0,
         outgrowth_width_px=2.0,
         crossing_topology=_empty_topology(),
+        branch_support=owned > 0,
     )
     rendered = _render_owned_skeleton(owned.shape, topology)
 
@@ -989,7 +994,7 @@ def test_crossing_cluster_counts_three_owned_arms_across_physical_nodes():
     bodies[30:35, 3:9] = 1
     bodies[7:13, 47:53] = 2
     topology = _analyze_topology(
-        labels > 0, bodies, 1.0, 8.0, assigned_path_labels=labels,
+        labels > 0, bodies, 1.0, 8.0, assigned_path_labels=labels, branch_support=labels > 0,
     )
     # Three same-owner arms are now a branch, not a retained two-arm crossover.
     assert topology.crossing_nodes == frozenset()
@@ -1023,6 +1028,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
         cell_bodies,
         coordinate_scale=pixel_size_um,
         outgrowth_width_px=8.0,
+        branch_support=skeleton,
     )
 
     assert len(topology.crossing_nodes) == 1
@@ -1098,6 +1104,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
     repaired[cell_bodies > 0] = 0  # The profile excludes soma pixels from traces.
     final = _analyze_owned_topology(
         repaired, cell_bodies, pixel_size_um, 8.0, crossing_topology=topology,
+        branch_support=response > 0,
     )
     final_terminals = {
         tuple(coordinate): int(final.path_owners[path_index])
@@ -1164,6 +1171,7 @@ def test_branch_events_require_three_paths_of_the_same_final_owner(
         coordinate_scale=1.0,
         outgrowth_width_px=1.0,
         assigned_path_labels=labels if use_assigned_owners else None,
+        branch_support=labels > 0,
     )
 
     assert tuple(sorted(topology.branch_nodes_by_cell)) == expected_branch_cells
@@ -1179,6 +1187,82 @@ def test_branch_events_require_three_paths_of_the_same_final_owner(
     assert {edge.feature_mapping()["branch_type"] for edge in morphology.edges} == (
         {1} if expected_branch_cells else {0}
     )
+
+
+def test_branch_qualification_rejects_medial_stars_inside_a_single_cap():
+    center = np.array([20, 20])
+    paths = tuple(np.array([center, center + offset]) for offset in (
+        [0, 1], [-1, -1], [1, -1],
+    ))
+    foreground = np.zeros((41, 41), dtype=bool)
+    rows, columns = disk(tuple(center), 3, shape=foreground.shape)
+    foreground[rows, columns] = True
+    topology = replace(
+        _empty_topology(), path_owners=np.ones(3, dtype=np.int32),
+        path_coordinates=paths, path_endpoint_groups=((0, 1), (0, 2), (0, 3)),
+        endpoint_group_coordinates={0: tuple(center), **{i + 1: tuple(path[-1]) for i, path in enumerate(paths)}},
+    )
+    branch_types, branches = topology.classify_owned_endpoints(
+        branch_support=foreground,
+        cell_body_labels=np.zeros(foreground.shape, dtype=np.int32), merge_radius=3,
+        outgrowth_width_px=3,
+    )
+    assert branches == {}
+    np.testing.assert_array_equal(branch_types, [0, 0, 0])
+
+
+@pytest.mark.parametrize("body_owner", [1, 2])
+def test_branch_qualification_keeps_a_short_real_soma_attachment(body_owner):
+    paths = (
+        np.array([[20, 20], [21, 20]]),
+        np.array([[20, 20], [19, 19], [18, 18], [17, 17]]),
+        np.array([[20, 20], [19, 21], [18, 22], [17, 23]]),
+    )
+    foreground = np.zeros((41, 41), dtype=bool)
+    rows, columns = disk((20, 20), 2, shape=foreground.shape)
+    foreground[rows, columns] = True
+    for path in paths:
+        foreground[tuple(path.T)] = True
+    bodies = np.zeros(foreground.shape, dtype=np.int32)
+    bodies[22:27, 19:22] = body_owner
+    topology = replace(
+        _empty_topology(), path_owners=np.ones(3, dtype=np.int32),
+        path_coordinates=paths, path_endpoint_groups=((0, 1), (0, 2), (0, 3)),
+        endpoint_group_coordinates={0: (20, 20), **{i + 1: tuple(path[-1]) for i, path in enumerate(paths)}},
+    )
+    branch_types, branches = topology.classify_owned_endpoints(
+        branch_support=foreground, cell_body_labels=bodies, merge_radius=3,
+        outgrowth_width_px=3,
+    )
+    assert branches == ({1: (0,)} if body_owner == 1 else {})
+    np.testing.assert_array_equal(branch_types, [1, 1, 1] if body_owner == 1 else [0, 0, 0])
+
+
+def test_branch_qualification_resolves_a_short_daughter_beyond_a_thick_junction():
+    paths = (
+        np.array([[4, 6], [5, 6], [6, 6], [7, 6], [8, 6]]),
+        np.array([[8, 6], [9, 7], [10, 8], [10, 9], [11, 10]]),
+        np.array([[8, 6], [9, 6], [10, 5], [11, 5], [12, 4], [13, 3]]),
+    )
+    foreground = np.zeros((20, 20), dtype=bool)
+    foreground[4:9, 4:8] = True
+    foreground[9, 3:9] = True
+    foreground[10, 3:10] = True
+    foreground[11, 3:7] = True
+    foreground[11, 8:11] = True
+    foreground[12:14, 2:6] = True
+    topology = replace(
+        _empty_topology(), path_owners=np.ones(3, dtype=np.int32),
+        path_coordinates=paths, path_endpoint_groups=((1, 0), (0, 2), (0, 3)),
+        endpoint_group_coordinates={0: (8, 6), 1: (4, 6), 2: (11, 10), 3: (13, 3)},
+    )
+    branch_types, branches = topology.classify_owned_endpoints(
+        branch_support=foreground,
+        cell_body_labels=np.zeros(foreground.shape, dtype=np.int32),
+        merge_radius=2.95, outgrowth_width_px=2.95,
+    )
+    assert branches == {1: (0,)}
+    np.testing.assert_array_equal(branch_types, [1, 1, 1])
 
 
 def test_nearby_nonopposite_junctions_remain_a_branch_event():
@@ -1202,6 +1286,7 @@ def test_nearby_nonopposite_junctions_remain_a_branch_event():
         cell_bodies,
         coordinate_scale=1.0,
         outgrowth_width_px=8.0,
+        branch_support=skeleton,
     )
 
     assert topology.crossing_nodes == frozenset()
@@ -2382,6 +2467,7 @@ def test_secondary_ownership_adopts_logical_paths_not_whole_components():
         np.zeros(skeleton.shape, dtype=np.int32),
         coordinate_scale=1.0,
         outgrowth_width_px=2.0,
+        branch_support=skeleton,
     )
     owner_skeleton = np.zeros(skeleton.shape, dtype=np.int32)
     secondary_regions = np.zeros(skeleton.shape, dtype=np.int32)
@@ -2409,6 +2495,7 @@ def test_secondary_ownership_partitions_a_path_at_nominal_owner_boundaries():
         np.zeros(skeleton.shape, dtype=np.int32),
         coordinate_scale=1.0,
         outgrowth_width_px=2.0,
+        branch_support=skeleton,
     )
     secondary_regions = np.zeros(skeleton.shape, dtype=np.int32)
     secondary_regions[11:14, 2:16] = 1
@@ -2438,6 +2525,7 @@ def test_owned_topology_preserves_adjacent_nominal_neuron_paths():
         coordinate_scale=1.0,
         outgrowth_width_px=2.0,
         crossing_topology=_empty_topology(),
+        branch_support=owned > 0,
     )
     rendered = np.zeros_like(owned)
     for path_index, coordinates in enumerate(topology.path_coordinates):
@@ -2461,6 +2549,7 @@ def test_secondary_path_adoption_survives_only_with_soma_rooted_signal_support()
         cell_bodies,
         coordinate_scale=1.0,
         outgrowth_width_px=2.0,
+        branch_support=skeleton,
     )
     assert not np.any(topology.path_owners)
 
@@ -2493,6 +2582,7 @@ def test_secondary_path_adoption_survives_only_with_soma_rooted_signal_support()
             coordinate_scale=1.0,
             outgrowth_width_px=2.0,
             assigned_path_labels=repaired,
+            branch_support=response > 0,
         )
 
     disconnected_labels, disconnected_topology = repaired_topology(connected=False)
@@ -2678,6 +2768,7 @@ def test_topology_discards_assigned_paths_detached_from_the_soma():
         coordinate_scale=1.0,
         outgrowth_width_px=3.0,
         assigned_path_labels=labels,
+        branch_support=labels > 0,
     )
     owned_skeleton = np.zeros_like(labels)
     for path_index, coordinates in enumerate(topology.path_coordinates):
