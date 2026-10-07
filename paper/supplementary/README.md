@@ -8,19 +8,50 @@ link-bibliography: true
 
 # OpenHCS supplementary material
 
-## Supplementary Figure 1. Array grouping, preparation and extension
+## Supplementary Figure 1. Process architecture, runtime composition and extension
+
+![Separate editing, execution and inspection processes.](../figures/slas/process_architecture.png){width=6in}
+
+(I) The graphical editor and MCP bridge submit compilation and execution
+requests to the ZMQ server and receive status updates. The server assigns
+compiled work to CPU/GPU workers, which read source images, save outputs and
+stream images and ROIs to separate napari or Fiji viewers. Worker and viewer
+counts are configurable. This diagram shows process responsibilities and data
+flow, rather than a particular deployment's process count.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+### Supplementary Figure 1, continued: complete runtime composition
+
+![Array axes, function chains, named results and scheduling.](../figures/slas/runtime_composition.png){width=5.6in}
+
+(II, A–D) Array axes and processing groups determine the image views supplied
+to each function. Functions declare per-plane, whole-stack or stack-reduction
+behaviour. A dictionary assigns function chains to groups; a list supplies a
+shared ordered chain. Named segmentation labels remain available to later
+measurements alongside the image flow, independently of saving to disk. When
+time is sequential, each timepoint completes the pipeline before the next
+begins; wells can run in parallel. Selected functions determine CPU/GPU support.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+### Supplementary Figure 1, continued: preparation and typed extension
 
 ![Shared configuration and a typed extension across the workflow.](../figures/slas/supp_workflow_infrastructure.png){width=6in}
 
-(A) Array axes and processing groups determine the image views supplied to each
+(III, A) Array axes and processing groups determine the image views supplied to each
 function. Functions declare per-plane, stack or stack-reduction behaviour.
 (B) Compilation connects images and named results, plans storage and ordered
 processing, checks requirements and prepares execution tasks. (C–D) One custom
 function declaration supplies typed parameters to the editor and MCP catalog.
 The gain and offset controls retain the defaults from that declaration.
-The complete runtime, compiler, output-routing, importer and viewer illustrations
-remain linked in Supplementary Data 4 rather than repeating the shared workflow
-as separate figures.
+The complete process and runtime diagrams are shown above. Additional compiler,
+output-routing, importer and viewer illustrations remain linked in
+Supplementary Data 4.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
