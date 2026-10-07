@@ -272,13 +272,16 @@ identifies the OpenHCS worker count. Lines join only observations of the same
 workflow, revision and worker configuration, never different capture heads.
 
 The earlier revision `eb773573c` supplies the measured 1, 9 and 16-assignment
-series for these three workflows. The later nine-assignment record at `71aded26c`
+series for these three workflows. Revision `d8678dbd4` supplies matched eight-assignment
+observations with one and two workers for all three workflows, with its own
+same-revision single-assignment observations. The later nine-assignment record at `71aded26c`
 supplies one- and three-worker observations for all three workflows; the later
 sixteen-assignment record at `2cda84a369` supplies one- and four-worker
 observations for the 3D monolayer only. The current full-cohort revision
 `3894ca3a0` supplies one-assignment, one-worker observations, not a current
-multiworker sweep. There are no two-worker observations in these matched records.
-Nine and sixteen assignments repeat each workflow's existing source sample;
+multiworker sweep. Two-, three- and four-worker captures have different revisions,
+assignment counts and cohort sizes; they are not a single matched 1–4-worker sweep.
+Eight, nine and sixteen assignments repeat each workflow's existing source sample;
 they are not independent biological wells. No averages across unlike workflows
 or revisions are used here.
 
@@ -297,19 +300,32 @@ workflows do not replace the full single-sample cohort of main Figure 2.
 
 ## Supplementary Figure 9 (continued). Matched worker comparisons
 
-![May-style mean bars and workflow points for the committed nine- and sixteen-assignment worker records.](../figures/slas/supp_matched_worker_speedups.png){width=6in}
+![May-style mean bars and workflow points for the retained eight- and nine-assignment worker records.](../figures/slas/supp_matched_worker_speedups.png){width=6in}
 
-(A) Nine assignments of three workflows on revision `71aded26c`: one versus
-three OpenHCS workers. (B) Sixteen assignments of the 3D monolayer workflow on
-revision `2cda84a369`: one versus four OpenHCS workers. Within each row, execution
+(A) Eight assignments of three workflows on revision `d8678dbd4`: one versus
+two OpenHCS workers. (B) Nine assignments of the same three workflow identities
+on revision `71aded26c`: one versus three OpenHCS workers. Within each row, execution
 and compile-plus-run total are separate groups. Each dot is one workflow's
 measured ratio against one actual stock CellProfiler process on the same
 assignments. Bars give arithmetic means, black lines medians, and annotations
-the minimum, median, mean and maximum. The lower row has one workflow, so its
-four statistics coincide and are marked “all”. Rows do not share a revision or
+the minimum, median, mean and maximum. Rows do not share a revision or
 cohort and are not pooled. Warmup and three measured repetitions passed each
 workflow's declared-output comparisons. Repeated assignments are computational
 replicates, not biological replicates.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 9 (continued). Four-worker comparison
+
+![Matched one- versus four-worker clocks for sixteen repeated 3D monolayer assignments.](../figures/slas/supp_matched_worker_speedups_continued_2.png){width=6in}
+
+(C) Sixteen assignments of the 3D monolayer workflow on revision `2cda84a369`:
+one versus four OpenHCS workers, with execution and total measured separately
+against one actual stock CellProfiler process. There is one workflow, so
+minimum, median, mean and maximum coincide and are marked “all”. This capture
+does not extend the eight- or nine-assignment records into a common scaling sweep.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -597,6 +613,7 @@ current-version compatibility matrix.
 
 - [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 2 and the paired-runtime continuation of Supplementary Figure 9.
 - [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
+- [Eight-assignment measured source record](../../benchmark/results/official30_matched_20261006/README.md), including the matched one-process baseline used for the two-worker comparison.
 - [Retained nine- and sixteen-assignment paired clock panels](../figures/slas/supp_matched_scaling.png), with the original separate capture heads.
 - [Single-core amortization: execution, total and paired nonexecution time](../figures/slas/matched_postgrid_20261006/single-core-amortization/measured_single_core_amortization.png).
 - [Nine-assignment execution ratios](../figures/slas/matched_latestmain_nine_20261006/primary-execution/measured_execution_metrics_long.csv) and [total ratios](../figures/slas/matched_latestmain_nine_20261006/primary-total/measured_total_metrics_long.csv), with the [qualified source record](../../benchmark/results/matched_latestmain_nine_20261006/README.md).

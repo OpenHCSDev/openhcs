@@ -1,0 +1,15 @@
+{
+  "generator_sha256": "5ebb80d63f294ba45e01e36092a2856187bd529ae9262844052a3c9ade28790d",
+  "source_sha256": {
+    "paper/figures/build_slas_benchmark.py": "4f510fe6d23b3d8a5213c030b6270c9d9b00fa9f9b9d816deda1250979a23840",
+    "paper/figures/slas/benchmark-publication/workers/matched_lastconsumer_20261006/figure2_provenance.json": "e153a0e185d0245475596349b2509157182ff44790873065b2bc89a9c41af0f2",
+    "paper/figures/slas/benchmark-publication/workers/matched_lastconsumer_20261006/measured_worker_speedups.png": "48fa7198af8b3d551108aaca76b048cb0be232f6bec1e6ae672b70d92d7937fe"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "supp_matched_worker_speedups_continued_2.png": "745422e898c4b930afde32b5d1fadb6e03d4aee938b749bb6d1528126f89b7f5",
+    "supp_matched_worker_speedups_continued_2.pdf": "640eb52f50292a8d15d584dc7dad6fb78c906372d1b2867bd1a41d2f2360d863",
+    "supp_matched_worker_speedups_continued_2.svg": "ede82093241075cecc9acfdf6f283ed0c9f39612e6ee4014e283b404b8bd61ed"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

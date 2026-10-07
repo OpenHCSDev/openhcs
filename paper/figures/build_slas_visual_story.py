@@ -796,19 +796,26 @@ def submission_neurite_results():
 
 def submission_shared_workflow():
     """Keep the native editing evidence readable beside the full-page diagram."""
-    sheet = FigureSheet("submission_shared_workflow", "", 4.8)
+    sheet = FigureSheet("submission_shared_workflow", "", 10.4)
     sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
-    sheet.panel("II", "Editable workflow", 3, 97)
-    sheet.native_image("authoring_main_verified_capture", (3, 5, 33, 88))
-    sheet.panel("III", "Execution server", 39, 97)
-    sheet.native_image("authoring_server_browser_verified_capture", (39, 68, 58, 24))
-    sheet.panel("IV", "Controls", 39, 62)
-    sheet.panel("V", "Matching Python", 68, 62)
+    sheet.panel("II", "Main window", 3, 97)
+    sheet.native_image("authoring_main_verified_capture", (3, 43, 94, 51))
+    sheet.panel("III", "Plate manager detail", 3, 41)
+    sheet.panel("IV", "Pipeline editor detail", 52, 41)
+    sheet.native_image("authoring_main_verified_capture", (3, 26, 45, 13),
+                       crop=(0, 204, 510, 360))
+    sheet.native_image("authoring_main_verified_capture", (52, 26, 45, 13),
+                       crop=(516, 204, 1024, 318))
+    sheet.panel("V", "Execution server", 3, 22)
+    sheet.native_image("authoring_server_browser_verified_capture", (3, 2, 34, 16))
+    sheet.panel("VI", "Controls", 39, 22)
+    sheet.panel("VII", "", 68, 22)
+    sheet.text(74, 22, "Matching Python", size=12, weight="bold")
     sheet.native_image(
-        "authoring_function_verified_capture", (39, 5, 25, 51), crop=(25, 153, 193, 290)
+        "authoring_function_verified_capture", (39, 2, 25, 16), crop=(25, 153, 193, 290)
     )
     sheet.native_image(
-        "authoring_code_verified_capture", (68, 5, 29, 51), crop=(74, 96, 292, 222)
+        "authoring_code_verified_capture", (68, 2, 29, 16), crop=(74, 96, 292, 222)
     )
     sheet.save()
 

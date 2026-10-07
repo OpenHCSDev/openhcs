@@ -52,9 +52,9 @@ We evaluated OpenHCS using established CellProfiler workflows and agent-authored
 
 ### Figure 1, continued. Native editing and execution controls
 
-![Retained native workflow editor, server browser and matching controls and Python.](figures/slas/submission_shared_workflow.png){width=6in}
+![Large native main window, plate-manager and pipeline-editor detail views, server browser and matching controls and Python.](figures/slas/submission_shared_workflow.png){width=6in}
 
-(II) Native workflow editor. (III) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (IV, V) Native controls and Python show matching normalization settings after MCP edits in an OpenHCS 0.8.5 session. The complete editing record and capture provenance are retained in the supplementary package.
+(II) Native main window. (III, IV) Enlarged details of its plate manager and pipeline editor. (V) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (VI, VII) Matching normalization controls and Python after MCP edits in OpenHCS 0.8.5. The supplementary package retains the editing record and capture provenance.
 
 ### Workflow definition and image sources
 

@@ -142,6 +142,7 @@ PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
   --publication-record benchmark/results/matched_min3_integrated_main_20261007 \
   --frozen \
   --assignment-record benchmark/results/matched_postgrid_20261006 \
+  --worker-record benchmark/results/official30_matched_20261006 \
   --worker-record benchmark/results/matched_latestmain_nine_20261006 \
   --worker-record benchmark/results/matched_lastconsumer_20261006 \
   --output-dir paper/figures/slas/benchmark-publication
