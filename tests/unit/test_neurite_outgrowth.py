@@ -2120,7 +2120,7 @@ def test_signal_body_derivation_partitions_shared_signal_by_nearest_nucleus():
     assert np.count_nonzero(bodies == 2) > 100
 
 
-def test_signal_body_derivation_enforces_maximum_width_from_nuclear_centroid():
+def test_signal_body_derivation_qualifies_short_axis_not_centroid_extent():
     shape = (96, 96)
     seeds = np.zeros(shape, dtype=np.int32)
     seeds[44:52, 20:76] = 1
@@ -2146,7 +2146,8 @@ def test_signal_body_derivation_enforces_maximum_width_from_nuclear_centroid():
 
     coordinates = np.argwhere(bodies == 1)
     assert np.ptp(coordinates[:, 0]) <= 20
-    assert np.ptp(coordinates[:, 1]) <= 20
+    assert np.ptp(coordinates[:, 1]) > 20
+    assert np.all(bodies[seeds == 1] == 1)
 
 
 def test_signal_body_derivation_rejects_nearby_signal_without_nuclear_overlap(

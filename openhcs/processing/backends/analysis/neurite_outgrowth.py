@@ -799,9 +799,6 @@ class MetaXpressCellBodySettings:
         removed_medial = np.zeros(body.shape, dtype=bool)
         for component_id in range(1, count + 1):
             component = thin_components == component_id
-            # A clipped arm has no observed terminal extent.
-            if np.any(component[[0, -1]]) or np.any(component[:, [0, -1]]):
-                continue
             if not np.any(component & (degrees <= 1)):
                 continue
             attachments = ndi.binary_dilation(component, connectivity) & protected
@@ -2220,7 +2217,12 @@ def _derive_signal_cell_bodies(
     bright_objects: bool,
     maximum_shaft_width_px: float,
 ) -> np.ndarray:
-    """Fill bounded soma signal assigned to its nearest nuclear seed."""
+    """Fill soma signal near its nearest seed; qualify short-axis width afterward.
+
+    A nucleus need not be central in its cytoplasm. The declared growth scale
+    bounds distance from nuclear support, not distance from its centroid;
+    imposing a centroid circle cuts supported soma lobes into false neurites.
+    """
 
     seeds = np.asarray(nuclear_seed_labels, dtype=np.int32)
     if seeds.shape != neurite_image.shape:
@@ -2276,7 +2278,6 @@ def _derive_signal_cell_bodies(
         ) ** 2
         candidate = (
             (nearest_seed == owner)
-            & (distance_from_centroid_squared <= maximum_radius_px**2)
             & (distance_to_nearest_seed <= maximum_radius_px)
             & local_body_foreground
         )
