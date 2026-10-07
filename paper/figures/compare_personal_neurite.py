@@ -1,8 +1,10 @@
-"""Compare retained well measurements, without processing or tuning images.
+"""Compare current native well measurements, without processing or tuning images.
 
 The identity key is evaluation-only: never give it to a blind analysis author.
 This entrypoint selects one run and an explicit well-aggregation protocol, never
 a mixture of attempts. Its outputs do not establish segmentation accuracy.
+Previously published comparison tables remain immutable historical evidence;
+this reader consumes the current unit-bearing OpenHCS summary declaration.
 """
 
 import argparse
@@ -14,6 +16,7 @@ import json
 import math
 from pathlib import Path
 from statistics import mean, stdev
+from typing import ClassVar
 
 
 @dataclass(frozen=True)
@@ -41,6 +44,7 @@ def write_rows(path, rows):
 class NativeSummary:
     """The measured endpoint projection of one exported native plane."""
 
+    coordinate_unit: ClassVar[str] = "micrometers"
     well: str
     site: str | None
     cell_count: int
@@ -55,8 +59,10 @@ class NativeSummary:
         if (int(row["neurite_channel_index"]), int(row["cell_body_channel_index"]),
                 int(row["nuclear_channel_index"])) != (1, 1, 0):
             raise ValueError(f"Unexpected channel assignment: {path}")
-        count, length = int(row["number_of_cells"]), float(row["total_outgrowth_um"])
-        measured_mean = float(row["mean_outgrowth_per_cell_um"])
+        if row["coordinate_unit"] != cls.coordinate_unit:
+            raise ValueError(f"Expected calibrated micrometer measurements: {path}")
+        count, length = int(row["number_of_cells"]), float(row["total_outgrowth"])
+        measured_mean = float(row["mean_outgrowth_per_cell"])
         if count <= 0 or not math.isfinite(length) or not math.isfinite(measured_mean):
             raise ValueError(f"No valid per-cell length denominator: {path}")
         if not math.isclose(length / count, measured_mean, rel_tol=1e-9):
@@ -89,7 +95,7 @@ class WellAggregation(ABC):
 class MosaicWellAggregation(WellAggregation):
     name = "mosaic"
     description = "OpenHCS mosaic total length / detected cells; MetaXpress well export"
-    figure_label = "Retained mosaic measurements; not the current field pipeline"
+    figure_label = "Stitched-mosaic well means from a fixed-pipeline transfer evaluation"
 
     def aggregate(self, rows):
         if len(rows) != 1 or rows[0].site is not None:
@@ -110,7 +116,7 @@ class SiteMeanWellAggregation(WellAggregation):
                              mean(row.cell_count for row in rows))
 
 
-def compare(reference, key, summaries, output, aggregation):
+def compare(reference, key, summaries, output, aggregation, coded_plate):
     inputs = [reference, key]
     mapping = {}
     for image in json.loads(key.read_text())["images"]:
@@ -124,7 +130,6 @@ def compare(reference, key, summaries, output, aggregation):
         if coded in mapping and mapping[coded] != identity:
             raise ValueError(f"Inconsistent source identity: {coded}")
         mapping[coded] = identity
-    coded_plate = summaries.parent.name.removesuffix("_openhcs")
     measured, paths = aggregation.load(summaries)
     native = {mapping[(coded_plate, well)]: asdict(endpoints) for well, endpoints in measured.items()}
     if len(native) != len(measured):
@@ -178,6 +183,8 @@ def compare(reference, key, summaries, output, aggregation):
         "comparison": "fixed-run treatment evaluation; not a manual accuracy score",
         "aggregation_protocol": aggregation.name,
         "aggregation": aggregation.description,
+        "coded_plate": coded_plate,
+        "coordinate_unit": NativeSummary.coordinate_unit,
         "protocol_figure_label": aggregation.figure_label,
         "generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "baseline": "each drug curve's own zero-dose DMSO wells",
@@ -189,7 +196,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("reference", "key", "summaries", "output"):
         parser.add_argument(f"--{name}", type=Path, required=True)
+    parser.add_argument("--coded-plate", required=True,
+                        help="Source plate identity in the evaluation key, not the output directory name")
     protocols = {protocol.name: protocol for protocol in WellAggregation.__subclasses__()}
     parser.add_argument("--aggregation", choices=protocols, required=True)
     args = parser.parse_args()
-    compare(args.reference, args.key, args.summaries, args.output, protocols[args.aggregation]())
+    compare(args.reference, args.key, args.summaries, args.output,
+            protocols[args.aggregation](), args.coded_plate)
