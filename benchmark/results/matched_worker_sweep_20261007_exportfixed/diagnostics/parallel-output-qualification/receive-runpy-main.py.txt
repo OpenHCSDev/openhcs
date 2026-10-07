@@ -1,0 +1,61 @@
+"""Exact registered __main__ launcher receiving; only main invocation replaced."""
+import ast,gzip,hashlib,json,os,pickle,runpy,subprocess,sys,time
+from pathlib import Path
+from types import SimpleNamespace
+production=Path('/home/ts/code/projects/openhcs-cp-registry-control');artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');sys.path.insert(0,str(production))
+import openhcs,benchmark
+benchmark.__path__.insert(0,str(artifact/'benchmark'))
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.serialization.json import to_jsonable
+source=artifact/'benchmark/matched_cellprofiler_batch.py';source_sha=hashlib.sha256(source.read_bytes()).hexdigest();tree=ast.parse(source.read_text())
+assert isinstance(tree.body[-1],ast.If)
+assert ast.unparse(tree.body[-1].test)=="__name__ == '__main__'"
+assert ast.unparse(tree.body[-1].body[0])=='raise SystemExit(main())'
+original_invocation=ast.dump(tree.body[-1].body[0])
+tree.body[-1].body=[ast.Expr(value=ast.Call(func=ast.Name(id='_receiving_entrypoint',ctx=ast.Load()),args=[ast.Call(func=ast.Name(id='globals',ctx=ast.Load()),args=[],keywords=[])],keywords=[]))]
+ast.fix_missing_locations(tree);receiving_code=compile(tree,str(source),'exec')
+out=Path(__file__).parent;proof={}
+def receive(namespace):
+ global proof
+ assert namespace['__name__']=='__main__'
+ function=namespace['_saved_output_equivalence']
+ assert function.__module__=='__main__'
+ assert getattr(sys.modules['__main__'],'_saved_output_equivalence') is function
+ assert sys.modules['__main__'].__dict__ is namespace
+ assert pickle.loads(pickle.dumps(function)) is function
+ statement_pair=None
+ for node in ast.walk(tree):
+  for field in ('body','orelse'):
+   statements=getattr(node,field,None)
+   if not isinstance(statements,list):continue
+   for index,statement in enumerate(statements):
+    if isinstance(statement,ast.Assign) and any(isinstance(target,ast.Name) and target.id=='comparison_tasks' for target in statement.targets):statement_pair=statements[index:index+2]
+ assert statement_pair and isinstance(statement_pair[1],ast.If)
+ comparison_code=compile(ast.Module(body=statement_pair,type_ignores=[]),str(source),'exec')
+ root=Path('/home/ts/.local/state/openhcs-maintenance/20261007')
+ case=root/'issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final'
+ reference=root/'issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final'
+ with gzip.open(case/'candidate_evidence/0/observation.pkl','rb') as stream:observation=pickle.load(stream)
+ axes=('W001','W002')
+ args=namespace['_parser']().parse_args(['--manifest',str(root/'issue1100-matched-sweep-v1/official30-manifest.json'),'--case','cp_tutorial_advanced_segmentation_final','--well-count','1','--repeat-assignments','8','--output-dir','/tmp/not-launched','--native-python','/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python','--comparison-workers','2','--comparison-cpus','0','1'])
+ namespace.update({'args':args,'native_root':reference/'native/0','assignment_exports':tuple(observation.exports.for_execution_axis(axis) for axis in axes),'wells':axes,'native_comparison_directories':axes,'policy':namespace['_strict_cellprofiler_runtime_equivalence_policy'](),'provenance':{},'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=production,text=True).strip(),'image_set_policy':SourceImageSetIdentityPolicy(),'completed':SimpleNamespace(output_roots=(case/'candidate/0/source_workspace_matched_pilot',))})
+ start=time.perf_counter();exec(comparison_code,namespace);elapsed=time.perf_counter()-start
+ result=namespace['comparisons'];payload=to_jsonable(result)
+ expected=json.loads((out/'receiving-cp_tutorial_advanced_segmentation_final-results.json').read_text())
+ canonical=json.dumps(payload,sort_keys=True,separators=(',',':'))
+ (out/'runpy-main-receiving-results.json').write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+ assert json.loads(canonical)==expected
+ assert all(not row[0].differences and not row[1].differences and not row[2] for row in result)
+ canonical=json.dumps(payload,sort_keys=True,separators=(',',':'))
+ proof={'status':'PASS','scope':'DIAGNOSTIC_ONLY exact runpy registered __main__ launcher; saved advanced2axes only, no science/server/native execution','run_module':'benchmark.matched_cellprofiler_batch','run_name':'__main__','alter_sys':True,'main_registered_during_receiving':True,'comparer_module':function.__module__,'comparer_matches_registered_module_attribute':True,'stdlib_pickle_global_roundtrip_same_function':True,'only_authoritative_code_substitution':'Bottom raise SystemExit(main()) invocation replaced by diagnostic receiving entrypoint; all actual driver definitions executed unmodified','substituted_invocation_ast':original_invocation,'actual_comparison_ast_line_range':[statement_pair[0].lineno,statement_pair[-1].end_lineno],'driver_path':str(source),'driver_sha256':source_sha,'production_module_path':openhcs.__file__,'production_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=production,text=True).strip(),'artifact_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=artifact,text=True).strip(),'entire_ordered_results_equal_saved_receiving_json':True,'canonical_results_sha256':hashlib.sha256(canonical.encode()).hexdigest(),'seconds':elapsed,'fork_worker_count':2,'cpu_affinity':[0,1],'numerical_threads':1,'native_cache':None,'bootstrap_original_failure':'runpy alter_sys=False did not replace outer bootstrap sys.modules[__main__]; task global lookup failed despite importable-module receiving passing.'}
+ assert hashlib.sha256(source.read_bytes()).hexdigest()==source_sha
+ (out/'runpy-main-receiving-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+ print(json.dumps(proof),flush=True)
+original_run_code=runpy._run_code
+def runtime_hook(code,run_globals,*args,**kwargs):
+ if Path(code.co_filename).resolve()==source.resolve():code=receiving_code
+ return original_run_code(code,run_globals,*args,**kwargs)
+runpy._run_code=runtime_hook
+runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__',alter_sys=True,init_globals={'_receiving_entrypoint':receive})
+runpy._run_code=original_run_code
+assert proof['status']=='PASS'
