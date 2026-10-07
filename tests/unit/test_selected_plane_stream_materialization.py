@@ -48,6 +48,7 @@ from openhcs.core.steps.function_artifact_materialization import (
 )
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NeuriteAdmissionPlanes,
+    NeuriteOwnershipPlanes,
     neurite_outgrowth_metaxpress,
     NeuriteOutgrowthSummary,
     NeuriteOutgrowthCellResult,
@@ -329,7 +330,9 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             np.asarray(source)[1].astype(np.float32),
             labels[1] > 0, labels[1] > 0,
             np.asarray(source)[1].astype(np.float32), labels[1] > 0,
+            np.asarray(source)[1].astype(np.float32),
         ).selected_outputs(1),
+        *NeuriteOwnershipPlanes(labels[1], labels[1], labels[1]).selected_outputs(1),
         graph,
     )
     specs = CallableContract.from_callable(
@@ -392,7 +395,9 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         assert {item.output_plan.name for item in materializations} == set(
             specs.names()
         )
-        assert len(materializations) == 12 + len(NeuriteAdmissionPlanes._fields)
+        assert len(materializations) == 12 + len(
+            NeuriteAdmissionPlanes.artifact_specs() + NeuriteOwnershipPlanes.artifact_specs()
+        )
         for item in materializations:
             outputs = item.outputs(plan, context)
             assert outputs
@@ -402,7 +407,9 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             for data, paths, request in saved_streams
             if paths[0].endswith(".checkpoint.tif")
         ]
-        assert len(checkpoints) == 5 + len(NeuriteAdmissionPlanes._fields)
+        assert len(checkpoints) == 5 + len(
+            NeuriteAdmissionPlanes.artifact_specs() + NeuriteOwnershipPlanes.artifact_specs()
+        )
         for (data,), (path,), request in checkpoints:
             assert (
                 request.source.metadata.component_metadata_for_item(path, 0)["channel"]
