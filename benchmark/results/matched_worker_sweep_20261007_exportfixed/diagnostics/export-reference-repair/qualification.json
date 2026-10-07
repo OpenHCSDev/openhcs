@@ -1,0 +1,27 @@
+{
+  "commit": "079562c15d8ebac0d0a416853ce0736cbae79c86",
+  "source_sha256": {
+    "openhcs/core/equivalence/measurement_rows.py": "f3da24adb5f16f9c99beba160e0af55338e9657005a7f980b900046fd0e9ff94",
+    "openhcs/core/runtime_measurements.py": "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7",
+    "openhcs/interop/cellprofiler/image_set_numbering.py": "186090ff7f74310d9a118bba55406efdd095c30bdeefa73ce60b14f618a0a16f",
+    "openhcs/processing/backends/cellprofiler/spreadsheet_export.py": "d3890d0f32c45fa2c8ac26c06de5efc167eecd0d96d201e4c0b029320c30fc61",
+    "tests/unit/test_cellprofiler_spreadsheet_export.py": "d721f637e0f31089887ef60b0e6f0b4583927d0cacbb5765f5bab5097fedfde6"
+  },
+  "behavior_checks": {
+    "command": "Production Python 3.12 run_tests.py with current canonical external import roots and native extension overlays",
+    "result": "52 passed",
+    "seconds": 2.79
+  },
+  "representative_replay": "replay-results.json",
+  "limitations": [
+    "Saved observation has no retained MeasurementTable payload; proof reconstructs declared rows from genuine correlated frozen CSV measurements.",
+    "No new scientific pipeline run or performance claim."
+  ],
+  "untouched": [
+    "frozen capture source and files",
+    "runtime environment",
+    "external checkouts",
+    "benchmark source"
+  ],
+  "carrier_followup": "Use ColumnarRows.covers_declared_object_measurement_domain for all nominal carriers; concrete and concatenated wide/long form projection regressions pass."
+}

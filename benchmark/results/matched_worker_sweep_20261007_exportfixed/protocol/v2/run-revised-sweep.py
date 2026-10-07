@@ -102,8 +102,8 @@ if options.prepare_only:
 for mode in plan['modes']:
     capture = SWEEP / mode['capture_mode'] / 'capture'
     assert sha(capture / 'command.json') == mode['command_sha256']
+    command = load(capture / 'command.json')['argv']
     if not (capture / 'terminal.json').exists():
-        command = load(capture / 'command.json')['argv']
         assert '--native-reference-root' in command
         assert ('--candidate-only' in command) == (mode['target_native_observation_count'] == 0)
         print('CAPTURING_OPENHCS_ONLY', mode['capture_mode'], flush=True)
@@ -125,7 +125,7 @@ for mode in plan['modes']:
     destination = RECORD / 'data/first_use' / mode['archive_mode']
     for name in ('first_use_execution_summary.csv', 'first_use_total_summary.csv', 'summary_custody.json'):
         preserve(converted / name, destination / name)
-    run(harness_script(ARCHIVER, str(RECORD), str(SWEEP / 'official30-manifest.json'), str(CONVERTER), mode['archive_mode'], str(capture)), env={**os.environ, 'ARCHIVE_ROOT': str(RECORD)})
+    run(harness_script(ARCHIVER, str(RECORD), command[command.index('--manifest') + 1], str(CONVERTER), mode['archive_mode'], str(capture)), env={**os.environ, 'ARCHIVE_ROOT': str(RECORD)})
     preserve(capture / 'environment-source-seal.json', RECORD / 'protocol' / mode['archive_mode'] / 'environment-source-seal.json')
     print('FIRST_USE_ARCHIVED', mode['archive_mode'], flush=True)
 print('REVISED_ALL_MODES_QUALIFIED', flush=True)
