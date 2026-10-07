@@ -65,6 +65,12 @@ def declared_cupy_leaf(monkeypatch):
         def astype(self, dtype, copy=False):
             return type(self)(self.values.astype(dtype, copy=copy), self.device.id)
 
+        def __truediv__(self, scalar):
+            return type(self)(self.values / scalar, self.device.id)
+
+        def reshape(self, shape):
+            return type(self)(self.values.reshape(shape), self.device.id)
+
     def upload(values):
         state['uploads'].append(state['device'])
         return DeviceArray(values, state['device'])
@@ -74,6 +80,12 @@ def declared_cupy_leaf(monkeypatch):
             runtime=SimpleNamespace(getDeviceCount=lambda: 2), Device=DeviceScope,
         ),
         array=upload,
+        broadcast_to=lambda value, shape: DeviceArray(
+            np.broadcast_to(value.values, shape), value.device.id,
+        ),
+        ones=lambda shape, dtype=bool: DeviceArray(
+            np.ones(shape, dtype=dtype), state['device'],
+        ),
         stack=lambda values, axis=0: DeviceArray(
             np.stack([value.values for value in values], axis=axis), state['device'],
         ),
@@ -116,6 +128,7 @@ def test_mixed_intensity_composition_uses_declared_memory_conversion(
         'memory_type': destination, 'device_id': 1 if destination == 'cupy' else None,
     }
     result = context.compose(**kwargs)
+    assert bool(state['downloads']) == (destination == 'numpy')
     output = image_payload_data(result)
     requested = 'cupy' if destination == 'implicit' else destination
     owner = MemoryType(requested)
@@ -128,10 +141,7 @@ def test_mixed_intensity_composition_uses_declared_memory_conversion(
     expected = raw.mask.values
     if composition is ImagePayloadStackContext or not declared_spatial_extent:
         expected = np.stack(tuple(value.mask.values for value in inputs))
-        # Bundle's non-shared mask preserves its mask owner's device; dense stack
-        # masks are returned on the declared output device through the ancestor.
-        if composition is ImagePayloadStackContext:
-            assert mask_owner.device_id_of(mask) == owner.device_id_of(output)
+    assert mask_owner.device_id_of(mask) == owner.device_id_of(output)
     np.testing.assert_array_equal(masks, expected)
     assert state['downloads']
     assert all(device == 1 for device in state['downloads'])
@@ -171,6 +181,42 @@ def test_image_bundle_stacks_on_the_payload_framework_device(monkeypatch) -> Non
 
     assert context.compose_unmasked(payloads) == "stacked"
     assert observed == [(payloads, MemoryType.CUPY.value, 7)]
+
+
+@pytest.mark.parametrize('mask_kind', ('full', 'channel-free', 'absent'))
+@pytest.mark.parametrize('destination', ('numpy', 'cupy'))
+def test_mixed_channel_bundle_promotes_masks_in_the_output_domain(
+    declared_cupy_leaf, mask_kind, destination,
+):
+    DeviceArray, state = declared_cupy_leaf
+    gray = np.arange(6, dtype=np.uint8).reshape(2, 3)
+    color = np.repeat(gray[..., None], 3, axis=2)
+    spatial = gray % 2 == 0
+    color_mask = (
+        None if mask_kind == 'absent' else DeviceArray(
+            np.repeat(spatial[..., None], 3, axis=2)
+            if mask_kind == 'full' else spatial,
+        )
+    )
+    inputs = (
+        ImagePayloadMetadata(source_channel_axis=2).payload_with(
+            DeviceArray(color), color_mask,
+        ),
+        ImagePayloadMetadata().payload_with(DeviceArray(gray), DeviceArray(spatial)),
+    )
+    result = ImagePayloadBundleContext.from_payloads(inputs).compose(
+        memory_type=destination, device_id=1 if destination == 'cupy' else None,
+    )
+    if destination == 'cupy':
+        assert not state['downloads']
+    owner = MemoryType(destination)
+    data, mask = image_payload_data(result), image_payload_mask(result)
+    assert owner.device_id_of(mask) == owner.device_id_of(data)
+    np.testing.assert_array_equal(owner.to_numpy(data), np.stack((color, color)))
+    expected = np.stack((np.ones_like(spatial) if mask_kind == 'absent' else spatial, spatial))
+    if mask_kind == 'full':
+        expected = np.repeat(expected[..., None], 3, axis=3)
+    np.testing.assert_array_equal(owner.to_numpy(mask), expected)
 
 
 def test_independent_cohort_copy_retains_nested_named_bundle_domains():
