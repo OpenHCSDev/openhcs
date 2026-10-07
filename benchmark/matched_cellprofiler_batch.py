@@ -17,6 +17,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
+import openhcs
 from objectstate.lazy_factory import (
     ensure_global_config_context,
     rebuild_lazy_config_with_new_global_reference,
@@ -45,6 +46,7 @@ from benchmark.native_batch_contracts import (
     NativeBatchReport,
     NativeBatchRequest,
 )
+from benchmark.native_execution_projection import RepeatedSourceNativeBatchReport
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline_on_client,
@@ -144,6 +146,24 @@ def _parser() -> argparse.ArgumentParser:
         "--native-reference-root",
         type=Path,
         help="Existing cases root with genuine native reports; missing cases run fresh.",
+    )
+    parser.add_argument(
+        "--candidate-only",
+        action="store_true",
+        help=(
+            "Measure only OpenHCS against a genuine retained repeated-source native "
+            "batch; retain actual native clocks and declare projection inputs separately."
+        ),
+    )
+    parser.add_argument(
+        "--native-execution-model",
+        choices=("retained-first-batch-plus-warm-assignments-v1",),
+        help="Explicitly project a fresh native batch; no new native observations.",
+    )
+    parser.add_argument(
+        "--production-source-root",
+        type=Path,
+        help="Frozen production checkout, separate from the benchmark harness source.",
     )
     return parser
 
@@ -792,6 +812,48 @@ def _reuse_native_report(
     return report
 
 
+def _reuse_native_projection_source(
+    reference_case: Path,
+    *,
+    native_payload: Mapping[str, object],
+    native_python: Path,
+    native_worker: Path,
+    provenance: dict[str, object],
+) -> dict[str, object]:
+    """Validate an observed repeated-source batch at its actual cardinality."""
+    if (
+        len(provenance["selected_source_wells"]) != 1
+        or provenance["assignment_scope"] != "independent repeated source assignments"
+        or provenance["native_job_count"] != 1
+    ):
+        raise RuntimeError(
+            "Candidate-only capture requires one repeated source and serial native."
+        )
+    source = RepeatedSourceNativeBatchReport.from_payload(
+        json.loads((reference_case / "native_report.json").read_text())
+    )
+    planned = source.validation_request(
+        NativeBatchRequest(**native_payload), len(provenance["wells"])
+    )
+    reference_provenance = dict(provenance)
+    reference_provenance["wells"] = _synthetic_well_ids(
+        len(source.assignment_directories)
+    )
+    report = _reuse_native_report(
+        reference_case,
+        native_payload=asdict(planned),
+        native_python=native_python,
+        native_worker=native_worker,
+        provenance=reference_provenance,
+    )
+    provenance.update(
+        (key, value)
+        for key, value in reference_provenance.items()
+        if key.startswith("native_reference_")
+    )
+    return report
+
+
 def _reuse_native_shard_reports(
     reference_case: Path,
     *,
@@ -996,6 +1058,18 @@ def main(argv: list[str] | None = None) -> int:
             raise FileNotFoundError("Native reference cases root does not exist.")
     if args.repeat_assignments is not None and args.repeat_assignments < 1:
         raise ValueError("Repeated assignment count must be positive.")
+    if args.native_execution_model is not None and not args.candidate_only:
+        raise ValueError("A native execution model requires candidate-only capture.")
+    if args.candidate_only and (
+        args.native_reference_root is None
+        or args.repeat_assignments is None
+        or args.native_jobs != 1
+        or args.production_source_root is None
+    ):
+        raise ValueError(
+            "Candidate-only capture requires retained native outputs, repeated "
+            "assignments, serial native reference, and a production source root."
+        )
     cases = load_comparison_cases(args.manifest.expanduser().resolve())
     selected_cases = tuple(
         case for case in cases if args.all_cases or case.name == args.case
@@ -1026,14 +1100,31 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     """Qualify one case while retaining the suite's prepared execution server."""
 
     project_root = Path(__file__).resolve().parent.parent
+    production_root = (
+        args.production_source_root.expanduser().resolve()
+        if args.production_source_root is not None
+        else project_root
+    )
+    if args.production_source_root is not None and (
+        Path(openhcs.__file__).resolve().parent.parent != production_root
+    ):
+        raise RuntimeError(
+            "Loaded OpenHCS does not belong to the declared production root."
+        )
     source_commit = subprocess.check_output(
-        ("git", "rev-parse", "HEAD"), cwd=project_root, text=True
+        ("git", "rev-parse", "HEAD"), cwd=production_root, text=True
     ).strip()
     source_dirty = bool(
         subprocess.check_output(
-            ("git", "status", "--porcelain"), cwd=project_root, text=True
+            ("git", "status", "--porcelain"), cwd=production_root, text=True
         ).strip()
     )
+    if args.production_source_root is not None and source_dirty:
+        raise RuntimeError("Declared production checkout must be clean.")
+    harness_inventory = {
+        str(path.relative_to(project_root)): sha256_file(path)
+        for path in sorted((project_root / "benchmark").rglob("*.py"))
+    }
     root = args.output_dir.expanduser().resolve()
     if root.exists() and any(root.iterdir()):
         raise FileExistsError(f"Matched pilot output directory must be empty: {root}")
@@ -1108,6 +1199,19 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         ),
         "source_commit": source_commit,
         "source_dirty": source_dirty,
+        "production_source_root": str(production_root),
+        "benchmark_harness": {
+            "source_root": str(project_root),
+            "source_commit": subprocess.check_output(
+                ("git", "rev-parse", "HEAD"), cwd=project_root, text=True
+            ).strip(),
+            "source_dirty": bool(
+                subprocess.check_output(
+                    ("git", "status", "--porcelain"), cwd=project_root, text=True
+                ).strip()
+            ),
+            "file_sha256": harness_inventory,
+        },
         "native_job_count": args.native_jobs,
         "candidate_worker_count": args.openhcs_workers,
         "candidate_worker_start_method": start_method.value,
@@ -1184,7 +1288,11 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         else None
     )
     if reference_case is not None and reference_case.exists():
-        native_report = _reuse_native_report(
+        native_report = (
+            _reuse_native_projection_source
+            if args.candidate_only
+            else _reuse_native_report
+        )(
             reference_case,
             native_payload=native_payload,
             native_python=native_python,
@@ -1197,6 +1305,10 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             )
         )
     else:
+        if args.candidate_only:
+            raise FileNotFoundError(
+                "Candidate-only native reference must already exist."
+            )
         native_report = _invoke_native_worker(
             native_python=native_python,
             worker_script=native_worker,
@@ -1207,6 +1319,28 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             timeout_seconds=native_request.timeout_seconds,
         )
     (root / "native_report.json").write_text(json.dumps(native_report, indent=2))
+    projection_inputs = None
+    native_comparison_directories = assignment_directories or ("",)
+    provenance["native_capture_status"] = (
+        "retained_projection_source"
+        if args.candidate_only
+        else "retained" if "native_reference_report_path" in provenance else "measured"
+    )
+    if args.candidate_only:
+        projection_source = RepeatedSourceNativeBatchReport.from_payload(native_report)
+        native_comparison_directories = projection_source.comparison_directories(
+            well_count
+        )
+        projection_method = (
+            projection_source.projected_fresh_batch
+            if args.native_execution_model is not None
+            else projection_source.projection_inputs
+        )
+        projection_inputs = projection_method(
+            well_count,
+            source_report_path=Path(provenance["native_reference_report_path"]),
+            source_report_sha256=provenance["native_reference_report_sha256"],
+        )
     native_image_set_counts = {
         observation["image_set_count"] for observation in native_report["observations"]
     }
@@ -1214,7 +1348,11 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         raise RuntimeError("Native whole-batch image-set count changed between runs.")
     (native_image_set_count,) = native_image_set_counts
     if args.repeat_assignments is not None:
-        expected_directories = assignment_directories or ("",)
+        expected_directories = (
+            projection_source.assignment_directories
+            if args.candidate_only
+            else assignment_directories or ("",)
+        )
         observed_domains = tuple(
             tuple(
                 (str(directory), int(count))
@@ -1364,6 +1502,15 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             expected_axis_count=well_count,
             require_owned_server=True,
         )
+        if args.production_source_root is not None and (
+            Path(completed.endpoint_provenance.client_openhcs_file)
+            .resolve()
+            .parent.parent
+            != production_root
+        ):
+            raise RuntimeError(
+                "Execution receipt OpenHCS source differs from production root."
+            )
         retained_evidence = inspect_measured_pipeline_run(evidence_dir)
         if not retained_evidence.retained_evidence_valid:
             raise RuntimeError(
@@ -1459,7 +1606,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 )
             comparisons = tuple(
                 _saved_output_equivalence(
-                    native_root / (directory if assignment_directories else ""),
+                    native_root / directory,
                     exports,
                     policy=policy,
                     source_workspaces=completed.output_roots,
@@ -1468,7 +1615,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 )
                 for well, directory, exports in zip(
                     wells,
-                    assignment_directories or ("",),
+                    native_comparison_directories,
                     assignment_exports,
                     strict=True,
                 )
@@ -1511,6 +1658,19 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             "assignment_scope": provenance["assignment_scope"],
             "compared_assignments": (
                 wells if args.repeat_assignments is not None else ()
+            ),
+            "native_assignment_correspondence": (
+                tuple(
+                    {
+                        "candidate_assignment": well,
+                        "observed_reference_directory": directory,
+                    }
+                    for well, directory in zip(
+                        wells, native_comparison_directories, strict=True
+                    )
+                )
+                if args.repeat_assignments is not None
+                else ()
             ),
             **worker_evidence,
             "server_job_started_at_epoch_seconds": record.start_time,
@@ -1603,6 +1763,21 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     if final_input_inventory != provenance["native_input_inventory"]:
         raise RuntimeError("Native source images or metadata changed during pilot.")
     _require_native_reference_unchanged(provenance)
+    if args.production_source_root is not None and (
+        subprocess.check_output(
+            ("git", "rev-parse", "HEAD"), cwd=production_root, text=True
+        ).strip()
+        != source_commit
+        or subprocess.check_output(
+            ("git", "status", "--porcelain"), cwd=production_root, text=True
+        ).strip()
+    ):
+        raise RuntimeError("Production source changed during candidate capture.")
+    if harness_inventory != {
+        str(path.relative_to(project_root)): sha256_file(path)
+        for path in sorted((project_root / "benchmark").rglob("*.py"))
+    }:
+        raise RuntimeError("Benchmark harness changed during candidate capture.")
     provenance["native_input_inventory_after"] = final_input_inventory
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
 
@@ -1612,11 +1787,20 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         "native_shards": shard_reports,
         "native_shard_equivalence": shard_equivalence,
         "candidate": observations,
+        "native_execution_projection": projection_inputs,
         "timing_claim": (
             "Observed complete selected batches: native pipeline-start through post-run "
             "and full invocation are separate; OpenHCS worker execution and complete "
             "client operation are separate. Repeated assignments are independently "
-            "executed source copies, not projected timings or additional genuine wells."
+            "executed source copies, not additional genuine wells."
+            + (
+                " Candidate-only execution uses observed repeated-source native outputs "
+                "at their original cardinality; separate projection inputs do not "
+                "claim newly observed native executions. Any declared timing model "
+                "is separate from the unchanged native observations."
+                if args.candidate_only
+                else " Native execution timings are observed."
+            )
             + (
                 " Native timings and output roots were reused from genuine retained "
                 "observations; their original source and report SHA are recorded separately."
