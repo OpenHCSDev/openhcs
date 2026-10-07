@@ -6,7 +6,7 @@ link-citations: true
 link-bibliography: true
 ---
 
-# OpenHCS: autonomous, auditable image analysis for self-driving microscopy laboratories
+# OpenHCS: autonomous image analysis that domain experts can audit
 
 **Authors:** Tristan Simas, Jathav Puvirajan, and Alyson Fournier
 
@@ -20,15 +20,15 @@ link-bibliography: true
 
 ## Abstract
 
-Closed-loop microscopy laboratories need image analysis that an agent can perform and a scientist can audit. We developed OpenHCS, an open-source platform in which scientists and agents edit the same pipeline through graphical controls, Python or the Model Context Protocol (MCP). Established CellProfiler workflows and custom Python functions can be combined, with images, segmentation masks and measurements available for inspection in napari and Fiji. All 30 imported CellProfiler workflows passed selected reference-output comparisons, including five supplemented with image or object-label exports. We evaluated autonomy with blind task-only trials: agents constructed and repaired analyses using MCP and packaged guidance, with pipelines frozen before reference comparison and no reference-score feedback. Independent nuclear analyses reached pooled object F1 of 0.898–0.906 across 200 annotated fields, including development fields. A completed 96-well translocation analysis yielded control Z-prime values of 0.849 and 0.726 for two drugs among cells with measurable compartments. Image review showed recovery of retinal cell bodies and principal neurite shafts, with uncertain cell boundaries and unresolved assignment at neurite crossings. Matched single-thread measurements across [pending]{.benchmark-claim key=case_count} workflows showed a minimum execution speedup of [pending]{.benchmark-claim key=execution_min}-fold over native CellProfiler and a median of [pending]{.benchmark-claim key=execution_median}-fold, with no declared-output differences. OpenHCS allows scientists to delegate analysis construction and execution while retaining access to the processing choices and biological results.
+Turning microscopy images into measurements requires choices about channels, preprocessing, segmentation and quality control beyond the biological question itself. We developed OpenHCS, an open-source platform in which an AI agent builds and repairs an analysis from a task brief while the scientist can inspect images, masks and measurements in napari and Fiji. Scientists and agents edit the same pipeline through graphical controls, Python or the Model Context Protocol (MCP). Established CellProfiler workflows and custom Python functions can be combined. All 30 imported CellProfiler workflows passed selected reference-output comparisons, including five supplemented with image or object-label exports. We evaluated autonomy with blind task-only trials: agents constructed and repaired analyses using MCP and packaged guidance, with pipelines frozen before reference comparison and no reference-score feedback. Independent nuclear analyses reached pooled object F1 of 0.898–0.906 across 200 annotated fields, including development fields. A completed 96-well translocation analysis yielded control Z-prime values of 0.849 and 0.726 for two drugs among cells with measurable compartments. Image review showed recovery of retinal cell bodies and principal neurite shafts, with uncertain cell boundaries and unresolved assignment at neurite crossings. Matched single-thread measurements across [pending]{.benchmark-claim key=case_count} workflows showed a minimum execution speedup of [pending]{.benchmark-claim key=execution_min}-fold over native CellProfiler and a median of [pending]{.benchmark-claim key=execution_median}-fold, with no declared-output differences. Scientists can delegate analysis construction and execution without writing an image-analysis program, while retaining the evidence and controls needed to judge the biological result.
 
 ## Introduction
 
-Self-driving microscopy laboratories need to turn acquired images into measurements before choosing the next experiment. Identifying the relevant channels, separating cells and neurites from background, and checking the analysis across samples remain difficult to automate. A segmentation that executes successfully can still miss dim structures or divide a cell incorrectly. An agent needs access to images and intermediate results to detect and repair these errors, while a scientist needs to audit the processing choices and the resulting measurements.
+An investigator may know which cells, neurites or subcellular signals matter to an experiment without knowing how to turn their images into reliable measurements. Image analysis adds specialist decisions: identifying channels, choosing preprocessing, setting segmentation parameters and checking results across samples. A pipeline that executes successfully can still miss dim structures or divide a cell incorrectly. Delegating this work therefore requires more than a table of answers. The investigator needs to see what was measured and decide whether it represents the biology.
 
-OpenHCS addresses the analysis step of this loop, not experiment design or instrument execution. It lets scientists and agents develop, inspect and revise the same pipeline. The analysis remains reusable without reconstructing its settings from the agent's conversation, and its intermediate images and measurements remain available for scientific review.
+OpenHCS lets an agent construct and repair an analysis from a task brief while keeping the scientist in control of scientific interpretation. Images, masks and measurements remain available in familiar viewers, and the processing settings remain editable through graphical controls or Python. The analysis can be reused without reconstructing its settings from the agent's conversation. Our trials test analysis authoring and repair, rather than ease of use by scientists without image-analysis training.
 
-Laboratory automation already uses shared declarations to connect instruments and software. SiLA 2 standardizes device communication, and the Tecan SiLA2 SDK generates server and client interfaces from annotated software declarations [@Hinkel2023]. Lange and colleagues demonstrated modular SiLA-based infrastructure linking device control and data management, while Courtney and colleagues integrated cell-culture instruments into an out-of-hours autopilot [@Lange2026; @Courtney2025]. Related work has connected liquid handlers to workflow orchestration and linked laboratory assets through shared information models [@Thieme2024; @Rihm2024].
+This capability also supplies the analysis step needed by imaging-based self-driving laboratories, where measurements inform the next experiment. SiLA 2 standardizes device communication, and the Tecan SiLA2 SDK generates server and client interfaces from annotated software declarations [@Hinkel2023]. Modular SiLA infrastructure connects device control and data management, and cell-culture instruments can operate in an out-of-hours autopilot [@Lange2026; @Courtney2025]. Other work connects liquid handlers to orchestration and laboratory assets through shared information models [@Thieme2024; @Rihm2024]. OpenHCS addresses image analysis within such a system; experiment selection and instrument execution remain separate responsibilities.
 
 We developed OpenHCS to let scientists and agents build and revise the same microscopy analysis (Figure 1). A pipeline records its processing functions and settings as editable Python, with matching graphical controls. The controls and descriptions available to agents are generated from the functions' parameter definitions. A scientist can therefore open an agent-authored pipeline, change a setting in a control or in code, and run the revised analysis. Established CellProfiler workflows and custom Python functions can be used in the same way.
 
@@ -55,6 +55,12 @@ We evaluated OpenHCS using established CellProfiler workflows and agent-authored
 ![Large native main window, plate-manager and pipeline-editor detail views, server browser and matching controls and Python.](figures/slas/submission_shared_workflow.png){width=6in}
 
 (II) Native main window. (III, IV) Enlarged details of its plate manager and pipeline editor. (V) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (VI, VII) Matching normalization controls and Python after MCP edits in OpenHCS 0.8.5. The supplementary package retains the editing record and capture provenance.
+
+### Figure 1, continued. The laboratory's own Python joins the shared analysis
+
+![Real Python declaration and docstring beside generated controls and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6in}
+
+(VIII) The typed `paper_rescale_signal` declaration, including its NumPy backend decorator and parameter docstring, supplies the defaults and descriptions shown in the native form and MCP catalog. Its source was registered through the existing custom-function route and selected in an ordinary pipeline step; no function-specific form or MCP tool was written. The retained demonstration used a patched OpenHCS 0.8.5 development installation and establishes registration and editing, not execution of this function on the assay images. Supplementary Data 4 retains the registration, installation changes and capture records.
 
 ### Workflow definition and image sources
 
@@ -122,6 +128,10 @@ no external scientific corrections or reference feedback. First-attempt results
 describe initial method selection and the extent of repair, not the criterion
 for autonomous success. Continuations receiving external scientific corrections
 provide assisted-development evidence and are reported separately.
+
+The scientific brief states the target and requested outputs; acquisition facts and operational instructions accompany it. For example, the retinal trial requested: “Produce RBPMS-positive soma instance labels, per-object measurements, qualified counts and a complete PipelineDocument with compile/execution receipts. Report uncertain identity, extent and dividing boundaries explicitly.” Its brief also supplied RBPMS/Hoechst channel hints and instructed metadata confirmation. These are biological targets with technical output and review requirements, not an unrestricted natural-language usability test. The inspected original briefs and their technical hints are retained in Supplementary Data 8.
+
+The packaged skill describes the specialist workflow: inspect channels and representative raw regions, measure feature scales, retrieve applicable function contracts, build and execute a pipeline, and compare matched raw-only, result-only and combined views. It calls for diagnosis at the earliest failing stage, rechecking a positive and a regression control, and retaining the author's selected frozen result. These instructions describe intended practice; the recorded attempts and captures establish which actions each author actually performed. General lessons can improve a later frozen skill, but reference answers and dataset-specific settings remain outside fresh authoring inputs.
 
 Separate trials evaluated whether a fresh gpt-6.1-sol agent could choose and revise an analysis using the task brief, packaged OpenHCS skill and MCP. The skill describes function discovery, image measurements, preprocessing and visual review; it does not supply the evaluated images' reference labels or accepted settings. Authors inspected their own inputs and intermediate results, retaining pipeline attempts, tool calls and matched image-only, result-only and combined views. The coordinator evaluated frozen predictions after authoring ended, without returning reference scores to the authors. These trials are distinct from the earlier three-assay held-out evaluation (Supplementary Data 8).
 
@@ -200,24 +210,6 @@ The assays include DNA-damage measurement, human and Drosophila cell morphology,
 The archived coverage tables list 58 distinct module names and 7,158 setting rows. They record whether a setting supplies a function parameter, an input/output requirement, an infrastructure option, or is intentionally ignored. Coverage describes how configurations are imported; the comparison results assess their outputs. Database export remains an ordinary terminal workflow step, using the same measurements and source identities as preceding steps.
 
 The advanced segmentation and 3D monolayer imports retain their named structures, measurements and processing sequences in editable Python (Supplementary Data 5).
-
-### Matched execution and total time across 30 workflows
-
-The matched single-sample evaluation used [pending]{.benchmark-claim key=case_count} workflows from record [pending]{.benchmark-claim key=record_name}, production revision [pending]{.benchmark-claim key=source_revision}. Its publication status is [pending]{.benchmark-claim key=status}. Declared-output comparisons passed in the warmup and three measured repetitions. Figure 2 shows the distribution of workflow speedups, with every workflow retained as a point. The minimum execution speedup over native CellProfiler was [pending]{.benchmark-claim key=execution_min}-fold and the median was [pending]{.benchmark-claim key=execution_median}-fold.
-
-Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=total_min}-fold and a median of [pending]{.benchmark-claim key=total_median}-fold. This comparison includes OpenHCS compilation and client coordination, separately from execution. Exact per-workflow times and the clock definitions accompany the same record.
-
-Measured multi-worker comparisons, total speedup versus assigned sample count, and individual workflow runtimes are shown in Supplementary Figure 9. Single-core amortization and exact efficiencies are retained in Supplementary Data 3.
-
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-### Figure 2. Matched single-sample speedup over native CellProfiler
-
-![Execution and compile-plus-run total speedups, showing means, medians and every matched workflow.](figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
-
-Execution and compile-plus-run total speedups for [pending]{.benchmark-claim key=case_count} workflows, using one selected source sample, one worker and one numerical thread. Coloured bars show mean speedup, grey points show individual workflows, and black lines show medians on a logarithmic scale. Each workflow's speedup is the ratio of independent engine medians from three repetitions after warmup; the dashed line marks equal runtime. All workflows passed the declared-output comparisons; this is workflow parity, not biological segmentation accuracy. Minimum and median execution speedups are [pending]{.benchmark-claim key=execution_min}-fold and [pending]{.benchmark-claim key=execution_median}-fold; corresponding total speedups are [pending]{.benchmark-claim key=total_min}-fold and [pending]{.benchmark-claim key=total_median}-fold. Record [pending]{.benchmark-claim key=record_name} supplies every panel and manuscript claim. The linear view, individual runtimes and sample-count comparisons appear in Supplementary Figure 9.
 
 ### Autonomous analysis across distinct biological tasks
 
@@ -319,30 +311,36 @@ being treated as additional experiments.
 
 | Input and task | Evaluation evidence | Supported result and limit |
 |---|---|---|
-| H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 3 trial; computational, not manual biological truth |
-| BBBC039 nuclei | Independent instance annotations; 200 fields and common 175 image-uninspected fields | Three agents' final pooled F1 0.898–0.906 on all fields and 0.906–0.910 on the retrospective uninspected subset |
-| BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
-| H002 3-D centres | 15 manual centres; Figure 4 trial | 15/15 matched within the primary 30-voxel distance, mean error 4.80 voxels; annotations not established as exhaustive |
+| H001 bright objects | Pinned notebook instance labels | Object F1 after one-to-one matching; computational reference, not manual biological truth |
+| BBBC039 nuclei | Independent instance annotations; full corpus and retrospective image-uninspected subset | Pooled object F1; development and retrospective uninspected subsets distinguished |
+| BBBC007 DNA/actin | Manual-outline union | Fraction of predicted boundary pixels near the reference; not boundary recall or exhaustive instance accuracy |
+| H002 3-D centres | Manual centre annotations | Matched-centre voxel distance; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Retained initial principal-shaft recovery; final repair exceeded the shaft target, and per-neuron crossing ownership remains unresolved |
 | Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
 | Laboratory neurites, 20-well transfer | MetaXpress well responses; two technical wells per drug/concentration | Fixed recipe recovered both increasing outgrowth dose trends with smaller fold changes; not a separate autonomous authoring trial or manual-trace score |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
-Table 2. Results and evaluation methods for autonomous image analysis.
+Table 1. Endpoints, references and scope of autonomous image analysis.
 Rows summarize the reported trials, not a newly pooled benchmark or a ranking
 of assays. Reference comparisons followed pipeline freezing and were not
 returned to authors. Visual-review rows do not supply a numerical accuracy
 estimate. First/final comparisons and independent repeats remain distinct;
 Supplementary Data 8 retains their exact inputs, predictions and evaluations.
 
-Table 2 summarizes each task's endpoint and scope; Supplementary Data 8 retains frozen attempts and independent evaluations.
+Table 1 summarizes each task's endpoint and scope; Supplementary Data 8 retains frozen attempts and independent evaluations.
 
-### Figure 3. Autonomous image review improves nuclear segmentation
+### Figure 2. Delegated specialist work leaves an analysis the scientist can inspect
 
-![Native autonomous repair, paired reference scores, complete coverage and annotated-versus-predicted counts.](figures/slas/task_only_visual.png){width=6in}
+![Skill-directed analysis workflow and a separately identified recorded H001 repair trajectory.](figures/slas/submission_autonomous_loop.png){width=6in}
 
-\(A) Matched H001 raw images and initial/final overlays show correction of a split elongated nucleus without reference feedback. (B) Whole-image agreement with a notebook-derived reference: excess predictions fall from four to two, while 59 of 64 reference objects remain matched and five remain missed. (C) BBBC039 pooled object F1 on three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line denotes pooled F1 rather than the mean of field scores; matching requires intersection over union of at least 0.5. (E) Final predicted versus annotated nuclear counts for the same 200 fields; the diagonal denotes equal counts, not correct boundaries or object identities. Initial results precede the author's self-directed revisions. Colours do not identify objects across attempts. Wider views and capture records are retained in Supplementary Figure 3 and Supplementary Data 8. These development comparisons do not establish held-out generalization or isolate the contribution of the skill.
+(A) The packaged skill's intended workflow connects the biological task to channel inspection, measurements, pipeline construction, matched-view review, repair and a frozen result. The repair arrow returns to execution and inspection rather than accepting a changed parameter as evidence of improvement. The scientist-facing statement describes available inspection and editing, not participation in a user study. (B) The recorded H001 author completed four candidates and selected the fourth after repairing a split and recovering a neighbouring pair lost by an earlier revision. Times are read from the original trial-resource catalogue: the first execution terminal and whole-task completion are distinct boundaries. Review, reporting and cleanup contribute to whole-task time. This example establishes an observed trajectory, not adherence to every current skill instruction by every author.
+
+### Figure 3. Image review repairs a split and preserves retinal neighbours
+
+![Matched raw, first and final views of an elongated-body split and neighbouring retinal somata.](figures/slas/submission_repair_examples.png){width=6in}
+
+(A) Matched H001 raw images and initial/final overlays show correction of a split elongated body without reference feedback. (B) The retained retinal author smoothed fragmented soma footprints while keeping two conspicuous neighbouring bodies separate. The raw images and display are matched before and after each repair; the retinal raw captures are byte-identical. Remaining weak-body coverage and a possible border split are uncertain. This retinal example is a self-directed continuation of a retained run, not a fresh independent trial. Colours do not identify objects across attempts. Reference scores, wider views and capture records remain in Supplementary Figures 3 and 5 and Supplementary Data 8. Neither crop establishes whole-field accuracy or isolates the effect of the skill.
 
 The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
 run plotted above: 61 fields improved, 123 decreased and 16 were unchanged
@@ -371,9 +369,28 @@ within-run repair does not guarantee a better result from the next fresh author.
 (I, A–B) Matched NeuronCyto II process-channel view and the H004 author's retained initial shaft result [@NeuronCytoII]. The intended structures are thick neurite shafts, including their dim stretches, rather than fine filopodia. The later repair overextended tracing and is not shown as a successful final result. Colours represent assigned identities, not independently established ownership at crossings. (II, C–E) Byte-identical native captures from the final P001 autonomous analysis show raw FITC, body/path output and their combination at matched site-1 coordinates. The run completed all nine fields without stitching or overlap deduplication. (III, F–G) Separate, externally informed soma and tracing repairs were evaluated across 20 matched wells, yielding increasing outgrowth-per-cell responses to FC-A and Y27632. Dots represent two technical wells per dose; marks and whiskers show their mean and sample standard deviation relative to the same curve's DMSO mean. These curves are assisted-development results, not additional autonomous authoring or equivalent segmentation. All six endpoint responses, numerical tables and the separate assisted mosaic are retained in the supplement.
 
 
+### Matched execution and total time across 30 workflows
+
+The matched single-sample evaluation used [pending]{.benchmark-claim key=case_count} workflows from record [pending]{.benchmark-claim key=record_name}, production revision [pending]{.benchmark-claim key=source_revision}. Its publication status is [pending]{.benchmark-claim key=status}. Declared-output comparisons passed in the warmup and three measured repetitions. Figure 6 shows the distribution of workflow speedups, with every workflow retained as a point. The minimum execution speedup over native CellProfiler was [pending]{.benchmark-claim key=execution_min}-fold and the median was [pending]{.benchmark-claim key=execution_median}-fold.
+
+Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=total_min}-fold and a median of [pending]{.benchmark-claim key=total_median}-fold. This comparison includes OpenHCS compilation and client coordination, separately from execution. Exact per-workflow times and the clock definitions accompany the same record.
+
+Measured multi-worker comparisons, total speedup versus assigned sample count, and individual workflow runtimes are shown in Supplementary Figure 9. Single-core amortization and exact efficiencies are retained in Supplementary Data 3.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+### Figure 6. Matched single-sample speedup over native CellProfiler
+
+![Execution and compile-plus-run total speedups, showing means, medians and every matched workflow.](figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
+
+Execution and compile-plus-run total speedups for [pending]{.benchmark-claim key=case_count} workflows, using one selected source sample, one worker and one numerical thread. Coloured bars show mean speedup, grey points show individual workflows, and black lines show medians on a logarithmic scale. Each workflow's speedup is the ratio of independent engine medians from three repetitions after warmup; the dashed line marks equal runtime. All workflows passed the declared-output comparisons; this is workflow parity, not biological segmentation accuracy. Minimum and median execution speedups are [pending]{.benchmark-claim key=execution_min}-fold and [pending]{.benchmark-claim key=execution_median}-fold; corresponding total speedups are [pending]{.benchmark-claim key=total_min}-fold and [pending]{.benchmark-claim key=total_median}-fold. Record [pending]{.benchmark-claim key=record_name} supplies every panel and manuscript claim. The linear view, individual runtimes and sample-count comparisons appear in Supplementary Figure 9.
+
+
 ## Discussion
 
-OpenHCS supplies an autonomous, auditable analysis component for imaging-based self-driving laboratories. It connects agent-authored processing choices to the images and measurements a scientist needs to evaluate, while keeping the pipeline editable as the biological sample or experimental question changes. Experiment selection and instrument control remain the responsibility of the surrounding laboratory system.
+OpenHCS makes delegated image analysis inspectable in the terms of the biological experiment. An agent's processing choices remain connected to the source images, masks and measurements, and the scientist can revise the pipeline as the sample or question changes. The trials show agents performing analysis construction and self-directed repair from supplied briefs and acquisition context. They do not establish how easily an untrained user can formulate a brief or judge the result.
 
 Workflow reuse can reduce the setup required for a new experiment. A laboratory can import a CellProfiler analysis, adjust its source mapping and parameters, add an assay-specific Python function, and inspect the resulting masks in Fiji or napari before processing further samples. Pipelines can also be authored directly in OpenHCS. Keeping the processing choices explicit provides a basis for review as analysis methods and experimental conditions change.
 
@@ -383,7 +400,7 @@ The appropriate endpoint also depends on the experiment. Principal neurite shaft
 
 Repeated trials with additional models, assays and expert-reviewed images will be needed to estimate how often an agent produces an acceptable analysis on a new experiment. The present trials do not isolate the effect of the packaged guidance or establish uniform performance across images. Further comparisons can extend CellProfiler import testing to additional settings and assess throughput with matched outputs. Channel selection, processing parameters and intermediate results remain available for review when a pipeline is transferred to new samples.
 
-Scientists can therefore delegate pipeline construction and execution while retaining the ability to inspect results in familiar viewers and revise the analysis through graphical controls or Python.
+Scientists can therefore delegate pipeline construction and execution while retaining the images, measurements and editable settings needed to judge the result. The same division of work can support an AI-guided laboratory: the agent performs the image-analysis work, while the domain expert remains responsible for the scientific question and interpretation.
 
 ## Supplementary Data
 

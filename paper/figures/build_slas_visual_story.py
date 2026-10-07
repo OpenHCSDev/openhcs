@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from io import BytesIO
 from pathlib import Path
 import subprocess
@@ -794,6 +795,84 @@ def submission_neurite_results():
     )
     sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Branching responses remain smaller than MetaXpress.",
                size=9.5, color=MUTED)
+    sheet.save()
+
+
+def submission_repair_examples():
+    """Put same-input nuclear and retinal repair witnesses in one main figure."""
+    from build_slas_supplement import SupplementFigure
+
+    sheet = SupplementFigure("submission_repair_examples", 7.4)
+    sheet.heading("A  A split elongated body is repaired", 97)
+    sheet.artwork("h001_scored_native", (2, 53, 96, 39), crop=(2, 61, 98, 91))
+    sheet.heading("B  Retinal contours improve while two neighbours stay separate", 48)
+    sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
+    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
+    for column, (view, label) in enumerate((
+        ("raw", "Raw RBPMS"), ("first", "First + raw"), ("final", "Final + raw"),
+    )):
+        x = 3 + column * 32
+        sheet.text(x, 42, label, size=11, weight="bold")
+        sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
+                           (x, 8, 30, 30), crop=(297, 28, 1250, 470))
+    sheet.text(50, 1, "Matched raw pixels and display within each trial • colours are not cross-attempt identities",
+               size=10, ha="center", color=MUTED)
+    sheet.save()
+
+
+def submission_autonomous_loop():
+    """Separate intended skill workflow from the retained H001 trajectory."""
+    sheet = FigureSheet("submission_autonomous_loop", "", 7.2)
+    resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
+    with resources.open(newline="") as stream:
+        rows = [row for row in csv.DictReader(stream)
+                if row["trial_id"] == "H001_FRESH586_96"]
+    if len(rows) != 1:
+        raise ValueError("Expected the original plotted H001 resource record")
+    trial = rows[0]
+    report = ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md"
+    # Reuse the retained author's original report, not a later skill's promise.
+    report_text = report.read_text()
+    if "All four compile/run pairs completed" not in report_text:
+        raise ValueError("H001's four-candidate trajectory is not established")
+    sheet.source(report)
+    sheet.source(resources)
+    sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
+    sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md")
+    sheet.panel("A", "Intended specialist workflow in the packaged skill", 3, 96)
+    for x, y, title, detail in (
+        (3, 72, "Biological brief", "Target • outputs • acquisition facts"),
+        (36, 72, "Inspect and measure", "Channels • raw signal • feature scales"),
+        (69, 72, "Build and execute", "Discover functions • editable pipeline"),
+        (69, 44, "Compare matched views", "Raw only • result only • combined"),
+        (36, 44, "Diagnose and repair", "Earliest failed stage\nRecheck a regression control"),
+        (3, 44, "Freeze selected result", "Pipeline • outputs • known limitations"),
+    ):
+        sheet.box(x, y, 28, 16, title, detail)
+    for start, end in (((31,80),(36,80)), ((64,80),(69,80)),
+                       ((83,72),(83,60)), ((69,52),(64,52)), ((36,52),(31,52))):
+        sheet.arrow(start, end)
+    sheet.route(((50,60),(50,65),(83,65),(83,72)), color=ORANGE, dashed=True)
+    sheet.text(50, 66, "Inspect the revised candidate", size=9, ha="center", color=ORANGE)
+    sheet.text(50, 38, "Scientist can inspect images, masks and measurements and revise the same pipeline",
+               size=11, ha="center", weight="bold", color=TEAL)
+    sheet.panel("B", "Nuclear segmentation: the observed repair sequence", 3, 29)
+    candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
+    if len(candidates) != 4:
+        raise ValueError("Expected the four original reported H001 candidates")
+    for index, ((candidate, count), decision) in enumerate(zip(candidates, (
+        "Split body", "Split fixed; pair lost", "Pair still lost", "Pair recovered",
+    ))):
+        x = 3 + index * 24
+        sheet.box(x, 15, 22, 11, f"{int(candidate)} • {count} objects", decision, color=TEAL)
+        if index < 3:
+            sheet.arrow((x+22,20.5), (x+24,20.5))
+    first = float(trial["first_elapsed_s"]) / 60
+    final = float(trial["final_elapsed_s"]) / 60
+    sheet.text(4, 8, f"Initial run completed: {first:.0f} min • whole task: {final:.0f} min",
+               size=11, color=TEAL)
+    sheet.text(4, 3, "Whole task includes image review, reporting and cleanup; times start at brief instruction.",
+               size=9, color=MUTED)
     sheet.save()
 
 

@@ -329,7 +329,7 @@ the clocks; native total excludes one-time pipeline loading and JVM startup.
 The different revisions and workloads remain separate qualified checkpoints.
 Exact ratios, independent-CellProfiler-process controls and the separate
 single-core amortization plots are linked in Supplementary Data 3. These selected
-workflows do not replace the full single-sample cohort of main Figure 2.
+workflows do not replace the full single-sample cohort of main Figure 6.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -389,7 +389,7 @@ segmentation accuracy.
 
 ![Linear-scale counterpart of the main-text thirty-workflow execution and total speedup distributions.](../figures/slas/benchmark-publication/measured_benchmark_publication.png){width=6in}
 
-The same workflow ratios, mean bars, median lines and extrema as main Figure 2,
+The same workflow ratios, mean bars, median lines and extrema as main Figure 6,
 on a linear vertical scale. The marked axis break keeps the bulk of the cohort
 visible without excluding the large speedup observations. Each clock contains
 the same thirty workflows; no many-worker measurements enter either distribution.
@@ -648,7 +648,7 @@ current-version compatibility matrix.
 
 ### Retained measured panels and numerical tables
 
-- [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 2 and the paired-runtime continuation of Supplementary Figure 9.
+- [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 6 and the paired-runtime continuation of Supplementary Figure 9.
 - [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
 - [Eight-assignment measured source record](../../benchmark/results/official30_matched_20261006/README.md), including the matched one-process baseline used for the two-worker comparison.
 - [Retained nine- and sixteen-assignment paired clock panels](../figures/slas/supp_matched_scaling.png), with the original separate capture heads.
@@ -1024,6 +1024,22 @@ from the three score receipts. Its
 retain the plotted rows and source/output hashes.
 
 ## Supplementary Data 8. Autonomous analysis evidence
+
+### Scientific briefs and the limits of the domain-expert framing
+
+The trials evaluate whether agents can construct and repair analyses from supplied tasks, images and packaged guidance. They do not evaluate usability with untrained laboratory members. Scientific targets were accompanied by acquisition facts, export requirements and operational instructions; “task-only” does not mean that every instruction was free of technical terminology.
+
+The retinal fresh26 trial received the following original scientific brief, reproduced verbatim. Its RBPMS/Hoechst identities are acquisition hints; instance labels, PipelineDocument, compile/execution receipts and matched-view QA are technical output and review requirements. No segmentation method, parameter value or expected count is specified.
+
+> Retinal whole-mount RBPMS analysis
+>
+> Analyse only R0010.czi in this input directory. Assay: retinal whole-mount RBPMS/Hoechst. Acquisition hints AF647:RBPMS and H3258:Hoechst; confirm physical channel and axis identity through MCP metadata and raw inspection. Produce RBPMS-positive soma instance labels, per-object measurements, qualified counts and a complete PipelineDocument with compile/execution receipts. Report uncertain identity, extent and dividing boundaries explicitly.
+>
+> This is authorized development input. No expected count or earlier method is supplied. Do not inspect other images, reference answers, notebooks, scorer code, repository plans or prior agents' scientific outputs. Use only this input, MCP and packaged guidance. Preserve FIRST, later self-directed repairs and matched distributed raw/result/combined QA; assess your final selected method at its supported scope. Current AUTHOR-PACKET owns operational paths and resources.
+
+Source: the retained `SCIENCE-BRIEF.rst` accompanying the [retinal fresh26 record](task_only_analysis/retinal-fresh26-qualified-completion.rst). The earlier NeuronCyto demonstration's complete method-directed prompt remains in Supplementary Data 4; its normalization and enhancement instructions must not be described as a method-free brief. The task-only H004 trial also preceded the later thick-shaft clarification below. The remaining original biological briefs are being recovered from their retained trial packets rather than reconstructed from successful pipelines.
+
+The current skill describes intended inspection and repair practice. Its later additions are not evidence that earlier authors followed those instructions. Main Figure 2 separates this intended workflow from a recorded H001 example; its wall times come from the original resource catalogue, and its candidate sequence comes from the author's retained report. No universal count of review rounds is inferred from screenshot totals.
 
 Supplementary Figures 3–8 group native views by assay. Main Figure 4 shows
 translocation and volume localisation; main Figure 5 shows public and personal

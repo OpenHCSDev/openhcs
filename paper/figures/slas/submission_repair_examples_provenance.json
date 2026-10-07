@@ -1,0 +1,73 @@
+{
+  "generator_sha256": "debba230e31daab4dff226750849682118aac4e13f19eaf5773a93cc169d3033",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/slas/h001_scored_native_provenance.json": "4e5916a2ae5c51aae90ebb7061ec35b8bb669eb446401c67119624c728a7e787",
+    "paper/figures/slas/h001_scored_native.png": "6d783467119e7829c603ddceae68d6b9cb4d2e106230dec456285814d66efe55",
+    "paper/figures/slas/retina_fresh16_repair_provenance.json": "f39d713943b269186ab023e2573e85dec731590d78f8564666aefd07c6f159cd",
+    "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst": "6ef4dc1a8f79379c19d5309cc77e133aa8d11da971470e70511830b780cefb72",
+    "paper/figures/slas/retina_fresh16_sources/nw-raw.png": "d38ca5c3901a95fad0e4006859d7a374f4a048b9f320648d875717900202bf4b",
+    "paper/figures/slas/retina_fresh16_sources/nw-first.png": "1112cafcd58ae2e09e15d409b7233dd9987177801a915cd91d287f0061f75666",
+    "paper/figures/slas/retina_fresh16_sources/nw-final.png": "5879f9e9a4614e3213c3ee9f8b0d2c36e47c9c39b48fb9fcbccad2ac7c1fc25a"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h001_scored_native.png",
+      "xyxy_pixels": [
+        54,
+        1171,
+        2646,
+        1747
+      ],
+      "source_size": [
+        2700,
+        1920
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-raw.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-first.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_sources/nw-final.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        470
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    }
+  ],
+  "output_sha256": {
+    "submission_repair_examples.png": "8958ee3af1026295511e04af5235df255a2604b36490cb4aacddfc330418f45c",
+    "submission_repair_examples.pdf": "9d208c6a4fbf786620dd74a7ea555817d1c3d8c8c375e9cc102daec82db3e081",
+    "submission_repair_examples.svg": "797ac09dd1c4a4159564dab5d834f877460b29d02d765dea3db95bfb5d9d528a"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

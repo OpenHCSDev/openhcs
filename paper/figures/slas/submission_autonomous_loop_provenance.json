@@ -1,0 +1,16 @@
+{
+  "generator_sha256": "ea958b6f15f9b83c8c2d474270186531a5a9552beec3954ba81244dedd3ce21f",
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/h001-fresh586-author-trajectory.md": "6e82fabd8cab6332229b05c9ef5c24830b702328db6a5b760f7b7ca631071a3c",
+    "paper/supplementary/task_only_analysis/trial_resources.csv": "ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9",
+    "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md": "cb14d533fb87b91f80d6f8c647bb833b0444f2239357af6732b93485eae8cfd9",
+    "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md": "6aff1f00a2cfb11a658850831c511298010339acba99c080cabed437c544e28b"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "submission_autonomous_loop.png": "fdf897ad9e62ea410ee9064dc1f129286f688b27e2b6ed5f784472d67d68bf78",
+    "submission_autonomous_loop.pdf": "5572ad9f41e3fb7920bc0232b0297353baede980e07e494e8a7adac10f2c4fc8",
+    "submission_autonomous_loop.svg": "d7777a9e8f4f5c5a37537339edd5c0e04d20ea4399bdbc06a29b1fb07f0577d9"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}
