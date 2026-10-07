@@ -1,17 +1,17 @@
 {
   "source_sha256": {
-    "benchmark/results/matched_latestmain_20261006/data/singlewell/execution_summary.csv": "86c6c181ec958a9761ca0b4386ee23159411a437eb7a7d2a877cadd040e0df57",
-    "benchmark/results/matched_latestmain_20261006/data/singlewell/total_summary.csv": "d683c0e179bc4927787126ac7621ed631b820cd12ad770d6b5fb7e3f6080d784",
-    "benchmark/results/matched_latestmain_20261006/data/singlewell/summary_custody.json": "fe3c1b83fc552a7c191651af5568e36a28c6a77fd598637cc4f95caab3cd9988",
+    "benchmark/results/matched_integrated_main_20261007/data/singlewell/execution_summary.csv": "82fe5b8106bf6ccd6f88fb862c84142c3a88ccb31ac048e3f7f6aea4948c9a5b",
+    "benchmark/results/matched_integrated_main_20261007/data/singlewell/total_summary.csv": "f8b079519d6f6a89ca106bbd2199162317a5d09b83c794498d98eb408febf9ad",
+    "benchmark/results/matched_integrated_main_20261007/data/singlewell/summary_custody.json": "75eb84f0b9c29cc70bbee7bdaeb133e8ad550c915e04f46de332efc6619e4de1",
     "benchmark/reports/cppipe_figures.py": "ce554b30097841f85a0398f977e6c7c3d2a95a4718c844784b417c77c670038f",
     "paper/figures/build_slas_benchmark.py": "6883fffb31bf0a02b2e8e79c485715c7fa8b821405d4d4506db6eb6abf30eace"
   },
   "generator_sha256": "6883fffb31bf0a02b2e8e79c485715c7fa8b821405d4d4506db6eb6abf30eace",
   "output_sha256": {
-    "benchmark_claims.json": "09bb96d50bb6e9c3b799af5bf211de4251de33e838075c8c0b9fd0efffcc062b",
-    "measured_benchmark_publication.png": "5ea84318dac291aafaa12419b08cdf6f9f361dfa0848e45d088d25de24deea48",
-    "measured_benchmark_publication.svg": "afb9f9236d3b0d6132a0ef90deaa1e72b85da9f07c6a7903dbe3fa81e0a413e7",
-    "measured_benchmark_publication_caption.md": "fdff8cce34c18f8eaa4e6a1c9abe3b03a5f21797a167724ea070d17727743b6a"
+    "benchmark_claims.json": "4abe85a43380c99ef927520bd9ff9d0535065c4793fdf795fd3475e94a5ce84c",
+    "measured_benchmark_publication.png": "701cc8028341a9e3300ba21ba0fac5ec0381a1716e6e6312d49356fcc66beb49",
+    "measured_benchmark_publication.svg": "c9d08dee73b5b9754a80712b7ef1527fa1f65838a4d5799c92c07f97017c1b89",
+    "measured_benchmark_publication_caption.md": "f9b4461244d4c96f643b33e7b578b7f9c3e901ebe270ddbed68b6cfda4f23117"
   },
   "interpretation": "Single measured-owner projection; final claims require explicit owner freeze."
 }

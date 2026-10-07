@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "cases": 30,
+  "scientific_observations": 120,
+  "warmup_and_measured_repetitions": [
+    -1,
+    0,
+    1,
+    2
+  ],
+  "verified_byte_originals": 1030
+}

@@ -1,0 +1,566 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "934d5d01-a0a4-4bb8-a9b7-32efc3715168",
+    "compile_artifact_id": "6ce24991-df9b-4f60-9bff-644dc42fda69",
+    "endpoint_pid": 89444,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      89444
+    ],
+    "worker_interval_overlap_seconds": 2.6483418941497803,
+    "axis_events": [
+      {
+        "axis_id": "A14",
+        "phase": "axis_started",
+        "timestamp": 1791333649.7981892,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      },
+      {
+        "axis_id": "A14",
+        "phase": "axis_completed",
+        "timestamp": 1791333652.446531,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791333649.7685614,
+    "first_axis_started_at_epoch_seconds": 1791333649.7981892,
+    "server_job_completed_at_epoch_seconds": 1791333652.9245648,
+    "server_job_seconds": 3.156003475189209,
+    "execution_seconds": 2.6483418941497803,
+    "compile_seconds": 0.26200437545776367,
+    "total_seconds": 3.5261499849148095,
+    "first_axis_through_server_completion_seconds": 3.126375675201416,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 11,
+    "declared_output_file_count": 9,
+    "native_output_inventory": [
+      {
+        "path": "MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "MyExpt_Experiment.csv",
+        "sha256": "590738d54ed1adb6166575d1770af275bd0f37679a65f9843fff4b1dfd239352"
+      },
+      {
+        "path": "MyExpt_Image.csv",
+        "sha256": "77c4974f2e00034327549b75c2dd0f63684718abbad93f3ebece2236704e12ed"
+      },
+      {
+        "path": "MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "820353e5d03510612d548cee953b87f428acc7d3d89c53e879ae462140e39d8f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "46518784a6c409baa69bf88dce074ae2d955d1d785c79ac1c068c5737bb311c1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "ebad2df49b9a366f21396bdc5783c70ca1367bf84e654569a14a3b9b133b236b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "481cd40bba32dc50883007662cf0885326e83aa3efa8d18250426bad2fd719a7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "7ae5b6ba5dc7ff684f95c469f9a679efff6d78494d7725078fab3ad09d0e1284"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "fcd5806cec75ec60f42ed2e0991691cb2d9db0cb6c26e042e1c5bf4689a25519"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "12c579d55466936f0a1934b4e299c687b39b1366736411c65011def1ae4dbbfb"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "99a65fd24408eaf57a323035adbfea18a2cd336c827ba9d65095e30dd0b87393"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "730ba229-3d55-4bf2-a80d-1cdd21d5ec6f",
+    "compile_artifact_id": "918ae3f2-a3e7-4386-9c69-0f83830f20e8",
+    "endpoint_pid": 89444,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      89444
+    ],
+    "worker_interval_overlap_seconds": 2.677039861679077,
+    "axis_events": [
+      {
+        "axis_id": "A14",
+        "phase": "axis_started",
+        "timestamp": 1791333673.9607294,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      },
+      {
+        "axis_id": "A14",
+        "phase": "axis_completed",
+        "timestamp": 1791333676.6377692,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791333673.9278643,
+    "first_axis_started_at_epoch_seconds": 1791333673.9607294,
+    "server_job_completed_at_epoch_seconds": 1791333677.1233017,
+    "server_job_seconds": 3.195437431335449,
+    "execution_seconds": 2.677039861679077,
+    "compile_seconds": 0.33522677421569824,
+    "total_seconds": 3.6490899245254695,
+    "first_axis_through_server_completion_seconds": 3.1625723838806152,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 11,
+    "declared_output_file_count": 9,
+    "native_output_inventory": [
+      {
+        "path": "MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "MyExpt_Experiment.csv",
+        "sha256": "e3c7a20ad963c8adb975c99093473fa43249e7b3cf609be657db9ca939f2509a"
+      },
+      {
+        "path": "MyExpt_Image.csv",
+        "sha256": "f62decd717fc82fd11e856fae34a53b5c4db89f3aaa08e82e411d945a43be9ea"
+      },
+      {
+        "path": "MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "820353e5d03510612d548cee953b87f428acc7d3d89c53e879ae462140e39d8f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "46518784a6c409baa69bf88dce074ae2d955d1d785c79ac1c068c5737bb311c1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "ebad2df49b9a366f21396bdc5783c70ca1367bf84e654569a14a3b9b133b236b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "481cd40bba32dc50883007662cf0885326e83aa3efa8d18250426bad2fd719a7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "7ae5b6ba5dc7ff684f95c469f9a679efff6d78494d7725078fab3ad09d0e1284"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "fcd5806cec75ec60f42ed2e0991691cb2d9db0cb6c26e042e1c5bf4689a25519"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "12c579d55466936f0a1934b4e299c687b39b1366736411c65011def1ae4dbbfb"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "99a65fd24408eaf57a323035adbfea18a2cd336c827ba9d65095e30dd0b87393"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "eb6d47c4-e7e3-4316-9768-896e577ed4b2",
+    "compile_artifact_id": "c59b9c1b-6d06-4b40-a395-794a7191e7de",
+    "endpoint_pid": 89444,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      89444
+    ],
+    "worker_interval_overlap_seconds": 2.73545503616333,
+    "axis_events": [
+      {
+        "axis_id": "A14",
+        "phase": "axis_started",
+        "timestamp": 1791333696.5296726,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      },
+      {
+        "axis_id": "A14",
+        "phase": "axis_completed",
+        "timestamp": 1791333699.2651277,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791333696.5002406,
+    "first_axis_started_at_epoch_seconds": 1791333696.5296726,
+    "server_job_completed_at_epoch_seconds": 1791333699.7529516,
+    "server_job_seconds": 3.252711057662964,
+    "execution_seconds": 2.73545503616333,
+    "compile_seconds": 0.2659611701965332,
+    "total_seconds": 3.6320497333072126,
+    "first_axis_through_server_completion_seconds": 3.2232789993286133,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 11,
+    "declared_output_file_count": 9,
+    "native_output_inventory": [
+      {
+        "path": "MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "MyExpt_Experiment.csv",
+        "sha256": "8a94a5000bb612242dd866b71e781225f6f80e086d93c8df0557e9853f4f0542"
+      },
+      {
+        "path": "MyExpt_Image.csv",
+        "sha256": "99fa6f26b2928ddfba84923894e3c1022fe770c7570b2a8441aebf902aefae6d"
+      },
+      {
+        "path": "MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "820353e5d03510612d548cee953b87f428acc7d3d89c53e879ae462140e39d8f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "46518784a6c409baa69bf88dce074ae2d955d1d785c79ac1c068c5737bb311c1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "ebad2df49b9a366f21396bdc5783c70ca1367bf84e654569a14a3b9b133b236b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "481cd40bba32dc50883007662cf0885326e83aa3efa8d18250426bad2fd719a7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "7ae5b6ba5dc7ff684f95c469f9a679efff6d78494d7725078fab3ad09d0e1284"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "fcd5806cec75ec60f42ed2e0991691cb2d9db0cb6c26e042e1c5bf4689a25519"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "12c579d55466936f0a1934b4e299c687b39b1366736411c65011def1ae4dbbfb"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "99a65fd24408eaf57a323035adbfea18a2cd336c827ba9d65095e30dd0b87393"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "5c015159-8052-4d01-a784-90b41b7e00cd",
+    "compile_artifact_id": "dbc11f30-83c8-4271-ab55-73a7f5e3b88e",
+    "endpoint_pid": 89444,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "worker_process_ids": [
+      89444
+    ],
+    "worker_interval_overlap_seconds": 2.709907293319702,
+    "axis_events": [
+      {
+        "axis_id": "A14",
+        "phase": "axis_started",
+        "timestamp": 1791333719.611491,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      },
+      {
+        "axis_id": "A14",
+        "phase": "axis_completed",
+        "timestamp": 1791333722.3213983,
+        "pid": 89444,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A14"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791333719.5827057,
+    "first_axis_started_at_epoch_seconds": 1791333719.611491,
+    "server_job_completed_at_epoch_seconds": 1791333722.8038902,
+    "server_job_seconds": 3.221184492111206,
+    "execution_seconds": 2.709907293319702,
+    "compile_seconds": 0.262636661529541,
+    "total_seconds": 3.590987061150372,
+    "first_axis_through_server_completion_seconds": 3.192399263381958,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 11,
+    "declared_output_file_count": 9,
+    "native_output_inventory": [
+      {
+        "path": "MyExpt_Cells.csv",
+        "sha256": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505"
+      },
+      {
+        "path": "MyExpt_Cytoplasm.csv",
+        "sha256": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f"
+      },
+      {
+        "path": "MyExpt_Experiment.csv",
+        "sha256": "cb1a96f8860b0dc0619603c98e95d94ec774f9c2bc73883b0f4e7bca9b0ec925"
+      },
+      {
+        "path": "MyExpt_Image.csv",
+        "sha256": "7bb3bc55181a69cb4c2b5c5d62b5fc38d99a1675563633b446d939c2e28b2198"
+      },
+      {
+        "path": "MyExpt_Nuclei.csv",
+        "sha256": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304"
+      },
+      {
+        "path": "MyExpt_Nucleoli.csv",
+        "sha256": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a"
+      },
+      {
+        "path": "MyExpt_NucleoliChildObjects.csv",
+        "sha256": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site1_Ch3_overlay.tiff",
+        "sha256": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1"
+      },
+      {
+        "path": "overlay_images/plate1_A14_site2_Ch3_overlay.tiff",
+        "sha256": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s001_w3_z001_t001_overlay.tiff",
+        "sha256": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A14_s002_w3_z001_t001_overlay.tiff",
+        "sha256": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "820353e5d03510612d548cee953b87f428acc7d3d89c53e879ae462140e39d8f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cells.csv",
+        "sha256": "46518784a6c409baa69bf88dce074ae2d955d1d785c79ac1c068c5737bb311c1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Cytoplasm.csv",
+        "sha256": "ebad2df49b9a366f21396bdc5783c70ca1367bf84e654569a14a3b9b133b236b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Image.csv",
+        "sha256": "481cd40bba32dc50883007662cf0885326e83aa3efa8d18250426bad2fd719a7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nuclei.csv",
+        "sha256": "7ae5b6ba5dc7ff684f95c469f9a679efff6d78494d7725078fab3ad09d0e1284"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Nucleoli.csv",
+        "sha256": "fcd5806cec75ec60f42ed2e0991691cb2d9db0cb6c26e042e1c5bf4689a25519"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_NucleoliChildObjects.csv",
+        "sha256": "12c579d55466936f0a1934b4e299c687b39b1366736411c65011def1ae4dbbfb"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/MyExpt_Object relationships.csv",
+        "sha256": "99a65fd24408eaf57a323035adbfea18a2cd336c827ba9d65095e30dd0b87393"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/final-integrated-main-official30-v1/capture/cases/cp_tutorial_beginner_segmentation_final/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

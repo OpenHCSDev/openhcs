@@ -1,0 +1,3 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+cp_tutorial_quality_control,1,1,worker_0,A01,MeasureImageQuality,1791333647.2900522,1791333647.9692776,0.6792254447937012
+cp_tutorial_quality_control,1,1,,,ExportToDatabase,1791333647.9714582,1791333648.040551,0.0690927505493164
