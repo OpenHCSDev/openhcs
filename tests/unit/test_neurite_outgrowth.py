@@ -72,6 +72,16 @@ from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import 
 )
 
 
+def _declared_shaft_admission(response, mask=None):
+    support = response > 0 if mask is None else mask
+    return NeuriteAdmissionResult(
+        mask=support,
+        planes=NeuriteAdmissionPlanes(
+            response, support, support, response, response > 0,
+        ),
+    )
+
+
 def _implementation():
     return CallableContract.from_callable(
         neurite_outgrowth_metaxpress
@@ -1043,7 +1053,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
     owned = _render_owned_skeleton(skeleton.shape, topology)
     response = np.where(skeleton, 150.0, 0.0)
     repaired = _repair_signal_supported_skeleton(
-        owned, response, np.zeros_like(cell_bodies), cell_bodies,
+        owned, _declared_shaft_admission(response), np.zeros_like(cell_bodies), cell_bodies,
         minimum_response=100.0, crossing_topology=topology,
     )
     core = topology.crossing_core_mask(skeleton.shape)
@@ -1055,7 +1065,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
     reversed_owned = np.where(owned > 0, 3 - owned, 0)
     reversed_bodies = np.where(cell_bodies > 0, 3 - cell_bodies, 0)
     reversed_repair = _repair_signal_supported_skeleton(
-        reversed_owned, response, np.zeros_like(cell_bodies), reversed_bodies,
+        reversed_owned, _declared_shaft_admission(response), np.zeros_like(cell_bodies), reversed_bodies,
         minimum_response=100.0, crossing_topology=reversed_topology,
     )
     np.testing.assert_array_equal(
@@ -1071,7 +1081,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
     foreign_response = response.copy()
     foreign_response[foreign_rows, foreign_columns] = 150.0
     foreign_repair = _repair_signal_supported_skeleton(
-        foreign_owned, foreign_response, np.zeros_like(cell_bodies), foreign_bodies,
+        foreign_owned, _declared_shaft_admission(foreign_response), np.zeros_like(cell_bodies), foreign_bodies,
         minimum_response=100.0, crossing_topology=topology,
     )
     assert np.all(foreign_repair[core] == 99)
@@ -1105,7 +1115,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
     unsupported_response = response.copy()
     unsupported_response[core] = 0
     unsupported = _repair_signal_supported_skeleton(
-        owned, unsupported_response, np.zeros_like(cell_bodies), cell_bodies,
+        owned, _declared_shaft_admission(unsupported_response), np.zeros_like(cell_bodies), cell_bodies,
         minimum_response=100.0, crossing_topology=topology,
     )
     unsupported[cell_bodies > 0] = 0
@@ -2228,9 +2238,15 @@ def test_signal_supported_repair_follows_curved_trace_instead_of_chord():
     owner_regions = np.zeros_like(labels)
     owner_regions[(response >= 100.0) | (cell_bodies == 1)] = 1
 
+    shaft_support = response >= 100.0
+    # A locally bright shortcut is not a shaft. The original admission must
+    # remain authoritative when repair reconnects the curved supported path.
+    response[32, 16:43] = 150.0
+    owner_regions[32, 16:43] = 1
+
     repaired = _repair_signal_supported_skeleton(
         labels,
-        response,
+        _declared_shaft_admission(response, shaft_support),
         owner_regions,
         cell_bodies,
         minimum_response=100.0,
@@ -2366,7 +2382,7 @@ def test_secondary_path_adoption_survives_only_with_soma_rooted_signal_support()
         assert np.all(adopted[32, 30:53] == 1)
         repaired = _repair_signal_supported_skeleton(
             adopted,
-            response,
+            _declared_shaft_admission(response),
             owner_regions,
             cell_bodies,
             minimum_response=100.0,
@@ -2408,7 +2424,7 @@ def test_signal_supported_repair_projects_crossings_regionally_on_eight_megapixe
 
     monkeypatch.setattr(_TopologyResult, 'crossing_core_mask', regional_projection)
     repaired = _repair_signal_supported_skeleton(
-        labels, response, labels, bodies, minimum_response=3,
+        labels, _declared_shaft_admission(response), labels, bodies, minimum_response=3,
         crossing_topology=_empty_topology(),
     )
     np.testing.assert_array_equal(repaired, np.where(bodies > 0, bodies, labels))
@@ -2434,7 +2450,7 @@ def test_signal_supported_repair_reserves_core_from_unrelated_earlier_owner():
         resolved_crossings=(_ResolvedCrossing(0, (0, 1), (2,)),),
     )
     repaired = _repair_signal_supported_skeleton(
-        labels, response, regions, bodies, minimum_response=100.0,
+        labels, _declared_shaft_admission(response), regions, bodies, minimum_response=100.0,
         crossing_topology=topology,
     )
     assert np.all(repaired[20, 8:20] == 2)
@@ -2444,7 +2460,7 @@ def test_signal_supported_repair_reserves_core_from_unrelated_earlier_owner():
     reversed_topology = replace(topology, path_owners=np.array([1, 1, 0]))
     reverse = lambda image: np.where(image > 0, 3 - image, 0)
     reversed_repair = _repair_signal_supported_skeleton(
-        reverse(labels), response, reverse(regions), reverse(bodies),
+        reverse(labels), _declared_shaft_admission(response), reverse(regions), reverse(bodies),
         minimum_response=100.0, crossing_topology=reversed_topology,
     )
     np.testing.assert_array_equal(reversed_repair, reverse(repaired))
@@ -2496,7 +2512,7 @@ def test_signal_supported_repair_bounds_compiled_search_to_owner_regions(monkeyp
 
     repaired = _repair_signal_supported_skeleton(
         labels,
-        response,
+        _declared_shaft_admission(response),
         owner_regions,
         cell_bodies,
         minimum_response=100.0,
@@ -2537,7 +2553,7 @@ def test_signal_supported_repair_rejects_unsupported_and_foreign_owner_routes():
 
     repaired = _repair_signal_supported_skeleton(
         labels,
-        response,
+        _declared_shaft_admission(response),
         owner_regions,
         cell_bodies,
         minimum_response=100.0,

@@ -414,7 +414,7 @@ class CellProfilerNeuriteEngineProfile:
         ).astype(np.int32, copy=False)
         owner_skeleton = _repair_signal_supported_skeleton(
             owner_skeleton,
-            outgrowth_response,
+            admission,
             secondary_owner_regions,
             cell_body_labels,
             minimum_response=outgrowth.intensity_above_local_background,
@@ -2089,7 +2089,7 @@ def _derive_signal_cell_bodies(
 
 def _repair_signal_supported_skeleton(
     labels: np.ndarray,
-    signal_response: np.ndarray,
+    admission: NeuriteAdmissionResult,
     owner_regions: np.ndarray,
     cell_body_labels: np.ndarray,
     *,
@@ -2100,18 +2100,21 @@ def _repair_signal_supported_skeleton(
 
     Each owner starts at a point inside its cell body. A deterministic
     multi-source least-cost search may traverse that body, already accepted
-    skeleton pixels, or pixels that both exceed the declared neurite-response
-    threshold and belong to the owner's propagated region. Unsupported or
-    foreign-owner fragments are removed instead of receiving inferred chords.
+    skeleton pixels, or admitted shaft pixels belonging to the owner's
+    propagated region. Local intensity alone does not establish shaft support:
+    the original enhancement/admission owner decides it. Resolved crossings
+    retain their separately qualified shared core. Unsupported or foreign-owner
+    fragments are removed instead of receiving inferred chords.
     """
 
     repaired = np.asarray(labels, dtype=np.int32).copy()
-    response = np.asarray(signal_response, dtype=float)
+    response = np.asarray(admission.response, dtype=float)
+    shaft_support = np.asarray(admission.mask, dtype=bool)
     regions = np.asarray(owner_regions, dtype=np.int32)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
-    if not repaired.shape == response.shape == regions.shape == bodies.shape:
+    if not repaired.shape == response.shape == shaft_support.shape == regions.shape == bodies.shape:
         raise ValueError(
-            "labels, signal_response, owner_regions, and cell_body_labels must "
+            "labels, admission, owner_regions, and cell_body_labels must "
             "have the same shape"
         )
     if not np.isfinite(minimum_response) or minimum_response < 0:
@@ -2142,6 +2145,7 @@ def _repair_signal_supported_skeleton(
         )
         local_repaired = repaired[owner_slice].copy()
         local_response = response[owner_slice]
+        local_shaft_support = shaft_support[owner_slice]
         local_regions = regions[owner_slice]
         local_bodies = bodies[owner_slice]
         body_mask = local_bodies == owner
@@ -2180,7 +2184,7 @@ def _repair_signal_supported_skeleton(
         # permanent exclusive neuron identity or crossing foreign bodies.
         local_repaired[shared_signal_support] = owner
         occupied_by_other_owner = (local_repaired > 0) & (local_repaired != owner)
-        signal_support = (local_response >= minimum_response) & (local_regions == owner)
+        signal_support = local_shaft_support & (local_regions == owner)
         allowed = (
             signal_support | original_owner | body_mask | shared_signal_support
         ) & ~occupied_by_other_owner & (
