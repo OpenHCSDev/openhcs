@@ -1,0 +1,9 @@
+{
+  "source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "workflows": 30,
+  "warmup_and_measured_scientific_comparisons": 120,
+  "all_declared_output_comparisons_pass": true,
+  "suite_terminal_sha256": "a673ac2b0de4eab70ce83a7884764e60936aca66658289e816470a19f3b71b73",
+  "status": "PASS",
+  "scope": "singlewell only; six other modes pending"
+}

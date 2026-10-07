@@ -1,0 +1,98 @@
+{
+  "purpose": "Prepared issue 1100 artifact layout; capture command/provenance and strict converter remain authorities",
+  "issue": "https://github.com/OpenHCSDev/openhcs/issues/1100",
+  "source_revision": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "record_name": "matched_worker_sweep_20261007",
+  "status": "PREPARATION_ONLY_NOT_QUALIFIED",
+  "capture_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1",
+  "converter_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/protocol/convert_matched_reports.py",
+  "converter_sha256": "2267362d2edf99ea0521234c0edcd30a647a3ec92d9e4f826d396ce2779a9d1c",
+  "mode_count": 7,
+  "expected_workflows_per_mode": 30,
+  "expected_warmup_and_measured_comparisons_per_mode": 120,
+  "ram": "Unavailable: retained matched harness has no process-tree RSS collector; no historical substitution",
+  "modes": [
+    {
+      "capture_mode": "12assignments-3workers",
+      "archive_mode": "12assignments-3workers",
+      "assignments": 12,
+      "openhcs_workers": 3,
+      "native_processes": 1,
+      "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/12assignments-3workers/capture/command.json",
+      "command_sha256": "bfa8d5c2edc6508c1baa51a88173f0b08384b06977788451a52939ec0033f088",
+      "terminal_present_at_preparation": false,
+      "qualification": "pending; no qualified summaries yet"
+    },
+    {
+      "capture_mode": "16assignments-1worker",
+      "archive_mode": "16assignments-1worker",
+      "assignments": 16,
+      "openhcs_workers": 1,
+      "native_processes": 1,
+      "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/16assignments-1worker/capture/command.json",
+      "command_sha256": "d40ec8d9ef62db50b6161760307dfc30b574f290477ce84ca0d65420e3249b25",
+      "terminal_present_at_preparation": false,
+      "qualification": "pending; no qualified summaries yet"
+    },
+    {
+      "capture_mode": "16assignments-2workers",
+      "archive_mode": "16assignments-2workers",
+      "assignments": 16,
+      "openhcs_workers": 2,
+      "native_processes": 1,
+      "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/16assignments-2workers/capture/command.json",
+      "command_sha256": "4e1e63c1d21886d97a2a3f8143bcea3d1151ce8827ff8f4c9c20c886ebfd9ec4",
+      "terminal_present_at_preparation": false,
+      "qualification": "pending; no qualified summaries yet"
+    },
+    {
+      "capture_mode": "16assignments-3workers",
+      "archive_mode": "16assignments-3workers",
+      "assignments": 16,
+      "openhcs_workers": 3,
+      "native_processes": 1,
+      "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/16assignments-3workers/capture/command.json",
+      "command_sha256": "f3a040e8ad4ace40c46bc7835624ccbfb9cd727771b7f7fd73808042b023d5f4",
+      "terminal_present_at_preparation": false,
+      "qualification": "pending; no qualified summaries yet"
+    },
+    {
+      "capture_mode": "16assignments-4workers",
+      "archive_mode": "16assignments-4workers",
+      "assignments": 16,
+      "openhcs_workers": 4,
+      "native_processes": 1,
+      "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/16assignments-4workers/capture/command.json",
+      "command_sha256": "81386b2e64d2806777b42f4ff93b7881681e6d865104cfe6e214b60ff8d8445c",
+      "terminal_present_at_preparation": false,
+      "qualification": "pending; no qualified summaries yet"
+    },
+    {
+      "capture_mode": "1assignment-1worker",
+      "archive_mode": "singlewell",
+      "assignments": 1,
+      "openhcs_workers": 1,
+      "native_processes": 1,
+      "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/1assignment-1worker/capture/command.json",
+      "command_sha256": "5fb340e21ae0d0a31deafa0f22133d0547c6cf71d46c0f7bac3fb865543ea6b0",
+      "terminal_present_at_preparation": false,
+      "qualification": "pending; no qualified summaries yet"
+    },
+    {
+      "capture_mode": "8assignments-2workers",
+      "archive_mode": "8assignments-2workers",
+      "assignments": 8,
+      "openhcs_workers": 2,
+      "native_processes": 1,
+      "command_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/command.json",
+      "command_sha256": "58e475257be97f670e7505e15be87d8c177aaea52d0aab9bbc1da32f9ca74405",
+      "terminal_present_at_preparation": false,
+      "qualification": "pending; no qualified summaries yet"
+    }
+  ],
+  "archive_owner_origin": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-figure-preparation-v1/archive_converted_modes.py",
+  "archive_owner": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/protocol/archive_converted_modes.py",
+  "archive_owner_sha256": "e9f19f615e9e52f55383a963933df7702ee0cfd185186d86945ea08986449522",
+  "render_owner": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/protocol/render_sweep.py",
+  "render_owner_sha256": "88908b37a4ef6fdbb7d4eeb9ecd864dbb4dd4e22b9c074a746d0a41ebd8f40dc"
+}
