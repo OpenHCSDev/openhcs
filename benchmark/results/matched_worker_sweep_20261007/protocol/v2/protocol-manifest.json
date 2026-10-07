@@ -125,6 +125,7 @@
   "archive_owner_path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007/protocol/v2/archive_converted_modes.py",
   "render_owner_path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007/protocol/render_sweep.py",
   "scheduler_owner_path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007/protocol/v2/run-revised-sweep.py",
-  "scheduler_owner_sha256": "ddb34c6bd38403425949dc92cffd36f560580b401f5ed2af2c7bf5bf7babb532",
-  "qualification_status": "Pending: prepared protocol does not assert completion of seven modes"
+  "scheduler_owner_sha256": "45d8c567c4900213f7fe96a5d2d3b40e57541c7302426ec06d9c96f1f4f55cca",
+  "qualification_status": "Pending: prepared protocol does not assert completion of seven modes",
+  "postqualification_render": "Existing render owner runs after all seven modes qualify; final terminal includes figures root only after successful rendering. Final visual/custody audit and merge remain required."
 }

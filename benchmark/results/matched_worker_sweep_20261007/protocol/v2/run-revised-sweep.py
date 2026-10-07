@@ -15,6 +15,7 @@ PYTHON = '/home/ts/code/projects/openhcs/.venv/bin/python'
 PLAN = RECORD / 'protocol/v2/protocol-manifest.json'
 CONVERTER = RECORD / 'protocol/v2/convert_matched_reports.py'
 ARCHIVER = RECORD / 'protocol/v2/archive_converted_modes.py'
+RENDERER = RECORD / 'protocol/render_sweep.py'
 
 def load(path):
     return json.loads(path.read_text())
@@ -48,6 +49,7 @@ plan = load(PLAN)
 assert plan['status'] == 'PREPARED_REVISED_CAPTURE_PROTOCOL'
 assert sha(CONVERTER) == plan['converter_sha256']
 assert sha(ARCHIVER) == plan['archive_owner_sha256']
+assert sha(RENDERER) == plan['render_owner_sha256']
 actual8 = SWEEP / '8assignments-2workers/capture'
 print('WAITING_FOR_ACTUAL8', flush=True)
 while not (actual8 / 'terminal.json').exists():
@@ -98,4 +100,6 @@ for mode in plan['modes']:
     preserve(capture / 'environment-source-seal.json', RECORD / 'protocol' / mode['archive_mode'] / 'environment-source-seal.json')
     print('FIRST_USE_ARCHIVED', mode['archive_mode'], flush=True)
 print('REVISED_ALL_MODES_QUALIFIED', flush=True)
-(SWEEP / 'revised-sweep.terminal.json').write_text(json.dumps({'returncode': 0, 'qualified_modes': [m['archive_mode'] for m in plan['modes']]}, indent=2) + '\n')
+run(harness_script(RENDERER, '--record', str(RECORD), '--protocol-manifest', str(PLAN), '--output-dir', str(RECORD / 'figures')))
+print('REVISED_FIGURES_RENDERED', flush=True)
+(SWEEP / 'revised-sweep.terminal.json').write_text(json.dumps({'returncode': 0, 'qualified_modes': [m['archive_mode'] for m in plan['modes']], 'rendered_figures_root': str(RECORD / 'figures')}, indent=2) + '\n')
