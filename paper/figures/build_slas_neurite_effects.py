@@ -5,6 +5,7 @@ import json
 from math import isclose
 from pathlib import Path
 from statistics import mean, stdev
+from textwrap import fill
 
 from build_slas_visual_story import BLUE, TEAL, INK, MUTED, ROOT, FigureSheet
 from compare_personal_neurite import DEFAULT_METRICS, METRICS, endpoint_declarations, read_rows
@@ -14,15 +15,25 @@ class NeuriteEffectFigure(FigureSheet):
     """One well table supplies points for every requested endpoint panel."""
 
     def __init__(self, tables: Path, *, stem: str, metrics=DEFAULT_METRICS):
-        super().__init__(stem, "Neurite outgrowth: drug responses across methods", 3.4 * len(metrics) + .8)
-        self.source(Path(__file__))
-        self.source(ROOT / "paper/figures/compare_personal_neurite.py")
+        super().__init__(stem, "Neurite outgrowth: drug responses across methods", 2.0 * len(metrics) + 1.4)
+        protocol_label = self.draw_panels(self, tables, metrics=metrics)
+        self.text(3, 91, protocol_label, size=11, color=MUTED)
+        self.text(3, 8, "Dots: two technical wells. Marks and whiskers: mean ± between-well SD, not confidence intervals.", size=10)
+        self.text(3, 4.5, "Each curve uses its own zero-dose DMSO mean. Dose positions are equally spaced for display.", size=10)
+        self.text(3, 1, "Within-method ratios compare response; they do not establish equivalent segmentation or absolute lengths.", size=10)
+
+    @staticmethod
+    def draw_panels(sheet: FigureSheet, tables: Path, *, metrics=DEFAULT_METRICS,
+                    bounds=(0, 0, 100, 100), start_letter="A"):
+        """Draw measured panels directly into a standalone or composite sheet."""
+        sheet.source(Path(__file__))
+        sheet.source(ROOT / "paper/figures/compare_personal_neurite.py")
         for name in ("joined_wells.csv", "treatment_effects.csv", "source_evidence.json"):
-            self.source(tables / name)
+            sheet.source(tables / name)
         wells = read_rows(tables / "joined_wells.csv")
         effects = read_rows(tables / "treatment_effects.csv")
         evidence = json.loads((tables / "source_evidence.json").read_text())
-        self.text(3, 91, evidence["protocol_figure_label"], size=11, color=MUTED)
+        x, y, width, extent = (value / 100 for value in bounds)
         declarations = endpoint_declarations()
         conditions = tuple(sorted({item["condition"] for item in effects}))
         limits = {}
@@ -36,12 +47,16 @@ class NeuriteEffectFigure(FigureSheet):
             limits[metric] = (lower - padding, upper + padding)
         for column, condition in enumerate(conditions):
             for row, metric in enumerate(metrics):
-                left = .10 + column * (.90 / len(conditions))
-                bottom = .17 + (len(metrics) - 1 - row) * (.71 / len(metrics))
-                height = .48 / len(metrics)
-                axis = self.figure.add_axes((left, bottom, .72 / len(conditions), height))
-                self.panel(chr(65 + row * len(conditions) + column), condition,
-                           left * 100, (bottom + height + .02) * 100)
+                left = x + width * (.14 + column * (.90 / len(conditions)))
+                bottom = y + extent * (.12 + (len(metrics) - 1 - row) * (.75 / len(metrics)))
+                height = extent * .55 / len(metrics)
+                axis = sheet.figure.add_axes((left, bottom, width * .68 / len(conditions), height))
+                letter = chr(ord(start_letter) + row * len(conditions) + column)
+                if row == 0:
+                    sheet.panel(letter, condition, left * 100, (bottom + height + extent * .02) * 100)
+                else:
+                    axis.text(.02, .98, letter, transform=axis.transAxes,
+                              va="top", fontsize=14, weight="bold", color=BLUE)
                 selected = sorted((item for item in effects
                                    if item["condition"] == condition and item["metric"] == metric),
                                   key=lambda item: float(item["dose_uM"]))
@@ -73,7 +88,7 @@ class NeuriteEffectFigure(FigureSheet):
                     axis.plot(positions, means, color=color, linewidth=1.1, label=label, zorder=1)
                 axis.axhline(1, color=MUTED, linewidth=0.8, linestyle="--", zorder=0)
                 axis.set(xlim=(-0.5, 4.5), ylim=limits[metric],
-                         ylabel=declarations[metric].label, xlabel="Concentration (µM)")
+                         ylabel=fill(declarations[metric].label, width=20), xlabel="Concentration (µM)")
                 axis.set_xticks(range(5), [item["dose_uM"] for item in selected])
                 axis.tick_params(labelsize=9, colors=INK)
                 axis.spines[["top", "right"]].set_visible(False)
@@ -81,9 +96,7 @@ class NeuriteEffectFigure(FigureSheet):
                 axis.set_axisbelow(True)
                 if row == 0 and column == 0:
                     axis.legend(fontsize=9, frameon=False)
-        self.text(3, 8, "Dots: two technical wells. Marks and whiskers: mean ± between-well SD, not confidence intervals.", size=10)
-        self.text(3, 4.5, "Each curve uses its own zero-dose DMSO mean. Dose positions are equally spaced for display.", size=10)
-        self.text(3, 1, "Within-method ratios compare response; they do not establish equivalent segmentation or absolute lengths.", size=10)
+        return evidence["protocol_figure_label"]
 
 
 if __name__ == "__main__":

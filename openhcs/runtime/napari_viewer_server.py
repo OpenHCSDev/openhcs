@@ -234,10 +234,22 @@ NapariViewerProjectionRequestT = TypeVar("NapariViewerProjectionRequestT")
 
 @dataclass(frozen=True)
 class NapariResultSelectionSurface:
-    """The one dock/widget pair bound to native Napari result state."""
+    """One native mount and the event subscriptions owned by that mount."""
 
     dock: QDockWidget
     manager: "QRoiManager"
+    subscriptions: ExitStack = field(default_factory=ExitStack, init=False, repr=False, compare=False)
+
+    def connect_event(self, emitter, callback: Callable) -> None:
+        """Keep each non-Qt event connection within this mount's lifetime."""
+
+        emitter.connect(callback)
+        self.subscriptions.callback(emitter.disconnect, callback)
+
+    def release(self) -> None:
+        """Disconnect observers before disposing their native presentation."""
+
+        self.subscriptions.close()
 
 
 def _apply_default_window_layout(viewer, result_selection_dock) -> None:
@@ -3684,6 +3696,11 @@ class NapariResultSelectionController:
 
         self._selection_observers.append(callback)
 
+    def disconnect_selection_observer(self, callback: Callable[[], None]) -> None:
+        """Release the exact observer registered by a native mount."""
+
+        self._selection_observers.remove(callback)
+
     def _notify_selection_observers(self) -> None:
         for callback in tuple(self._selection_observers):
             callback()
@@ -3894,7 +3911,7 @@ class NapariResultSelectionController:
 
 
 def _install_result_selection_toolbar(
-    result_selection_dock: QDockWidget,
+    surface: NapariResultSelectionSurface,
     controller: NapariResultSelectionController,
 ):
     """Expose native selection thickness beside the result-table workflow."""
@@ -3902,8 +3919,10 @@ def _install_result_selection_toolbar(
     from qtpy.QtGui import QColor
     from qtpy.QtWidgets import QColorDialog, QLabel, QPushButton, QSpinBox, QToolBar
 
-    qt_window = result_selection_dock.window()
+    qt_window = surface.dock.window()
     toolbar = QToolBar("OpenHCS ROI selection", qt_window)
+    surface.subscriptions.callback(toolbar.deleteLater)
+    surface.subscriptions.callback(toolbar.hide)
     toolbar.setObjectName("openhcs_roi_selection_toolbar")
     label = QLabel("Selected ROI outline:", toolbar)
     thickness = QSpinBox(toolbar)
@@ -4048,18 +4067,19 @@ def _install_result_selection_toolbar(
             )
             sync_group_color()
 
-    highlight_settings.events.highlight_thickness.connect(sync_from_preferences)
-    highlight_settings.events.highlight_color.connect(sync_color_from_preferences)
+    surface.connect_event(highlight_settings.events.highlight_thickness, sync_from_preferences)
+    surface.connect_event(highlight_settings.events.highlight_color, sync_color_from_preferences)
     color_button.clicked.connect(choose_color)
     layer_color_button.clicked.connect(choose_layer_color)
     group_color_button.clicked.connect(choose_group_color)
     controller.connect_selection_observer(sync_group_color)
+    surface.subscriptions.callback(controller.disconnect_selection_observer, sync_group_color)
     if controller.server.viewer is not None:
-        controller.server.viewer.layers.selection.events.active.connect(
-            sync_layer_color
+        surface.connect_event(
+            controller.server.viewer.layers.selection.events.active, sync_layer_color
         )
-        controller.server.viewer.layers.selection.events.active.connect(
-            sync_group_color
+        surface.connect_event(
+            controller.server.viewer.layers.selection.events.active, sync_group_color
         )
     toolbar.addWidget(label)
     toolbar.addWidget(thickness)
@@ -6486,7 +6506,6 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         self.process_launch = request.process_launch
         self.viewer = None
         self.result_selection_surface: NapariResultSelectionSurface | None = None
-        self.result_selection_toolbar = None
         self.layer_route_state = NapariLayerRouteStateStore.empty()
         self.component_groups = NapariComponentGroupStore()
         self.component_name_metadata = ViewerComponentNameMetadata.empty()
@@ -6547,7 +6566,51 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 dock=dock,
                 manager=manager,
             )
+            surface = self.result_selection_surface
+            dock.destroyed.connect(partial(self._result_selection_dock_destroyed, surface))
+            manager.about_to_destroy.connect(partial(self._result_selection_manager_retiring, surface))
+            manager.destroyed.connect(partial(self._result_selection_manager_destroyed, surface))
+            _install_result_selection_toolbar(surface, self.result_selection_controller)
         return self.result_selection_surface
+
+    def _result_selection_dock_destroyed(
+        self, surface: NapariResultSelectionSurface, _destroyed: object = None,
+    ) -> None:
+        """Retire this mount, including Napari's detached inner widget."""
+
+        if self.result_selection_surface is not surface:
+            return
+        self.result_selection_surface = None
+        surface.release()
+        surface.manager.close()
+        surface.manager.deleteLater()
+
+    def _result_selection_manager_retiring(
+        self, surface: NapariResultSelectionSurface, _destroyed: object = None,
+    ) -> None:
+        """Detach the mount before its inner QWidget's deferred destruction."""
+
+        if self.result_selection_surface is not surface:
+            return
+        self.result_selection_surface = None
+        surface.release()
+        self.viewer.window.remove_dock_widget(surface.dock)
+
+    def _result_selection_manager_destroyed(
+        self, surface: NapariResultSelectionSurface, _destroyed: object = None,
+    ) -> None:
+        """Retire immediate native deletion without touching the dying widget."""
+
+        if self.result_selection_surface is not surface:
+            return
+        self.result_selection_surface = None
+        surface.release()
+        # The dock still lives. Give Qt ownership of this callback so window
+        # teardown cancels it, and detach only after QWidget destruction returns.
+        timer = QTimer(surface.dock)
+        timer.setSingleShot(True)
+        timer.timeout.connect(partial(self.viewer.window.remove_dock_widget, surface.dock))
+        timer.start(0)
 
     def start(self) -> None:
         """Bind each ZMQ endpoint in its dedicated socket-owner thread."""
@@ -6884,10 +6947,6 @@ def run_napari_viewer_process(
         )
         result_selection_surface = server.require_result_selection_surface()
         _apply_default_window_layout(viewer, result_selection_surface.dock)
-        server.result_selection_toolbar = _install_result_selection_toolbar(
-            result_selection_surface.dock,
-            server.result_selection_controller,
-        )
         if scope_accent_color is not None:
             _apply_scope_accent_styling(
                 result_selection_surface.dock,

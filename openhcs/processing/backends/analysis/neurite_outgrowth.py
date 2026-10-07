@@ -8,10 +8,10 @@ segmentation leaves and measures the final soma-rooted neurite topology.
 
 import heapq
 from collections import Counter, defaultdict
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, fields, replace
 from enum import Enum
 from itertools import combinations
-from typing import Iterable, Mapping, NamedTuple, Sequence, Tuple, get_type_hints
+from typing import Iterable, Mapping, Sequence, Tuple, get_type_hints
 
 import numpy as np
 from scipy import ndimage as ndi
@@ -234,6 +234,7 @@ class CellProfilerNeuriteEngineProfile:
             NEURITE_TOPOLOGY_DROPPED_TRACE_OUTPUT,
             NEURITE_TOPOLOGY_ADDED_TRACE_OUTPUT,
             *NeuriteAdmissionPlanes.artifact_specs(),
+            *NeuriteOwnershipPlanes.artifact_specs(),
             cls.morphology_output(),
         )
 
@@ -305,6 +306,7 @@ class CellProfilerNeuriteEngineProfile:
                 cell_body,
                 coordinate_scale,
                 bright_objects=bright_objects,
+                maximum_shaft_width_px=outgrowth.maximum_width_px(coordinate_scale),
             )
             keep_signal_body = (
                 np.bincount(
@@ -340,7 +342,6 @@ class CellProfilerNeuriteEngineProfile:
             bright_objects=bright_objects,
         )
         outgrowth_binary = admission.mask
-        outgrowth_skeleton = admission.skeleton
         outgrowth_response = admission.response
         outgrowth_width_px = outgrowth.maximum_width_px(coordinate_scale)
         nuclear_seed_mode = use_nuclear_stain and body_detection_channel_index == int(
@@ -376,6 +377,7 @@ class CellProfilerNeuriteEngineProfile:
                 bright_objects=bright_objects,
             )
 
+        outgrowth_skeleton = admission.skeleton_for(cell_body_labels)
         topology = _analyze_topology(
             outgrowth_skeleton,
             cell_body_labels,
@@ -386,6 +388,7 @@ class CellProfilerNeuriteEngineProfile:
             outgrowth_skeleton.shape,
             topology,
         )
+        initial_owned_trace = owner_skeleton.copy()
         initial_topology_owned_trace_pixels = int(
             np.count_nonzero((owner_skeleton > 0) & (cell_body_labels == 0))
         )
@@ -398,6 +401,7 @@ class CellProfilerNeuriteEngineProfile:
         secondary_adopted_trace_pixels = int(
             np.count_nonzero((owner_skeleton > 0) & (cell_body_labels == 0))
         )
+        adopted_owned_trace = owner_skeleton.copy()
         crossing_support = _render_crossing_support(
             outgrowth_skeleton.shape,
             topology,
@@ -414,7 +418,7 @@ class CellProfilerNeuriteEngineProfile:
         ).astype(np.int32, copy=False)
         owner_skeleton = _repair_signal_supported_skeleton(
             owner_skeleton,
-            outgrowth_response,
+            admission,
             secondary_owner_regions,
             cell_body_labels,
             minimum_response=outgrowth.intensity_above_local_background,
@@ -448,7 +452,7 @@ class CellProfilerNeuriteEngineProfile:
         physically_soma_rooted_trace = _physically_soma_rooted_owner_mask(
             pre_topology_owner_skeleton,
             cell_body_labels,
-            maximum_root_distance=max(1, int(np.ceil(outgrowth_width_px)) + 2),
+            maximum_root_distance=_TopologyResult.soma_attachment_radius(outgrowth_width_px),
         )
         topology_dropped_trace = (
             (pre_topology_owner_skeleton > 0)
@@ -644,6 +648,9 @@ class CellProfilerNeuriteEngineProfile:
                 (neurite_channel_index,),
             ),
             *admission.planes.selected_outputs(neurite_channel_index),
+            *NeuriteOwnershipPlanes(
+                initial_owned_trace, adopted_owned_trace, pre_topology_owner_skeleton,
+            ).selected_outputs(neurite_channel_index),
             neurite_morphology,
         )
 
@@ -752,6 +759,93 @@ class MetaXpressCellBodySettings:
     def minimum_area_px(self, coordinate_scale: float) -> float:
         """Project this declaration's minimum body area into image pixels."""
         return self.minimum_area / coordinate_scale**2
+
+    @staticmethod
+    def _inscribed_disc_support(
+        radius: np.ndarray, medial_support: np.ndarray,
+    ) -> np.ndarray:
+        """Project original medial discs without adding a new geometric rule."""
+        support = np.zeros(radius.shape, dtype=bool)
+        for row, column in np.argwhere(medial_support):
+            disc_radius = float(radius[row, column])
+            extent = int(np.ceil(disc_radius))
+            row_start, row_stop = (
+                max(0, row - extent), min(radius.shape[0], row + extent + 1),
+            )
+            column_start, column_stop = (
+                max(0, column - extent), min(radius.shape[1], column + extent + 1),
+            )
+            rows, columns = np.ogrid[row_start:row_stop, column_start:column_stop]
+            disc = (rows - row) ** 2 + (columns - column) ** 2 < disc_radius**2
+            support[row_start:row_stop, column_start:column_stop] |= disc
+        return support
+
+    def separate_terminal_shafts(
+        self,
+        body: np.ndarray,
+        nuclear_seed: np.ndarray,
+        maximum_shaft_width_px: float,
+    ) -> np.ndarray:
+        """Separate long thin terminal arms without eroding the soma boundary.
+
+        The outgrowth declaration supplies shaft width; the independent minimum
+        inscribed-diameter acceptance gate does not classify local cytoplasm.
+        Broad medial discs are soma support only in a projected support region
+        connected to the nucleus. A locally wide shaft junction cannot protect
+        itself merely by joining the soma through a thin shaft.
+        Thin connections between protected regions and short irregular boundary
+        lobes remain soma. Only terminal thin components extending farther than
+        one shaft width from their sole attachment are removed.
+
+        Original inscribed discs project that decision back to the boundary.
+        Shared disc support, nuclear pixels and boundary pixels not represented
+        by removed discs survive only while connected to the nuclear seed.
+        No reconstruction through the original mask can regrow the removed shaft.
+        """
+        body = np.asarray(body, dtype=bool)
+        radius = ndi.distance_transform_edt(np.pad(body, 1))[1:-1, 1:-1]
+        skeleton_payload = _raw_processing_leaf(medialaxis)(
+            np.pad(body, 1).astype(np.float32, copy=False)
+        )
+        skeleton = np.asarray(image_payload_data(skeleton_payload))[1:-1, 1:-1] > 0
+        distance_to_nucleus = ndi.distance_transform_edt(~nuclear_seed)
+        broad_medial = skeleton & (
+            (2.0 * radius - 1.0 > maximum_shaft_width_px)
+            | (distance_to_nucleus < radius)
+        )
+        connectivity = np.ones((3, 3), dtype=bool)
+        broad_support = body & self._inscribed_disc_support(radius, broad_medial)
+        broad_regions, _ = ndi.label(broad_support, connectivity)
+        nuclear_regions = np.unique(broad_regions[broad_support & nuclear_seed])
+        soma_support = broad_support & np.isin(broad_regions, nuclear_regions)
+        protected = skeleton & soma_support
+        degrees = ndi.convolve(
+            skeleton.astype(np.int32), connectivity, mode="constant", cval=0
+        ) - skeleton
+        thin_components, count = ndi.label(skeleton & ~protected, connectivity)
+        removed_medial = np.zeros(body.shape, dtype=bool)
+        for component_id in range(1, count + 1):
+            component = thin_components == component_id
+            if not np.any(component & (degrees <= 1)):
+                continue
+            attachments = ndi.binary_dilation(component, connectivity) & protected
+            _, attachment_count = ndi.label(attachments, connectivity)
+            if attachment_count != 1:
+                continue
+            distance_from_attachment = ndi.distance_transform_edt(~attachments)
+            if np.max(distance_from_attachment[component]) > maximum_shaft_width_px:
+                removed_medial |= component
+        if not np.any(removed_medial):
+            return body
+
+        retained_support = self._inscribed_disc_support(
+            radius, skeleton & ~removed_medial,
+        )
+        removed_support = self._inscribed_disc_support(radius, removed_medial)
+        retained = body & (~removed_support | retained_support | nuclear_seed)
+        components, _ = ndi.label(retained, connectivity)
+        seeded_components = np.unique(components[retained & nuclear_seed])
+        return retained & np.isin(components, seeded_components)
 
     def contract_candidates(
         self,
@@ -1118,7 +1212,30 @@ NEURITE_TOPOLOGY_ADDED_TRACE_OUTPUT = _neurite_qa_checkpoint_output(
 )
 
 
-class NeuriteAdmissionPlanes(NamedTuple):
+@dataclass(frozen=True)
+class NeuriteDiagnosticPlanes:
+    """The declared plane fields own checkpoint order and projection."""
+
+    @classmethod
+    def artifact_specs(cls) -> tuple[ArtifactSpec, ...]:
+        return tuple(
+            _neurite_qa_checkpoint_output(f"neurite_{field.name}")
+            for field in fields(cls)
+        )
+
+    def selected_outputs(
+        self, source_index: int
+    ) -> tuple[SelectedDiagnosticPlaneImageOutput, ...]:
+        return tuple(
+            SelectedDiagnosticPlaneImageOutput(
+                getattr(self, field.name)[None], (source_index,),
+            )
+            for field in fields(self)
+        )
+
+
+@dataclass(frozen=True)
+class NeuriteAdmissionPlanes(NeuriteDiagnosticPlanes):
     """Original consumed stage values; field order owns checkpoint order.
 
     threshold_support precedes optional seeded-component retention;
@@ -1132,20 +1249,22 @@ class NeuriteAdmissionPlanes(NamedTuple):
     retained_support: np.ndarray
     local_response: np.ndarray
     local_support: np.ndarray
+    soma_attachment_response: np.ndarray
 
-    @classmethod
-    def artifact_specs(cls) -> tuple[ArtifactSpec, ...]:
-        return tuple(
-            _neurite_qa_checkpoint_output(f"neurite_{name}") for name in cls._fields
-        )
 
-    def selected_outputs(
-        self, source_index: int
-    ) -> tuple[SelectedDiagnosticPlaneImageOutput, ...]:
-        return tuple(
-            SelectedDiagnosticPlaneImageOutput(plane[None], (source_index,))
-            for plane in self
-        )
+
+@dataclass(frozen=True)
+class NeuriteOwnershipPlanes(NeuriteDiagnosticPlanes):
+    """Original owner labels at each graph stage, before final topology.
+
+    These are execution snapshots, not an alternative ownership decision.
+    Repaired trace excludes soma interiors, matching the consumed final graph
+    input; initial and adopted trace preserve the corresponding original inputs.
+    """
+
+    initial_owned_trace: np.ndarray
+    adopted_owned_trace: np.ndarray
+    repaired_owned_trace: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -1153,12 +1272,46 @@ class NeuriteAdmissionResult:
     """Detection and diagnostic consumers share one original execution."""
 
     mask: np.ndarray
-    skeleton: np.ndarray
     planes: NeuriteAdmissionPlanes
+    outgrowth_width_px: float
 
     @property
     def response(self) -> np.ndarray:
         return self.planes.local_response
+
+    def soma_attachment_labels(
+        self, cell_body_labels: np.ndarray, minimum_response: float,
+    ) -> np.ndarray:
+        """Qualify the declared root neighborhood at the soma signal scale.
+
+        Tubeness and the narrow opening can vanish on a broad soma-to-shaft
+        transition. This distinct support is confined to the original root
+        neighborhood and nearest accepted soma; it cannot admit remote tracks.
+        """
+        _, neighborhood = _TopologyResult.soma_neighborhood(
+            cell_body_labels, self.outgrowth_width_px,
+        )
+        return np.where(
+            self.planes.soma_attachment_response >= minimum_response,
+            neighborhood, 0,
+        ).astype(np.int32, copy=False)
+
+    def skeleton_for(self, cell_body_labels: np.ndarray) -> np.ndarray:
+        """Thin admitted shafts with accepted somas as solid root support.
+
+        Tubeness can respond to a soma's perimeter without its interior. Thinning
+        that hollow response first invents a ring which survives later soma
+        exclusion as fringe junctions. The accepted body labels already own
+        soma support; use them before thinning, without filling genuine shaft
+        loops or changing the independently retained admission evidence.
+        """
+        bodies = np.asarray(cell_body_labels)
+        if bodies.shape != self.mask.shape:
+            raise ValueError("cell bodies and neurite admission must share a shape")
+        payload = _raw_processing_leaf(medialaxis)(
+            (self.mask | (bodies > 0)).astype(np.float32, copy=False)
+        )
+        return np.asarray(image_payload_data(payload)) > 0
 
 
 # Both callable ABIs derive diagnostic slots from the same stage declaration.
@@ -1168,6 +1321,7 @@ NeuriteOutgrowthRuntimeTuple = Tuple[(
     SelectedPlaneImageOutput, SelectedPlaneImageOutput, SelectedPlaneImageOutput,
     SelectedPlaneImageOutput, SelectedPlaneImageOutput,
     *(SelectedDiagnosticPlaneImageOutput for _ in get_type_hints(NeuriteAdmissionPlanes)),
+    *(SelectedDiagnosticPlaneImageOutput for _ in get_type_hints(NeuriteOwnershipPlanes)),
     SpatialGraph,
 )]
 
@@ -1216,6 +1370,139 @@ class _TopologyResult:
     root_paths_by_cell: Mapping[int, tuple[int, ...]]
     branch_nodes_by_cell: Mapping[int, tuple[int, ...]]
     resolved_crossings: tuple[_ResolvedCrossing, ...]
+
+    @staticmethod
+    def soma_attachment_radius(outgrowth_width_px: float) -> int:
+        return max(1, int(np.ceil(outgrowth_width_px)) + 2)
+
+    @classmethod
+    def soma_neighborhood(
+        cls, cell_body_labels: np.ndarray, outgrowth_width_px: float,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        distance, nearest = ndi.distance_transform_edt(
+            cell_body_labels == 0, return_indices=True,
+        )
+        labels = np.where(
+            distance <= cls.soma_attachment_radius(outgrowth_width_px),
+            cell_body_labels[tuple(nearest)], 0,
+        )
+        return distance, labels
+
+    @classmethod
+    def soma_ownership_seeds(
+        cls, cell_body_labels: np.ndarray, outgrowth_width_px: float,
+        path_coordinates: Sequence[np.ndarray],
+    ) -> dict[int, tuple[int, ...]]:
+        """Near-body evidence seeds ownership, not biological process count."""
+        _, neighborhood = cls.soma_neighborhood(cell_body_labels, outgrowth_width_px)
+        roots = {}
+        for path, coordinates in enumerate(path_coordinates):
+            labels = neighborhood[tuple(coordinates.T)]
+            labels = labels[labels > 0]
+            if labels.size:
+                roots[path] = tuple(label for label, _ in Counter(map(int, labels)).most_common())
+        return roots
+
+    @classmethod
+    def soma_process_roots(
+        cls, cell_body_labels: np.ndarray, outgrowth_width_px: float,
+        path_coordinates: Sequence[np.ndarray],
+        transitions: Mapping[int, Iterable[int]],
+        path_owners: np.ndarray,
+    ) -> dict[int, tuple[int, ...]]:
+        """Seed proximal attachments, not every daughter in the root zone.
+
+        A near-soma branch can put its stem and daughters inside the same
+        neighborhood. Only a local minimum of distance to that soma starts a
+        process. Connected equal-distance paths form one attachment plateau;
+        distinct exits separated by a more distal junction remain separate.
+        """
+        distance, neighborhood = cls.soma_neighborhood(
+            cell_body_labels, outgrowth_width_px,
+        )
+        proximity_by_owner: dict[int, dict[int, float]] = defaultdict(dict)
+        for path, coordinates in enumerate(path_coordinates):
+            owner = int(path_owners[path])
+            if owner <= 0:
+                continue
+            labels = neighborhood[tuple(coordinates.T)]
+            path_distances = distance[tuple(coordinates.T)]
+            if np.any(labels == owner):
+                proximity_by_owner[owner][path] = float(
+                    path_distances[labels == owner].min()
+                )
+        roots: dict[int, list[int]] = defaultdict(list)
+        for owner, proximity in proximity_by_owner.items():
+            remaining = set(proximity)
+            while remaining:
+                seed = min(remaining)
+                plateau = {seed}
+                frontier = [seed]
+                remaining.remove(seed)
+                while frontier:
+                    path = frontier.pop()
+                    adjacent = {
+                        neighbor for neighbor in transitions[path]
+                        if neighbor in remaining
+                        and proximity[neighbor] == proximity[seed]
+                    }
+                    remaining.difference_update(adjacent)
+                    plateau.update(adjacent)
+                    frontier.extend(sorted(adjacent))
+                if any(
+                    neighbor in proximity
+                    and proximity[neighbor] < proximity[seed]
+                    for path in plateau for neighbor in transitions[path]
+                ):
+                    continue
+                roots[owner].append(min(plateau))
+        return {owner: tuple(sorted(paths)) for owner, paths in roots.items()}
+
+    @staticmethod
+    def classify_owned_endpoints(
+        path_owners: np.ndarray,
+        path_endpoint_groups: Sequence[Sequence[int]],
+        crossing_core_paths: set[int],
+        endpoint_group_coordinates: Mapping[int, tuple[float, float]],
+        *,
+        merge_radius: float,
+    ) -> tuple[np.ndarray, dict[int, tuple[int, ...]]]:
+        """Derive path types and branch events from the same final ownership.
+
+        Logical crossing groups can span several physical skeleton nodes. A
+        physical anchor's incidence is therefore not their degree. Count
+        distinct owned paths at each logical endpoint, excluding crossing
+        cores and counting a closed path only once for branch eligibility.
+        Branch identities are endpoint-group IDs, like the exported graph.
+        """
+        endpoint_paths: dict[tuple[int, int], set[int]] = defaultdict(set)
+        for path_index, groups in enumerate(path_endpoint_groups):
+            owner = int(path_owners[path_index])
+            if owner > 0 and path_index not in crossing_core_paths:
+                for group in set(groups):
+                    endpoint_paths[owner, group].add(path_index)
+        branch_groups: dict[int, list[int]] = defaultdict(list)
+        for (owner, group), paths in endpoint_paths.items():
+            if len(paths) >= 3:
+                branch_groups[owner].append(group)
+        branch_types = np.zeros(len(path_owners), dtype=np.int32)
+        for path_index, groups in enumerate(path_endpoint_groups):
+            owner = int(path_owners[path_index])
+            if owner <= 0 or path_index in crossing_core_paths:
+                continue
+            branch_types[path_index] = (
+                3 if groups[0] == groups[1] else sum(
+                    len(endpoint_paths[owner, group]) >= 3 for group in groups
+                )
+            )
+        coordinates = {
+            group: np.asarray(coordinate)
+            for group, coordinate in endpoint_group_coordinates.items()
+        }
+        return branch_types, {
+            owner: _merge_nearby_nodes(groups, coordinates, radius=merge_radius)
+            for owner, groups in branch_groups.items()
+        }
 
     @property
     def crossing_nodes(self) -> frozenset[int]:
@@ -1784,18 +2071,17 @@ def _identify_neurites_cellprofiler(
         bright_objects=bright_objects,
     )
     local_support = response >= settings.intensity_above_local_background
-    outgrowth_mask = cp_mask & local_support
-    skeleton_payload = _raw_processing_leaf(medialaxis)(
-        outgrowth_mask.astype(np.float32, copy=False)
+    soma_attachment_response = local_background_response(
+        image, object_width_px=body_width_px, bright_objects=bright_objects,
     )
-    skeleton = np.asarray(image_payload_data(skeleton_payload)) > 0
+    outgrowth_mask = cp_mask & local_support
     return NeuriteAdmissionResult(
         outgrowth_mask,
-        skeleton,
         NeuriteAdmissionPlanes(
             np.asarray(image_payload_data(enhanced)), threshold_support, cp_mask,
-            response, local_support,
+            response, local_support, soma_attachment_response,
         ),
+        outgrowth_width_px,
     )
 
 
@@ -1941,8 +2227,14 @@ def _derive_signal_cell_bodies(
     coordinate_scale: float,
     *,
     bright_objects: bool,
+    maximum_shaft_width_px: float,
 ) -> np.ndarray:
-    """Fill bounded soma signal assigned to its nearest nuclear seed."""
+    """Fill soma signal near its nearest seed; qualify short-axis width afterward.
+
+    A nucleus need not be central in its cytoplasm. The declared growth scale
+    bounds distance from nuclear support, not distance from its centroid;
+    imposing a centroid circle cuts supported soma lobes into false neurites.
+    """
 
     seeds = np.asarray(nuclear_seed_labels, dtype=np.int32)
     if seeds.shape != neurite_image.shape:
@@ -1998,7 +2290,6 @@ def _derive_signal_cell_bodies(
         ) ** 2
         candidate = (
             (nearest_seed == owner)
-            & (distance_from_centroid_squared <= maximum_radius_px**2)
             & (distance_to_nearest_seed <= maximum_radius_px)
             & local_body_foreground
         )
@@ -2016,26 +2307,27 @@ def _derive_signal_cell_bodies(
                 value,
             ),
         )
-        body = ndi.binary_fill_holes(components == component)
+        body = settings.separate_terminal_shafts(
+            ndi.binary_fill_holes(components == component),
+            seed,
+            maximum_shaft_width_px,
+        )
         if np.count_nonzero(body) < minimum_area_px:
             continue
         local_bodies = bodies[owner_slice]
         local_bodies[body] = owner
 
-    # Later seeds can overwrite shared pixels after an earlier body passed the
-    # area check. Reapply the public minimum-area contract to the final masks.
-    final_areas = np.bincount(
-        bodies.ravel(),
-        minlength=int(seeds.max()) + 1,
-    )
-    keep = final_areas >= minimum_area_px
-    keep[0] = False
+    # Hole filling and later seeds can change an admitted region's geometry and
+    # response. Qualify the final masks through the same declared body contract
+    # as compact and propagated bodies, including the independent lower-size
+    # gate. Keep nuclear identities here; the caller owns dense relabelling.
+    keep = settings.contract_candidates(bodies, response, coordinate_scale)
     return np.where(keep[bodies], bodies, 0).astype(np.int32, copy=False)
 
 
 def _repair_signal_supported_skeleton(
     labels: np.ndarray,
-    signal_response: np.ndarray,
+    admission: NeuriteAdmissionResult,
     owner_regions: np.ndarray,
     cell_body_labels: np.ndarray,
     *,
@@ -2046,22 +2338,27 @@ def _repair_signal_supported_skeleton(
 
     Each owner starts at a point inside its cell body. A deterministic
     multi-source least-cost search may traverse that body, already accepted
-    skeleton pixels, or pixels that both exceed the declared neurite-response
-    threshold and belong to the owner's propagated region. Unsupported or
-    foreign-owner fragments are removed instead of receiving inferred chords.
+    skeleton pixels, or admitted shaft pixels belonging to the owner's
+    propagated region. Local intensity alone does not establish shaft support:
+    the original enhancement/admission owner decides it. Resolved crossings
+    retain their separately qualified shared core. Unsupported or foreign-owner
+    fragments are removed instead of receiving inferred chords.
     """
 
     repaired = np.asarray(labels, dtype=np.int32).copy()
-    response = np.asarray(signal_response, dtype=float)
+    response = np.asarray(admission.response, dtype=float)
+    shaft_support = np.asarray(admission.mask, dtype=bool)
     regions = np.asarray(owner_regions, dtype=np.int32)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
-    if not repaired.shape == response.shape == regions.shape == bodies.shape:
+    if not repaired.shape == response.shape == shaft_support.shape == regions.shape == bodies.shape:
         raise ValueError(
-            "labels, signal_response, owner_regions, and cell_body_labels must "
+            "labels, admission, owner_regions, and cell_body_labels must "
             "have the same shape"
         )
     if not np.isfinite(minimum_response) or minimum_response < 0:
         raise ValueError("minimum_response must be finite and >= 0")
+
+    soma_attachments = admission.soma_attachment_labels(bodies, minimum_response)
 
     connectivity = np.ones((3, 3), dtype=bool)
     owner_bounds: dict[int, list[tuple[int, int, int, int]]] = defaultdict(list)
@@ -2088,9 +2385,14 @@ def _repair_signal_supported_skeleton(
         )
         local_repaired = repaired[owner_slice].copy()
         local_response = response[owner_slice]
+        local_shaft_support = shaft_support[owner_slice]
         local_regions = regions[owner_slice]
         local_bodies = bodies[owner_slice]
         body_mask = local_bodies == owner
+        foreign_body = (local_bodies > 0) & ~body_mask
+        # A pre-existing topology assignment cannot grant passage through a
+        # different accepted soma, even before the final interior stripping.
+        local_repaired[(local_repaired == owner) & foreign_body] = 0
         original_owner = (local_repaired == owner) & ~body_mask
         origin = (owner_slice[0].start, owner_slice[1].start)
         local_core = crossing_topology.crossing_core_mask(
@@ -2126,10 +2428,11 @@ def _repair_signal_supported_skeleton(
         # permanent exclusive neuron identity or crossing foreign bodies.
         local_repaired[shared_signal_support] = owner
         occupied_by_other_owner = (local_repaired > 0) & (local_repaired != owner)
-        signal_support = (local_response >= minimum_response) & (local_regions == owner)
+        signal_support = local_shaft_support & (local_regions == owner)
+        root_support = soma_attachments[owner_slice] == owner
         allowed = (
-            signal_support | original_owner | body_mask | shared_signal_support
-        ) & ~occupied_by_other_owner & (
+            signal_support | original_owner | body_mask | shared_signal_support | root_support
+        ) & ~occupied_by_other_owner & ~foreign_body & (
             ~local_core | shared_signal_support | original_owner | body_mask
         )
 
@@ -2303,7 +2606,6 @@ def _analyze_topology(
     path_euclidean_lengths = branch_table["euclidean_distance"].to_numpy(dtype=float)
     node_incidence: dict[int, list[int]] = defaultdict(list)
     node_endpoints: dict[int, list[tuple[int, int]]] = defaultdict(list)
-    node_coordinates: dict[int, np.ndarray] = {}
     path_endpoint_nodes: list[tuple[int, int]] = []
     for path_index, row in branch_table.iterrows():
         source = int(row["node_id_src"])
@@ -2313,17 +2615,10 @@ def _analyze_topology(
         node_incidence[destination].append(path_index)
         node_endpoints[source].append((path_index, 0))
         node_endpoints[destination].append((path_index, 1))
-        node_coordinates[source] = np.array(
-            [row["image_coord_src_0"], row["image_coord_src_1"]], dtype=float
-        )
-        node_coordinates[destination] = np.array(
-            [row["image_coord_dst_0"], row["image_coord_dst_1"]], dtype=float
-        )
 
     transitions: dict[int, set[int]] = {
         path_index: set() for path_index in range(path_count)
     }
-    branch_nodes: set[int] = set()
     crossing_nodes: set[int] = set()
     path_endpoint_groups = [[0, 0] for _ in range(path_count)]
     endpoint_group_coordinates: dict[int, tuple[float, float]] = {}
@@ -2399,10 +2694,6 @@ def _analyze_topology(
         elif node in crossing_cluster_nodes:
             continue
         else:
-            incident_paths = node_incidence[node]
-            unique_paths = sorted(set(incident_paths))
-            if len(unique_paths) >= 3:
-                branch_nodes.add(node)
             endpoint_groups = (tuple(node_endpoints[node]),)
 
         for endpoint_group in endpoint_groups:
@@ -2426,19 +2717,9 @@ def _analyze_topology(
                 transitions[first].add(second)
                 transitions[second].add(first)
 
-    expanded_bodies = expand_labels(
-        cell_body_labels,
-        distance=max(1, int(np.ceil(outgrowth_width_px)) + 2),
+    root_labels_by_path = _TopologyResult.soma_ownership_seeds(
+        cell_body_labels, outgrowth_width_px, path_coordinates,
     )
-    root_labels_by_path: dict[int, tuple[int, ...]] = {}
-    for path_index, coordinates in enumerate(path_coordinates):
-        labels = expanded_bodies[tuple(coordinates.T)]
-        labels = labels[labels > 0]
-        if labels.size:
-            counts = Counter(int(label) for label in labels)
-            root_labels_by_path[path_index] = tuple(
-                label for label, _ in counts.most_common()
-            )
 
     path_owners, path_distances = _propagate_path_owners(
         path_lengths,
@@ -2485,8 +2766,6 @@ def _analyze_topology(
             merged_group = min(endpoint_groups)
             for path_index, endpoint_index in endpoints:
                 path_endpoint_groups[path_index][endpoint_index] = merged_group
-            if len(owner_paths) >= 3:
-                branch_nodes.add(node)
     roots_by_cell: dict[int, list[int]] = defaultdict(list)
     for path_index, labels in root_labels_by_path.items():
         owner = int(path_owners[path_index])
@@ -2498,22 +2777,16 @@ def _analyze_topology(
         transitions,
         roots_by_cell,
     )
-    path_branch_types = _owner_qualified_path_branch_types(
+    process_roots = _TopologyResult.soma_process_roots(
+        cell_body_labels, outgrowth_width_px, path_coordinates, transitions, path_owners,
+    )
+    path_branch_types, branch_nodes_by_cell = _TopologyResult.classify_owned_endpoints(
         path_owners,
         path_endpoint_groups,
         crossing_core_paths,
+        endpoint_group_coordinates,
+        merge_radius=max(1.0, outgrowth_width_px),
     )
-
-    branch_nodes_by_cell: dict[int, list[int]] = defaultdict(list)
-    for node in branch_nodes:
-        owned_degrees = Counter(
-            int(path_owners[path_index])
-            for path_index in set(node_incidence[node])
-            if path_owners[path_index] > 0
-        )
-        for owner, degree in owned_degrees.items():
-            if degree >= 3:
-                branch_nodes_by_cell[owner].append(node)
 
     resolved_crossings = tuple(
         _ResolvedCrossing(node, crossing_paths_by_node[node],
@@ -2532,17 +2805,8 @@ def _analyze_topology(
         path_branch_types=path_branch_types,
         endpoint_group_coordinates=endpoint_group_coordinates,
         transitions={key: tuple(sorted(value)) for key, value in transitions.items()},
-        root_paths_by_cell={
-            cell: tuple(sorted(set(paths))) for cell, paths in roots_by_cell.items()
-        },
-        branch_nodes_by_cell={
-            owner: _merge_nearby_nodes(
-                nodes,
-                node_coordinates,
-                radius=max(1.0, outgrowth_width_px),
-            )
-            for owner, nodes in branch_nodes_by_cell.items()
-        },
+        root_paths_by_cell=process_roots,
+        branch_nodes_by_cell=branch_nodes_by_cell,
         resolved_crossings=tuple(
             crossing for crossing in resolved_crossings
             if crossing.crossover_paths(path_owners)
@@ -2576,7 +2840,7 @@ def _analyze_owned_topology(
 
     body_regions = {int(region.label): region for region in regionprops(bodies)}
     owned_regions = {int(region.label): region for region in regionprops(owned)}
-    margin = max(1, int(np.ceil(outgrowth_width_px)) + 2)
+    margin = _TopologyResult.soma_attachment_radius(outgrowth_width_px)
 
     path_owners: list[np.ndarray] = []
     path_distances: list[np.ndarray] = []
@@ -2671,12 +2935,9 @@ def _analyze_owned_topology(
             root_paths_by_cell[int(cell)] = tuple(root + path_offset for root in roots)
 
         local_node_ids = set(local.crossing_nodes)
-        local_node_ids.update(
-            node for nodes in local.branch_nodes_by_cell.values() for node in nodes
-        )
         branch_nodes_by_cell.update(
             {
-                int(cell): tuple(node + node_offset for node in nodes)
+                int(cell): tuple(group_mapping[group] for group in nodes)
                 for cell, nodes in local.branch_nodes_by_cell.items()
             }
         )
@@ -2875,34 +3136,6 @@ def _retain_soma_rooted_path_owners(
     if detached_paths:
         path_owners[detached_paths] = 0
         path_distances[detached_paths] = np.inf
-
-
-def _owner_qualified_path_branch_types(
-    path_owners: np.ndarray,
-    path_endpoint_groups: Sequence[Sequence[int]],
-    crossing_core_paths: set[int],
-) -> np.ndarray:
-    """Classify paths from final owner-specific logical endpoint degrees."""
-
-    endpoint_degrees = Counter(
-        (int(path_owners[path_index]), group_id)
-        for path_index, endpoint_groups in enumerate(path_endpoint_groups)
-        if path_owners[path_index] > 0 and path_index not in crossing_core_paths
-        for group_id in endpoint_groups
-    )
-    branch_types = np.zeros(len(path_owners), dtype=np.int32)
-    for path_index, endpoint_groups in enumerate(path_endpoint_groups):
-        owner = int(path_owners[path_index])
-        if owner <= 0 or path_index in crossing_core_paths:
-            continue
-        source_group, destination_group = endpoint_groups
-        if source_group == destination_group:
-            branch_types[path_index] = 3
-            continue
-        branch_types[path_index] = sum(
-            endpoint_degrees[owner, group_id] >= 3 for group_id in endpoint_groups
-        )
-    return branch_types
 
 
 def _propagate_path_owners(

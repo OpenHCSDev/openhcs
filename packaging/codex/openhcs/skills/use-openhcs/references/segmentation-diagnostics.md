@@ -316,6 +316,24 @@ of the missing continuous path, and an unrooted piece is not automatically
 debris. Retain the useful local recovery and its remaining support/ownership
 limits under the existing claim-scoped criteria.
 
+For automatically repaired connections or extensions, inspect the entire added
+path on matched raw-only and combined views, including stretches between bright
+endpoints. Measure its consumed response and nearby background along the path;
+isolated specks above a local cutoff do not establish a continuous shaft. A
+least-cost route, soma association or connected graph can still follow background
+fluctuations. Compare the added geometry with the original admitted shaft support
+to locate whether detection, connection repair or rendering introduced it. A path
+outside that mask is a diagnostic lead, not automatic proof of false tracing:
+raw-supported faint shafts can also be missing from admission.
+
+When sensitivity recovers genuine shafts but introduces unsupported connections,
+keep the recovered-shaft witness alongside a false-connection witness. Diagnose
+the connection stage before rolling sensitivity back globally. More total length,
+more branches or fewer disconnected fragments is not improvement by itself;
+neither is closer agreement with another analysis package. Require the repair to
+retain supported paths while rejecting background routes, then check distributed
+control and treated regions before interpreting treatment effects.
+
 A faint-path admission repair can improve the mask and skeleton without
 establishing a soma-rooted, per-cell graph. Inspect recovered weak paths together
 with an empty-background witness, newly admitted disconnected fragments and a

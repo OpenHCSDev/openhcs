@@ -3453,6 +3453,9 @@ def _run_fake_napari_entrypoint(
                     )
                 )
                 events.append("result_selection_surface_open")
+                napari_viewer_server._install_result_selection_toolbar(
+                    self.result_selection_surface, self.result_selection_controller,
+                )
             return self.result_selection_surface
 
         def start(self):
@@ -4151,8 +4154,10 @@ def test_roi_selection_toolbar_adjusts_native_highlight_setting(qtbot, monkeypat
     server = type("ResultSelectionServer", (), {"viewer": None})()
     controller = napari_viewer_server.NapariResultSelectionController(server)
 
+    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, object())
+    qt_window.destroyed.connect(surface.release)
     toolbar = napari_viewer_server._install_result_selection_toolbar(
-        result_selection_dock,
+        surface,
         controller,
     )
     thickness = toolbar.findChild(QSpinBox, "openhcs_roi_highlight_thickness")
@@ -4216,8 +4221,10 @@ def test_roi_layer_color_button_recolors_every_shape(qtbot, monkeypatch):
         lambda *_args, **_kwargs: QColor.fromRgbF(0.2, 0.8, 0.3, 1.0),
     )
 
+    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, object())
+    qt_window.destroyed.connect(surface.release)
     toolbar = napari_viewer_server._install_result_selection_toolbar(
-        result_selection_dock,
+        surface,
         server.result_selection_controller,
     )
     layer_color = toolbar.findChild(QPushButton, "openhcs_roi_layer_color")
