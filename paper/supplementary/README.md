@@ -43,15 +43,10 @@ begins; wells can run in parallel. Selected functions determine CPU/GPU support.
 
 ![Shared configuration and a typed extension across the workflow.](../figures/slas/supp_workflow_infrastructure.png){width=6in}
 
-(III, A) Array axes and processing groups determine the image views supplied to each
-function. Functions declare per-plane, stack or stack-reduction behaviour.
-(B) Compilation connects images and named results, plans storage and ordered
-processing, checks requirements and prepares execution tasks. (C–D) One custom
-function declaration supplies typed parameters to the editor and MCP catalog.
-The gain and offset controls retain the defaults from that declaration.
-The complete process and runtime diagrams are shown above. Additional compiler,
-output-routing, importer and viewer illustrations remain linked in
-Supplementary Data 4.
+(III, A–B) Selected array-grouping and preparation details. (C–D) One custom
+function declaration supplies typed parameters and defaults to both the editor
+and MCP catalog. Supplementary Data 4 retains further compiler, output-routing,
+importer and viewer illustrations.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
