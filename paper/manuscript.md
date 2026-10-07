@@ -59,7 +59,7 @@ Registered function descriptions let agents select functions and edit the shared
 ![Shared editing, execution, workers, viewers and image storage.](figures/slas/shared_workflow.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Forms, Python and MCP act on one editable workflow; CellProfiler imports enter the same definition. The ZeroMQ execution server compiles pipelines, coordinates workers and returns progress to the editor. Workers read source images, save outputs and stream results to separate napari or Fiji viewers. Logos identify import, storage, processing and viewing integrations, not separate analysis steps. CPU/GPU support depends on the selected functions; OMERO support is experimental. Supplementary Figure 1 expands the runtime and preparation details.
+Forms, Python and MCP edit one workflow, including imported CellProfiler pipelines. The ZeroMQ execution server compiles the pipeline and coordinates workers. Workers read images, save outputs and stream results to napari or Fiji; progress returns to the editor. Supplementary Figure 1 shows runtime preparation.
 :::
 
 ### CellProfiler import and output comparison
@@ -123,7 +123,7 @@ One workflow supplies the desktop controls, generated Python and MCP operations 
 ![Full-width high-resolution native workspace with two example plates and a nine-step pipeline; boxes mark its existing controls.](figures/slas/submission_shared_workflow.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(I)** Native OpenHCS 0.8.7 workspace with ExampleHuman and ExampleFly folders loaded and the editor displaying the nine-step ExampleHuman recipe. One continuous crop of the 2048 × 1536 capture excludes the monitoring dashboard; no stitching, vertical stretching or duplicate insets are used. Blue outlines identify existing controls. This authoring demonstration did not execute analysis or restart the execution service. Full original capture and earlier editing records: Supplementary Data 3.
+**(I)** Native workspace with ExampleHuman and ExampleFly folders and the nine-step ExampleHuman recipe. Blue boxes mark the plate manager, pipeline editor and execution-server list.
 :::
 
 ### Figure 1, continued. The laboratory's own Python joins the shared analysis
@@ -131,7 +131,7 @@ One workflow supplies the desktop controls, generated Python and MCP operations 
 ![Real Python declaration and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(II)** The syntax-highlighted `paper_rescale_signal` declaration, including its NumPy backend decorator and docstring, supplies the shown form defaults and MCP descriptions; no function-specific form or tool was written. Native OpenHCS 0.8.7 form and code views show the same function with gain 1.2 and offset 0.0, verified against its code-document readback. These records establish authoring, not assay execution or a parameter-editing round trip. Supplementary Data 3 retains capture records and limitations.
+**(II)** The Python declaration and docstring generate the function's graphical controls and MCP descriptions. Form and code views show gain 1.2 and offset 0.0. Capture records and the code/control check are in the supplementary Figure assembly and interface records section.
 :::
 
 ### Autonomous analysis
@@ -176,7 +176,7 @@ The H001 author matched 59 of 64 computational-reference objects and raised F1 f
 ![Skill-directed workflow with Fiji and napari inspection, followed by the recorded H001 decisions and matched raw/repair images.](figures/slas/submission_autonomous_loop.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** Licensed pictograms and Fiji/napari logos show the packaged skill's intended workflow: biological brief, input inspection, pipeline execution, matched-view audit, targeted repair and delivery. (B) Recorded H001 decisions across four executions, with the same region shown raw, first (a01) and final (a04). The elongated body's split is repaired; colours are not shared object identities. The report also records recovery of a pair lost during revision. Catalogue times include review, reporting and cleanup. This example does not establish universal adherence to the current skill.
+**(A)** The packaged skill's workflow: biological brief, input inspection, pipeline execution, matched-view audit, targeted repair and delivery. **(B)** H001 decisions across four executions and matched raw, first (a01) and final (a04) views. The elongated object's split is corrected. Colours distinguish labels within each view. Times include inspection, repair, reporting and cleanup.
 :::
 
 ### Figure 4. Quantitative results and matched image-repair evidence
@@ -184,7 +184,12 @@ The H001 author matched 59 of 64 computational-reference objects and raised F1 f
 ![Task-specific nuclear, boundary, volume and translocation endpoints alongside an independent DNA/actin merge repair.](figures/slas/submission_analysis_summary.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** H001 first/final computational-reference F1 (one image). (B) Three BBBC039 authors, all 200 and 175 commonly uninspected fields. (C) BBBC007 boundary agreement: field dots and pooled-pixel lines. (D) H002 matched-centre errors and recovered references. (E) BBBC013 dose means/sample SD, four wells per dose; control Z-prime uses four positive/four negative wells. (F) An independent, uncoached BBBC007 author (H003_POSTPAUSE_88) repairs a local merge in the same C4 region, from candidate01_retry01 to candidate06. The lower object retains bridge support and another regional merge remains unresolved; this is within-run repair, not ground-truth segmentation accuracy. Colours are not shared identities. References differ across endpoints; none is a pooled accuracy score. Evaluation records: Supplementary Data 8.
+**(A)** H001 computational-reference object F1, first and final, one image.
+**(B)** BBBC039 object F1 for three authors on all 200 fields and the 175 commonly uninspected fields.
+**(C)** BBBC007 directed boundary agreement with manual outlines; dots are fields and lines are pooled-pixel fractions.
+**(D)** H002 voxel errors for the 15 matched manual centres.
+**(E)** BBBC013 dose means and sample SD, four wells per dose; control Z′ uses four positive and four negative wells.
+**(F)** BBBC007 raw and label views of the same C4 region, before (candidate01_retry01) and after (candidate06) merge repair. Colours distinguish labels within each view.
 :::
 
 ### Figure 4, continued. Repairs and volumetric localisation
@@ -192,7 +197,9 @@ The H001 author matched 59 of 64 computational-reference objects and raised F1 f
 ![Matched retinal and volumetric body repairs, with separate frozen three-dimensional localisation evidence.](figures/slas/submission_quantitative_results.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-**(G)** Same-input retinal raw/first/final views: fragmented footprints improve while neighbours remain separate. Border and weak-body coverage remain uncertain; this is continuation, not a fresh trial. (H) An independent 3-D author repairs a body partition at Z=36, not the complete volume. (I) A separate frozen analysis: XY labels and post-freeze XZ/YZ outlines (yellow), with in-plane centres (magenta). Fifteen manual centres were recovered; eleven further predictions have no matching annotation of established coverage. Distances are voxels, not micrometres. Colours do not identify objects across attempts. Wider views and remaining errors: Supplementary Figures 3–4 and Data 8.
+**(G)** Retinal raw, first and final views of fragmented soma footprints and a neighbouring pair.
+**(H)** Body-partition repair at Z=36 in a 3D volume.
+**(I)** H002 XY labels, XZ/YZ outlines (yellow) and in-plane centres (magenta), with 15 matched manual centres and 11 unmatched predictions. Distances are voxels. Colours distinguish labels within each view.
 :::
 
 ### Figure 5. Neurite analysis and assisted drug responses
@@ -203,30 +210,24 @@ The H001 author matched 59 of 64 computational-reference objects and raised F1 f
 **(I)** Same field and scale: raw, initial OpenHCS and published NeuronCyto II [@NeuronCytoII] (CC BY-NC 4.0), not manual ground truth or exact registration. Later repair overextended the target. (II) Matched autonomous P001 field. Frozen arrays/vector paths replace reduced screenshots; display changes leave geometry and measurements unchanged (Supplementary Data 8). (III) Assisted 20-well responses relative to each drug's DMSO mean; dots: two technical wells/dose; whiskers: sample SD. Additional endpoints: Supplementary Figure 5.
 :::
 
-### Imported CellProfiler workflows match the compared reference outputs
+### Imported CellProfiler workflows reproduce native outputs
 
-All 30 workflows passed selected reference-output comparisons in one unified current-source run, with zero reported differences. The selected reference profiles comprised 21 with CSV measurements, three with SQLite measurements and CellProfiler Analyst properties, and six containing only retained images or arrays. The five supplemented workflows contributed five object-label images and three numerical images. All five label images matched exactly after singleton-axis normalization, and all three numerical images passed with zero out-of-tolerance pixels. Supplementary Data 1 identifies every selected output and preserves the unified observations and source identity.
+All 30 imported workflows reproduced the compared native outputs with zero differences: labels matched exactly and numerical measurements passed at 1e-6 tolerance. The comparison included 21 CSV profiles, three SQLite profiles and six image/array profiles. Five workflows received added exports comprising five label images and three numerical images (Supplementary Data 1).
 
-Image comparison executed for seven workflows: six image- or array-only profiles and the completed translocation example, whose overlay was compared alongside its SQLite measurements. Supplementary Data 4 shows how named images, objects and operations are retained in the imported Comet Assay.
-
-The assays include DNA-damage measurement, human and Drosophila cell morphology, tumor morphology, Cell Painting morphology and quality control, protein translocation, wound healing, time-lapse tracking, imaging flow cytometry, colocalization, positive-cell classification, yeast screening, and *C. elegans* phenotyping. Supplementary Data 1-2 identify the workflows and imported settings.
-
-The advanced segmentation and 3D monolayer imports retain their named structures, measurements and processing sequences in editable Python (Supplementary Data 5).
+The workflows covered DNA damage, human and Drosophila morphology, tumor morphology, Cell Painting, protein translocation, wound healing, tracking, imaging flow cytometry, colocalization, positive-cell classification, yeast screening and *C. elegans* phenotyping. Seven workflows had image comparisons, including the translocation overlay alongside SQLite measurements. Advanced segmentation and 3D monolayer imports could be reloaded as editable Python with their named structures, measurements and processing sequences (Supplementary Data 5).
 
 ### Execution speed
 
-The matched single-sample evaluation used [pending]{.benchmark-claim key=case_count} workflows from record [pending]{.benchmark-claim key=record_name}, production revision [pending]{.benchmark-claim key=source_revision}. Its publication status is [pending]{.benchmark-claim key=status}. Declared-output comparisons passed in the warmup and three measured repetitions. Figure 6 shows the distribution of workflow speedups, with every workflow retained as a point. The minimum execution speedup over native CellProfiler was [pending]{.benchmark-claim key=execution_min}-fold and the median was [pending]{.benchmark-claim key=execution_median}-fold.
+Across 30 workflows, one-core execution was a median [TODO: refreshed execution median, matched benchmark]-fold faster than native CellProfiler, with minimum [TODO: refreshed execution minimum, matched benchmark]-fold (Figure 6). Compile-plus-run total speedup was a median [TODO: refreshed total median, matched benchmark]-fold, with minimum [TODO: refreshed total minimum, matched benchmark]-fold. Each point compares the engines' median durations over three repetitions after warmup. Output comparisons passed during warmup and every measured repetition.
 
-Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=total_min}-fold and a median of [pending]{.benchmark-claim key=total_median}-fold. This comparison includes OpenHCS compilation and client coordination, separately from execution. Exact per-workflow times and the clock definitions accompany the same record.
-
-Measured multi-worker comparisons, total speedup versus assigned sample count, and individual workflow runtimes are shown in Supplementary Figure 6. Single-core amortization and exact efficiencies are retained in Supplementary Data 3.
+Supplementary Figure 6 shows multi-worker comparisons, total speedup by assigned sample count and individual workflow runtimes. Supplementary Data 3 gives timing boundaries and worker measurements.
 
 ### Figure 6. Matched single-sample speedup over native CellProfiler
 
 ![Execution and compile-plus-run total speedups, showing means, medians and every matched workflow.](figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-Execution and compile-plus-run total speedups for [pending]{.benchmark-claim key=case_count} workflows, using one selected source sample, one worker and one numerical thread. Coloured bars show mean speedup, grey points show individual workflows, and black lines show medians on a logarithmic scale. Each workflow's speedup is the ratio of independent engine medians from three repetitions after warmup; the dashed line marks equal runtime. All workflows passed the declared-output comparisons; this is workflow parity, not biological segmentation accuracy. Minimum and median execution speedups are [pending]{.benchmark-claim key=execution_min}-fold and [pending]{.benchmark-claim key=execution_median}-fold; corresponding total speedups are [pending]{.benchmark-claim key=total_min}-fold and [pending]{.benchmark-claim key=total_median}-fold. Record [pending]{.benchmark-claim key=record_name} supplies every panel and manuscript claim. The linear view, individual runtimes and sample-count comparisons appear in Supplementary Figure 6.
+Execution and compile-plus-run speedups for 30 imported CellProfiler workflows on one core, one worker and one numerical thread. Each point is one workflow: CellProfiler median time divided by OpenHCS median time over three runs after warmup. Bars show means, black lines medians and the dashed line equal runtime on a logarithmic axis. Every run reproduced the compared outputs. Medians: execution [TODO: refreshed median, matched benchmark]-fold and total [TODO: refreshed median, matched benchmark]-fold. Supplementary Figure 6 shows linear scales and individual runtimes.
 :::
 
 ## Discussion
