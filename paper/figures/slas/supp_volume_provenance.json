@@ -1,0 +1,150 @@
+{
+  "generator_sha256": "22c3103fc6ce51533fba8ee1c8c44ef02dd36f9a3a0f9500ff633b6a6a30d38f",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "abc947410e5a6d59e5f784f5237e6ba5f45726af25fdb51ad108c168335d6a5a",
+    "paper/figures/slas/h002_measurement_first_provenance.json": "d948f5ccc0370f974c5ce0674842587496d49cf5244a82c5fad60d3e2fd46eba",
+    "paper/figures/slas/h002_measurement_first.png": "339b9e2e987ec7dd6b89ca8e9e17651e9c61774ed22a195cc4b90cf18baa276d",
+    "paper/figures/slas/h002_fresh22_split_repair_provenance.json": "d760a570920f7c4bb6e9c6736cbe12bf4f9183529b3a8b1b0db3b36ddd46f11d",
+    "paper/figures/slas/h002_fresh22_split_repair.png": "71721207deebd67c82d5b7f5caeae61b43ccdfc01f99f71198093f7d55c444ba",
+    "paper/figures/slas/h002_fresh10_native_provenance.json": "1e1ff40b4289e03ba8acac85f09e144920389e9382d3acd5d3d4254fa7a27b7c",
+    "paper/figures/slas/h002_fresh10_native.png": "5d5ecaa7575ee07ff51a5e918fd82826b309516869ca4cc21fede210a1cb0c97"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h002_measurement_first.png",
+      "xyxy_pixels": [
+        81,
+        219,
+        1350,
+        1292
+      ],
+      "source_size": [
+        2700,
+        2190
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_measurement_first.png",
+      "xyxy_pixels": [
+        1485,
+        263,
+        2619,
+        679
+      ],
+      "source_size": [
+        2700,
+        2190
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_measurement_first.png",
+      "xyxy_pixels": [
+        1485,
+        832,
+        2619,
+        1226
+      ],
+      "source_size": [
+        2700,
+        2190
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        81,
+        346,
+        1296,
+        902
+      ],
+      "source_size": [
+        2700,
+        1920
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        1404,
+        346,
+        2619,
+        902
+      ],
+      "source_size": [
+        2700,
+        1920
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        81,
+        1114,
+        1296,
+        1670
+      ],
+      "source_size": [
+        2700,
+        1920
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh22_split_repair.png",
+      "xyxy_pixels": [
+        1404,
+        1114,
+        2619,
+        1670
+      ],
+      "source_size": [
+        2700,
+        1920
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh10_native.png",
+      "xyxy_pixels": [
+        728,
+        145,
+        1372,
+        609
+      ],
+      "source_size": [
+        1400,
+        1450
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh10_native.png",
+      "xyxy_pixels": [
+        728,
+        682,
+        1372,
+        1015
+      ],
+      "source_size": [
+        1400,
+        1450
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh10_native.png",
+      "xyxy_pixels": [
+        728,
+        1088,
+        1372,
+        1436
+      ],
+      "source_size": [
+        1400,
+        1450
+      ]
+    }
+  ],
+  "output_sha256": {
+    "supp_volume.png": "0066404c04047016e86e4d80057833c7dfb7faa09aeb82b76c5c08ff51c7f325",
+    "supp_volume.pdf": "155e66e0177b2a6ea8c5229389868cb94b98d91d61456a01a68dad6f94d0f4c7",
+    "supp_volume.svg": "2707403ad61e662e835bdffded38f5ac7e48cb0e89164a06b2694ceaf3345409"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

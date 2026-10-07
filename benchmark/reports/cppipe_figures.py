@@ -228,41 +228,69 @@ class MeasuredBatchSummarySource(SummarySource):
         self, total: MeasuredBatchSummarySource, *, output_dir: Path,
         output_formats: Sequence[str] = DEFAULT_FORMATS,
     ) -> tuple[Path, ...]:
-        """One parity/execution/total display; reuse the existing CDF painter."""
+        """Show each qualified workflow's paired clocks and measured speedup."""
         # The same owner validates matching revision/cohort and every ratio.
         self.publication_values(total, record_name=output_dir.name, frozen=False)
         execution_table, total_table = _load_summary_table(self), _load_summary_table(total)
         passed = sum(SUMMARY_ROW_NUMERICS.optional_float(row, ACCURACY_FIELD) == 1.0
                      for row in execution_table.values())
         count = len(execution_table)
-        with FIGURE_STYLE.context(), plt.rc_context({"xtick.labelsize": 10, "ytick.labelsize": 10}):
-            fig, axes = plt.subplots(1, 3, figsize=(7.2, 3.4), layout="constrained",
-                                     gridspec_kw={"width_ratios": (0.75, 1.35, 1.35)})
-            axis = axes[0]
-            axis.bar((0,), (100 * passed / count,), color=FIGURE_STYLE.color_for_method(1), width=0.55)
-            axis.set(ylim=(0, 110), xticks=(0,), xticklabels=("Workflows",),
-                     ylabel="Declared-output checks passed (%)")
-            axis.set_title("A  Output parity", loc="left", fontsize=11)
-            axis.text(0, 102, f"{passed}/{count}", ha="center", fontsize=10)
-            FIGURE_STYLE.decorate_axis(axis, metric=FigureMetricSpec(
-                ACCURACY_FRACTION_FIELD, "qualified_science_pass", "", ""), panel_index=1)
-            for axis, scope, source, table, letter, target in zip(
-                axes[1:], ("execution", "total"), (self, total),
-                (execution_table, total_table), ("B", "C"), (SPEEDUP_TARGET, 1.0), strict=True,
+        names = tuple(sorted(execution_table))
+        labels = tuple(PIPELINE_LABEL_LAYOUT.split_label(name) for name in names)
+        positions = []
+        cursor = 0.0
+        for label in labels:
+            height = 1.0 + .8 * label.count("\n")
+            positions.append(cursor + height / 2)
+            cursor += height
+        with FIGURE_STYLE.context():
+            fig, axes = plt.subplots(1, 2, figsize=(8.0, 9.5), sharey=True)
+            fig.subplots_adjust(left=.34, right=.94, top=.87, bottom=.07, wspace=.31)
+            fig.suptitle("Matched CellProfiler and OpenHCS runtimes", x=.04, y=.985,
+                         ha="left", fontsize=14, fontweight="bold")
+            fig.text(.04, .956, f"{passed}/{count} workflows passed declared-output comparisons",
+                     fontsize=10)
+            fig.text(.04, .930, "One worker · one numerical thread · medians of three measured runs",
+                     fontsize=9.5)
+            fig.legend(handles=[
+                matplotlib.patches.Patch(color=FIGURE_STYLE.color_for_method(0), label="CellProfiler"),
+                matplotlib.patches.Patch(color=FIGURE_STYLE.color_for_method(1), label="OpenHCS"),
+            ], loc="upper left", bbox_to_anchor=(.035, .916), ncol=2, frameon=False,
+                       fontsize=10)
+            smallest = min(float(row[field]) for table in (execution_table, total_table)
+                           for row in table.values()
+                           for field in (NATIVE_SECONDS_FIELD, OPENHCS_SECONDS_FIELD))
+            largest = max(float(row[field]) for table in (execution_table, total_table)
+                          for row in table.values()
+                          for field in (NATIVE_SECONDS_FIELD, OPENHCS_SECONDS_FIELD))
+            limits = (10 ** math.floor(math.log10(smallest)),
+                      10 ** math.ceil(math.log10(largest)))
+            for axis, scope, source, table, letter in zip(
+                axes, ("execution", "total"), (self, total),
+                (execution_table, total_table), ("A", "B"), strict=True,
             ):
-                series = SpeedupDistributionSeries(source.candidate_method, tuple(
-                    SUMMARY_ROW_NUMERICS.speedup_from_summary_row(row) for row in table.values()))
-                report = SpeedupDistributionReport((series,), output_dir, "", scope.title(),
-                                                   "Native / OpenHCS time", target_line=target)
-                report.draw_cdf(axis, log_x=True)
-                axis.set_xticks((1, 4, 16, 64, 256), labels=("1", "4", "16", "64", "256"))
-                axis.set_title(f"{letter}  {scope.title()} speedup", loc="left", fontsize=11)
-                axis.set_ylabel("Workflows at or above (%)", fontsize=10)
-                axis.set_xlabel("Native / OpenHCS time", fontsize=10)
-                summary = report.summary_statistics[0]
-                axis.text(0.03, 0.05, f"min {summary.minimum:.3f}×\nmedian {summary.median:.3f}×",
-                          transform=axis.transAxes, fontsize=10,
-                          bbox={"facecolor": FIGURE_STYLE.background, "edgecolor": "none", "alpha": .9})
+                ratios = tuple(source.metric_rows(name, table[name], category_row=table[name])[1].speedup
+                               for name in names)
+                for method_index, field in enumerate((NATIVE_SECONDS_FIELD, OPENHCS_SECONDS_FIELD)):
+                    axis.barh([position + (method_index - .5) * .32 for position in positions],
+                              [float(table[name][field]) for name in names], height=.29,
+                              color=FIGURE_STYLE.color_for_method(method_index), zorder=3)
+                axis.set_xscale("log")
+                axis.set_xlim(*limits)
+                axis.set_ylim(cursor, 0)
+                axis.set_yticks(positions, labels)
+                axis.tick_params(axis="y", length=0, labelsize=8.8, pad=8)
+                axis.tick_params(axis="x", labelsize=9)
+                axis.xaxis.set_major_formatter(FuncFormatter(_plain_log_tick_label))
+                axis.grid(axis="x", color=FIGURE_STYLE.grid_color, zorder=0)
+                axis.spines[["top", "right", "left"]].set_visible(False)
+                axis.set_title(f"{letter}  {scope.title()} time", loc="left", fontsize=11, pad=28)
+                axis.set_xlabel("Seconds (log scale)", fontsize=10)
+                axis.text(.0, 1.01, "CellProfiler / OpenHCS speedup →", transform=axis.transAxes,
+                          fontsize=8.5)
+                for position, ratio in zip(positions, ratios, strict=True):
+                    axis.text(1.03, position, f"{ratio:.2f}×", transform=axis.get_yaxis_transform(),
+                              va="center", fontsize=8.5)
             outputs = tuple(output_dir / f"measured_benchmark_publication.{extension}" for extension in output_formats)
             for path in outputs:
                 FIGURE_STYLE.save(fig, path)

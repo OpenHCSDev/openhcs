@@ -22,6 +22,8 @@ from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
 
+from build_slas_agent import normalize_generated_svg
+
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA = (
     ROOT / "benchmark/results/labmeeting_20260513/official30_well_throughput/data"
@@ -49,6 +51,9 @@ def write_provenance(
 ) -> None:
     """Record the existing manuscript source/output checksum contract."""
     sources = tuple(path.resolve() for path in sources)
+    for path in outputs:
+        if path.suffix == ".svg":
+            normalize_generated_svg(path)
     receipt = {
         "source_sha256": {
             str(path.relative_to(ROOT)):
@@ -172,9 +177,9 @@ def build_publication(record: Path, output_dir: Path, *, frozen: bool = False) -
     composite = execution.publication_figure(total, output_dir=output_dir)
     caption = output_dir / "measured_benchmark_publication_caption.md"
     caption.write_text(
-        "(A) Workflows passing the qualified declared-output comparison; this is not biological accuracy. "
-        "(B) Execution and (C) total speedup distributions from the same saved cohort, "
-        "using ratios of independent engine medians. Dashed lines denote 2× execution and 1× total parity. "
+        "(A) Execution and (B) compile-plus-run total runtime for every workflow in the same saved cohort. "
+        "Paired bars show measured CellProfiler and OpenHCS median seconds on shared logarithmic axes; "
+        "row annotations show ratios of independent engine medians. Declared-output parity is not biological accuracy. "
         f"Record {values['record_name']}, production source {values['source_revision']}, "
         f"publication status {values['status']}. Execution minimum/median "
         f"{values['execution_min']}/{values['execution_median']}×; total minimum/median "
