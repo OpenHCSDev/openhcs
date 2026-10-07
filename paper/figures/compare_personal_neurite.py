@@ -10,7 +10,7 @@ this reader consumes the current unit-bearing OpenHCS summary declaration.
 import argparse
 from abc import ABC, abstractmethod
 import csv
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 import hashlib
 import json
 import math
@@ -20,12 +20,46 @@ from typing import ClassVar
 
 
 @dataclass(frozen=True)
+class SummaryEndpoint:
+    """One endpoint declaration supplies native decoding and reference identity."""
+
+    label: str
+    reference_column: str
+    native_column: str
+
+    def native_value(self, summary, cells):
+        return float(summary[self.native_column])
+
+
+class CellMeanEndpoint(SummaryEndpoint):
+    """Mean of per-cell endpoints, not a pooled graph-segment statistic."""
+
+    def native_value(self, summary, cells):
+        return mean(float(row[self.native_column]) for row in cells)
+
+
+@dataclass(frozen=True)
 class WellEndpoints:
-    mean_outgrowth: float
-    cell_count: float
+    mean_outgrowth: float = field(metadata={"endpoint": SummaryEndpoint(
+        "Mean outgrowth per cell / control", "Mean Outgrowth Per Cell (Neurite Outgrowth)", "mean_outgrowth_per_cell")})
+    cell_count: float = field(metadata={"endpoint": SummaryEndpoint(
+        "Detected cells / control", "Number of Cells (Neurite Outgrowth)", "number_of_cells")})
+    total_outgrowth: float = field(metadata={"endpoint": SummaryEndpoint(
+        "Total outgrowth / control", "Total Outgrowth (Neurite Outgrowth)", "total_outgrowth")})
+    branches_per_cell: float = field(metadata={"endpoint": SummaryEndpoint(
+        "Branches per cell / control", "Mean Branches Per Cell (Neurite Outgrowth)", "mean_branches_per_cell")})
+    mean_process_length: float = field(metadata={"endpoint": CellMeanEndpoint(
+        "Mean cell process length / control", "Cell: Mean Process Length (Neurite Outgrowth)", "mean_process_length")})
+    median_process_length: float = field(metadata={"endpoint": CellMeanEndpoint(
+        "Mean cell median process length / control", "Cell: Median Process Length (Neurite Outgrowth)", "median_process_length")})
 
 
 METRICS = tuple(field.name for field in fields(WellEndpoints))
+DEFAULT_METRICS = ("mean_outgrowth", "cell_count")
+
+
+def endpoint_declarations():
+    return {item.name: item.metadata["endpoint"] for item in fields(WellEndpoints)}
 
 
 def read_rows(path):
@@ -47,8 +81,11 @@ class NativeSummary:
     coordinate_unit: ClassVar[str] = "micrometers"
     well: str
     site: str | None
-    cell_count: int
-    mean_outgrowth: float
+    endpoints: WellEndpoints
+
+    @staticmethod
+    def cells_path(path):
+        return path.with_name(path.name.replace("_neurite_outgrowth_summary_", "_neurite_outgrowth_cells_"))
 
     @classmethod
     def read(cls, path):
@@ -69,7 +106,26 @@ class NativeSummary:
             raise ValueError(f"Inconsistent mean outgrowth: {path}")
         if (int(row["z_index"]), int(row["timepoint"])) != (1, 1):
             raise ValueError(f"Unexpected acquisition plane: {path}")
-        return cls(row["well"], row.get("site"), count, measured_mean)
+        cells = read_rows(cls.cells_path(path))
+        if len(cells) != count or len({int(cell["cell"]) for cell in cells}) != count:
+            raise ValueError(f"Cell identities disagree with summary: {path}")
+        if any(cell["coordinate_unit"] != cls.coordinate_unit or
+               cell["well"] != row["well"] or cell.get("site") != row.get("site")
+               for cell in cells):
+            raise ValueError(f"Cell measurements use another source or calibration: {path}")
+        for cell_column, summary_column in (("total_outgrowth", "total_outgrowth"),
+                                            ("branches", "total_branches")):
+            if not math.isclose(sum(float(cell[cell_column]) for cell in cells),
+                                float(row[summary_column]), rel_tol=1e-9, abs_tol=1e-9):
+                raise ValueError(f"Cell {cell_column} does not reconcile to summary: {path}")
+        if not math.isclose(float(row["total_branches"]) / count,
+                            float(row["mean_branches_per_cell"]), rel_tol=1e-9):
+            raise ValueError(f"Inconsistent branch denominator: {path}")
+        values = {name: declaration.native_value(row, cells)
+                  for name, declaration in endpoint_declarations().items()}
+        if not all(math.isfinite(value) and value >= 0 for value in values.values()):
+            raise ValueError(f"Invalid native endpoint: {path}")
+        return cls(row["well"], row.get("site"), WellEndpoints(**values))
 
 
 class WellAggregation(ABC):
@@ -78,6 +134,8 @@ class WellAggregation(ABC):
     name: str
     description: str
     figure_label: str
+    process_length_description: str
+    total_outgrowth_description: str
 
     @abstractmethod
     def aggregate(self, rows):
@@ -89,6 +147,7 @@ class WellAggregation(ABC):
             row = NativeSummary.read(path)
             grouped.setdefault(row.well, []).append(row)
             paths.append(path)
+            paths.append(NativeSummary.cells_path(path))
         return {well: self.aggregate(rows) for well, rows in grouped.items()}, paths
 
 
@@ -96,28 +155,68 @@ class MosaicWellAggregation(WellAggregation):
     name = "mosaic"
     description = "OpenHCS mosaic total length / detected cells; MetaXpress well export"
     figure_label = "Stitched-mosaic well means from a fixed-pipeline transfer evaluation"
+    process_length_description = "Mean of per-cell mean/median root-partition lengths in the mosaic; not pooled segment statistics. MetaXpress cell-summary aggregation is not declared."
+    total_outgrowth_description = "Total traced length in the site-collapsed mosaic, not a sum of overlapping field totals."
 
     def aggregate(self, rows):
         if len(rows) != 1 or rows[0].site is not None:
             raise ValueError("Mosaic protocol requires exactly one site-collapsed summary per well")
         row = rows[0]
-        return WellEndpoints(row.mean_outgrowth, row.cell_count)
+        return row.endpoints
 
 
 class SiteMeanWellAggregation(WellAggregation):
     name = "site-mean"
-    description = "Unweighted mean of nine native site mean-outgrowth/cell-count endpoints; MetaXpress well export"
+    description = "Unweighted mean of nine native site endpoints; MetaXpress well export"
     figure_label = "Nine-field well means from a fixed-pipeline transfer evaluation"
+    process_length_description = "Mean of per-cell mean/median root-partition lengths within each site, then unweighted site mean; not pooled segment statistics. MetaXpress cell-summary aggregation is not declared."
+    total_outgrowth_description = "Unweighted mean of field totals; overlap is not deduplicated and field totals are not summed as unique-well length."
 
     def aggregate(self, rows):
         if len(rows) != 9 or {row.site for row in rows} != {str(site) for site in range(1, 10)}:
             raise ValueError("Site-mean protocol requires nine unique measured sites, 1–9, for each well")
-        return WellEndpoints(mean(row.mean_outgrowth for row in rows),
-                             mean(row.cell_count for row in rows))
+        return WellEndpoints(**{metric: mean(getattr(row.endpoints, metric) for row in rows)
+                                for metric in METRICS})
 
 
-def compare(reference, key, summaries, output, aggregation, coded_plate, pipeline):
+def reference_rows(reference, workbook, metrics):
+    """Use the existing well metadata; decode original workbook endpoints once."""
+    rows = read_rows(reference)
+    if workbook is not None:
+        from openpyxl import load_workbook
+        book = load_workbook(workbook, read_only=True, data_only=True)
+        try:
+            wanted = {(row["excel_sheet"], int(row["excel_row"])): row for row in rows}
+            declarations = endpoint_declarations()
+            for sheet in book:
+                headers = None
+                for number, values in enumerate(sheet.iter_rows(values_only=True), 1):
+                    if "Number of Cells (Neurite Outgrowth)" in values:
+                        headers = values
+                    target = wanted.get((sheet.title, number))
+                    if target is None:
+                        continue
+                    if headers is None or values[0] != target["well"]:
+                        raise ValueError(f"Workbook source row identity changed: {sheet.title}/{number}")
+                    for metric in metrics:
+                        target[metric] = values[headers.index(declarations[metric].reference_column)]
+                    del wanted[(sheet.title, number)]
+            if wanted:
+                raise ValueError("Reference metadata names missing workbook rows")
+        finally:
+            book.close()
+    for row in rows:
+        for metric in metrics:
+            if metric not in row or not math.isfinite(float(row[metric])) or float(row[metric]) < 0:
+                raise ValueError(f"Missing or invalid reference endpoint {metric}: {row['plate']}/{row['well']}")
+    return rows
+
+
+def compare(reference, key, summaries, output, aggregation, coded_plate, pipeline,
+            *, metrics=DEFAULT_METRICS, workbook=None):
     inputs = [reference, key, pipeline]
+    if workbook is not None:
+        inputs.append(workbook)
     mapping = {}
     for image in json.loads(key.read_text())["images"]:
         plate, filename = image["coded_relative_path"].split("/")
@@ -136,14 +235,14 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
         raise ValueError("Multiple coded wells map to the same physical well")
     inputs.extend(paths)
     joined = []
-    for row in read_rows(reference):
+    for row in reference_rows(reference, workbook, metrics):
         identity = (row["plate"], row["well"])
         if identity not in native:
             continue
         joined.append({**row, **{f"openhcs_{metric}": native[identity][metric]
-                                for metric in METRICS}})
+                                for metric in metrics}})
     effects = []
-    for condition in ("FC-A", "Y27"):
+    for condition in dict.fromkeys(row["condition"] for row in joined):
         curve = [row for row in joined if row["condition"] == condition]
         control = [row for row in curve if float(row["nominal_dose_uM"]) == 0]
         if len(control) != 2:
@@ -152,7 +251,7 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
             drug = [row for row in curve if float(row["nominal_dose_uM"]) == dose]
             if len(drug) != 2:
                 raise ValueError(f"Missing technical replicate: {condition}/{dose}")
-            for metric in METRICS:
+            for metric in metrics:
                 result = {"plate": drug[0]["plate"], "condition": condition,
                           "dose_uM": dose, "metric": metric,
                           "baseline_wells": ";".join(row["well"] for row in control),
@@ -184,6 +283,9 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
         "aggregation_protocol": aggregation.name,
         "aggregation": aggregation.description,
         "coded_plate": coded_plate,
+        "metrics": list(metrics),
+        "process_length_aggregation": aggregation.process_length_description,
+        "total_outgrowth_aggregation": aggregation.total_outgrowth_description,
         "coordinate_unit": NativeSummary.coordinate_unit,
         "pipeline_source": str(pipeline),
         "protocol_figure_label": aggregation.figure_label,
@@ -199,8 +301,12 @@ if __name__ == "__main__":
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--coded-plate", required=True,
                         help="Source plate identity in the evaluation key, not the output directory name")
+    parser.add_argument("--metrics", nargs="+", choices=METRICS, default=DEFAULT_METRICS)
+    parser.add_argument("--reference-workbook", type=Path,
+                        help="Original workbook supplies selected endpoints at the CSV's retained Excel row identities.")
     protocols = {protocol.name: protocol for protocol in WellAggregation.__subclasses__()}
     parser.add_argument("--aggregation", choices=protocols, required=True)
     args = parser.parse_args()
     compare(args.reference, args.key, args.summaries, args.output,
-            protocols[args.aggregation](), args.coded_plate, args.pipeline)
+            protocols[args.aggregation](), args.coded_plate, args.pipeline,
+            metrics=tuple(args.metrics), workbook=args.reference_workbook)

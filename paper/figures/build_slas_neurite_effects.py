@@ -7,14 +7,14 @@ from pathlib import Path
 from statistics import mean, stdev
 
 from build_slas_visual_story import BLUE, TEAL, INK, MUTED, ROOT, FigureSheet
-from compare_personal_neurite import METRICS, read_rows
+from compare_personal_neurite import DEFAULT_METRICS, METRICS, endpoint_declarations, read_rows
 
 
 class NeuriteEffectFigure(FigureSheet):
-    """One well table supplies points and both endpoint panels."""
+    """One well table supplies points for every requested endpoint panel."""
 
-    def __init__(self, tables: Path, *, stem: str):
-        super().__init__(stem, "Neurite outgrowth: drug responses across methods", 7.6)
+    def __init__(self, tables: Path, *, stem: str, metrics=DEFAULT_METRICS):
+        super().__init__(stem, "Neurite outgrowth: drug responses across methods", 3.4 * len(metrics) + .8)
         self.source(Path(__file__))
         self.source(ROOT / "paper/figures/compare_personal_neurite.py")
         for name in ("joined_wells.csv", "treatment_effects.csv", "source_evidence.json"):
@@ -23,10 +23,10 @@ class NeuriteEffectFigure(FigureSheet):
         effects = read_rows(tables / "treatment_effects.csv")
         evidence = json.loads((tables / "source_evidence.json").read_text())
         self.text(3, 91, evidence["protocol_figure_label"], size=11, color=MUTED)
-        labels = {"mean_outgrowth": "Mean outgrowth per cell / control",
-                  "cell_count": "Detected cells / control"}
+        declarations = endpoint_declarations()
+        conditions = tuple(sorted({item["condition"] for item in effects}))
         limits = {}
-        for metric in METRICS:
+        for metric in metrics:
             extents = [float(group[f"{method}_fold_change"]) + sign *
                        float(group[f"{method}_treatment_sd"]) / float(group[f"{method}_control_mean"])
                        for group in effects if group["metric"] == metric
@@ -34,11 +34,14 @@ class NeuriteEffectFigure(FigureSheet):
             lower, upper = min(extents), max(extents)
             padding = (upper - lower) * 0.08
             limits[metric] = (lower - padding, upper + padding)
-        for column, (condition, title) in enumerate((("FC-A", "FC-A"), ("Y27", "Y27632"))):
-            for row, metric in enumerate(METRICS):
-                left, bottom = 0.10 + column * 0.49, 0.56 - row * 0.38
-                axis = self.figure.add_axes((left, bottom, 0.37, 0.26))
-                self.panel(chr(65 + row * 2 + column), title, left * 100, (bottom + 0.28) * 100)
+        for column, condition in enumerate(conditions):
+            for row, metric in enumerate(metrics):
+                left = .10 + column * (.90 / len(conditions))
+                bottom = .17 + (len(metrics) - 1 - row) * (.71 / len(metrics))
+                height = .48 / len(metrics)
+                axis = self.figure.add_axes((left, bottom, .72 / len(conditions), height))
+                self.panel(chr(65 + row * len(conditions) + column), condition,
+                           left * 100, (bottom + height + .02) * 100)
                 selected = sorted((item for item in effects
                                    if item["condition"] == condition and item["metric"] == metric),
                                   key=lambda item: float(item["dose_uM"]))
@@ -70,7 +73,7 @@ class NeuriteEffectFigure(FigureSheet):
                     axis.plot(positions, means, color=color, linewidth=1.1, label=label, zorder=1)
                 axis.axhline(1, color=MUTED, linewidth=0.8, linestyle="--", zorder=0)
                 axis.set(xlim=(-0.5, 4.5), ylim=limits[metric],
-                         ylabel=labels[metric], xlabel="Concentration (µM)")
+                         ylabel=declarations[metric].label, xlabel="Concentration (µM)")
                 axis.set_xticks(range(5), [item["dose_uM"] for item in selected])
                 axis.tick_params(labelsize=9, colors=INK)
                 axis.spines[["top", "right"]].set_visible(False)
@@ -87,5 +90,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tables", type=Path, required=True)
     parser.add_argument("--stem", required=True)
+    parser.add_argument("--metrics", nargs="+", choices=METRICS, default=DEFAULT_METRICS)
     args = parser.parse_args()
-    NeuriteEffectFigure(args.tables.resolve(), stem=args.stem).save()
+    NeuriteEffectFigure(args.tables.resolve(), stem=args.stem, metrics=tuple(args.metrics)).save()
