@@ -234,17 +234,20 @@ Upper: matched DNA, actin, seeded territories and combined outlines following au
 
 The existing commercial export contains 120 well summaries from two plates.
 An evaluation-only source key links the coded images to their physical wells.
-Sixty wells on the controls plate have retained OpenHCS mosaic summaries from
-one earlier complete run (A018). These provide a treatment-response comparison,
-not a score for the current nine-field autonomous pipeline illustrated in
-main Figure 5. The latter covers one DMSO well and cannot establish drug effects.
+The frozen recipe settings from the nine-field autonomous analysis illustrated
+in main Figure 5 were applied to 20 drug and control wells on one plate using
+the current production backend. All nine fields in each well were analysed,
+giving 180 field summaries. Source-file hashes, physical well identities and
+the 1.3556 µm pixel calibration were checked against the retained source key.
+This fixed-recipe transfer evaluates treatment responses; it is not an
+additional autonomous authoring trial.
 
 Each FC-A and Y27632 (export label Y27) concentration has two technical-replicate
 wells. Fold change is the treatment mean divided by the same curve's zero-dose
 DMSO mean; zero-dose wells are not pooled across drugs. Mean outgrowth increased
 at every nonzero concentration in both methods:
 
-![Matched well-level outgrowth and cell-count responses to FC-A and Y27632.](../figures/slas/personal_neurite_effects_retained.png){width=6in}
+![Matched well-level outgrowth and cell-count responses to FC-A and Y27632.](../figures/slas/personal_neurite_effects_transfer.png){width=6in}
 
 (A–B) Mean outgrowth per detected cell relative to the same drug curve's DMSO
 control; (C–D) cell-count ratios in those same wells. Dots show the two technical
@@ -255,27 +258,27 @@ Dose positions are equally spaced for display, not a fitted concentration–resp
 model. Paired treatment panels use the same vertical scale. The plot and
 numerical tables are generated from the same well measurements.
 
-Agreement is limited to effect direction: the magnitudes differ, and the
-OpenHCS Y27632 response does not reproduce the increasing MetaXpress dose trend.
-The commercial endpoint is a well export apparently averaging separate sites;
-OpenHCS measures total retained process length divided by detected cells in a
-stitched mosaic. Differences in segmentation and aggregation can therefore
-affect the comparison. Exported MetaXpress length units and exact site weighting
-are unspecified, so absolute lengths and counts are not treated as equivalent.
+Both methods reproduce increasing mean outgrowth across the four nonzero doses
+for each drug. OpenHCS fold changes are smaller at every nonzero concentration.
+Each OpenHCS well summary is the unweighted mean of its nine field-level
+outgrowth-per-cell measurements; cell counts are averaged over those same fields.
+The commercial endpoint is an existing well export whose exact site weighting
+and length units are unspecified. Absolute lengths and counts are therefore
+not treated as equivalent.
 Within-method ratios avoid a constant unit conversion but do not remove those
 measurement differences. Neither method is manual ground truth, and two
 technical wells do not establish biological replication or significance.
 
-The [joined physical-well table](personal_neurite_comparison/joined_wells.csv)
-and [treatment-effect table](personal_neurite_comparison/treatment_effects.csv)
+The [joined physical-well table](personal_neurite_transfer/joined_wells.csv)
+and [treatment-effect table](personal_neurite_transfer/treatment_effects.csv)
 retain well identities, means, sample standard deviations, counts, raw deltas,
 fold changes and fractional-change differences. Cell-count changes accompany
 outgrowth to expose denominator changes without inferring toxicity. The
-[source hashes](personal_neurite_comparison/source_evidence.json) identify the
-exact retained inputs; missing wells from the other plate are not filled with
-zero. The comparison script processes tables only and does not tune images.
-The current field pipeline must be applied unchanged to the matching drug and
-control wells before these effects can be attributed to that pipeline.
+[source hashes](personal_neurite_transfer/source_evidence.json) identify the
+exact submitted pipeline, source key, commercial export and all 180 native
+summaries. The comparison script processes tables only and does not tune images.
+Overlapping fields are not deduplicated, so averaged field counts are not unique
+whole-well neuron counts. Unselected wells are not filled with zero.
 
 ### Assisted laboratory neurite mosaic
 

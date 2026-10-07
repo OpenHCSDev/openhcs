@@ -129,6 +129,16 @@ Codex-credit equivalents at published rates observed on 6 October 2026.
 These rate scenarios are not actual subscription charges; billing amounts
 were not recorded.
 
+For the laboratory neurite comparison, we applied the frozen recipe settings
+to nine fields in each of 20 FC-A and Y27632 wells using the current production
+backend. An evaluation-only source key linked coded inputs to physical wells.
+Each well's endpoint was the unweighted mean of field-level outgrowth per
+detected cell; cell counts were averaged over the same fields. Treatment means
+were divided by the same drug curve's zero-dose DMSO mean, with two technical
+wells at each concentration. Existing MetaXpress well exports supplied the
+comparison response, not manual tracing truth. This fixed-recipe transfer was
+separate from autonomous pipeline authoring.
+
 ### Performance measurements and reproducibility
 
 The matched single-sample evaluation used CPU execution with one worker and one numerical thread on one physical core. OpenHCS revision [pending]{.benchmark-claim key=source_revision} ran with Python 3.12; native CellProfiler 4.2.8.1 ran with Python 3.9 in its separate environment. Each workflow used one selected source well or sample, which can contain multiple image sets, with unchanged processing settings and the declared comparison outputs. A warmup preceded three measured repetitions. Complete retained native observations were reused only after the workload, inputs, outputs, software environment and hardware checks passed; OpenHCS observations were acquired on the same clean source revision across all 30 workflows.
@@ -251,15 +261,15 @@ neurons. The frozen pipeline, outputs and independent image review are linked
 in Supplementary Data 8. This trial used development images rather than an
 unseen test set.
 
-Retained measurements from an earlier complete laboratory-plate analysis also
-allowed comparison with commercial MetaXpress results in matched physical wells.
-Both methods recovered increased mean outgrowth at the nonzero FC-A and Y27632
-concentrations, but the response magnitudes differed and OpenHCS did not reproduce
-the increasing Y27632 dose trend (Supplementary Figure 12). This comparison
-tests recovery of a treatment response, not equivalence of individual cell masks
-or lengths. The earlier run used stitched mosaics rather than the separate-field
-pipeline illustrated in Figure 5; its measurements are not credited to that
-autonomous trial.
+Applying the fixed recipe to 20 matched drug and control wells recovered the
+treatment responses measured by commercial MetaXpress analysis (Supplementary
+Figure 12). Both methods showed increased mean outgrowth at every nonzero FC-A
+and Y27632 concentration, with increasing treatment means across the four doses
+in each drug curve. OpenHCS outgrowth fold changes were smaller at every nonzero
+concentration. This comparison tests recovery of a treatment response, not
+equivalence of individual cell masks or lengths. The transfer used unchanged
+recipe settings on the current production backend and was separate from the
+autonomous authoring trial.
 
 Supplementary Data 8 separately reports an assisted stitched-mosaic analysis of the laboratory dataset.
 
@@ -284,6 +294,7 @@ being treated as additional experiments.
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Retained initial principal-shaft recovery; final repair exceeded the shaft target, and per-neuron crossing ownership remains unresolved |
 | Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
+| Laboratory neurites, 20-well transfer | MetaXpress well responses; two technical wells per drug/concentration | Fixed recipe recovered both increasing outgrowth dose trends with smaller fold changes; not a separate autonomous authoring trial or manual-trace score |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
 Table 2. Results and evaluation methods for autonomous image analysis.
