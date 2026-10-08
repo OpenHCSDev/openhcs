@@ -153,73 +153,39 @@ assisted-development evaluation, separate from autonomous authoring.
 
 ## Supplementary Figure 6. Total speedup by workflow and assigned sample count
 
-![Total speedups for each workflow, revision and worker configuration on linear and logarithmic axes.](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.png){width=6in}
+![Total speedups for each workflow, revision and worker configuration on linear and logarithmic axes.](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.png){width=4.8in}
 
-(A1–A2) Illumination correction Example 3; (B1–B2) Vitra;
-(C1–C2) 3D monolayer. Left and right columns present the same measurements on
-linear and logarithmic axes. Each point is the ratio of the median total time
-for one stock CellProfiler process to the median OpenHCS total time, from three
-measured repetitions. Colour identifies the production revision; marker shape
-identifies the OpenHCS worker count. Lines join only observations of the same
-workflow, revision and worker configuration, never different capture heads.
-
-The earlier revision `eb773573c` supplies the measured 1, 9 and 16-assignment
-series for these three workflows. Revision `d8678dbd4` supplies matched eight-assignment
-observations with one and two workers for all three workflows, with its own
-same-revision single-assignment observations. The later nine-assignment record at `71aded26c`
-supplies one- and three-worker observations for all three workflows; the later
-sixteen-assignment record at `2cda84a369` supplies one- and four-worker
-observations for the 3D monolayer only. The current full-cohort revision
-`3894ca3a0` supplies one-assignment, one-worker observations, not a current
-multiworker sweep. Two-, three- and four-worker captures have different revisions,
-assignment counts and cohort sizes; they are not a single matched 1–4-worker sweep.
-Eight, nine and sixteen assignments repeat each workflow's existing source sample;
-they are not independent biological wells. No averages across unlike workflows
-or revisions are used here.
-
-Execution includes worker coordination, saving, plate exports and finalization.
-Total includes disjoint compile and execute client submit/wait phases. Endpoint,
-library and kernel readiness and subsequent scientific comparison are outside
-the clocks; native total excludes one-time pipeline loading and JVM startup.
-The different revisions and workloads remain separate qualified checkpoints.
-Exact ratios, independent-CellProfiler-process controls and the separate
-single-core amortization plots are linked in Supplementary Data 3. These selected
-workflows do not replace the full single-sample cohort of main Figure 6.
+(A1–A2) Illumination correction Example 3; (B1–B2) Vitra; (C1–C2) 3D monolayer.
+Columns use linear and logarithmic axes. Points are CellProfiler/OpenHCS median
+total-time ratios over three repetitions. Colour identifies revision; shape
+identifies worker count. Lines join matched configurations. Supplementary Data 3
+gives the protocol and numerical tables.
 
 ## Supplementary Figure 6 (continued). Matched worker comparisons
 
-![Matched one- versus two-, three- and four-worker comparisons, retaining separate capture revisions.](../figures/slas/supp_worker_comparisons.png){width=6in}
+![Matched one- versus two-, three- and four-worker comparisons, retaining separate capture revisions.](../figures/slas/supp_worker_comparisons.png){width=5in}
 
-(A) Eight assignments of three workflows on revision `d8678dbd4`: one versus
-two OpenHCS workers. (B) Nine assignments of the same three workflow identities
-on revision `71aded26c`: one versus three OpenHCS workers. Within each row, execution
-and compile-plus-run total are separate groups. Each dot is one workflow's
-measured ratio against one actual stock CellProfiler process on the same
-assignments. Bars give arithmetic means, black lines medians, and annotations
-the minimum, median, mean and maximum. Rows do not share a revision or
-cohort and are not pooled. Warmup and three measured repetitions passed each
-workflow's declared-output comparisons. Repeated assignments are computational
-replicates, not biological replicates.
-
-(C) Sixteen assignments of the 3D monolayer workflow on revision `2cda84a369`:
-one versus four OpenHCS workers, with execution and total measured separately
-against one actual stock CellProfiler process. There is one workflow, so
-minimum, median, mean and maximum coincide and are marked “all”. This capture
-does not extend the eight- or nine-assignment records into a common scaling sweep.
-The original [eight-/nine-assignment sheet](../figures/slas/supp_matched_worker_speedups.png)
-and [four-worker sheet](../figures/slas/supp_matched_worker_speedups_continued_2.png)
-retain the source records used for this consolidated layout.
+**(A)** Eight assignments of three workflows on revision `d8678dbd4`: one versus
+two OpenHCS workers. (B) Nine assignments of the same three workflows on
+revision `71aded26c`: one versus three OpenHCS workers. Within each row,
+execution and compile-plus-run total are separate groups. Each dot is one
+workflow's ratio against one stock CellProfiler process on the same assignments.
+Bars give arithmetic means, black lines medians, and annotations the minimum,
+median, mean and maximum. Each row uses its own revision and cohort. (C)
+Sixteen assignments of 3D monolayer on revision `2cda84a369`: one versus
+four OpenHCS workers. There is one workflow, so minimum, median, mean and
+maximum coincide and are marked “all”. Supplementary Data 3 gives the protocol
+and source tables.
 
 ## Supplementary Figure 6 (continued). Individual workflow runtimes
 
 ![Paired execution and total runtime for all thirty workflows.](../figures/slas/benchmark-publication/measured_benchmark_workflow_runtimes.png){width=6in}
 
-(A) Execution; (B) compile-plus-run total. Paired bars show measured median
-CellProfiler and OpenHCS durations for each of the thirty workflows in main
-Figure 6, with one worker and one numerical thread. Both panels use the same
-logarithmic seconds scale. Row annotations give CellProfiler/OpenHCS ratios of
-independent engine medians from three measured repetitions. These are measured
-native clocks. All thirty workflows passed their declared-output comparisons.
+**(A)** Execution; **(B)** compile-plus-run total. Paired bars show median CellProfiler
+and OpenHCS durations for each of the thirty workflows in main Figure 6, with
+one worker and one numerical thread. Both panels use the same logarithmic
+seconds scale. Row annotations give CellProfiler/OpenHCS ratios of engine medians from three measured
+repetitions. All thirty workflows passed their declared-output comparisons.
 
 The [linear-scale aggregate view](../figures/slas/benchmark-publication/measured_benchmark_publication.png)
 shows the same aggregate measurements on linear axes.
@@ -335,7 +301,7 @@ current-version compatibility matrix.
 
 ## Supplementary Data 3. Worker measurements
 
-### Retained measured panels and numerical tables
+### Measured panels and numerical tables
 
 - [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 6 and the paired-runtime continuation of Supplementary Figure 6.
 - [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
@@ -361,7 +327,36 @@ owner or establish that later fixes eliminate paging.
 
 ### Matched scaling protocol
 
-The selected-workflow comparisons use one stock CellProfiler process and the declared OpenHCS worker count. OpenHCS timings include worker coordination, saving, exports and finalization. Additional independent CellProfiler processes provide a calibration. Assignment counts, revisions and cohorts remain separate in Supplementary Figure 6 and its source tables.
+The earlier revision `eb773573c` supplies the measured 1, 9 and 16-assignment
+series for illumination correction Example 3, Vitra and 3D monolayer.
+Revision `d8678dbd4` supplies matched eight-assignment
+observations with one and two workers for all three workflows, with its own
+same-revision single-assignment observations. The later nine-assignment record at `71aded26c`
+supplies one- and three-worker observations for all three workflows; the later
+sixteen-assignment record at `2cda84a369` supplies one- and four-worker
+observations for the 3D monolayer only. The current full-cohort revision
+`3894ca3a0` supplies one-assignment, one-worker observations, not a current
+multiworker sweep. Two-, three- and four-worker captures have different revisions,
+assignment counts and cohort sizes; they are not a single matched 1–4-worker sweep.
+Eight, nine and sixteen assignments repeat each workflow's existing source sample;
+they are not independent biological wells. No averages across unlike workflows
+or revisions are used here.
+
+Execution includes worker coordination, saving, plate exports and finalization.
+Total includes disjoint compile and execute client submit/wait phases. Endpoint,
+library and kernel readiness and subsequent scientific comparison are outside
+the clocks; native total excludes one-time pipeline loading and JVM startup.
+Main Figure 6 reports the full single-sample cohort. The tables above give exact
+ratios, independent-CellProfiler-process controls and single-core amortization.
+
+Warmup and three measured repetitions passed each workflow's declared-output
+comparisons. The original [eight-/nine-assignment sheet](../figures/slas/supp_matched_worker_speedups.png)
+and [four-worker sheet](../figures/slas/supp_matched_worker_speedups_continued_2.png)
+provide the inputs to the consolidated worker-comparison layout.
+
+The selected-workflow comparisons use one stock CellProfiler process and the
+declared OpenHCS worker count. Additional independent CellProfiler processes
+provide a calibration.
 
 ## Figure assembly and interface records
 
