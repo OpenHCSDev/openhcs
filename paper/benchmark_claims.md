@@ -5,15 +5,14 @@ This projection does not run benchmarks, change records, warm kernels or
 compile a function catalog. A qualified dated checkpoint is not automatically
 the final publication freeze.
 
-## Regenerate Figure 2 and the claim include
+## Regenerate Figure 6 and the claim include
 
 The current benchmark owner is the frozen seven-mode protocol in
 `benchmark/results/matched_worker_sweep_20261007_exportfixed`. Its controller
 qualifies and archives all 30 workflows in each requested mode before rendering.
-The single-well, eight-assignment/two-worker and twelve-assignment one-, two-, three- and four-worker modes are qualified; the sixteen-assignment/four-worker mode remains pending.
-Do not publish a complete-sweep claim until every mode has passed.
+All seven modes are qualified and archived for all thirty workflows; their figures and numerical include are generated from the complete admitted sweep.
 
-After the complete sweep is qualified, use its existing renderer to produce the
+Use its existing renderer to produce the
 manuscript assets directly at the consumer path:
 
 ```sh

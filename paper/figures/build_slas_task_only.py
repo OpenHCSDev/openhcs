@@ -338,34 +338,34 @@ def build(root: Path, output: Path) -> None:
 
 
 def submission_summary() -> None:
-    """Draw distinct endpoints from published tables, without reopening predictions."""
-    from build_slas_visual_story import FigureSheet, MUTED
+    """Combine distinct frozen endpoints with an independent local repair witness."""
+    from build_slas_visual_story import MUTED
+    from build_slas_supplement import SupplementFigure
     from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
 
     h001, bbbc039 = load_evaluations(ROOT)
-    sheet = FigureSheet("submission_analysis_summary", "Different biological tasks require different checks", 9.0)
+    sheet = SupplementFigure("submission_analysis_summary", 10.0)
     sources = [H001_SOURCE, BBBC039_SOURCE,
                SOURCE_DIRECTORY / "bbbc039-uninspected-fields.csv",
                SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
                SOURCE_DIRECTORY / "bbbc007-fresh26-final-candidate.rst",
                SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json",
-               SOURCE.relative_to(ROOT),
-               Path("paper/supplementary/personal_neurite_repaired_morphometry/treatment_effects.csv")]
+               SOURCE.relative_to(ROOT)]
     sheet.source(Path(__file__))
     sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
     for path in sources:
         sheet.source(ROOT / path)
-    axes = [sheet.figure.add_axes((0.09 + col * 0.49, bottom, 0.37, 0.19))
-            for bottom in (0.70, 0.405, 0.11) for col in (0, 1)]
+    axes = [sheet.figure.add_axes((0.09 + col * 0.49, bottom, 0.37, 0.15))
+            for bottom in (0.79, 0.55) for col in (0, 1)]
+    axes.append(sheet.figure.add_axes((0.09, 0.32, 0.86, 0.12)))
     titles = ("A  Bright objects", "B  Independent nuclear analyses",
             "C  DNA / actin cell boundaries", "D  Three-dimensional centres",
-              "E  Protein translocation", "F  Laboratory neurite response")
+              "E  Protein translocation")
     details = ("Same image · computational reference",
                "Three authors · independent instance annotations",
                "16 fields each · manual-outline union",
                "15 manual centres · coverage not exhaustive",
-               "96 wells, including development · 4 wells / dose",
-               "Assisted repair · 2 technical wells / dose")
+               "96 wells, including development · 4 wells / dose")
     for axis, title, detail in zip(axes, titles, details, strict=True):
         axis.set_title(title, loc="left", fontsize=12, fontweight="bold", pad=28)
         axis.text(0, 1.06, detail, transform=axis.transAxes, fontsize=9, color=MUTED)
@@ -447,19 +447,13 @@ def submission_summary() -> None:
     axes[4].tick_params(axis="x", labelsize=8)
     axes[4].legend(frameon=False, fontsize=9, loc="upper left")
 
-    rows = list(csv.DictReader((ROOT / sources[7]).open()))
-    selected = [row for row in rows if row["metric"] == "mean_outgrowth" and float(row["dose_uM"]) == 40]
-    if len(selected) != 2:
-        raise ValueError("Expected two retained 40 µM neurite treatment endpoints")
-    for offset, key, color, label in ((-0.14, "metaxpress_fold_change", BLUE, "MetaXpress"),
-                                     (0.14, "openhcs_fold_change", TEAL, "OpenHCS")):
-        values = [float(row[key]) for row in selected]
-        bars = axes[5].bar(np.arange(2) + offset, values, width=0.26, color=color, label=label)
-        axes[5].bar_label(bars, labels=[f"{v:.2f}" for v in values], padding=3, fontsize=10)
-    axes[5].axhline(1, color=MUTED, linestyle="--", linewidth=0.8)
-    axes[5].set(xticks=(0, 1), xticklabels=[{"Y27": "Y27632", "FCA": "FC-A"}.get(row["condition"], row["condition"]) for row in selected],
-                xlabel="40 µM relative to matched DMSO", ylabel="Outgrowth per cell (fold)", ylim=(0, 2.6))
-    axes[5].legend(frameon=False, fontsize=9, loc="lower left")
+    sheet.text(3, 24, "F  Independent DNA / actin analysis: local merge repair",
+               size=12, weight="bold")
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-source-proof.json")
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h003-native-render-receipt.json")
+    sheet.artwork("h003_native_repair", (2, 2, 96, 21), crop=(1, 4, 99, 42))
+    sheet.text(3, 0.5, "Uncoached H003 author, same C4 region; local separation repaired, not complete segmentation accuracy.",
+               size=8.5, color=MUTED)
     sheet.save()
 
 

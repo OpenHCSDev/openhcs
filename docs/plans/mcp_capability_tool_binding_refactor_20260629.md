@@ -1217,8 +1217,9 @@ XDG_CACHE_HOME=/tmp/openhcs-test-cache pytest \
   `UiListBranchesMcpToolBinding`.
 - Kept the four UI catalog connection leaves explicit:
   code documents, state surfaces, actions, and windows. Those bindings still
-  own MCP-specific identity flattening through `McpUiCatalogPayloadProjection`;
-  moving them requires making that projection DTO/serialization-owned first.
+  serialize their declaration-owned DTOs through `to_jsonable`, preserving
+  nested identities exactly as required by their capability output contracts.
+  The extra MCP identity-flattening projection has been deleted.
 
 Verified gates:
 

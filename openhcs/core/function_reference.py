@@ -31,6 +31,19 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class ModuleExportFunctionSource:
+    """Source capability for a callable exported unchanged by its module."""
+
+    import_identity: CallableImportIdentity
+
+    @property
+    def source_import_identity(self) -> CallableImportIdentity:
+        return self.import_identity
+
+    def source_expression(self, imported_name: str) -> str:
+        return imported_name
+
+
 @dataclass(frozen=True, kw_only=True)
 class FunctionReference(PythonSourceLiteral, ABC):
     """Picklable callable identity plus explicit compiler metadata."""
@@ -53,15 +66,13 @@ class FunctionReference(PythonSourceLiteral, ABC):
         return self.import_identity.module_name
 
     @property
+    @abstractmethod
     def source_import_identity(self) -> CallableImportIdentity:
         """Import authority used to reconstruct this declaration in Python."""
 
-        return self.import_identity
-
+    @abstractmethod
     def source_expression(self, imported_name: str) -> str:
         """Render through the source authority, including pycodify name aliases."""
-
-        return imported_name
 
     def source_literal(self) -> str:
         return self.source_expression(self.source_import_identity.function_name)
@@ -107,7 +118,7 @@ class FunctionReference(PythonSourceLiteral, ABC):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ImportableFunctionReference(FunctionReference):
+class ImportableFunctionReference(ModuleExportFunctionSource, FunctionReference):
     """Reference whose callable identity is owned by a Python module export."""
 
     def resolve(self) -> Callable:
@@ -157,6 +168,13 @@ class RegistryFunctionReference(FunctionReference):
         )
 
         return RegistryService.resolve_function_reference(self)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ModuleExportRegistryFunctionReference(
+    ModuleExportFunctionSource, RegistryFunctionReference,
+):
+    """Direct source import with registry-owned transport and wrapper identity."""
 
 
 @dataclass(frozen=True)
@@ -388,8 +406,17 @@ class FunctionReferenceTransportAuthority:
                 metadata,
                 processing_contract=function_metadata.contract,
             )
-        return RegistryFunctionReference(
-            import_identity=function_metadata.import_identity,
+        identity = function_metadata.import_identity
+        exported = FunctionReferenceTransportAuthority.importable_function(
+            identity.module_name, identity.function_name,
+        )
+        reference_type = (
+            ModuleExportRegistryFunctionReference
+            if exported is function_metadata.func
+            else RegistryFunctionReference
+        )
+        return reference_type(
+            import_identity=identity,
             composite_key=composite_key,
             metadata=metadata,
             declaration_revision=FunctionReferenceTransportAuthority.declaration_revision(

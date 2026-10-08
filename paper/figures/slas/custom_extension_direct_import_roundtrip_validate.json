@@ -1,0 +1,25 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "document_id": "object_state_scope:/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0",
+          "errors": [],
+          "normalized_scope_ids": [
+            "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0"
+          ],
+          "schema_version": "openhcs.agent.v1",
+          "valid": true,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_ui_validate_code_document"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

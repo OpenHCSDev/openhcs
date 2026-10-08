@@ -1,0 +1,56 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capture_scope": "window",
+          "captured": true,
+          "errors": [],
+          "frame_condition": "immediate",
+          "height": 1536,
+          "observation": null,
+          "observation_timeout_s": 5,
+          "operation_id": null,
+          "output_dir_path": "/home/ts/code/projects/openhcs/paper/figures/slas/figure1_two_plate_native_20261007",
+          "resource": {
+            "mime_type": "image/png",
+            "path": "/home/ts/code/projects/openhcs/paper/figures/slas/figure1_two_plate_native_20261007/20261007T232717800671Z_main_window_OpenHCS.png",
+            "sha256": "2fbe702f80835fcc10649759cb28a26f96a728440279890bfc5cacee95c8df10",
+            "size_bytes": 494285,
+            "title": "OpenHCS",
+            "uri": "file:///home/ts/code/projects/openhcs/paper/figures/slas/figure1_two_plate_native_20261007/20261007T232717800671Z_main_window_OpenHCS.png"
+          },
+          "schema_version": "openhcs.agent.v1",
+          "summary": {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "identity": {
+              "window_id": "main_window"
+            },
+            "managed_action_ids": [],
+            "manager_scope": null,
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "OpenHCS",
+            "visible": true,
+            "window_kind": "qt_top_level"
+          },
+          "warnings": [],
+          "width": 2048,
+          "window_id": "main_window"
+        }
+      ],
+      "tool": "openhcs_ui_snapshot_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

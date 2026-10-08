@@ -1,0 +1,32 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "action_kind": "auto",
+          "errors": [],
+          "invoked": true,
+          "path_id": "1.0.0.1.1.1",
+          "receipt": {
+            "accepted": true,
+            "bridge_operation_id": "293f8978-81dd-4da5-8b15-4d8c1b4bbee1",
+            "request_token": {
+              "value": null
+            }
+          },
+          "schema_version": "openhcs.agent.v1",
+          "summary": null,
+          "warnings": [],
+          "window_id": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0"
+        }
+      ],
+      "tool": "openhcs_ui_invoke_widget_action"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

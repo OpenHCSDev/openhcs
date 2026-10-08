@@ -1,0 +1,731 @@
+{
+  "mcp_error": false,
+  "payloads": [
+    {
+      "errors": [
+        {
+          "code": "mcp_payload_invalid",
+          "exception_type": "ValueError",
+          "hint": null,
+          "message": "UiActionSummary received undeclared field(s): action_id, widget_id.",
+          "path": null
+        }
+      ],
+      "receipt": {
+        "actions": [
+          {
+            "action_id": "add_step",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "PipelineEditor actions require an initialized current plate. Inspect plate_manager.state, initialize the selected plate, then read window_code_document:pipeline_editor or widget-tree pipeline_editor.",
+              "message": "pipeline_editor action 'add_step' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "pipeline_editor.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "d57c051e2dbb3009086642e504ee5bee4e7b2a942efd8497441c08d9ee26c241",
+            "side_effects": [
+              "opens_step_editor",
+              "may_mutate_pipeline"
+            ],
+            "target_scope_ids": [],
+            "title": "Add",
+            "widget_id": "pipeline_editor"
+          },
+          {
+            "action_id": "del_step",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "PipelineEditor step actions require at least one selected step. Load or create steps with auto_load_pipeline, add_step, or window_code_document:pipeline_editor, then select a step row.",
+              "message": "pipeline_editor action 'del_step' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "pipeline_editor.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected_steps",
+            "selection_revision_token": "d57c051e2dbb3009086642e504ee5bee4e7b2a942efd8497441c08d9ee26c241",
+            "side_effects": [
+              "mutates_pipeline"
+            ],
+            "target_scope_ids": [],
+            "title": "Del",
+            "widget_id": "pipeline_editor"
+          },
+          {
+            "action_id": "edit_step",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "PipelineEditor step actions require at least one selected step. Load or create steps with auto_load_pipeline, add_step, or window_code_document:pipeline_editor, then select a step row.",
+              "message": "pipeline_editor action 'edit_step' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "pipeline_editor.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected_steps",
+            "selection_revision_token": "d57c051e2dbb3009086642e504ee5bee4e7b2a942efd8497441c08d9ee26c241",
+            "side_effects": [
+              "opens_step_editor",
+              "may_mutate_step"
+            ],
+            "target_scope_ids": [],
+            "title": "Edit",
+            "widget_id": "pipeline_editor"
+          },
+          {
+            "action_id": "auto_load_pipeline",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "PipelineEditor actions require an initialized current plate. Inspect plate_manager.state, initialize the selected plate, then read window_code_document:pipeline_editor or widget-tree pipeline_editor.",
+              "message": "pipeline_editor action 'auto_load_pipeline' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "pipeline_editor.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "d57c051e2dbb3009086642e504ee5bee4e7b2a942efd8497441c08d9ee26c241",
+            "side_effects": [
+              "loads_basic_pipeline",
+              "mutates_pipeline"
+            ],
+            "target_scope_ids": [],
+            "title": "Auto",
+            "widget_id": "pipeline_editor"
+          },
+          {
+            "action_id": "code_pipeline",
+            "confirmation_required": false,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "PipelineEditor actions require an initialized current plate. Inspect plate_manager.state, initialize the selected plate, then read window_code_document:pipeline_editor or widget-tree pipeline_editor.",
+              "message": "pipeline_editor action 'code_pipeline' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "pipeline_editor.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "d57c051e2dbb3009086642e504ee5bee4e7b2a942efd8497441c08d9ee26c241",
+            "side_effects": [
+              "opens_code_document_window"
+            ],
+            "target_scope_ids": [],
+            "title": "Code",
+            "widget_id": "pipeline_editor"
+          },
+          {
+            "action_id": "runtime_values",
+            "confirmation_required": false,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "debug_target_required",
+              "exception_type": null,
+              "hint": "Use plate_manager.state to select a plate, initialize it, compile it, then read pipeline_debug_toolbar.session.",
+              "message": "Debug controls require a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "pipeline_editor.state",
+              "pipeline_debug_toolbar.session"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "80eadb4bbe80e2b2ca9a3c0e4a18161ed819f2d300c4619bbbf0d03d73832fbb",
+            "side_effects": [
+              "opens_debug_runtime_inspector"
+            ],
+            "target_scope_ids": [],
+            "title": "Inspect Runtime",
+            "widget_id": "pipeline_debug_toolbar"
+          },
+          {
+            "action_id": "run",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "debug_target_required",
+              "exception_type": null,
+              "hint": "Use plate_manager.state to select a plate, initialize it, compile it, then read pipeline_debug_toolbar.session.",
+              "message": "Debug controls require a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "pipeline_editor.state",
+              "pipeline_debug_toolbar.session"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "80eadb4bbe80e2b2ca9a3c0e4a18161ed819f2d300c4619bbbf0d03d73832fbb",
+            "side_effects": [
+              "starts_or_controls_debug_execution"
+            ],
+            "target_scope_ids": [],
+            "title": "Debug",
+            "widget_id": "pipeline_debug_toolbar"
+          },
+          {
+            "action_id": "step",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "debug_target_required",
+              "exception_type": null,
+              "hint": "Use plate_manager.state to select a plate, initialize it, compile it, then read pipeline_debug_toolbar.session.",
+              "message": "Debug controls require a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "pipeline_editor.state",
+              "pipeline_debug_toolbar.session"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "80eadb4bbe80e2b2ca9a3c0e4a18161ed819f2d300c4619bbbf0d03d73832fbb",
+            "side_effects": [
+              "starts_or_controls_debug_execution"
+            ],
+            "target_scope_ids": [],
+            "title": "Step",
+            "widget_id": "pipeline_debug_toolbar"
+          },
+          {
+            "action_id": "run_to_pause",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "debug_target_required",
+              "exception_type": null,
+              "hint": "Use plate_manager.state to select a plate, initialize it, compile it, then read pipeline_debug_toolbar.session.",
+              "message": "Debug controls require a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "pipeline_editor.state",
+              "pipeline_debug_toolbar.session"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "80eadb4bbe80e2b2ca9a3c0e4a18161ed819f2d300c4619bbbf0d03d73832fbb",
+            "side_effects": [
+              "starts_or_controls_debug_execution"
+            ],
+            "target_scope_ids": [],
+            "title": "Run to Pause",
+            "widget_id": "pipeline_debug_toolbar"
+          },
+          {
+            "action_id": "choose_source_group",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "debug_target_required",
+              "exception_type": null,
+              "hint": "Use plate_manager.state to select a plate, initialize it, compile it, then read pipeline_debug_toolbar.session.",
+              "message": "Debug controls require a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "pipeline_editor.state",
+              "pipeline_debug_toolbar.session"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "80eadb4bbe80e2b2ca9a3c0e4a18161ed819f2d300c4619bbbf0d03d73832fbb",
+            "side_effects": [
+              "starts_or_controls_debug_execution"
+            ],
+            "target_scope_ids": [],
+            "title": "Choose source group",
+            "widget_id": "pipeline_debug_toolbar"
+          },
+          {
+            "action_id": "stop",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "debug_target_required",
+              "exception_type": null,
+              "hint": "Use plate_manager.state to select a plate, initialize it, compile it, then read pipeline_debug_toolbar.session.",
+              "message": "Debug controls require a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "pipeline_editor.state",
+              "pipeline_debug_toolbar.session"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "80eadb4bbe80e2b2ca9a3c0e4a18161ed819f2d300c4619bbbf0d03d73832fbb",
+            "side_effects": [
+              "starts_or_controls_debug_execution"
+            ],
+            "target_scope_ids": [],
+            "title": "Stop debug session",
+            "widget_id": "pipeline_debug_toolbar"
+          },
+          {
+            "action_id": "restart",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "debug_target_required",
+              "exception_type": null,
+              "hint": "Use plate_manager.state to select a plate, initialize it, compile it, then read pipeline_debug_toolbar.session.",
+              "message": "Debug controls require a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "pipeline_editor.state",
+              "pipeline_debug_toolbar.session"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "current_pipeline",
+            "selection_revision_token": "80eadb4bbe80e2b2ca9a3c0e4a18161ed819f2d300c4619bbbf0d03d73832fbb",
+            "side_effects": [
+              "starts_or_controls_debug_execution"
+            ],
+            "target_scope_ids": [],
+            "title": "Restart",
+            "widget_id": "pipeline_debug_toolbar"
+          },
+          {
+            "action_id": "add_plate",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": true,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "opens_file_dialog",
+              "mutates_plate_collection"
+            ],
+            "target_scope_ids": [],
+            "title": "Add",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "del_plate",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "Inspect openhcs_ui_list_actions and plate_manager.state for the current selection and workflow preconditions before invoking this action.",
+              "message": "PlateManager action 'del_plate' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "mutates_plate_collection"
+            ],
+            "target_scope_ids": [],
+            "title": "Del",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "edit_config",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "Inspect openhcs_ui_list_actions and plate_manager.state for the current selection and workflow preconditions before invoking this action.",
+              "message": "PlateManager action 'edit_config' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "opens_config_window",
+              "may_mutate_plate_config"
+            ],
+            "target_scope_ids": [],
+            "title": "Edit",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "init_plate",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "plate_selection_required",
+              "exception_type": null,
+              "hint": "Use openhcs_ui_get_state_surface(surface_id='plate_manager.state') to inspect available rows and selected_scope_ids. If no rows are listed, add a plate first. For autonomous path-based plate setup, read 'plate_manager.orchestrator_config' with openhcs_ui_get_code_document(selection_mode='all'), then apply source containing plate_paths and pipeline_data via openhcs_ui_apply_code_document. The add_plate UI action opens a GUI file dialog.",
+              "message": "PlateManager action 'init_plate' requires a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "starts_initialization_workflow"
+            ],
+            "target_scope_ids": [],
+            "title": "Init",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "compile_plate",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "plate_selection_required",
+              "exception_type": null,
+              "hint": "Use openhcs_ui_get_state_surface(surface_id='plate_manager.state') to inspect available rows and selected_scope_ids. If no rows are listed, add a plate first. For autonomous path-based plate setup, read 'plate_manager.orchestrator_config' with openhcs_ui_get_code_document(selection_mode='all'), then apply source containing plate_paths and pipeline_data via openhcs_ui_apply_code_document. The add_plate UI action opens a GUI file dialog.",
+              "message": "PlateManager action 'compile_plate' requires a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "starts_compile_workflow"
+            ],
+            "target_scope_ids": [],
+            "title": "Compile",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "run_plate",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "plate_selection_required",
+              "exception_type": null,
+              "hint": "Use openhcs_ui_get_state_surface(surface_id='plate_manager.state') to inspect available rows and selected_scope_ids. If no rows are listed, add a plate first. For autonomous path-based plate setup, read 'plate_manager.orchestrator_config' with openhcs_ui_get_code_document(selection_mode='all'), then apply source containing plate_paths and pipeline_data via openhcs_ui_apply_code_document. The add_plate UI action opens a GUI file dialog.",
+              "message": "PlateManager action 'run_plate' requires a selected plate.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "starts_or_stops_execution_workflow"
+            ],
+            "target_scope_ids": [],
+            "title": "Run",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "code_plate",
+            "confirmation_required": false,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": true,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "opens_code_document_window"
+            ],
+            "target_scope_ids": [],
+            "title": "Code",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "view_results",
+            "confirmation_required": false,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": true,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state",
+              "plate_manager.live_measurements"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "opens_results_window"
+            ],
+            "target_scope_ids": [],
+            "title": "Results",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "view_metadata",
+            "confirmation_required": false,
+            "current_selection_count": 0,
+            "disabled_error": {
+              "code": "ui_action_disabled",
+              "exception_type": null,
+              "hint": "Inspect openhcs_ui_list_actions and plate_manager.state for the current selection and workflow preconditions before invoking this action.",
+              "message": "PlateManager action 'view_metadata' is disabled.",
+              "path": null
+            },
+            "enabled": false,
+            "invocation_mode": "sync",
+            "related_state_surface_ids": [
+              "plate_manager.state"
+            ],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "selected",
+            "selection_revision_token": "b6ea882516451303114760908d5f588c80c74083754b691bcc093a949ced9246",
+            "side_effects": [
+              "opens_metadata_window"
+            ],
+            "target_scope_ids": [],
+            "title": "Viewer",
+            "widget_id": "plate_manager"
+          },
+          {
+            "action_id": "check_for_updates",
+            "confirmation_required": false,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": true,
+            "invocation_mode": "async",
+            "related_state_surface_ids": [],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "global",
+            "selection_revision_token": null,
+            "side_effects": [
+              "checks_trusted_release_service",
+              "may_open_update_confirmation"
+            ],
+            "target_scope_ids": [],
+            "title": "Check for Updates",
+            "widget_id": "main_window"
+          },
+          {
+            "action_id": "restart_session",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": true,
+            "invocation_mode": "async",
+            "related_state_surface_ids": [],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "global",
+            "selection_revision_token": null,
+            "side_effects": [
+              "saves_all_plate_declarations_and_history",
+              "restarts_ui_process",
+              "requires_ui_bridge_rediscovery"
+            ],
+            "target_scope_ids": [],
+            "title": "Restart OpenHCS and restore session (reconnect required)",
+            "widget_id": "main_window"
+          },
+          {
+            "action_id": "exit",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": true,
+            "invocation_mode": "async",
+            "related_state_surface_ids": [],
+            "required_target_count": null,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "global",
+            "selection_revision_token": null,
+            "side_effects": [
+              "runs_main_window_close_cleanup",
+              "exits_ui_process",
+              "retires_ui_bridge_descriptor"
+            ],
+            "target_scope_ids": [],
+            "title": "Exit OpenHCS (disconnect expected)",
+            "widget_id": "main_window"
+          },
+          {
+            "action_id": "save_and_close",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": false,
+            "invocation_mode": "async",
+            "related_state_surface_ids": [],
+            "required_target_count": 1,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "targeted",
+            "selection_revision_token": null,
+            "side_effects": [
+              "saves_window_state",
+              "closes_window"
+            ],
+            "target_scope_ids": [],
+            "title": "Save and close",
+            "widget_id": "managed_window"
+          },
+          {
+            "action_id": "save_without_close",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": false,
+            "invocation_mode": "async",
+            "related_state_surface_ids": [],
+            "required_target_count": 1,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "targeted",
+            "selection_revision_token": null,
+            "side_effects": [
+              "saves_window_state"
+            ],
+            "target_scope_ids": [],
+            "title": "Save without closing",
+            "widget_id": "managed_window"
+          },
+          {
+            "action_id": "discard_and_close",
+            "confirmation_required": true,
+            "current_selection_count": 0,
+            "disabled_error": null,
+            "enabled": false,
+            "invocation_mode": "async",
+            "related_state_surface_ids": [],
+            "required_target_count": 1,
+            "schema_version": "openhcs.agent.v1",
+            "selection_mode": "targeted",
+            "selection_revision_token": null,
+            "side_effects": [
+              "discards_unsaved_window_state",
+              "closes_window"
+            ],
+            "target_scope_ids": [],
+            "title": "Discard changes and close",
+            "widget_id": "managed_window"
+          }
+        ],
+        "errors": [],
+        "page": null,
+        "schema_version": "openhcs.agent.v1",
+        "warnings": [
+          {
+            "code": "plate_path_setup_uses_code_document",
+            "hint": null,
+            "message": "For autonomous path-based plate setup, read 'plate_manager.orchestrator_config' with openhcs_ui_get_code_document(selection_mode='all'), then apply source containing plate_paths and pipeline_data via openhcs_ui_apply_code_document. The add_plate UI action opens a GUI file dialog."
+          },
+          {
+            "code": "ui_restart_reconnect_required",
+            "hint": null,
+            "message": "restart_session returns an accepted receipt before the old UI exits. Rediscover the new UI bridge and verify restored state; the old process's operation receipt is not persistent across restart."
+          },
+          {
+            "code": "ui_exit_disconnect_expected",
+            "hint": null,
+            "message": "exit returns an accepted receipt before the UI process and bridge disconnect. Verify process and descriptor retirement without polling the vanished bridge."
+          }
+        ]
+      }
+    }
+  ],
+  "tool": "openhcs_ui_list_actions"
+}

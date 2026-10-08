@@ -1,0 +1,23 @@
+{
+  "source_checkout": "/home/ts/code/projects/openhcs",
+  "source_head_at_gui_launch": "e4dfc4424d87adf14e0ea8acb4ff4ae6a07d5311",
+  "application_version": "0.8.7",
+  "source_file": "paper/figures/slas/custom_signal_example.py",
+  "source_sha256": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
+  "function_id": "openhcs:paper_rescale_signal",
+  "declared_defaults": {"gain": 1.2, "offset": 0.0},
+  "registration_receipt": "custom_extension_current_main_registration.json",
+  "catalog_preparation_receipt": "custom_extension_current_main_catalog_preparation.json",
+  "function_detail_receipt": "custom_extension_current_main_function_detail.json",
+  "ui_failure_receipts": ["custom_extension_current_main_windows_failure.json", "custom_extension_current_main_actions_failure.json"],
+  "transcript": "/run/media/ts/hdd/openhcs-science/custom-authoring-capture-20261007/control/mcp-authoring.typescript",
+  "display": ":98",
+  "observed": "Current-source registration persisted successfully, catalog ready, function detail read successfully. Isolated GUI launched and connected to the authoring runtime.",
+  "limitation": "Native UI window/action catalogs failed MCP decoding: UiWindowSummary rejects window_id; UiActionSummary rejects action_id and widget_id. No custom-step form/code capture or code-document readback established.",
+  "native_form_capture": null,
+  "native_code_capture": null,
+  "crop_coordinates": null,
+  "analysis_executed": false,
+  "roundtrip_verified": false,
+  "source_patch_applied": false
+}

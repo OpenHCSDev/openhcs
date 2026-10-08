@@ -1,0 +1,25 @@
+{
+  "interpretation": "Presentation of immutable existing arrays and path archives; no analysis rerun. Colour and path stroke are editorial display choices. Raw windows reproduce recorded review settings.",
+  "public": {
+    "author_run": "H004_FRESH20_95",
+    "attempt": "first",
+    "root": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95",
+    "raw_window": [0, 100],
+    "files": {
+      "raw": {"path": "paired_input/field_w1.tif", "sha256": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7"},
+      "bodies": {"path": "first/paired_input_openhcs/results/paired_site-1_z_index-1_timepoint-1_cell_bodies_step0.labels.tif", "sha256": "88b531a3c40428e1e8fb4c4f2c5343ce1e846e0ddf7278261361c11c7d7e5f83"},
+      "paths": {"path": "first/paired_input_openhcs/results/paired_s001_w1_z001_t001_neurite_morphology_step0.graph.roi.zip", "sha256": "504187b118797febeff738bdc6731c685db7a16dd5798312bb759a85fc71e189"}
+    }
+  },
+  "laboratory": {
+    "author_run": "P001_FRESH13_96",
+    "attempt": "final-attempt, site 1",
+    "root": "/run/media/ts/hdd/openhcs-science/next-bbbc01388-p00196-fresh13-20261005/P001_FRESH13_96",
+    "raw_window": [144, 3500],
+    "files": {
+      "raw": {"path": "staged/P001/A01_s001_w2_z001_t001.tif", "sha256": "210fd15c0fdd3385b599b6efa604f121506c7b62071b88483082dc3f8b7e82f9"},
+      "bodies": {"path": "analysis/final-attempt/P001_openhcs/results/A01_site-1_z_index-1_timepoint-1_cell_bodies_step0.labels.tif", "sha256": "bf42c2323a850339d42b579b795a836722cedb9e23f5c4c73df00f986f9e81e2"},
+      "paths": {"path": "analysis/final-attempt/P001_openhcs/results/A01_s001_w2_z001_t001_neurite_morphology_step0.graph.roi.zip", "sha256": "736fd6818b93ff349f20323fd85ea7f767ec573d0e51a0ffc7d2b3bcf8e648b2"}
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "applied": false,
+          "base_revision_token": "c68dd8530f468f7d6cb0ca0f97f132d2317284f47ca87bdef954fb329e552bd7",
+          "current_revision_token": null,
+          "current_snapshot": null,
+          "document_id": "object_state_scope:/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0",
+          "errors": [],
+          "new_revision_token": null,
+          "operation_id": "6ced87a9-57b2-4d1a-b89b-fa6c26221047",
+          "outcome": "running",
+          "post_apply_snapshot": null,
+          "pre_apply_snapshot": null,
+          "receipt": {
+            "accepted": true,
+            "bridge_operation_id": "6ced87a9-57b2-4d1a-b89b-fa6c26221047",
+            "request_token": {
+              "value": null
+            }
+          },
+          "schema_version": "openhcs.agent.v1",
+          "undo_snapshot": null,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_ui_apply_code_document"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

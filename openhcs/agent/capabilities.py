@@ -3560,7 +3560,7 @@ class UiListCodeDocumentsCapability(UiCodeDocumentCapability):
     kind = CapabilityKind.TOOL
     title = "List UI code documents"
     description = (
-        "Lists UI code documents with flat document_id values for follow-up calls."
+        "Lists UI code documents with identity.document_id values for follow-up calls."
     )
     service = "ui_bridge"
     runtime_requirements = ("running_openhcs_ui_bridge",)
@@ -3575,7 +3575,7 @@ class UiListStateSurfacesCapability(UiSelectedPlateCapability):
     title = "List UI state surfaces"
     description = (
         "Lists pollable domain state surfaces, including workflow status and live "
-        "measurement results, with flat surface_id values for follow-up reads."
+        "measurement results, with identity.surface_id values for follow-up reads."
     )
     service = "ui_bridge"
     exposition = UiSelectedPlateCapability.exposition.refine(
@@ -3620,7 +3620,7 @@ class UiListActionsCapability(UiSemanticActionCapability):
     cli_command = "actions"
     kind = CapabilityKind.TOOL
     title = "List UI actions"
-    description = "Lists invokable UI actions with flat widget_id/action_id values."
+    description = "Lists invokable UI actions with identity.widget_id/action_id values."
     service = "ui_bridge"
     runtime_requirements = ("running_openhcs_ui_bridge",)
     security_requirements = ("ui_bridge_auth_token",)
@@ -3688,7 +3688,7 @@ class UiListWindowsCapability(UiWindowCapability):
     cli_command = "windows"
     kind = CapabilityKind.TOOL
     title = "List UI windows"
-    description = "Lists visible/focusable UI windows with flat window_id values."
+    description = "Lists visible/focusable UI windows with identity.window_id values."
     service = "ui_bridge"
     runtime_requirements = ("running_openhcs_ui_bridge",)
     security_requirements = ("ui_bridge_auth_token",)

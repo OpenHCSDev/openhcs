@@ -1,0 +1,56 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "current_revision_token": "c68dd8530f468f7d6cb0ca0f97f132d2317284f47ca87bdef954fb329e552bd7",
+          "current_snapshot": {
+            "branch": "main",
+            "index": 1,
+            "is_current": true,
+            "is_head": true,
+            "label": "edit plate_manager.orchestrator_config via MCP [/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate]",
+            "num_states": 7,
+            "parent_snapshot_id": "cfcfb33c-6e7b-4943-b442-28ff5228a743",
+            "schema_version": "openhcs.agent.v1",
+            "snapshot_id": "798852c2-4175-41ca-b50d-b9423b2dd229",
+            "timestamp": "2026-10-07T16:28:37.079",
+            "timestamp_unix": 1791404917.0797312,
+            "uri": "openhcs://ui/snapshots/798852c2-4175-41ca-b50d-b9423b2dd229"
+          },
+          "errors": [],
+          "mime_type": "text/x-python",
+          "schema_version": "openhcs.agent.v1",
+          "selected_scope_ids": [
+            "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0"
+          ],
+          "selection_mode": "selected",
+          "sha256": "f5b94fc621317ff0eefb9869e77b2d24c77266755df5e90d78a3ed1ccd60a3c5",
+          "size_bytes": 235,
+          "source": "# Edit this function pattern and save to apply changes\n\nfrom openhcs.processing.custom_functions import paper_rescale_signal\n\npattern = (paper_rescale_signal, {\n        'gain': 1.2,\n        'offset': 0.0,\n        'enabled': True\n    })",
+          "summary": {
+            "current_selection_count": 1,
+            "identity": {
+              "document_id": "object_state_scope:/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/plate::functionstep_0::func_0"
+            },
+            "readable": true,
+            "schema_version": "openhcs.agent.v1",
+            "supported_selection_modes": [],
+            "title": "Edit Function: paper_rescale_signal",
+            "total_scope_count": 7,
+            "widget_id": "object_state_scope",
+            "writable": true
+          },
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_ui_get_code_document"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

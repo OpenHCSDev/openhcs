@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Rectangle
-from PIL import Image
+from PIL import Image, ImageOps
 
 from build_slas_agent import ROOT, OUTPUT, digest, normalize_generated_svg
 
@@ -44,6 +44,7 @@ class FigureSheet:
         self.axis.set_axis_off()
         self.sources: dict[str, str] = {}
         self.crops: list[dict] = []
+        self.display_transforms: list[dict] = []
         self.text(3, 97, title, size=16, weight="bold", va="top")
 
     def text(self, x, y, value, *, size=11, color=INK, **kwargs):
@@ -179,19 +180,23 @@ class FigureSheet:
         self.source(record_path)
         self.source_image(path, bounds, crop=crop)
 
-    def native_image(self, name, bounds, *, crop=None):
+    def native_image(self, name, bounds, *, crop=None, response_path=("response",),
+                     provenance_path=None):
         """Use an unmodified screenshot checked against its native MCP receipt."""
         path = OUTPUT / f"{name}.png"
-        record_path = OUTPUT / f"{name}_provenance.json"
-        record = json.loads(record_path.read_text())["response"]["results"][0][
-            "payloads"
-        ][0]
+        record_path = provenance_path or OUTPUT / f"{name}_provenance.json"
+        envelope = json.loads(record_path.read_text())
+        # Retained CLI command records wrap the native execution response;
+        # direct shell receipts retain that response at the document root.
+        for key in response_path:
+            envelope = envelope[key]
+        record = envelope["results"][0]["payloads"][0]
         if not record["captured"] or digest(path) != record["resource"]["sha256"]:
             raise ValueError(f"Native screenshot hash mismatch: {name}")
         self.source(record_path)
         self.source_image(path, bounds, crop=crop)
 
-    def source_image(self, path, bounds, *, crop=None):
+    def source_image(self, path, bounds, *, crop=None, invert=False):
         """Place retained pixels and record any editorial detail crop."""
         self.source(path)
         with Image.open(path) as original:
@@ -210,17 +215,24 @@ class FigureSheet:
                 }
             )
             pixels = pixels.crop(crop)
+        if invert:
+            pixels = ImageOps.invert(pixels)
+            self.display_transforms.append({
+                "source": str(path.relative_to(ROOT)),
+                "operation": "RGB complement (255 - channel); display only",
+                "crop_xyxy_pixels": list(crop) if crop else None,
+            })
         x, y, width, height = bounds
         axis = self.figure.add_axes((x / 100, y / 100, width / 100, height / 100))
         axis.imshow(pixels, interpolation="nearest")
         axis.set_axis_off()
 
-    def save(self):
+    def save(self, *, dpi=300):
         OUTPUT.mkdir(parents=True, exist_ok=True)
         outputs = []
         for extension in ("png", "pdf", "svg"):
             path = OUTPUT / f"{self.stem}.{extension}"
-            self.figure.savefig(path, dpi=300)
+            self.figure.savefig(path, dpi=dpi)
             if extension == "svg":
                 normalize_generated_svg(path)
             outputs.append(path)
@@ -229,6 +241,7 @@ class FigureSheet:
             "generator_sha256": digest(Path(__file__)),
             "source_sha256": self.sources,
             "ui_crops": self.crops,
+            "display_transforms": self.display_transforms,
             "output_sha256": {p.name: digest(p) for p in outputs},
             "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations",
         }
@@ -763,39 +776,64 @@ def personal_stitched_development():
 
 def submission_neurite_results():
     from build_slas_neurite_effects import NeuriteEffectFigure
+    from build_slas_neurite_views import FrozenNeuriteView
 
     """Show the retained shaft illustration without promoting an overextended repair."""
-    sheet = FigureSheet("submission_neurite_results", "", 10.1)
+    sheet = FigureSheet("submission_neurite_results", "", 10.4)
     public = OUTPUT / "h004_fresh20_sources"
     personal = OUTPUT / "p001_fresh13_sources"
+    published = OUTPUT / "neuroncyto_published_reference"
+    reference_path = published / "source.json"
+    reference = json.loads(reference_path.read_text())
+    reference_image = published / reference["source_file"]
+    if digest(reference_image) != reference["sha256"]:
+        raise ValueError("Published NeuronCyto II figure source hash mismatch")
+    sheet.source(reference_path)
     sheet.source(public / "QA-INDEX.json")
     sheet.source(personal / "source-record.rst")
     sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
     sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
-    sheet.panel("I", "Public neurites: thick-shaft recovery", 3, 97)
-    for x, name, title in (
-        (3, "first-bottom-raw", "A  Raw process channel"),
-        (52, "first-bottom-result", "B  Initial shaft result"),
+    views_path = OUTPUT / "frozen_neurite_views.json"
+    sheet.source(views_path)
+    sheet.source(ROOT / "paper/figures/build_slas_neurite_views.py")
+    views = json.loads(views_path.read_text())
+    public_view = FrozenNeuriteView(sheet, views["public"])
+    laboratory_view = FrozenNeuriteView(sheet, views["laboratory"])
+    sheet.panel("I", "Public neurites: OpenHCS and published NeuronCyto II", 3, 97)
+    matched = reference["matched_wholefield_layout"]
+    for x, name, title, record in (
+        (3, "first-full-raw", "A  Raw field", matched["raw"]),
+        (35, "first-full-result", "B  OpenHCS initial result", matched["openhcs_initial"]),
     ):
+        path = public / f"{name}.png"
+        if digest(path) != record["sha256"]:
+            raise ValueError(f"Whole-field native capture hash mismatch: {name}")
         sheet.text(x, 91, title, size=10.5, weight="bold")
-        sheet.source_image(public / f"{name}.png", (x, 70, 45, 18), crop=(297, 28, 1250, 410))
-    sheet.text(3, 67, "Retained shaft candidate; fine filopodia are outside this endpoint.", size=10, color=MUTED)
-    sheet.panel("II", "Laboratory neurites: final autonomous analysis", 3, 62)
+        public_view.draw((x, 61, 30, 26), raw=name == "first-full-raw",
+                         result=name == "first-full-result")
+    sheet.text(67, 91, "C  Published NeuronCyto II", size=10.5, weight="bold")
+    sheet.source_image(reference_image, (67, 61, 30, 26),
+                       crop=tuple(reference["crop_xyxy_pixels"]))
+    sheet.text(67, 59, "Algorithm comparison, not manual GT", size=8.5, color=MUTED)
+    sheet.text(3, 56, "A/B: frozen 800-pixel field and vector paths. C: Ong et al., Fig. 2D; 450-pixel PDF crop; CC BY-NC 4.0.",
+               size=9, color=MUTED)
+    sheet.panel("II", "Laboratory neurites: final autonomous analysis", 3, 52)
     for x, name, title in (
-        (3, "raw", "C  Raw FITC"),
-        (35, "result", "D  Body and path result"),
-        (67, "combined", "E  Combined"),
+        (3, "raw", "D  Raw FITC"),
+        (35, "result", "E  Body and path result"),
+        (67, "combined", "F  Combined"),
     ):
-        sheet.text(x, 57, title, size=10.5, weight="bold")
-        sheet.source_image(personal / f"site1-{name}.png", (x, 32, 30, 23), crop=(550, 28, 997, 437))
-    sheet.panel("III", "Assisted repair: treatment responses", 3, 28)
+        sheet.text(x, 48, title, size=10.5, weight="bold")
+        laboratory_view.draw((x, 27, 30, 19.5), raw=name != "result", result=name != "raw")
+    sheet.panel("III", "Assisted repair: treatment responses", 3, 24)
     NeuriteEffectFigure.draw_panels(
         sheet, ROOT / "paper/supplementary/personal_neurite_repaired_morphometry",
-        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 30), start_letter="F",
+        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 26), start_letter="G",
     )
     sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Concordant outgrowth responses; branching fold changes differ.",
                size=9.5, color=MUTED)
-    sheet.save()
+    # Preserve the 1024-pixel field in the manuscript's raster embedding too.
+    sheet.save(dpi=600)
 
 
 def submission_repair_examples():
@@ -822,7 +860,7 @@ def submission_repair_examples():
 
 def submission_autonomous_loop():
     """Separate intended skill workflow from the retained H001 trajectory."""
-    sheet = FigureSheet("submission_autonomous_loop", "", 7.2)
+    sheet = FigureSheet("submission_autonomous_loop", "", 9.6)
     resources = ROOT / "paper/supplementary/task_only_analysis/trial_resources.csv"
     with resources.open(newline="") as stream:
         rows = [row for row in csv.DictReader(stream)
@@ -839,24 +877,60 @@ def submission_autonomous_loop():
     sheet.source(resources)
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md")
-    sheet.panel("A", "Intended specialist workflow in the packaged skill", 3, 96)
-    for x, y, title, detail in (
-        (3, 72, "Biological brief", "Target • outputs • acquisition facts"),
-        (36, 72, "Inspect and measure", "Channels • raw signal • feature scales"),
-        (69, 72, "Build and execute", "Discover functions • editable pipeline"),
-        (69, 44, "Compare matched views", "Raw only • result only • combined"),
-        (36, 44, "Diagnose and repair", "Earliest failed stage\nRecheck a regression control"),
-        (3, 44, "Freeze selected result", "Pipeline • outputs • known limitations"),
-    ):
-        sheet.box(x, y, 28, 16, title, detail)
+
+    # Use an existing licensed icon vocabulary; symbols are procedural, not
+    # fabricated microscopy results. The observed trajectory stays separate.
+    icons = ROOT / "paper/figures/assets/lucide"
+    sheet.source(icons / "SOURCE.txt")
+    sheet.source(icons / "LICENSE")
+    sheet.panel("A", "Specialist work delegated through the packaged skill", 3, 96)
+    stages = (
+        (3, 69, "1  Biological brief", "clipboard-list",
+         "Biological question\nDesired measurements\nAcquisition context", BLUE),
+        (36, 69, "2  Inspect inputs", "microscope",
+         "Channels and scales\nBright / dim regions\nCentre and borders", BLUE),
+        (69, 69, "3  Build and execute", "workflow",
+         "Editable pipeline\nDeclared functions\nCompile and run", BLUE),
+        (69, 41, "4  Audit the result", "scan-eye",
+         "Raw / result / overlay\nMatched position / scale\nMasks / measurements", TEAL),
+        (36, 41, "5  Repair and recheck", "wrench",
+         "Earliest failing stage\nOne change at a time\nFailure + control view", ORANGE),
+        (3, 41, "6  Freeze and deliver", "files",
+         "Pipeline and settings\nImages and tables\nQA and limitations", TEAL),
+    )
+    for x, y, title, icon, detail, color in stages:
+        sheet.axis.add_patch(FancyBboxPatch(
+            (x, y), 28, 23, boxstyle="round,pad=0.2,rounding_size=0.65",
+            facecolor=PALE, edgecolor=color, linewidth=1.2, zorder=2,
+        ))
+        sheet.text(x + 14, y + 20.5, title, size=11, weight="bold",
+                   color=color, ha="center", va="center")
+        if icon == "clipboard-list":
+            sheet.asset(icons / "user-round.svg", (x+1, y+8, 6, 9))
+            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+13, 3, 4))
+            sheet.asset(icons / "clipboard-list.svg", (x+7, y+6, 3, 5))
+        elif icon == "microscope":
+            sheet.source(ROOT / "website/assets/logos/README.md")
+            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+11, 9, 6))
+            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+4, 9, 6))
+        elif icon == "workflow":
+            sheet.asset(icons / "list-tree.svg", (x+1.8, y+7, 8, 10))
+        elif icon == "scan-eye":
+            sheet.asset(icons / "clipboard-check.svg", (x+1.8, y+7, 8, 10))
+        elif icon == "files":
+            sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+7, 8, 10))
+        else:
+            sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 7, 8, 10))
+        sheet.text(x + 11, y + 12, detail, size=9, va="center",
+                   linespacing=1.5, zorder=4)
     for start, end in (((31,80),(36,80)), ((64,80),(69,80)),
-                       ((83,72),(83,60)), ((69,52),(64,52)), ((36,52),(31,52))):
+                       ((83,69),(83,64)), ((69,52),(64,52)), ((36,52),(31,52))):
         sheet.arrow(start, end)
-    sheet.route(((50,60),(50,65),(83,65),(83,72)), color=ORANGE, dashed=True)
-    sheet.text(50, 66, "Inspect the revised candidate", size=9, ha="center", color=ORANGE)
-    sheet.text(50, 38, "Scientist can inspect images, masks and measurements and revise the same pipeline",
-               size=11, ha="center", weight="bold", color=TEAL)
-    sheet.panel("B", "Nuclear segmentation: the observed repair sequence", 3, 29)
+    sheet.route(((50,64),(50,66),(83,66),(83,69)), color=ORANGE, dashed=True)
+    sheet.text(50, 67, "Run and inspect the revision", size=9, ha="center", color=ORANGE)
+    sheet.text(50, 37, "Scientist audits images, masks and measurements; the pipeline remains editable",
+               size=10.5, ha="center", weight="bold", color=TEAL)
+    sheet.panel("B", "Nuclear segmentation: observed H001 repair sequence", 3, 32)
     candidates = re.findall(r"a(\d{2}) suppression \d+ produced (\d+)", report_text)
     if len(candidates) != 4:
         raise ValueError("Expected the four original reported H001 candidates")
@@ -864,59 +938,93 @@ def submission_autonomous_loop():
         "Split body", "Split fixed; pair lost", "Pair still lost", "Pair recovered",
     ))):
         x = 3 + index * 24
-        sheet.box(x, 15, 22, 11, f"{int(candidate)} • {count} objects", decision, color=TEAL)
+        sheet.box(x, 24, 22, 6, f"{int(candidate)} • {count} objects", decision, color=TEAL)
         if index < 3:
-            sheet.arrow((x+22,20.5), (x+24,20.5))
+            sheet.arrow((x+22,27), (x+24,27))
     first = float(trial["first_elapsed_s"]) / 60
     final = float(trial["final_elapsed_s"]) / 60
-    sheet.text(4, 8, f"Initial run completed: {first:.0f} min • whole task: {final:.0f} min",
-               size=11, color=TEAL)
-    sheet.text(4, 3, "Whole task includes image review, reporting and cleanup; times start at brief instruction.",
-               size=9, color=MUTED)
+    sheet.source(OUTPUT / "h001_scored_native_provenance.json")
+    for column, (view, label) in enumerate((
+        ("raw", "Raw • same input"), ("first", "First a01 • split body"),
+        ("final", "Final a04 • split repaired"),
+    )):
+        x = 3 + column * 32
+        sheet.text(x, 22, label, size=11, weight="bold")
+        sheet.source_image(OUTPUT / "h001_scored_sources" / f"detail_{view}.png",
+                           (x, 5, 30, 16), crop=(620, 90, 980, 355))
+    sheet.text(4, 3.4, f"Initial run: {first:.0f} min • whole task: {final:.0f} min • four completed candidates",
+               size=10, color=TEAL)
+    sheet.text(4, 1.4, "Counts and decisions: author report; whole task includes review, reporting and cleanup.",
+               size=8.5, color=MUTED)
     sheet.save()
 
 
 def submission_shared_workflow():
-    """Keep the native editing evidence readable beside the full-page diagram."""
-    sheet = FigureSheet("submission_shared_workflow", "", 10.4)
-    sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
-    sheet.panel("II", "Main window", 3, 97)
-    sheet.native_image("authoring_main_verified_capture", (3, 43, 94, 51))
-    sheet.panel("III", "Plate manager detail", 3, 41)
-    sheet.panel("IV", "Pipeline editor detail", 52, 41)
-    sheet.native_image("authoring_main_verified_capture", (3, 26, 45, 13),
-                       crop=(0, 204, 510, 360))
-    sheet.native_image("authoring_main_verified_capture", (52, 26, 45, 13),
-                       crop=(516, 204, 1024, 318))
-    sheet.panel("V", "Execution server", 3, 22)
-    sheet.native_image("authoring_server_browser_verified_capture", (3, 2, 34, 16))
-    sheet.panel("VI", "Controls", 39, 22)
-    sheet.panel("VII", "", 68, 22)
-    sheet.text(74, 22, "Matching Python", size=12, weight="bold")
-    sheet.native_image(
-        "authoring_function_verified_capture", (39, 2, 25, 16), crop=(25, 153, 193, 290)
-    )
-    sheet.native_image(
-        "authoring_code_verified_capture", (68, 2, 29, 16), crop=(74, 96, 292, 222)
-    )
-    sheet.save()
+    """Show the full-width native application once, with region outlines."""
+    folder = OUTPUT / "figure1_two_plate_native_20261007"
+    evidence_path = folder / "capture_evidence.json"
+    evidence = json.loads(evidence_path.read_text())
+    capture = folder / Path(evidence["selected_png"]).name
+    with Image.open(capture) as pixels:
+        width_px, height_px = pixels.size
+    _, _, logical_width, logical_height = evidence["logical_window_xywh"]
+    sx, sy = width_px / logical_width, height_px / logical_height
+    workspace_top = min(evidence["boxes_xywh"][region][1]
+                        for region in ("plate_manager", "pipeline_editor"))
+    crop = (0, round(workspace_top * sy), width_px, height_px)
+    sheet = FigureSheet("submission_shared_workflow", "",
+                        9 * (crop[3] - crop[1]) / width_px)
+    sheet.source(evidence_path)
+    sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
+                       (0, 0, 100, 100), response_path=(), crop=crop,
+                       provenance_path=folder / evidence["selected_capture"])
+    window = sheet.figure.axes[-1]
+    # Derive native-pixel outlines from the recorded Qt logical rectangles.
+    for region in ("plate_manager", "pipeline_editor", "zmq_servers"):
+        x, y, width, height = evidence["boxes_xywh"][region]
+        x, width, y, height = x * sx, width * sx, y * sy - crop[1], height * sy
+        window.add_patch(Rectangle((x, y), width, height, fill=False,
+                                   edgecolor=BLUE, linewidth=2))
+    sheet.save(dpi=600)
 
 
 def submission_quantitative_results():
-    """Show the matched images supporting the separate quantitative summary."""
-    sheet = FigureSheet("submission_quantitative_results", "", 7.6)
+    """Combine retinal and volumetric repairs with the frozen volume evidence."""
+    from build_slas_supplement import SupplementFigure
+
+    sheet = SupplementFigure("submission_quantitative_results", 9.5)
+    sheet.heading("G  Retinal repair preserves neighbouring somata", 98)
+    sheet.source(OUTPUT / "retina_fresh16_repair_provenance.json")
+    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
+    for column, (view, label) in enumerate((
+        ("raw", "Raw RBPMS"), ("first", "First + raw"), ("final", "Final + raw"),
+    )):
+        x = 3 + column * 32
+        sheet.text(x, 93, label, size=11, weight="bold")
+        sheet.source_image(OUTPUT / "retina_fresh16_sources" / f"nw-{view}.png",
+                           (x, 73, 30, 18), crop=(297, 28, 1250, 470))
+    sheet.heading("H  Independent 3-D author repairs a continuous-body split", 69)
+    sources = OUTPUT / "h002_fresh22_sources"
+    receipt_path = sources / "source-receipt.json"
+    receipt = json.loads(receipt_path.read_text())
+    sheet.source(receipt_path)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")
+    for column, (name, label) in enumerate((
+        ("raw", "Raw XY"), ("first-labels", "First labels"),
+        ("final-labels", "Final labels"), ("final-combined", "Final + raw"),
+    )):
+        path = sources / f"{name}.png"
+        if digest(path) != receipt["captures"][name]["sha256"]:
+            raise ValueError(f"Frozen H002 capture changed: {name}")
+        x = 3 + column * 24
+        sheet.text(x, 63, label, size=10.5, weight="bold")
+        sheet.source_image(path, (x, 44, 22, 17), crop=(610, 28, 1250, 448))
+    sheet.text(3, 40, "Same XY viewport and Z=36; local repair is not proof of complete volume segmentation.",
+               size=9, color=MUTED)
+    sheet.heading("I  Separate frozen analysis: XY, XZ and YZ localisation", 36)
     sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
-    sheet.panel("G", "Three-dimensional nuclear localisation", 3, 97)
-    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 51, 94, 42),
+    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 3, 94, 30),
                        crop=(50, 110, 2660, 1300))
-    sheet.panel("H", "Retinal somata in heterogeneous background", 3, 46)
-    sheet.source(OUTPUT / "retinal_fresh_native_provenance.json")
-    sheet.text(3, 40, "Raw RBPMS", size=10.5, weight="bold")
-    sheet.text(52, 40, "Final outlines", size=10.5, weight="bold")
-    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (3, 3, 45, 34),
-                       crop=(24, 790, 747, 1185))
-    sheet.source_image(OUTPUT / "retinal_fresh_native.png", (52, 3, 45, 34),
-                       crop=(770, 790, 1493, 1185))
     sheet.save()
 
 

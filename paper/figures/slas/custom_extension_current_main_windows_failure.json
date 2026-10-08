@@ -1,0 +1,185 @@
+{
+  "mcp_error": false,
+  "payloads": [
+    {
+      "errors": [
+        {
+          "code": "mcp_payload_invalid",
+          "exception_type": "ValueError",
+          "hint": null,
+          "message": "UiWindowSummary received undeclared field(s): window_id.",
+          "path": null
+        }
+      ],
+      "receipt": {
+        "errors": [],
+        "page": null,
+        "schema_version": "openhcs.agent.v1",
+        "warnings": [],
+        "windows": [
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": null,
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "OpenHCS",
+            "visible": true,
+            "window_id": "main_window",
+            "window_kind": "qt_top_level"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "system_monitor"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "System Monitor",
+            "visible": true,
+            "window_id": "system_monitor",
+            "window_kind": "embedded"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "plate_manager"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "Plate Manager",
+            "visible": true,
+            "window_id": "plate_manager",
+            "window_kind": "embedded"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "zmq_server_manager"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "ZMQ Server Manager",
+            "visible": true,
+            "window_id": "zmq_server_manager",
+            "window_kind": "embedded"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "pipeline_editor"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "Pipeline Editor",
+            "visible": true,
+            "window_id": "pipeline_editor",
+            "window_kind": "embedded"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "image_browser"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "Image Browser",
+            "visible": false,
+            "window_id": "image_browser",
+            "window_kind": "managed"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "log_viewer"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "Log Viewer",
+            "visible": false,
+            "window_id": "log_viewer",
+            "window_kind": "managed"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "knowledge_base"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "OpenHCS Knowledge Base",
+            "visible": false,
+            "window_id": "knowledge_base",
+            "window_kind": "managed"
+          },
+          {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "about_openhcs"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "About OpenHCS",
+            "visible": false,
+            "window_id": "about_openhcs",
+            "window_kind": "managed"
+          }
+        ]
+      }
+    }
+  ],
+  "tool": "openhcs_ui_list_windows"
+}

@@ -1,0 +1,101 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "auth_required": true,
+          "bridge_features": [
+            "ui_code_documents",
+            "ui_state_surfaces",
+            "ui_actions",
+            "ui_windows",
+            "objectstate_scopes",
+            "objectstate_field_mutation",
+            "ui_window_navigation",
+            "ui_window_snapshots",
+            "widget_tree_projection",
+            "widget_action_invocation",
+            "objectstate_snapshots",
+            "objectstate_branches",
+            "operation_status",
+            "selected_plate_workflows"
+          ],
+          "bridge_instance_id": "ui-71381a33-9dec-4489-81b3-0f61b7c8b432",
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 7896,
+            "transport_mode": "ipc"
+          },
+          "descriptor_file_path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/bridge/ui_bridge_ui-71381a33-9dec-4489-81b3-0f61b7c8b432.json",
+          "descriptor_status": "ok",
+          "descriptors": [
+            {
+              "application": {
+                "identifier": "openhcs",
+                "version": "0.8.7"
+              },
+              "bridge_instance_id": "ui-71381a33-9dec-4489-81b3-0f61b7c8b432",
+              "connection": {
+                "host": "127.0.0.1",
+                "persistent": true,
+                "port": 7896,
+                "transport_mode": "ipc"
+              },
+              "descriptor_file_path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/bridge/ui_bridge_ui-71381a33-9dec-4489-81b3-0f61b7c8b432.json",
+              "errors": [],
+              "pid": 3993763,
+              "schema_version": "openhcs.agent.v1",
+              "started_at_unix": 1791404853.08202,
+              "status": "ok",
+              "warnings": []
+            }
+          ],
+          "errors": [],
+          "provider_catalog_schema_versions": [
+            "openhcs.agent.v1"
+          ],
+          "reachable": true,
+          "schema_version": "openhcs.agent.v1",
+          "service": "openhcs.ui_bridge",
+          "supported_operations": [
+            "status",
+            "list_documents",
+            "list_state_surfaces",
+            "list_actions",
+            "list_windows",
+            "list_object_state_scopes",
+            "describe_object_state_field",
+            "mutate_object_state_field",
+            "get_document",
+            "get_state_surface",
+            "invoke_action",
+            "focus_window",
+            "navigate_window",
+            "close_window",
+            "snapshot_window",
+            "widget_tree",
+            "invoke_widget_action",
+            "validate_document",
+            "apply_document",
+            "list_snapshots",
+            "restore_snapshot",
+            "time_travel_head",
+            "list_branches",
+            "switch_branch",
+            "get_operation_status",
+            "selected_plate_workflow"
+          ],
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_ui_bridge_status"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

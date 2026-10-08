@@ -1,0 +1,111 @@
+{
+  "selected_capture": "main_window_nine_steps_capture_provenance.json",
+  "selected_png": "/home/ts/code/projects/openhcs/paper/figures/slas/figure1_two_plate_native_20261007/20261007T232717800671Z_main_window_OpenHCS.png",
+  "native_pixels": [
+    2048,
+    1536
+  ],
+  "logical_window_xywh": [
+    0,
+    0,
+    1024,
+    768
+  ],
+  "qt_scale_factor": 2,
+  "logical_to_native_pixel_scale": [
+    2,
+    2
+  ],
+  "boxes_xywh": {
+    "system_monitor": [
+      0,
+      22,
+      1024,
+      171
+    ],
+    "plate_manager": [
+      0,
+      199,
+      509,
+      369
+    ],
+    "zmq_servers": [
+      0,
+      574,
+      509,
+      158
+    ],
+    "pipeline_editor": [
+      515,
+      199,
+      509,
+      533
+    ]
+  },
+  "boxes_pixels_xywh": {
+    "system_monitor": [
+      0,
+      44,
+      2048,
+      342
+    ],
+    "plate_manager": [
+      0,
+      398,
+      1018,
+      738
+    ],
+    "zmq_servers": [
+      0,
+      1148,
+      1018,
+      316
+    ],
+    "pipeline_editor": [
+      1030,
+      398,
+      1018,
+      1066
+    ]
+  },
+  "source_checkout": "/home/ts/code/projects/openhcs",
+  "head_at_capture_delivery": "c10ed6612b6bec9ccea5759f871259132d163280",
+  "gui_and_source_mcp_version": "0.8.7",
+  "installed_foreign_mcp_and_execution_version": "0.8.6",
+  "pipelines": {
+    "ExampleHuman": {
+      "steps": 9,
+      "source": "/home/ts/code/projects/openhcs/benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleHuman/candidate_evidence/1/submitted_pipeline.py",
+      "sha256": "e90f8c268556a8303b90355715e73829a6ecf6399732c21c3d863a434beadb07",
+      "plate": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/images"
+    },
+    "ExampleFly": {
+      "steps": 17,
+      "source": "/home/ts/code/projects/openhcs/benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleFly/candidate_evidence/1/submitted_pipeline.py",
+      "sha256": "a42ef8a6bd21919e955bb3e63227fd8780273f8881685fc520a7b9a65fca4442",
+      "plate": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleFly/images"
+    }
+  },
+  "notes": [
+    "Selected capture shows Human nine-step editor and both public plate paths. Fly's 17-step recipe was subsequently applied successfully; final readback selected Human again.",
+    "Later 232802 capture retains stale '17 steps' status text from last Fly apply while showing Human nine-step rows; use the selected 232717 capture for publication.",
+    "Both native row names are images; native full source paths distinguish ExampleHuman and ExampleFly.",
+    "Orchestrator schema rejects get_function calls (unsafe_call); native pipeline-editor document accepts the unchanged retained recipe.",
+    "Human validation/apply responses timed out during cold registry discovery. Apply was not replayed. Subsequent canonical snapshot/readback confirmed nine steps and new ObjectState snapshot.",
+    "No initialization, compilation or analysis execution was requested. Existing 0.8.6 execution server was preserved.",
+    "Native minimum window 1024x768 logical; no window geometry or splitter mutation used. No crops, composite reconstruction or UI patches.",
+    "CPU-only GUI truthfully displays NVIDIA SMI Error. Startup execution-server version mismatch retained in gui.log; user-dialog Cancel did not restart server."
+  ],
+  "cleanup": {
+    "gui_pid": 265120,
+    "gui_exit_code": 0,
+    "mcp_pid": 268000,
+    "mcp_shell_exit_code": 0,
+    "xvfb_pid": 265062,
+    "display": ":98",
+    "xvfb_exit_code": 0,
+    "all_three_pids_absent": true,
+    "science_viewer_and_runtime_untouched": true
+  },
+  "secrets_and_image_base64_retained": false
+}

@@ -1,0 +1,44 @@
+{
+  "article": "Ong et al. (2016), NeuronCyto II: An automatic and quantitative solution for crossover neural cells in high throughput screening",
+  "doi": "10.1002/cyto.a.22872",
+  "article_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/cyto.a.22872",
+  "source_url": "https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/PMC5089663.1.pdf",
+  "extraction": "Unmodified embedded JPEG from article PDF page 4, image object 16; pdfimages -f 4 -l 4 -j",
+  "article_pdf_sha256": "377e393ae5de7375bccaf69154da4c4c3fba4b0eb96195181f38d5a7da765f4e",
+  "license_evidence_url": "https://pmc-oa-opendata.s3.amazonaws.com/PMC5089663.1/PMC5089663.1.xml",
+  "license": "CC BY-NC 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
+  "copyright": "2016 The Authors; published by Wiley Periodicals, Inc. on behalf of ISAC",
+  "source_file": "CYTO-89-747-g002-pdf.jpg",
+  "sha256": "cebc8010f38e0d1e3c25a8de658e6a6b5f3ec60d90564ba6df1087b80630f687",
+  "source_size_pixels": [1004, 950],
+  "published_figure": "2D",
+  "crop_xyxy_pixels": [550, 496, 1000, 946],
+  "crop_convention": "PIL left, top, right, bottom; right and bottom exclusive",
+  "modifications": "Editorial square crop of panel D's whole-field image, excluding its border, and placement only; no recolouring, retouching, sharpening or spatial registration. Author red circles and arrow retained.",
+  "reference_kind": "Published NeuronCyto II algorithm result, not manual ground truth",
+  "field_correspondence": "Published Figure 2C/D and the retained first-full raw/result captures depict the same image-1 whole field in the same orientation. The lower soma, upper-right soma and diagonal chain of somas provide visual correspondence. Square whole-field crops displayed at equal physical widths give comparable field of view and magnification; this is not subpixel registration or contrast matching across authors.",
+  "matched_wholefield_layout": {
+    "native_input_size_xy_pixels": [800, 800],
+    "raw": {
+      "capture_group": "first-full-raw",
+      "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-full-raw/20261006T000247964251Z_napari_6015_OpenHCS_Napari_Visualization.png",
+      "sha256": "a5ff357b010c1869732c54890aa611b6ed9f6ab674086a911c2bbb8c11a3a3e2",
+      "crop_xyxy_pixels": [574, 39, 973, 438]
+    },
+    "openhcs_initial": {
+      "capture_group": "first-full-result",
+      "path": "/run/media/ts/hdd/openhcs-science/next-h004-retina-fresh20-95-96-20261005/H004_FRESH20_95/qa/first-full-result/20261006T000248330147Z_napari_6015_OpenHCS_Napari_Visualization.png",
+      "sha256": "8526d5be0e23deff03407e8b78a18d4b5f5e4f9cc1b7ce3f35a148b5b8c45ba2",
+      "crop_xyxy_pixels": [574, 39, 973, 438]
+    },
+    "capture_center_yx": [399.5, 399.5],
+    "capture_zoom": 0.49875,
+    "crop_sizes_xy_pixels": {"raw": [399, 399], "openhcs_initial": [399, 399], "published_neuroncyto": [225, 225]},
+    "layout": "Use equal square physical image bounds for all three crops, not the former wide native-detail bounds.",
+    "limitations": "The publication JPEG is a separately rasterized low-resolution result; exact subpixel registration is not established. The retained raw/result screenshots include a viewer annotation in the lower-right field; it must not be painted out. Colours are not shared cell identities and contrast/backgrounds differ."
+  },
+  "input_w1_sha256": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7",
+  "input_w2_sha256": "ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847",
+  "reuse_status": "Attributed manuscript draft comparison only; commercial journal reproduction permission/licence compatibility requires review before publication. No journal upload authorised."
+}

@@ -1,0 +1,101 @@
+{
+  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "9ec518be210e042acb002d837c74babd1dcc7e9df4b49f9c24dc6fa13d788abb",
+    "paper/figures/slas/h002_fresh10_native_provenance.json": "1e1ff40b4289e03ba8acac85f09e144920389e9382d3acd5d3d4254fa7a27b7c",
+    "paper/figures/slas/h002_fresh10_native.png": "5d5ecaa7575ee07ff51a5e918fd82826b309516869ca4cc21fede210a1cb0c97",
+    "paper/figures/slas/retina_fresh16_repair_provenance.json": "f39d713943b269186ab023e2573e85dec731590d78f8564666aefd07c6f159cd",
+    "paper/figures/slas/retina_fresh16_repair.png": "582fc7f615372ba12c1fa2dbc009e2b8ed1d218e94d8b5363abcd2420dda5c74",
+    "paper/figures/slas/h003_native_repair_provenance.json": "9480c3cc31e520b9bbdd536c95492fa4460599e3feba6ef6140b87d68c450f48",
+    "paper/figures/slas/h003_native_repair.png": "ed147bd88b98fb817e7dd67e96e6582e8a244cfcf02a8c449a604b527ce54e47",
+    "paper/figures/slas/h003_fresh19_matched_provenance.json": "25af16164537fce5b7ccc137014941af191e42bd970137b92bcbbf4c0484f342",
+    "paper/figures/slas/h003_fresh19_matched.png": "af9234786b4103d75a57226ec5dab0e19000b5530a34eceb0285ebf7f7251a3f"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h002_fresh10_native.png",
+      "xyxy_pixels": [
+        728,
+        145,
+        1372,
+        609
+      ],
+      "source_size": [
+        1400,
+        1450
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh10_native.png",
+      "xyxy_pixels": [
+        728,
+        682,
+        1372,
+        1015
+      ],
+      "source_size": [
+        1400,
+        1450
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_fresh10_native.png",
+      "xyxy_pixels": [
+        728,
+        1088,
+        1372,
+        1436
+      ],
+      "source_size": [
+        1400,
+        1450
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "xyxy_pixels": [
+        27,
+        1004,
+        2673,
+        1377
+      ],
+      "source_size": [
+        2700,
+        1620
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_native_repair.png",
+      "xyxy_pixels": [
+        16,
+        705,
+        1568,
+        1198
+      ],
+      "source_size": [
+        1584,
+        1410
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h003_fresh19_matched.png",
+      "xyxy_pixels": [
+        27,
+        1554,
+        2673,
+        1976
+      ],
+      "source_size": [
+        2700,
+        2220
+      ]
+    }
+  ],
+  "display_transforms": [],
+  "output_sha256": {
+    "supp_morphology_checks.png": "af68605671297255762b68f720758d3c39e09dcbc42ce4c1404df80a27521953",
+    "supp_morphology_checks.pdf": "570e3a8c12845ddf1c0c5651b68ee6bd88439ba2720fc8466857075d8841aa26",
+    "supp_morphology_checks.svg": "4dd94fa6842e8c72b23e56778ee592d0343fd99bdb43060397b39f73d6cce2e1"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

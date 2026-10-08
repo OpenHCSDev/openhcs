@@ -57,6 +57,12 @@ from openhcs.agent.dto.plate import (
     SyntheticPlateGenerationResult,
 )
 from openhcs.agent.dto.ui_bridge import (
+    UiActionCatalog,
+    UiActionIdentity,
+    UiActionSummary,
+    UiCodeDocumentCatalog,
+    UiCodeDocumentIdentity,
+    UiCodeDocumentSummary,
     UiCatalogPageMetadata,
     UiMutationReceipt,
     UiObjectStateFieldFilter,
@@ -70,6 +76,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateValuePreview,
     UiSemanticAddress,
     UiStateSurfaceDocument,
+    UiStateSurfaceCatalog,
     UiStateSurfaceIdentity,
     UiStateSurfaceSummary,
     UiWidgetActionSummary,
@@ -77,6 +84,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiWidgetTreeNode,
     UiWidgetTreeResult,
     UiWindowIdentity,
+    UiWindowCatalog,
     UiWindowSnapshotResult,
     UiWindowSummary,
 )
@@ -870,10 +878,10 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
     assert "snapshot" in descriptions["openhcs_ui_apply_code_document"]
     assert "undo" in descriptions["openhcs_ui_apply_code_document"]
     assert "request_token" in schemas["openhcs_ui_apply_code_document"]["properties"]
-    assert "flat document_id" in descriptions["openhcs_ui_list_code_documents"]
-    assert "flat surface_id" in descriptions["openhcs_ui_list_state_surfaces"]
-    assert "flat widget_id/action_id" in descriptions["openhcs_ui_list_actions"]
-    assert "flat window_id" in descriptions["openhcs_ui_list_windows"]
+    assert "identity.document_id" in descriptions["openhcs_ui_list_code_documents"]
+    assert "identity.surface_id" in descriptions["openhcs_ui_list_state_surfaces"]
+    assert "identity.widget_id/action_id" in descriptions["openhcs_ui_list_actions"]
+    assert "identity.window_id" in descriptions["openhcs_ui_list_windows"]
     state_surface_properties = schemas["openhcs_ui_get_state_surface"]["properties"]
     assert "base_revision_token" in state_surface_properties
     assert "revision_token" not in state_surface_properties
@@ -1007,7 +1015,7 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
     assert "napari_streaming_config" not in add_step_properties
 
 
-def test_mcp_widget_tree_projection_compacts_empty_action_fields():
+def test_mcp_widget_tree_projection_preserves_required_empty_action_fields():
     result = UiWidgetTreeResult(
         schema_version=SCHEMA_VERSION,
         window_id="plate_manager",
@@ -1053,9 +1061,22 @@ def test_mcp_widget_tree_projection_compacts_empty_action_fields():
         "global_geometry",
         "action_kinds",
         "clickable",
+        "object_name",
+        "accessible_name",
+        "accessible_description",
+        "checkable",
+        "checked",
+        "current_index",
+        "current_text",
+        "item_count",
+        "tool_tip",
     }
     assert action["label"] == "Compile"
     assert action["geometry"] == {"x": 8, "y": 160, "width": 72, "height": 24}
+    from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+
+    decoded = AgentDtoJsonCodec.dataclass_from_json(UiWidgetTreeResult, payload)
+    assert decoded == result
 
 
 def test_mcp_widget_tree_projection_preserves_semantic_action_values():
@@ -1147,50 +1168,98 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
     }
 
 
-def test_mcp_ui_catalog_projection_flattens_identity_ids():
-    documents = server.McpUiCatalogPayloadProjection("documents").compact_payload(
-        {
-            "documents": [
-                {
-                    "identity": {"document_id": "plate_manager.orchestrator_config"},
-                    "title": "Plate manager orchestrator config",
-                }
-            ]
-        }
-    )
-    actions = server.McpUiCatalogPayloadProjection("actions").compact_payload(
-        {
-            "actions": [
-                {
-                    "identity": {
-                        "widget_id": "plate_manager",
-                        "action_id": "add_plate",
-                    },
-                    "enabled": True,
-                }
-            ]
-        }
-    )
-    windows = server.McpUiCatalogPayloadProjection("windows").compact_payload(
-        {
-            "windows": [
-                {
-                    "identity": {"window_id": "global_config"},
-                    "title": "Configuration - GlobalPipelineConfig",
-                }
-            ]
-        }
-    )
+@pytest.mark.parametrize(
+    "binding,method,catalog",
+    [
+        (
+            server.UiListCodeDocumentsMcpToolBinding,
+            "list_documents",
+            UiCodeDocumentCatalog(
+                schema_version=SCHEMA_VERSION,
+                documents=(
+                    UiCodeDocumentSummary(
+                        schema_version=SCHEMA_VERSION,
+                        identity=UiCodeDocumentIdentity(
+                            document_id="plate_manager.orchestrator_config"
+                        ),
+                        widget_id="plate_manager",
+                        title="Plate config",
+                        readable=True,
+                        writable=True,
+                    ),
+                ),
+            ),
+        ),
+        (
+            server.UiListStateSurfacesMcpToolBinding,
+            "list_state_surfaces",
+            UiStateSurfaceCatalog(
+                schema_version=SCHEMA_VERSION,
+                surfaces=(
+                    UiStateSurfaceSummary(
+                        schema_version=SCHEMA_VERSION,
+                        identity=UiStateSurfaceIdentity(
+                            surface_id="plate_manager.state"
+                        ),
+                        widget_id="plate_manager",
+                        title="Plate state",
+                        readable=True,
+                    ),
+                ),
+            ),
+        ),
+        (
+            server.UiListActionsMcpToolBinding,
+            "list_actions",
+            UiActionCatalog(
+                schema_version=SCHEMA_VERSION,
+                actions=(
+                    UiActionSummary(
+                        schema_version=SCHEMA_VERSION,
+                        identity=UiActionIdentity(
+                            widget_id="plate_manager", action_id="add_plate"
+                        ),
+                        title="Add plate",
+                        enabled=True,
+                        invocation_mode="sync",
+                    ),
+                ),
+            ),
+        ),
+        (
+            server.UiListWindowsMcpToolBinding,
+            "list_windows",
+            UiWindowCatalog(
+                schema_version=SCHEMA_VERSION,
+                windows=(
+                    UiWindowSummary(
+                        schema_version=SCHEMA_VERSION,
+                        identity=UiWindowIdentity(window_id="global_config"),
+                        title="Global config",
+                        window_kind="managed",
+                        visible=True,
+                        focusable=True,
+                    ),
+                ),
+            ),
+        ),
+    ],
+)
+def test_mcp_ui_catalog_bindings_preserve_declared_identity(binding, method, catalog):
+    from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
 
-    assert documents["documents"][0]["document_id"] == (
-        "plate_manager.orchestrator_config"
+    context = SimpleNamespace(
+        ui_bridge_service=SimpleNamespace(**{method: lambda connection: catalog})
     )
-    assert "identity" not in documents["documents"][0]
-    assert actions["actions"][0]["widget_id"] == "plate_manager"
-    assert actions["actions"][0]["action_id"] == "add_plate"
-    assert "identity" not in actions["actions"][0]
-    assert windows["windows"][0]["window_id"] == "global_config"
-    assert "identity" not in windows["windows"][0]
+    payload = binding.execute(context, DEFAULT_UI_BRIDGE_CONNECTION_SPEC)
+
+    assert payload == server.to_jsonable(catalog)
+    assert (
+        AgentDtoJsonCodec.dataclass_from_json(
+            binding.capability.output_contract, payload
+        )
+        == catalog
+    )
 
 
 def test_mcp_widget_tree_projection_can_return_full_action_fields():

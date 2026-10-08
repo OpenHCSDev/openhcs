@@ -14,6 +14,7 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.function_reference import (
     FunctionReferenceTransportAuthority,
+    ModuleExportRegistryFunctionReference,
     RegistryFunctionReference,
 )
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
@@ -120,6 +121,7 @@ def test_raw_resolution_cannot_replace_processing_reference_metadata(
     )
     monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
     reference = FunctionReferenceTransportAuthority.function_reference(wrapped)
+    assert type(reference) is RegistryFunctionReference
     raw_reference = replace(reference, metadata=CallableMetadata())
     first, second = (
         (raw_reference, reference) if raw_first else (reference, raw_reference)
@@ -133,3 +135,22 @@ def test_raw_resolution_cannot_replace_processing_reference_metadata(
         assert transported.metadata == reference.metadata
         assert CallableContract.from_callable(transported).input_memory_type == "numpy"
         assert transported.resolve() is wrapped
+
+
+def test_module_export_source_keeps_exact_registry_transport_identity(monkeypatch):
+    metadata = RegistryService.declared_metadata_for_callable(
+        cellprofiler_backend.crop
+    )[1]
+    monkeypatch.setattr(RegistryService, "_metadata_cache", {metadata.composite_key: metadata})
+    monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
+    reference = FunctionReferenceTransportAuthority.function_reference(metadata.func)
+    exported = FunctionReferenceTransportAuthority.importable_function(
+        metadata.import_identity.module_name, metadata.import_identity.function_name,
+    )
+    if exported is metadata.func:
+        assert isinstance(reference, ModuleExportRegistryFunctionReference)
+        assert reference.source_import_identity == reference.import_identity
+    else:
+        assert type(reference) is RegistryFunctionReference
+    assert reference.composite_key == metadata.composite_key
+    assert reference.resolve() is metadata.func

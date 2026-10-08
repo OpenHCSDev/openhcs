@@ -1,5 +1,26 @@
 [
   {
+    "id": "Pan2026BIABench",
+    "type": "article",
+    "title": "BIABench: Evaluating AI agents on real-world bioimage analysis tasks",
+    "author": [
+      {"given": "Zixuan", "family": "Pan"},
+      {"given": "Davide", "family": "Panzeri"},
+      {"given": "Lukas", "family": "Johanns"},
+      {"given": "Marilin", "family": "Moor"},
+      {"given": "Yu", "family": "Zhou"},
+      {"given": "Hedi", "family": "Peterson"},
+      {"given": "Yiyu", "family": "Shi"},
+      {"given": "Jianxu", "family": "Chen"}
+    ],
+    "publisher": "arXiv",
+    "genre": "Preprint",
+    "number": "2609.34274v1",
+    "issued": {"date-parts": [[2026, 9, 28]]},
+    "DOI": "10.48550/arXiv.2609.34274",
+    "URL": "https://arxiv.org/abs/2609.34274"
+  },
+  {
     "id": "Hinkel2023",
     "type": "article-journal",
     "title": "The Tecan SiLA2 SDK: A royalty-free, open-source framework to develop SiLA2 servers and clients",

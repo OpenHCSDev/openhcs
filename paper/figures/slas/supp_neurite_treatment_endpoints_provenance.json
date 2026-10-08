@@ -1,0 +1,19 @@
+{
+  "generator_sha256": "50f2636aa93a0357bf8a7fd5291fc82f79e95ad9c6114475fef29a5cc242adb2",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "9ec518be210e042acb002d837c74babd1dcc7e9df4b49f9c24dc6fa13d788abb",
+    "paper/figures/build_slas_neurite_effects.py": "76da934abd432d78215f94b3c0651d10a807fd4b99a5c2272a8f8e81c7727218",
+    "paper/figures/compare_personal_neurite.py": "56ebc5f582c4bcbc2384d6cf954e32ca86007fb8a91f63f403ee293a7c05a2eb",
+    "paper/supplementary/personal_neurite_repaired_morphometry/joined_wells.csv": "d059c5c35b7cdff94c411caaa29fcaefeff0f952baf63bb229b1c82c92773a2e",
+    "paper/supplementary/personal_neurite_repaired_morphometry/treatment_effects.csv": "0f76b81b6f69646df93d5c83676f40f8865a2897779588f907ffcd64d691c12f",
+    "paper/supplementary/personal_neurite_repaired_morphometry/source_evidence.json": "cffa65f25928b67298727d387c037e7f329d77375da761f6c5d30fa6203eb6bb"
+  },
+  "ui_crops": [],
+  "display_transforms": [],
+  "output_sha256": {
+    "supp_neurite_treatment_endpoints.png": "e404aca286c5373ec9e0a089d70b7ce9e454aadac487a46a08c4a1175b516835",
+    "supp_neurite_treatment_endpoints.pdf": "9738cf441bb2ccad1fccf20cd9a26e2b3c2abd97da229724e2c891eb8714a33c",
+    "supp_neurite_treatment_endpoints.svg": "f31b6fc848fb1a4829b618b4c7d9cc02846a9ba4d6fed2cfb5c3cae0e3328037"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

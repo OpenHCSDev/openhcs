@@ -11,6 +11,7 @@ from paper_build.declarations import DocumentRole
 from paper_build.build import MarkdownDocumentBuilder, resolve_inputs
 from paper_build.artifacts import InputObservations
 from paper_build.process import BuildLog
+from paper_build.markdown import walk_ast
 from paper_build.word import finalize_docx as shared_finalize_docx
 from build_paper import PAPER, SlasRetainedFigures
 
@@ -86,10 +87,19 @@ def test_compatibility_command_delegates_and_resolves_old_source(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     with zipfile.ZipFile(output) as archive:
-        assert (
-            "shared microscopy workflows" in archive.read("word/document.xml").decode()
+        manuscript_title = next(
+            line.removeprefix("# ")
+            for line in (PAPER.root / PAPER.documents[0].sources[0]).read_text().splitlines()
+            if line.startswith("# ")
         )
-        assert (
-            len([name for name in archive.namelist() if name.startswith("word/media/")])
-            == 6
+        assert manuscript_title in archive.read("word/document.xml").decode()
+        inputs = MarkdownDocumentBuilder().dependencies(
+            PAPER.documents[0], PAPER.root, BuildLog(tmp_path / "images.log"),
+            InputObservations(), PAPER.preparation,
         )
+        declared_images = {
+            node["c"][2][0]
+            for source in inputs.sources for node in walk_ast(source.ast)
+            if node.get("t") == "Image"
+        }
+        assert len([name for name in archive.namelist() if name.startswith("word/media/")]) == len(declared_images)

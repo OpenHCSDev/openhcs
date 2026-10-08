@@ -7,11 +7,16 @@ authoring session. This illustration does not execute an image-analysis job.
 from __future__ import annotations
 
 import ast
+import io
 import json
+import keyword
 from pathlib import Path
 import textwrap
+import tokenize
 
 from matplotlib.patches import Rectangle
+from matplotlib.font_manager import FontProperties
+from matplotlib.textpath import TextPath
 
 from build_slas_visual_story import (
     BLUE,
@@ -26,11 +31,47 @@ from build_slas_visual_story import (
 )
 
 
+def python_excerpt(sheet, x, y, source, *, size=10.5):
+    """Draw actual Python tokens as editable vector text, not a raster."""
+    lines = source.splitlines()
+    colors = [["#253346"] * len(line) for line in lines]
+    for token in tokenize.generate_tokens(io.StringIO(source).readline):
+        color = (
+            BLUE if token.type == tokenize.NAME and keyword.iskeyword(token.string)
+            else TEAL if token.type == tokenize.STRING
+            else PURPLE if token.type == tokenize.NUMBER
+            else MUTED if token.type == tokenize.COMMENT
+            else None
+        )
+        if color is None:
+            continue
+        for row in range(token.start[0] - 1, min(token.end[0], len(lines))):
+            start = token.start[1] if row == token.start[0] - 1 else 0
+            end = token.end[1] if row == token.end[0] - 1 else len(lines[row])
+            colors[row][start:end] = [color] * (end - start)
+    font = FontProperties(family="DejaVu Sans Mono", size=size)
+    # Include the advance, rather than glyph ink width, to retain indentation.
+    advance = (TextPath((0, 0), "MM", prop=font).get_extents().width
+               - TextPath((0, 0), "M", prop=font).get_extents().width)
+    dx = advance / (sheet.figure.get_figwidth() * 72) * 100
+    dy = size * 1.18 / (sheet.figure.get_figheight() * 72) * 100
+    for row, line in enumerate(lines):
+        start = 0
+        while start < len(line):
+            end = start + 1
+            while end < len(line) and colors[row][end] == colors[row][start]:
+                end += 1
+            sheet.text(x + start * dx, y - row * dy, line[start:end],
+                       size=size, color=colors[row][start], family="DejaVu Sans Mono",
+                       va="top", parse_math=False)
+            start = end
+
+
 def extension(*, main_panel=False):
     sheet = FigureSheet(
         "submission_custom_function" if main_panel else "custom_function_extension",
         "" if main_panel else "One function declaration reaches the whole workflow",
-        5.2 if main_panel else 7.6,
+        6.2 if main_panel else 7.6,
     )
     source_path = OUTPUT / "custom_signal_example.py"
     tree = ast.parse(source_path.read_text())
@@ -38,12 +79,19 @@ def extension(*, main_panel=False):
     if len(functions) != 1:
         raise ValueError("The extension figure requires one function declaration")
     function = functions[0]
-    registration_path = OUTPUT / "custom_extension_registration.json"
-    detail_path = OUTPUT / "custom_extension_description.json"
-    registration = json.loads(registration_path.read_text())["response"]["results"][0][
+    registration_path = OUTPUT / ("custom_extension_fixed_openhcs_register_custom_function.json"
+                                  if main_panel else "custom_extension_registration.json")
+    detail_path = OUTPUT / ("custom_extension_live_function_detail.json"
+                            if main_panel else "custom_extension_description.json")
+    registration_response = json.loads(registration_path.read_text())
+    detail_response = json.loads(detail_path.read_text())
+    if not main_panel:
+        registration_response = registration_response["response"]
+        detail_response = detail_response["response"]
+    registration = registration_response["results"][0][
         "payloads"
     ][0]
-    detail = json.loads(detail_path.read_text())["response"]["results"][0]["payloads"][
+    detail = detail_response["results"][0]["payloads"][
         0
     ]
     if registration["registered_count"] != 1 or registration["errors"]:
@@ -124,27 +172,57 @@ def extension(*, main_panel=False):
         sheet.source(ROOT / path)
 
     if main_panel:
-        sheet.text(3, 96, "VIII", size=14, weight="bold", color=BLUE)
-        sheet.text(11, 96, "Lab Python becomes an editable analysis step", size=12, weight="bold")
+        code_path = OUTPUT / "custom_extension_live_code_document.json"
+        code = json.loads(code_path.read_text())["results"][0]["payloads"][0]
+        code_tree = ast.parse(code["source"])
+        pattern = next(node.value for node in code_tree.body
+                       if isinstance(node, ast.Assign)
+                       and any(isinstance(target, ast.Name) and target.id == "pattern"
+                               for target in node.targets))
+        imported_names = {
+            alias.asname or alias.name: (node.module, alias.name)
+            for node in code_tree.body if isinstance(node, ast.ImportFrom)
+            for alias in node.names
+        }
+        callable_expression = pattern.elts[0]
+        if not isinstance(callable_expression, ast.Name) or imported_names.get(
+            callable_expression.id
+        ) != (detail["entry"]["module"], entry["name"]):
+            raise ValueError("Live code identifies a different function")
+        live_parameters = ast.literal_eval(pattern.elts[1])
+        if any(live_parameters[name] != value for name, value in source_defaults.items()):
+            raise ValueError("Live code parameters differ from the shown declaration")
+        sheet.source(code_path)
+        live_evidence_path = OUTPUT / "custom_extension_live_evidence.json"
+        live_evidence = json.loads(live_evidence_path.read_text())
+        if digest(source_path) != live_evidence["function_source_sha256"]:
+            raise ValueError("Current function source differs from the native authoring record")
+        sheet.source(live_evidence_path)
+        sheet.text(3, 96, "II", size=14, weight="bold", color=BLUE)
+        sheet.text(11, 96, "Function definition → generated form ↔ live code", size=12, weight="bold")
         # The actual declaration, including its array-backend decorator, is
         # the source of the shown defaults and descriptions, not a mock API.
-        sheet.axis.add_patch(Rectangle((3, 13), 52, 75, color=PALE))
-        sheet.text(5, 84, excerpt, size=11.5, family="DejaVu Sans Mono",
-                   va="top", linespacing=1.15)
-        sheet.text(5, 17, "Docstring excerpt; full registered source retained", size=9, color=MUTED)
-        sheet.arrow((56, 51), (61, 51), color=BLUE)
-        sheet.text(58.5, 63, "Register\nsource", size=9, ha="center")
-        sheet.text(64, 84, "Generated form controls", size=12, weight="bold")
-        sheet.native_image("custom_extension_parameters_capture",
-                           (64, 50, 33, 29), crop=(15, 337, 310, 445))
-        sheet.text(64, 43, "Agent-facing catalog description", size=11, weight="bold")
+        sheet.axis.add_patch(Rectangle((3, 24), 44, 65, color=PALE))
+        python_excerpt(sheet, 5, 85, excerpt)
+        sheet.text(5, 26, "Docstring excerpt; registered source retained", size=8.5, color=MUTED)
+        sheet.arrow((48, 70), (52, 70), color=BLUE)
+        sheet.text(50, 78, "Register", size=8, ha="center", rotation=90)
+        sheet.text(53, 87, "Generated form controls", size=12, weight="bold")
+        sheet.native_image("custom_extension_live_parameters_capture",
+                           (53, 57, 44, 26), crop=(20, 113, 310, 224), response_path=())
+        sheet.text(53, 54, "The same function and parameters", size=10, color=MUTED)
+        sheet.text(53, 49, "Live editable Python", size=12, weight="bold")
+        sheet.native_image("custom_extension_live_code_capture", (53, 25, 44, 23.3),
+                           crop=(70, 38, 530, 194), response_path=())
+        sheet.text(53, 23, "Native form and code • OpenHCS 0.8.7", size=9, color=PURPLE)
+        sheet.text(3, 20, "The same declaration also supplies the agent-facing catalog", size=11, weight="bold")
         for index, name in enumerate(parameter_names):
             parameter = parameters[name]
-            y = 34 - index * 12
-            sheet.text(64, y, f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
-                       size=9, family="DejaVu Sans Mono", color=TEAL)
-            sheet.text(64, y-5, parameter["description"], size=9, color=MUTED)
-        sheet.text(50, 4, "One registered source • no function-specific form or MCP tool",
+            x = 3 + index * 48
+            sheet.text(x, 14, f"{name}: {parameter['annotation']} = {parameter['default_repr']}",
+                       size=10, family="DejaVu Sans Mono", color=TEAL)
+            sheet.text(x, 10, parameter["description"], size=10, color=MUTED)
+        sheet.text(50, 4, "Declaration-derived controls and catalog • editable Python uses the same workflow",
                    size=11, ha="center", color=MUTED)
         sheet.save()
         return

@@ -1,0 +1,58 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capture_scope": "window",
+          "captured": true,
+          "errors": [],
+          "frame_condition": "immediate",
+          "height": 700,
+          "observation": null,
+          "observation_timeout_s": 5,
+          "operation_id": null,
+          "output_dir_path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures",
+          "resource": {
+            "mime_type": "image/png",
+            "path": "/home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures/20261007T203207861469Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png",
+            "sha256": "3c61d091c21e73a8580db50f14c94cfff336661e31dad8b8fef95c40d6966b82",
+            "size_bytes": 25411,
+            "title": "Edit Function Pattern",
+            "uri": "file:///home/ts/.cache/agent-scratch/direct-import-authoring-20261007/captures/20261007T203207861469Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png"
+          },
+          "schema_version": "openhcs.agent.v1",
+          "summary": {
+            "dirty": false,
+            "dirty_field_count": 0,
+            "focusable": true,
+            "identity": {
+              "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139952243201584"
+            },
+            "managed_action_ids": [],
+            "manager_scope": {
+              "value": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139952243201584"
+            },
+            "object_state_scope_id": null,
+            "schema_version": "openhcs.agent.v1",
+            "semantic_markers": [],
+            "signature_diff": false,
+            "signature_diff_field_count": 0,
+            "title": "Edit Function Pattern",
+            "visible": true,
+            "window_kind": "scope"
+          },
+          "warnings": [],
+          "width": 900,
+          "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139952243201584"
+        }
+      ],
+      "tool": "openhcs_ui_snapshot_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
