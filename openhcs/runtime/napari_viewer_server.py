@@ -2679,16 +2679,25 @@ class NapariLayerDisplayPipeline:
     def settlement_progress(self) -> ViewerSettleProgress:
         """Begin or observe an incremental Qt-driven settlement cycle."""
 
-        settlement = self.server.layer_route_state.begin_settlement()
-        if settlement.active_route is None:
-            self._schedule_next_settlement_update(settlement)
-        return settlement.progress()
+        with self.server.layer_route_state.mutation_boundary():
+            # Stream acceptance uses the same boundary. No cycle can report an
+            # empty completion while an accepted batch remains to be projected.
+            if not self.server.accepted_stream_batches.empty():
+                return self.server.layer_route_state.admit_settlement().progress()
+            settlement = self.server.layer_route_state.begin_settlement()
+            if settlement.active_route is None:
+                self._schedule_next_settlement_update(settlement)
+            return settlement.progress()
 
     def _schedule_next_settlement_update(
         self,
         settlement: NapariLayerSettlementState,
     ) -> None:
-        if settlement.failed or settlement.active_route is not None:
+        if (
+            settlement.failed
+            or settlement.active_route is not None
+            or settlement.awaiting_updates
+        ):
             return
         if settlement.completed_update_count == len(settlement.updates):
             try:
@@ -2733,9 +2742,13 @@ class NapariLayerDisplayPipeline:
                     update.retained_callback(partial(self._execute_settlement_update, settlement, route_key)),
                 )
                 return
-            self._display_work_by_route.pop(route_key, None)
-            self.server.layer_route_state.clear_update_error(route_key)
-            settlement.complete_active(route_key)
+            # Publish terminal progress only after the existing route-failure
+            # check, without holding the boundary across native display work.
+            with self.server.layer_route_state.mutation_boundary():
+                self._display_work_by_route.pop(route_key, None)
+                self.server.layer_route_state.clear_update_error(route_key)
+                settlement.complete_active(route_key)
+                self._schedule_next_settlement_update(settlement)
         except Exception as error:
             self.server.layer_route_state.record_update_error(route_key, error)
             self._display_work_by_route.pop(route_key, None)
@@ -2745,7 +2758,6 @@ class NapariLayerDisplayPipeline:
             )
             settlement.fail_active(route_key)
             return
-        self._schedule_next_settlement_update(settlement)
 
     def display_layer_batch(
         self,
@@ -2999,15 +3011,14 @@ class NapariSettleControlMessageAction(NapariControlMessageAction):
         server: "NapariViewerServer",
         message: Mapping[str, object],
     ) -> dict[str, object] | None:
-        """Snapshot an existing settlement without waiting for Qt rendering."""
+        """Admit or observe settlement without waiting for Qt rendering."""
 
         del message
         unavailable = self._unavailable_response(server)
         if unavailable is not None:
             return unavailable
-        progress = server.layer_route_state.existing_settlement_progress()
-        if progress is None:
-            return None
+        with server.layer_route_state.mutation_boundary():
+            progress = server.layer_route_state.admit_settlement().progress()
         return self._progress_response(server, progress)
 
     @staticmethod
@@ -6795,7 +6806,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
             # Receipt certifies ownership, not display completion. Invalidate a
             # prior terminal settlement before acknowledging this new work.
             with self.layer_route_state.mutation_boundary():
-                self.layer_route_state.reset_settlement()
+                self.layer_route_state.reset_settlement(accepting_stream=True)
                 self.accepted_stream_batches.put(accepted_batch)
             return NapariStreamMessageReply.success(msg_type)
         except Exception as error:
@@ -6825,6 +6836,11 @@ class NapariViewerServer(OpenHCSViewerServerABC):
     def process_messages(self) -> None:
         """Drain control actions whose registered owners require the Qt thread."""
 
+        # The transport only admits the cycle. This Qt service binds route
+        # updates and stops their timers after the accepted intake barrier.
+        progress = self.layer_route_state.existing_settlement_progress()
+        if progress is not None and progress.phase is ViewerSettlePhase.RUNNING:
+            self.display_pipeline.settlement_progress()
         while True:
             try:
                 request = self.accepted_control_requests.get_nowait()

@@ -311,7 +311,9 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
 class NapariLayerSettlementState:
     """Own one incremental drain of queued Napari layer updates."""
 
-    updates: tuple[tuple[str, NapariPendingLayerUpdate], ...]
+    # None is an admitted cycle awaiting the Qt intake barrier. An empty tuple
+    # is different: Qt has bound the cycle and found no pending route updates.
+    updates: tuple[tuple[str, NapariPendingLayerUpdate], ...] | None
     completed_update_count: int = 0
     active_route: str | None = None
     active_route_work_unit_count: int = 0
@@ -324,12 +326,27 @@ class NapariLayerSettlementState:
     )
 
     @property
+    def awaiting_updates(self) -> bool:
+        with self._lock:
+            return self.updates is None
+
+    def bind_updates(
+        self, updates: tuple[tuple[str, NapariPendingLayerUpdate], ...]
+    ) -> None:
+        """Bind the exact Qt-owned updates once the accepted intake is drained."""
+        with self._lock:
+            if self.updates is not None:
+                raise RuntimeError("Napari settlement updates are already bound.")
+            self.updates = updates
+
+    @property
     def phase(self) -> ViewerSettlePhase:
         with self._lock:
             if self.failed:
                 return ViewerSettlePhase.FAILED
             if (
-                self.completed_update_count == len(self.updates)
+                self.updates is not None
+                and self.completed_update_count == len(self.updates)
                 and self.active_route is None
             ):
                 return ViewerSettlePhase.COMPLETE
@@ -341,6 +358,8 @@ class NapariLayerSettlementState:
         """Claim the next exact update for one Qt callback."""
 
         with self._lock:
+            if self.updates is None:
+                return None
             if self.phase is not ViewerSettlePhase.RUNNING:
                 return None
             if self.active_route is not None:
@@ -455,7 +474,7 @@ class NapariLayerSettlementState:
             return ViewerSettleProgress(
                 phase=self.phase,
                 completed_update_count=self.completed_update_count,
-                total_update_count=len(self.updates),
+                total_update_count=0 if self.updates is None else len(self.updates),
                 active_route=self.active_route,
                 active_route_work_unit_count=self.active_route_work_unit_count,
                 active_route_work_unit_active=self.active_route_work_unit_active,
@@ -1752,7 +1771,10 @@ class NapariLayerRouteStateStore:
         update: NapariPendingLayerUpdate,
     ) -> None:
         with self._settlement_lock:
-            if self.layer_settlement is not None:
+            if (
+                self.layer_settlement is not None
+                and not self.layer_settlement.awaiting_updates
+            ):
                 if self.layer_settlement.phase is ViewerSettlePhase.RUNNING:
                     raise RuntimeError(
                         "Cannot queue a Napari layer update while settlement is active."
@@ -1781,13 +1803,19 @@ class NapariLayerRouteStateStore:
         return updates
 
     def begin_settlement(self) -> NapariLayerSettlementState:
-        """Return the active settlement or begin one from queued updates."""
+        """Bind queued updates on Qt after the accepted intake barrier."""
 
         with self._settlement_lock:
+            settlement = self.admit_settlement()
+            if settlement.awaiting_updates:
+                settlement.bind_updates(self.drain_pending_updates())
+            return settlement
+
+    def admit_settlement(self) -> NapariLayerSettlementState:
+        """Admit one observable cycle without touching Qt updates or timers."""
+        with self._settlement_lock:
             if self.layer_settlement is None:
-                self.layer_settlement = NapariLayerSettlementState(
-                    self.drain_pending_updates()
-                )
+                self.layer_settlement = NapariLayerSettlementState(None)
             return self.layer_settlement
 
     def existing_settlement_progress(self) -> ViewerSettleProgress | None:
@@ -1799,7 +1827,7 @@ class NapariLayerRouteStateStore:
             return None
         return settlement.progress()
 
-    def reset_settlement(self) -> None:
+    def reset_settlement(self, *, accepting_stream: bool = False) -> None:
         """Begin a new stream cycle after any observed terminal settlement.
 
         Route failures remain attached to their route until a successful update
@@ -1808,6 +1836,12 @@ class NapariLayerRouteStateStore:
         """
 
         with self._settlement_lock:
+            if (
+                accepting_stream
+                and self.layer_settlement is not None
+                and self.layer_settlement.awaiting_updates
+            ):
+                return  # Intake continues until Qt binds this admitted cycle.
             if (
                 self.layer_settlement is not None
                 and self.layer_settlement.phase is ViewerSettlePhase.RUNNING

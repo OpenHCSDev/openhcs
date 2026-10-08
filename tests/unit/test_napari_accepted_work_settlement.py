@@ -7,6 +7,10 @@ import uuid
 import gc
 import weakref
 import logging
+import os
+import pickle
+import time
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -175,10 +179,11 @@ def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
     # A new accepted batch starts the next existing settlement cycle. The
     # previous failed cycle must not become a permanent unrelated failure.
     assert wire_receiver(image_item())["status"] == "success"
-    assert (
+    admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
         NapariSettleControlMessageAction().transport_thread_response(receiver, {})
-        is None
-    )
+    ))
+    assert admitted.phase is ViewerSettlePhase.RUNNING
+    assert admitted.total_update_count == 0
     receiver.process_accepted_stream_messages()
     settle(receiver)
     qtbot.waitUntil(
@@ -197,10 +202,94 @@ def test_previous_complete_cannot_settle_new_accepted_work(receiver):
         == "success"
     )
     assert not receiver.accepted_stream_batches.empty()
-    assert (
+    admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
         NapariSettleControlMessageAction().transport_thread_response(receiver, {})
-        is None
-    )
+    ))
+    assert admitted.phase is ViewerSettlePhase.RUNNING
+    assert admitted.total_update_count == 0
+
+
+def test_initial_settlement_is_observable_before_qt_intake_and_completes(
+    receiver, wire_receiver, qtbot, tmp_path,
+):
+    """Use actual transport, native layers and Qt service, without delayed mocks."""
+    from qtpy.QtCore import QTimer
+    from zmqruntime.transport import get_control_port
+
+    archive = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_ROI")
+    if archive:
+        rois = load_rois_from_zip(Path(archive))
+        item = {
+            "path": archive,
+            "data_type": "shapes",
+            "shapes": NapariROIConverter.rois_to_shapes(rois),
+            "metadata": image_item()["metadata"],
+        }
+    else:
+        item = image_item()
+    assert wire_receiver(item)["status"] == "success"
+    assert not receiver.accepted_stream_batches.empty()
+    assert not receiver.layer_route_state.layer_pending_updates
+
+    context = zmq.Context()
+    control = context.socket(zmq.REQ)
+    control.setsockopt(zmq.LINGER, 0)
+    control.setsockopt(zmq.RCVTIMEO, 2000)
+    receiver.control_transport_pump.start()
+    control_port = get_control_port(receiver.port, receiver.config)
+    control.connect(get_zmq_transport_url(
+        control_port, host="localhost", mode=receiver.transport_mode,
+        config=receiver.config,
+    ))
+    service = QTimer()
+    service.timeout.connect(receiver.process_accepted_stream_messages)
+    service.timeout.connect(receiver.process_messages)
+
+    def observe():
+        control.send(pickle.dumps({"type": "settle"}))
+        return ViewerSettleProgress.from_response(ViewerControlResponse(
+            pickle.loads(control.recv())
+        ))
+
+    try:
+        started = time.perf_counter()
+        first = observe()
+        elapsed = time.perf_counter() - started
+        assert first.phase is ViewerSettlePhase.RUNNING
+        assert first.completed_update_count == first.total_update_count == 0
+        cycle = receiver.layer_route_state.layer_settlement
+        assert cycle.awaiting_updates
+        assert observe() == first
+        assert receiver.layer_route_state.layer_settlement is cycle
+        assert receiver.accepted_control_requests.empty()
+        with pytest.raises(RuntimeError, match="active.*settlement"):
+            receiver.layer_route_state.reset_settlement()
+        with pytest.raises(RuntimeError, match="active.*settlement"):
+            receiver.layer_route_state.require_retirement_boundary()
+
+        # New accepted input belongs to this admitted, not-yet-bound cycle.
+        assert wire_receiver(image_item())["status"] == "success"
+        assert receiver.layer_route_state.layer_settlement is cycle
+        receiver.viewer.window.show()
+        service.start(50)
+        qtbot.waitUntil(
+            lambda: observe().phase is ViewerSettlePhase.COMPLETE, timeout=20000,
+        )
+        final = observe()
+        assert final.completed_update_count == final.total_update_count
+        assert final.total_update_count > 0
+        assert receiver.accepted_stream_batches.empty()
+        assert receiver.viewer.layers
+        receiver.viewer.screenshot(path=str(tmp_path / "native-settlement.png"))
+        print(f"native first settlement {elapsed:.4f}s; pending intake admitted; "
+              f"terminal {final.completed_update_count}/{final.total_update_count}; "
+              f"native layers {len(receiver.viewer.layers)}; archive={archive}")
+    finally:
+        service.stop()
+        receiver.control_transport_pump.stop()
+        control.close(linger=0)
+        context.term()
+        remove_ipc_socket(control_port, receiver.config)
 
 
 def test_payload_load_failure_is_rejected_before_route_creation(receiver):
