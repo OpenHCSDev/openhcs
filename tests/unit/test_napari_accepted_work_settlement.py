@@ -273,6 +273,7 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
     client_worker = ThreadPoolExecutor(max_workers=1)
     late_observer = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_LATE_OBSERVER") == "true"
     client_started = []
+    delivery = None
 
     def deliver():
         if late_observer:
@@ -323,7 +324,11 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         started_delivery = time.perf_counter()
         delivery = client_worker.submit(deliver)
         service.start(50)
-        qtbot.waitUntil(delivery.done, timeout=180000)
+        # The real client owns the no-progress deadline. A second wall-clock
+        # deadline can interrupt moving native work and then manufacture an
+        # idle timeout by joining that client while its Qt callbacks cannot run.
+        while not delivery.done():
+            qtbot.wait(50)
         assert delivery.result()
         final = observe()
         assert final.completed_update_count == final.total_update_count
@@ -348,6 +353,10 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
             assert observations[0][1].active_route_work_unit_active
             assert awaiting_seconds > 30, f"Actual unbound work was only {awaiting_seconds:.3f}s"
     finally:
+        # Preserve Qt service until the original observation reaches terminal;
+        # never block its callback owner on the observer thread's join.
+        while delivery is not None and not delivery.done():
+            qtbot.wait(50)
         service.stop()
         client_worker.shutdown(wait=True)
         receiver.control_transport_pump.stop()
