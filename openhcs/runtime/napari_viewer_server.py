@@ -4166,8 +4166,14 @@ def _install_result_selection_toolbar(
 
     qt_window = surface.dock.window()
     toolbar = QToolBar("OpenHCS ROI selection", qt_window)
-    surface.subscriptions.callback(toolbar.deleteLater)
-    surface.subscriptions.callback(toolbar.hide)
+    # Qt owns native disposal: receiver connections vanish if window teardown
+    # destroys the toolbar before the dock. Python observers must retire at
+    # either end of that lifetime, without calling a deleted QWidget.
+    surface.dock.destroyed.connect(toolbar.hide)
+    surface.dock.destroyed.connect(toolbar.deleteLater)
+    surface.manager.destroyed.connect(toolbar.hide)
+    surface.manager.destroyed.connect(toolbar.deleteLater)
+    toolbar.destroyed.connect(surface.release)
     toolbar.setObjectName("openhcs_roi_selection_toolbar")
     label = QLabel("Selected ROI outline:", toolbar)
     thickness = QSpinBox(toolbar)

@@ -4144,7 +4144,7 @@ def test_roi_selection_preserves_user_adjusted_native_highlight_thickness(
 def test_roi_selection_toolbar_adjusts_native_highlight_setting(qtbot, monkeypatch):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     from napari.settings import get_settings
-    from qtpy.QtWidgets import QMainWindow, QPushButton, QSpinBox
+    from qtpy.QtWidgets import QDockWidget, QMainWindow, QPushButton, QSpinBox, QWidget
 
     settings = get_settings()
     monkeypatch.setattr(settings.appearance.highlight, "highlight_thickness", 1)
@@ -4155,15 +4155,11 @@ def test_roi_selection_toolbar_adjusts_native_highlight_setting(qtbot, monkeypat
     )
     qt_window = QMainWindow()
     qtbot.addWidget(qt_window)
-    result_selection_dock = type(
-        "ResultSelectionDock",
-        (),
-        {"window": lambda self: qt_window},
-    )()
+    result_selection_dock = QDockWidget(qt_window)
     server = type("ResultSelectionServer", (), {"viewer": None})()
     controller = napari_viewer_server.NapariResultSelectionController(server)
 
-    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, object())
+    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, QWidget(result_selection_dock))
     qt_window.destroyed.connect(surface.release)
     toolbar = napari_viewer_server._install_result_selection_toolbar(
         surface,
@@ -4199,7 +4195,7 @@ def test_roi_layer_color_button_recolors_every_shape(qtbot, monkeypatch):
     from napari.components import ViewerModel
     from qtpy.QtCore import Qt
     from qtpy.QtGui import QColor
-    from qtpy.QtWidgets import QColorDialog, QMainWindow, QPushButton
+    from qtpy.QtWidgets import QColorDialog, QDockWidget, QMainWindow, QPushButton, QWidget
 
     viewer = ViewerModel()
     layer = viewer.add_shapes(
@@ -4219,18 +4215,14 @@ def test_roi_layer_color_button_recolors_every_shape(qtbot, monkeypatch):
     )
     qt_window = QMainWindow()
     qtbot.addWidget(qt_window)
-    result_selection_dock = type(
-        "ResultSelectionDock",
-        (),
-        {"window": lambda self: qt_window},
-    )()
+    result_selection_dock = QDockWidget(qt_window)
     monkeypatch.setattr(
         QColorDialog,
         "getColor",
         lambda *_args, **_kwargs: QColor.fromRgbF(0.2, 0.8, 0.3, 1.0),
     )
 
-    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, object())
+    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, QWidget(result_selection_dock))
     qt_window.destroyed.connect(surface.release)
     toolbar = napari_viewer_server._install_result_selection_toolbar(
         surface,
