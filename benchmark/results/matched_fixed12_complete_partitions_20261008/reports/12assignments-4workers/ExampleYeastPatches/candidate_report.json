@@ -1,0 +1,3102 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "c6f12f89-e5fa-4181-812c-aa6879bd2868",
+    "compile_artifact_id": "f6fd0dbd-ac81-4455-acd6-f7d42af10098",
+    "endpoint_pid": 1506880,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1507333,
+      1507334,
+      1507335,
+      1507336
+    ],
+    "worker_interval_overlap_seconds": 4.293704032897949,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791460092.9646943,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791460092.9721441,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791460092.987907,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791460092.991805,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791460094.5416262,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791460094.541699,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791460094.544342,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791460094.544463,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791460094.5455031,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791460094.5456622,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791460094.5810974,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791460094.5812616,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791460095.9059763,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791460095.9060931,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791460095.934855,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791460095.9349873,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791460095.9365897,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791460095.936955,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791460095.9634194,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791460095.9635859,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791460097.285509,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791460097.293479,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791460097.31557,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791460097.3568041,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791460092.9043968,
+    "first_axis_started_at_epoch_seconds": 1791460092.9646943,
+    "server_job_completed_at_epoch_seconds": 1791460097.5199175,
+    "server_job_seconds": 4.615520715713501,
+    "execution_seconds": 4.3921098709106445,
+    "compile_seconds": 0.5898542404174805,
+    "total_seconds": 5.359250959008932,
+    "first_axis_through_server_completion_seconds": 4.555223226547241,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 64,
+    "candidate_output_file_count": 31,
+    "declared_output_file_count": 29,
+    "native_output_inventory": [
+      {
+        "path": "W001/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W001/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W001/Experiment.csv",
+        "sha256": "528ddf1126c502eeabc2b4c1e9b9b3efe44267cc4f65c99ad5315c0f87ff77d8"
+      },
+      {
+        "path": "W001/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W001/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "92bf7c75bdb25ea95427b83684bad64dbb8d61b89677127702c696a8cdb2265a"
+      },
+      {
+        "path": "W001/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W001/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W002/Experiment.csv",
+        "sha256": "6b32c17e139c7ab94f9edb6b2aab97f4ab52363657a8255957d7c589e34633d9"
+      },
+      {
+        "path": "W002/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W002/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "4a252ce895bebba232ad675c8ad905aff739cbf3e6f8fbc72440e70e308aa2ba"
+      },
+      {
+        "path": "W002/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W002/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W003/Experiment.csv",
+        "sha256": "10fa02b19dcea8c2d6b0abcd98327ac43b842beb8198a09a5ea36a7508246f2a"
+      },
+      {
+        "path": "W003/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W003/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "c2a64baf564a1f6c7b1ea95e1a3a03267fc39bb7cc581258db4d622efe2e1006"
+      },
+      {
+        "path": "W003/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W003/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W004/Experiment.csv",
+        "sha256": "6e386fef89b6adee3bccc7b41eafdbf651abb2bdfcea52f4f7b1f871cc44f48a"
+      },
+      {
+        "path": "W004/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W004/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "d24d0a90de8e5420215ab1e178ae05f4da700fd0c707e0257696cff989021a12"
+      },
+      {
+        "path": "W004/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W004/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W005/Experiment.csv",
+        "sha256": "7310db6c01662d85252fc8c6c63f63c9281efd7d65b0e40f1da3f03403786893"
+      },
+      {
+        "path": "W005/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W005/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "b23dd72685ea6428847fcb7dfd6bcf6855f052b4a3eb0e014dc4a0c98c0ec090"
+      },
+      {
+        "path": "W005/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W005/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W006/Experiment.csv",
+        "sha256": "aff9bc476abb490dec9e600a706946652be1d54203df36b9610ba205996d0cfb"
+      },
+      {
+        "path": "W006/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W006/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "bb00c2721bf5196d39c24d5b780406435acab94bd9f2739ecfa392a8a5496937"
+      },
+      {
+        "path": "W006/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W006/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W007/Experiment.csv",
+        "sha256": "599473032b9616960ba1fdb878600af0b17d94ebd0113dd108644d16df0f5499"
+      },
+      {
+        "path": "W007/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W007/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "905ab7c7ed27300823f395ee605c71fda0b08a28254f005aaaf17812c29c8f8b"
+      },
+      {
+        "path": "W007/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W007/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W008/Experiment.csv",
+        "sha256": "4f69d2907079bf37bb4338315c0031cd461bdb8efb0ddfe4ff469120e0efab79"
+      },
+      {
+        "path": "W008/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W008/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "038cb6a128103e58841b70e3cef5934fd7f553fe2681362b3c162ab372066327"
+      },
+      {
+        "path": "W008/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W008/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0e1a67a0893cf69462dc162db7f66d485659c51eead641b6983750b6c888501e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/FilterObjects.csv",
+        "sha256": "f30d3bb65b92db51f1022243724056314b037ebe90c98e2452ba2969ddeadb58"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/ForcedSpots.csv",
+        "sha256": "03ba02e6519bced1ff26133ec06f55bc64e4d58f57796dbc01896e38e65d4fd0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "abbf95c92f8f00b5c0eddab13b0fd353fc6f4e99c4e9c54cfd5abf95a5590a2d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/NaturalSpots.csv",
+        "sha256": "d1cf362b8dd975b3affd7422d34af4bc2cac864cfe0793698b020b5c2444fa40"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Prespots.csv",
+        "sha256": "60d400292510aab55f32d36da555f8258931337db4f89e88d69dd6f80365278c"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-complete-partitions-main753-v1/receiving-4workers/4workers/ExampleYeastPatches/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "fd8d5f1b-d68d-46c3-96b1-b662c8186b5b",
+    "compile_artifact_id": "c720e8c2-99b3-4039-81e1-19eb40866880",
+    "endpoint_pid": 1506880,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1507333,
+      1507334,
+      1507335,
+      1507336
+    ],
+    "worker_interval_overlap_seconds": 4.14745569229126,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791460100.7536418,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791460100.7602575,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791460100.776821,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791460100.7939835,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791460102.1539066,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791460102.1539788,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791460102.157466,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791460102.1575818,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791460102.1795013,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791460102.1796982,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791460102.2101529,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791460102.2103791,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791460103.537681,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791460103.5378354,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791460103.552536,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791460103.5526695,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791460103.5734518,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791460103.5736315,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791460103.6056874,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791460103.606072,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791460104.9414392,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791460104.969526,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791460105.0155928,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791460105.020067,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791460100.7256072,
+    "first_axis_started_at_epoch_seconds": 1791460100.7536418,
+    "server_job_completed_at_epoch_seconds": 1791460105.1841502,
+    "server_job_seconds": 4.458543062210083,
+    "execution_seconds": 4.266425132751465,
+    "compile_seconds": 0.5528347492218018,
+    "total_seconds": 5.134389351122081,
+    "first_axis_through_server_completion_seconds": 4.430508375167847,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 64,
+    "candidate_output_file_count": 31,
+    "declared_output_file_count": 29,
+    "native_output_inventory": [
+      {
+        "path": "W001/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W001/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W001/Experiment.csv",
+        "sha256": "4c3e3da148dd02232b4803e00332fe5457087cfb2cf3f8ff504d253efdfa9561"
+      },
+      {
+        "path": "W001/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W001/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "bf0e95fb0276795d9715b0337f5213812c5626f9ea8caea74f28dada7bb2601d"
+      },
+      {
+        "path": "W001/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W001/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W002/Experiment.csv",
+        "sha256": "7fe709b95f3294f6ab15da7dd27a863fbc3470b14563602281911c6b7a3759a9"
+      },
+      {
+        "path": "W002/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W002/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "31b00eb9fff4e68caff25753e27682891a3a33f340d764580addba96e4bafe50"
+      },
+      {
+        "path": "W002/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W002/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W003/Experiment.csv",
+        "sha256": "5a3ffa930d9c4d60724401bd34f92dd880c5fda08acadc6003badd41efe87012"
+      },
+      {
+        "path": "W003/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W003/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "45c4e413e5980b232a601a4c8e1e0d00717e05978af7f1a483de52f47b3a9d52"
+      },
+      {
+        "path": "W003/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W003/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W004/Experiment.csv",
+        "sha256": "fe78c5724dd9a218250724d8ea5356522b5061bc979ef8d94c7aed17afe5f41a"
+      },
+      {
+        "path": "W004/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W004/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "41e48e1206d4ae884e66eee662356e5fd949ea559d897d8013d19815e58a288d"
+      },
+      {
+        "path": "W004/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W004/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W005/Experiment.csv",
+        "sha256": "6f672c14dfed262b89a8aee69e7dd311ed4a32f8121402f5903409fe16f71ac1"
+      },
+      {
+        "path": "W005/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W005/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "117e92d3e55491bac2085310e9ba49b6a19268d24842279229ca9bf83ff8511f"
+      },
+      {
+        "path": "W005/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W005/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W006/Experiment.csv",
+        "sha256": "8cf82aad4a0cc780a23852110f51fe9506f1140170a8f5c2a8a09ce396f26071"
+      },
+      {
+        "path": "W006/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W006/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "b81a1c4e0de146dc5f8ef916349c1ea52ff170c80b56cbe3aca19cb9e0df960f"
+      },
+      {
+        "path": "W006/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W006/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W007/Experiment.csv",
+        "sha256": "5a3532525ed5af9a1801d19ba6e5f93ec0c755be39bb4b3cd2761234d5d3a63a"
+      },
+      {
+        "path": "W007/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W007/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "2f2b0cae727327825b521c91a8158a7975109a09ab34e1c7b3c99fe43069d166"
+      },
+      {
+        "path": "W007/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W007/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W008/Experiment.csv",
+        "sha256": "fff745958d8cbfee81e967c2b7c740acf4d68ee4b80fd18b68a740295a82a150"
+      },
+      {
+        "path": "W008/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W008/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "847fca39dd5c469f1de562d3902e187083374962dc50330234252bfc3b7a04fe"
+      },
+      {
+        "path": "W008/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W008/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0e1a67a0893cf69462dc162db7f66d485659c51eead641b6983750b6c888501e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/FilterObjects.csv",
+        "sha256": "f30d3bb65b92db51f1022243724056314b037ebe90c98e2452ba2969ddeadb58"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/ForcedSpots.csv",
+        "sha256": "03ba02e6519bced1ff26133ec06f55bc64e4d58f57796dbc01896e38e65d4fd0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "abbf95c92f8f00b5c0eddab13b0fd353fc6f4e99c4e9c54cfd5abf95a5590a2d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/NaturalSpots.csv",
+        "sha256": "d1cf362b8dd975b3affd7422d34af4bc2cac864cfe0793698b020b5c2444fa40"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Prespots.csv",
+        "sha256": "60d400292510aab55f32d36da555f8258931337db4f89e88d69dd6f80365278c"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-complete-partitions-main753-v1/receiving-4workers/4workers/ExampleYeastPatches/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "778294fe-c7b0-48ce-9236-bd0108ad042a",
+    "compile_artifact_id": "fca42db2-1f4c-4484-b4f8-dc9c2271487e",
+    "endpoint_pid": 1506880,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1507333,
+      1507334,
+      1507335,
+      1507336
+    ],
+    "worker_interval_overlap_seconds": 4.105305433273315,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791460108.1530895,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791460108.159631,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791460108.1763217,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791460108.1874619,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791460109.547378,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791460109.5475113,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791460109.561618,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791460109.561753,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791460109.5955799,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791460109.59581,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791460109.611374,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791460109.611589,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791460110.9096842,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791460110.910051,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791460110.9273248,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791460110.9275517,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791460111.0969284,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791460111.097323,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791460111.2043238,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791460111.2045298,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791460112.2927673,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791460112.3155303,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791460112.4348397,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791460112.5422277,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791460108.1252148,
+    "first_axis_started_at_epoch_seconds": 1791460108.1530895,
+    "server_job_completed_at_epoch_seconds": 1791460112.6986883,
+    "server_job_seconds": 4.5734734535217285,
+    "execution_seconds": 4.389138221740723,
+    "compile_seconds": 0.5545573234558105,
+    "total_seconds": 5.249296450056136,
+    "first_axis_through_server_completion_seconds": 4.545598745346069,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 64,
+    "candidate_output_file_count": 31,
+    "declared_output_file_count": 29,
+    "native_output_inventory": [
+      {
+        "path": "W001/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W001/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W001/Experiment.csv",
+        "sha256": "f48b01226c58b7ba49311345200f02c14d646eaaf20082f6a573862f3d997f0a"
+      },
+      {
+        "path": "W001/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W001/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "92bf48a22585177d77c2b4fbb1d4ea473cadc7f1966a37f44037af7e17af50ac"
+      },
+      {
+        "path": "W001/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W001/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W002/Experiment.csv",
+        "sha256": "e2bc7c48604c4f394ab3bf4c493497c8b06acd2234822542431b586ea6764a79"
+      },
+      {
+        "path": "W002/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W002/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "5e62608196da22504eab0800dc833cf69eb26a65bbb51abfdb29e29d34841069"
+      },
+      {
+        "path": "W002/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W002/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W003/Experiment.csv",
+        "sha256": "cb31c01a2c6f81f9b6a9e7f4d8aa8f49d074241b9e2fe11b535d143d4e603d42"
+      },
+      {
+        "path": "W003/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W003/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "e2b576d0f3d8bf089fcbf565411f8ce4b0690fa2bba839cb97e8c03184f644f3"
+      },
+      {
+        "path": "W003/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W003/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W004/Experiment.csv",
+        "sha256": "9ff1e31fb1ac59d0d87f04eb83258015b14517748d8c2b3ba24f7a42821c6e67"
+      },
+      {
+        "path": "W004/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W004/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "8e611d44a19bf469071e019fd01a0d424fbc04e8634ed84433e905f047b6ca5a"
+      },
+      {
+        "path": "W004/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W004/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W005/Experiment.csv",
+        "sha256": "2aaf0a8b9f78923d0a3130662e2c3d4db37953b3d713a1cf812930c336054b35"
+      },
+      {
+        "path": "W005/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W005/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "eb684143d66131c160a0bfedcfbed70310daebb5d787fff417178b9f1dd370ea"
+      },
+      {
+        "path": "W005/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W005/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W006/Experiment.csv",
+        "sha256": "edb296e1920a5a6e935ff9c3d1ebfcbd791021387e4022154337aea11289822a"
+      },
+      {
+        "path": "W006/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W006/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "0cf919753267e52b937f8171bef23fdea55e0472cc31decf94ae619f29e2c8cc"
+      },
+      {
+        "path": "W006/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W006/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W007/Experiment.csv",
+        "sha256": "80d9058699fca390c83c9674d036e24a9e3f20bdb8fcc03bdec0847a59bac438"
+      },
+      {
+        "path": "W007/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W007/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "ae50800240105a76b8119fe6b52f9790d24186d66b586cc1ebc87ac78a2ebbeb"
+      },
+      {
+        "path": "W007/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W007/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W008/Experiment.csv",
+        "sha256": "b34f5e2e4bd395a8af03271b9a57826e5795c716c6a0e8b80a740c97d79c649d"
+      },
+      {
+        "path": "W008/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W008/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "9796123999150333c9757d483ac825082709f38f056b511dbd5cd537ff76e882"
+      },
+      {
+        "path": "W008/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W008/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0e1a67a0893cf69462dc162db7f66d485659c51eead641b6983750b6c888501e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/FilterObjects.csv",
+        "sha256": "f30d3bb65b92db51f1022243724056314b037ebe90c98e2452ba2969ddeadb58"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/ForcedSpots.csv",
+        "sha256": "03ba02e6519bced1ff26133ec06f55bc64e4d58f57796dbc01896e38e65d4fd0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "abbf95c92f8f00b5c0eddab13b0fd353fc6f4e99c4e9c54cfd5abf95a5590a2d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/NaturalSpots.csv",
+        "sha256": "d1cf362b8dd975b3affd7422d34af4bc2cac864cfe0793698b020b5c2444fa40"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Prespots.csv",
+        "sha256": "60d400292510aab55f32d36da555f8258931337db4f89e88d69dd6f80365278c"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-complete-partitions-main753-v1/receiving-4workers/4workers/ExampleYeastPatches/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "b7a18a5b-bc83-4287-a54f-028ccd114eed",
+    "compile_artifact_id": "91332dcd-edf1-43c5-a36b-230ae16aa135",
+    "endpoint_pid": 1506880,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1507333,
+      1507334,
+      1507335,
+      1507336
+    ],
+    "worker_interval_overlap_seconds": 4.117482423782349,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791460115.7039263,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791460115.7106383,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791460115.7318594,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791460115.7341282,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791460117.0895627,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791460117.089697,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791460117.1151228,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791460117.1154919,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791460117.1867368,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791460117.1869514,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791460117.2107174,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791460117.2109668,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791460118.4385993,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791460118.438688,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791460118.4946501,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791460118.49497,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791460118.6067905,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791460118.6070633,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791460118.6155324,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791460118.615765,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791460119.8516107,
+        "pid": 1507333,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W005",
+          "W009"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791460119.8915176,
+        "pid": 1507336,
+        "worker_slot": "worker_3",
+        "owned_wells": [
+          "W004",
+          "W008",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791460119.9917023,
+        "pid": 1507334,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W006",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791460120.0220718,
+        "pid": 1507335,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W007",
+          "W011"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791460115.6764972,
+    "first_axis_started_at_epoch_seconds": 1791460115.7039263,
+    "server_job_completed_at_epoch_seconds": 1791460120.1790602,
+    "server_job_seconds": 4.502562999725342,
+    "execution_seconds": 4.318145513534546,
+    "compile_seconds": 0.556206226348877,
+    "total_seconds": 5.172764613293111,
+    "first_axis_through_server_completion_seconds": 4.475133895874023,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 64,
+    "candidate_output_file_count": 31,
+    "declared_output_file_count": 29,
+    "native_output_inventory": [
+      {
+        "path": "W001/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W001/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W001/Experiment.csv",
+        "sha256": "641d8f48cd02d757c2e9ddb902210aa74e02b289681ebc1bf0ec7445a51ed195"
+      },
+      {
+        "path": "W001/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W001/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "1670133bf8837ab9f94e85f22f73a04fe4fce22465548362701ff066f1e7a33d"
+      },
+      {
+        "path": "W001/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W001/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W002/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W002/Experiment.csv",
+        "sha256": "20e5c928b0806477bad22dfe5b25a9501b390c6bd41b9e2738b3d8b34ab04f9a"
+      },
+      {
+        "path": "W002/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W002/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "1aa782be98169fd116ee7fd290feddadd5f71e9619418687b9f5996c2c9c3d27"
+      },
+      {
+        "path": "W002/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W002/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W003/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W003/Experiment.csv",
+        "sha256": "62acd9a241d52da26b757f4a7b6ae3e01d26434c97af8500a9f84cf8f0275aa3"
+      },
+      {
+        "path": "W003/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W003/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "e81661a00f8871758dbaa1329dc11160eb4c82ebe1babbd2c29455238e29f087"
+      },
+      {
+        "path": "W003/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W003/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W004/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W004/Experiment.csv",
+        "sha256": "fc6e16f45c939d54b4524fbd468bec0701989ac72945c4b0d30e77097c1ecf81"
+      },
+      {
+        "path": "W004/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W004/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "4daff76ff112f579a2fb77272c134245ad64984473f244e01b960f6e18f24401"
+      },
+      {
+        "path": "W004/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W004/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W005/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W005/Experiment.csv",
+        "sha256": "9769a34b81a41c69fd0e18b48ece4ed090c70414e6fabe05fca90c3526d2b57e"
+      },
+      {
+        "path": "W005/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W005/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "682961c63de5d477ef68e8ed4b08abf53c04c0a1249331e6790276d336f2d538"
+      },
+      {
+        "path": "W005/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W005/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W006/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W006/Experiment.csv",
+        "sha256": "9cf006dc0ac86d077116a43a89c6d0c0d3ddaf510b972f4c705f3aa95dba6457"
+      },
+      {
+        "path": "W006/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W006/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "dff02aed624c99bd9b64687c2c79d6f280641b22cac2ef8d877a243644c4697b"
+      },
+      {
+        "path": "W006/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W006/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W007/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W007/Experiment.csv",
+        "sha256": "80afeb13e45451f195cbc4ae7573798704364124b6ee2a535add8f5d8b1b8778"
+      },
+      {
+        "path": "W007/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W007/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "f07abb3e77eafe7537a57a2071954e358e4c225d57c112e1c49507276fa07631"
+      },
+      {
+        "path": "W007/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W007/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_ForcedOutline.png",
+        "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+      },
+      {
+        "path": "W008/1832-48hours-gal-1_NaturalOutline.png",
+        "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+      },
+      {
+        "path": "W008/Experiment.csv",
+        "sha256": "c9916a36f0b048b95fa19bc80e78ee3bc31ed912f70332a21a0b54a76ea11c99"
+      },
+      {
+        "path": "W008/FilterObjects.csv",
+        "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+      },
+      {
+        "path": "W008/ForcedSpots.csv",
+        "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "4d0cf84ad1ad5db43dc686d690e36b37a7db027aae6578c32b0a9cdf643ea016"
+      },
+      {
+        "path": "W008/NaturalSpots.csv",
+        "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+      },
+      {
+        "path": "W008/Prespots.csv",
+        "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W001_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W002_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W003_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W004_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W005_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W006_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W007_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W008_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W009_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W010_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W011_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_ForcedOutline.png",
+        "sha256": "7ec19fce6e36a56dd47d20bca155b47db602b536dab033df5226f77f7d0065c6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/W012_s001_w1_z001_t001_NaturalOutline.png",
+        "sha256": "fe18ddf4ca08cf24ed63081b93ce1da260dd3d0651153eb7778b510a23da646e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0e1a67a0893cf69462dc162db7f66d485659c51eead641b6983750b6c888501e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/FilterObjects.csv",
+        "sha256": "f30d3bb65b92db51f1022243724056314b037ebe90c98e2452ba2969ddeadb58"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/ForcedSpots.csv",
+        "sha256": "03ba02e6519bced1ff26133ec06f55bc64e4d58f57796dbc01896e38e65d4fd0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "abbf95c92f8f00b5c0eddab13b0fd353fc6f4e99c4e9c54cfd5abf95a5590a2d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/NaturalSpots.csv",
+        "sha256": "d1cf362b8dd975b3affd7422d34af4bc2cac864cfe0793698b020b5c2444fa40"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Prespots.csv",
+        "sha256": "60d400292510aab55f32d36da555f8258931337db4f89e88d69dd6f80365278c"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-complete-partitions-main753-v1/receiving-4workers/4workers/ExampleYeastPatches/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

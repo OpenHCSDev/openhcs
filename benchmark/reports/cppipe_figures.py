@@ -653,6 +653,7 @@ class BenchmarkFigureStyle:
         target_line: float | None = None,
         log_variant: bool,
         font_scale: float = 1.0,
+        annotation_precision: int = 1,
     ) -> tuple[Path, ...]:
         """Plot mean bars with all per-pipeline points for each method."""
         import matplotlib.pyplot as plt
@@ -918,11 +919,11 @@ class BenchmarkFigureStyle:
                         (
                             method_index,
                             color,
-                            ((f"all {mean:.1f}{value_suffix}", mean, "bold"),) if len(values_) == 1 else (
-                                (f"min {minimum:.1f}{value_suffix}", minimum, "normal"),
-                                (f"med {median:.1f}{value_suffix}", median, "normal"),
-                                (f"mean {mean:.1f}{value_suffix}", mean, "bold"),
-                                (f"max {maximum:.1f}{value_suffix}", maximum, "normal"),
+                            ((f"all {mean:.{annotation_precision}f}{value_suffix}", mean, "bold"),) if len(values_) == 1 else (
+                                (f"min {minimum:.{annotation_precision}f}{value_suffix}", minimum, "normal"),
+                                (f"med {median:.{annotation_precision}f}{value_suffix}", median, "normal"),
+                                (f"mean {mean:.{annotation_precision}f}{value_suffix}", mean, "bold"),
+                                (f"max {maximum:.{annotation_precision}f}{value_suffix}", maximum, "normal"),
                             ),
                         )
                     )

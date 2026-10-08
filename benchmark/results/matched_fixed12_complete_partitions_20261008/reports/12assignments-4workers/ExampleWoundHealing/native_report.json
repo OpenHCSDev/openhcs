@@ -1,0 +1,229 @@
+{
+  "startup_seconds": 0.5866755479946733,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native_preparation/native_cellprofiler_headless/ExampleWoundHealing.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native/-1",
+      "image_set_count": 16,
+      "invocation_seconds": 30.25762896798551,
+      "pre_pipeline_seconds": 0.0015639741905033588,
+      "pipeline_execution_seconds": 30.256064993795007,
+      "invocation_started_monotonic_seconds": 4146039.371989743,
+      "pipeline_started_monotonic_seconds": 4146039.373553717,
+      "completed_monotonic_seconds": 4146069.629618711,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native/0",
+      "image_set_count": 16,
+      "invocation_seconds": 30.28364851884544,
+      "pre_pipeline_seconds": 0.0007550311274826527,
+      "pipeline_execution_seconds": 30.282893487717956,
+      "invocation_started_monotonic_seconds": 4146069.629631185,
+      "pipeline_started_monotonic_seconds": 4146069.630386216,
+      "completed_monotonic_seconds": 4146099.913279704,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native/1",
+      "image_set_count": 16,
+      "invocation_seconds": 31.312186966184527,
+      "pre_pipeline_seconds": 0.0006982851773500443,
+      "pipeline_execution_seconds": 31.311488681007177,
+      "invocation_started_monotonic_seconds": 4146099.913289953,
+      "pipeline_started_monotonic_seconds": 4146099.913988238,
+      "completed_monotonic_seconds": 4146131.225476919,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleWoundHealing/native/2",
+      "image_set_count": 16,
+      "invocation_seconds": 30.630546796601266,
+      "pre_pipeline_seconds": 0.0007470166310667992,
+      "pipeline_execution_seconds": 30.6297997799702,
+      "invocation_started_monotonic_seconds": 4146131.225487178,
+      "pipeline_started_monotonic_seconds": 4146131.226234195,
+      "completed_monotonic_seconds": 4146161.856033975,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "source_head": "7d13c202706f7582c4ec1f4a9874a441f67dad5f",
+  "policy": {
+    "source_head": "7d13c202706f7582c4ec1f4a9874a441f67dad5f",
+    "scope": "30 official workflows, fixed12 independent repeated assignments, actual1/4 workers",
+    "actual_measurements": "Warmup -1 preserved; medians use actual0/1/2; full SERVER_PIPELINE_JOB execution",
+    "total_scope": "Original additive compile/execute SUBMIT+WAIT total; separate server compile+execute rows retained in custody",
+    "goal": {
+      "source_head": "7d13c202706f7582c4ec1f4a9874a441f67dad5f",
+      "workflow_count": 30,
+      "assignments": 12,
+      "target": 3.0,
+      "median_scaling_by_scope": {
+        "execution": 2.894590941686156,
+        "total": 2.6211162006603734
+      },
+      "execution_target_met": false,
+      "completion_scope": "Measured scaling gate only; publication and merged artifacts remain separately required."
+    },
+    "native_reference": "CP12 projected from retained actual CP8 fresh+warm via existing RepeatedSourceNativeBatchReport; target native observations0",
+    "historical_record": "Original seven-mode publication/verifier unchanged; no invented2/3-worker modes or new singlewell capture",
+    "publication_status": "Qualified record; root reviews rendered artifacts before the already authorized commit and publication"
+  },
+  "archive_custody_sha256": {
+    "data/12assignments-4workers/summary_custody.json": "4a4177e7b8cfc850015e74b52cd7fd78af7ac5fb6a05d4f5d4eee9cd3ec2495e",
+    "data/12assignments-1worker/summary_custody.json": "5bade5799e40e992b513542ebcb86fe22f41e61153b77f91aeb64489363146cc"
+  },
+  "owner_sha256": {
+    "/home/ts/code/projects/openhcs-materialization-plumbing/benchmark/reports/cppipe_figures.py": "5cb343ad28debeb2a4cf7500c221c1eab684b6fa2ffc909a4feb3fe9d72a3f43",
+    "/home/ts/code/projects/openhcs-materialization-plumbing/paper/figures/build_slas_agent.py": "88aa622cc09a96b702dc138dc64571df0239cae4a7c11f43fa274629628f5edc"
+  },
+  "output_sha256": {
+    "actual_oh/execution/workflow_metrics.csv": "d218159c0b38853bbf8157bc7bde5e2ea3f97ce7c117a1790707e7729ce29f4e",
+    "projected_cp_reference/execution/workflow_metrics.csv": "0bb8d5f302903d5b4c2afad7040278cf3367145efaeea4de4f16dfd8369672bd",
+    "actual_oh/execution/actual_oh_runtime.png": "dde77cdd457cb10e80eb7caf96a9cfdcc3ef49f02b20f70bbbb18e950b04c0df",
+    "actual_oh/execution/actual_oh_runtime.svg": "f839c23da869def022741286d600a5cb9a5ac4f1de191b507180fbf55ee4123a",
+    "actual_oh/execution/actual_oh_runtime_log.png": "cf909eb964a9be518d03ae062d23f78367e4d4389a645bceb9e4fcf612eaed7c",
+    "actual_oh/execution/actual_oh_runtime_log.svg": "b6988f3cabf4802b4373c80b2ab55da587f1bf3acd5e9ce853f9c6f525a34eeb",
+    "actual_oh/execution/actual_oh_scaling.png": "03423ef9ce80489a4d9b63609f42aa550eccb7abf0d968d179fbe0dc22475260",
+    "actual_oh/execution/actual_oh_scaling.svg": "71c584d1bbd7ed4ccae567c0c2a1c22a89cee991ad72c43828b1aa47f3851cce",
+    "actual_oh/execution/actual_oh_scaling_log.png": "7e153b9bb56c45d548c765666e08a0d62a31c76696f4f337c02d44550eb8147b",
+    "actual_oh/execution/actual_oh_scaling_log.svg": "2d712a88c945cd94c850c4dc7c7d7464b20c978c8f02b1bff6f9c518ecbab06f",
+    "actual_oh/execution/actual_oh_scaling_distribution.png": "28b3e5ac8960b6870875a71a3566bb00188c56e5d8c5cef8ad9e77c74209026d",
+    "actual_oh/execution/actual_oh_scaling_distribution.svg": "595b5ce5f095727d9de10dcd28b3c16953a186a353a7756da3cdb056a0a6211e",
+    "actual_oh/execution/actual_oh_scaling_distribution_log.png": "c658b7b71f04e6cf72896d3f9955d8e31ddc600628482eb85cd6a1575206f79f",
+    "actual_oh/execution/actual_oh_scaling_distribution_log.svg": "5052edc5e5d3281e43b6f01430d32e5affa41c4b406ffde00838703b92db477e",
+    "projected_cp_reference/execution/projected_cp_runtime.png": "a0e89156b7a82baeb10a506778b1684ecc1f2048311e133b7739208977c82e25",
+    "projected_cp_reference/execution/projected_cp_runtime.svg": "70c103ee69b240acc21d54109af47c0b6f47b9eae7d629b56dfb690bae533f56",
+    "projected_cp_reference/execution/projected_cp_runtime_log.png": "634ad66543f2f1522903588f99d5c1dfdab84ee1419a518237e93704761b9535",
+    "projected_cp_reference/execution/projected_cp_runtime_log.svg": "fdd5a1c304b26a4c372cfeb785fed71e3b174368b16971b4d756416052d7fe9c",
+    "projected_cp_reference/execution/projected_cp_ratio.png": "d8343e225cc88faff409e68b2f9a17742737634237f3f40ef872e370f72a945e",
+    "projected_cp_reference/execution/projected_cp_ratio.svg": "74fdff623d048f14f88befde2b12d1ab010144f4d63d03948cb4acfbf0e07cb2",
+    "projected_cp_reference/execution/projected_cp_ratio_log.png": "34c39c338ce96cc2ae7a15b8c6fd66e6cd1f4029b3a1b313cbb509142f1d7e23",
+    "projected_cp_reference/execution/projected_cp_ratio_log.svg": "9e5b4bd1abcfea08c2fc2f79408e72041127b094a2993cecd6754b549bdf6732",
+    "projected_cp_reference/execution/projected_cp_ratio_distribution.png": "dc95aa86112bcd32ad0ac0cef70a3781974c39a642eb3519dc699770c9c13d8d",
+    "projected_cp_reference/execution/projected_cp_ratio_distribution.svg": "fa1b454aff7c715dc14de6ddf1c281732fe42904901e40cf3ca008826c8c89f6",
+    "projected_cp_reference/execution/projected_cp_ratio_distribution_log.png": "b32e1b165370c53db39028f4d1ebd81a8e8c6cf0d04ecab225b0d087662741b1",
+    "projected_cp_reference/execution/projected_cp_ratio_distribution_log.svg": "9573b75a06610c521ca649012f136131762289446a3de708364e03c7e0ea84f0",
+    "actual_oh/total/workflow_metrics.csv": "b7f6db6924cdeca1ad5daf25e0aef89e62f485f487697451419941ea055d209f",
+    "projected_cp_reference/total/workflow_metrics.csv": "13c2a76067e0467910bb8ad7f3f231af4b3cffc37aa8ba51870a6408ba73f29c",
+    "actual_oh/total/actual_oh_runtime.png": "ae878be26f440d64a03248023a6e04056fa9142cae82681a1686721cff7474f7",
+    "actual_oh/total/actual_oh_runtime.svg": "9a2414b16af2c93648f299f7b4224c4117907000842ca492b09b3e7217916dbc",
+    "actual_oh/total/actual_oh_runtime_log.png": "d4b21a613d4400eca96cba556a6dea361af2cc309a30959734de6159b7d58db9",
+    "actual_oh/total/actual_oh_runtime_log.svg": "58b079e3cc7a3ca1ff18363c80dd03c344addc0f8a730b345e6dcbaf4d880ca5",
+    "actual_oh/total/actual_oh_scaling.png": "1fd2cae672ecc175c1a52865f0cf188a2603f34762bb82ce2c70da6bfb6926ab",
+    "actual_oh/total/actual_oh_scaling.svg": "ca0df8e078fbaa370097cc96be013fe96aa4ee0ce8eebf2c77e033516dd0092a",
+    "actual_oh/total/actual_oh_scaling_log.png": "b4a307445b53fb77444eeda18e3e02633503383a88fec71d69ba910cf7e145bf",
+    "actual_oh/total/actual_oh_scaling_log.svg": "15b5909ca9c5604de9e92b4f15e704585efd97bd23e42f41fca6645f2e582008",
+    "actual_oh/total/actual_oh_scaling_distribution.png": "8215a17492407d063dd8eb8508a831cc11da8eb3f442af3c64fff39e317d70bf",
+    "actual_oh/total/actual_oh_scaling_distribution.svg": "ffc50d05b55f2a985eb241cc6a7c3f8387cd8f70bf9aa0f2e02a978c695f3961",
+    "actual_oh/total/actual_oh_scaling_distribution_log.png": "6b8c848eb89ae5e38d2f1cebe48595cd6d93a3107d45f6e00d62a56fe6393bde",
+    "actual_oh/total/actual_oh_scaling_distribution_log.svg": "308343e2f6880deb6029dff0bd81513c9d1667c39f70e1a2947bf30a09b08631",
+    "projected_cp_reference/total/projected_cp_runtime.png": "03c274321bea419d0f712b34ba6838cbf539b6029826e8158b4a5fe732a0d3f2",
+    "projected_cp_reference/total/projected_cp_runtime.svg": "b24dc7bc63a996c672e57d5c9d8b8b7917aaa98a659088ac3a92f3992aaf091a",
+    "projected_cp_reference/total/projected_cp_runtime_log.png": "596e67d65a40539fb234216973755ec0a92f11362a5c020dcc82ac44cb1c5b8a",
+    "projected_cp_reference/total/projected_cp_runtime_log.svg": "e11953755e515d4ec4b74165774309b0502b50e7cc1d4d99b295eae0a0f7eeeb",
+    "projected_cp_reference/total/projected_cp_ratio.png": "b015ca0636a2f4077b7f2d25787ec46d554a57ac1ac5883bcda576ef87e23bc6",
+    "projected_cp_reference/total/projected_cp_ratio.svg": "d0df5a48a0855004a892ab5d15d0d44bdedd211e53b181cbef0e3aec192cc21f",
+    "projected_cp_reference/total/projected_cp_ratio_log.png": "5eca1f1290bbf0b03012b879572e0ac58c166e289037c683f1277292459be3f7",
+    "projected_cp_reference/total/projected_cp_ratio_log.svg": "9a7cde927878d42add6e1d88d8cb01f1db3a84e93dbe90db55548477c61b3e21",
+    "projected_cp_reference/total/projected_cp_ratio_distribution.png": "04acc1d34bf20428548411723387195cfd8c98610776a3c6f8f2ccf5aedbfb4c",
+    "projected_cp_reference/total/projected_cp_ratio_distribution.svg": "42aaf2f6e9521ec510035871140487f17765804817140476a629dcb05378dd0b",
+    "projected_cp_reference/total/projected_cp_ratio_distribution_log.png": "ce6e5602775fea1cb4987ac4c27234bbe519cc7a7f3f8ca43af70841ca8c8de9",
+    "projected_cp_reference/total/projected_cp_ratio_distribution_log.svg": "43fc6a3d2fc200b7f9f9528325510c3f027dde9f42b52d0f7ce78a93a8f0fee4",
+    "caption.md": "e66fa3f88f69b9eda806292585b5527ea91c6c2ebd1e2778a70caefe533a871d"
+  },
+  "rendering_script_sha256": "9fc46ebab389209aac5f85661f44934a2d31707d6c5ea9ceedb5431b63ddb1c6",
+  "visual_review": {
+    "status": "PASS",
+    "reviewer": "root",
+    "reviewed_panels": [
+      "actual_oh/execution/actual_oh_scaling.png",
+      "actual_oh/execution/actual_oh_scaling_distribution.png",
+      "actual_oh/total/actual_oh_scaling.png",
+      "projected_cp_reference/execution/projected_cp_ratio.png",
+      "projected_cp_reference/total/projected_cp_ratio_log.png"
+    ],
+    "findings": "Labels, cohort coverage, median/mean distinction, guide thresholds and projected native reference labels inspected. The 3x measured scaling target remains unmet."
+  }
+}
