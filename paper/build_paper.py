@@ -106,7 +106,7 @@ PAPER = PaperDefinition(
         DocumentDefinition(DocumentRole.SUPPLEMENT, (
             Path("supplementary/README.md"),
             Path("supplementary/task_only_analysis/trial_resource_tables.md"),
-        )),
+        ), layout=CaptionedFiguresLayout(caption_font_size_pt=10)),
     ),
     preparation=SlasRetainedFigures(),
 )

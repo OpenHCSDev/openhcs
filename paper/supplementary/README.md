@@ -14,31 +14,41 @@ Development history and full instructions are kept in the [archived supplementar
 
 ![Array grouping, named results, scheduling and preparation.](../figures/slas/supp_workflow_infrastructure.png){width=4.8in}
 
+::: {custom-style="ImageCaption"}
 (I, A–D) Array axes and groups supply image views to per-plane, stack or stack-reduction functions. Named labels remain available to later measurements; sequential timepoints complete in order while wells can run in parallel. (II) Compiled plans, prepared functions and a worker map form the execution bundle. The [figure assembly and interface records](#figure-assembly-and-interface-records) link the source artwork; main Figures 1–2 show the native workflow and process topology.
+:::
 
 ## Supplementary Figure 2. Translocation response and compartment eligibility
 
 ![Full-plate eligibility fractions and independent held-out translocation endpoints.](../figures/slas/supp_translocation.png){width=5.7in}
 
+::: {custom-style="ImageCaption"}
 (A–B) Eligible-nucleus fractions in 96 BBBC013 wells, including four development wells. Dots show four wells per dose; marks and whiskers show their mean and sample SD. Main Figure 4E shows the response curves. (C–D) An earlier independent held-out trial used mean cell-level GFP ratios, with four wells per control condition. The two trials used different well summaries: mean GFP ratio and median log2 ratio. Supplementary Data 7–8 give the methods and source data.
+:::
 
 ## Supplementary Figure 3. Nuclear-instance evaluation and object separation
 
 ![Independent-author scores and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=5.7in}
 
+::: {custom-style="ImageCaption"}
 (I, A–B) Final BBBC039 segmentations from two independent authors on 200 fields, with pooled object F1 of 0.898 and 0.906 at intersection over union ≥ 0.5. (II, A–B) Earlier prospective BBBC039 F1/Dice on 50 held-out fields and BBBC007 boundary support on 12. Each trial used four development fields. Boundary support is the fraction of predicted boundary pixels within two pixels of a manual outline. Supplementary Data 7–8 provide counts and per-field scores.
+:::
 
 ## Supplementary Figure 4. Independent morphology checks and remaining ambiguities
 
 ![Independent orthogonal localisation, retinal borders and unsupported body growth.](../figures/slas/supp_morphology_checks.png){width=5.4in}
 
+::: {custom-style="ImageCaption"}
 (A–C) Nuclear centres from an independent volume analysis in XY, XZ and YZ. (D–F) Retinal border region shown raw, with first and final outlines; a possible split remains at display window 0–42, gamma 1. (G–I) A faint DNA pair remains merged at window 0–151. (J–L) A nuclear seed lacks actin-supported body growth at window 0–104, gamma 1. The panels show separate trials; colours identify objects within each image. Supplementary Data 8 links the source captures and matching records.
+:::
 
 ## Supplementary Figure 5. Laboratory treatment responses compared with MetaXpress
 
 ![Five additional well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=5in}
 
+::: {custom-style="ImageCaption"}
 (A–B) Detected cells; (C–D) total outgrowth; (E–F) branches per cell; (G–H) mean cell process length; (I–J) mean cell median process length. Twenty matched wells were analysed after assisted repair. Each curve is normalized to its own DMSO mean; dots show two technical wells per dose and whiskers their sample SD. Mean outgrowth per detected cell is included in the linked six-endpoint sheet.
+:::
 
 ### Treatment evaluation and endpoint definitions
 
@@ -155,16 +165,19 @@ assisted-development evaluation, separate from autonomous authoring.
 
 ![Total speedups for each workflow, revision and worker configuration on linear and logarithmic axes.](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.png){width=4.8in}
 
+::: {custom-style="ImageCaption"}
 (A1–A2) Illumination correction Example 3; (B1–B2) Vitra; (C1–C2) 3D monolayer.
 Columns use linear and logarithmic axes. Points are CellProfiler/OpenHCS median
 total-time ratios over three repetitions. Colour identifies revision; shape
 identifies worker count. Lines join matched configurations. Supplementary Data 3
 gives the protocol and numerical tables.
+:::
 
 ## Supplementary Figure 6 (continued). Matched worker comparisons
 
 ![Matched one- versus two-, three- and four-worker comparisons, retaining separate capture revisions.](../figures/slas/supp_worker_comparisons.png){width=5in}
 
+::: {custom-style="ImageCaption"}
 **(A)** Eight assignments of three workflows on revision `d8678dbd4`: one versus
 two OpenHCS workers. (B) Nine assignments of the same three workflows on
 revision `71aded26c`: one versus three OpenHCS workers. Within each row,
@@ -176,16 +189,19 @@ Sixteen assignments of 3D monolayer on revision `2cda84a369`: one versus
 four OpenHCS workers. There is one workflow, so minimum, median, mean and
 maximum coincide and are marked “all”. Supplementary Data 3 gives the protocol
 and source tables.
+:::
 
 ## Supplementary Figure 6 (continued). Individual workflow runtimes
 
 ![Paired execution and total runtime for all thirty workflows.](../figures/slas/benchmark-publication/measured_benchmark_workflow_runtimes.png){width=6in}
 
+::: {custom-style="ImageCaption"}
 **(A)** Execution; **(B)** compile-plus-run total. Paired bars show median CellProfiler
 and OpenHCS durations for each of the thirty workflows in main Figure 6, with
 one worker and one numerical thread. Both panels use the same logarithmic
 seconds scale. Row annotations give CellProfiler/OpenHCS ratios of engine medians from three measured
 repetitions. All thirty workflows passed their declared-output comparisons.
+:::
 
 The [linear-scale aggregate view](../figures/slas/benchmark-publication/measured_benchmark_publication.png)
 shows the same aggregate measurements on linear axes.
