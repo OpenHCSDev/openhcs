@@ -136,26 +136,27 @@ One workflow supplies the desktop controls, generated Python and MCP operations 
 
 ### Autonomous analysis
 
-Table 2. Autonomous-analysis trial summary. Uninspected fields were selected retrospectively; held-out partitions were withheld prospectively. [TODO: complete author-by-author rows and skill versions from Supplementary Data 7–8.]
+Table 2. Trial-level results. Labels identify authors in Supplementary Data 7–8; multiple endpoints from one author are listed as separate comparisons. [TODO: additional repetitions and models, from new trial outputs.]
 
 | Assay | Model | Data partition | Endpoint | Result |
 |---|---|---|---|---|
 | BBBC039, earlier trial | gpt-5.6-sol | 50 held-out fields | Object F1; foreground Dice | 0.746; 0.935 |
-| BBBC039, three later authors | gpt-6.1-sol | 175 commonly uninspected fields | Pooled object F1 | 0.906 to 0.910 |
-| BBBC039, three later authors | gpt-6.1-sol | 200 fields including development | Pooled object F1 | 0.898 to 0.906 |
-| BBBC039, paired repair | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
+| BBBC039, fresh612 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.910; 0.906 |
+| BBBC039, fresh10 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.898 |
+| BBBC039, fresh13 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.904 |
+| BBBC039, fresh612 repair | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
 | BBBC007, earlier trial | gpt-5.6-sol | 12 held-out fields | Directed boundary fraction | 0.671 |
-| BBBC007, two later authors | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 and 0.740 |
-| BBBC007, paired field | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
+| BBBC007, fresh19 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 |
+| BBBC007, fresh26 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.740 |
+| BBBC007/H003, fresh26 | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
 | BBBC013, earlier trial | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
-| BBBC013, later trial | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
-| H001 | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
-| H002 | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
-| Retina, repair trial | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
-| Retina, repeat trial | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
-| Public neurites | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
-| Laboratory neurites | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
-| Additional authors and models | [TODO: new trial sources] | [TODO: partition] | [TODO: endpoint] | [TODO: result] |
+| BBBC013, fresh23 | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
+| H001, fresh586 | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
+| H002, fresh15 | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
+| Retina, fresh09 | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
+| Retina, fresh26 | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
+| Public neurites, fresh20 | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
+| Laboratory neurites, fresh13 | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
 
 Three independent nuclear-analysis authors reached pooled object F1 of 0.906 to 0.910 on the 175 BBBC039 fields none of them opened. Across all 200 fields, including development fields, F1 was 0.898 to 0.906 (Figure 4B). A same-input repair raised F1 from 0.908 to 0.934 on three fields. In the full-corpus repeat, 61 fields improved, 123 decreased and 16 were unchanged (Supplementary Figure 3). The earlier gpt-5.6-sol trial reached F1 0.746 and foreground Dice 0.935 on 50 prospectively held-out fields (Table 2). [TODO: field-level error pattern, from the per-field scores and matched images.]
 
@@ -246,7 +247,7 @@ The supplement describes the comparisons, reference definitions and trial eviden
 
 1. **CellProfiler workflow comparison:** unified 30-workflow results, output inventories and five-workflow export definitions.
 2. **CellProfiler coverage:** module-to-workflow associations, individual setting handling, and archived processing-registration coverage.
-3. **Worker and memory measurements:** measured execution and memory by workflow, worker count and repeated-image assignment count, including completion status.
+3. **Worker measurements:** execution timings by workflow, worker count and repeated-image assignment count.
 4. **Recorded agent workflow:** earlier method-directed NeuronCyto demonstration, model and software versions, outputs and comparison references.
 5. **Complex CellProfiler workflows:** source-derived step sequences, function-call counts and editable Python for advanced segmentation and 3D monolayer analysis.
 6. **Workflow regression tests:** representative configuration, generated-Python and compiler-validation checks, with source and CI-job references.
