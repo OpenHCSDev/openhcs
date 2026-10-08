@@ -197,15 +197,25 @@ class CompiledExecutionBundle:
             runtime_environment=runtime_environment,
         )
 
-    def for_transport_serialization(self) -> "CompiledExecutionBundle":
-        """Return this bundle in the worker-transport pickle-safe shape."""
+    def for_transport_serialization(
+        self,
+        *,
+        context_keys: Sequence[str] | None = None,
+    ) -> "CompiledExecutionBundle":
+        """Derive pickle-safe contexts while retaining shared declarations."""
 
         from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 
+        contexts = (
+            self.transport_contexts
+            if context_keys is None
+            else {key: self.transport_contexts[key] for key in context_keys}
+        )
         return replace(
             self,
             pipeline_definition=FunctionStepTransportAuthority.normalize_pipeline(
                 list(self.pipeline_definition)
             ),
-            runtime_contexts=self.transport_contexts,
+            runtime_contexts=contexts,
+            transport_contexts=contexts,
         )

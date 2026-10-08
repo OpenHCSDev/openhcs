@@ -18,6 +18,11 @@ from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparat
 from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
 
 
+@pytest.fixture(autouse=True)
+def catalogue_preparation_without_process_pool(monkeypatch):
+    monkeypatch.setattr(ZMQExecutionServer, "_prepare_worker_resources", lambda self: None)
+
+
 class PreparedCatalog(FunctionCatalogService):
     def __init__(self, events):
         super().__init__()

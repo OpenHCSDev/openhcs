@@ -53,6 +53,7 @@ from openhcs.runtime.viewer_protocol import ViewerPersistenceMode
 from polystore.filemanager import FileManager
 
 if TYPE_CHECKING:
+    from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
     from openhcs.core.config import PipelineConfig
 
 # Zarr backend is CPU-only; always import it (even in subprocess/no-GPU mode)
@@ -108,7 +109,7 @@ class PipelineOrchestrator:
         # Lock removed - was orphaned code never used
 
         # Track executor for cancellation support
-        self._executor = None
+        self._executor_resources = None
         self._execution_cancellation = ExecutionCancellationAuthority()
         self.execution_id = f"local::{plate_path}"
         self.transport_config = transport_config
@@ -549,9 +550,7 @@ class PipelineOrchestrator:
     def is_initialized(self) -> bool:
         return self._initialized
 
-    def _ensure_openhcs_metadata(
-        self, resolved_config: GlobalPipelineConfig
-    ) -> None:
+    def _ensure_openhcs_metadata(self, resolved_config: GlobalPipelineConfig) -> None:
         """Ensure complete OpenHCS metadata exists for the plate.
 
         Uses the same context creation logic as pipeline execution to get full metadata
@@ -706,7 +705,8 @@ class PipelineOrchestrator:
             source_bindings=source_bindings_defaults_to_base(
                 (
                     self.get_effective_config()
-                    if resolved_config is None else resolved_config
+                    if resolved_config is None
+                    else resolved_config
                 ).source_bindings_config
             ),
         ).projection_if_available()
@@ -739,7 +739,7 @@ class PipelineOrchestrator:
             resolved_config=resolved_config,
         )
 
-    def cancel_execution(self):
+    def cancel_execution(self) -> int:
         """
         Cancel ongoing execution by shutting down the executor.
 
@@ -748,11 +748,9 @@ class PipelineOrchestrator:
         """
         self._execution_cancellation.request()
 
-        if self._executor:
-            try:
-                self._executor.shutdown(wait=False, cancel_futures=True)
-            except Exception as e:
-                logger.warning(f"🔥 ORCHESTRATOR: Failed to cancel executor: {e}")
+        if self._executor_resources is not None:
+            return self._executor_resources.cancel_execution()
+        return 0
 
     def execute_compiled_plate(
         self,
@@ -764,6 +762,7 @@ class PipelineOrchestrator:
         progress_context=None,
         runtime_observation_mode: RuntimeObservationMode | None = None,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
+        prepared_worker_runner: "PreparedForkWorkerLaneRunner | None" = None,
     ) -> Dict[str, ExecutionResult]:
         """
         Execute-all phase: Runs the stateless pipeline against compiled contexts.
@@ -802,6 +801,7 @@ class PipelineOrchestrator:
                     else runtime_observation_mode
                 ),
                 debug_execution_policy=debug_execution_policy,
+                prepared_worker_runner=prepared_worker_runner,
             ),
         )
 

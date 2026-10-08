@@ -98,9 +98,13 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
     resources = ForkInheritedWorkerExecutorResources(
         multiprocessing_context=multiprocessing.get_context("fork"),
         use_multiprocessing=True,
+        _runner=worker_execution_module.ForkInheritedWorkerLaneRunner(
+            multiprocessing.get_context("fork")
+        ),
     )
     plan = WorkerLaneExecutionPlan(
-        execution_id="exec", plate_id="plate",
+        execution_id="exec",
+        plate_id="plate",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         assignments=WorkerAssignmentPlan(
             worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
@@ -111,9 +115,13 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
     processes = []
     try:
         with resources.execution_context():
-            assert set(resources.run_worker_lanes(
-                pipeline_definition=[], worker_lane_execution_plan=plan, parent_contexts={},
-            )) == {"A01", "A02"}
+            assert set(
+                resources.run_worker_lanes(
+                    pipeline_definition=[],
+                    worker_lane_execution_plan=plan,
+                    parent_contexts={},
+                )
+            ) == {"A01", "A02"}
             processes = [process for _, process, _ in resources._runner._processes]
             assert all(process.is_alive() for process in processes)
             for requests in [(5, 2, 7, 1, 8, 4), (3, 9)]:
@@ -124,7 +132,9 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
                 assert {pid for _, pid in results} == {p.pid for p in processes}
     finally:
         ForkInheritedWorkerExecutionState.clear()
-    assert all(not process.is_alive() and process.exitcode == 0 for process in processes)
+    assert all(
+        not process.is_alive() and process.exitcode == 0 for process in processes
+    )
     resources.shutdown_executor()
 
 
@@ -143,9 +153,13 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
     resources = ForkInheritedWorkerExecutorResources(
         multiprocessing_context=multiprocessing.get_context("fork"),
         use_multiprocessing=True,
+        _runner=worker_execution_module.ForkInheritedWorkerLaneRunner(
+            multiprocessing.get_context("fork")
+        ),
     )
     plan = WorkerLaneExecutionPlan(
-        execution_id="exec", plate_id="plate",
+        execution_id="exec",
+        plate_id="plate",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         assignments=WorkerAssignmentPlan(
             worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
@@ -161,17 +175,22 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
         ):
             with resources.execution_context():
                 resources.run_worker_lanes(
-                    pipeline_definition=[], worker_lane_execution_plan=plan,
+                    pipeline_definition=[],
+                    worker_lane_execution_plan=plan,
                     parent_contexts={},
                 )
                 processes = [p for _, p, _ in resources._runner._processes]
                 if failure == "cancel":
                     raise ExecutionCancelledError("cancelled")
-                resources.map_partition_invocations(_partition_process_identity, (-1, 2))
+                resources.map_partition_invocations(
+                    _partition_process_identity, (-1, 2)
+                )
     finally:
         ForkInheritedWorkerExecutionState.clear()
     assert len(processes) == 2
-    assert all(not process.is_alive() and process.exitcode == 0 for process in processes)
+    assert all(
+        not process.is_alive() and process.exitcode == 0 for process in processes
+    )
 
 
 def _compiled_context(axis_id: str) -> ProcessingContext:
@@ -493,24 +512,32 @@ def test_resource_modes_select_prepared_runtime_or_serial_transport_contexts():
     runtime_context = _compiled_context("A01")
     transport_context = _compiled_context("A01")
     bundle = CompiledExecutionBundle(
-        pipeline_definition=(), runtime_contexts={"A01": runtime_context},
-        transport_contexts={"A01": transport_context}, worker_assignments={},
+        pipeline_definition=(),
+        runtime_contexts={"A01": runtime_context},
+        transport_contexts={"A01": transport_context},
+        worker_assignments={},
         runtime_environment=_runtime_environment(
-            use_threading=False, start_method=MultiprocessingStartMethod.SPAWN,
+            use_threading=False,
+            start_method=MultiprocessingStartMethod.SPAWN,
         ),
     )
     cancellation = ExecutionCancellationSignal()
     resources = (
         InlineWorkerExecutorResources(
-            multiprocessing_context=None, use_multiprocessing=False,
+            multiprocessing_context=None,
+            use_multiprocessing=False,
             cancellation=cancellation,
         ),
         ForkInheritedWorkerExecutorResources(
-            multiprocessing_context=None, use_multiprocessing=True,
+            multiprocessing_context=None,
+            use_multiprocessing=True,
+            _runner=worker_execution_module.ForkInheritedWorkerLaneRunner(None),
         ),
         ThreadedWorkerExecutorResources(
-            multiprocessing_context=None, use_multiprocessing=False,
-            _executor=None, cancellation=cancellation,
+            multiprocessing_context=None,
+            use_multiprocessing=False,
+            _executor=None,
+            cancellation=cancellation,
         ),
     )
     for resource in resources:
@@ -518,8 +545,10 @@ def test_resource_modes_select_prepared_runtime_or_serial_transport_contexts():
         assert contexts is not bundle.runtime_contexts
         assert contexts["A01"] is runtime_context
     serial = PooledWorkerExecutorResources(
-        multiprocessing_context=None, use_multiprocessing=True,
-        _executor=None, cancellation=None,
+        multiprocessing_context=None,
+        use_multiprocessing=True,
+        _executor=None,
+        cancellation=None,
     )
     assert serial.contexts_snapshot(bundle)["A01"] is transport_context
 
@@ -713,8 +742,10 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
         worker_execution_module, "_execute_fork_inherited_worker_lane_static", held_lane
     )
     lane = WorkerLaneExecutionContext(
-        execution_id="signal-ownership", plate_id=str(tmp_path),
-        debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker_0",
+        execution_id="signal-ownership",
+        plate_id=str(tmp_path),
+        debug_execution_policy=NoOpDebugExecutionPolicy(),
+        worker_slot="worker_0",
         worker_assignments={"worker_0": ["A01"]},
     )
     process = fork.Process(
@@ -822,8 +853,10 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         execute_axis,
     )
     lane_context = WorkerLaneExecutionContext(
-        execution_id="cancel-lane", plate_id="synthetic",
-        debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker_0",
+        execution_id="cancel-lane",
+        plate_id="synthetic",
+        debug_execution_policy=NoOpDebugExecutionPolicy(),
+        worker_slot="worker_0",
         worker_assignments={"worker_0": ["A01", "B01"]},
     )
     lane_axis_contexts = [
