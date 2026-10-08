@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, ClassVar, Generic, Sequence, TypeAlias, TypeVa
 
 import numpy as np
 import zmq
+from zmqruntime.timeouts import OperationDeadline
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming import StreamingSharedMemoryAuthority
 from polystore.streaming.identity import (
@@ -500,9 +501,32 @@ class NapariAcceptedControlRequest:
 
     message: Mapping[str, object]
     response: Future[bytes] = field(default_factory=Future)
+    observation_deadline: OperationDeadline = field(kw_only=True)
 
-    def observe(self, server, deadline, stop_event) -> bytes:
+    @classmethod
+    def from_wire_mapping(cls, message: Mapping[str, object]) -> NapariAcceptedControlRequest:
+        """Admit one host-local budget; Qt never decodes or restarts it."""
+        from python_introspect import validate_annotated_dataclass
+        from zmqruntime.messages import MessageFields
+        from openhcs.agent.dto.viewer import ViewerWindowControlRequest
+
+        deadline = ControlRequestHeader.admit_observation(message)
+        admitted = dict(message)
+        del admitted[MessageFields.OBSERVATION_BUDGET_SECONDS]
+        del admitted[MessageFields.OBSERVATION_OPERATION]
+        payload = admitted.get(ViewerControlResponseField.PAYLOAD.value)
+        if isinstance(payload, ViewerWindowControlRequest):
+            validate_annotated_dataclass(payload)
+            if payload.operation_deadline is not None:
+                raise ValueError("A control payload cannot carry a sender-host deadline.")
+            admitted[ViewerControlResponseField.PAYLOAD.value] = replace(
+                payload, operation_deadline=deadline,
+            )
+        return cls(admitted, observation_deadline=deadline)
+
+    def observe(self, server, stop_event) -> bytes:
         """Release reply custody on expiry, without cancelling native custody."""
+        deadline = self.observation_deadline
         while True:
             if self.response.done():
                 return self.response.result()
@@ -2883,11 +2907,9 @@ class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMe
         """Default synchronous action hook on the shared reply owner."""
         request.complete_from(server, self.handle, server, request.message)
 
-    def observation_deadline(self, message):
-        """Every action observes the caller's original request budget."""
-        deadline = ControlRequestHeader.observation_deadline(message)
-        deadline.remaining_seconds()
-        return deadline
+    def validate_admission(self, request: NapariAcceptedControlRequest) -> None:
+        """Action-specific admission uses the already decoded request."""
+        request.observation_deadline.remaining_seconds()
 
     @classmethod
     def for_message_type(cls, message_type: str | None) -> "NapariControlMessageAction":
@@ -6159,26 +6181,19 @@ class NapariScreenshotControlMessageAction(
         server: "NapariViewerServer",
         message: Mapping[str, object],
     ) -> dict[str, object]:
-        """Explicit immediate capture; observed conditions cannot bypass dispatch."""
-        request = self.snapshot_request(server, message)
-        return self._native_reply(
-            server,
-            self.snapshot_reply(
-                self.snapshot_descriptor(server),
-                super().capture(request),
-            ),
-        )
+        """Snapshot capture requires the admitted local request budget."""
+        raise RuntimeError("Snapshots require accepted-request dispatch, including immediate capture.")
 
     def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
         super().request_capture(
-            self.snapshot_request(server, request.message),
+            self.snapshot_request(server, request.message, request.observation_deadline),
             partial(request.complete_from, server, self._snapshot_native_reply, server),
             partial(request.fail_observation, server),
         )
 
-    def observation_deadline(self, message):
-        self.capture_spec(message)
-        return super().observation_deadline(message)
+    def validate_admission(self, request: NapariAcceptedControlRequest) -> None:
+        self.capture_spec(request.message)
+        super().validate_admission(request)
 
     @staticmethod
     def capture_spec(message):
@@ -6203,7 +6218,7 @@ class NapariScreenshotControlMessageAction(
         )
 
     @classmethod
-    def snapshot_request(cls, server, message):
+    def snapshot_request(cls, server, message, operation_deadline: OperationDeadline):
         if server.viewer is None:
             raise ValueError("Napari viewer is not available.")
 
@@ -6218,7 +6233,7 @@ class NapariScreenshotControlMessageAction(
             capture=capture_spec,
             subject_id=f"{ViewerType.NAPARI.wire_value}_{server.port}",
             title=server.napari_window_title,
-            operation_deadline=capture_spec.snapshot_operation_deadline(),
+            operation_deadline=operation_deadline,
             render_owner=OpenGLWidgetSnapshotRenderOwner(
                 server.viewer.window.qt_viewer.canvas.native
             ),
@@ -6482,8 +6497,9 @@ class NapariControlTransportPump:
             action = NapariControlMessageAction.for_message_type(
                 msg_type if isinstance(msg_type, str) else None
             )
-            deadline = action.observation_deadline(message)
-            transport_response = action.transport_thread_response(self.server, message)
+            request = NapariAcceptedControlRequest.from_wire_mapping(message)
+            action.validate_admission(request)
+            transport_response = action.transport_thread_response(self.server, request.message)
         except Exception as error:
             return self.server.serialize_control_response(
                 self.server.control_error_response(error)
@@ -6491,9 +6507,8 @@ class NapariControlTransportPump:
         if transport_response is not None:
             return self.server.serialize_control_response(transport_response)
 
-        request = NapariAcceptedControlRequest(message)
         self.server.accepted_control_requests.put(request)
-        return request.observe(self.server, deadline, self._stop_event)
+        return request.observe(self.server, self._stop_event)
 
 
 class NapariViewerServer(OpenHCSViewerServerABC):

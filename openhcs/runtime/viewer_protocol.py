@@ -1660,18 +1660,26 @@ class ViewerControlMessageRequest:
         if self.timeout <= 0:
             raise ValueError("Viewer control timeout must be positive.")
 
-    def to_wire_mapping(self) -> dict[str, object]:
-        """Project this typed request to primitive wire fields."""
+    def to_wire_mapping(self, *, deadline: OperationDeadline | None = None) -> dict[str, object]:
+        """Project this typed request to primitive wire fields at send."""
 
         request: dict[str, object] = {
             ViewerControlResponseField.TYPE.value: self.message_type
         }
         if self.payload is not None:
-            request[ViewerControlResponseField.PAYLOAD.value] = self.payload
-        deadline = self.operation_deadline or OperationDeadline.after_milliseconds(
+            from dataclasses import replace
+            from openhcs.agent.dto.viewer import ViewerWindowControlRequest
+
+            # Full snapshot/retirement carriers contain a sender-local clock.
+            # Their enclosing budget is admitted once from the envelope below.
+            payload = self.payload
+            if isinstance(payload, ViewerWindowControlRequest):
+                payload = replace(payload, operation_deadline=None)
+            request[ViewerControlResponseField.PAYLOAD.value] = payload
+        deadline = deadline or self.operation_deadline or OperationDeadline.after_milliseconds(
             max(1, int(self.timeout * 1000)), operation="viewer control request",
         )
-        return ControlRequestHeader.with_observation_deadline(request, deadline)
+        return ControlRequestHeader.with_observation_budget(request, deadline)
 
     def send(self) -> ViewerControlResponse:
         import pickle
@@ -1681,16 +1689,18 @@ class ViewerControlMessageRequest:
         context = None
         socket = None
         try:
-            request = self.to_wire_mapping()
-            deadline = ControlRequestHeader.observation_deadline(request)
+            deadline = self.operation_deadline or OperationDeadline.after_milliseconds(
+                max(1, int(self.timeout * 1000)), operation="viewer control request",
+            )
             context = zmq.Context()
             socket = context.socket(zmq.REQ)
             socket.setsockopt(zmq.LINGER, 0)
-            socket.setsockopt(zmq.RCVTIMEO, deadline.remaining_milliseconds())
             socket.setsockopt(zmq.SNDTIMEO, deadline.remaining_milliseconds())
             socket.connect(self.endpoint.control_url())
-            socket.send(pickle.dumps(request))
+            socket.send(pickle.dumps(self.to_wire_mapping(deadline=deadline)))
+            socket.setsockopt(zmq.RCVTIMEO, deadline.remaining_milliseconds())
             payload = pickle.loads(socket.recv())
+            deadline.remaining_seconds()
             if not isinstance(payload, Mapping):
                 raise TypeError(
                     "Viewer control response must be a mapping, "

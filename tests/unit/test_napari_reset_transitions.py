@@ -517,6 +517,7 @@ class QueuedRetirementGateway(ZMQViewerWindowGateway):
         reply = Future()
         self.server.accepted_control_requests.put(NapariAcceptedControlRequest(
             pickle.loads(pickle.dumps(message)), reply,
+            observation_deadline=request.control_deadline(),
         ))
         loop = QEventLoop()
         def dispatch():
