@@ -356,6 +356,9 @@ def test_roi_metric_columns_follow_native_features_and_preserve_selection(qtbot)
     )
     manager = QRoiManager(viewer)
     qtbot.addWidget(manager)
+    manager.resize(900, 400)
+    manager.show()
+    qtbot.waitExposed(manager)
     model = manager._roilist._roi_model
     horizontal = QtCore.Qt.Orientation.Horizontal
     editable = QtCore.Qt.ItemFlag.ItemIsEditable
@@ -366,6 +369,11 @@ def test_roi_metric_columns_follow_native_features_and_preserve_selection(qtbot)
     ]
     assert model.data(model.index(1, 2)) == "12"
     assert model.data(model.index(1, 4)) == "2.5"
+    header = manager._roilist.horizontalHeader()
+    assert header.sectionSize(RoiTableColumn.NAME) == 160
+    assert header.sectionViewportPosition(4) + header.sectionSize(4) <= (
+        manager._roilist.viewport().width()
+    )
     assert not model.flags(model.index(1, 4)) & editable
     assert not model.setData(model.index(1, 4), "999")
     assert layer.features["length"].iat[1] == 2.5

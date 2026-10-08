@@ -253,8 +253,9 @@ class QRoiListWidget(QtW.QTableView):
         horizontal_header.setFixedHeight(18)
         horizontal_header.setSectionResizeMode(
             RoiTableColumn.NAME,
-            QtW.QHeaderView.ResizeMode.Stretch,
+            QtW.QHeaderView.ResizeMode.Interactive,
         )
+        horizontal_header.resizeSection(RoiTableColumn.NAME, 160)
         horizontal_header.setSectionResizeMode(
             RoiTableColumn.SHAPE_TYPE,
             QtW.QHeaderView.ResizeMode.Interactive,
