@@ -143,10 +143,55 @@ class CellProfilerImageSetNumbering:
         projection: MeasurementRowsAxisProjection | None = None,
     ) -> Sequence[object] | ColumnarRows:
         """Project OpenHCS row axes into exact CellProfiler image numbers."""
-
-        slice_axis = MeasurementRowAxisField.SLICE_INDEX
         if projection is None:
             projection = MeasurementRowsAxisProjection.from_rows(table.rows)
+        image_numbers_by_slice, axisless_image_number = self._measurement_image_numbers(
+            scope=scope,
+            table=table,
+            projection=projection,
+        )
+        projected = projection.remap_runtime_slice_indices(
+            image_numbers_by_slice,
+            axisless_value=axisless_image_number,
+        )
+        replacements = self._project_reference_columns(scope=scope, table=table)
+        if not replacements:
+            return projected
+        return MeasurementProjectedColumnarRows(
+            ColumnarRowColumnOverlay(projected.columns, MappingProxyType(replacements)),
+            fields=projected.fields,
+            declared_object_measurement_domain_covered=(
+                projected.covers_declared_object_measurement_domain
+            ),
+            object_row_identity=projected.object_row_identity,
+        )
+
+    def admit_measurement_references(
+        self,
+        *,
+        scope: RuntimeExecutionAxisScope,
+        table: MeasurementTable,
+        projection: MeasurementRowsAxisProjection | None = None,
+    ) -> None:
+        """Retain exact image admission without materializing unused row axes.
+
+        References may introduce source planes absent from the physical row
+        domain. Preserve their first-encounter numbering and validation even
+        when subject demand defers the producer's measurement rows.
+        """
+        if projection is None:
+            projection = MeasurementRowsAxisProjection.from_rows(table.rows)
+        self._measurement_image_numbers(scope=scope, table=table, projection=projection)
+        self._project_reference_columns(scope=scope, table=table)
+
+    def _measurement_image_numbers(
+        self,
+        *,
+        scope: RuntimeExecutionAxisScope,
+        table: MeasurementTable,
+        projection: MeasurementRowsAxisProjection,
+    ) -> tuple[dict[int, int], int | None]:
+        slice_axis = MeasurementRowAxisField.SLICE_INDEX
         image_numbers_by_slice = self.for_source_slices(
             scope=scope,
             provenance=table.source_provenance,
@@ -181,11 +226,14 @@ class CellProfilerImageSetNumbering:
             # Image- and object-scoped axisless rows remain ambiguous and fail
             # above when their provenance spans multiple image sets.
             axisless_image_number = source_image_numbers[0]
-        projected = projection.remap_runtime_slice_indices(
-            image_numbers_by_slice,
-            axisless_value=axisless_image_number,
-        )
+        return image_numbers_by_slice, axisless_image_number
 
+    def _project_reference_columns(
+        self,
+        *,
+        scope: RuntimeExecutionAxisScope,
+        table: MeasurementTable,
+    ) -> dict[str, list[object]]:
         # References describe the producer's original image domain, just like
         # slice_index. Project their correlated values before the wide join;
         # precomputed reference means are derived from these object values by
@@ -209,11 +257,10 @@ class CellProfilerImageSetNumbering:
                 feature = str(feature)
                 is_reference = reference_features.get(feature)
                 if is_reference is None:
-                    is_reference = (
-                        image_number_reference_measurement_field(feature)
-                        and not aggregate_image_number_reference_measurement_field(
-                            feature
-                        )
+                    is_reference = image_number_reference_measurement_field(
+                        feature
+                    ) and not aggregate_image_number_reference_measurement_field(
+                        feature
                     )
                     reference_features[feature] = is_reference
                 if is_reference:
@@ -253,16 +300,7 @@ class CellProfilerImageSetNumbering:
                 updated[index] = global_number
             if updated is not None:
                 replacements[name] = updated
-        if not replacements:
-            return projected
-        return MeasurementProjectedColumnarRows(
-            ColumnarRowColumnOverlay(projected.columns, MappingProxyType(replacements)),
-            fields=projected.fields,
-            declared_object_measurement_domain_covered=(
-                projected.covers_declared_object_measurement_domain
-            ),
-            object_row_identity=projected.object_row_identity,
-        )
+        return replacements
 
     @staticmethod
     def source_slices_for_measurement_table(

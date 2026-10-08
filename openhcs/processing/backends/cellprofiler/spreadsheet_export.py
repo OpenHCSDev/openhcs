@@ -738,38 +738,57 @@ def _measurement_tables(
         CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract,
         required_subjects=required_subjects,
     )
-    projected_tables: list[tuple[MeasurementTable, ColumnarRows]] = []
+    projected_tables: list[
+        tuple[StoredRuntimeValue, MeasurementTable, ColumnarRows | None]
+    ] = []
     source_metadata_by_image_number: OrderedDict[
         int,
         list[tuple[Mapping[str, object], Mapping[str, object]]],
     ] = OrderedDict()
     all_tables: list[MeasurementTable] = []
+    slice_axis = MeasurementRowAxisField.SLICE_INDEX
     for _spec, record_tables in _record_measurement_tables(artifact_batch):
         all_tables.extend(table for _record, table in record_tables)
-        slice_axis = MeasurementRowAxisField.SLICE_INDEX
         for record, table in record_tables:
+            projection = MeasurementRowsAxisProjection.from_rows(table.rows)
             image_numbers_by_slice = image_numbers.for_source_slices(
                 scope=record.key.scope,
                 provenance=table.source_provenance,
-                slice_indices=image_numbers.source_slices_for_measurement_table(table),
+                slice_indices=image_numbers.source_slices_for_measurement_table(
+                    table, projection=projection
+                ),
                 owner=table.name,
             )
-            projected_rows = image_numbers.project_measurement_rows(
-                scope=record.key.scope,
-                table=table,
-            )
-            if required_subjects is not None:
-                projected_tables.append((table, projected_rows))
-            accumulator.add_declared_rows(
-                projected_rows,
-                CELLPROFILER_MEASUREMENT_DIALECT,
-                default_subject=_measurement_subject_name(table),
+            default_subject = _measurement_subject_name(table)
+            if accumulator.admits_declared_rows(
+                table.rows,
+                default_subject=default_subject,
                 default_scope=table.subject.scope,
-                object_id_field=table.subject.object_id_field,
-                qualifier_field_names=measurement_qualifier_field_names(
-                    CELLPROFILER_MEASUREMENT_DIALECT
-                ),
-            )
+            ):
+                projected_rows = image_numbers.project_measurement_rows(
+                    scope=record.key.scope,
+                    table=table,
+                    projection=projection,
+                )
+                accumulator.add_declared_rows(
+                    projected_rows,
+                    CELLPROFILER_MEASUREMENT_DIALECT,
+                    default_subject=default_subject,
+                    default_scope=table.subject.scope,
+                    object_id_field=table.subject.object_id_field,
+                    qualifier_field_names=measurement_qualifier_field_names(
+                        CELLPROFILER_MEASUREMENT_DIALECT
+                    ),
+                )
+            else:
+                image_numbers.admit_measurement_references(
+                    scope=record.key.scope,
+                    table=table,
+                    projection=projection,
+                )
+                projected_rows = None
+            if required_subjects is not None:
+                projected_tables.append((record, table, projected_rows))
             for (
                 image_number,
                 original_metadata,
@@ -802,7 +821,9 @@ def _measurement_tables(
                         default_scope=MeasurementScope.IMAGE,
                     )
     if experiment_tables is None:
-        experiment_tables = CellProfilerModule.derive_experiment_measurement_tables(all_tables)
+        experiment_tables = CellProfilerModule.derive_experiment_measurement_tables(
+            all_tables
+        )
     for table in experiment_tables:
         accumulator.add_declared_rows(
             table.rows,
@@ -861,11 +882,23 @@ def _measurement_tables(
         ).difference(required_subjects)
         if additional_subjects:
             accumulator.required_subjects = frozenset(additional_subjects)
-            for table, projected_rows in projected_tables:
+            for record, table, projected_rows in projected_tables:
+                default_subject = _measurement_subject_name(table)
+                if not accumulator.admits_declared_rows(
+                    table.rows,
+                    default_subject=default_subject,
+                    default_scope=table.subject.scope,
+                ):
+                    continue
+                if projected_rows is None:
+                    projected_rows = image_numbers.project_measurement_rows(
+                        scope=record.key.scope,
+                        table=table,
+                    )
                 accumulator.add_declared_rows(
                     projected_rows,
                     CELLPROFILER_MEASUREMENT_DIALECT,
-                    default_subject=_measurement_subject_name(table),
+                    default_subject=default_subject,
                     default_scope=table.subject.scope,
                     object_id_field=table.subject.object_id_field,
                     qualifier_field_names=measurement_qualifier_field_names(
