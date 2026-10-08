@@ -2143,3 +2143,76 @@ def test_declared_reference_mean_uses_full_projected_objects_after_selection() -
     )
     assert result["Image"].column_values(name)[0] == 11
     assert source["Image"].column_values(name)[0] == 0.5
+
+
+@pytest.mark.parametrize("selection_mode", ("ordinary", "combined", "relationships", "all"))
+def test_partitioned_export_admits_only_consumed_relationship_subject(selection_mode):
+    from openhcs.core.runtime_batch_contracts import RuntimeArtifactPartitionBatchRequest
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        _partitioned_spreadsheet_export,
+    )
+    from openhcs.processing.materialization.core import ColumnarCsvOutput
+
+    records = {}
+    for ordinal in range(1, 13):
+        axis = f"W{ordinal:03d}"
+        records[axis] = (
+            _measurement_record(
+                "images", axis_id=axis,
+                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                rows=({"slice_index": 0, "Count": 2},),
+            ),
+            _measurement_record(
+                "cells", axis_id=axis,
+                subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+                rows=(
+                    {"slice_index": 0, "object_number": 1, "Area": 2.0},
+                    {"slice_index": 0, "object_number": 2, "Area": 4.0},
+                ),
+            ),
+            _relationship_record("relationships", axis_id=axis),
+        )
+    batch = RuntimeArtifactBatch(
+        input_specs=(
+            ArtifactSpec.input("images", MeasurementsArtifactType),
+            ArtifactSpec.input("cells", MeasurementsArtifactType),
+            ArtifactSpec.input("relationships", RelationshipsArtifactType),
+        ),
+        records_by_axis=records,
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    selections = (
+        (SpreadsheetFileSelection(("Image", "Cells"), "Combined.csv"),)
+        if selection_mode == "combined"
+        else (
+            SpreadsheetFileSelection(("Image",), "Image.csv"),
+            SpreadsheetFileSelection(("Cells",), "Cells.csv"),
+        )
+    )
+    if selection_mode == "relationships":
+        selections += (SpreadsheetFileSelection(("Object relationships",), "Edges.csv"),)
+    kwargs = dict(
+        export_all_measurement_types=selection_mode == "all",
+        file_selections=selections,
+        calculate_aggregate_means=True,
+        add_filename_prefix=False,
+    )
+    expected = render_spreadsheet_bundle(batch, **kwargs)
+    mapped = []
+
+    def map_partitions(func, requests):
+        mapped.extend(requests)
+        return tuple(func(request) for request in requests)
+
+    request = RuntimeArtifactPartitionBatchRequest.from_contract(
+        CallableContract.from_callable(export_to_spreadsheet),
+        artifact_batch=batch, kwargs=kwargs, runtime_context=None,
+        map_partition_invocations=map_partitions,
+    )
+    outputs = _partitioned_spreadsheet_export(request)
+    actual = {
+        path: (output.rendered() if isinstance(output, ColumnarCsvOutput) else output).require_text_content()
+        for path, output in outputs.items()
+    }
+    assert actual == expected
+    assert len(mapped) == (0 if selection_mode in ("relationships", "all") else 12)

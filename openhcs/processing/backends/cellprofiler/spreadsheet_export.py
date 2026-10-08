@@ -220,6 +220,21 @@ class SpreadsheetFileSelection:
     subjects: tuple[str, ...]
     file_name: str
 
+    relationship_subject_name: ClassVar[str] = "Object relationships"
+
+    @classmethod
+    def admits_subject(
+        cls,
+        subject: str,
+        *,
+        export_all_measurement_types: bool,
+        file_selections: tuple[SpreadsheetFileSelection, ...],
+    ) -> bool:
+        """Determine subject demand from the actual declared file consumers."""
+        return export_all_measurement_types or any(
+            subject in selection.subjects for selection in file_selections
+        )
+
     def __post_init__(self) -> None:
         subjects = tuple(dict.fromkeys(subject.strip() for subject in self.subjects))
         if not subjects or any(not subject for subject in subjects):
@@ -512,9 +527,14 @@ def prepare_spreadsheet_bundle(
         add_image_file_names=add_image_file_names,
         experiment_tables=experiment_tables,
     )
-    relationship_rows = _relationship_rows(artifact_batch, image_numbers)
-    if relationship_rows:
-        tables["Object relationships"] = relationship_rows
+    if SpreadsheetFileSelection.admits_subject(
+        SpreadsheetFileSelection.relationship_subject_name,
+        export_all_measurement_types=bool(export_all_measurement_types),
+        file_selections=file_selections,
+    ):
+        relationship_rows = _relationship_rows(artifact_batch, image_numbers)
+        if relationship_rows:
+            tables[SpreadsheetFileSelection.relationship_subject_name] = relationship_rows
     source_image_rows = tables.get(
         "Image", MeasurementSparseColumnarRows({}, fields=())
     )
@@ -938,7 +958,7 @@ def _selected_table_columns(
         fields = tuple(
             field
             for field in rows.fields
-            if subject == "Object relationships"
+            if subject == SpreadsheetFileSelection.relationship_subject_name
             or field.name in axis_fields
             or any(
                 selection.matches(subject, field.name) for selection in selected_columns
@@ -1377,7 +1397,15 @@ def _partitioned_spreadsheet_export(
         declarations == declaration_sets[0] for declarations in declaration_sets
     )
     experiment_tables = CellProfilerModule.derive_experiment_measurement_tables(all_tables)
-    relationship_rows = _relationship_rows(batch, image_numbers)
+    relationship_rows = (
+        _relationship_rows(batch, image_numbers)
+        if SpreadsheetFileSelection.admits_subject(
+            SpreadsheetFileSelection.relationship_subject_name,
+            export_all_measurement_types=bool(kwargs["export_all_measurement_types"]),
+            file_selections=kwargs["file_selections"],
+        )
+        else ()
+    )
     # Existing source-numbering traversal can interleave axes. Byte bodies may
     # be concatenated only when axis partitions preserve that admitted order.
     flattened_numbers = tuple(number for values in numbers_by_axis.values() for number in values)
