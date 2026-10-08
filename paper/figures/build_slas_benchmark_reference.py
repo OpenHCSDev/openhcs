@@ -10,12 +10,13 @@ from dataclasses import replace
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from build_slas_benchmark import ROOT, sha256, write_provenance
 
 
-def build_reference_figures(publication_dir: Path, output_dir: Path) -> None:
+def build_reference_figures(
+    publication_dir: Path, output_dir: Path, *, rebuild_coverage: bool = True,
+) -> None:
     """Rebuild the supplied historical chart forms from admitted new sweep rows."""
     from benchmark.reports import cppipe_figures as figures
 
@@ -27,15 +28,25 @@ def build_reference_figures(publication_dir: Path, output_dir: Path) -> None:
         raise ValueError("Reference figures require the complete qualified sweep")
     inputs = [include, Path(__file__), Path(figures.__file__)]
     tables = {}
+    observations = {}
+    source_receipts = []
     for schedule in ("may", "fixed12"):
         directory = publication_dir / schedule / "execution"
         path = directory / "first_use_workflow_metrics.csv"
         receipt_path = directory / "figure2_provenance.json"
         receipt = json.loads(receipt_path.read_text())
+        source_receipts.append(receipt)
         if receipt["output_sha256"][path.name] != sha256(path):
             raise ValueError(f"Sweep rows differ from admitted artwork source: {path}")
         inputs.extend((path, receipt_path))
         with path.open(newline="") as stream:
+            admitted = tuple(r for r in csv.DictReader(stream)
+                             if not r["method"].startswith("CP first batch"))
+            for r in admitted:
+                key = (r["method"], r["pipeline_name"])
+                if key in observations and observations[key] != r:
+                    raise ValueError(f"Shared sweep observation disagrees: {key}")
+                observations[key] = r
             rows = tuple(figures.BenchmarkMetricRow(
                 pipeline_name=r["pipeline_name"], method=r["method"],
                 assay_category=r["assay_category"], module_category=r["module_category"],
@@ -43,83 +54,68 @@ def build_reference_figures(publication_dir: Path, output_dir: Path) -> None:
                 raw_seconds=float(r["raw_seconds"]) if r["raw_seconds"] else None,
                 speedup=float(r["speedup"]) if r["speedup"] else None,
                 peak_memory_mb=None,
-            ) for r in csv.DictReader(stream) if not r["method"].startswith("CP first batch"))
+            ) for r in admitted)
         tables[schedule] = rows
     rows = tables["may"]
     methods = tuple(dict.fromkeys(row.method for row in rows))
     names = tuple(sorted({row.pipeline_name for row in rows}))
-    if len(names) != 30 or any(sum(r.method == m for r in rows) != 30 for m in methods):
+    if len(names) != 30 or any(
+        len(condition := tuple(r.pipeline_name for r in rows if r.method == m)) != 30
+        or set(condition) != set(names) for m in methods
+    ):
         raise ValueError("Each plotted worker condition must contain all thirty workflows")
-    labels = {name: name.replace("IlluminationCorrection", "Illum.")
-              .replace("Example", "").replace("cp_tutorial_", "")
-              .replace("_", " ") for name in names}
-    if len(set(labels.values())) != len(names):
-        raise ValueError("Shortened pipeline labels must remain unique")
-    display_rows = tuple(replace(row, pipeline_name=labels[row.pipeline_name]) for row in rows)
-    averages = tuple(replace(next(r for r in rows if r.method == method),
-        pipeline_name="Average", speedup=next(
-            mode["scope_statistics"]["execution"]["mean"]
-            for mode in claims["mode_statistics"].values()
-            if method.startswith(f"{mode['openhcs_worker_count']} worker")
-            and f" / {mode['assignment_count']} assignments" in method
-        )) for method in methods)
-    outputs = list(figures.generate_grouped_benchmark_metric_figures(
-        (*display_rows, *averages), metrics=(figures.FigureMetricSpec(
-            "speedup", "reference_pipeline_speedup", "Execution speedup by pipeline and worker count",
-            "CP first-use reference / OpenHCS", baseline_line=1, log_variant=True,
-        ),), methods=methods, pipeline_names=(*(labels[name] for name in names), "Average"), output_dir=output_dir,
-        wrap_after=16, group_width_inches=.5,
-    ))
-    parity = tuple(replace(row, method="OpenHCS") for row in display_rows if row.method == methods[0])
-    outputs.extend(figures.generate_grouped_benchmark_metric_figures(
-        parity, metrics=(figures.FigureMetricSpec(
-            "accuracy_fraction", "reference_parity", "Declared-output agreement by pipeline",
-            "Declared-output agreement (%)", percentage=True, baseline_line=100, minimum_ylim=0,
-        ),), methods=("OpenHCS",), pipeline_names=tuple(labels[name] for name in names), output_dir=output_dir,
-        wrap_after=15, group_width_inches=.5,
-    ))
-    outputs.extend(figures.FIGURE_STYLE.generate_average_point_figures(
+    outputs = list(figures.FIGURE_STYLE.generate_average_point_figures(
         rows, methods=methods, output_dir=output_dir, output_formats=("png", "svg"),
         filename_stem="reference_core_summary", title="Execution speedup by worker count",
         ylabel="CP first-use reference / OpenHCS", value_key="speedup", target_line=1,
         log_variant=True,
     ))
-    # The numerical include owns these statistics; this panel only paints them.
+    # Relabel the admitted observations; the shared painter owns dots and statistics.
     modes = sorted(claims["mode_statistics"].values(),
                    key=lambda m: (m["openhcs_worker_count"], m["assignment_count"]))
-    for log_y in (False, True):
-        with figures.FIGURE_STYLE.context():
-            fig, axis = plt.subplots(figsize=(9, 4.8), layout="constrained")
-            positions = np.arange(len(modes))
-            summaries = [m["scope_statistics"]["execution"] for m in modes]
-            axis.bar(positions, [s["mean"] for s in summaries], label="Mean",
-                     color=[figures.FIGURE_STYLE.color_for_method(m["openhcs_worker_count"] - 1) for m in modes])
-            axis.scatter(positions, [s["median"] for s in summaries], marker="D", color="#252525", label="Median", zorder=3)
-            axis.scatter(positions, [s["minimum"] for s in summaries], marker="v", color="#b2182b", edgecolors="white", label="Minimum", zorder=4)
-            axis.axhline(1, color="#b2182b", linestyle="--")
-            axis.set_xticks(positions, [
-                f"{m['openhcs_worker_count']}w × {m['assignment_count'] / m['openhcs_worker_count']:g}/worker\n"
-                f"{m['assignment_count']} assignments\n"
-                + ("CP measured" if m['native_reference_kind'] == 'measured_first_batch' else "CP projected")
-                for m in modes], fontsize=10)
-            axis.set_xlabel("Workers × assignments per worker (w = worker)")
-            axis.set(title="Speedup summary by assignments per worker", ylabel="CP first-use reference / OpenHCS")
-            if log_y:
-                axis.set_yscale("log")
-            else:
-                axis.set_ylim(bottom=0)
-            axis.grid(axis="y", alpha=.25)
-            axis.set_axisbelow(True)
-            axis.legend(frameon=False, ncol=3)
-            for extension in ("png", "svg"):
-                path = output_dir / f"reference_assignments_summary{'_log' if log_y else ''}.{extension}"
-                figures.FIGURE_STYLE.save(fig, path)
-                outputs.append(path)
-            plt.close(fig)
+    if any(receipt["source_revision"] != source_receipts[0]["source_revision"]
+           or receipt["source_sha256"] != source_receipts[0]["source_sha256"]
+           for receipt in source_receipts[1:]):
+        raise ValueError("Shared sweep observations require identical source provenance")
+    combined = {(row.method, row.pipeline_name): row
+                for schedule_rows in tables.values() for row in schedule_rows}
+    all_methods = {row.method for row in combined.values()}
+    if len(all_methods) != 7 or len(combined) != 210 or any(
+        {row.pipeline_name for row in combined.values() if row.method == method} != set(names)
+        for method in all_methods
+    ):
+        raise ValueError("Assignment panel requires seven configurations of thirty workflows")
+    assignment_labels = {
+        m["scope_statistics"]["execution"]["label"]:
+        f"{m['openhcs_worker_count']}w × {m['assignment_count'] / m['openhcs_worker_count']:g}/worker\n"
+        f"{m['assignment_count']} assignments\n"
+        + ("CP measured" if m['native_reference_kind'] == 'measured_first_batch' else "CP projected")
+        for m in modes
+    }
+    assignment_rows = tuple(replace(row, method=assignment_labels[row.method])
+                            for row in combined.values())
+    outputs.extend(figures.FIGURE_STYLE.generate_average_point_figures(
+        assignment_rows, methods=tuple(assignment_labels.values()), output_dir=output_dir,
+        output_formats=("png", "svg"), filename_stem="reference_assignments_summary",
+        title="Execution speedup by assignments per worker (w = worker)",
+        ylabel="CP first-use reference / OpenHCS", value_key="speedup",
+        target_line=1, log_variant=True,
+    ))
     table = output_dir / "reference_pipeline_metrics.csv"
-    figures._write_metric_rows(table, rows)
+    figures._write_metric_rows(table, tuple(combined.values()))
     outputs.append(table)
-    coverage_inputs, coverage_outputs = build_module_test_coverage(output_dir)
+    if rebuild_coverage:
+        coverage_inputs, coverage_outputs = build_module_test_coverage(output_dir)
+    else:
+        # Editorial regeneration must not replace an independently qualified grade.
+        retained_path = output_dir / "retained_coverage_provenance.json"
+        retained = json.loads(retained_path.read_text())
+        coverage_outputs = tuple(output_dir / f"reference_module_coverage.{extension}"
+                                 for extension in ("png", "svg", "csv"))
+        for path in coverage_outputs:
+            if sha256(path) != retained["output_sha256"][path.name]:
+                raise ValueError(f"Retained module coverage differs from its record: {path}")
+        coverage_inputs = (retained_path,)
     inputs.extend(coverage_inputs)
     outputs.extend(coverage_outputs)
     write_provenance(output_dir, tuple(inputs), tuple(outputs), {

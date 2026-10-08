@@ -130,6 +130,13 @@ PYTHONPATH=paper/figures .venv/bin/python -c 'from pathlib import Path; from bui
 PYTHONPATH=paper/figures .venv/bin/python -c 'from build_slas_supplement import benchmark_publication; benchmark_publication()'
 ```
 
+For layout-only changes, pass `rebuild_coverage=False` to
+`build_reference_figures`. This checks the retained coverage artwork and table
+against `reference-layout/retained_coverage_provenance.json`, keeping the original
+coverage evidence intact rather than regrading the current registry. Figure 6
+contains the four worker configurations and coverage; the seven-configuration
+assignment chart is in Supplementary Figure 6.
+
 The per-module CSV names the credited behavior and test. Shared-path coverage
 does not claim validation of all module-specific algorithms or settings.
 

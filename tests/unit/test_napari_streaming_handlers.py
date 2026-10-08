@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from itertools import product
 from pathlib import Path
+from queue import Queue
 from types import SimpleNamespace
 
 import numpy as np
@@ -897,6 +898,7 @@ class _FakeLayerState:
 
 class _FakeNapariServer:
     def __init__(self):
+        self.accepted_stream_batches = Queue()
         self.layer_route_state = _FakeLayerState()
         self.component_groups = NapariComponentGroupStore()
         self.component_name_metadata = _component_name_metadata(

@@ -338,7 +338,9 @@ class PlateStreamingService:
         context: PlateInspectionContext,
     ) -> VirtualWorkspaceSourceProjection | None:
         """Carry inventory-owned physical image identities into viewer loading."""
-        builder = VirtualWorkspaceSourceProjectionBuilder(Path(context.plate_path))
+        builder = VirtualWorkspaceSourceProjectionBuilder(
+            context.handler.metadata_handler.source_workspace_root(context.plate_path)
+        )
         projections = {}
         for record in records:
             image_path = record.streamable_image_path
@@ -384,7 +386,9 @@ class PlateStreamingService:
                 "Image source receipt byte count conflicts with its resource."
             )
         state = ViewerWindowStateResult.from_mapping(json.loads(data))
-        builder = VirtualWorkspaceSourceProjectionBuilder(Path(context.plate_path))
+        builder = VirtualWorkspaceSourceProjectionBuilder(
+            context.handler.metadata_handler.source_workspace_root(context.plate_path)
+        )
         projections = {}
         producers = []
         image_records = tuple(

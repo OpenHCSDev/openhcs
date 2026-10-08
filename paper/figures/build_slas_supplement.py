@@ -112,28 +112,25 @@ def scaling():
 
 
 def benchmark_publication():
-    """Assemble the five supplied chart forms from the new sweep artwork."""
+    """Keep worker speedups and coverage in main; assignment detail in supplement."""
     pages = (
         ("submission_benchmark_schedule", (
-            ("A", "Execution speedup by worker count", "reference_core_summary_log"),
-            ("B", "Available assignments-per-worker conditions", "reference_assignments_summary_log"),
+            ("A", "reference_core_summary_log"),
         )),
-        ("submission_benchmark_pipelines", (
-            ("C", "Execution speedup for every pipeline", "reference_pipeline_speedup_log"),
-        )),
-        ("submission_benchmark_parity", (
-            ("D", "Declared-output agreement", "reference_parity"),
+        ("supp_benchmark_assignments", (
+            ("", "reference_assignments_summary_log"),
         )),
         ("submission_benchmark_coverage", (
-            ("E", "Graded processing-module test coverage", "reference_module_coverage"),
+            ("B", "reference_module_coverage"),
         )),
     )
     for stem, panels in pages:
-        height_inches = 9.8 if len(panels) == 2 else 4.6 if stem.endswith("coverage") else 9.0
+        height_inches = 3.3 if stem == "supp_benchmark_assignments" else 4.6
         sheet = SupplementFigure(stem, height_inches)
-        for index, (letter, title, artwork) in enumerate(panels):
-            y, height = ((51, 46) if index == 0 else (1, 46)) if len(panels) == 2 else (1, 93)
-            sheet.heading(f"{letter}  {title}", y + height + 2)
+        for letter, artwork in panels:
+            y, height = 1, 93
+            if letter:
+                sheet.text(1, y + height + 2, letter, size=14, weight="bold", va="top")
             sheet.artwork(f"benchmark-publication/reference-layout/{artwork}", (1, y, 98, height))
         sheet.save(dpi=400)
 

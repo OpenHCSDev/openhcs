@@ -128,6 +128,8 @@ class ViewerSettleField(str, Enum):
     ACTIVE_ROUTE = "active_route"
     ACTIVE_ROUTE_WORK_UNIT_COUNT = "active_route_work_unit_count"
     ACTIVE_ROUTE_WORK_UNIT_ACTIVE = "active_route_work_unit_active"
+    PROCESSED_INTAKE_ITEM_COUNT = "processed_intake_item_count"
+    INTAKE_ITEM_ACTIVE = "intake_item_active"
 
 
 class ViewerPayloadSummaryField(str, Enum):
@@ -659,8 +661,19 @@ class ViewerSettleProgress:
     active_route: str | None = None
     active_route_work_unit_count: int = 0
     active_route_work_unit_active: bool = False
+    processed_intake_item_count: int = 0
+    intake_item_active: bool = False
 
     def __post_init__(self) -> None:
+        if (
+            type(self.processed_intake_item_count) is not int
+            or self.processed_intake_item_count < 0
+        ):
+            raise ValueError("Viewer processed intake count must be non-negative.")
+        if type(self.intake_item_active) is not bool:
+            raise TypeError("Viewer intake activity must be boolean.")
+        if self.phase is ViewerSettlePhase.COMPLETE and self.intake_item_active:
+            raise ValueError("Completed settlement cannot have active intake.")
         if (
             type(self.completed_update_count) is not int
             or type(self.total_update_count) is not int
@@ -709,6 +722,24 @@ class ViewerSettleProgress:
             total_update_count=total_update_count,
         )
 
+    @property
+    def progress_marker(self) -> tuple[int, int, int]:
+        return (
+            self.processed_intake_item_count,
+            self.completed_update_count,
+            self.active_route_work_unit_count,
+        )
+
+    @property
+    def work_unit_active(self) -> bool:
+        return self.intake_item_active or self.active_route_work_unit_active
+
+    @property
+    def completion_percent(self) -> float:
+        if self.total_update_count:
+            return 100.0 * self.completed_update_count / self.total_update_count
+        return 100.0 if self.phase is ViewerSettlePhase.COMPLETE else 0.0
+
     @classmethod
     def from_response(
         cls,
@@ -736,6 +767,10 @@ class ViewerSettleProgress:
                 payload[ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_COUNT.value]
             ),
             active_route_work_unit_active=active_work_unit_value,
+            processed_intake_item_count=cast(int, payload[
+                ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value
+            ]),
+            intake_item_active=payload[ViewerSettleField.INTAKE_ITEM_ACTIVE.value],
         )
 
     def to_wire_mapping(self) -> dict[str, object]:
@@ -754,6 +789,8 @@ class ViewerSettleProgress:
             ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_ACTIVE.value: (
                 self.active_route_work_unit_active
             ),
+            ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value: self.processed_intake_item_count,
+            ViewerSettleField.INTAKE_ITEM_ACTIVE.value: self.intake_item_active,
         }
 
 
@@ -2046,7 +2083,7 @@ class ManagedViewerLifecycleMixin(
             raise ValueError("Viewer settlement no-progress timeout must be positive.")
 
         logger = logging.getLogger(type(self).__module__)
-        last_progress_marker = (-1, -1)
+        last_progress_marker = (-1, -1, -1)
         no_progress_deadline = time.monotonic() + timeout
         while True:
             try:
@@ -2083,29 +2120,28 @@ class ManagedViewerLifecycleMixin(
                 return True
 
             now = time.monotonic()
-            progress_marker = (
-                progress.completed_update_count,
-                progress.active_route_work_unit_count,
-            )
+            progress_marker = progress.progress_marker
             if progress_marker > last_progress_marker:
                 last_progress_marker = progress_marker
                 no_progress_deadline = now + timeout
                 logger.info(
-                    "%s viewer settling layer updates: %d/%d; active route "
+                    "%s viewer settling after %d intake items: %d/%d; active route "
                     "completed %d bounded work unit(s)",
                     self.viewer_process_label,
+                    progress.processed_intake_item_count,
                     progress.completed_update_count,
                     progress.total_update_count,
                     progress.active_route_work_unit_count,
                 )
-            elif progress.active_route_work_unit_active:
+            elif progress.work_unit_active:
                 no_progress_deadline = now + timeout
             elif now >= no_progress_deadline:
                 logger.warning(
                     "%s viewer settlement made no progress for %.1f seconds "
-                    "at %d/%d updates and %d active-route work unit(s)",
+                    "after %d intake items, at %d/%d updates and %d active-route work unit(s)",
                     self.viewer_process_label,
                     timeout,
+                    progress.processed_intake_item_count,
                     progress.completed_update_count,
                     progress.total_update_count,
                     progress.active_route_work_unit_count,

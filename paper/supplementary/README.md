@@ -163,6 +163,14 @@ assisted-development evaluation, separate from autonomous authoring.
 Execution and compile-plus-run total speedups for thirty workflows, with one assignment, one worker and one numerical thread. Points are workflows; bars show arithmetic means, black lines medians and the dashed line equal runtime. Each ratio uses one measured CellProfiler first-use-inclusive batch divided by the median of three OpenHCS repetitions after warmup. Native internal initialization is included; external process and server startup are excluded. Supplementary Data 3 links linear views, paired clocks, efficiency tables and native projection calibration.
 :::
 
+## Supplementary Figure 6, continued. Assignments per worker
+
+![Execution speedups for all thirty workflows in each of seven assignment configurations.](../figures/slas/supp_benchmark_assignments.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+Each configuration contains thirty workflow points; bars show arithmetic means and black lines medians. The labels give workers (w), assignments per worker and total assignments. CellProfiler 1- and 8-assignment first-use-inclusive batches were measured; 12- and 16-assignment references were projected from the measured 8-assignment batch and warmed per-assignment rate. OpenHCS times are medians of three repetitions after warmup. The dashed line marks equal runtime. Repeated assignments are computational replicates, not independent biological samples. Main Figure 6A shows four configurations from this sweep; this view includes all seven and makes assignments per worker explicit.
+:::
+
 ## Supplementary Figure 6, continued. Fixed-workload scaling
 
 ![Measured execution scaling at twelve assignments and one to four workers.](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png){width=6in}

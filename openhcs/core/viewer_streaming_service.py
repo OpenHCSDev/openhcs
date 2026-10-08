@@ -383,8 +383,9 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
         source_projection: VirtualWorkspaceSourceProjection,
         component_metadata: ViewerWireMapping,
     ):
+        workspace_root = Path(source_projection.workspace_root or self.plate_path)
         lookup = VirtualWorkspacePathLookup.from_paths(
-            filename, str(Path(self.plate_path) / filename)
+            filename, str(workspace_root / filename)
         )
         source_ref = source_projection.source_ref_for(lookup)
         backend = read_backend if source_ref is None else source_ref.backend
@@ -398,7 +399,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
                 self.filemanager.resolve_address(
                     source_ref.backend_address,
                     backend,
-                    base_path=Path(self.plate_path),
+                    base_path=workspace_root,
                 )
             )
         )

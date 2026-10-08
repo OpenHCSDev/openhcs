@@ -1401,7 +1401,7 @@ class PlateInspectionService:
                 record,
                 record.sample(
                     filemanager,
-                    plate_path=plate_path,
+                    plate_path=handler.metadata_handler.source_workspace_root(plate_path),
                     request=ImageSamplingRequest(
                         origin_yx=(request.y, request.x),
                         shape_yx=(request.height, request.width),

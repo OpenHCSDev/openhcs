@@ -395,14 +395,15 @@ def update_metadata_for_zarr_conversion(
         zarr_dir = plate_root / zarr_subdir
         metadata_handler = OpenHCSMetadataHandler(context.filemanager)
         metadata_document = metadata_handler.load_metadata_document(plate_root)
-        grid_dimensions = metadata_handler.get_metadata_grid_dimensions(plate_root)
-        pixel_size = metadata_handler.get_pixel_size(plate_root)
         subdirectories = dict(OpenHCSMetadataSubdirectories(metadata_document).items())
         if original_subdir not in subdirectories:
             raise ValueError(
                 "Zarr conversion metadata is missing original subdirectory "
                 f"{original_subdir!r}."
             )
+        source_dir = plate_root / original_subdir
+        grid_dimensions = metadata_handler.get_metadata_grid_dimensions(source_dir)
+        pixel_size = metadata_handler.get_metadata_pixel_size(source_dir)
         source_projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
             subdirectories[original_subdir]
         )
