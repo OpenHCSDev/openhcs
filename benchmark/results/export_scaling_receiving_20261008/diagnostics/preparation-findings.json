@@ -1,0 +1,40 @@
+{
+  "scope": "Saved genuine12assignmentNeighbors export diagnostic only; no official scaling/headline measurements",
+  "capture": {
+    "valid": "neighbors-diagnostic-v3",
+    "all12_outcomes": "PASS",
+    "batch_sha256": "b5dd1856d89ea8805297417ed8e06ae1be92f0cb7188a62795fcc4ae3d1b26e8",
+    "original_attempt": "neighbors-diagnostic all12sciencetypedcapturemissing; preserved",
+    "second_attempt": "neighbors-diagnostic-v2 terminatedearly after observer overhead discovered; preserved",
+    "source_status": "Dirtyguardcandidate currentmain atcapture; no frozenofficialsourceclaim"
+  },
+  "decisive_findings": {
+    "old_serial_prepare_cpu": 4.584205062,
+    "guarded_serial_prepare_cpu": 1.792238374,
+    "old_serial_render_cpu": 0.766522579,
+    "guarded_serial_render_cpu": 0.758181276,
+    "full2csv_bytes_equal": true,
+    "removed_relationship_pass_cpu": 2.791966688,
+    "original_partition_fallback_repeats_relationship_derivation_twice": true,
+    "two_pass_removal_cpu_model": 5.583933376,
+    "not_measured_pipeline_saving": true
+  },
+  "rejected_dtype_route": {
+    "entire_saved_prepare_render_cpu_before": 2.55041965,
+    "after": 2.458625754,
+    "saving_cpu": 0.091793896,
+    "reason": "Insufficientdominantpayoff; notproductionpatch. Partitioning alreadyadmitsnativecolumns peraxiswherecomplete."
+  },
+  "next_consumer": "Rootreviewedselectiondependencyguard+existingworkerpartitionauthority; actualupdated1worker/4worker matched12jobs neededbeforeheadline scalingclaim",
+  "files": {
+    "capture-neighbors.py": "646cab7f126a8db91186699263597285110bbe2e67a2f958143c9718d2f1b243",
+    "capture-neighbors-v2.py": "e6a5333897db03a5367fabfe1401a137ba81fa9aa82b4b9a5d56b00d810f8544",
+    "capture-neighbors-v3.py": "217e938e934071eed28afab63b584feb4cad4ae9c35d27f822bffda0110c8eba",
+    "neighbors-preparation-replay.py": "c89fc41cbdf55791c0166f04efb900ef86e155e6f664ed8903c59dc3e76a3d59",
+    "neighbors-preselection-replay.py": "247d18ef9eedb4c020b7ced5b964dda380903a939437e225c9d7228b80e092ad",
+    "measurement_row_materialization.py.txt": "e4a800ecfd01eaaf99e442e760e46816a70bef932fb75dfc7d60f8213a8954bb",
+    "neighbors-preparation-proof.json": "7008c7d4eb80ea341697473ced99d1cb991a58bb4439f4f392e5bd73df6e1d95",
+    "neighbors-preselection-proof.json": "670426a762e205c67c48660bb4e200f9d6361070d3f1235e04c0a826cfe98a1f",
+    "run-neighbors-worker-pair.py": "9d6b33252bc8f108c37d85322febe0f06e76401f9160c977d78d3d07a5d03b1e"
+  }
+}

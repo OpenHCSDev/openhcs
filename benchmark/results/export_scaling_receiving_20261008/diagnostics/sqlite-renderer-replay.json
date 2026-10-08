@@ -1,0 +1,84 @@
+{
+  "scope": "Saved actual one-axis AdvancedSegmentation full CPA renderer; all SQLite tables, properties, relationships, schemas and rows exact; no pipeline headline or qualification clock claim",
+  "scalar_oracle": "Native and NumPy floats/ints, NaN/inf, bool, bytes/string, subclasses preserve value and exact returnedtype; invalid ndarray/bool and nonscalars rejected identically",
+  "medians": {
+    "old": 0.27882263995707035,
+    "new": 0.1174007635563612
+  },
+  "samples": {
+    "old": [
+      0.28204788733273745,
+      0.27572772931307554,
+      0.27882263995707035,
+      0.27675703819841146,
+      0.2952076029032469
+    ],
+    "new": [
+      0.12011815328150988,
+      0.11641389410942793,
+      0.11644429061561823,
+      0.1174007635563612,
+      0.11958245374262333
+    ]
+  },
+  "table_shapes": {
+    "Experiment": {
+      "fields": 2,
+      "rows": 1
+    },
+    "sqlite_sequence": {
+      "fields": 2,
+      "rows": 1
+    },
+    "Experiment_Properties": {
+      "fields": 4,
+      "rows": 0
+    },
+    "Per_Image": {
+      "fields": 144,
+      "rows": 2
+    },
+    "Per_Experiment": {
+      "fields": 4,
+      "rows": 1
+    },
+    "Per_Nuclei": {
+      "fields": 496,
+      "rows": 136
+    },
+    "Per_Cells": {
+      "fields": 503,
+      "rows": 136
+    },
+    "Per_Cytoplasm": {
+      "fields": 326,
+      "rows": 136
+    },
+    "Per_Nucleoli": {
+      "fields": 164,
+      "rows": 194
+    },
+    "Per_Mitochondria": {
+      "fields": 171,
+      "rows": 1330
+    },
+    "Per_NucleoliChildObjects": {
+      "fields": 6,
+      "rows": 194
+    },
+    "Per_MitochondriaChildObjects": {
+      "fields": 6,
+      "rows": 1330
+    },
+    "Per_RelationshipTypes": {
+      "fields": 5,
+      "rows": 7
+    },
+    "Per_Relationships": {
+      "fields": 5,
+      "rows": 12114
+    }
+  },
+  "input_sha256": "ef8fa8048f339c71a73d13205f46d31903d7c549e3a40353a1d85e32828244ce",
+  "twelve_axis_linear_sql_savings_ceiling_seconds": 1.9370625168085098
+}

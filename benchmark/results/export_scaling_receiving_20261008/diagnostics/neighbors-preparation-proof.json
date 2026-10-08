@@ -1,0 +1,54 @@
+{
+  "scope": "Actual12assignmentNeighbors preexport batch; dirtyguard diagnostic source, directserial, no benchmarkheadline",
+  "source_owner": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/measurement_row_materialization.py",
+  "source_sha": "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995",
+  "input_sha": "b5dd1856d89ea8805297417ed8e06ae1be92f0cb7188a62795fcc4ae3d1b26e8",
+  "original": {
+    "label": "neighbors-original",
+    "prepare": {
+      "cpu": 1.792238374,
+      "wall": 1.7990657547488809
+    },
+    "render": {
+      "cpu": 0.7581812760000002,
+      "wall": 0.7606674712151289
+    },
+    "csv_bytes_exact": true,
+    "hashes": {
+      "Image.csv": "d6e74fa4aaaa0c533b6efe83351c507d1cfa98b9ae30bca7c64831f230d7b8af",
+      "Cells.csv": "dd5694d23d7053b316f0f83630970e65205a86fc300ae44cfd0912264782034f"
+    }
+  },
+  "optimized": {
+    "label": "neighbors-native-dtype",
+    "prepare": {
+      "cpu": 1.578643221,
+      "wall": 1.5848351158201694
+    },
+    "render": {
+      "cpu": 0.8799825329999997,
+      "wall": 0.8829333307221532
+    },
+    "csv_bytes_exact": true,
+    "hashes": {
+      "Image.csv": "d6e74fa4aaaa0c533b6efe83351c507d1cfa98b9ae30bca7c64831f230d7b8af",
+      "Cells.csv": "dd5694d23d7053b316f0f83630970e65205a86fc300ae44cfd0912264782034f"
+    }
+  },
+  "profiled_original": {
+    "label": "neighbors-profiled",
+    "prepare": {
+      "cpu": 6.176312584,
+      "wall": 6.197241358458996
+    },
+    "render": {
+      "cpu": 0.7604784850000001,
+      "wall": 0.762999695725739
+    },
+    "csv_bytes_exact": true,
+    "hashes": {
+      "Image.csv": "d6e74fa4aaaa0c533b6efe83351c507d1cfa98b9ae30bca7c64831f230d7b8af",
+      "Cells.csv": "dd5694d23d7053b316f0f83630970e65205a86fc300ae44cfd0912264782034f"
+    }
+  }
+}
