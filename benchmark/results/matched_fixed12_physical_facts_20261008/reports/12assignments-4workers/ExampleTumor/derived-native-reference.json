@@ -1,0 +1,73 @@
+{
+  "derivation": {
+    "status": "projected",
+    "source_assignment_count": 8,
+    "target_assignment_count": 12,
+    "source_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/ExampleTumor/native_report.json",
+    "source_report_sha256": "27dfa376cc65f4e3f8d3d8a8e8312991651df44721fd5de00f854a99ad5b5382",
+    "comparison_source_assignment_directories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W001",
+      "W002",
+      "W003",
+      "W004"
+    ],
+    "observed_reference_inputs": [
+      {
+        "repetition": -1,
+        "observed_reference_execution_seconds": 23.10225514601916,
+        "observed_reference_pre_pipeline_seconds": 0.0021305629052221775
+      },
+      {
+        "repetition": 0,
+        "observed_reference_execution_seconds": 24.737717269919813,
+        "observed_reference_pre_pipeline_seconds": 0.000759350135922432
+      },
+      {
+        "repetition": 1,
+        "observed_reference_execution_seconds": 23.086089313030243,
+        "observed_reference_pre_pipeline_seconds": 0.0007874327711760998
+      },
+      {
+        "repetition": 2,
+        "observed_reference_execution_seconds": 22.25369610078633,
+        "observed_reference_pre_pipeline_seconds": 0.0007326998747885227
+      }
+    ],
+    "model_identity": "retained-first-batch-plus-warm-assignments-v1",
+    "model_formula": "T(N) = T(S, first) + (N - S) * median(T(S, warm)) / S",
+    "source_fresh_repetition": -1,
+    "source_fresh_observation_count": 1,
+    "source_warm_repetitions": [
+      0,
+      1,
+      2
+    ],
+    "source_warm_observation_count": 3,
+    "target_native_observation_count": 0,
+    "observed_source_fresh_execution_seconds": 23.10225514601916,
+    "observed_source_fresh_pre_pipeline_seconds": 0.0021305629052221775,
+    "observed_source_warm_batch_execution_median_seconds": 23.086089313030243,
+    "derived_warm_assignment_execution_seconds": 2.8857611641287804,
+    "projected_fresh_batch_execution_seconds": 34.64529980253428,
+    "projected_fresh_batch_prepared_invocation_seconds": 34.647430365439504
+  },
+  "original_report": {
+    "kind": "projected_first_batch",
+    "execution_seconds": 34.64529980253428,
+    "prepared_invocation_seconds": 34.647430365439504,
+    "source_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/ExampleTumor/native_report.json",
+    "source_report_sha256": "27dfa376cc65f4e3f8d3d8a8e8312991651df44721fd5de00f854a99ad5b5382",
+    "source_fresh_repetition": -1,
+    "source_fresh_observation_count": 1,
+    "target_native_observation_count": 0
+  },
+  "raw_case_report_sha256": "2d3dac37a22591c4cb50dc10d3f492b4eb6476936d214523fe41b5fe1f728b8e"
+}
