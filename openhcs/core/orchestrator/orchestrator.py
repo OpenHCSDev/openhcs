@@ -716,7 +716,7 @@ class PipelineOrchestrator:
 
     def source_workspace_files(self, axis_id: str | None = None) -> tuple[str, ...]:
         """Return VFS-visible virtual source paths for one axis or all axes."""
-        return self.source_workspace_projection().pipeline_start_files(axis_id=axis_id)
+        return self.source_workspace_projection().source_files(axis_id=axis_id)
 
     def compile_pipelines(
         self,

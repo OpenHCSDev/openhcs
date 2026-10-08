@@ -474,6 +474,12 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
 
         return None
 
+    def source_workspace_pipeline_start_paths(
+        self, plate_path: Union[str, Path],
+    ) -> tuple[str, ...] | None:
+        """Return declared default inputs, or no separate default source scope."""
+        return None
+
     def source_dataset(
         self,
         plate_path: Union[str, Path],

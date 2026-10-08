@@ -1644,7 +1644,7 @@ def _source_workspace_summary(
     if not isinstance(projection, VirtualWorkspaceSourceProjection):
         return SourceWorkspaceSummary()
 
-    full_virtual_paths = projection.pipeline_start_files()
+    full_virtual_paths = projection.source_files()
     records = tuple(
         _source_workspace_record(projection, full_virtual_path)
         for full_virtual_path in full_virtual_paths[
@@ -1656,7 +1656,7 @@ def _source_workspace_summary(
         files=records,
         truncated_file_count=max(0, len(full_virtual_paths) - len(records)),
         axis_file_counts={
-            axis: len(projection.pipeline_start_files(axis_id=axis))
+            axis: len(projection.source_files(axis_id=axis))
             for axis in axes[:MAX_INSPECTION_AXES]
         },
     )

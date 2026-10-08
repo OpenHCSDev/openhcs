@@ -1832,7 +1832,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         """Resolve current-axis files through their declared source backend."""
         return SourceFileUniverse(
             files=(
-                self.require_source_projection().pipeline_start_files(
+                self.require_source_projection().source_files(
                     axis_id=self.plan.axis_id,
                 )
                 if self.uses_virtual_workspace_projection
@@ -1975,6 +1975,6 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
         if not self.uses_pipeline_start_binding_origin:
             return None
         return SourceFileUniverse(
-            files=projection.pipeline_start_files(axis_id=self.plan.axis_id),
+            files=projection.source_files(axis_id=self.plan.axis_id),
             backend=self.source_backend,
         )

@@ -189,21 +189,23 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self,
         plate_path: Union[str, Path],
     ) -> Dict[str, Any]:
-        """Return the declared input projection, not every retained inventory."""
+        """Return every bindable projection within the requested workspace scope."""
 
         document = self.load_metadata_document(plate_path)
         subdirectories = self._metadata_subdirectories(document, plate_path)
-        try:
-            selected = self._main_subdirectory_name(subdirectories, plate_path)
-        except MetadataNotFoundError:
-            # Unselected documents remain available for explicit source binding;
-            # input initialization still requires an unambiguous default.
-            pass
-        else:
-            subdirectories = {selected: subdirectories[selected]}
         if subdirectories is document[FIELDS.SUBDIRECTORIES]:
             return document
         return {**document, FIELDS.SUBDIRECTORIES: subdirectories}
+
+    def source_workspace_pipeline_start_paths(
+        self, plate_path: Union[str, Path],
+    ) -> tuple[str, ...] | None:
+        """Derive default input paths without narrowing named source admission."""
+        document = self.source_workspace_metadata_document(plate_path)
+        metadata = self._metadata_projection(
+            self._metadata_subdirectories(document, plate_path), plate_path,
+        )
+        return tuple(VirtualWorkspaceMapping.from_subdirectory(metadata).entries)
 
     def source_workspace_root(self, plate_path: Union[str, Path]) -> Path:
         """Keep projection selection separate from plate-relative storage addresses."""

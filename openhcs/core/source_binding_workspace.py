@@ -669,6 +669,7 @@ class SourceBindingWorkspaceProjector:
                 if path in selected_paths
             }),
             workspace_root=projection.workspace_root,
+            pipeline_start_paths=projection.pipeline_start_paths,
         )
 
     def projection_set(

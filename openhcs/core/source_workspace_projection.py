@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
@@ -87,7 +87,9 @@ class VirtualWorkspaceSourceProjection:
     source_projections_by_virtual_path: Mapping[str, SourceProjection] = field(
         default_factory=lambda: MappingProxyType({})
     )
-    _pipeline_start_files_by_axis: dict[str | None, tuple[str, ...]] = field(
+    pipeline_start_paths: tuple[str, ...] | None = None
+    """Metadata-owned default scope; None means the entire admitted universe."""
+    _source_files_by_axis: dict[str | None, tuple[str, ...]] = field(
         default_factory=dict,
         init=False,
         repr=False,
@@ -349,8 +351,18 @@ class VirtualWorkspaceSourceProjection:
         )
 
     def pipeline_start_files(self, *, axis_id: str | None = None) -> tuple[str, ...]:
-        """Return loadable virtual source paths for one runtime source universe."""
-        cached = self._pipeline_start_files_by_axis.get(axis_id)
+        """Return default pipeline inputs, not every bindable saved artifact."""
+        files = self.source_files(axis_id=axis_id)
+        if self.pipeline_start_paths is None:
+            return files
+        selected = frozenset(
+            self._loadable_virtual_path(path) for path in self.pipeline_start_paths
+        )
+        return tuple(path for path in files if path in selected)
+
+    def source_files(self, *, axis_id: str | None = None) -> tuple[str, ...]:
+        """Return the complete admitted universe for selectors and inspection."""
+        cached = self._source_files_by_axis.get(axis_id)
         if cached is not None:
             return cached
 
@@ -365,7 +377,7 @@ class VirtualWorkspaceSourceProjection:
                 self._loadable_virtual_path(virtual_path) for virtual_path in selected
             )
         )
-        self._pipeline_start_files_by_axis[axis_id] = result
+        self._source_files_by_axis[axis_id] = result
         return result
 
     def files_for_projection_role(
@@ -597,6 +609,7 @@ class VirtualWorkspaceSourceProjection:
                     source_projections[axis_id]
                 ),
                 workspace_root=self.workspace_root,
+                pipeline_start_paths=self.pipeline_start_paths,
             )
             for axis_id, refs in source_refs.items()
         })
@@ -776,14 +789,23 @@ class VirtualWorkspaceSourceProjectionCache:
         metadata: OpenHCSMetadataPayload,
         *,
         source_bindings: SourceBindingsConfig | None = None,
+        pipeline_start_paths: tuple[str, ...] | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
         plate_key = str(plate_path)
         cached = self.projections_by_plate_path.get(plate_key)
-        if cached is None or cached.metadata is not metadata:
+        if (
+            cached is None or cached.metadata is not metadata
+            or (
+                cached.projection is not None
+                and cached.projection.pipeline_start_paths != pipeline_start_paths
+            )
+        ):
             projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
                 plate_path,
                 metadata,
             )
+            if projection is not None:
+                projection = replace(projection, pipeline_start_paths=pipeline_start_paths)
             cached = VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
             self.projections_by_plate_path[plate_key] = cached
         return cached.admitted_for(source_bindings).projection
@@ -903,8 +925,11 @@ class VirtualWorkspaceSourceProjectionAuthority:
         workspace_handler.invalidate_metadata_cache()
         return (self.metadata_handler, workspace_handler)
 
-    def metadata_documents(self) -> tuple[OpenHCSMetadataPayload, ...]:
-        documents: list[OpenHCSMetadataPayload] = []
+    def metadata_documents(
+        self,
+    ) -> tuple[tuple[OpenHCSMetadataPayload, tuple[str, ...] | None], ...]:
+        """Pair each complete document with its owner's default input scope."""
+        documents = []
         for metadata_handler in self.metadata_handlers():
             metadata = metadata_handler.source_workspace_metadata_document(
                 self.plate_path
@@ -915,7 +940,10 @@ class VirtualWorkspaceSourceProjectionAuthority:
                 raise RuntimeError(
                     "Source workspace metadata document must be a mapping."
                 )
-            documents.append(metadata)
+            documents.append((
+                metadata,
+                metadata_handler.source_workspace_pipeline_start_paths(self.plate_path),
+            ))
         return tuple(documents)
 
     def _projection_for_axis(
@@ -933,12 +961,14 @@ class VirtualWorkspaceSourceProjectionAuthority:
         self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
         workspace_root = self.metadata_handler.source_workspace_root(self.plate_path)
-        for metadata in self.metadata_documents():
+        for metadata, pipeline_start_paths in self.metadata_documents():
             if self.cache is None:
                 projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
                     workspace_root,
                     metadata,
                 )
+                if projection is not None:
+                    projection = replace(projection, pipeline_start_paths=pipeline_start_paths)
                 if projection is not None and self.source_bindings is not None:
                     from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 
@@ -948,6 +978,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
             else:
                 projection = self.cache.projection_for(
                     workspace_root, metadata, source_bindings=self.source_bindings,
+                    pipeline_start_paths=pipeline_start_paths,
                 )
             if projection is None:
                 continue
@@ -1017,7 +1048,10 @@ class RuntimeVirtualWorkspaceSourceProjectionAuthority(
                 VirtualWorkspaceMapping.from_subdirectory(fields)
             )
             builder.ingest_admitted_subdirectory(fields, entries)
-        return self._projection_for_axis(builder.projection(), axis_id=axis_id)
+        combined = builder.projection()
+        if projection is not None:
+            combined = replace(combined, pipeline_start_paths=projection.pipeline_start_paths)
+        return self._projection_for_axis(combined, axis_id=axis_id)
 
 
 @dataclass(slots=True)

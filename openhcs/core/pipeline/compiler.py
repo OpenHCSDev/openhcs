@@ -65,6 +65,7 @@ from openhcs.core.pipeline.compilation_session import (
 from openhcs.core.source_workspace_projection import (
     DEFAULT_SOURCE_PROJECTION_CACHE,
     VirtualWorkspaceSourceProjection,
+    VirtualWorkspacePathLookup,
 )
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
@@ -1399,10 +1400,14 @@ class PipelineCompiler:
         else:
             selected = tuple(
                 (projection, False, "<pipeline-start>")
+                for path in workspace_projection.pipeline_start_files()
                 for projection in (
-                    workspace_projection.source_projections_by_virtual_path.values()
+                    workspace_projection.source_projection_for(
+                        VirtualWorkspacePathLookup.from_paths(path, path)
+                    ),
                 )
-                if projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
+                if projection is not None
+                and projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
             )
         if not selected:
             failures.append(

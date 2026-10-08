@@ -186,7 +186,7 @@ def test_persist_eighteen_select_two_reopen_and_compile(tmp_path):
     reopened = OpenHCSMetadataHandler(manager)
     assert reopened.determine_main_subdirectory(root) == "."
     assert set(reopened.component_value_set(root).values_for(AllComponents.SITE)) == {"9"}
-    assert tuple(reopened.source_workspace_metadata_document(root)[FIELDS.SUBDIRECTORIES]) == (".",)
+    assert set(reopened.source_workspace_metadata_document(root)[FIELDS.SUBDIRECTORIES]) == {"images", "auxiliary", "."}
     assert len(reopened.source_workspace_metadata_document(images)[FIELDS.SUBDIRECTORIES]["images"][FIELDS.IMAGE_FILES]) == 18
     assert {d.subdirectory_name for d in reopened.analysis_result_directories(root)} == {"images", "auxiliary"}
     assert {d.subdirectory_name for d in reopened.analysis_result_directories(images)} == {"images"}
@@ -196,7 +196,8 @@ def test_persist_eighteen_select_two_reopen_and_compile(tmp_path):
     finally:
         set_progress_queue(None)
     assert bundle.axis_ids == ("A01",)
-    assert len(owner.source_workspace_files()) == 2
+    assert len(owner.source_workspace_projection().pipeline_start_files()) == 2
+    assert len(owner.source_workspace_files()) == 4
     assert hashes == {p: hashlib.sha256((root / p).read_bytes()).hexdigest() for p in paths}
     invalid_root = tmp_path / "invalid"
     invalid_root.mkdir()
@@ -205,5 +206,80 @@ def test_persist_eighteen_select_two_reopen_and_compile(tmp_path):
     (invalid_root / "openhcs_metadata.json").write_text(json.dumps(invalid))
     invalid_reader = OpenHCSMetadataHandler(manager)
     with pytest.raises(ValueError, match="Multiple.*marked main"):
-        invalid_reader.source_workspace_metadata_document(invalid_root)
+        invalid_reader.source_workspace_pipeline_start_paths(invalid_root)
     print("native compiler: persisted18 -> selected2 -> reopened '.'; original18 TIFF hashes and images metadata preserved")
+
+
+@pytest.mark.parametrize("cached", [False, True])
+def test_root_default_inputs_preserve_nonmain_saved_label_binding(tmp_path, cached):
+    from polystore.base import ensure_storage_registry, storage_registry
+    from polystore.filemanager import FileManager
+    from openhcs.core.artifacts import ObjectLabelsArtifactType
+    from openhcs.core.source_bindings import (
+        NamedSourceBinding, SourceBindingsConfig, SourceProjectionRole,
+        SourceFilterClause, SourceFilterMatchType, SourceFilterSubject,
+    )
+    from openhcs.core.source_projection import SourceArtifactProjection
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjectionAuthority, VirtualWorkspaceSourceProjectionCache,
+    )
+
+    root = tmp_path / "saved"
+    (root / "images").mkdir(parents=True)
+    (root / "labels").mkdir()
+    image_path = "images/A01_s009_w1_z001_t001.tif"
+    label_path = "labels/A01_s009_w1_z001_t001.tif"
+    image = np.arange(64, dtype=np.uint16).reshape(8, 8)
+    labels = np.zeros((8, 8), dtype=np.uint16)
+    labels[1:4, 2:6] = 37
+    tifffile.imwrite(root / image_path, image)
+    tifffile.imwrite(root / label_path, labels)
+    address = OpenHCSPlaneAddress.from_values("A01", 9, 1, 1, 1)
+    image_projection = SourcePlaneProjection(address=address, ref=SourcePixelRef("disk", image_path), source_alias="Signal")
+    label_projection = SourceArtifactProjection(
+        address=address, ref=SourcePixelRef("disk", label_path),
+        source_alias="StoredLabels", artifact_kind=ObjectLabelsArtifactType,
+        image_metadata=ImagePayloadMetadata(source_dtype="uint16",
+            source_provenance=SourceImageProvenance(source_path="acquisition/site-9")),
+    )
+    writer = AtomicMetadataWriter()
+    for directory, path, projection, main in (
+        ("images", image_path, image_projection, True),
+        ("labels", label_path, label_projection, False),
+    ):
+        writer.publish_source_projection_metadata(
+            root / "openhcs_metadata.json", directory,
+            VirtualWorkspaceSourceProjectionEntries.from_projection_paths(((projection, path),)),
+            serializer=SourceProjectionMetadataSerializer(SourceSchemaFilenameParser()),
+            saved_image_paths=(path,), microscope_handler_name="source_bindings",
+            source_filename_parser_name="SourceSchemaFilenameParser", component_labels={},
+            backend="disk", results_dir=None, is_main=main,
+        )
+    ensure_storage_registry()
+    manager = FileManager(dict(storage_registry))
+    from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
+    SourceBindingsHandler.register_workspace_backends(root, manager)
+    binding = NamedSourceBinding(alias="StoredLabels", artifact_kind=ObjectLabelsArtifactType,
+        projection_role=SourceProjectionRole.SOURCE_ARTIFACT)
+    authority = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        plate_path=root, metadata_handler=OpenHCSMetadataHandler(manager), filemanager=manager,
+        source_bindings=SourceBindingsConfig(bindings=(binding,), source_filters=(
+            SourceFilterClause(subject=SourceFilterSubject.FILE,
+                match_type=SourceFilterMatchType.CONTAINS, value="_s009_"),
+        )),
+        cache=VirtualWorkspaceSourceProjectionCache() if cached else None,
+    )
+    projection = authority.projection_or_empty()
+    assert projection.pipeline_start_files() == (str(root / image_path),)
+    assert set(projection.source_files()) == {str(root / image_path), str(root / label_path)}
+    for view in (projection, authority.projection_or_empty(axis_id="A01")):
+        occurrences = view.source_occurrences_for_binding(binding, axis_id="A01")
+        assert occurrences == ((str(root / label_path), label_projection),)
+        loaded, = view.load_binding_payloads(tuple(path for path, _ in occurrences), binding=binding, filemanager=manager)
+        np.testing.assert_array_equal(loaded.data.squeeze(), labels)
+        # Native loading identifies the stored label resource; the admitted
+        # projection above still retains the original acquisition declaration.
+        assert loaded.metadata.source_provenance.source_path == label_path
+        assert loaded.metadata.source_image_names == ("StoredLabels",)
+        assert view.pipeline_start_files(axis_id="A01") == (str(root / image_path),)
+    print("native saved-label load: root default image + nonmain StoredLabels retained, exact label 37 pixels")
