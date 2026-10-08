@@ -163,7 +163,6 @@ def _compiled_semantic_step_plan(
         step_name="enriched-contract-step",
         step_type="FunctionStep",
         axis_id="A01",
-        func=pattern,
         variable_components=variable_components,
         group_by=group_by,
         compiled_function_pattern=compile_function_pattern(
@@ -486,7 +485,6 @@ def test_compiled_step_rejects_stack_consumer_after_prior_axis_collapse():
         input_memory_type="numpy",
         output_memory_type="numpy",
         variable_components=(VariableComponents.SITE,),
-        func=pattern,
         compiled_function_pattern=_compiled_pattern(pattern),
     )
 
@@ -661,7 +659,6 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
         step_name="combine",
         step_type="FunctionStep",
         axis_id="A01",
-        func=combine,
         variable_components=(),
         group_by=GroupBy.CHANNEL,
         artifact_inputs=input_plans,
@@ -707,7 +704,6 @@ def test_compiled_dict_branches_accept_their_exact_input_scopes():
         step_name="branch",
         step_type="FunctionStep",
         axis_id="A01",
-        func=pattern,
         variable_components=(),
         group_by=GroupBy.CHANNEL,
         artifact_inputs=input_plans,

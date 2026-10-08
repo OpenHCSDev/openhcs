@@ -659,7 +659,6 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
     )
     plan = planner.plans[3]
     plan.step_name = snapshot.name
-    plan.func = pattern
     plan.main_input_dependency = StepInputDependency.no_main_flow()
     plan.artifact_inputs = maps.inputs
     plan.artifact_outputs = maps.outputs
@@ -4625,7 +4624,6 @@ def test_compiled_group_by_preserves_dynamic_execution_scope():
     planner.cfg = PathConfigStub(sub_dir="images", output_dir_suffix="_generated")
     planner.plans[3].group_by = GroupBy.CHANNEL
     planner.plans[3].variable_components = (VariableComponents.SITE,)
-    planner.plans[3].func = lambda image: image
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,

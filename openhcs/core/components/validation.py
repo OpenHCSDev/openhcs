@@ -81,7 +81,7 @@ class GenericValidator(Generic[T]):
         self,
         variable_components: List[T],
         group_by: Optional[Union[T, "GroupBy"]],
-        func_pattern: Any,
+        is_grouped: bool,
         step_name: str,
     ) -> ValidationResult:
         """
@@ -90,25 +90,18 @@ class GenericValidator(Generic[T]):
         Args:
             variable_components: List of variable components
             group_by: Optional group_by component
-            func_pattern: Function pattern (callable, dict, or list)
+            is_grouped: Whether the admitted function pattern dispatches by group
             step_name: Name of the step for error reporting
 
         Returns:
             ValidationResult indicating success or failure
         """
-        from openhcs.core.function_patterns import NormalizedFunctionPattern
-
         try:
             # 1. Validate component combination
             self.config.validate_combination(variable_components, group_by)
 
             # 2. Validate dict pattern requirements
-            grouped = (
-                func_pattern.is_grouped
-                if isinstance(func_pattern, NormalizedFunctionPattern)
-                else isinstance(func_pattern, dict)
-            )
-            if grouped and (group_by is None or group_by.value is None):
+            if is_grouped and (group_by is None or group_by.value is None):
                 return ValidationResult(
                     is_valid=False,
                     error_message=(

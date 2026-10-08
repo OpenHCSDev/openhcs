@@ -2121,7 +2121,6 @@ class PathPlannerStepAssemblyStage:
                 declarations.inputs,
             )
 
-        self.planner.plans[step_index].func = func_pattern
         compiled_pattern = self.planner.artifacts.build_step_compiled_function_pattern(
             step,
             step_index,

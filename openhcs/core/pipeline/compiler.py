@@ -142,7 +142,7 @@ MATERIALIZATION_PLAN_REQUIREMENTS = (
 FUNCTION_MEMORY_PLAN_REQUIREMENTS = (
     ("input_memory_type", lambda plan: plan.input_memory_type),
     ("output_memory_type", lambda plan: plan.output_memory_type),
-    ("func", lambda plan: plan.func),
+    ("compiled_function_pattern", lambda plan: plan.compiled_function_pattern),
 )
 
 
