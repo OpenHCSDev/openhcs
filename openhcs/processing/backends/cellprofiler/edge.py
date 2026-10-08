@@ -67,6 +67,9 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     CellProfilerPlaneGeometry,
 )
+from openhcs.processing.backends.cellprofiler.enum_attributes import (
+    CellProfilerEnumAttributeMixin,
+)
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
 
@@ -85,20 +88,15 @@ class EdgeMethod(Enum):
         return CellProfilerBackendProvider.NATIVE
 
 
-class EdgeDirection(Enum):
+class EdgeDirection(CellProfilerEnumAttributeMixin, Enum):
+    __cellprofiler_attribute_names__ = (
+        "_includes_horizontal_response",
+        "_includes_vertical_response",
+    )
+
     ALL = ("all", True, True)
     HORIZONTAL = ("horizontal", True, False)
     VERTICAL = ("vertical", False, True)
-
-    def __init__(
-        self,
-        label: str,
-        includes_horizontal_response: bool,
-        includes_vertical_response: bool,
-    ) -> None:
-        self._value_ = label
-        self._includes_horizontal_response = includes_horizontal_response
-        self._includes_vertical_response = includes_vertical_response
 
     @property
     def includes_horizontal_response(self) -> bool:
