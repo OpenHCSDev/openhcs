@@ -899,6 +899,7 @@ class WideMeasurementRowAccumulator:
     """Admit projected batches and derive each completed subject once on consumption."""
 
     row_identity_contract: RuntimeMeasurementRowIdentityContract
+    required_subjects: frozenset[str] | None = None
     _batches_by_subject: dict[str, list[ColumnarRows]] = field(
         default_factory=dict, init=False, repr=False
     )
@@ -1086,7 +1087,6 @@ class WideMeasurementRowAccumulator:
             if name in columns
         )
         object_names = columns.get(MeasurementRowAxisField.OBJECT_NAME.value)
-        source_names = columns.get(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value)
         feature_fields = tuple(
             columns[name]
             for name in MeasurementRowAxisField.feature_name_field_names_ordered()
@@ -1099,22 +1099,23 @@ class WideMeasurementRowAccumulator:
         )
         if feature_fields and not value_fields:
             raise ValueError("Long-form measurement columns have no value column.")
-        normalized_features = (
-            np.fromiter(
-                (
+        normalized_features = None
+        if feature_fields:
+            if self.required_subjects is None:
+                normalized_features = np.fromiter(
                     (
-                        MEASUREMENT_SPARSE_CELL
-                        if is_structural_missing_measurement_cell(value)
-                        else str(value)
-                    )
-                    for value in feature_fields[0]
-                ),
-                dtype=object,
-                count=row_count,
-            )
-            if feature_fields
-            else None
-        )
+                        (
+                            MEASUREMENT_SPARSE_CELL
+                            if is_structural_missing_measurement_cell(value)
+                            else str(value)
+                        )
+                        for value in feature_fields[0]
+                    ),
+                    dtype=object,
+                    count=row_count,
+                )
+            else:
+                normalized_features = np.empty(row_count, dtype=object)
         cohorts: dict[tuple[str, tuple[tuple[str, object], ...]], list[int]] = {}
         labels = np.full(row_count, missing_cell, dtype=object)
         for index in range(row_count):
@@ -1129,26 +1130,29 @@ class WideMeasurementRowAccumulator:
                     if normalized:
                         subject = normalized
                         owned = True
-            for values in object_columns:
-                label = measurement_object_label_value(values[index])
-                if label is not None:
-                    labels[index] = label
-                    break
-            source = source_image_name
-            if source_names is not None:
-                name = source_names[index]
-                if name is not None and not is_structural_missing_measurement_cell(
-                    name
-                ):
-                    source = str(name).strip() or source
             scope = MeasurementRowOwnership(
-                object_name=subject if owned else None, source_image_name=source
+                object_name=subject if owned else None
             ).scope(default_scope)
             if (
                 scope is MeasurementScope.OBJECT
                 and subject not in self._object_subjects
             ):
                 self._object_subjects.append(subject)
+            if self.required_subjects is not None:
+                if subject not in self.required_subjects:
+                    continue
+                if normalized_features is not None:
+                    value = feature_fields[0][index]
+                    normalized_features[index] = (
+                        MEASUREMENT_SPARSE_CELL
+                        if is_structural_missing_measurement_cell(value)
+                        else str(value)
+                    )
+            for values in object_columns:
+                label = measurement_object_label_value(values[index])
+                if label is not None:
+                    labels[index] = label
+                    break
             qualification = tuple(
                 (name, values[index])
                 for name, values in qualifiers
@@ -1247,7 +1251,9 @@ class WideMeasurementRowAccumulator:
             )
             self._batches_by_subject.setdefault(subject, []).append(batch)
 
-    def columnar_rows_by_subject(self) -> dict[str, ColumnarRows]:
+    def columnar_rows_by_subject(
+        self, *, subjects: frozenset[str] | None = None
+    ) -> dict[str, ColumnarRows]:
         """Coalesce admitted batches in first-seen subject and identity order.
 
         Cross-batch duplicate values are validated by the columnar join when the
@@ -1255,6 +1261,8 @@ class WideMeasurementRowAccumulator:
         """
         result: dict[str, ColumnarRows] = {}
         for subject, batches in self._batches_by_subject.items():
+            if subjects is not None and subject not in subjects:
+                continue
             names = frozenset(name for value in batches for name in value.columns)
             image_names = self.row_identity_contract.selected_image_identity_fields(
                 frozenset(normalize_runtime_identifier(name) for name in names)
