@@ -1046,6 +1046,13 @@ class NeuriteOutgrowthCellResult:
     its square. The physical declaration requires micrometer calibration; the
     pixel declaration measures source pixels without asserting calibration.
     No independent seed-relative skeleton measurement rescales the values.
+
+    An admitted cell remains in the output when it has no measured process
+    partitions: ``processes`` and ``total_outgrowth`` are zero. In that case
+    ``mean_process_length``, ``median_process_length`` and
+    ``max_process_length`` are exported as zero sentinels for absent process
+    statistics, not measurements of zero-length processes. Consumers computing
+    process-length statistics must distinguish these rows using ``processes``.
     """
 
     slice_index: int
