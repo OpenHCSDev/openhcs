@@ -580,6 +580,25 @@ class NapariAcceptedControlRequest:
         except Exception as error:
             self.complete_from(server, server.control_error_response, error)
 
+    def dispatch_on_native_frame(
+        self, server, callback: Callable[[], None], *, include_hidden: bool = False,
+    ) -> None:
+        """Keep accepted work alive until Qt has applied its native slice.
+
+        The response observation may expire independently; it must not cancel
+        this continuation or reinterpret requested Dims as applied geometry.
+        """
+        def applied(frame: Future[None]) -> None:
+            try:
+                frame.result()
+                callback()
+            except Exception as error:
+                self.complete_from(server, server.control_error_response, error)
+
+        server.display_pipeline.native_frame_completion(
+            include_hidden=include_hidden,
+        ).add_done_callback(applied)
+
 
 @dataclass(frozen=True)
 class NapariStreamMessageReply:
@@ -2443,11 +2462,104 @@ class NapariLayerDisplayPipeline:
             str,
             tuple[NapariPendingLayerUpdate, NapariLayerDisplayWork],
         ] = {}
+        self._native_frame_waiters: dict[Future[None], Callable[[], None]] = {}
+        self._native_frame_mutation_depth = 0
+
+    def native_frame_applied(self, *, include_hidden: bool = False) -> bool:
+        """Derive completion from native layers, not requested Dims alone."""
+        viewer = self.server.require_viewer()
+        return self._native_frame_mutation_depth == 0 and all(
+            layer.loaded and (
+                not layer.visible or layer._slice_input == layer._make_slice_input(viewer.dims)
+            )
+            for layer in viewer.layers if layer.visible or include_hidden
+        )
+
+    @staticmethod
+    def native_data_objects(layer) -> tuple[object, ...]:
+        # Shapes.data returns a fresh list on every access; its native member
+        # arrays, not that temporary list, carry source identity. Image/Points
+        # return their actual array. No pixel values are copied here.
+        data = layer.data
+        return tuple(data) if isinstance(data, list) else (data,)
+
+    @classmethod
+    def same_native_data_objects(cls, layer, originals) -> bool:
+        current = cls.native_data_objects(layer)
+        return len(current) == len(originals) and all(
+            now is original for now, original in zip(current, originals)
+        )
+
+    def native_frame_completion(self, *, include_hidden: bool = False) -> Future[None]:
+        """Observe QtViewer's original response consumer without polling.
+
+        set_data follows response application and loaded-request-ID admission.
+        No geometry, coordinates or loaded state are copied into this owner.
+        """
+        frame: Future[None] = Future()
+        if self.native_frame_applied(include_hidden=include_hidden):
+            frame.set_result(None)
+            return frame
+        viewer = self.server.require_viewer()
+        subscriptions = []
+
+        def applied(event=None) -> None:
+            if not frame.done() and self.native_frame_applied(include_hidden=include_hidden):
+                frame.set_result(None)
+
+        self._native_frame_waiters[frame] = applied
+
+        def subscribe(emitter, callback) -> None:
+            emitter.connect(callback)
+            subscriptions.append((emitter, callback))
+
+        def inserted(event) -> None:
+            subscribe(event.value.events.set_data, applied)
+            subscribe(event.value.events.visible, applied)
+            applied()
+
+        def release(completed) -> None:
+            for emitter, callback in subscriptions:
+                emitter.disconnect(callback)
+            self._native_frame_waiters.pop(completed, None)
+
+        frame.add_done_callback(release)
+        for layer in viewer.layers:
+            subscribe(layer.events.set_data, applied)
+            subscribe(layer.events.visible, applied)
+        subscribe(viewer.layers.events.inserted, inserted)
+        subscribe(viewer.layers.events.removed, applied)
+        applied()
+        return frame
+
+    @contextmanager
+    def native_frame_mutation(self):
+        """Commit resident streaming-array frame changes in one Qt turn.
+
+        This local native context does not alter napari settings or ordinary
+        asynchronous viewer navigation. Admission first awaits existing native
+        work, so an older async response cannot overwrite the committed frame.
+        """
+        if not self.native_frame_applied(include_hidden=True):
+            raise RuntimeError("Native frame mutation requires applied slice admission.")
+        with self.server.require_viewer()._layer_slicer.force_sync():
+            self._native_frame_mutation_depth += 1
+            try:
+                yield
+            finally:
+                self._native_frame_mutation_depth -= 1
+                # Native set_data events can fire inside an atomic mutation.
+                # Resume accepted peers only after its selection/restores finish.
+                if self._native_frame_mutation_depth == 0:
+                    for applied in tuple(self._native_frame_waiters.values()):
+                        applied()
 
     def clear_display_work(self) -> None:
         """Discard every deferred display continuation for a reset or shutdown."""
 
         self._display_work_by_route.clear()
+        for frame in tuple(self._native_frame_waiters):
+            frame.set_exception(RuntimeError("Viewer reset before native frame application."))
 
     def purge_display_work(self, route_key: str) -> None:
         self._display_work_by_route.pop(route_key, None)
@@ -2632,11 +2744,20 @@ class NapariLayerDisplayPipeline:
     ) -> None:
         """Advance one debounced route in bounded Qt callbacks."""
 
+        self.native_frame_completion(include_hidden=True).add_done_callback(
+            partial(self._execute_scheduled_applied_update, layer_key, update),
+        )
+
+    def _execute_scheduled_applied_update(
+        self, layer_key: str, update: NapariPendingLayerUpdate, frame: Future[None],
+    ) -> None:
+
         if self.server.layer_route_state.pending_update_for(layer_key) is not update:
             return
         try:
+            frame.result()
             settlement = self.server.layer_route_state.admit_settlement(requested=False)
-            with settlement.debounced_work_unit(layer_key):
+            with self.native_frame_mutation(), settlement.debounced_work_unit(layer_key):
                 work = self._work_for_update(
                     layer_key=layer_key,
                     update=update,
@@ -2785,13 +2906,25 @@ class NapariLayerDisplayPipeline:
     ) -> None:
         """Advance one bounded route work unit and publish genuine progress."""
 
+        self.native_frame_completion(include_hidden=True).add_done_callback(
+            partial(self._execute_settlement_applied_update, settlement, route_key, update),
+        )
+
+    def _execute_settlement_applied_update(
+        self, settlement: NapariLayerSettlementState, route_key: str,
+        update: NapariPendingLayerUpdate, frame: Future[None],
+    ) -> None:
+
         try:
-            settlement.begin_active_work_unit(route_key)
-            work = self._work_for_update(
-                layer_key=route_key,
-                update=update,
-            )
-            if not work.advance():
+            frame.result()
+            with self.native_frame_mutation():
+                settlement.begin_active_work_unit(route_key)
+                work = self._work_for_update(
+                    layer_key=route_key,
+                    update=update,
+                )
+                complete = work.advance()
+            if not complete:
                 settlement.complete_active_work_unit(route_key)
                 QTimer.singleShot(
                     NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
@@ -2904,7 +3037,7 @@ class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMe
     __registry__: ClassVar[dict[str, type["NapariControlMessageAction"]]] = {}
 
     def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
-        """Default synchronous action hook on the shared reply owner."""
+        """Recovery and lifecycle actions do not depend on slice completion."""
         request.complete_from(server, self.handle, server, request.message)
 
     def validate_admission(self, request: NapariAcceptedControlRequest) -> None:
@@ -2948,6 +3081,34 @@ class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMe
 
         del server, message
         return None
+
+
+class NapariAppliedFrameControlMessageAction(NapariControlMessageAction):
+    """Native-frame consumers await the original Qt response application."""
+
+    def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
+        request.dispatch_on_native_frame(
+            server, partial(self.dispatch_applied_frame, server, request),
+        )
+
+    def dispatch_applied_frame(self, server, request: NapariAcceptedControlRequest) -> None:
+        request.complete_from(server, self.handle, server, request.message)
+
+
+class NapariResidentFrameMutationControlMessageAction(NapariAppliedFrameControlMessageAction):
+    """Commit preloaded streaming arrays atomically, not ordinary async UI navigation."""
+
+    def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
+        request.dispatch_on_native_frame(
+            server, partial(self.dispatch_applied_frame, server, request), include_hidden=True,
+        )
+
+    def dispatch_applied_frame(self, server, request: NapariAcceptedControlRequest) -> None:
+        def mutate():
+            with server.display_pipeline.native_frame_mutation():
+                return self.handle(server, request.message)
+
+        request.complete_from(server, mutate)
 
 
 class NapariShutdownControlMessageAction(NapariControlMessageAction):
@@ -3548,7 +3709,7 @@ class NapariResultSelectionController:
                 index for index, identity in enumerate(target_identities)
                 if identity in selected
             )
-            displayed = NapariResultElementSelectionAuthority.displayed_indices(
+            displayed = self.displayed_result_indices(
                 target, indices,
             )
             if displayed != indices:
@@ -3876,13 +4037,22 @@ class NapariResultSelectionController:
                 linked.append((cast(NapariLayerHandle, candidate), member_indices))
         return tuple(linked) or ((layer, source_group.member_indices),)
 
+    def displayed_result_indices(self, layer, data_indices):
+        # Napari deliberately skips data_displayed refresh for invisible
+        # layers. Retaining their source selection still requires native slice
+        # geometry, without changing visibility or inventing displayed rows.
+        if not layer.visible:
+            layer._slice_dims(self.server.require_viewer().dims)
+            layer._refresh_sync(data_displayed=True, force=True)
+        return NapariResultElementSelectionAuthority.displayed_indices(layer, data_indices)
+
     def _synchronize_linked_group(
         self,
         layer: NapariLayerHandle,
         data_index: int,
     ) -> tuple[tuple[NapariLayerHandle, tuple[int, ...]], ...]:
         linked = tuple(
-            (candidate, NapariResultElementSelectionAuthority.displayed_indices(
+            (candidate, self.displayed_result_indices(
                 candidate, member_indices,
             ))
             for candidate, member_indices in self._linked_group_members(layer, data_index)
@@ -3918,6 +4088,25 @@ class NapariResultSelectionController:
         layer_reference: weakref.ReferenceType[object],
         data_index: int,
         generation: int,
+    ) -> None:
+        self.server.display_pipeline.native_frame_completion(
+            include_hidden=True,
+        ).add_done_callback(partial(
+            self._apply_selection_on_native_frame, layer_reference, data_index, generation,
+        ))
+
+    def _apply_selection_on_native_frame(
+        self, layer_reference, data_index, generation, frame: Future[None],
+    ) -> None:
+        try:
+            frame.result()
+            with self.server.display_pipeline.native_frame_mutation():
+                self._apply_resident_selection(layer_reference, data_index, generation)
+        except Exception:
+            logger.exception("Failed to apply selected Napari result on its native frame")
+
+    def _apply_resident_selection(
+        self, layer_reference, data_index, generation,
     ) -> None:
         if generation != self._pending_generation:
             return
@@ -5023,7 +5212,7 @@ class NapariViewerPayloadProjection(
         return str(value)
 
 
-class NapariStateControlMessageAction(NapariControlMessageAction):
+class NapariStateControlMessageAction(NapariAppliedFrameControlMessageAction):
     """Registered action that reports live layer and axis state."""
 
     message_type = ViewerControlMessageType.STATE.value
@@ -5086,7 +5275,7 @@ class NapariPayloadsControlMessageAction(NapariControlMessageAction):
         ).to_wire_mapping()
 
 
-class NapariMountedRouteControlMessageAction(NapariControlMessageAction):
+class NapariMountedRouteControlMessageAction(NapariAppliedFrameControlMessageAction):
     """Shared exact mounted-route boundary for routed native commands."""
 
     def _mounted_layer(
@@ -5323,7 +5512,7 @@ class NapariRegionMeasurementControlMessageAction(
         return plane.region(request)
 
 
-class NapariPresentationControlMessageAction(NapariControlMessageAction):
+class NapariPresentationControlMessageAction(NapariAppliedFrameControlMessageAction):
     """Shared nominal admission, native apply/readback and reply lifecycle."""
 
     request_type: ClassVar[type]
@@ -5678,10 +5867,36 @@ class NapariPreparedNavigation:
         )
 
 
-class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageAction):
+class NapariNavigationControlMessageAction(
+    NapariResidentFrameMutationControlMessageAction, NapariMountedRouteControlMessageAction,
+):
     """Registered action that selects viewer layers and semantic axis indices."""
 
     message_type = ViewerControlMessageType.NAVIGATE.value
+
+    def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
+        options = request.message.get(ViewerControlResponseField.PAYLOAD.value)
+        if not isinstance(options, ViewerNavigationControlOptions):
+            raise TypeError("Napari navigation control payload must be ViewerNavigationControlOptions.")
+        prepared = self.prepare(server, options)
+        source_data = server.display_pipeline.native_data_objects(prepared.layer)
+        request.dispatch_on_native_frame(
+            server, partial(self._dispatch_prepared, server, request, prepared, source_data),
+            include_hidden=True,
+        )
+
+    def _dispatch_prepared(self, server, request, prepared, source_data) -> None:
+        def apply():
+            if (
+                self._mounted_layer(server, prepared.request.route_key) is not prepared.layer
+                or not server.display_pipeline.same_native_data_objects(prepared.layer, source_data)
+            ):
+                raise RuntimeError("Navigation source changed before native frame application.")
+            with server.display_pipeline.native_frame_mutation():
+                self.apply_prepared(server, prepared)
+                return self._navigation_reply(server, prepared.request)
+
+        request.complete_from(server, apply)
 
     def handle(
         self,
@@ -5714,6 +5929,10 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
                 )
             ).to_wire_mapping()
 
+        return self._navigation_reply(server, request)
+
+    @staticmethod
+    def _navigation_reply(server, request):
         response = NapariViewerStateProjection(
             server=server,
             viewer=server.viewer,
@@ -6037,7 +6256,7 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             )
 
 
-class NapariLayerRetirementControlMessageAction(NapariControlMessageAction):
+class NapariLayerRetirementControlMessageAction(NapariResidentFrameMutationControlMessageAction):
     """Qt-owned registered action; the coordinator owns the retirement recipe."""
 
     message_type = OpenHCSViewerControlMessageType.RETIRE_LAYERS.value
@@ -6064,7 +6283,7 @@ class NapariLayerRetirementControlMessageAction(NapariControlMessageAction):
             ).to_wire_mapping()
 
 
-class NapariLayerIsolationControlMessageAction(NapariControlMessageAction):
+class NapariLayerIsolationControlMessageAction(NapariResidentFrameMutationControlMessageAction):
     """Apply one atomic visibility and selection projection to mounted layers."""
 
     message_type = ViewerControlMessageType.ISOLATE_LAYERS.value
@@ -6163,7 +6382,7 @@ class NapariLayerIsolationControlMessageAction(NapariControlMessageAction):
 
 
 class NapariScreenshotControlMessageAction(
-    NapariControlMessageAction, ViewerWindowSnapshotService
+    NapariAppliedFrameControlMessageAction, ViewerWindowSnapshotService
 ):
     """Registered action that captures the Napari Qt window."""
 
@@ -6184,10 +6403,21 @@ class NapariScreenshotControlMessageAction(
         """Snapshot capture requires the admitted local request budget."""
         raise RuntimeError("Snapshots require accepted-request dispatch, including immediate capture.")
 
-    def dispatch(self, server, request: NapariAcceptedControlRequest) -> None:
+    def dispatch_applied_frame(self, server, request: NapariAcceptedControlRequest) -> None:
+        # Bind the original native response inputs and their source objects at
+        # capture admission. A later, valid but different frame is not this one.
+        viewer = server.require_viewer()
+        native_frame = tuple(
+            (layer, server.display_pipeline.native_data_objects(layer), layer._slice_input, layer._last_slice_id)
+            for layer in viewer.layers if layer.visible
+        )
+        dimensions = NapariViewerStateProjection.native_dimensions(viewer).to_wire_mapping()
         super().request_capture(
             self.snapshot_request(server, request.message, request.observation_deadline),
-            partial(request.complete_from, server, self._snapshot_native_reply, server),
+            partial(
+                request.complete_from, server, self._snapshot_native_reply,
+                server, native_frame, dimensions,
+            ),
             partial(request.fail_observation, server),
         )
 
@@ -6239,18 +6469,29 @@ class NapariScreenshotControlMessageAction(
             ),
         )
 
-    def _snapshot_native_reply(self, server, snapshot):
+    def _snapshot_native_reply(self, server, native_frame, dimensions, snapshot):
+        viewer = server.require_viewer()
+        layers = tuple(layer for layer in viewer.layers if layer.visible)
+        if (
+            layers != tuple(member[0] for member in native_frame)
+            or any(
+                not server.display_pipeline.same_native_data_objects(layer, data)
+                or layer._slice_input != slice_input
+                or layer._last_slice_id != request_id
+                for layer, data, slice_input, request_id in native_frame
+            )
+            or NapariViewerStateProjection.native_dimensions(viewer).to_wire_mapping() != dimensions
+        ):
+            raise RuntimeError("Snapshot source frame changed during native rendering.")
         return self._native_reply(
-            server, self.snapshot_reply(self.snapshot_descriptor(server), snapshot)
+            server, self.snapshot_reply(self.snapshot_descriptor(server), snapshot), dimensions,
         )
 
     @staticmethod
-    def _native_reply(server, response):
-        response[ViewerControlField.NATIVE_DIMENSIONS.value] = (
-            NapariViewerStateProjection.native_dimensions(
-                server.viewer
-            ).to_wire_mapping()
-        )
+    def _native_reply(server, response, dimensions):
+        if not server.display_pipeline.native_frame_applied():
+            raise RuntimeError("Snapshot native frame changed before capture completion.")
+        response[ViewerControlField.NATIVE_DIMENSIONS.value] = dimensions
         return response
 
 

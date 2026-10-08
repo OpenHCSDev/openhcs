@@ -93,11 +93,17 @@ def receiver():
     server.bind_result_selection_layer = server.result_selection_controller.bind
     # ViewerModel exercises native layer/dims selection, not window prominence.
     server.raise_result_selection_surface = lambda: None
-    yield server
-    server.layer_route_state.drain_pending_updates()
-    server.display_pipeline.clear_display_work()
-    server.viewer.layers.clear()
-    app.processEvents()
+    # This model-only fixture has no QtViewer._on_slice_ready consumer. Use
+    # napari's native synchronous slicer rather than inheriting the desktop's
+    # async setting and leaving Image/Points responses unapplied.
+    with server.viewer._layer_slicer.force_sync():
+        try:
+            yield server
+        finally:
+            server.layer_route_state.drain_pending_updates()
+            server.display_pipeline.clear_display_work()
+            server.viewer.layers.clear()
+            app.processEvents()
 
 
 def enqueue(
