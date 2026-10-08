@@ -488,6 +488,44 @@ link the plotted values to the original evaluations.
 
 ## Supplementary Data 8. Autonomous analysis evidence
 
+### Evaluation endpoints and reference types
+
+| Assay | Endpoint | Reference |
+|---|---|---|
+| H001 bright objects | One-to-one object F1 | Computational notebook labels |
+| BBBC039 nuclei | One-to-one object F1 and foreground Dice | Independent instance annotations |
+| BBBC007 DNA/actin | Directed boundary fraction | Manual-outline union |
+| BBBC013 translocation | Well-level GFP ratio and control Z′ | Treatment groups |
+| H002 3D centres | Matched-centre voxel distance | Manual centre annotations |
+| Retinal somata | Counts and distributed image review | Matched raw/result views; [TODO: annotated soma centres] |
+| Public and laboratory neurites | Shaft and path recovery | Matched raw/path views; [TODO: crossing ownership labels] |
+
+### Trial-level autonomous results
+
+Labels identify authors in the linked records in Supplementary Data 7–8; multiple endpoints from one author are listed as separate comparisons. [TODO: additional repetitions and models, from new trial outputs.]
+
+| Assay | Model | Data partition | Endpoint | Result |
+|---|---|---|---|---|
+| BBBC039, earlier trial | gpt-5.6-sol | 50 held-out fields | Object F1; foreground Dice | 0.746; 0.935 |
+| BBBC039, fresh612 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.910; 0.906 |
+| BBBC039, fresh10 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.898 |
+| BBBC039, fresh13 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.904 |
+| BBBC039, fresh612 repair | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
+| BBBC007, earlier trial | gpt-5.6-sol | 12 held-out fields | Directed boundary fraction | 0.671 |
+| BBBC007, fresh19 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 |
+| BBBC007, fresh26 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.740 |
+| BBBC007/H003, fresh26 | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
+| BBBC013, earlier trial | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
+| BBBC013, fresh23 | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
+| H001, fresh586 | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
+| H001, fresh25 rotation | gpt-6.1-sol | One development image | Final labels; matched image review | 62; no reference score |
+| H002, fresh15 | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
+| H002, fresh23 rotation | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.86 voxels |
+| Retina, fresh09 | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
+| Retina, fresh26 | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
+| Public neurites, fresh20 | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
+| Laboratory neurites, fresh13 | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
+
 ### Source artwork and assisted mosaic review
 
 Main Figure 5 shows public shafts, autonomous laboratory-field analysis and
@@ -581,7 +619,7 @@ accuracy percentage.
 - [Trial wall times, usage and dated model/software identities](task_only_analysis/trial_resources.rst),
   with the [complete resource catalogue](task_only_analysis/trial_resources.csv).
 
-Two additional final-pipeline repeats appear in main Table 2. H001 fresh25
+Two additional final-pipeline repeats appear in the trial-level inventory above. H001 fresh25
 rotation selected 62 labels after matched image review; no computational-reference
 score was reported for that repeat. H002 fresh23 rotation matched all 15 annotated
 centres within 30 voxels, with mean error 4.8580507660 voxels and eleven unmatched
