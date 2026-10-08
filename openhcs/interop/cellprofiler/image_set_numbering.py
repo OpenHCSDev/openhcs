@@ -140,15 +140,19 @@ class CellProfilerImageSetNumbering:
         *,
         scope: RuntimeExecutionAxisScope,
         table: MeasurementTable,
+        projection: MeasurementRowsAxisProjection | None = None,
     ) -> Sequence[object] | ColumnarRows:
         """Project OpenHCS row axes into exact CellProfiler image numbers."""
 
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
-        projection = MeasurementRowsAxisProjection.from_rows(table.rows)
+        if projection is None:
+            projection = MeasurementRowsAxisProjection.from_rows(table.rows)
         image_numbers_by_slice = self.for_source_slices(
             scope=scope,
             provenance=table.source_provenance,
-            slice_indices=self.source_slices_for_measurement_table(table),
+            slice_indices=self.source_slices_for_measurement_table(
+                table, projection=projection
+            ),
             owner=table.name,
         )
         axisless_image_number = None
@@ -187,32 +191,47 @@ class CellProfilerImageSetNumbering:
         # precomputed reference means are derived from these object values by
         # the spreadsheet aggregate owner instead of offsetting a mean.
         replacements = {}
-        feature_columns = tuple(
-            table.rows.column_values(name)
-            for name in MeasurementRowAxisField.feature_name_field_names_ordered()
-            if name in table.rows.columns
+        feature_field = next(
+            (
+                name
+                for name in MeasurementRowAxisField.feature_name_field_names_ordered()
+                if name in table.rows.columns
+            ),
+            None,
         )
-        features = feature_columns[0] if feature_columns else None
+        reference_indices = []
         value_fields = MeasurementRowValueField.field_names()
+        if feature_field is not None and value_fields.intersection(table.rows.columns):
+            reference_features: dict[str, bool] = {}
+            for index, feature in enumerate(table.rows.column_values(feature_field)):
+                if is_structural_missing_measurement_cell(feature):
+                    continue
+                feature = str(feature)
+                is_reference = reference_features.get(feature)
+                if is_reference is None:
+                    is_reference = (
+                        image_number_reference_measurement_field(feature)
+                        and not aggregate_image_number_reference_measurement_field(
+                            feature
+                        )
+                    )
+                    reference_features[feature] = is_reference
+                if is_reference:
+                    reference_indices.append(index)
+        reference_numbers: dict[int, int] = {}
         for name in table.rows.columns:
             wide_reference = image_number_reference_measurement_field(name)
             if aggregate_image_number_reference_measurement_field(name):
                 continue
-            if not wide_reference and (features is None or name not in value_fields):
+            if not wide_reference and (
+                name not in value_fields or not reference_indices
+            ):
                 continue
             values = table.rows.column_values(name)
             updated = None
-            for index, value in enumerate(values):
-                if not wide_reference:
-                    feature = features[index]
-                    if is_structural_missing_measurement_cell(feature):
-                        continue
-                    feature = str(feature)
-                    if (
-                        not image_number_reference_measurement_field(feature)
-                        or aggregate_image_number_reference_measurement_field(feature)
-                    ):
-                        continue
+            indices = range(len(values)) if wide_reference else reference_indices
+            for index in indices:
+                value = values[index]
                 if is_structural_missing_measurement_cell(value):
                     continue
                 number = measurement_axis_integer_value(
@@ -220,12 +239,15 @@ class CellProfilerImageSetNumbering:
                 )
                 if number is None or number <= 0:
                     continue
-                global_number = self.for_source_slice(
-                    scope=scope,
-                    provenance=table.source_provenance,
-                    slice_index=number - 1,
-                    owner=table.name,
-                )
+                global_number = reference_numbers.get(number)
+                if global_number is None:
+                    global_number = self.for_source_slice(
+                        scope=scope,
+                        provenance=table.source_provenance,
+                        slice_index=number - 1,
+                        owner=table.name,
+                    )
+                    reference_numbers[number] = global_number
                 if updated is None:
                     updated = list(values)
                 updated[index] = global_number
@@ -245,13 +267,16 @@ class CellProfilerImageSetNumbering:
     @staticmethod
     def source_slices_for_measurement_table(
         table: MeasurementTable,
+        *,
+        projection: MeasurementRowsAxisProjection | None = None,
     ) -> tuple[int, ...]:
         """Return exactly the slices represented by this producer's row scope.
 
         Axisless rows consume their declared source stack, not a guessed plate
         grid. Preserve explicit row order before additional source planes.
         """
-        projection = MeasurementRowsAxisProjection.from_rows(table.rows)
+        if projection is None:
+            projection = MeasurementRowsAxisProjection.from_rows(table.rows)
         indices = projection.present_axis_values(
             MeasurementRowAxisField.SLICE_INDEX.value
         )

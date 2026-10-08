@@ -1576,21 +1576,31 @@ class ColumnarMeasurementRowsAxisProjection(MeasurementRowsAxisProjection):
     def declares_axis_field(self, axis: MeasurementRowAxisField) -> bool:
         return axis.value in self.columns
 
+    @staticmethod
+    def _integer_column(values: Sequence[object]) -> np.ndarray | None:
+        """Admit a numeric integer vector without retaining mutable source state."""
+        column = np.asarray(values)
+        return column if column.ndim == 1 and column.dtype.kind in "biu" else None
+
     def has_axisless_rows(self, axis: MeasurementRowAxisField) -> bool:
         values = self.columns.get(axis.value)
         if values is None:
             return self.has_rows
-        if isinstance(values, np.ndarray) and values.dtype.kind in "biu":
+        if self._integer_column(values) is not None:
             return False
         return any(
             measurement_axis_integer_value(value, axis) is None for value in values
         )
 
     def present_axis_values(self, field_name: str) -> tuple[int, ...]:
-        """Return present integer axis values for one measurement column."""
+        """Return present integer axis values in their source encounter order."""
+        values = self.columns.get(field_name, ())
+        integers = self._integer_column(values)
+        if integers is not None:
+            domain, first_positions = np.unique(integers, return_index=True)
+            return tuple(int(value) for value in domain[np.argsort(first_positions)])
         return measurement_axis_integer_domain(
-            self.columns.get(field_name, ()),
-            MeasurementRowAxisField(field_name),
+            values, MeasurementRowAxisField(field_name)
         )
 
     def project_runtime_slice_index(
@@ -1627,8 +1637,9 @@ class ColumnarMeasurementRowsAxisProjection(MeasurementRowsAxisProjection):
                 return self.rows
             return self.project_runtime_slice_index(axisless_value)
         source_values = self.columns[slice_index_field]
-        if isinstance(source_values, np.ndarray) and source_values.dtype.kind in "biu":
-            domain, inverse = np.unique(source_values, return_inverse=True)
+        integers = self._integer_column(source_values)
+        if integers is not None:
+            domain, inverse = np.unique(integers, return_inverse=True)
             remapped = []
             for value in domain:
                 slice_index = int(value)
@@ -2007,30 +2018,58 @@ class ConcatenatedColumnarRowColumns(Mapping[str, Sequence[object]]):
         cached = self._column_cache.get(column_name)
         if cached is not None:
             return cached
-        batch_column_keys = tuple(
-            batch_columns.get(column_name) for batch_columns in self._batch_columns
+        physical_batches = tuple(
+            (row_batch, batch_columns.get(column_name))
+            for row_batch, batch_columns, row_count in zip(
+                self.row_batches,
+                self._batch_columns,
+                self._batch_row_counts,
+                strict=True,
+            )
+            if row_count
         )
-        if all(column_key is not None for column_key in batch_column_keys):
-            values = np.concatenate(
-                tuple(
-                    columnar_row_values(row_batch, column_key)
-                    for row_batch, column_key in zip(
-                        self.row_batches,
-                        batch_column_keys,
-                        strict=True,
-                    )
+        if not physical_batches:
+            physical_batches = tuple(
+                (row_batch, batch_columns.get(column_name))
+                for row_batch, batch_columns in zip(
+                    self.row_batches, self._batch_columns, strict=True
                 )
             )
+        dense_columns = None
+        if physical_batches and all(
+            column_key is not None for _row_batch, column_key in physical_batches
+        ):
+            dense_columns = tuple(
+                columnar_row_values(row_batch, column_key)
+                for row_batch, column_key in physical_batches
+            )
+            if len(physical_batches) != len(self.row_batches):
+                dense_columns = tuple(
+                    ColumnarRows.column_array(column) for column in dense_columns
+                )
+                common_dtype = np.result_type(
+                    *(column.dtype for column in dense_columns)
+                )
+                if common_dtype.kind not in "biuO" and any(
+                    column.dtype.kind in "biu" for column in dense_columns
+                ):
+                    # An empty schema batch previously kept these cells in an
+                    # object column. Preserve integer values and Boolean cells
+                    # instead of promoting them to floats or textual values.
+                    dense_columns = None
+        if dense_columns is not None:
+            values = np.concatenate(dense_columns)
         else:
             values = np.empty(sum(self._batch_row_counts), dtype=object)
             values.fill(MEASUREMENT_SPARSE_CELL)
             row_offset = 0
-            for row_batch, row_count, column_key in zip(
+            for row_batch, row_count, batch_columns in zip(
                 self.row_batches,
                 self._batch_row_counts,
-                batch_column_keys,
+                self._batch_columns,
                 strict=True,
             ):
+                column_key = batch_columns.get(column_name)
                 if column_key is not None:
                     values[row_offset : row_offset + row_count] = columnar_row_values(
                         row_batch,
