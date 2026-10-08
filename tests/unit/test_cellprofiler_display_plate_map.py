@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import pickle
+
 import numpy as np
+import pytest
 
 from openhcs.processing.backends.cellprofiler.display_modules import (
     AggregationMethod,
@@ -40,3 +43,12 @@ def test_display_plate_map_cv_zero_mean_is_nan() -> None:
 
 def test_display_plate_map_empty_values_are_nan() -> None:
     assert np.isnan(_aggregate_values(np.asarray([]), AggregationMethod.AVG))
+
+
+@pytest.mark.parametrize("method", tuple(AggregationMethod))
+def test_aggregation_method_round_trips_through_compiled_worker_transport(method):
+    assert AggregationMethod(method.value) is method
+    restored = pickle.loads(pickle.dumps(method, protocol=pickle.HIGHEST_PROTOCOL))
+    assert restored is method
+    values = np.asarray([1.0, 2.0, 4.0, 5.0])
+    assert restored.aggregate(values) == method.aggregate(values)
