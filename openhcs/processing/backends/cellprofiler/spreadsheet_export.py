@@ -221,6 +221,7 @@ class SpreadsheetFileSelection:
     file_name: str
 
     relationship_subject_name: ClassVar[str] = "Object relationships"
+    experiment_subject_name: ClassVar[str] = MeasurementScope.EXPERIMENT.value.title()
 
     @classmethod
     def admits_subject(
@@ -520,6 +521,12 @@ def prepare_spreadsheet_bundle(
         image_numbers = CellProfilerImageSetNumbering(
             artifact_batch.source_image_set_identity_policy
         )
+    if not SpreadsheetFileSelection.admits_subject(
+        SpreadsheetFileSelection.experiment_subject_name,
+        export_all_measurement_types=bool(export_all_measurement_types),
+        file_selections=file_selections,
+    ):
+        experiment_tables = ()
     tables, object_subjects = _measurement_tables(
         artifact_batch,
         image_numbers,
@@ -534,7 +541,9 @@ def prepare_spreadsheet_bundle(
     ):
         relationship_rows = _relationship_rows(artifact_batch, image_numbers)
         if relationship_rows:
-            tables[SpreadsheetFileSelection.relationship_subject_name] = relationship_rows
+            tables[SpreadsheetFileSelection.relationship_subject_name] = (
+                relationship_rows
+            )
     source_image_rows = tables.get(
         "Image", MeasurementSparseColumnarRows({}, fields=())
     )
@@ -933,7 +942,7 @@ def _measurement_subject_name(table: MeasurementTable) -> str:
     if subject.scope is MeasurementScope.IMAGE:
         return "Image"
     if subject.scope is MeasurementScope.EXPERIMENT:
-        return "Experiment"
+        return SpreadsheetFileSelection.experiment_subject_name
     if subject.scope is MeasurementScope.OBJECT:
         if subject.name is None:
             raise ValueError(f"Object measurement table {table.name!r} has no subject.")
@@ -1396,7 +1405,15 @@ def _partitioned_spreadsheet_export(
     homogeneous = homogeneous and all(
         declarations == declaration_sets[0] for declarations in declaration_sets
     )
-    experiment_tables = CellProfilerModule.derive_experiment_measurement_tables(all_tables)
+    experiment_tables = (
+        CellProfilerModule.derive_experiment_measurement_tables(all_tables)
+        if SpreadsheetFileSelection.admits_subject(
+            SpreadsheetFileSelection.experiment_subject_name,
+            export_all_measurement_types=bool(kwargs["export_all_measurement_types"]),
+            file_selections=kwargs["file_selections"],
+        )
+        else ()
+    )
     relationship_rows = (
         _relationship_rows(batch, image_numbers)
         if SpreadsheetFileSelection.admits_subject(
@@ -1408,7 +1425,9 @@ def _partitioned_spreadsheet_export(
     )
     # Existing source-numbering traversal can interleave axes. Byte bodies may
     # be concatenated only when axis partitions preserve that admitted order.
-    flattened_numbers = tuple(number for values in numbers_by_axis.values() for number in values)
+    flattened_numbers = tuple(
+        number for values in numbers_by_axis.values() for number in values
+    )
     ordered_domains = flattened_numbers == tuple(range(1, len(flattened_numbers) + 1))
     if (
         len(numbers_by_axis) < 2

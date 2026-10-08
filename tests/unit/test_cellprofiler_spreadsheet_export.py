@@ -2145,9 +2145,16 @@ def test_declared_reference_mean_uses_full_projected_objects_after_selection() -
     assert source["Image"].column_values(name)[0] == 0.5
 
 
-@pytest.mark.parametrize("selection_mode", ("ordinary", "combined", "relationships", "all"))
+@pytest.mark.parametrize(
+    "selection_mode", ("ordinary", "combined", "relationships", "experiment", "all")
+)
 def test_partitioned_export_admits_only_consumed_relationship_subject(selection_mode):
-    from openhcs.core.runtime_batch_contracts import RuntimeArtifactPartitionBatchRequest
+    from openhcs.processing.backends.cellprofiler.image_quality import (
+        MeasureImageQualityModule,
+    )
+    from openhcs.core.runtime_batch_contracts import (
+        RuntimeArtifactPartitionBatchRequest,
+    )
     from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
         _partitioned_spreadsheet_export,
     )
@@ -2158,13 +2165,23 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
         axis = f"W{ordinal:03d}"
         records[axis] = (
             _measurement_record(
-                "images", axis_id=axis,
+                "images",
+                axis_id=axis,
                 subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
-                rows=({"slice_index": 0, "Count": 2},),
+                rows=(
+                    {
+                        "slice_index": 0,
+                        "Count": 2,
+                        "ImageQuality_ThresholdOtsu_OrigRed_2W": ordinal / 20,
+                    },
+                ),
             ),
             _measurement_record(
-                "cells", axis_id=axis,
-                subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+                "cells",
+                axis_id=axis,
+                subject=MeasurementSubject(
+                    MeasurementScope.OBJECT, "Cells", "object_number"
+                ),
                 rows=(
                     {"slice_index": 0, "object_number": 1, "Area": 2.0},
                     {"slice_index": 0, "object_number": 2, "Area": 4.0},
@@ -2172,6 +2189,7 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
             ),
             _relationship_record("relationships", axis_id=axis),
         )
+        records[axis][0].data.measurement_feature_owner = MeasureImageQualityModule
     batch = RuntimeArtifactBatch(
         input_specs=(
             ArtifactSpec.input("images", MeasurementsArtifactType),
@@ -2190,7 +2208,11 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
         )
     )
     if selection_mode == "relationships":
-        selections += (SpreadsheetFileSelection(("Object relationships",), "Edges.csv"),)
+        selections += (
+            SpreadsheetFileSelection(("Object relationships",), "Edges.csv"),
+        )
+    if selection_mode == "experiment":
+        selections += (SpreadsheetFileSelection(("Experiment",), "Experiment.csv"),)
     kwargs = dict(
         export_all_measurement_types=selection_mode == "all",
         file_selections=selections,
@@ -2206,13 +2228,19 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
 
     request = RuntimeArtifactPartitionBatchRequest.from_contract(
         CallableContract.from_callable(export_to_spreadsheet),
-        artifact_batch=batch, kwargs=kwargs, runtime_context=None,
+        artifact_batch=batch,
+        kwargs=kwargs,
+        runtime_context=None,
         map_partition_invocations=map_partitions,
     )
     outputs = _partitioned_spreadsheet_export(request)
     actual = {
-        path: (output.rendered() if isinstance(output, ColumnarCsvOutput) else output).require_text_content()
+        path: (
+            output.rendered() if isinstance(output, ColumnarCsvOutput) else output
+        ).require_text_content()
         for path, output in outputs.items()
     }
     assert actual == expected
-    assert len(mapped) == (0 if selection_mode in ("relationships", "all") else 12)
+    assert len(mapped) == (
+        0 if selection_mode in ("relationships", "experiment", "all") else 12
+    )
