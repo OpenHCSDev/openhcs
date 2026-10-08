@@ -12,9 +12,9 @@ mode=${4:?explicit operation mode: ongoing, full, replacement, bootstrap or ledg
 # Desktop reserve describes future growth admission. Below-reserve
 # ongoing observations must still be able to resolve jobs and release buffers.
 case "$mode" in
-  ongoing) memory_policy=warning; disk_policy=warning; deadline_policy=warning ;;
-  full|replacement|bootstrap) memory_policy=reject; disk_policy=reject; deadline_policy=reject ;;
-  ledger) memory_policy=ledger; disk_policy=warning; deadline_policy=warning ;;
+  ongoing) memory_policy=warning; deadline_policy=warning ;;
+  full|replacement|bootstrap) memory_policy=reject; deadline_policy=reject ;;
+  ledger) memory_policy=ledger; deadline_policy=warning ;;
   *) exit 64 ;;
 esac
 runtime="$FLEET_WORKSPACE/output/runtime"
@@ -97,17 +97,15 @@ done
 printf 'Programme retainedRoots=%s measuredCurrent=%s growthEstimate=%s remainingGrowthEstimate=%s scope=%s\n' "$old_count" "$total" "$reserved" "$remaining" "$mode" | tee -a "$receipt.output"
 printf 'Operational policy: retained-output/scratch byte quotas removed; programme amounts are growth estimates, not limits. Actual HOME/RAM/pressure and owned cleanup remain authoritative.\n' | tee -a "$receipt.output"
 printf 'Operation admission revision: existing recorded-client bounded observations/QA use ongoing warning policy; cold startup and large allocations require replacement/bootstrap/full. No tool-name exception, new client, or UNKNOWN replay is authorized by an ongoing PASS.\n' | tee -a "$receipt.output"
-# Forecasts guide cleanup/staging, not permission for an unrelated capture.
-# Admission protects actual free HOME; no all-fleet estimate is added to its floor.
-home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
-df --output=avail -B1 /home/ts | awk -v floor="$home_floor" -v policy="$disk_policy" '
+# HOME carries the recorder/control/history; the declared artifact destination
+# carries arrays and scratch. A generic HOME floor does not size either owner.
+# Keep actual capacity and observed control growth visible; exhausted/invalid
+# filesystems still fail. Destination forecasts remain estimates, not quotas.
+control_bytes=$(du -s -B1 "$FLEET_WORKSPACE/output" | cut -f1)
+df --output=avail -B1 /home/ts | awk -v controls="$control_bytes" '
   NR==2 {
     if($1 !~ /^[0-9]+$/ || $1+0<=0) exit 78
-    printf "HomeAvailable %.3f GiB; startupReserve %.3f GiB; policy=%s\n",$1/1073741824,floor/1073741824,policy
-    if($1<floor) {
-      if(policy=="reject") exit 78
-      printf "Disk warning: below startup reserve. Existing-client bounded reads/QA only; no cold launch or bulk allocation permission. Check actual destination writes and coordinate owned cleanup.\n"
-    }
+    printf "HomeAvailable %.3f GiB; measuredControlHistoryBytes=%.0f; assess control/history growth separately from the declared array/scratch destination\n",$1/1073741824,controls
     observed=1
   }
   END {if(!observed) exit 78}' | tee "$receipt.disk"

@@ -118,7 +118,7 @@ case "$mode" in
     # Never mirror physical run declarations into the mutable membership owner.
     jq --argjson retained_reader_contract "$retained_reader_contract" '{scope_slice, retained_output_roots, authors:.funded_members,
       proposed_resource_envelope:(.proposed_resource_envelope | {
-        minimum_home_ongoing_gib, desktop_growth_reserve_mib} + $retained_reader_contract)
+        desktop_growth_reserve_mib} + $retained_reader_contract)
     }' "$run/program.json" > "$pending"
     mv "$pending" "$funding/program.json"
     sha256sum "$funding/program.json"

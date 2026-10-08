@@ -107,9 +107,9 @@ printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/ho
 run 0 replacement forecast_not_startup_permission
 export CONTROLLED_HOME_BYTES=2147483647
 run 0 ongoing existing_qa_below_startup_reserve
-rg -q 'Disk warning: below startup reserve' "$runtime/resources-existing_qa_below_startup_reserve.disk"
-run 78 replacement startup_below_reserve
-run 78 full bulk_allocation_below_reserve
+rg -q 'measuredControlHistoryBytes=' "$runtime/resources-existing_qa_below_startup_reserve.disk"
+run 0 replacement startup_below_former_generic_floor
+run 0 full actual_destination_not_generic_home_floor
 export CONTROLLED_HOME_BYTES=0
 run 78 ongoing exhausted_destination
 export CONTROLLED_HOME_BYTES=2147483647 CONTROLLED_MCP_ACTIVE=0

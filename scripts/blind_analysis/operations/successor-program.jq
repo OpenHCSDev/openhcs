@@ -46,7 +46,8 @@ $funding[0] as $original
       .proposed_resource_envelope.helpers_scope_grouping,
       .proposed_resource_envelope.approval)
 | del(.proposed_resource_envelope.total_output_and_scratch_mib,
-      .proposed_resource_envelope.full_memory_psi_max_percent)
+      .proposed_resource_envelope.full_memory_psi_max_percent,
+      .proposed_resource_envelope.minimum_home_ongoing_gib)
 | .authors = $original.authors
 | .authors |= map(
     . as $member

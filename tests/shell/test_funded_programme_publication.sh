@@ -131,7 +131,7 @@ bash "$operations/resource-check.sh" "$scratch/funding" INDEPENDENT_C own_overag
 status=$?
 set -e
 test "$status" = 0
-rg -q 'startupReserve 0.000 GiB; policy=warning' "$scratch/sibling-overage.log"
+rg -q 'measuredControlHistoryBytes=' "$scratch/sibling-overage.log"
 measured_a=$(awk '/^Current / && /\/old-a\// {for(i=1;i<=NF;i++) if($i ~ /^total=/) {split($i,value,"="); print value[2]}}' "$scratch/sibling-overage.log")
 remaining_growth=$(sed -n 's/.*remainingGrowthEstimate=\([0-9]*\).*/\1/p' "$scratch/sibling-overage.log")
 test "$remaining_growth" = "$((2097152-measured_a))"
