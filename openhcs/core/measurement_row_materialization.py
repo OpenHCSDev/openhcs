@@ -1576,21 +1576,31 @@ class ColumnarMeasurementRowsAxisProjection(MeasurementRowsAxisProjection):
     def declares_axis_field(self, axis: MeasurementRowAxisField) -> bool:
         return axis.value in self.columns
 
+    @staticmethod
+    def _integer_column(values: Sequence[object]) -> np.ndarray | None:
+        """Admit a numeric integer vector without retaining mutable source state."""
+        column = np.asarray(values)
+        return column if column.dtype.kind in "biu" else None
+
     def has_axisless_rows(self, axis: MeasurementRowAxisField) -> bool:
         values = self.columns.get(axis.value)
         if values is None:
             return self.has_rows
-        if isinstance(values, np.ndarray) and values.dtype.kind in "biu":
+        if self._integer_column(values) is not None:
             return False
         return any(
             measurement_axis_integer_value(value, axis) is None for value in values
         )
 
     def present_axis_values(self, field_name: str) -> tuple[int, ...]:
-        """Return present integer axis values for one measurement column."""
+        """Return present integer axis values in their source encounter order."""
+        values = self.columns.get(field_name, ())
+        integers = self._integer_column(values)
+        if integers is not None:
+            domain, first_positions = np.unique(integers, return_index=True)
+            return tuple(int(value) for value in domain[np.argsort(first_positions)])
         return measurement_axis_integer_domain(
-            self.columns.get(field_name, ()),
-            MeasurementRowAxisField(field_name),
+            values, MeasurementRowAxisField(field_name)
         )
 
     def project_runtime_slice_index(
@@ -1627,8 +1637,9 @@ class ColumnarMeasurementRowsAxisProjection(MeasurementRowsAxisProjection):
                 return self.rows
             return self.project_runtime_slice_index(axisless_value)
         source_values = self.columns[slice_index_field]
-        if isinstance(source_values, np.ndarray) and source_values.dtype.kind in "biu":
-            domain, inverse = np.unique(source_values, return_inverse=True)
+        integers = self._integer_column(source_values)
+        if integers is not None:
+            domain, inverse = np.unique(integers, return_inverse=True)
             remapped = []
             for value in domain:
                 slice_index = int(value)
