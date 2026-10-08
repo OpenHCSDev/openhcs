@@ -60,9 +60,8 @@ outgrowth per detected cell, cell count, total outgrowth, branches per cell,
 and mean and median process length. For the last two endpoints, we first
 averaged the corresponding per-cell values within each field, including
 zero-growth cells. Overlapping fields were not deduplicated; total outgrowth
-therefore denotes a mean field total, not unique whole-well length. Treatment means
-were divided by the same drug curve's zero-dose DMSO mean, with two technical
-wells at each concentration. Existing MetaXpress well exports supplied the
+therefore denotes a mean field total, not unique whole-well length.
+Existing MetaXpress well exports supplied the
 comparison response, not manual tracing truth. This fixed-recipe transfer was
 separate from autonomous pipeline authoring.
 
@@ -80,7 +79,7 @@ The commercial export contains 120 well summaries from two plates. The repaired 
 Each FC-A and Y27632 concentration has two technical wells. Y27632 is labelled Y27 in the export. The [six-endpoint sheet](../figures/slas/personal_neurite_effects_repaired.png) includes mean outgrowth per detected cell and the endpoints in Supplementary Figure 5.
 
 Every endpoint is divided by the same drug
-curve's DMSO mean. Dots show the two technical
+curve's zero-dose DMSO mean. Dots show the two technical
 wells at each concentration. Marks and whiskers show their mean and sample
 standard deviation after division by the observed control mean; they do not
 propagate uncertainty in that denominator or represent confidence intervals.
@@ -88,9 +87,6 @@ Dose positions are equally spaced for display, not a fitted concentration–resp
 model. Paired treatment panels use the same vertical scale. The plot and
 numerical tables are generated from the same well measurements.
 
-Each OpenHCS well endpoint is the unweighted mean of its nine field-level
-measurements. Total outgrowth is therefore a mean field total, not unique
-whole-well length.
 The commercial endpoint is an existing well export whose exact site weighting
 and software settings are not retained. The
 [MetaXpress 6 Neurite Outgrowth guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf)
@@ -106,9 +102,7 @@ technical wells do not establish biological replication or significance.
 
 OpenHCS process lengths describe the connected paths assigned to a
 soma-adjacent root, including daughter branches, rather than individual
-segments between graph junctions. Per-cell mean and median process lengths
-are averaged within each field, including zero-growth cells, then across its
-nine fields. Branches require at least three same-neuron paths and distinct
+segments between graph junctions. Branches require at least three same-neuron paths and distinct
 admitted image arms around the junction. Paths sharing one image corridor
 and graph stars confined within a foreground cap do not add branch events;
 resolved crossings are not automatically branches. These
@@ -123,8 +117,8 @@ outgrowth to expose denominator changes without inferring toxicity. The
 [source hashes](personal_neurite_repaired_morphometry/source_evidence.json) identify the
 exact submitted pipeline, source key, commercial export and all 180 native
 summaries. The comparison script processes tables only and does not tune images.
-Overlapping fields are not deduplicated, so averaged field counts are not unique
-whole-well neuron counts. Unselected wells are not filled with zero.
+Like total outgrowth, averaged field counts do not denote unique whole-well
+neurons. Unselected wells are not filled with zero.
 The [original frozen comparison](personal_neurite_baseline_morphometry/treatment_effects.csv)
 is retained separately for before/after evaluation; it was not overwritten.
 
@@ -200,7 +194,7 @@ Imported `ExportToDatabase` modules run once per plate after image-group process
 
 The OpenHCS 0.8.5 [release test](ci_official30_085/README.md) preceded the unified 30-workflow value comparison below.
 
-The subsequent matched performance evaluation retained the complete 30-workflow manifest and compared the declared table, database and image outputs in a warmup and three measured repetitions per engine. All 120 OpenHCS observations completed without declared-output differences against complete native CellProfiler runs. These current-source observations, their output inventories and their timing boundaries are separate from the historical release comparison and are retained in the [minimum-threefold integrated-main matched benchmark record](../../benchmark/results/matched_min3_integrated_main_20261007/README.md).
+An earlier matched performance evaluation compared the declared table, database and image outputs for all 30 workflows in a warmup and three measured repetitions per engine. All 120 OpenHCS observations matched complete native CellProfiler runs. The [original matched benchmark](../../benchmark/results/matched_min3_integrated_main_20261007/README.md) gives its output inventories and timing boundaries. Supplementary Data 3 describes the subsequent first-use-inclusive worker sweep used in main Figure 6.
 
 For the five workflows without file exports, terminal image or object-label exports were appended while preserving the original processing modules and settings. Native CellProfiler generated eight additional reference artifacts. A subsequent unified run compiled and executed all 30 workflows afresh and compared each candidate with its selected native reference values. Object labels were compared exactly after singleton-axis normalization; numerical images used the stated float tolerances. The following sections give the export definitions, reference inventory and per-workflow comparisons. The original unified-run environment was not recorded; the five-workflow export audit has its own recorded environment.
 
@@ -352,64 +346,7 @@ preserves signed within-session and cross-session errors. All OpenHCS scaling
 ratios use actual, same-workload medians. No historical RAM values fill the
 unavailable process-tree RAM field.
 
-### Retained historical panels and numerical tables
-
-
-- [Prior thirty-workflow matched record](../../benchmark/results/matched_min3_integrated_main_20261007/README.md), retaining its original engine-median timing policy separately from the current first-use sweep.
-- [Prior paired runtime panel](../figures/slas/benchmark-publication/measured_benchmark_workflow_runtimes.png), a historical snapshot rather than the timing source for current main Figure 6.
-- [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
-- [Eight-assignment measured source record](../../benchmark/results/official30_matched_20261006/README.md), including the matched one-process baseline used for the two-worker comparison.
-- [Retained nine- and sixteen-assignment paired clock panels](../figures/slas/supp_matched_scaling.png), with the original separate capture heads.
-- [Single-core amortization: execution, total and paired nonexecution time](../figures/slas/matched_postgrid_20261006/single-core-amortization/measured_single_core_amortization.png).
-- [Nine-assignment execution ratios](../figures/slas/matched_latestmain_nine_20261006/primary-execution/measured_execution_metrics_long.csv) and [total ratios](../figures/slas/matched_latestmain_nine_20261006/primary-total/measured_total_metrics_long.csv), with the [qualified source record](../../benchmark/results/matched_latestmain_nine_20261006/README.md).
-- [Sixteen-assignment execution ratios](../figures/slas/matched_lastconsumer_20261006/primary-execution/measured_execution_metrics_long.csv) and [total ratios](../figures/slas/matched_lastconsumer_20261006/primary-total/measured_total_metrics_long.csv), with the [qualified source record](../../benchmark/results/matched_lastconsumer_20261006/README.md).
-- Additional independent-CellProfiler-process controls: [nine-assignment execution](../figures/slas/matched_latestmain_nine_20261006/independent-cp-calibration-execution/measured_execution_seconds.png), [nine-assignment total](../figures/slas/matched_latestmain_nine_20261006/independent-cp-calibration-total/measured_total_seconds.png), [sixteen-assignment execution](../figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-execution/measured_execution_seconds.png) and [sixteen-assignment total](../figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-total/measured_total_seconds.png).
-
-Single-core amortization uses one worker and one numerical thread, with actual
-medians over three measured repetitions after warmup at 1, 9 and 16 repeated
-assignments of one biological source sample. Connecting lines join observations.
-OpenHCS nonexecution time is the median paired difference between total and full
-server execution per assignment; it is not a kernel/runtime decomposition.
-Those observations passed declared-output comparisons on revision `eb773573c`.
-Their selected workflows were not reselected from the final single-sample rankings.
-The [earlier three-workflow sixteen-assignment checkpoint](../../benchmark/results/matched_postgrid_20261006/README.md)
-and its [passive-counter diagnostics](../../benchmark/results/matched_postgrid_20261006/diagnostics/3d-same-step-scaling-counter-comparison.json)
-remain separate records. Increased system time, process swap and major faults
-support a working-set/reclaim contribution; they do not identify an allocation
-owner or establish that later fixes eliminate paging.
-
-### Matched scaling protocol
-
-The earlier revision `eb773573c` supplies the measured 1, 9 and 16-assignment
-series for illumination correction Example 3, Vitra and 3D monolayer.
-Revision `d8678dbd4` supplies matched eight-assignment
-observations with one and two workers for all three workflows, with its own
-same-revision single-assignment observations. The later nine-assignment record at `71aded26c`
-supplies one- and three-worker observations for all three workflows; the later
-sixteen-assignment record at `2cda84a369` supplies one- and four-worker
-observations for the 3D monolayer only. The current full-cohort revision
-`3894ca3a0` supplies one-assignment, one-worker observations, not a current
-multiworker sweep. Two-, three- and four-worker captures have different revisions,
-assignment counts and cohort sizes; they are not a single matched 1–4-worker sweep.
-Eight, nine and sixteen assignments repeat each workflow's existing source sample;
-they are not independent biological wells. No averages across unlike workflows
-or revisions are used here.
-
-Execution includes worker coordination, saving, plate exports and finalization.
-Total includes disjoint compile and execute client submit/wait phases. Endpoint,
-library and kernel readiness and subsequent scientific comparison are outside
-the clocks; native total excludes one-time pipeline loading and JVM startup.
-Main Figure 6 reports the full single-sample cohort. The tables above give exact
-ratios, independent-CellProfiler-process controls and single-core amortization.
-
-Warmup and three measured repetitions passed each workflow's declared-output
-comparisons. The original [eight-/nine-assignment sheet](../figures/slas/supp_matched_worker_speedups.png)
-and [four-worker sheet](../figures/slas/supp_matched_worker_speedups_continued_2.png)
-provide the inputs to the consolidated worker-comparison layout.
-
-The selected-workflow comparisons use one stock CellProfiler process and the
-declared OpenHCS worker count. Additional independent CellProfiler processes
-provide a calibration.
+Historical timing panels and scaling protocols are in the archived supplementary source linked above.
 
 ## Figure assembly and interface records
 
