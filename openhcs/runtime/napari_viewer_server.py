@@ -197,6 +197,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.viewer_controls import ViewerIntensityStatistics
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
@@ -5757,7 +5758,7 @@ class NapariIntensityWindowControlMessageAction(NapariMountedRouteControlMessage
                 f"Napari image route {route_key!r} has no finite pixel data."
             )
         pixels = np.concatenate(finite_payloads)
-        resolved = np.percentile(
+        resolved = ViewerIntensityStatistics.percentiles(
             pixels,
             (request.low_percentile, request.high_percentile),
         )

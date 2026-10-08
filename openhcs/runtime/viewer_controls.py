@@ -694,20 +694,52 @@ class ViewerIntensityStatistics:
     standard_deviation: float
     total: float
 
+    @staticmethod
+    def _require_finite_pixels(values: np.ndarray) -> None:
+        import numpy as np
+
+        if values.dtype.kind not in "biuf":
+            raise TypeError("Intensity statistics require real numeric or Boolean pixels.")
+        if not values.size or not np.isfinite(values).all():
+            raise ValueError("Measurement pixels must be nonempty and finite.")
+
+    @classmethod
+    def percentiles(
+        cls, values: np.ndarray, percentiles: Sequence[float],
+    ) -> np.ndarray:
+        """Linear order statistics, including Boolean intensities 0 and 1.
+
+        Boolean counts identify each order statistic without sorting, casting
+        the image, or reinterpreting noncanonical True storage bytes as values.
+        """
+        import numpy as np
+
+        cls._require_finite_pixels(values)
+        requested = np.asarray(percentiles, dtype=np.float64)
+        if not np.isfinite(requested).all() or ((requested < 0) | (requested > 100)).any():
+            raise ValueError("Intensity percentiles must be finite and within 0..100.")
+        if values.dtype.kind != "b":
+            return np.percentile(values, requested)
+        false_count = values.size - np.count_nonzero(values)
+        ranks = (requested / 100) * (values.size - 1)
+        lower_ranks = np.floor(ranks)
+        lower_values = (lower_ranks >= false_count).astype(np.float64)
+        upper_values = (np.ceil(ranks) >= false_count).astype(np.float64)
+        return lower_values + (upper_values - lower_values) * (ranks - lower_ranks)
+
     @classmethod
     def from_pixels(cls, values: np.ndarray) -> ViewerIntensityStatistics:
         import numpy as np
 
-        if not values.size or not np.isfinite(values).all():
-            raise ValueError("Measurement pixels must be nonempty and finite.")
+        cls._require_finite_pixels(values)
         result = cls(
             int(values.size),
             float(values.min()),
             float(values.max()),
-            float(values.mean()),
-            float(np.median(values)),
-            float(values.std(ddof=0)),
-            float(values.sum()),
+            float(values.mean(dtype=np.float64)),
+            float(cls.percentiles(values, (50.0,))[0]),
+            float(values.std(ddof=0, dtype=np.float64)),
+            float(values.sum(dtype=np.float64)),
         )
         if not all(
             isfinite(v) for v in (result.mean, result.standard_deviation, result.total)

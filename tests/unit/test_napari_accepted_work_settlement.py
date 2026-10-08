@@ -136,6 +136,69 @@ def image_item():
     }
 
 
+def test_native_boolean_intensity_window_preserves_persisted_mask(
+    receiver, wire_receiver, qtbot,
+):
+    """Actual stream/control sockets and Qt; optional retained engineering input."""
+    import hashlib
+    import tifffile
+    from qtpy.QtCore import QTimer
+    from openhcs.runtime.viewer_controls import ViewerIntensityWindowControlOptions
+    from openhcs.runtime.viewer_protocol import ViewerRuntimeEndpoint
+
+    mask_path = os.environ.get("OPENHCS_INTENSITY_QUALIFICATION_MASK")
+    if mask_path:
+        original = Path(mask_path).read_bytes()
+        pixels = tifffile.imread(mask_path)
+        assert pixels.dtype == np.bool_
+    else:
+        original = None
+        pixels = np.array([[False, True], [True, False]])
+    assert pixels.any() and not pixels.all()
+    pixel_hash = hashlib.sha256(pixels.tobytes()).hexdigest()
+    item = {**image_item(), "path": mask_path or "native_mask.tif",
+            "data": pixels, "dtype": str(pixels.dtype), "shape": list(pixels.shape)}
+    assert wire_receiver(item)["status"] == "success"
+    receiver.process_accepted_stream_messages()
+    settle(receiver)
+    qtbot.waitUntil(lambda: settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE, timeout=5000)
+    route_key, = receiver.component_groups
+    layer = receiver.layer_route_state.layer(route_key)
+    native_pixels = layer.data
+    assert native_pixels.dtype == np.bool_
+    np.testing.assert_array_equal(native_pixels.reshape(-1), pixels.reshape(-1))
+    original_step = receiver.viewer.dims.current_step
+    receiver.control_transport_pump.start()
+    service = QTimer()
+    service.timeout.connect(receiver.process_messages)
+    service.start(10)
+    try:
+        request = ViewerControlMessageRequest(
+            ViewerRuntimeEndpoint(receiver.endpoint, receiver.config), "apply_intensity_window",
+            ViewerIntensityWindowControlOptions(route_key=route_key, low_percentile=0, high_percentile=100),
+            timeout=5,
+        )
+        with ThreadPoolExecutor(max_workers=1) as worker:
+            future = worker.submit(request.send)
+            qtbot.waitUntil(future.done, timeout=10000)
+            response = future.result()
+        assert response.succeeded(), response.payload
+        assert tuple(response.payload["resolved_limits"]) == (0.0, 1.0)
+        assert response.payload["contributing_pixel_count"] == pixels.size
+        assert response.payload["matched_payload_count"] == 1
+        assert tuple(layer.contrast_limits) == (0.0, 1.0)
+        assert layer.data is native_pixels and layer.data.dtype == np.bool_
+        assert receiver.viewer.dims.current_step == original_step
+        assert hashlib.sha256(pixels.tobytes()).hexdigest() == pixel_hash
+        if original is not None:
+            assert Path(mask_path).read_bytes() == original
+        print(f"native Boolean window: source={mask_path or 'synthetic'}; pixels={pixels.size}; "
+              "control success; native limits=(0,1); dtype/navigation/source bytes preserved")
+    finally:
+        service.stop()
+        receiver.control_transport_pump.stop()
+
+
 def settle(receiver):
     response = NapariSettleControlMessageAction().handle(receiver, {})
     return response, ViewerSettleProgress.from_response(ViewerControlResponse(response))
