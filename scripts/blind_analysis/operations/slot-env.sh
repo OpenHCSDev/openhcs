@@ -220,22 +220,108 @@ export FLEET_RECORD_RUNTIME FLEET_CLIENT_UNIT FLEET_AUTHOR_UNIT FLEET_OPERATIONS
 export FLEET_PREDECESSOR_RECORD_RUNTIME FLEET_PREDECESSOR_AUTHOR_UNIT
 
 fleet_require_closed_controllers() {
-  local runtime="$FLEET_PREDECESSOR_RECORD_RUNTIME" journal state controller
+  local runtime="$FLEET_PREDECESSOR_RECORD_RUNTIME" journal state controller controllers invocation expected
   test -f "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch" || return
   for journal in author-events.typescript mcp.stdin mcp.stdout; do
-    tail -n 3 "$runtime/$journal" | rg -q '^Script done .*COMMAND_EXIT_CODE="[0-9]+"' || return
-    if fuser "$runtime/$journal" >/dev/null 2>&1; then return 75; fi
+    test -f "$runtime/$journal" || return
+    if fuser "$runtime/$journal" >/dev/null 2>&1; then
+      return 75
+    else
+      state=$?
+      test "$state" = 1 || return "$state"
+    fi
+    if [[ "$journal" != author-events.typescript ]]; then
+      tail -n 3 "$runtime/$journal" | rg -q '^Script done .*COMMAND_EXIT_CODE="[0-9]+"' || return
+    fi
   done
   state=$(systemctl --user show "$FLEET_PREDECESSOR_AUTHOR_UNIT.scope" -p ActiveState --value) || return
-  [[ "$state" == inactive || "$state" == failed || -z "$state" ]] || return 75
+  [[ "$state" == inactive || "$state" == failed ]] || return 75
+  if ! tail -n 3 "$runtime/author-events.typescript" | rg -q '^Script done .*COMMAND_EXIT_CODE="[0-9]+"'; then
+    # Only the original launch's positive terminal observation can account for
+    # its missing recorder footer. This is controller custody, not a final turn
+    # or scientific verdict, and cannot dispose an unknown recovery controller.
+    test "$runtime" = "$FLEET_WORKSPACE/output/runtime" || return
+    test "$FLEET_PREDECESSOR_AUTHOR_UNIT" = "$FLEET_UNIT-author" || return
+    expected=$("$FLEET_PYTHON" -B - "$FLEET_RUN_ROOT" "$FLEET_SLOT" "$runtime" <<'PY'
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+
+import psutil
+
+root, slot, runtime = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
+launch = json.loads((root / "AUTHOR-LAUNCH-CUSTODY.json").read_text())
+terminal = launch["original_launch_terminal_observation"]
+custody = launch["interruption_custody"]
+if launch["slot"] != slot or custody["receipt"] != "INTERRUPTION-CUSTODY.json":
+    raise ValueError("Interruption custody belongs to a different launch")
+interruption = json.loads((root / custody["receipt"]).read_text())
+if not custody["file_manifest"] == interruption["file_manifest"] == "INTERRUPTION-CUSTODY-FILES.json":
+    raise ValueError("Interruption manifest references disagree")
+original = interruption["original_author_termination"]
+if not (
+    all(type(value) is int for value in (
+        launch["original_tool_handle"], terminal["tool_handle"], original["tool_handle"],
+        terminal["exit_code"], original["exit_code"],
+    ))
+    and launch["original_tool_handle"] > 0
+    and launch["original_tool_handle"] == terminal["tool_handle"] == original["tool_handle"]
+    and 128 < terminal["exit_code"] <= 192
+    and terminal["exit_code"] == original["exit_code"]
+    and terminal["author_scope_absent"] is True
+    and re.fullmatch(r"[a-f0-9]{32}", launch["author_invocation"])
+):
+    raise ValueError("Original launch has no matching positive terminal interruption")
+manifest = json.loads((root / interruption["file_manifest"]).read_text())
+for journal in ("author-events.typescript", "mcp.stdin", "mcp.stdout"):
+    path = runtime / journal
+    entry, = (entry for entry in manifest["files"] if entry["path"] == str(path))
+    content = path.read_bytes()
+    if not (type(entry["bytes"]) is int and entry["bytes"] == len(content)
+            and entry["sha256"] == hashlib.sha256(content).hexdigest()):
+        raise ValueError(f"Interrupted journal bytes changed: {path}")
+    if journal == "author-events.typescript":
+        threads = {
+            json.loads(line)["thread_id"] for line in content.decode().splitlines()
+            if line.startswith('{"type":"thread.started"')
+        }
+        if threads != {launch["thread_id"]}:
+            raise ValueError("Interrupted journal belongs to a different author thread")
+for role in ("author", "bwrap"):
+    pid = launch[f"{role}_pid"]
+    if not (type(pid) is int and pid > 0
+            and type(terminal[f"{role}_pid_absent"]) is int and terminal[f"{role}_pid_absent"] == pid):
+        raise ValueError(f"Recorded {role} absence belongs to a different PID")
+    try:
+        psutil.Process(pid)
+    except psutil.NoSuchProcess:
+        continue
+    # The launch did not retain creation times for these controllers. Refuse
+    # any current incarnation at either PID rather than infer identity/absence.
+    raise RuntimeError(f"Recorded {role} PID is present; closure is unresolved")
+print(launch["author_invocation"])
+PY
+    ) || return
+    invocation=$(systemctl --user show "$FLEET_PREDECESSOR_AUTHOR_UNIT.scope" -p InvocationID --value) || return
+    if [[ -z "$invocation" ]]; then
+      state=$(systemctl --user show "$FLEET_PREDECESSOR_AUTHOR_UNIT.scope" -p LoadState --value) || return
+      test "$state" = not-found || return 75
+    else
+      test "$invocation" = "$expected" || return 75
+    fi
+  fi
   # systemd owns current controllers. A new observation name must not bypass
   # a live recovery; its native descendants in the original MCP scope remain.
+  controllers=$(systemctl --user list-units --type=scope --state=active,activating \
+    --no-legend --plain --no-pager "$FLEET_UNIT-author-*.scope" "$FLEET_UNIT-mcp-*.scope") || return
   while read -r controller _; do
+    [[ -n "$controller" ]] || continue
     [[ "$controller" == "$FLEET_AUTHOR_UNIT.scope" || "$controller" == "$FLEET_CLIENT_UNIT.scope" ]] && continue
     printf 'Recovery controller still active: %s\n' "$controller" >&2
     return 75
-  done < <(systemctl --user list-units --type=scope --state=active,activating \
-    --no-legend --plain --no-pager "$FLEET_UNIT-author-*.scope" "$FLEET_UNIT-mcp-*.scope")
+  done <<< "$controllers"
 }
 
 fleet_require_joint_slice() {
