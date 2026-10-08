@@ -28,6 +28,7 @@ from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import NonBlankString, TransportMode, ZMQConfig
 from zmqruntime.messages import (
+    ControlRequestHeader,
     ControlMessageType,
     EndpointApplicationCompatibility,
     EndpointApplicationCompatibilityError,
@@ -35,6 +36,7 @@ from zmqruntime.messages import (
 )
 from zmqruntime.streaming import StreamingVisualizerServer, VisualizerProcessManager
 from zmqruntime.transport import resolve_transport_mode
+from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_state import ViewerReuseAdmissionABC
 from openhcs.runtime.import_authority import (
     OpenHCSRuntimeImportAuthority,
@@ -1650,6 +1652,7 @@ class ViewerControlMessageRequest:
     message_type: str
     payload: object | None = None
     timeout: float = 2.0
+    operation_deadline: OperationDeadline | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.message_type, str) or not self.message_type:
@@ -1665,7 +1668,10 @@ class ViewerControlMessageRequest:
         }
         if self.payload is not None:
             request[ViewerControlResponseField.PAYLOAD.value] = self.payload
-        return request
+        deadline = self.operation_deadline or OperationDeadline.after_milliseconds(
+            max(1, int(self.timeout * 1000)), operation="viewer control request",
+        )
+        return ControlRequestHeader.with_observation_deadline(request, deadline)
 
     def send(self) -> ViewerControlResponse:
         import pickle
@@ -1675,12 +1681,15 @@ class ViewerControlMessageRequest:
         context = None
         socket = None
         try:
+            request = self.to_wire_mapping()
+            deadline = ControlRequestHeader.observation_deadline(request)
             context = zmq.Context()
             socket = context.socket(zmq.REQ)
             socket.setsockopt(zmq.LINGER, 0)
-            socket.setsockopt(zmq.RCVTIMEO, int(self.timeout * 1000))
+            socket.setsockopt(zmq.RCVTIMEO, deadline.remaining_milliseconds())
+            socket.setsockopt(zmq.SNDTIMEO, deadline.remaining_milliseconds())
             socket.connect(self.endpoint.control_url())
-            socket.send(pickle.dumps(self.to_wire_mapping()))
+            socket.send(pickle.dumps(request))
             payload = pickle.loads(socket.recv())
             if not isinstance(payload, Mapping):
                 raise TypeError(

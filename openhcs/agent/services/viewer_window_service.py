@@ -24,6 +24,7 @@ from zmqruntime.client import (
     EndpointShutdownResult,
     ZMQClient,
 )
+from zmqruntime.messages import ControlRequestHeader
 from zmqruntime.viewer_protocol import (
     ViewerNativeImageIntensityPresentation,
     ViewerNativeLayerTransform,
@@ -97,7 +98,6 @@ from openhcs.runtime.viewer_component_system import (
 from openhcs.runtime.viewer_protocol import OpenHCSViewerControlMessageType
 from openhcs.runtime.viewer_protocol import (
     ViewerControlField,
-    ViewerControlMessageRequest,
     ViewerControlMessageType,
     ViewerControlResponseField,
     ViewerDescriptorField,
@@ -1184,7 +1184,9 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         poller = zmq.Poller()
         try:
             socket.connect(control_url)
-            socket.send(pickle.dumps(message), flags=zmq.DONTWAIT)
+            socket.send(pickle.dumps(ControlRequestHeader.with_observation_deadline(
+                message, deadline,
+            )), flags=zmq.DONTWAIT)
             poller.register(socket, zmq.POLLIN)
             events = dict(poller.poll(deadline.remaining_milliseconds()))
             if events.get(socket) != zmq.POLLIN:

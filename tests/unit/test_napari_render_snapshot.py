@@ -56,6 +56,10 @@ def queued_viewer():
         host="localhost", port=5584, transport_mode=TransportMode.TCP
     )
     server.napari_window_title = "Queued source snapshot"
+    from openhcs.runtime.napari_streaming_handlers import NapariLayerRouteStateStore
+    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    server.config = OPENHCS_ZMQ_CONFIG
     server.accepted_control_requests = queue.Queue()
     yield app, canvas, server
     from qtpy.compat import isalive
@@ -245,8 +249,11 @@ def test_snapshot_original_deadline_releases_transport_without_cancelling_qt_wor
     replies = Future()
 
     def receive():
+        from zmqruntime.messages import ControlRequestHeader
         replies.set_result(pump._response_payload(
-            pickle.dumps({"type": "screenshot", "payload": request})
+            pickle.dumps(ControlRequestHeader.with_observation_deadline(
+                {"type": "screenshot", "payload": request}, request.control_deadline(),
+            ))
         ))
 
     thread = threading.Thread(target=receive)

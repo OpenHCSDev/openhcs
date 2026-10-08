@@ -167,7 +167,11 @@ def test_viewer_control_message_request_projects_primitive_wire_fields():
 
     wire = request.to_wire_mapping()
 
-    assert wire == {"type": "state", "payload": controls}
+    assert wire["type"] == "state"
+    assert wire["payload"] is controls
+    from zmqruntime.messages import ControlRequestHeader
+    deadline = ControlRequestHeader.observation_deadline(wire)
+    assert deadline.timeout_ms == int(request.timeout * 1000)
     assert all(type(field_name) is str for field_name in wire)
 
 

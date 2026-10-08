@@ -32,6 +32,7 @@ from openhcs.runtime.napari_viewer_server import (
 from openhcs.runtime.viewer_protocol import (
     NapariViewerServerRequest,
     ViewerControlResponse,
+    ViewerControlMessageRequest,
     ViewerSettlePhase,
     ViewerSettleProgress,
 )
@@ -274,26 +275,51 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
     late_observer = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_LATE_OBSERVER") == "true"
     client_started = []
     delivery = None
+    control_observation = []
+    inspect_pending_control = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_CONTROL") == "true"
 
     def deliver():
-        if late_observer:
+        if late_observer or inspect_pending_control:
             deadline = time.monotonic() + 90
             while True:
                 progress = receiver.layer_route_state.existing_settlement_progress()
                 if (progress is not None and progress.active_route is not None
-                        and "channel_2" in progress.active_route
-                        and progress.active_route_work_unit_active):
+                        and progress.active_route_work_unit_active
+                        and ((inspect_pending_control and receiver.layer_route_state.layers)
+                             or (late_observer and "channel_2" in progress.active_route))):
                     break
-                if time.monotonic() >= deadline:
+                if late_observer and time.monotonic() >= deadline:
                     raise AssertionError("No real channel-2 native work was observed.")
                 time.sleep(0.001)
+        if inspect_pending_control:
+            from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+            route = next(key for key in receiver.layer_route_state.layers if "channel_1" in key)
+            native_layer = receiver.layer_route_state.layers[route]
+            started = time.perf_counter()
+            try:
+                reply = ViewerControlMessageRequest(
+                    client.runtime_endpoint, "navigate",
+                    ViewerNavigationControlOptions(route, visible=False), timeout=0.1,
+                ).send()
+                assert not reply.succeeded()
+            except zmq.Again:
+                pass  # The caller's original observation budget expired.
+            expired_after = time.perf_counter() - started
+            started = time.perf_counter()
+            progress = ViewerSettleProgress.from_response(ViewerControlMessageRequest(
+                client.runtime_endpoint, "settle", timeout=2,
+            ).send())
+            control_observation.append((native_layer, expired_after, time.perf_counter() - started, progress))
+            assert progress.phase is ViewerSettlePhase.RUNNING
         client_started.append(time.perf_counter())
         return client.settle_viewer_state(
             progress_callback=lambda progress: observations.append((time.perf_counter(), progress)),
         )
 
     def observe():
-        control.send(pickle.dumps({"type": "settle"}))
+        control.send(pickle.dumps(ViewerControlMessageRequest(
+            client.runtime_endpoint, "settle", timeout=2,
+        ).to_wire_mapping()))
         return ViewerSettleProgress.from_response(ViewerControlResponse(
             pickle.loads(control.recv())
         ))
@@ -335,6 +361,12 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         assert final.total_update_count > 0
         assert receiver.accepted_stream_batches.empty()
         assert receiver.viewer.layers
+        if inspect_pending_control:
+            native_layer, expired_after, settlement_reply_seconds, pending = control_observation[0]
+            assert not native_layer.visible  # Expiry did not cancel the real Qt mutation.
+            print(f"native control expired after {expired_after:.3f}s; subsequent settlement "
+                  f"reply {settlement_reply_seconds:.3f}s; pending={pending}; "
+                  "original navigation applied after observation expiry")
         assert final.processed_intake_item_count == (len(item) if isinstance(item, list) else 1) + 1
         awaiting = [(t, p) for t, p in observations
                     if p.phase is ViewerSettlePhase.RUNNING and p.total_update_count == 0]

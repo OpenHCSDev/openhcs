@@ -55,6 +55,7 @@ from napari.layers.base._base_constants import Blending
 from napari.utils.colormaps import ensure_colormap
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import (
+    ControlRequestHeader,
     ImageTransferIdentity,
     ControlMessageType,
     EndpointControlCapability,
@@ -499,6 +500,29 @@ class NapariAcceptedControlRequest:
 
     message: Mapping[str, object]
     response: Future[bytes] = field(default_factory=Future)
+
+    def observe(self, server, deadline, stop_event) -> bytes:
+        """Release reply custody on expiry, without cancelling native custody."""
+        while True:
+            if self.response.done():
+                return self.response.result()
+            try:
+                return self.response.result(timeout=min(0.05, deadline.remaining_seconds()))
+            except TimeoutError:
+                if deadline.expired():
+                    logger.warning(
+                        "Napari control observation expired on port %s: action=%s "
+                        "budget=%sms; accepted Qt work retained, mutation outcome UNKNOWN",
+                        server.control_port,
+                        self.message[ViewerControlResponseField.TYPE.value],
+                        deadline.timeout_ms,
+                    )
+                    self.complete_from(server, server.control_error_response, deadline.timeout_error())
+                elif stop_event.is_set() or not server.is_running():
+                    self.complete_from(
+                        server, server.control_error_response,
+                        RuntimeError("Napari viewer stopped before completing its Qt-bound control request."),
+                    )
 
     def complete_from(self, server, projection, *args) -> None:
         """Project and serialize inside the same reply failure boundary."""
@@ -2860,8 +2884,10 @@ class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMe
         request.complete_from(server, self.handle, server, request.message)
 
     def observation_deadline(self, message):
-        """Only an action with an existing operation budget supplies a deadline."""
-        return None
+        """Every action observes the caller's original request budget."""
+        deadline = ControlRequestHeader.observation_deadline(message)
+        deadline.remaining_seconds()
+        return deadline
 
     @classmethod
     def for_message_type(cls, message_type: str | None) -> "NapariControlMessageAction":
@@ -6151,7 +6177,8 @@ class NapariScreenshotControlMessageAction(
         )
 
     def observation_deadline(self, message):
-        return self.capture_spec(message).snapshot_operation_deadline()
+        self.capture_spec(message)
+        return super().observation_deadline(message)
 
     @staticmethod
     def capture_spec(message):
@@ -6455,14 +6482,8 @@ class NapariControlTransportPump:
             action = NapariControlMessageAction.for_message_type(
                 msg_type if isinstance(msg_type, str) else None
             )
-            transport_response = action.transport_thread_response(self.server, message)
             deadline = action.observation_deadline(message)
-            if deadline is not None:
-                # Pickled carriers can come from a different declaration version.
-                # Consume the original budget before admitting Qt work: a malformed
-                # or already expired deadline is a request error, not a fatal error
-                # in the socket-owning pump after dispatch.
-                deadline.remaining_seconds()
+            transport_response = action.transport_thread_response(self.server, message)
         except Exception as error:
             return self.server.serialize_control_response(
                 self.server.control_error_response(error)
@@ -6472,28 +6493,7 @@ class NapariControlTransportPump:
 
         request = NapariAcceptedControlRequest(message)
         self.server.accepted_control_requests.put(request)
-        while True:
-            try:
-                return request.response.result(timeout=0.05)
-            except TimeoutError:
-                if deadline is not None:
-                    try:
-                        deadline.remaining_seconds()
-                    except TimeoutError as error:
-                        # Observation expiry is NOT cancellation of native work
-                        # or proof of non-dispatch. Its original deadline also
-                        # bounds the snapshot owner's eventual capture/commit.
-                        request.complete_from(
-                            self.server, self.server.control_error_response, error
-                        )
-                if self._stop_event.is_set() or not self.server.is_running():
-                    request.complete_from(
-                        self.server, self.server.control_error_response,
-                        RuntimeError(
-                            "Napari viewer stopped before completing its "
-                            "Qt-bound control request."
-                        ),
-                    )
+        return request.observe(self.server, deadline, self._stop_event)
 
 
 class NapariViewerServer(OpenHCSViewerServerABC):

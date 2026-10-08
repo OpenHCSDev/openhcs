@@ -205,7 +205,11 @@ def test_napari_control_pump_reports_active_settlement_without_qt_dispatch() -> 
         )
     )
     try:
-        socket.send(pickle.dumps({"type": "settle"}))
+        from zmqruntime.messages import ControlRequestHeader
+        from zmqruntime.timeouts import OperationDeadline
+        socket.send(pickle.dumps(ControlRequestHeader.with_observation_deadline(
+            {"type": "settle"}, OperationDeadline.after_milliseconds(2000, operation="settlement observation"),
+        )))
         response = pickle.loads(socket.recv())
         progress = ViewerSettleProgress.from_response(ViewerControlResponse(response))
         assert progress.phase is ViewerSettlePhase.RUNNING
