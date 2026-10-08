@@ -1,0 +1,316 @@
+{
+  "scope": "Saved exact original JPEG uint8 pixels and reconstructed STACK/source scales; preparation proved source reuse; numeric-only four-fork replay, not production pipeline",
+  "exact_array_metadata_and_source_immutability": true,
+  "lanes": [
+    [
+      {
+        "round": 0,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.0899204779416323,
+        "user_seconds": 0.098233,
+        "sys_seconds": 0.981675,
+        "minor_faults": 149231,
+        "major_faults": 0
+      },
+      {
+        "round": 0,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.328625600785017,
+        "user_seconds": 0.06587100000000001,
+        "sys_seconds": 0.25915,
+        "minor_faults": 39739,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3164014583453536,
+        "user_seconds": 0.056548000000000015,
+        "sys_seconds": 0.2569279999999998,
+        "minor_faults": 45868,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.08542849868536,
+        "user_seconds": 0.08447999999999997,
+        "sys_seconds": 0.990583,
+        "minor_faults": 150369,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.1104760123416781,
+        "user_seconds": 0.08516299999999999,
+        "sys_seconds": 1.0153660000000002,
+        "minor_faults": 155985,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3982424968853593,
+        "user_seconds": 0.06040799999999996,
+        "sys_seconds": 0.332249,
+        "minor_faults": 38705,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.39833038207143545,
+        "user_seconds": 0.09090300000000007,
+        "sys_seconds": 0.30278300000000025,
+        "minor_faults": 39728,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.1877849753946066,
+        "user_seconds": 0.10045400000000004,
+        "sys_seconds": 1.075697,
+        "minor_faults": 145763,
+        "major_faults": 0
+      }
+    ],
+    [
+      {
+        "round": 0,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.0945017263293266,
+        "user_seconds": 0.07950299999999999,
+        "sys_seconds": 1.005688,
+        "minor_faults": 152756,
+        "major_faults": 0
+      },
+      {
+        "round": 0,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3466633642092347,
+        "user_seconds": 0.051539,
+        "sys_seconds": 0.292489,
+        "minor_faults": 41263,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3103548102080822,
+        "user_seconds": 0.04754899999999998,
+        "sys_seconds": 0.25983599999999996,
+        "minor_faults": 44848,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.0335356537252665,
+        "user_seconds": 0.07837499999999997,
+        "sys_seconds": 0.946164,
+        "minor_faults": 146796,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.244527623988688,
+        "user_seconds": 0.09650000000000003,
+        "sys_seconds": 1.1376689999999998,
+        "minor_faults": 149341,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.42102981451898813,
+        "user_seconds": 0.06712099999999999,
+        "sys_seconds": 0.34824299999999964,
+        "minor_faults": 39729,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.4077610643580556,
+        "user_seconds": 0.07613199999999998,
+        "sys_seconds": 0.32737799999999995,
+        "minor_faults": 36661,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.19007140211761,
+        "user_seconds": 0.08646799999999993,
+        "sys_seconds": 1.0927549999999995,
+        "minor_faults": 139120,
+        "major_faults": 0
+      }
+    ],
+    [
+      {
+        "round": 0,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.0589780705049634,
+        "user_seconds": 0.082421,
+        "sys_seconds": 0.966828,
+        "minor_faults": 150712,
+        "major_faults": 0
+      },
+      {
+        "round": 0,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3321199119091034,
+        "user_seconds": 0.070289,
+        "sys_seconds": 0.25756,
+        "minor_faults": 47915,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.26224829722195864,
+        "user_seconds": 0.06523000000000001,
+        "sys_seconds": 0.194129,
+        "minor_faults": 46890,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.1582563808187842,
+        "user_seconds": 0.06754600000000002,
+        "sys_seconds": 1.0804869999999998,
+        "minor_faults": 153436,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.253949728794396,
+        "user_seconds": 0.09754999999999997,
+        "sys_seconds": 1.1453460000000004,
+        "minor_faults": 145762,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.42218572180718184,
+        "user_seconds": 0.07216800000000001,
+        "sys_seconds": 0.3455499999999998,
+        "minor_faults": 36150,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3298925580456853,
+        "user_seconds": 0.060631999999999964,
+        "sys_seconds": 0.26204499999999964,
+        "minor_faults": 34112,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.1089950324967504,
+        "user_seconds": 0.08534799999999998,
+        "sys_seconds": 1.009709,
+        "minor_faults": 150369,
+        "major_faults": 0
+      }
+    ],
+    [
+      {
+        "round": 0,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.0951432837173343,
+        "user_seconds": 0.073476,
+        "sys_seconds": 1.0123090000000001,
+        "minor_faults": 143060,
+        "major_faults": 0
+      },
+      {
+        "round": 0,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.34646662324666977,
+        "user_seconds": 0.06039299999999999,
+        "sys_seconds": 0.2832649999999999,
+        "minor_faults": 45863,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3215368306264281,
+        "user_seconds": 0.05558199999999999,
+        "sys_seconds": 0.26227699999999987,
+        "minor_faults": 30529,
+        "major_faults": 0
+      },
+      {
+        "round": 1,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.1571019664406776,
+        "user_seconds": 0.085475,
+        "sys_seconds": 1.0614290000000004,
+        "minor_faults": 164671,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.1902522621676326,
+        "user_seconds": 0.085511,
+        "sys_seconds": 1.0954099999999998,
+        "minor_faults": 147294,
+        "major_faults": 0
+      },
+      {
+        "round": 2,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.40609566774219275,
+        "user_seconds": 0.06027199999999999,
+        "sys_seconds": 0.34204500000000015,
+        "minor_faults": 39727,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "proposed",
+        "three_assignments_seconds": 0.3732900321483612,
+        "user_seconds": 0.067212,
+        "sys_seconds": 0.3018590000000003,
+        "minor_faults": 37173,
+        "major_faults": 0
+      },
+      {
+        "round": 3,
+        "algorithm": "original",
+        "three_assignments_seconds": 1.128940388560295,
+        "user_seconds": 0.10124300000000003,
+        "sys_seconds": 1.0163060000000002,
+        "minor_faults": 142699,
+        "major_faults": 0
+      }
+    ]
+  ],
+  "critical_three_assignment_seconds": {
+    "original": [
+      1.0951432837173343,
+      1.1582563808187842,
+      1.253949728794396,
+      1.19007140211761
+    ],
+    "proposed": [
+      0.3466633642092347,
+      0.3215368306264281,
+      0.42218572180718184,
+      0.4077610643580556
+    ]
+  }
+}

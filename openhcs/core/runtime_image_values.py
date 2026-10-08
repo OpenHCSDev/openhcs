@@ -249,22 +249,21 @@ class ImagePayloadIntensityFields(ABC):
                     "Image intensity scales must match the declared leading plane axis."
                 )
             self.require_leading_intensity_axis()
-            normalized_planes = tuple(
-                self.normalized_intensity_array(
-                    plane, target_dtype=target_dtype,
-                    scale=self.intensity_scale_for_source_plane(index),
+            source_dtype = np.dtype(memory_type.canonical_dtype_name(array.dtype))
+            scale_proofs = tuple(
+                self.normalization_scale(
+                    source_dtype, self.intensity_scale_for_source_plane(index),
                 )
-                for index, plane in enumerate(array)
+                for index in range(len(array))
             )
             metadata = self.replace_fields(
                 unit_interval_intensity=ImageUnitIntervalIntensityMetadata(
-                    source_plane_scales=tuple(proof for _, proof in normalized_planes),
+                    source_plane_scales=tuple(proof for _, proof in scale_proofs),
                 ),
             )
             return metadata.payload_with(
-                memory_type.stack_arrays(
-                    [plane for plane, _ in normalized_planes],
-                    memory_type.device_id_of(array),
+                memory_type.normalize_planes(
+                    array, target_dtype, tuple(scale for scale, _ in scale_proofs),
                 ),
                 image_payload_mask(payload),
             )
@@ -277,24 +276,37 @@ class ImagePayloadIntensityFields(ABC):
         )
 
     @staticmethod
+    def normalization_scale(
+        source_dtype: np.dtype, scale: float | None,
+    ) -> tuple[float | None, int | None]:
+        """Admit one current-domain divisor and its integer acquisition proof."""
+        if scale is None:
+            # A promoted float uses its declared source scale, never a range guess.
+            scale = image_intensity_scale_for_dtype(source_dtype)
+        if scale is None:
+            return None, None
+        if not np.isfinite(scale) or scale <= 0:
+            raise ValueError("Source intensity scale must be finite and positive.")
+        proof_scale = (
+            int(scale)
+            if np.issubdtype(source_dtype, np.integer) and float(scale).is_integer()
+            else None
+        )
+        return scale, proof_scale
+
+    @staticmethod
     def normalized_intensity_array(
         array: Any, *, target_dtype: np.dtype, scale: float | None,
     ) -> tuple[Any, int | None]:
         """Apply one numerical recipe without projecting image source identity."""
         memory_type = MemoryType(detect_memory_type(array))
         source_dtype = np.dtype(memory_type.canonical_dtype_name(array.dtype))
-        if scale is None:
-            # Bare arrays are admitted at this original numerical boundary. A
-            # promoted float uses its declared source scale, never a range guess.
-            scale = image_intensity_scale_for_dtype(source_dtype)
+        scale, proof_scale = ImagePayloadIntensityFields.normalization_scale(
+            source_dtype, scale,
+        )
         normalized = memory_type.astype(array, target_dtype)
-        proof_scale = None
         if scale is not None:
-            if not np.isfinite(scale) or scale <= 0:
-                raise ValueError("Source intensity scale must be finite and positive.")
             normalized = normalized / float(scale)
-            if np.issubdtype(source_dtype, np.integer) and float(scale).is_integer():
-                proof_scale = int(scale)
         return normalized, proof_scale
 
     @classmethod
