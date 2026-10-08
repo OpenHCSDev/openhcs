@@ -221,14 +221,38 @@ The workflows covered DNA damage, human and Drosophila morphology, tumor morphol
 
 Across 30 workflows, one-core execution was a median [pending]{.benchmark-claim key=execution_median}-fold faster than native CellProfiler, with minimum [pending]{.benchmark-claim key=execution_min}-fold (Figure 6). Compile-plus-run total speedup was a median [pending]{.benchmark-claim key=total_median}-fold, with minimum [pending]{.benchmark-claim key=total_min}-fold. Each point compares one complete native first-use-inclusive batch with the median of three OpenHCS repetitions after warmup. Output comparisons passed during warmup and every measured repetition.
 
-Supplementary Figure 6 shows the full thirty-workflow worker schedule for execution and total time, and measured scaling at a fixed twelve-assignment workload. Twelve- and sixteen-assignment CellProfiler references are explicitly projected. Supplementary Data 3 gives timing boundaries and worker measurements.
+Figure 6 shows execution speedups for every workflow, their distributions across worker counts, the seven measured assignment configurations, output agreement and graded module-test coverage. Twelve- and sixteen-assignment CellProfiler references are projected. Supplementary Data 3 gives total times, fixed-workload scaling and projection calibration.
 
-### Figure 6. Matched single-sample speedup over native CellProfiler
+### Figure 6. Workflow speed, output agreement and test coverage
 
-![Execution and compile-plus-run total speedups, showing means, medians and every matched workflow.](figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
+![Execution speedup distributions and assignment-per-worker summaries for thirty workflows.](figures/slas/submission_benchmark_schedule.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Execution and compile-plus-run speedups for 30 imported CellProfiler workflows on one core, one worker and one numerical thread. Each point is one workflow: one complete CellProfiler first-use-inclusive native batch divided by the OpenHCS median over three runs after warmup. Native internal initialization is included; external server startup is excluded. Native source n=1 and OpenHCS n=3. Bars show means, black lines medians and the dashed line equal runtime on a logarithmic axis. Every run reproduced the compared outputs. Medians: execution [pending]{.benchmark-claim key=execution_median}-fold and total [pending]{.benchmark-claim key=total_median}-fold. Record [pending]{.benchmark-claim key=record_name} supplies the figure and numerical claims. Supplementary Figure 6 shows linear scales, the worker schedule and measured fixed-workload scaling.
+**(A)** Execution speedups at workers/assignments 1/1, 2/8, 3/12 and 4/16. Points are the thirty workflows, bars means and black lines medians. **(B)** Mean, median and minimum speedups across the seven available assignment configurations. Each ratio uses a complete CellProfiler first-use-inclusive batch divided by the median of three OpenHCS runs after warmup. CellProfiler 1- and 8-assignment batches were measured; 12 and 16 were projected from the measured 8-assignment batch and warmed per-assignment rate. The dashed line marks equal runtime. Repeated assignments are computational replicates of each selected sample.
+:::
+
+### Figure 6, continued. Per-workflow speedups
+
+![Execution speedups for all thirty workflows and the mean across workflows, grouped by worker count.](figures/slas/submission_benchmark_pipelines.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(C)** Execution speedups for every workflow under the four worker/assignment configurations in A. The final bar group shows the arithmetic mean across workflows. Colours identify worker counts; the dashed line marks equal runtime.
+:::
+
+### Figure 6, continued. Output agreement
+
+![Declared-output agreement by workflow.](figures/slas/submission_benchmark_parity.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(D)** Agreement of declared outputs with native CellProfiler for each workflow. Labels matched exactly and numerical measurements passed at 1e-6 tolerance.
+:::
+
+### Figure 6, continued. Graded module coverage
+
+![Graded test evidence for current executable processing modules.](figures/slas/submission_benchmark_coverage.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(E)** Evidence tiers for the current executable processing-module catalog: exercised in the thirty-workflow corpus, module-specific behavior tests, shared-path behavior tests, declaration/import checks only, or no evidence. A module receives its strongest supported tier. Shared-path evidence covers the named common behavior, not every module-specific setting or algorithm. Setup modules and non-executable declarations are excluded. Supplementary Data 3 provides the per-module evidence and timing tables.
 :::
 
 ## Discussion

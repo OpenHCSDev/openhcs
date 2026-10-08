@@ -115,6 +115,24 @@ previous paired package available, with diagnostics under `build/run-*`.
 Snapshots copy one resolved successful package and its linked local support.
 They are frozen reading copies, not another manuscript source.
 
+Figure 6 reuses the qualified sweep measurements; rebuilding its chart forms
+does not run benchmarks. Its module coverage grades come from the canonical
+compatibility report and the named behavior tests in
+`figures/cellprofiler_coverage_evidence.json`. Run those selected tests with
+pytest's JUnit output at
+`paper/figures/slas/benchmark-publication/reference-layout/coverage_test_results.xml`
+before rebuilding the figures. Skipped, failed or missing credited tests stop
+the coverage build. From the repository root:
+
+```sh
+.venv/bin/python -c 'import json, subprocess, sys; evidence=json.load(open("paper/figures/cellprofiler_coverage_evidence.json")); nodes=sorted({node for group in evidence["groups"] for node in group["test_nodeids"]}); sys.exit(subprocess.call([sys.executable, "-m", "pytest", "-q", "--junitxml=paper/figures/slas/benchmark-publication/reference-layout/coverage_test_results.xml", *nodes]))'
+PYTHONPATH=paper/figures .venv/bin/python -c 'from pathlib import Path; from build_slas_benchmark_reference import build_reference_figures; build_reference_figures(Path("paper/figures/slas/benchmark-publication"), Path("paper/figures/slas/benchmark-publication/reference-layout"))'
+PYTHONPATH=paper/figures .venv/bin/python -c 'from build_slas_supplement import benchmark_publication; benchmark_publication()'
+```
+
+The per-module CSV names the credited behavior and test. Shared-path coverage
+does not claim validation of all module-specific algorithms or settings.
+
 The build-only requirement pins the reviewed papers Git commit. Installation
 imports that package; no sibling checkout, vendored copy or manual code syncing
 is required. Shared-code development may use an editable papers installation in

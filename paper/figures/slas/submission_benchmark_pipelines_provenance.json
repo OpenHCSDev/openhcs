@@ -1,0 +1,16 @@
+{
+  "generator_sha256": "7bcc97182bd13be5ae499d27a5ac742d9d2d6a790509b8a1c9950e6ef6df206d",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "eda1b0739c794c53c737e2a692cdf27ad42a432817bc35dc44c8eb76f529c621",
+    "paper/figures/slas/benchmark-publication/reference-layout/figure2_provenance.json": "bc182d6684944f44744575a42500497b8d6c7670ba3a33539380781c6e626899",
+    "paper/figures/slas/benchmark-publication/reference-layout/reference_pipeline_speedup_log.png": "7ac9fb7cdf08da3df62a973675549de00a229f71f4fd5a109c77ffef486ee19f"
+  },
+  "ui_crops": [],
+  "display_transforms": [],
+  "output_sha256": {
+    "submission_benchmark_pipelines.png": "bc4759c184517c7eb876140c0902f22f4c48369167483a647c80b550e390f981",
+    "submission_benchmark_pipelines.pdf": "924e86c6fb936d2db47dea0cf4d065e7232e3589b5be0a557478b79e092ff8c2",
+    "submission_benchmark_pipelines.svg": "390e77f41b9a4faf88f908c60001c9ff08b3ef0494431a0ee587baa6a2e7e0a4"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

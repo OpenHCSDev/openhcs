@@ -131,6 +131,7 @@ paper/build/
 output/
 *.json
 !examples/*.json
+!paper/figures/cellprofiler_coverage_evidence.json
 !openhcs/resources/installer_contract.json
 !website/assets/agent/cold-start-workflow-record.json
 !website/assets/agent/neurite-outgrowth-workflow-record.json

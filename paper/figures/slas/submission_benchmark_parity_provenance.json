@@ -1,0 +1,16 @@
+{
+  "generator_sha256": "7bcc97182bd13be5ae499d27a5ac742d9d2d6a790509b8a1c9950e6ef6df206d",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "eda1b0739c794c53c737e2a692cdf27ad42a432817bc35dc44c8eb76f529c621",
+    "paper/figures/slas/benchmark-publication/reference-layout/figure2_provenance.json": "bc182d6684944f44744575a42500497b8d6c7670ba3a33539380781c6e626899",
+    "paper/figures/slas/benchmark-publication/reference-layout/reference_parity.png": "db2d03ede4643d0b3c751cfc7873ccb513253712c736a497afb1d23a54395689"
+  },
+  "ui_crops": [],
+  "display_transforms": [],
+  "output_sha256": {
+    "submission_benchmark_parity.png": "286c7ca87c17cc28bde22ea17042f490a1299ecac6a9d608d7ff79471b13b3c7",
+    "submission_benchmark_parity.pdf": "08674b5310cb0c1f21f3aeb2a4155026669c178fc2e335e3990696b7e71ebaef",
+    "submission_benchmark_parity.svg": "0c9054340382fcbb34fddb4920054e4aab9f3010fa792f213e6b0d4f0ef59fe3"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

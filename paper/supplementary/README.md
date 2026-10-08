@@ -161,28 +161,20 @@ separated without spatial ground truth. Both methods recovered concordant
 positive outgrowth responses with different measured magnitudes. This is an
 assisted-development evaluation, separate from autonomous authoring.
 
-## Supplementary Figure 6. Execution speedup at the May worker configurations
+## Supplementary Figure 6. Single-sample execution and total speedups
 
-![Execution speedup for all thirty workflows at the May worker/assignment configurations.](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points_log.png){width=5in}
+![Execution and compile-plus-run total speedups for one assignment and one worker.](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-One worker/one assignment, two/eight, three/twelve and four/sixteen. Bars show arithmetic means, points every workflow and black lines medians. CP1 and CP8 are actual complete serial first-use-inclusive batches; CP12 and CP16 are explicitly projected from the measured CP8 first batch plus its warmed per-assignment rate, with zero actual native target observations. OpenHCS uses three measured repetitions after warmup. This changing-workload schedule is distinct from fixed-workload scaling.
+Execution and compile-plus-run total speedups for thirty workflows, with one assignment, one worker and one numerical thread. Points are workflows; bars show arithmetic means, black lines medians and the dashed line equal runtime. Each ratio uses one measured CellProfiler first-use-inclusive batch divided by the median of three OpenHCS repetitions after warmup. Native internal initialization is included; external process and server startup are excluded. Supplementary Data 3 links linear views, paired clocks, efficiency tables and native projection calibration.
 :::
 
-## Supplementary Figure 6 (continued). Compilation-plus-execution total speedup
+## Supplementary Figure 6, continued. Fixed-workload scaling
 
-![Total speedup at the same worker/assignment configurations.](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points_log.png){width=5in}
-
-::: {custom-style="ImageCaption"}
-The same thirty workflows and native reference policy as the execution panel. OpenHCS total includes disjoint compilation, client coordination and full server execution, including saving, exports, publication and finalization. Native prepared-invocation total adds the first anchor preparation once. External process/JVM/ZMQ/server startup and scientific qualification are excluded. Native initialization within its pipeline call remains included.
-:::
-
-## Supplementary Figure 6 (continued). Measured scaling at twelve fixed assignments
-
-![Actual OpenHCS execution scaling with twelve assignments held fixed.](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png){width=5in}
+![Measured execution scaling at twelve assignments and one to four workers.](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-Actual one-worker time divided by actual one-, two-, three- and four-worker medians, with twelve assignments held fixed for every workflow. No CellProfiler projection enters this panel. Repeated assignments reuse each selected source sample; they are computational replicates, not independent biological wells. All seven modes use frozen production `d06b7226c82fc6de8ab6b644f3bec417f4b7b922` and pass complete declared-output comparisons in warmup and every measured repetition. Multi-assignment modes allow CPUs2–5; the single-assignment mode uses CPU5, with one numerical thread per worker. Process-tree peak RAM is unavailable; historical May RAM is not substituted. Supplementary Data 3 links linear views, paired clocks, total scaling, efficiency tables, native calibration and projection validation.
+Execution scaling for thirty workflows: measured one-worker time divided by measured time at each worker count, with twelve assignments held fixed. Each time is the median of three repetitions after warmup. Points are workflows, bars means and black lines medians. These ratios use only measured OpenHCS times. The corresponding total-time and efficiency plots are linked in Supplementary Data 3.
 :::
 
 ## Supplementary Table 1. Reusable libraries and their roles
@@ -344,6 +336,7 @@ current-version compatibility matrix.
 
 - [Qualified full record and clock policy](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/README.md), with the [seven-configuration protocol](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json).
 - [Single-sample execution and total, linear](../figures/slas/benchmark-publication/measured_benchmark_publication.png) and [logarithmic](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), with [manuscript numerical claims](../figures/slas/benchmark-publication/benchmark_claims.json).
+- Rebuilt reference chart forms: [per-workflow speedups](../figures/slas/benchmark-publication/reference-layout/reference_pipeline_speedup_log.svg), [worker summary](../figures/slas/benchmark-publication/reference-layout/reference_core_summary_log.svg), [assignment summary](../figures/slas/benchmark-publication/reference-layout/reference_assignments_summary_log.svg), [output agreement](../figures/slas/benchmark-publication/reference-layout/reference_parity.svg), and [graded module coverage](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.svg), with the [per-module behavior and test attribution](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv).
 - May execution speedups: [linear](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv).
 - May total speedups: [linear](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
 - Actual fixed-twelve execution scaling: [linear](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/execution/efficiency/derived_workflow_metrics.csv).

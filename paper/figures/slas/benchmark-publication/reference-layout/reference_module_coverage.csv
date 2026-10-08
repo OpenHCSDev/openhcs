@@ -1,0 +1,86 @@
+module,tier,behavior,test_nodeids
+Align,30-workflow corpus,Declared-output comparison in corpus,
+CalculateMath,30-workflow corpus,Declared-output comparison in corpus,
+CalculateStatistics,Module-specific behavior tested,"Reconstructs measurement-input contracts and executes statistics on image/object measurement tables; checks Zfactor, Vfactor, OneTailedZfactor and EC50 feature names and experiment scope, not numerical accuracy of every statistic.",tests/unit/test_cellprofiler_conditional_measurement_outputs.py::test_calculate_statistics_contract_and_exact_experiment_rows
+ClassifyObjectsSingleMeasurement,30-workflow corpus,Declared-output comparison in corpus,
+Closing,30-workflow corpus,Declared-output comparison in corpus,
+ColorToGray,30-workflow corpus,Declared-output comparison in corpus,
+Combineobjects,30-workflow corpus,Declared-output comparison in corpus,
+ConvertImageToObjects,Module-specific behavior tested,Converts two binary objects into nominal labels and typed statistics. Executes dead-worm identification on an empty image with typed rows and zero declared objects; does not validate real-worm detection accuracy.,tests/unit/test_cellprofiler_uncovered_object_output_contracts.py::test_object_leaf_callables_emit_schema_rows_then_nominal_labels
+ConvertObjectsToImage,30-workflow corpus,Declared-output comparison in corpus,
+CorrectIlluminationApply,30-workflow corpus,Declared-output comparison in corpus,
+CorrectIlluminationCalculate,30-workflow corpus,Declared-output comparison in corpus,
+Crop,30-workflow corpus,Declared-output comparison in corpus,
+DefineGridManual,30-workflow corpus,Declared-output comparison in corpus,
+DilateImage,Module-specific behavior tested,Compares disk-radius-three stack morphology exactly against per-plane skimage references; selected parametrization includes these two module callables.,tests/unit/test_cellprofiler_closing_hotpath.py::test_image_morphology_stack_matches_planewise_reference
+DilateObjects,Module-specific behavior tested,Executes the object-dilation boundary and checks rejection of a volumetric footprint on two-dimensional labels; not valid-dilation numerical evidence.,tests/unit/test_cellprofiler_library_loading.py::test_dilate_objects_rejects_volumetric_structuring_element_for_2d_labels
+DisplayDataOnImage,30-workflow corpus,Declared-output comparison in corpus,
+DisplayDensityPlot,Module-specific behavior tested,"Executes display callables against declared image/object measurement tables; checks point counts, histogram counts, well identities and per-well object means. Does not verify native plot painting.",tests/unit/test_cellprofiler_display_manual_projection_declarations.py::test_display_callables_resolve_values_from_declared_measurement_tables
+DisplayHistogram,Module-specific behavior tested,"Executes display callables against declared image/object measurement tables; checks point counts, histogram counts, well identities and per-well object means. Does not verify native plot painting.",tests/unit/test_cellprofiler_display_manual_projection_declarations.py::test_display_callables_resolve_values_from_declared_measurement_tables
+DisplayPlatemap,Module-specific behavior tested,"Executes display callables against declared image/object measurement tables; checks point counts, histogram counts, well identities and per-well object means. Does not verify native plot painting.",tests/unit/test_cellprofiler_display_manual_projection_declarations.py::test_display_callables_resolve_values_from_declared_measurement_tables
+DisplayScatterPlot,Module-specific behavior tested,"Executes display callables against declared image/object measurement tables; checks point counts, histogram counts, well identities and per-well object means. Does not verify native plot painting.",tests/unit/test_cellprofiler_display_manual_projection_declarations.py::test_display_callables_resolve_values_from_declared_measurement_tables
+EditObjectsManually,Module-specific behavior tested,Executes supplied-label editing with retained sparse object IDs 2 and 5 and checks rejection of unsupported layered overlap. Does not exercise interactive annotation. The helper IdentifyObjectsManually is non-executable and is not credited as a processing module.,tests/unit/test_cellprofiler_display_manual_projection_declarations.py::test_manual_identification_preserves_actual_sparse_object_id_domain
+EnhanceEdges,30-workflow corpus,Declared-output comparison in corpus,
+EnhanceOrSuppressFeatures,30-workflow corpus,Declared-output comparison in corpus,
+ErodeImage,30-workflow corpus,Declared-output comparison in corpus,
+ErodeObjects,30-workflow corpus,Declared-output comparison in corpus,
+ExpandOrShrinkObjects,30-workflow corpus,Declared-output comparison in corpus,
+ExportToDatabase,30-workflow corpus,Declared-output comparison in corpus,
+ExportToSpreadsheet,30-workflow corpus,Declared-output comparison in corpus,
+FillObjects,Module-specific behavior tested,Executes NUMBA-backed convex-hull filling and compares the retained object's mask against the morphology owner reference.,tests/unit/test_cellprofiler_morphology.py::test_fill_objects_convex_hull_routes_through_morphology_backend
+FilterObjects,30-workflow corpus,Declared-output comparison in corpus,
+FindMaxima,Module-specific behavior tested,Executes one-impulse maxima detection with exact count/settings rows and default zero-angle rotation with unchanged pixels and a typed rotation row. Does not cover nonzero rotations.,tests/unit/test_cellprofiler_uncovered_image_measurement_contracts.py::test_uncovered_image_callables_return_schema_bearing_measurement_rows
+FlagImage,Module-specific behavior tested,Reconstructs repeated-group measurement contracts and executes ANY/ALL flag combinations with exact emitted flag rows.,tests/unit/test_cellprofiler_conditional_measurement_outputs.py::test_flag_image_repeated_groups_reconstruct_contract_and_runtime_rows
+FlipAndRotate,Module-specific behavior tested,Executes one-impulse maxima detection with exact count/settings rows and default zero-angle rotation with unchanged pixels and a typed rotation row. Does not cover nonzero rotations.,tests/unit/test_cellprofiler_uncovered_image_measurement_contracts.py::test_uncovered_image_callables_return_schema_bearing_measurement_rows
+GaussianFilter,Module-specific behavior tested,"Executes Gaussian filtering through the function-contract executor for one and three calibrated sites; compares anisotropic Gaussian pixels and verifies independent sites, metadata, mask and original input preservation.",tests/unit/test_calibrated_gaussian_spatial_axes.py::test_calibrated_sites_filter_independently_and_preserve_source
+GrayToColor,30-workflow corpus,Declared-output comparison in corpus,
+IdentifyDeadWorms,Module-specific behavior tested,Converts two binary objects into nominal labels and typed statistics. Executes dead-worm identification on an empty image with typed rows and zero declared objects; does not validate real-worm detection accuracy.,tests/unit/test_cellprofiler_uncovered_object_output_contracts.py::test_object_leaf_callables_emit_schema_rows_then_nominal_labels
+IdentifyObjectsInGrid,30-workflow corpus,Declared-output comparison in corpus,
+IdentifyPrimaryObjects,30-workflow corpus,Declared-output comparison in corpus,
+IdentifySecondaryObjects,30-workflow corpus,Declared-output comparison in corpus,
+IdentifyTertiaryObjects,30-workflow corpus,Declared-output comparison in corpus,
+ImageMath,30-workflow corpus,Declared-output comparison in corpus,
+InvertForPrinting,Module-specific behavior tested,"Executes all eight RGB enable masks, checking grayscale values, channel ordering, metadata and the no-output case.",tests/unit/test_cellprofiler_conditional_named_images.py::test_invert_for_printing_runtime_returns_enabled_channels_in_rgb_order
+MakeProjection,Module-specific behavior tested,"Executes average, maximum, minimum, sum, variance and mask projections and compares values against NumPy references.",tests/unit/test_cellprofiler_projection_backend.py::test_make_projection_preserves_core_projection_values
+MaskImage,30-workflow corpus,Declared-output comparison in corpus,
+MaskObjects,30-workflow corpus,Declared-output comparison in corpus,
+MatchTemplate,Module-specific behavior tested,"Executes matching against an actual template file and checks shape, float32 dtype and the expected correlation maximum.",tests/unit/test_settings_binder.py::test_match_template_reads_its_declared_template_file
+MeasureColocalization,30-workflow corpus,Declared-output comparison in corpus,
+MeasureGranularity,30-workflow corpus,Declared-output comparison in corpus,
+MeasureImageAreaOccupiedBinary,30-workflow corpus,Declared-output comparison in corpus,
+MeasureImageIntensity,30-workflow corpus,Declared-output comparison in corpus,
+MeasureImageOverlap,Module-specific behavior tested,Executes base and EMD image-overlap variants and checks conditional input/output contracts and EMD schema presence; does not assert overlap metric numerical parity.,tests/unit/test_cellprofiler_conditional_measurement_outputs.py::test_overlap_public_variants_reconstruct_conditional_contract_and_schema
+MeasureImageQuality,30-workflow corpus,Declared-output comparison in corpus,
+MeasureImageSkeleton,Module-specific behavior tested,"Executes a straight skeleton measurement, retaining input pixels and emitting typed rows with zero branches and two endpoints.",tests/unit/test_cellprofiler_measure_image_skeleton_contract.py::test_measure_image_skeleton_returns_schema_bearing_rows
+MeasureObjectIntensity,30-workflow corpus,Declared-output comparison in corpus,
+MeasureObjectIntensityDistribution,30-workflow corpus,Declared-output comparison in corpus,
+MeasureObjectNeighbors,30-workflow corpus,Declared-output comparison in corpus,
+MeasureObjectOverlap,Shared-path behavior tested,"Credits only shared nominal-label materialization through object_label_dense_array: AreaOccupied consumes a nominal payload and checks area four, total area sixteen and unchanged image. MeasureObjectOverlap uses the same owner; overlap metrics and EMD are not exercised by this node.",tests/unit/test_cellprofiler_object_label_payload_inputs.py::test_area_occupied_accepts_object_label_payload_input
+MeasureObjectSizeShape,30-workflow corpus,Declared-output comparison in corpus,
+MeasureObjectSkeleton,Module-specific behavior tested,"Executes seeded object-skeleton analysis and checks retained branchpoint pixels and measurement rows against the same analysis owner; consistency evidence, not an independent numerical reference.",tests/unit/test_cellprofiler_conditional_named_images.py::test_measure_object_skeleton_retained_runtime_image_is_exact_analysis_image
+MeasureTexture,30-workflow corpus,Declared-output comparison in corpus,
+Medialaxis,Module-specific behavior tested,"Executes medial-axis extraction and checks float32 binary output, nonempty support and fewer foreground pixels than the solid input; not exact pixel parity.",tests/unit/test_cellprofiler_medial_axis_contract.py::test_medial_axis_callable_returns_thin_binary_skeleton
+MedianFilter,30-workflow corpus,Declared-output comparison in corpus,
+Morph,Module-specific behavior tested,Executes the NUMBA convex-hull Morph operation and compares binary pixels against the morphology owner reference; other Morph operations are not covered by this node.,tests/unit/test_cellprofiler_morphology.py::test_morph_convex_hull_routes_through_morphology_backend
+Morphologicalskeleton,Module-specific behavior tested,"Executes planar skeletonization, compares pixels with skimage skeletonize and checks the PURE_2D processing contract.",tests/unit/test_cellprofiler_morphology.py::test_morphological_skeleton_uses_planar_processing_contract
+Opening,Module-specific behavior tested,Compares disk-radius-three stack morphology exactly against per-plane skimage references; selected parametrization includes these two module callables.,tests/unit/test_cellprofiler_closing_hotpath.py::test_image_morphology_stack_matches_planewise_reference
+OverlayObjects,30-workflow corpus,Declared-output comparison in corpus,
+OverlayOutlines,30-workflow corpus,Declared-output comparison in corpus,
+Reducenoise,Shared-path behavior tested,"Credits only shared image-payload pixel replacement through with_image_payload_data: calibrated Gaussian execution checks mask, metadata and input preservation. Reducenoise uses this owner, but this node does not execute Reducenoise or validate non-local-means denoising.",tests/unit/test_calibrated_gaussian_spatial_axes.py::test_calibrated_sites_filter_independently_and_preserve_source
+RelateObjects,30-workflow corpus,Declared-output comparison in corpus,
+RemoveHoles,30-workflow corpus,Declared-output comparison in corpus,
+RescaleIntensity,30-workflow corpus,Declared-output comparison in corpus,
+Resize,30-workflow corpus,Declared-output comparison in corpus,
+ResizeObjects,30-workflow corpus,Declared-output comparison in corpus,
+RunImagejMacro,Module-specific behavior tested,"Executes callable output composition with the Fiji request send method monkeypatched; checks declared output names, order and values. Does not execute Fiji, its server or a real macro.",tests/unit/test_cellprofiler_conditional_named_images.py::test_run_imagej_macro_runtime_returns_declared_group_order
+SaveImages,30-workflow corpus,Declared-output comparison in corpus,
+ShrinkToObjectCenters,Module-specific behavior tested,"Executes object-center shrinking and checks measurement row count, nominal label payload and one retained pixel per object.",tests/unit/test_cellprofiler_morphology.py::test_shrink_to_object_centers_emits_typed_rows_and_labels
+Smooth,30-workflow corpus,Declared-output comparison in corpus,
+SplitOrMergeObjects,Module-specific behavior tested,Executes per-parent merging with convex-hull output and checks one resulting object and exact hull pixels; not all splitting or merging modes.,tests/unit/test_cellprofiler_morphology.py::test_split_or_merge_convex_hull_routes_through_morphology_backend
+StraightenWorms,30-workflow corpus,Declared-output comparison in corpus,
+Threshold,30-workflow corpus,Declared-output comparison in corpus,
+Tile,30-workflow corpus,Declared-output comparison in corpus,
+TrackObjects,30-workflow corpus,Declared-output comparison in corpus,
+UnmixColors,Module-specific behavior tested,"Executes three stain rows including a custom stain; checks one float32 image per row, output shapes, removed channel-axis metadata and the FLEXIBLE processing contract; not stain-separation accuracy.",tests/unit/test_cellprofiler_library_loading.py::test_unmix_colors_returns_one_output_per_stain_row
+UntangleWorms,30-workflow corpus,Declared-output comparison in corpus,
+Watershed,30-workflow corpus,Declared-output comparison in corpus,

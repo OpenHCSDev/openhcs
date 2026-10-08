@@ -1,0 +1,184 @@
+{
+  "description": "Bounded source-level evidence attribution. Module membership and corpus coverage must be derived from the canonical compatibility report, not from this mapping.",
+  "catalog_owner": "openhcs/interop/cellprofiler/module_declarations.py:CellProfilerModule",
+  "corpus_report_owner": "benchmark/converter/compatibility_matrix.py:build_cellprofiler_compatibility_report_for_manifest",
+  "execution_status": "This file attributes test behavior; passing execution evidence is supplied separately by reference-layout/coverage_test_results.xml and validated during figure generation.",
+  "limits": "Non-shared groups exercise the named module's callable or output behavior, not its complete setting space or CellProfiler parity. Shared-only groups credit only the named implementation behavior. Parametrized nodeids select all cases of that function.",
+  "groups": [
+    {
+      "modules": ["CalculateStatistics"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_conditional_measurement_outputs.py::test_calculate_statistics_contract_and_exact_experiment_rows"],
+      "behavior": "Reconstructs measurement-input contracts and executes statistics on image/object measurement tables; checks Zfactor, Vfactor, OneTailedZfactor and EC50 feature names and experiment scope, not numerical accuracy of every statistic.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/calculate_statistics.py"]
+    },
+    {
+      "modules": ["FlagImage"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_conditional_measurement_outputs.py::test_flag_image_repeated_groups_reconstruct_contract_and_runtime_rows"],
+      "behavior": "Reconstructs repeated-group measurement contracts and executes ANY/ALL flag combinations with exact emitted flag rows.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/flagging.py"]
+    },
+    {
+      "modules": ["MeasureImageOverlap"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_conditional_measurement_outputs.py::test_overlap_public_variants_reconstruct_conditional_contract_and_schema"],
+      "behavior": "Executes base and EMD image-overlap variants and checks conditional input/output contracts and EMD schema presence; does not assert overlap metric numerical parity.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/object_overlap.py"]
+    },
+    {
+      "modules": ["ConvertImageToObjects", "IdentifyDeadWorms"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_uncovered_object_output_contracts.py::test_object_leaf_callables_emit_schema_rows_then_nominal_labels"],
+      "behavior": "Converts two binary objects into nominal labels and typed statistics. Executes dead-worm identification on an empty image with typed rows and zero declared objects; does not validate real-worm detection accuracy.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/object_images.py", "openhcs/processing/backends/cellprofiler/worms.py"]
+    },
+    {
+      "modules": ["DilateImage", "Opening"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_closing_hotpath.py::test_image_morphology_stack_matches_planewise_reference"],
+      "behavior": "Compares disk-radius-three stack morphology exactly against per-plane skimage references; selected parametrization includes these two module callables.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/morphology.py"]
+    },
+    {
+      "modules": ["DilateObjects"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_library_loading.py::test_dilate_objects_rejects_volumetric_structuring_element_for_2d_labels"],
+      "behavior": "Executes the object-dilation boundary and checks rejection of a volumetric footprint on two-dimensional labels; not valid-dilation numerical evidence.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/morphology.py"]
+    },
+    {
+      "modules": ["DisplayDensityPlot", "DisplayHistogram", "DisplayPlatemap", "DisplayScatterPlot"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_display_manual_projection_declarations.py::test_display_callables_resolve_values_from_declared_measurement_tables"],
+      "behavior": "Executes display callables against declared image/object measurement tables; checks point counts, histogram counts, well identities and per-well object means. Does not verify native plot painting.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/display_modules.py"]
+    },
+    {
+      "modules": ["EditObjectsManually"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_display_manual_projection_declarations.py::test_manual_identification_preserves_actual_sparse_object_id_domain"],
+      "behavior": "Executes supplied-label editing with retained sparse object IDs 2 and 5 and checks rejection of unsupported layered overlap. Does not exercise interactive annotation. The helper IdentifyObjectsManually is non-executable and is not credited as a processing module.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/edit_objects.py", "openhcs/processing/backends/cellprofiler/manual_objects.py"]
+    },
+    {
+      "modules": ["FillObjects"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_morphology.py::test_fill_objects_convex_hull_routes_through_morphology_backend"],
+      "behavior": "Executes NUMBA-backed convex-hull filling and compares the retained object's mask against the morphology owner reference.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/morphology.py"]
+    },
+    {
+      "modules": ["Morph"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_morphology.py::test_morph_convex_hull_routes_through_morphology_backend"],
+      "behavior": "Executes the NUMBA convex-hull Morph operation and compares binary pixels against the morphology owner reference; other Morph operations are not covered by this node.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/morphology.py"]
+    },
+    {
+      "modules": ["SplitOrMergeObjects"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_morphology.py::test_split_or_merge_convex_hull_routes_through_morphology_backend"],
+      "behavior": "Executes per-parent merging with convex-hull output and checks one resulting object and exact hull pixels; not all splitting or merging modes.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/morphology.py"]
+    },
+    {
+      "modules": ["Morphologicalskeleton"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_morphology.py::test_morphological_skeleton_uses_planar_processing_contract"],
+      "behavior": "Executes planar skeletonization, compares pixels with skimage skeletonize and checks the PURE_2D processing contract.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/morphology.py"]
+    },
+    {
+      "modules": ["ShrinkToObjectCenters"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_morphology.py::test_shrink_to_object_centers_emits_typed_rows_and_labels"],
+      "behavior": "Executes object-center shrinking and checks measurement row count, nominal label payload and one retained pixel per object.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/morphology.py"]
+    },
+    {
+      "modules": ["FindMaxima", "FlipAndRotate"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_uncovered_image_measurement_contracts.py::test_uncovered_image_callables_return_schema_bearing_measurement_rows"],
+      "behavior": "Executes one-impulse maxima detection with exact count/settings rows and default zero-angle rotation with unchanged pixels and a typed rotation row. Does not cover nonzero rotations.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/maxima.py", "openhcs/processing/backends/cellprofiler/image_geometry.py"]
+    },
+    {
+      "modules": ["GaussianFilter"],
+      "test_nodeids": ["tests/unit/test_calibrated_gaussian_spatial_axes.py::test_calibrated_sites_filter_independently_and_preserve_source"],
+      "behavior": "Executes Gaussian filtering through the function-contract executor for one and three calibrated sites; compares anisotropic Gaussian pixels and verifies independent sites, metadata, mask and original input preservation.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/gaussian_filter.py", "openhcs/interop/cellprofiler/runtime/function_contract_execution.py", "openhcs/core/runtime_image_values.py"]
+    },
+    {
+      "modules": ["InvertForPrinting"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_conditional_named_images.py::test_invert_for_printing_runtime_returns_enabled_channels_in_rgb_order"],
+      "behavior": "Executes all eight RGB enable masks, checking grayscale values, channel ordering, metadata and the no-output case.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/color.py"]
+    },
+    {
+      "modules": ["MakeProjection"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_projection_backend.py::test_make_projection_preserves_core_projection_values"],
+      "behavior": "Executes average, maximum, minimum, sum, variance and mask projections and compares values against NumPy references.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/projection.py"]
+    },
+    {
+      "modules": ["MatchTemplate"],
+      "test_nodeids": ["tests/unit/test_settings_binder.py::test_match_template_reads_its_declared_template_file"],
+      "behavior": "Executes matching against an actual template file and checks shape, float32 dtype and the expected correlation maximum.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/feature_enhancement.py"]
+    },
+    {
+      "modules": ["MeasureImageSkeleton"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_measure_image_skeleton_contract.py::test_measure_image_skeleton_returns_schema_bearing_rows"],
+      "behavior": "Executes a straight skeleton measurement, retaining input pixels and emitting typed rows with zero branches and two endpoints.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/skeleton.py"]
+    },
+    {
+      "modules": ["MeasureObjectSkeleton"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_conditional_named_images.py::test_measure_object_skeleton_retained_runtime_image_is_exact_analysis_image"],
+      "behavior": "Executes seeded object-skeleton analysis and checks retained branchpoint pixels and measurement rows against the same analysis owner; consistency evidence, not an independent numerical reference.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/skeleton.py"]
+    },
+    {
+      "modules": ["Medialaxis"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_medial_axis_contract.py::test_medial_axis_callable_returns_thin_binary_skeleton"],
+      "behavior": "Executes medial-axis extraction and checks float32 binary output, nonempty support and fewer foreground pixels than the solid input; not exact pixel parity.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/medial_axis.py"]
+    },
+    {
+      "modules": ["RunImagejMacro"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_conditional_named_images.py::test_run_imagej_macro_runtime_returns_declared_group_order"],
+      "behavior": "Executes callable output composition with the Fiji request send method monkeypatched; checks declared output names, order and values. Does not execute Fiji, its server or a real macro.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/imagej_macro.py", "openhcs/runtime/fiji_macro_runtime.py"]
+    },
+    {
+      "modules": ["UnmixColors"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_library_loading.py::test_unmix_colors_returns_one_output_per_stain_row"],
+      "behavior": "Executes three stain rows including a custom stain; checks one float32 image per row, output shapes, removed channel-axis metadata and the FLEXIBLE processing contract; not stain-separation accuracy.",
+      "shared_only": false,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/color.py"]
+    },
+    {
+      "modules": ["Reducenoise"],
+      "test_nodeids": ["tests/unit/test_calibrated_gaussian_spatial_axes.py::test_calibrated_sites_filter_independently_and_preserve_source"],
+      "behavior": "Credits only shared image-payload pixel replacement through with_image_payload_data: calibrated Gaussian execution checks mask, metadata and input preservation. Reducenoise uses this owner, but this node does not execute Reducenoise or validate non-local-means denoising.",
+      "shared_only": true,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/smoothing.py", "openhcs/core/runtime_image_values.py", "openhcs/processing/backends/cellprofiler/gaussian_filter.py", "openhcs/interop/cellprofiler/runtime/function_contract_execution.py"]
+    },
+    {
+      "modules": ["MeasureObjectOverlap"],
+      "test_nodeids": ["tests/unit/test_cellprofiler_object_label_payload_inputs.py::test_area_occupied_accepts_object_label_payload_input"],
+      "behavior": "Credits only shared nominal-label materialization through object_label_dense_array: AreaOccupied consumes a nominal payload and checks area four, total area sixteen and unchanged image. MeasureObjectOverlap uses the same owner; overlap metrics and EMD are not exercised by this node.",
+      "shared_only": true,
+      "owner_sources": ["openhcs/processing/backends/cellprofiler/object_overlap.py", "openhcs/core/runtime_object_labels.py", "openhcs/processing/backends/cellprofiler/area_occupied.py"]
+    }
+  ]
+}
