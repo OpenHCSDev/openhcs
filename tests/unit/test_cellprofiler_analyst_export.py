@@ -40,7 +40,7 @@ from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
 from openhcs.core.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (
@@ -1937,13 +1937,13 @@ def _record_relationship(
 def _external_rows(
     table: CellProfilerProjectedTable,
 ) -> tuple[dict[str, object], ...]:
-    return tuple(dict(row) for row in table.rows)
+    return tuple(dict(row) for row in (table.rows.iter_row_mappings() if isinstance(table.rows, ColumnarRows) else table.rows))
 
 
 def _field_rows(
     table: CellProfilerProjectedTable,
 ) -> tuple[dict[str, object], ...]:
-    return tuple(dict(row) for row in table.rows)
+    return tuple(dict(row) for row in (table.rows.iter_row_mappings() if isinstance(table.rows, ColumnarRows) else table.rows))
 
 
 def test_database_projection_includes_derived_grid_measurements() -> None:

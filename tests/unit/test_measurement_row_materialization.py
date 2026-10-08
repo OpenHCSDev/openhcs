@@ -328,6 +328,32 @@ def test_dense_concatenation_preserves_numpy_dtype_and_column_cache() -> None:
     assert rows.columns["value"] is values
 
 
+@pytest.mark.parametrize(
+    "columns",
+    (
+        (np.array([2**53 + 1], np.int64), np.array([0.5], np.float64)),
+        (np.array([True], np.bool_), np.array(["text"], dtype="U4")),
+        (np.array([], np.float64), np.array([2**53 + 1], np.int64)),
+        (np.array([True], np.bool_), np.array([], dtype="U4")),
+    ),
+)
+def test_concatenation_retains_sparse_join_cells_at_dtype_boundaries(columns) -> None:
+    fields = (FieldSpec("value"),)
+    batches = tuple(
+        MeasurementProjectedColumnarRows({"value": column}, fields=fields)
+        for column in columns
+    )
+    expected = MeasurementSparseColumnarRows.from_columnar_batches(
+        batches, identity_fields=(),
+    ).column_values("value")
+    rows = ConcatenatedColumnarRows(batches)
+    actual = rows.column_values("value")
+    assert actual.dtype == expected.dtype == np.dtype(object)
+    assert actual.tolist() == expected.tolist()
+    assert tuple(type(value) for value in actual) == tuple(type(value) for value in expected)
+    assert rows.column_values("value") is actual
+
+
 def test_sparse_concatenation_preserves_gaps_order_and_marker_identity() -> None:
     value_field = (FieldSpec("value", float),)
     other_field = (FieldSpec("other", int),)
