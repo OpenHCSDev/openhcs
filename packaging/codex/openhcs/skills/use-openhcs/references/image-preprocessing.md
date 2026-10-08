@@ -1,7 +1,7 @@
 # Choose and test microscopy preprocessing
 
-Normalize segmentation and tracing inputs before tuning detection parameters.
-For additional corrections, start from a raw biological witness and its nuisance,
+Establish segmentation and tracing input units before tuning detection parameters.
+For corrections, start from a raw biological witness and its nuisance,
 not a favourite filter. Establish
 the target channel, the structures that must survive and a specific nuisance
 model. Retain acquisition source and provenance as a reproducible reference;
@@ -13,22 +13,30 @@ compatible registered OpenHCS
 callable before choosing parameters; the live contract owns backend, dtype,
 axes, units and artifact flow.
 
-## Normalize segmentation inputs before tuning
+## Establish detection inputs before tuning
 
-Analytical normalization is a standard part of segmentation and tracing, not
-an optional cosmetic repair reserved for visibly poor images. Declare the
-mapping, fit domain and target range before measuring the detector's input or
-choosing intensity-dependent parameters. Use the existing source/processing
-owner: if it already supplies the intended normalized input, verify that
-contract rather than adding a duplicate transform or independently refitting it.
-An internally rescaled feature response is not evidence that the requested
-input normalization has been performed.
+Inspect the detector's declared dtype, intensity units and embedded operations.
+Raw calibrated input is valid when its contract and observed support justify it;
+normalization is not a compulsory extra filter. When normalization is required
+by the callable or chosen to improve detection, declare its mapping, fit domain
+and target range before choosing intensity-dependent parameters. If the existing
+source/processing owner already supplies that input, verify it instead of
+applying a duplicate transform. Internal feature rescaling does not establish
+an externally requested input mapping.
 
-Choose a linear/percentile rescaling or another justified mapping through a
-registered operation. For comparable fields, follow
+Preprocessing may be separate FunctionSteps or earlier callables in the same
+step's function chain. Both use ordinary registered operations and declared
+source/axis contracts. Inspect embedded enhancement switches before adding an
+external equivalent; retain only the operations whose contribution is supported
+by raw/processed/result comparison. For optional neurite enhancement and its
+admission gates, follow
+[the detector diagnostics](segmentation-diagnostics.md#separate-support-recovery-from-rooted-graph-validity).
+
+If rescaling is chosen, use a linear/percentile or other justified mapping through
+a registered operation. For comparable fields sharing that mapping, follow
 [shared scaling](#shared-scaling-for-fields-of-one-mosaic); keep that fit and
 mapping fixed across the channel's fields. Measure thresholds and noise scales
-in the actual resulting units, not the original detector counts. Normalization
+in the actual consumed units, whether raw or transformed. Normalization
 does not replace denoising, background subtraction or illumination correction;
 select those operations from their nuisance evidence and record their order.
 
