@@ -776,7 +776,6 @@ class CPATableRowProjection:
             CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject=default_subject,
             default_scope=table.subject.scope,
-            source_image_name=table.source_image_name,
             object_id_field=table.subject.object_id_field,
             qualifier_field_names=measurement_qualifier_field_names(
                 CELLPROFILER_MEASUREMENT_DIALECT

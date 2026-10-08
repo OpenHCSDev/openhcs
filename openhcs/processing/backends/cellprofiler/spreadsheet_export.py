@@ -249,6 +249,46 @@ class SpreadsheetFileSelection:
             subject in selection.subjects for selection in file_selections
         )
 
+    @classmethod
+    def measurement_subjects(
+        cls,
+        *,
+        export_all_measurement_types: bool,
+        file_selections: tuple[SpreadsheetFileSelection, ...],
+        calculates_aggregates: bool,
+    ) -> frozenset[str] | None:
+        """Derive consumed subjects while retaining Image metadata dependencies."""
+        if export_all_measurement_types or calculates_aggregates:
+            return None
+        return frozenset(
+            (
+                "Image",
+                *(
+                    subject
+                    for selection in file_selections
+                    for subject in selection.subjects
+                ),
+            )
+        )
+
+    @classmethod
+    def reference_mean_subjects(
+        cls,
+        image_rows: ColumnarRows | None,
+        object_subjects: tuple[str, ...],
+    ) -> frozenset[str]:
+        """Derive object dependencies from the admitted Image feature grammar."""
+        references = tuple(
+            name
+            for name in (() if image_rows is None else image_rows.columns)
+            if aggregate_image_number_reference_measurement_field(name)
+        )
+        return frozenset(
+            subject
+            for subject in object_subjects
+            if any(name.startswith(f"Mean_{subject}_") for name in references)
+        )
+
     def __post_init__(self) -> None:
         subjects = tuple(dict.fromkeys(subject.strip() for subject in self.subjects))
         if not subjects or any(not subject for subject in subjects):
@@ -564,6 +604,15 @@ def prepare_spreadsheet_bundle(
         add_image_metadata=add_image_metadata,
         add_image_file_names=add_image_file_names,
         experiment_tables=experiment_tables,
+        required_subjects=SpreadsheetFileSelection.measurement_subjects(
+            export_all_measurement_types=bool(export_all_measurement_types),
+            file_selections=file_selections,
+            calculates_aggregates=bool(
+                calculate_aggregate_means
+                or calculate_aggregate_medians
+                or calculate_aggregate_standard_deviations
+            ),
+        ),
     )
     if SpreadsheetFileSelection.admits_subject(
         SpreadsheetFileSelection.relationship_subject_name,
@@ -680,13 +729,16 @@ def _measurement_tables(
     add_image_metadata: bool,
     add_image_file_names: bool,
     experiment_tables: tuple[MeasurementTable, ...] | None = None,
+    required_subjects: frozenset[str] | None = None,
 ) -> tuple[
     OrderedDict[str, ColumnarRows],
     tuple[str, ...],
 ]:
     accumulator = WideMeasurementRowAccumulator(
-        CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract
+        CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract,
+        required_subjects=required_subjects,
     )
+    projected_tables: list[tuple[MeasurementTable, ColumnarRows]] = []
     source_metadata_by_image_number: OrderedDict[
         int,
         list[tuple[Mapping[str, object], Mapping[str, object]]],
@@ -702,15 +754,17 @@ def _measurement_tables(
                 slice_indices=image_numbers.source_slices_for_measurement_table(table),
                 owner=table.name,
             )
+            projected_rows = image_numbers.project_measurement_rows(
+                scope=record.key.scope,
+                table=table,
+            )
+            if required_subjects is not None:
+                projected_tables.append((table, projected_rows))
             accumulator.add_declared_rows(
-                image_numbers.project_measurement_rows(
-                    scope=record.key.scope,
-                    table=table,
-                ),
+                projected_rows,
                 CELLPROFILER_MEASUREMENT_DIALECT,
                 default_subject=_measurement_subject_name(table),
                 default_scope=table.subject.scope,
-                source_image_name=table.source_image_name,
                 object_id_field=table.subject.object_id_field,
                 qualifier_field_names=measurement_qualifier_field_names(
                     CELLPROFILER_MEASUREMENT_DIALECT
@@ -755,7 +809,6 @@ def _measurement_tables(
             CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject=_measurement_subject_name(table),
             default_scope=table.subject.scope,
-            source_image_name=table.source_image_name,
             object_id_field=table.subject.object_id_field,
             qualifier_field_names=measurement_qualifier_field_names(
                 CELLPROFILER_MEASUREMENT_DIALECT
@@ -797,13 +850,35 @@ def _measurement_tables(
             default_subject="Image",
             default_scope=MeasurementScope.IMAGE,
         )
-    return (
-        OrderedDict(
-            (subject, _cellprofiler_rows(rows))
-            for subject, rows in accumulator.columnar_rows_by_subject().items()
-        ),
-        accumulator.object_subjects(),
+    tables = OrderedDict(
+        (subject, _cellprofiler_rows(rows))
+        for subject, rows in accumulator.columnar_rows_by_subject().items()
     )
+    object_subjects = accumulator.object_subjects()
+    if required_subjects is not None:
+        additional_subjects = SpreadsheetFileSelection.reference_mean_subjects(
+            tables.get("Image"), object_subjects
+        ).difference(required_subjects)
+        if additional_subjects:
+            accumulator.required_subjects = frozenset(additional_subjects)
+            for table, projected_rows in projected_tables:
+                accumulator.add_declared_rows(
+                    projected_rows,
+                    CELLPROFILER_MEASUREMENT_DIALECT,
+                    default_subject=_measurement_subject_name(table),
+                    default_scope=table.subject.scope,
+                    object_id_field=table.subject.object_id_field,
+                    qualifier_field_names=measurement_qualifier_field_names(
+                        CELLPROFILER_MEASUREMENT_DIALECT
+                    ),
+                )
+            tables.update(
+                (subject, _cellprofiler_rows(rows))
+                for subject, rows in accumulator.columnar_rows_by_subject(
+                    subjects=frozenset(additional_subjects)
+                ).items()
+            )
+    return tables, object_subjects
 
 
 def _source_metadata_consensus(
