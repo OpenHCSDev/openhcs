@@ -1,0 +1,57 @@
+{
+  "source_revision": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "native_reference_kinds": {
+    "singlewell": "measured_first_batch",
+    "8assignments-2workers": "measured_first_batch",
+    "12assignments-1worker": "projected_first_batch",
+    "12assignments-2workers": "projected_first_batch",
+    "12assignments-3workers": "projected_first_batch",
+    "12assignments-4workers": "projected_first_batch",
+    "16assignments-4workers": "projected_first_batch"
+  },
+  "native_source_cpu_affinities": {
+    "singlewell": [
+      5
+    ],
+    "8assignments-2workers": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "12assignments-1worker": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "12assignments-2workers": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "12assignments-3workers": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "12assignments-4workers": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "16assignments-4workers": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "calibration_scope": "CP1 versus CP8 uses different CPU affinity (one versus four slots), so not a batching-only effect. Matched-affinity cold-first validation covers three workflows, not the full thirty; cross-campaign anchor variation remains visible.",
+  "native_policy": "Measured CP first batch n=1 at 1/8 assignments; explicitly projected first-use CP reference at 12/16; OH median n=3. No target native observations fabricated.",
+  "memory": "Unavailable; no historical substitution",
+  "scope": "total"
+}
