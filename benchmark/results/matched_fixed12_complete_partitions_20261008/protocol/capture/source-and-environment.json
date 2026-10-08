@@ -1,0 +1,14 @@
+{
+  "source_head": "753d4b26de7eab3ac592b29c10d70c2c769a6763",
+  "environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0",
+    "NUMPY_MADVISE_HUGEPAGE": "0"
+  },
+  "native_tabular_sha256": "5b467950263c086878b213d5e7743b97b5b364ee3cfc0eff9205122e71fa7334"
+}

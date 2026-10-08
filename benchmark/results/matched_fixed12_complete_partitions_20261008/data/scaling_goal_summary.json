@@ -1,0 +1,12 @@
+{
+  "source_head": "753d4b26de7eab3ac592b29c10d70c2c769a6763",
+  "workflow_count": 30,
+  "assignments": 12,
+  "target": 3.0,
+  "median_scaling_by_scope": {
+    "execution": 2.950571883472099,
+    "total": 2.6763791409170468
+  },
+  "execution_target_met": false,
+  "completion_scope": "Measured scaling gate only; publication and merged artifacts remain separately required."
+}
