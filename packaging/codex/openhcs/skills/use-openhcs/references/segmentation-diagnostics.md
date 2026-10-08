@@ -278,6 +278,31 @@ biology elsewhere; retain a faint-path regression control.
 
 ### Separate support recovery from rooted graph validity
 
+For `neurite_outgrowth_metaxpress`, reflect the registered settings before
+choosing a sensitivity change. Initial admission intersects the enhanced
+candidate mask with local-background response support. Lowering
+`intensity_above_local_background` cannot restore pixels excluded by the
+enhanced gate; lowering `candidate_threshold_correction_factor` cannot override
+the local gate. Compare both retained planes at the missing shaft, not only
+their intersection. Optional strong-seed retention is a further distinction
+described below, not a substitute for either gate.
+
+The declared soma width also selects the enhanced response's adaptive-threshold
+neighbourhood in discrete pixel steps. A soma-width repair can therefore alter
+neurite admission while every outgrowth setting stays unchanged. Different
+analytical normalisation changes the local-response scale relative to raw signal;
+two numeric cutoffs are not directly comparable across different mappings.
+Retain the consumed alias, normalisation and compiled settings when comparing
+stages, and check distributed path/background controls after a body-scale change.
+
+Stable cell counts do not establish stable arbor measurements: body admission,
+soma-rooted path ownership and qualified junctions answer different questions.
+Trace a magnitude difference through candidate support, initial owned paths,
+repair and final topology before attributing it to branching definitions.
+Read diagnostic counters by their declared stage: adoption/repair counts can
+be cumulative retained totals, not increments to add together. Neither trace
+retention fractions nor agreement between pipelines measures biological recall.
+
 If a raw-supported junction disappears from a ridge-enhanced candidate, compare
 the raw pixels, enhanced response and admitted mask at that junction and an
 ordinary path. More permissive thresholding cannot recover pixels absent from
