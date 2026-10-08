@@ -1,0 +1,108 @@
+{
+  "source": "6cbf26d62db0385e88a2138eaac6809d68dc1898",
+  "scope": "Bounded actual12assignment matched receiving 1worker/4workers on same owned endpoint; warm+3 actualOH and fullSCI; originalnative8 comparisonfacts untouched; no freshCP execution, no derivedCP metric model chosen",
+  "common_argv": [
+    "--manifest",
+    "/home/ts/code/projects/openhcs-materialization-plumbing/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/official30-manifest.json",
+    "--case",
+    "ExampleWoundHealing",
+    "--well-count",
+    "1",
+    "--repeat-assignments",
+    "12",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--candidate-only",
+    "--production-source-root",
+    "/home/ts/code/projects/openhcs-materialization-plumbing",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1",
+    "--native-measurement-cache-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261008/wound-runtime-profile-v1/normalization-wound-workers-pair/native-measurement-facts",
+    "--comparison-workers",
+    "2",
+    "--comparison-cpus",
+    "0",
+    "1"
+  ],
+  "server_port": 7778,
+  "affinity_by_job": [
+    {
+      "workers": 1,
+      "epoch_seconds": 1791424742.218285,
+      "endpoint_pid": 3918096,
+      "endpoint_create_time": 1791424631.8,
+      "parent_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_cpu_affinity": [
+        5
+      ],
+      "server_thread_cpu_affinity": {
+        "3918096": [
+          5
+        ],
+        "3923114": [
+          5
+        ],
+        "3923115": [
+          5
+        ],
+        "3923116": [
+          5
+        ]
+      }
+    },
+    {
+      "workers": 4,
+      "epoch_seconds": 1791424781.318402,
+      "endpoint_pid": 3918096,
+      "endpoint_create_time": 1791424631.8,
+      "parent_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_thread_cpu_affinity": {
+        "3918096": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3923114": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3923115": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3923116": [
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    }
+  ]
+}
