@@ -417,7 +417,7 @@ class InternalSymbolRenderer(McpDevOutputRenderer):
         role = McpDevPayloadProjection.text(payload.get("role"))
         if role != "<none>":
             lines.append(f"Role: {role}")
-        doc_summary = McpDevPayloadProjection.text(payload.get("doc_summary"))
+        doc_summary = McpDevPayloadProjection.text(payload.get("doc") or payload.get("doc_summary"))
         if doc_summary != "<none>":
             lines.append(f"Doc: {doc_summary}")
         return "\n".join(lines)

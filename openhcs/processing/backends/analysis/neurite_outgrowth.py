@@ -1479,6 +1479,13 @@ class _TopologyResult:
         medial-axis star wholly inside one foreground disc is a cap. A short
         proximal arm must terminate against its own soma; merely passing near
         a soma does not qualify. Trace geometry and nominal owners are unchanged.
+
+        Three distinct corridors (including a qualified proximal soma arm)
+        qualify a branch. Qualified logical groups are clustered transitively
+        by Euclidean separation at most ``merge_radius``; each cluster counts
+        once per cell. The topology builder supplies max(1, outgrowth_width_px)
+        as that radius. Branch counts are not the number of exported graph
+        nodes, paths, or soma-root process partitions.
         """
         endpoint_paths: dict[tuple[int, int], set[int]] = defaultdict(set)
         owned_paths: dict[int, list[int]] = defaultdict(list)

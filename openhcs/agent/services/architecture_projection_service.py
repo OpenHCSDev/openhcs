@@ -32,7 +32,7 @@ class InternalApiSymbolSpec:
     symbol: InspectableSymbol
     source_symbol: InspectableSymbol | None = None
 
-    def project(self) -> InternalApiSymbol:
+    def project(self, *, include_doc: bool = False) -> InternalApiSymbol:
         source_location = _source_location(self.symbol_source_authority())
         return InternalApiSymbol(
             symbol_id=self.symbol_id,
@@ -44,6 +44,7 @@ class InternalApiSymbolSpec:
             doc_summary=_doc_summary(self.symbol),
             source_path=source_location.source_path,
             line_number=source_location.line_number,
+            doc=inspect.getdoc(self.symbol) if include_doc else None,
         )
 
     def symbol_source_authority(self) -> InspectableSymbol:
@@ -361,6 +362,33 @@ class ExecutionRuntimeArchitectureTopic(ArchitectureTopicProjection):
         )
 
 
+class NeuriteMeasurementsArchitectureTopic(ArchitectureTopicProjection):
+    topic_id = "neurite_measurements"
+    title = "Neurite measurement definitions"
+    summary = "Source-owned soma-root process partitions and branch qualification."
+
+    def symbol_specs(self) -> tuple[InternalApiSymbolSpec, ...]:
+        from openhcs.processing.backends.analysis.neurite_outgrowth import (
+            NeuriteOutgrowthCellResult,
+            _TopologyResult,
+        )
+
+        return (
+            InternalApiSymbolSpec(
+                "analysis.NeuriteOutgrowthCellResult",
+                "NeuriteOutgrowthCellResult",
+                "Native per-cell measurement declaration and process definition.",
+                NeuriteOutgrowthCellResult,
+            ),
+            InternalApiSymbolSpec(
+                "analysis.neurite_classify_owned_endpoints",
+                "Neurite branch qualification",
+                "Final owned-topology branch-event classification authority.",
+                _TopologyResult.classify_owned_endpoints,
+            ),
+        )
+
+
 class ArchitectureProjectionService:
     """Expose architecture facts without exposing live internal method calls."""
 
@@ -383,7 +411,7 @@ class ArchitectureProjectionService:
             for spec in projection.symbol_specs():
                 curated_specs.append((projection.required_topic_id(), spec))
                 if spec.symbol_id == symbol_id:
-                    return spec.project()
+                    return spec.project(include_doc=True)
         raise ArchitectureSymbolNotCuratedError(
             symbol_id,
             tuple(curated_specs),

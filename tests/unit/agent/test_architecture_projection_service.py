@@ -1,4 +1,5 @@
 from openhcs.serialization.json import to_jsonable
+import inspect
 from openhcs.agent.services.architecture_projection_service import (
     ArchitectureProjectionService,
 )
@@ -85,3 +86,29 @@ def test_describe_internal_symbol_returns_json_safe_projection():
 
     assert payload["symbol_id"] == "core.FunctionStep"
     assert payload["source_path"] == "openhcs/core/steps/function_step.py"
+
+
+def test_neurite_measurement_definitions_are_retrieved_from_owning_symbols():
+    from openhcs.processing.backends.analysis.neurite_outgrowth import (
+        NeuriteOutgrowthCellResult,
+        _TopologyResult,
+    )
+
+    service = ArchitectureProjectionService()
+    assert "neurite_measurements" in {
+        topic.topic_id for topic in service.list_topics().topics
+    }
+    topic = service.explain_topic("neurite_measurements")
+    assert all(symbol.doc is None for symbol in topic.internal_symbols)
+    for symbol, owner in zip(topic.internal_symbols, (
+        NeuriteOutgrowthCellResult, _TopologyResult.classify_owned_endpoints,
+    )):
+        detail = service.describe_internal_symbol(symbol.symbol_id)
+        assert to_jsonable(detail)["doc"] == inspect.getdoc(owner)
+        assert detail.source_path.endswith("analysis/neurite_outgrowth.py")
+    assert "owned path partition" in service.describe_internal_symbol(
+        "analysis.NeuriteOutgrowthCellResult"
+    ).doc
+    assert "clustered transitively" in service.describe_internal_symbol(
+        "analysis.neurite_classify_owned_endpoints"
+    ).doc

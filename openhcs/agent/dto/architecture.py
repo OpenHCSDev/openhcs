@@ -17,6 +17,7 @@ class InternalApiSymbol(ImportPathRef):
     doc_summary: str | None
     source_path: str | None
     line_number: int | None
+    doc: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
