@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+ExampleWoundHealing,1,12,worker_0,12,1791426697.6886952,1791426705.5760376,7.88734245300293
