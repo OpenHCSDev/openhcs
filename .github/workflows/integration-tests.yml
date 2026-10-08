@@ -2032,7 +2032,7 @@ jobs:
       OPENHCS_CPU_ONLY: true
       QT_QPA_PLATFORM: offscreen
       MPLBACKEND: Agg
-      NUMBA_DISABLE_INTEL_SVML: ${{ runner.os == 'macOS' && '1' || '0' }}
+      NUMBA_DISABLE_INTEL_SVML: ${{ matrix.os == 'macos-latest' && '1' || '0' }}
 
     steps:
       - name: Enable Windows long paths
