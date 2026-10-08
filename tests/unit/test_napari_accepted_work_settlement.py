@@ -204,6 +204,128 @@ def settle(receiver):
     return response, ViewerSettleProgress.from_response(ViewerControlResponse(response))
 
 
+@pytest.mark.skipif(not os.environ.get("OPENHCS_TRIANGULATION_QUALIFICATION_ROI"),
+                    reason="Explicit retained-archive native qualification")
+def test_native_compiled_triangulation_retains_archive_and_control(
+    receiver, wire_receiver, qtbot, tmp_path,
+):
+    """All retained contours, original transport, native control and capture."""
+    import hashlib
+    from importlib.metadata import version
+    from qtpy.QtCore import QTimer
+    from napari.utils.triangulation_backend import get_backend, TriangulationBackend
+    from napari.layers.shapes._shapes_models.polygon import Polygon
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.steps.stream_component_semantics import (
+        StreamImagePayloadMetadataProjector, StreamViewerComponentMetadataProjector,
+    )
+    from openhcs.runtime.viewer_controls import ViewerStateControlOptions
+    from openhcs.runtime.viewer_protocol import ViewerRuntimeEndpoint
+    from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
+    from openhcs.agent.dto.execution import ExecutionConnectionSpec
+    from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
+
+    assert get_backend() is TriangulationBackend.fastest_available
+    archive = Path(os.environ["OPENHCS_TRIANGULATION_QUALIFICATION_ROI"])
+    original_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
+    rois = load_rois_from_zip(archive)
+    source = ROIArchiveSourceMetadata.decode(rois)
+    assert source is not None
+    # The existing archive source owner separates transported source metadata
+    # from feature rows, while preserving every parent/member and contour.
+    shapes = NapariROIConverter.rois_to_shapes(ROIArchiveSourceMetadata.geometry(rois))
+    largest = max(shapes, key=lambda row: len(row["coordinates"]))
+    coordinates = np.asarray(largest["coordinates"], dtype=np.float32)
+    started = time.perf_counter()
+    polygon = Polygon(coordinates)
+    polygon_seconds = time.perf_counter() - started
+    assert polygon._set_meshes.__name__ == "_set_meshes_compiled_partseg"
+    np.testing.assert_array_equal(polygon.data, coordinates)
+    triangles = polygon._face_vertices[polygon._face_triangles].astype(np.float64)
+    u, v = triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0]
+    mesh_area = np.abs(u[:, 0] * v[:, 1] - u[:, 1] * v[:, 0]).sum() / 2
+    points = coordinates.astype(np.float64)
+    polygon_area = abs(np.sum(points[:, 0] * np.roll(points[:, 1], -1)
+                              - points[:, 1] * np.roll(points[:, 0], -1))) / 2
+
+    fields = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(source, ())
+    components = StreamViewerComponentMetadataProjector.for_item_fields(
+        NapariDisplayConfig.COMPONENT_ORDER, fields,
+    ).project_required(index=0, metadata=source.source_provenance.source_component_metadata)
+    item = {"path": str(archive), "data_type": "shapes", "shapes": shapes,
+            "metadata": components, **fields}
+    assert wire_receiver(item)["status"] == "success"
+    assert not receiver.accepted_stream_batches.empty()
+    endpoint = ViewerRuntimeEndpoint(receiver.endpoint, receiver.config)
+    receiver.control_transport_pump.start()
+    service = QTimer()
+    service.timeout.connect(receiver.process_accepted_stream_messages)
+    service.timeout.connect(receiver.process_messages)
+    service.start(10)
+    receiver.viewer.show()
+    latencies, pending_observations = [], 0
+    started = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=1) as worker:
+        def control(kind, payload=None):
+            sent = time.perf_counter()
+            future = worker.submit(ViewerControlMessageRequest(endpoint, kind, payload, timeout=5).send)
+            while not future.done():
+                qtbot.wait(10)
+            response = future.result()
+            assert response.succeeded(), response.payload
+            latencies.append(time.perf_counter() - sent)
+            return response
+
+        try:
+            while True:
+                progress = ViewerSettleProgress.from_response(control("settle"))
+                assert progress.phase is not ViewerSettlePhase.FAILED
+                control("state", ViewerStateControlOptions(
+                    include_component_values=False, include_payload_summaries=False,
+                ))
+                if progress.phase is ViewerSettlePhase.COMPLETE:
+                    break
+                pending_observations += 1
+            native_seconds = time.perf_counter() - started
+            assert pending_observations > 0
+            print(f"native materialization completed: {len(shapes)} contours in {native_seconds:.3f}s; "
+                  f"pending observations={pending_observations}; maximum state/settle latency={max(latencies):.3f}s", flush=True)
+            route_key, = receiver.component_groups
+            layer = receiver.layer_route_state.layer(route_key)
+            assert len(layer.data) == len(shapes) == len(rois)
+            for native, shape in zip(layer.data, shapes, strict=True):
+                np.testing.assert_array_equal(native[:, -2:], np.asarray(shape["coordinates"], dtype=np.float32))
+            for column in ("label", "area", "perimeter"):
+                np.testing.assert_array_equal(layer.features[column],
+                                              [shape["metadata"][column] for shape in shapes])
+            identities = tuple(layer.features[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE])
+            assert len(set(identities)) == len(shapes)
+            assert tuple(layer.scale[-2:]) == source.source_voxel_spacing.values_zyx[-2:]
+            records = receiver.component_groups.existing_items_for(route_key)
+            assert records[0].image_metadata.to_viewer_image_metadata() == source.to_viewer_image_metadata()
+            assert all(model._set_meshes.__name__ == "_set_meshes_compiled_partseg"
+                       for model in layer._data_view.shapes)
+            snapshot = ViewerWindowSnapshotRequest.from_fields(
+                connection=ExecutionConnectionSpec(port=receiver.port, transport_mode=receiver.transport_mode),
+                output_dir_path=str(tmp_path),
+            )
+            response = control("screenshot", snapshot)
+            assert tuple(layer.features[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE]) == identities
+            assert hashlib.sha256(archive.read_bytes()).hexdigest() == original_hash
+            print(f"partsegcore={version('PartSegCore-compiled-backend')}; napari={version('napari')}; "
+                  f"largest={len(coordinates)} vertices triangulated in {polygon_seconds:.3f}s; "
+                  f"native all {len(shapes)} members in {native_seconds:.3f}s; "
+                  f"pending observations={pending_observations}; control max={max(latencies):.3f}s; "
+                  f"terminal={progress.completed_update_count}/{progress.total_update_count}; "
+                  f"geometry/labels/features/calibration/source retained; snapshot={response.payload}")
+            # Keep the unresolved parity failure after collecting the actual
+            # native interaction/capture result; do not weaken it to qualify.
+            assert mesh_area == pytest.approx(polygon_area, rel=1e-5)
+        finally:
+            service.stop()
+            receiver.control_transport_pump.stop()
+
+
 def saved_roi_item(tmp_path):
     archive = tmp_path / "aggregate_segmentation_masks_step1_rois.roi.zip"
     DiskStorageBackend()._save_rois(
