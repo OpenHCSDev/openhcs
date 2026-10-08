@@ -299,7 +299,7 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
             try:
                 reply = ViewerControlMessageRequest(
                     client.runtime_endpoint, "navigate",
-                    ViewerNavigationControlOptions(route, visible=False), timeout=0.1,
+                    ViewerNavigationControlOptions(route_key=route, visible=False), timeout=0.1,
                 ).send()
                 assert not reply.succeeded()
             except zmq.Again:
