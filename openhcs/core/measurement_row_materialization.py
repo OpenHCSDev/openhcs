@@ -226,6 +226,35 @@ class MeasurementRowTextValue(MeasurementRowDeclaredValue):
         return str(value).strip() or None
 
     @classmethod
+    def domain_from_column(
+        cls, rows: ColumnarRows, column_name: str
+    ) -> tuple[str | None, ...]:
+        """Read distinct ownership text from physical segments in row order.
+
+        Built-in text cells can be admitted before normalization. Other atomic
+        cells retain the existing text conversion law, including unhashable
+        arrays or lists. Missing physical segments own the default subject.
+        """
+        if column_name not in rows.columns:
+            return (None,)
+        raw_domain: dict[str | None, None] = {}
+        row_stop = 0
+        for offset, values in rows.column_value_segments(column_name):
+            if offset > row_stop:
+                raw_domain.setdefault(None, None)
+            for value in values:
+                text = (
+                    value
+                    if type(value) is str or type(value) is np.str_
+                    else cls.normalize_value(value)
+                )
+                raw_domain.setdefault(text, None)
+            row_stop = offset + len(values)
+        if row_stop < rows.row_count():
+            raw_domain.setdefault(None, None)
+        return tuple(dict.fromkeys(cls.normalize_value(value) for value in raw_domain))
+
+    @classmethod
     def value_from_row(
         cls,
         row: Mapping[str, object],
@@ -537,6 +566,25 @@ class MeasurementSparseColumnarRows(ColumnarRows):
     def __post_init__(self) -> None:
         self.validate_fields()
 
+    @staticmethod
+    def present_mask(
+        values: np.ndarray,
+        *,
+        missing_cell: object = MEASUREMENT_SPARSE_CELL,
+    ) -> np.ndarray:
+        """Derive physical presence without boxing dense typed scalar columns."""
+        if not values.dtype.hasobject and missing_cell is MEASUREMENT_SPARSE_CELL:
+            return np.ones(len(values), dtype=bool)
+        return np.fromiter(
+            (
+                value is not missing_cell
+                and not is_structural_missing_measurement_cell(value)
+                for value in values
+            ),
+            dtype=bool,
+            count=len(values),
+        )
+
     @classmethod
     def from_rows(
         cls,
@@ -679,20 +727,7 @@ class MeasurementSparseColumnarRows(ColumnarRows):
             )
             for name, values in source_columns.items():
                 values = ColumnarRows.column_array(values)
-                present = (
-                    np.ones(len(values), dtype=bool)
-                    if not values.dtype.hasobject
-                    and missing_cell is MEASUREMENT_SPARSE_CELL
-                    else np.fromiter(
-                        (
-                            value is not missing_cell
-                            and not is_structural_missing_measurement_cell(value)
-                            for value in values
-                        ),
-                        dtype=bool,
-                        count=len(values),
-                    )
-                )
+                present = cls.present_mask(values, missing_cell=missing_cell)
                 indexes = destinations[present]
                 admitted = values[present]
                 unique, first, inverse = (
@@ -963,16 +998,7 @@ class WideMeasurementRowAccumulator:
             return False
         self._long_form_fields(rows.columns)
         field_name = MeasurementRowAxisField.OBJECT_NAME.value
-        object_names = (
-            tuple(
-                dict.fromkeys(
-                    MeasurementRowObjectName.normalize_value(value)
-                    for value in rows.column_values(field_name)
-                )
-            )
-            if field_name in rows.columns
-            else (None,)
-        )
+        object_names = MeasurementRowObjectName.domain_from_column(rows, field_name)
         admitted = False
         for name in object_names:
             subject = name or default_subject
@@ -2085,13 +2111,10 @@ class ConcatenatedColumnarRowColumns(Mapping[str, Sequence[object]]):
             column_key is not None for _row_batch, column_key in physical_batches
         ):
             dense_columns = tuple(
-                columnar_row_values(row_batch, column_key)
+                ColumnarRows.column_array(columnar_row_values(row_batch, column_key))
                 for row_batch, column_key in physical_batches
             )
             if len(physical_batches) != len(self.row_batches):
-                dense_columns = tuple(
-                    ColumnarRows.column_array(column) for column in dense_columns
-                )
                 common_dtype = np.result_type(
                     *(column.dtype for column in dense_columns)
                 )

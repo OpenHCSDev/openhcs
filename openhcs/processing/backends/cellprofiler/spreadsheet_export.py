@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import csv
+import io
+
 import re
 import statistics
 from collections import OrderedDict
@@ -360,14 +363,27 @@ class SpreadsheetFileSelection:
                 values = ColumnarRows.column_array(rows.column_values(field_name))[
                     source_indexes
                 ]
-                present = np.fromiter(
-                    (not is_structural_missing_measurement_cell(value) for value in values),
-                    dtype=bool,
-                    count=len(values),
-                )
+                present = MeasurementSparseColumnarRows.present_mask(values)
                 if not np.any(present):
                     continue
                 name = f"{subject}_{field_name}"
+                if (
+                    name not in columns
+                    and len(target_indexes) == len(image_values)
+                    and bool(np.all(present))
+                ):
+                    # Match the scalar values produced by the sparse object
+                    # assignment while retaining native numeric storage.
+                    if values.dtype.kind == "f" and values.dtype.itemsize < 8:
+                        values = values.astype(np.float64)
+                    elif values.dtype.kind == "c" and values.dtype.itemsize < 16:
+                        values = values.astype(np.complex128)
+                    elif values.dtype.kind not in "biufcSUO":
+                        values = values.astype(object)
+                    dense = np.empty_like(values)
+                    dense[target_indexes] = values
+                    columns[name] = dense
+                    continue
                 if name not in columns:
                     columns[name] = np.empty(len(image_values), dtype=object)
                     columns[name].fill(MEASUREMENT_SPARSE_CELL)
@@ -395,25 +411,35 @@ class SpreadsheetFileSelection:
         """Derive native headers in their existing first-present field order."""
 
         return self.csv_schema(
-            tuple(rows.iter_row_mappings()),
+            rows,
             active_subjects=active_subjects,
         )[1]
 
     def csv_schema(
         self,
-        row_mappings: Sequence[Mapping[str, object]],
+        rows: ColumnarRows,
         *,
         active_subjects: tuple[str, ...],
         columns: Sequence[str] | None = None,
     ) -> tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]:
         """Own both physical column order and contextual header projection."""
-        columns = (
-            tuple(columns)
-            if columns is not None
-            else tuple(
-                dict.fromkeys(field_name for row in row_mappings for field_name in row)
-            )
-        )
+        if columns is None:
+            present_fields = []
+            for position, name in enumerate(rows.columns):
+                values = rows.column_values(name)
+                first = next(
+                    (
+                        index
+                        for index, value in enumerate(values)
+                        if not is_structural_missing_measurement_cell(value)
+                    ),
+                    None,
+                )
+                if first is not None:
+                    present_fields.append((first, position, name))
+            columns = tuple(name for _first, _position, name in sorted(present_fields))
+        else:
+            columns = tuple(columns)
         header_rows = (columns,)
         if len(active_subjects) > 1:
             bindings = []
@@ -480,30 +506,42 @@ class CellProfilerSpreadsheetCsvOptions(CsvOptions):
     delimiter: SpreadsheetDelimiter
     nan_representation: SpreadsheetNanRepresentation
 
-    def header_rows(self, rows: ColumnarRows) -> tuple[tuple[str, ...], ...]:
-        return self.selection.csv_schema(
-            tuple(rows.iter_row_mappings()),
-            active_subjects=self.active_subjects,
-            columns=self.fields,
-        )[1]
-
-    def render_parts(self, data: ColumnarRows) -> tuple[str, str]:
-        row_mappings = tuple(data.iter_row_mappings())
+    def csv_schema(
+        self, rows: ColumnarRows,
+    ) -> tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]:
         columns, headers = self.selection.csv_schema(
-            row_mappings,
+            rows,
             active_subjects=self.active_subjects,
             columns=self.fields,
         )
+        return columns, headers if columns else ()
+
+    def read_csv(self, text: str):
+        return csv.reader(io.StringIO(text, newline=""), delimiter=self.delimiter.value)
+
+    def render_parts(
+        self,
+        data: ColumnarRows,
+        *,
+        schema: tuple[tuple[str, ...], tuple[tuple[str, ...], ...]] | None = None,
+    ) -> tuple[str, str]:
+        from openhcs.core.measurement_row_materialization import MeasurementSparseCell
+
+        columns, headers = self.csv_schema(data) if schema is None else schema
+        values = tuple(
+            data.column_values(name) if name in data.columns else None
+            for name in columns
+        )
         policy = (
-            columns,
             self.delimiter.value,
             Real,
             self.nan_representation is SpreadsheetNanRepresentation.NULL,
             headers,
+            MeasurementSparseCell,
         )
         return (
-            _render_native_csv((), *policy),
-            _render_native_csv(row_mappings, *policy),
+            _render_native_csv(values, columns, 0, *policy),
+            _render_native_csv(values, columns, data.row_count(), *policy),
         )
 
     def render(self, data: ColumnarRows) -> str:
@@ -1517,7 +1555,8 @@ def _prepare_spreadsheet_partition(
             )
             for path, output in bundle.items()
         }
-    return {path: output.realized_for_composition() for path, output in bundle.items()}
+    return {path: output.realized_for_composition(partition_fields=request.partition_fields)
+        for path, output in bundle.items()}
 
 
 def _partitioned_spreadsheet_export(

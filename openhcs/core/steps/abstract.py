@@ -135,7 +135,10 @@ class StepExecutionObservation:
                 values,
             ) in observation.materialized_locations_by_address.items():
                 locations[address] = tuple(
-                    dict.fromkeys((*locations.get(address, ()), *values))
+                    {
+                        location: location
+                        for location in (*locations.get(address, ()), *values)
+                    }.values()
                 )
             paths.extend(observation.runtime_export_paths)
             analysis_inputs.append(observation.analysis_inputs)

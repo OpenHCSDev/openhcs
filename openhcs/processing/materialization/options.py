@@ -7,6 +7,8 @@ Greenfield design:
 
 from __future__ import annotations
 
+import csv
+import io
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -82,15 +84,32 @@ class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
 
     filename_suffix: str = "_details.csv"
 
-    def header_rows(self, rows: ColumnarRows) -> tuple[tuple[str, ...], ...]:
-        """Declare the CSV schema used for correlated partition composition."""
-        return (tuple(field.name for field in rows.fields),)
+    def csv_schema(
+        self,
+        rows: ColumnarRows,
+    ) -> tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]:
+        """Declare physical columns and their contextual CSV headers."""
+        columns = tuple(field.name for field in rows.fields)
+        return columns, (columns,)
 
-    def render_parts(self, rows: ColumnarRows) -> tuple[str, str]:
+    def header_rows(self, rows: ColumnarRows) -> tuple[tuple[str, ...], ...]:
+        return self.csv_schema(rows)[1]
+
+    def read_csv(self, text: str):
+        """Read formatting-ready lexemes with this writer's dialect."""
+        return csv.reader(io.StringIO(text, newline=""))
+
+    def render_parts(
+        self,
+        rows: ColumnarRows,
+        *,
+        schema: tuple[tuple[str, ...], tuple[tuple[str, ...], ...]] | None = None,
+    ) -> tuple[str, str]:
         """Derive header and complete CSV through this writer's format owner."""
         from openhcs.processing.materialization.core import _render_csv_rows
 
-        return _render_csv_rows((), self.header_rows(rows)[0]), self.render(rows)
+        columns, _headers = self.csv_schema(rows) if schema is None else schema
+        return _render_csv_rows((), columns), self.render(rows)
 
     def render(self, data: Any) -> str:
         """Render through the existing CSV format owner."""

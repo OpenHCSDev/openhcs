@@ -251,20 +251,21 @@ class CellProfilerImageSetNumbering:
         value_fields = MeasurementRowValueField.field_names()
         if feature_field is not None and value_fields.intersection(table.rows.columns):
             reference_features: dict[str, bool] = {}
-            for index, feature in enumerate(table.rows.column_values(feature_field)):
-                if is_structural_missing_measurement_cell(feature):
-                    continue
-                feature = str(feature)
-                is_reference = reference_features.get(feature)
-                if is_reference is None:
-                    is_reference = image_number_reference_measurement_field(
-                        feature
-                    ) and not aggregate_image_number_reference_measurement_field(
-                        feature
-                    )
-                    reference_features[feature] = is_reference
-                if is_reference:
-                    reference_indices.append(index)
+            for offset, features in table.rows.column_value_segments(feature_field):
+                for index, feature in enumerate(features, start=offset):
+                    if is_structural_missing_measurement_cell(feature):
+                        continue
+                    feature = str(feature)
+                    is_reference = reference_features.get(feature)
+                    if is_reference is None:
+                        is_reference = image_number_reference_measurement_field(
+                            feature
+                        ) and not aggregate_image_number_reference_measurement_field(
+                            feature
+                        )
+                        reference_features[feature] = is_reference
+                    if is_reference:
+                        reference_indices.append(index)
         reference_numbers: dict[int, int] = {}
         for name in table.rows.columns:
             wide_reference = image_number_reference_measurement_field(name)
