@@ -189,10 +189,18 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self,
         plate_path: Union[str, Path],
     ) -> Dict[str, Any]:
-        """Return OpenHCS virtual source-workspace metadata."""
+        """Return the declared input projection, not every retained inventory."""
 
         document = self.load_metadata_document(plate_path)
         subdirectories = self._metadata_subdirectories(document, plate_path)
+        try:
+            selected = self._main_subdirectory_name(subdirectories, plate_path)
+        except MetadataNotFoundError:
+            # Unselected documents remain available for explicit source binding;
+            # input initialization still requires an unambiguous default.
+            pass
+        else:
+            subdirectories = {selected: subdirectories[selected]}
         if subdirectories is document[FIELDS.SUBDIRECTORIES]:
             return document
         return {**document, FIELDS.SUBDIRECTORIES: subdirectories}
@@ -385,8 +393,10 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
     ) -> tuple[AnalysisResultDirectory, ...]:
         """Return OpenHCS analysis results directories declared by metadata."""
         plate_root = self.source_workspace_root(plate_path)
-        metadata_document = self.source_workspace_metadata_document(plate_path)
+        # Result discovery owns the retained inventory, not only pipeline input.
+        metadata_document = self.load_metadata_document(plate_path)
         subdirectories = self._metadata_subdirectories(metadata_document, plate_path)
+        metadata_document = {**metadata_document, FIELDS.SUBDIRECTORIES: subdirectories}
         source_projection = (
             VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
                 plate_root, metadata_document

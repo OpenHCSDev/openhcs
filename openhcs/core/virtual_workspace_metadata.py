@@ -88,6 +88,10 @@ class AtomicMetadataWriter:
     ) -> None:
         def update(data: dict[str, Any] | None) -> dict[str, Any]:
             data = self._ensure_subdirectories_structure(data)
+            self._promote_main_subdirectory(data, (
+                name for name, fields in subdirectory_updates.items()
+                if fields.get(SourceProjectionMetadataSerializer.MAIN_FIELD) is True
+            ))
             subdirectories = data[METADATA_CONFIG.SUBDIRECTORIES_KEY]
             for subdirectory_name, fields in subdirectory_updates.items():
                 subdirectory = subdirectories.setdefault(subdirectory_name, {})
@@ -123,6 +127,11 @@ class AtomicMetadataWriter:
     ) -> None:
         def update(data: dict[str, Any] | None) -> dict[str, Any]:
             data = self._ensure_subdirectories_structure(data)
+            self._promote_main_subdirectory(data, (
+                (subdirectory_name,)
+                if subdirectory_metadata.get(SourceProjectionMetadataSerializer.MAIN_FIELD) is True
+                else ()
+            ))
             data[METADATA_CONFIG.SUBDIRECTORIES_KEY][subdirectory_name] = dict(
                 subdirectory_metadata
             )
@@ -199,7 +208,7 @@ class AtomicMetadataWriter:
                 backend: True,
             }
             if is_main:
-                subdirectory[serializer.MAIN_FIELD] = True
+                self._promote_main_subdirectory(data, (subdirectory_name,))
             if results_dir is not None:
                 subdirectory[serializer.RESULTS_DIR_FIELD] = results_dir
             self._update_projection_geometry(
@@ -256,20 +265,46 @@ class AtomicMetadataWriter:
                     context, document=document, admitted_entries=admitted
                 ):
                     reconciliation_contexts.setdefault(target, context)
-            for target, context in reconciliation_contexts.items():
-                if target.contains_outputs(context):
-                    admitted[target.sub_dir] = target.write(
-                        context,
-                        metadata_writer=self,
-                        metadata_document=data,
-                        admitted_entries=admitted.get(
-                            target.sub_dir,
-                            VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
-                        ),
-                    )
+            published_targets = tuple(
+                (target, context) for target, context in reconciliation_contexts.items()
+                if target.contains_outputs(context)
+            )
+            self._promote_main_subdirectory(data, (
+                target.sub_dir for target, _ in published_targets if target.is_main
+            ))
+            for target, context in published_targets:
+                admitted[target.sub_dir] = target.write(
+                    context,
+                    metadata_writer=self,
+                    metadata_document=data,
+                    admitted_entries=admitted.get(
+                        target.sub_dir,
+                        VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
+                    ),
+                )
             return data
 
         self._execute_update(metadata_path, update)
+
+    @staticmethod
+    def _promote_main_subdirectory(
+        data: dict[str, Any], promoted_names: Iterable[str],
+    ) -> None:
+        """Transfer the declared default within the owning metadata transaction."""
+        promotions = tuple(dict.fromkeys(promoted_names))
+        if len(promotions) > 1:
+            raise ValueError(
+                f"Multiple OpenHCS metadata subdirectories explicitly promoted main: {promotions}"
+            )
+        if not promotions:
+            return
+        selected = promotions[0]
+        main_field = SourceProjectionMetadataSerializer.MAIN_FIELD
+        subdirectories = data[METADATA_CONFIG.SUBDIRECTORIES_KEY]
+        for name, subdirectory in subdirectories.items():
+            if name != selected and subdirectory.get(main_field) is True:
+                subdirectory[main_field] = False
+        subdirectories.setdefault(selected, {})[main_field] = True
 
     @staticmethod
     def _update_projection_geometry(

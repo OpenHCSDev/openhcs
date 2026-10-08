@@ -466,7 +466,6 @@ def update_metadata_for_zarr_conversion(
                 metadata_path,
                 {
                     zarr_subdir: zarr_metadata,
-                    original_subdir: {"main": False},
                 },
             )
         else:
@@ -480,11 +479,8 @@ def update_metadata_for_zarr_conversion(
                 grid_dimensions=grid_dimensions,
                 pixel_size=pixel_size,
             )
-            writer.merge_subdirectory_metadata(
-                metadata_path, {original_subdir: {"main": False}}
-            )
         logger.info(
-            "Ensured complete metadata for %s, set %s main=false",
+            "Ensured complete metadata for %s, promoted from %s",
             zarr_subdir,
             original_subdir,
         )
