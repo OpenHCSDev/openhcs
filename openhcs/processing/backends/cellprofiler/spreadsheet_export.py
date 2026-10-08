@@ -66,6 +66,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
+    ObjectRelationshipDeclaration,
 )
 from openhcs.core.source_image_provenance import (
     source_component_metadata_consensus,
@@ -224,6 +225,18 @@ class SpreadsheetFileSelection:
     experiment_subject_name: ClassVar[str] = MeasurementScope.EXPERIMENT.value.title()
 
     @classmethod
+    def for_subject(
+        cls,
+        subject: str,
+        delimiter: SpreadsheetDelimiter,
+    ) -> SpreadsheetFileSelection:
+        """Derive one automatic file from its declared measurement subject."""
+        return cls(
+            (subject,),
+            f"{subject}{_coerce_enum(SpreadsheetDelimiter, delimiter).default_suffix}",
+        )
+
+    @classmethod
     def admits_subject(
         cls,
         subject: str,
@@ -340,17 +353,26 @@ class SpreadsheetFileSelection:
         self, rows: ColumnarRows, *, active_subjects: tuple[str, ...],
     ) -> tuple[tuple[str, ...], ...]:
         """Derive native headers in their existing first-present field order."""
+
         return self.csv_schema(
-            tuple(rows.iter_row_mappings()), active_subjects=active_subjects,
+            tuple(rows.iter_row_mappings()),
+            active_subjects=active_subjects,
         )[1]
 
     def csv_schema(
-        self, row_mappings: Sequence[Mapping[str, object]], *,
+        self,
+        row_mappings: Sequence[Mapping[str, object]],
+        *,
         active_subjects: tuple[str, ...],
+        columns: Sequence[str] | None = None,
     ) -> tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]:
         """Own both physical column order and contextual header projection."""
-        columns = tuple(
-            dict.fromkeys(field_name for row in row_mappings for field_name in row)
+        columns = (
+            tuple(columns)
+            if columns is not None
+            else tuple(
+                dict.fromkeys(field_name for row in row_mappings for field_name in row)
+            )
         )
         header_rows = (columns,)
         if len(active_subjects) > 1:
@@ -419,16 +441,25 @@ class CellProfilerSpreadsheetCsvOptions(CsvOptions):
     nan_representation: SpreadsheetNanRepresentation
 
     def header_rows(self, rows: ColumnarRows) -> tuple[tuple[str, ...], ...]:
-        return self.selection.header_rows(rows, active_subjects=self.active_subjects)
+        return self.selection.csv_schema(
+            tuple(rows.iter_row_mappings()),
+            active_subjects=self.active_subjects,
+            columns=self.fields,
+        )[1]
 
     def render_parts(self, data: ColumnarRows) -> tuple[str, str]:
         row_mappings = tuple(data.iter_row_mappings())
         columns, headers = self.selection.csv_schema(
-            row_mappings, active_subjects=self.active_subjects,
+            row_mappings,
+            active_subjects=self.active_subjects,
+            columns=self.fields,
         )
         policy = (
-            columns, self.delimiter.value, Real,
-            self.nan_representation is SpreadsheetNanRepresentation.NULL, headers,
+            columns,
+            self.delimiter.value,
+            Real,
+            self.nan_representation is SpreadsheetNanRepresentation.NULL,
+            headers,
         )
         return (
             _render_native_csv((), *policy),
@@ -1234,11 +1265,7 @@ def _automatic_file_selections(
     delimiter: SpreadsheetDelimiter,
 ) -> tuple[SpreadsheetFileSelection, ...]:
     return tuple(
-        SpreadsheetFileSelection(
-            subjects=(subject,),
-            file_name=f"{subject}{delimiter.default_suffix}",
-        )
-        for subject in tables
+        SpreadsheetFileSelection.for_subject(subject, delimiter) for subject in tables
     )
 
 
@@ -1341,20 +1368,48 @@ class SpreadsheetPartitionInvocation:
     artifact_batch: RuntimeArtifactBatch
     kwargs: dict[str, object]
     image_numbers: CellProfilerImageSetNumbering
+    partition_fields: tuple[str, ...] = (
+        CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
+    )
+    csv_fields: tuple[FieldSpec, ...] = ()
 
 
 def _prepare_spreadsheet_partition(
     request: SpreadsheetPartitionInvocation,
 ) -> dict[str, RenderedColumnarCsvOutput]:
-    return {
-        path: output.realized_for_composition()
-        for path, output in prepare_spreadsheet_bundle(
-            request.artifact_batch,
-            image_numbers=request.image_numbers,
-            experiment_tables=(),
-            **request.kwargs,
-        ).items()
-    }
+    bundle = prepare_spreadsheet_bundle(
+        request.artifact_batch,
+        image_numbers=request.image_numbers,
+        experiment_tables=(),
+        **request.kwargs,
+    )
+    if request.csv_fields:
+        bundle = {
+            path: replace(
+                output,
+                content=MeasurementSparseColumnarRows(
+                    {
+                        field.name: (
+                            output.content.column_values(field.name)
+                            if field.name in output.content.columns
+                            else np.full(
+                                len(output.content),
+                                MEASUREMENT_SPARSE_CELL,
+                                dtype=object,
+                            )
+                        )
+                        for field in request.csv_fields
+                    },
+                    fields=request.csv_fields,
+                ),
+                options=replace(
+                    output.options,
+                    fields=[field.name for field in request.csv_fields],
+                ),
+            )
+            for path, output in bundle.items()
+        }
+    return {path: output.realized_for_composition() for path, output in bundle.items()}
 
 
 def _partitioned_spreadsheet_export(
@@ -1369,12 +1424,16 @@ def _partitioned_spreadsheet_export(
         str(kwargs["filename_prefix"]) if kwargs["add_filename_prefix"] else "",
         *(selection.file_name for selection in kwargs["file_selections"]),
     )
-    uses_metadata_path = any(_METADATA_TEMPLATE.search(value) for value in path_templates)
+    uses_metadata_path = any(
+        _METADATA_TEMPLATE.search(value) for value in path_templates
+    )
     if len(batch.records_by_axis) < 2:
         return prepare_spreadsheet_bundle(
             batch, context=request.runtime_context, **kwargs
         )
-    image_numbers = CellProfilerImageSetNumbering(batch.source_image_set_identity_policy)
+    image_numbers = CellProfilerImageSetNumbering(
+        batch.source_image_set_identity_policy
+    )
     all_tables = []
     numbers_by_axis: OrderedDict[str, list[int]] = OrderedDict()
     schemas_by_spec = {}
@@ -1390,10 +1449,14 @@ def _partitioned_spreadsheet_export(
                 owner=table.name,
             )
             axis_numbers = numbers_by_axis.setdefault(record.key.scope.axis_id, [])
-            axis_numbers.extend(number for number in numbers.values() if number not in axis_numbers)
+            axis_numbers.extend(
+                number for number in numbers.values() if number not in axis_numbers
+            )
             schema = table.rows.fields
             declaration = (spec.ref(), table.runtime_semantic_id)
-            declarations_by_axis.setdefault(record.key.scope.axis_id, []).append(declaration)
+            declarations_by_axis.setdefault(record.key.scope.axis_id, []).append(
+                declaration
+            )
             previous = schemas_by_spec.setdefault(declaration, schema)
             homogeneous = homogeneous and previous == schema
     if kwargs["export_all_measurement_types"]:
@@ -1414,15 +1477,103 @@ def _partitioned_spreadsheet_export(
         )
         else ()
     )
-    relationship_rows = (
-        _relationship_rows(batch, image_numbers)
-        if SpreadsheetFileSelection.admits_subject(
-            SpreadsheetFileSelection.relationship_subject_name,
-            export_all_measurement_types=bool(kwargs["export_all_measurement_types"]),
-            file_selections=kwargs["file_selections"],
+    relationship_subject = SpreadsheetFileSelection.relationship_subject_name
+    automatic_files = bool(kwargs["export_all_measurement_types"])
+    relationship_selections = (
+        (
+            SpreadsheetFileSelection.for_subject(
+                relationship_subject, kwargs["delimiter"]
+            ),
         )
-        else ()
+        if automatic_files
+        else tuple(
+            selection
+            for selection in kwargs["file_selections"]
+            if relationship_subject in selection.subjects
+        )
     )
+    relationships_partitionable = all(
+        selection.subjects == (relationship_subject,)
+        for selection in relationship_selections
+    )
+    relationship_invocations = []
+    relationship_field_groups = []
+    relationship_domains = set()
+    relationship_fields = (
+        *ObjectRelationshipDeclaration.exported_field_names,
+        CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
+    )
+    if relationship_selections and relationships_partitionable:
+        relationship_kwargs = {
+            **kwargs,
+            "export_all_measurement_types": False,
+            "file_selections": relationship_selections,
+        }
+        # Retain the original spec-major/axis-major edge order. Declarations
+        # separate producers sharing an image; source numbering separates axes.
+        for spec in batch.specs_of_type(RelationshipsArtifactType):
+            for axis_id, records in batch.records(spec.ref()).items():
+                if not any(record.data.payload.source_ids for record in records):
+                    continue
+                declared_domains = set()
+                for record in records:
+                    relationship = cast(ObjectRelationship, record.data)
+                    if not relationship.payload.source_ids:
+                        continue
+                    relationship_field_groups.append(
+                        tuple(
+                            FieldSpec(name, required=False)
+                            for name in relationship.relationship_columns()
+                        )
+                    )
+                    axis_numbers = numbers_by_axis.get(axis_id)
+                    if axis_numbers is None or not relationship.payload.slice_indices:
+                        relationships_partitionable = False
+                        continue
+                    numbers = image_numbers.for_source_slices(
+                        scope=record.key.scope,
+                        provenance=relationship.source_provenance,
+                        slice_indices=tuple(
+                            dict.fromkeys(relationship.payload.slice_indices)
+                        ),
+                        owner=relationship.name,
+                    )
+                    if any(number not in axis_numbers for number in numbers.values()):
+                        relationships_partitionable = False
+                    declaration = tuple(
+                        relationship.declaration.exported_columns().values()
+                    )
+                    declared_domains.update(
+                        (*declaration, number) for number in numbers.values()
+                    )
+                if relationship_domains.intersection(declared_domains):
+                    relationships_partitionable = False
+                relationship_domains.update(declared_domains)
+                relationship_invocations.append(
+                    SpreadsheetPartitionInvocation(
+                        RuntimeArtifactBatch(
+                            (spec,),
+                            {axis_id: records},
+                            batch.source_image_set_identity_policy,
+                            batch.source_binding_plan,
+                        ),
+                        relationship_kwargs,
+                        image_numbers,
+                        relationship_fields,
+                    )
+                )
+    if relationship_invocations:
+        fields = FieldSpec.merge_exact(relationship_field_groups)
+        canonical_rows = _cellprofiler_rows(
+            MeasurementSparseColumnarRows(
+                {field.name: () for field in fields},
+                fields=fields,
+            )
+        )
+        relationship_invocations = [
+            replace(invocation, csv_fields=canonical_rows.fields)
+            for invocation in relationship_invocations
+        ]
     # Existing source-numbering traversal can interleave axes. Byte bodies may
     # be concatenated only when axis partitions preserve that admitted order.
     flattened_numbers = tuple(
@@ -1432,7 +1583,7 @@ def _partitioned_spreadsheet_export(
     if (
         len(numbers_by_axis) < 2
         or experiment_tables
-        or relationship_rows
+        or not relationships_partitionable
         or not homogeneous
         or not ordered_domains
         or uses_metadata_path
@@ -1444,28 +1595,61 @@ def _partitioned_spreadsheet_export(
             context=request.runtime_context,
             **kwargs,
         )
-    invocations = tuple(
-        SpreadsheetPartitionInvocation(
-            RuntimeArtifactBatch(
-                batch.input_specs,
-                {axis_id: batch.records_by_axis[axis_id]},
-                batch.source_image_set_identity_policy,
-                batch.source_binding_plan,
-            ),
-            kwargs,
-            image_numbers,
-        )
-        for axis_id in numbers_by_axis
+    local_selections = tuple(
+        selection
+        for selection in kwargs["file_selections"]
+        if relationship_subject not in selection.subjects
     )
-    parts = request.map_partition_invocations(_prepare_spreadsheet_partition, invocations)
+    local_kwargs = {**kwargs, "file_selections": local_selections}
+    local_specs = tuple(
+        spec
+        for spec in batch.input_specs
+        if not issubclass(spec.artifact_type, RelationshipsArtifactType)
+    )
+    invocations = (
+        tuple(
+            SpreadsheetPartitionInvocation(
+                RuntimeArtifactBatch(
+                    local_specs,
+                    {
+                        axis_id: tuple(
+                            record
+                            for record in batch.records_by_axis[axis_id]
+                            if not issubclass(
+                                record.key.artifact_type, RelationshipsArtifactType
+                            )
+                        )
+                    },
+                    batch.source_image_set_identity_policy,
+                    batch.source_binding_plan,
+                ),
+                local_kwargs,
+                image_numbers,
+            )
+            for axis_id in numbers_by_axis
+        )
+        if automatic_files or local_selections
+        else ()
+    ) + tuple(relationship_invocations)
+    parts = request.map_partition_invocations(
+        _prepare_spreadsheet_partition, invocations
+    )
     by_path: OrderedDict[str, list[RenderedColumnarCsvOutput]] = OrderedDict()
-    for part in parts:
+    partition_fields_by_path = {}
+    for invocation, part in zip(invocations, parts, strict=True):
         for path, output in part.items():
+            previous = partition_fields_by_path.setdefault(
+                path, invocation.partition_fields
+            )
+            if previous != invocation.partition_fields:
+                raise ValueError(
+                    "Spreadsheet partitions declare conflicting file domains."
+                )
             by_path.setdefault(path, []).append(output)
     bundle = {
         path: RenderedColumnarCsvOutput.compose(
             outputs,
-            partition_fields=(CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,),
+            partition_fields=partition_fields_by_path[path],
         )
         for path, outputs in by_path.items()
     }
@@ -1478,7 +1662,6 @@ def _partitioned_spreadsheet_export(
     RuntimeBatchExecutionDomain.ARTIFACT_PARTITIONS,
     _partitioned_spreadsheet_export,
 )
-
 @execution_scope(FunctionStepExecutionScope.PLATE)
 @runtime_bound_parameters(RuntimeArtifactBatch)
 def export_to_spreadsheet(
