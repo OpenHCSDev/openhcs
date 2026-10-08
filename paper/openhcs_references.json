@@ -2659,5 +2659,26 @@
         ]
       ]
     }
+  },
+  {
+    "id": "MCMICROImplementation",
+    "type": "software",
+    "author": [
+      {
+        "literal": "MCMICRO contributors"
+      }
+    ],
+    "title": "MCMICRO Nextflow implementation: module configuration and extension template",
+    "version": "334e9dcc8814124cdf1488a149035bbac3ece54f",
+    "URL": "https://github.com/labsyspharm/mcmicro/tree/334e9dcc8814124cdf1488a149035bbac3ece54f",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          8
+        ]
+      ]
+    }
   }
 ]
