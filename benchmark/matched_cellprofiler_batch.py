@@ -14,6 +14,7 @@ import subprocess
 from collections import Counter
 from collections.abc import Mapping
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from contextlib import nullcontext
 from dataclasses import asdict, replace
 from functools import partial
 from multiprocessing import get_context
@@ -168,6 +169,11 @@ def _parser() -> argparse.ArgumentParser:
             "Measure only OpenHCS against a genuine retained repeated-source native "
             "batch; retain actual native clocks and declare projection inputs separately."
         ),
+    )
+    parser.add_argument(
+        "--preflight-native-references",
+        action="store_true",
+        help="Validate retained native input/workload custody without either engine's execution or a server.",
     )
     parser.add_argument(
         "--native-execution-model",
@@ -833,9 +839,14 @@ def _reuse_native_report(
     original_inventory = json.loads(
         json.dumps(_source_input_inventory(original_source_universe))
     )
-    if (
-        original_inventory != origin["native_input_inventory"]
-        or original_inventory != current_inventory
+    # Source paths retain physical custody; staging location is not content
+    # identity. All other inventory fields and the original files stay exact.
+    if original_inventory != origin["native_input_inventory"] or tuple(
+        {key: value for key, value in row.items() if key != "source_path"}
+        for row in original_inventory
+    ) != tuple(
+        {key: value for key, value in row.items() if key != "source_path"}
+        for row in current_inventory
     ):
         raise RuntimeError("Retained native source images or metadata differ.")
     typed_report.environment.require_equivalent(
@@ -1116,6 +1127,10 @@ def _candidate_pipeline_config(
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.preflight_native_references and not args.candidate_only:
+        raise ValueError(
+            "Native reference preflight requires candidate-only retained references."
+        )
     if args.repetitions < 1 or args.openhcs_workers < 1 or args.native_jobs < 1:
         raise ValueError("Repetitions and worker counts must be positive.")
     if args.comparison_workers < 1:
@@ -1169,11 +1184,16 @@ def main(argv: list[str] | None = None) -> int:
         raise FileExistsError(
             f"Matched pilot output directory must be empty: {output_root}"
         )
-    port = DataControlPortPairAuthority.acquire(
-        OPENHCS_ZMQ_CONFIG,
-        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-    ).data_port
-    with ZMQExecutionClient(port=port, persistent=False) as client:
+    if args.preflight_native_references:
+        execution_scope = nullcontext(None)
+    else:
+        port = DataControlPortPairAuthority.acquire(
+            OPENHCS_ZMQ_CONFIG,
+            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+        ).data_port
+        execution_scope = ZMQExecutionClient(port=port, persistent=False)
+    receipts = {}
+    with execution_scope as client:
         for case in selected_cases:
             case_args = argparse.Namespace(**vars(args))
             case_args.case = case.name
@@ -1181,6 +1201,19 @@ def main(argv: list[str] | None = None) -> int:
                 output_root / case.name if args.all_cases else output_root
             )
             _run_case(case_args, client)
+            if args.preflight_native_references:
+                receipt = case_args.output_dir / "native_reference_preflight.json"
+                receipts[case.name] = {
+                    "path": str(receipt),
+                    "sha256": sha256_file(receipt),
+                }
+    if args.preflight_native_references:
+        (output_root / "native_reference_preflight_suite.json").write_text(
+            json.dumps(
+                {"status": "PASS", "cases": receipts, "processing_executed": False},
+                indent=2,
+            )
+        )
     return 0
 
 
@@ -1197,8 +1230,15 @@ def _harness_source_inventory(project_root: Path) -> dict[str, str]:
     }
 
 
-def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
+def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> int:
     """Qualify one case while retaining the suite's prepared execution server."""
+
+    if args.preflight_native_references and (
+        not args.candidate_only or args.native_reference_root is None
+    ):
+        raise ValueError(
+            "Native reference preflight requires candidate-only retained references."
+        )
 
     project_root = Path(__file__).resolve().parent.parent
     production_root = (
@@ -1495,6 +1535,38 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         ),
         flush=True,
     )
+
+    if args.preflight_native_references:
+        _require_native_reference_unchanged(provenance)
+        final_inputs = _source_input_inventory(native_domain.source_universe)
+        if final_inputs != provenance["native_input_inventory"]:
+            raise RuntimeError(
+                "Native preflight source files changed during admission."
+            )
+        provenance["native_input_inventory_after"] = final_inputs
+        (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
+        (root / "native_reference_preflight.json").write_text(
+            json.dumps(
+                {
+                    "status": "PASS",
+                    "case": case.name,
+                    "source_commit": source_commit,
+                    "provenance_path": str(root / "pilot_provenance.json"),
+                    "provenance_sha256": sha256_file(root / "pilot_provenance.json"),
+                    "native_reference_report_path": provenance[
+                        "native_reference_report_path"
+                    ],
+                    "native_reference_report_sha256": provenance[
+                        "native_reference_report_sha256"
+                    ],
+                    "processing_executed": False,
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if client is None:
+        raise ValueError("Matched processing requires a prepared execution client.")
 
     policy = _strict_cellprofiler_runtime_equivalence_policy()
     (root / "equivalence_policy.json").write_text(
