@@ -1600,6 +1600,38 @@ class ProducedImageStack(ImagePayloadSliceStack):
             memory_type=self.memory_type, plane_axis=self.plane_axis,
         )
 
+    def copy_input_cohort(
+        self, *, memory_type: str, device_id: int | None,
+    ) -> "ProducedImageStack":
+        """Snapshot literal produced pixels directly into canonical storage.
+
+        Input isolation and dense realization share one allocation. Copying
+        each borrowed member first would make placement stack those independent
+        copies into a second buffer, including a second copy of every mask.
+        """
+        data = stack_runtime_slices(
+            tuple(image_payload_data(payload) for payload in self.slices),
+            memory_type, device_id,
+        )
+        masks = tuple(image_payload_mask(payload) for payload in self.slices)
+        mask = None
+        if masks[0] is not None:
+            shared = self._shared_image_mask(masks, self.image_geometry())
+            mask = (
+                stack_runtime_slices(masks, memory_type, device_id)
+                if shared is None else stack_runtime_slices(
+                    (shared,), memory_type, device_id,
+                )[0]
+            )
+        metadata = self._metadata.replace_fields()
+        copied = type(self)(
+            self.slices, self.slice_contexts, memory_type=memory_type,
+            plane_axis=self.plane_axis, source_metadata=metadata,
+        )
+        copied._composed_payload = metadata.payload_with(data, mask)
+        copied._retain_composed_slices()
+        return copied
+
     def compose(
         self, *, memory_type: str | None = None, device_id: int | None = None,
     ) -> Any:

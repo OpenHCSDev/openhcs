@@ -244,6 +244,52 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
     assert not np.shares_memory(independent.slices[0].mask, composed.mask)
 
 
+@pytest.mark.parametrize("shared_mask", (False, True))
+@pytest.mark.parametrize("spatial_mask", (False, True))
+def test_produced_input_snapshot_owns_canonical_pixels_and_masks(shared_mask, spatial_mask):
+    import pickle
+    from openhcs.core.aligned_image_payload import ProducedImageStack
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+
+    pixels = (np.full((3, 4), 7, dtype=np.uint16),
+              np.full((3, 4), 0.25, dtype=np.float32))
+    first_mask = np.ones((3, 4), dtype=bool)
+    masks = (first_mask, first_mask if shared_mask else ~first_mask)
+    metadata = ImagePayloadMetadata(
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(3, 4))
+    ) if spatial_mask else ImagePayloadMetadata()
+    source = ProducedImageStack(
+        tuple(MaskedImagePayload(data, mask, metadata)
+              for data, mask in zip(pixels, masks, strict=True)),
+        memory_type="numpy", plane_axis=(
+            RuntimePlaneAxis.SOURCE_BINDING if spatial_mask
+            else RuntimePlaneAxis.RUNTIME_SLICE
+        ),
+    )
+    expected = np.stack(pixels)
+    expected_mask = first_mask.copy() if shared_mask and spatial_mask else np.stack(masks)
+    copied = source.copy_input_cohort(memory_type="numpy", device_id=None)
+    assert source._composed_payload is None
+    canonical = copied.compose()
+    assert copied.compose() is canonical
+    np.testing.assert_array_equal(canonical.data, expected)
+    np.testing.assert_array_equal(canonical.mask, expected_mask)
+    assert canonical.data.dtype == expected.dtype
+    assert copied.metadata == source.metadata
+    for index in range(2):
+        assert np.shares_memory(copied.slices[index].data, canonical.data)
+        assert np.shares_memory(copied.slices[index].mask, canonical.mask)
+        assert not np.shares_memory(copied.slices[index].data, pixels[index])
+        assert not np.shares_memory(copied.slices[index].mask, masks[index])
+    pixels[0][:] = 99
+    first_mask[:] = False
+    np.testing.assert_array_equal(canonical.data, expected)
+    np.testing.assert_array_equal(canonical.mask, expected_mask)
+    reloaded = pickle.loads(pickle.dumps(copied))
+    assert np.shares_memory(reloaded.slices[0].data, reloaded.compose().data)
+    assert np.shares_memory(reloaded.slices[0].mask, reloaded.compose().mask)
+
+
 def test_typed_stage_payloads_roundtrip_existing_pickle_boundary():
     import pickle
 
