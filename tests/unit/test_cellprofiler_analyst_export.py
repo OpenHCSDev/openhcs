@@ -544,6 +544,37 @@ def test_projection_uses_only_exact_batch_records_and_merges_subject_rows() -> N
     sqlite_bytes = CPASQLiteRenderer().render(projection, settings)
     assert sqlite_bytes.startswith(b"SQLite format 3\x00")
 
+    # Exercise the mapped parent consume boundary with disjoint image domains,
+    # correlated object measurements and relationship endpoints together.
+    second_axis = "second-well"
+    second_records = tuple(
+        replace(
+            record,
+            key=replace(
+                record.key, scope=replace(record.key.scope, axis_id=second_axis)
+            ),
+        )
+        for record in store.values()
+    )
+    two_axes = replace(
+        batch, records_by_axis={AXIS_ID: store.values(), second_axis: second_records}
+    )
+    partitions = []
+
+    def map_projections(func, invocations):
+        partitions.append(len(invocations))
+        assert all(invocation[0].context is None for invocation in invocations)
+        return tuple(func(invocation) for invocation in invocations)
+
+    serial = _projection_builder().build(two_axes, settings, channels)
+    mapped = _projection_builder().build(
+        two_axes, settings, channels, map_partition_invocations=map_projections
+    )
+    assert partitions == [2]
+    assert CPASQLiteRenderer().render(mapped, settings) == CPASQLiteRenderer().render(
+        serial, settings
+    )
+
 
 def test_long_measurement_schema_remains_owned_by_each_projected_subject() -> None:
     store = RuntimeValueStore()

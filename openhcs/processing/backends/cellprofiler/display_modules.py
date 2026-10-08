@@ -86,6 +86,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.interop.cellprofiler_setting_normalization import (
     normalize_cellprofiler_setting_name,
 )
+from openhcs.processing.backends.cellprofiler.enum_attributes import (
+    CellProfilerEnumAttributeMixin,
+)
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
@@ -880,15 +883,13 @@ def display_histogram(
     return image, DataclassMeasurementColumnarRows((result,), row_type=HistogramResult)
 
 
-class AggregationMethod(Enum):
+class AggregationMethod(CellProfilerEnumAttributeMixin, Enum):
+    __cellprofiler_attribute_names__ = ("_helper",)
+
     AVG = ("avg", np.mean)
     MEDIAN = ("median", np.median)
     STDEV = ("stdev", np.std)
     CV = ("cv%", None)
-
-    def __init__(self, label: str, helper: object | None) -> None:
-        self._value_ = label
-        self._helper = helper
 
     def aggregate(self, values: np.ndarray) -> float:
         if self is AggregationMethod.CV:
