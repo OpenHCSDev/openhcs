@@ -20,7 +20,8 @@ from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.constants import Microscope
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_projection import (
@@ -31,7 +32,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.viewer_streaming_service import StreamingService
+from openhcs.core.viewer_streaming_service import StreamingService, ViewerStreamingSource
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.viewer_protocol import ViewerLaunchContext
@@ -234,6 +235,30 @@ def test_mixed_plane_and_artifact_projections_keep_scope_and_storage_independent
         assert result.errors == result.warnings == ()
         assert result.total_count == count
         assert all(record.full_virtual_path == str(root / record.virtual_path) for record in result.records)
+        sampled = inspection.sample_image(PlateImageSampleRequest.from_fields(
+            plate_path=str(scope), image_path=result.records[0].source_path,
+            y=0, x=0, height=2, width=2,
+            include_array_values=True, max_array_elements=4,
+        ))
+        assert sampled.errors == ()
+        expected = pixels if scope != root / "saved-1" else declarations[1][1]
+        np.testing.assert_array_equal(sampled.sample_values, expected[:2, :2])
+        scoped_context, errors, _ = inspection.open_context(
+            PlatePathInspectionRequest(plate_path=str(scope)),
+        )
+        assert errors == ()
+        inventory, _ = inspection.file_inventory(scoped_context, kind=PlateFileKind.IMAGE)
+        records = inventory.file_records(kinds=(PlateFileKind.IMAGE,))
+        projection = PlateStreamingService._inventory_source_projection(records, scoped_context)
+        first = records[0]
+        payload = ViewerStreamingSource(
+            filemanager=scoped_context.filemanager,
+            microscope_handler=scoped_context.handler, plate_path=str(scope),
+        ).load_image(
+            first.streamable_image_path, first.source_ref.backend,
+            source_projection=projection, component_metadata=first.metadata,
+        )
+        np.testing.assert_array_equal(image_payload_data(payload), expected)
 
 
 @pytest.mark.parametrize("main_branch", ("saved-0", "unmapped"))
