@@ -1,0 +1,157 @@
+{
+  "execution_ids_in_order": [
+    "a918a77d-102e-4322-b183-fb902e4f2fe0",
+    "aaa8c256-98a8-47ba-9dad-062f795e40d6",
+    "5d0fcd87-4200-445b-9b6e-374b5b69082f",
+    "59c8a18a-59a7-4a73-a8ac-5f60dfc85fb2"
+  ],
+  "warmup_excluded": "a918a77d-102e-4322-b183-fb902e4f2fe0",
+  "scope": "actual 12-assignment 4-worker P0 diagnostic, reps0/1/2, not ordinary benchmark",
+  "ColorToGray": {
+    "pattern_execute_chain": {
+      "count": 36,
+      "median_seconds": 0.35302500000000003,
+      "sum_lane_seconds": 14.435272
+    },
+    "invocation_total": {
+      "count": 36,
+      "median_seconds": 0.3525155,
+      "sum_lane_seconds": 14.409896999999999
+    },
+    "function_call": {
+      "count": 36,
+      "median_seconds": 0.352394,
+      "sum_lane_seconds": 14.400538
+    },
+    "cp_module_run_total": {
+      "count": 36,
+      "median_seconds": 0.3522325,
+      "sum_lane_seconds": 14.392206
+    },
+    "cp_image_request": {
+      "count": 36,
+      "median_seconds": 0.2265395,
+      "sum_lane_seconds": 9.733196
+    },
+    "cp_contract_execute": {
+      "count": 36,
+      "median_seconds": 0.10767399999999999,
+      "sum_lane_seconds": 4.282241
+    },
+    "cp_executor_execute": {
+      "count": 36,
+      "median_seconds": 0.10763249999999999,
+      "sum_lane_seconds": 4.279112
+    },
+    "cp_pure_2d_slice_execute": {
+      "count": 36,
+      "median_seconds": 0.106926,
+      "sum_lane_seconds": 4.233389
+    },
+    "pattern_load_stack": {
+      "count": 36,
+      "median_seconds": 0.0589555,
+      "sum_lane_seconds": 2.389856
+    },
+    "cp_record_outputs": {
+      "count": 36,
+      "median_seconds": 0.0022295,
+      "sum_lane_seconds": 0.094023
+    },
+    "cp_output_record_one": {
+      "count": 36,
+      "median_seconds": 0.0020435,
+      "sum_lane_seconds": 0.086266
+    },
+    "step_prepare_groups": {
+      "count": 36,
+      "median_seconds": 0.001695,
+      "sum_lane_seconds": 0.072973
+    },
+    "step_detect_patterns": {
+      "count": 36,
+      "median_seconds": 0.001096,
+      "sum_lane_seconds": 0.052033
+    },
+    "cp_pure_2d_aggregate_outputs": {
+      "count": 36,
+      "median_seconds": 0.0005024999999999999,
+      "sum_lane_seconds": 0.020982999999999998
+    },
+    "cp_pure_2d_prepare_slices": {
+      "count": 36,
+      "median_seconds": 0.00038500000000000003,
+      "sum_lane_seconds": 0.016093
+    },
+    "cp_invocation_request": {
+      "count": 36,
+      "median_seconds": 0.0002155,
+      "sum_lane_seconds": 0.010204
+    },
+    "cp_replace_main_flow_check": {
+      "count": 36,
+      "median_seconds": 0.00019999999999999998,
+      "sum_lane_seconds": 0.008536
+    },
+    "runtime_adapter_factory": {
+      "count": 36,
+      "median_seconds": 9.75e-05,
+      "sum_lane_seconds": 0.005027
+    },
+    "cp_runs_per_image_check": {
+      "count": 36,
+      "median_seconds": 4.85e-05,
+      "sum_lane_seconds": 0.002309
+    },
+    "cp_split_output": {
+      "count": 36,
+      "median_seconds": 5.55e-05,
+      "sum_lane_seconds": 0.002025
+    },
+    "finalize_openhcs_metadata": {
+      "count": 36,
+      "median_seconds": 4.4e-05,
+      "sum_lane_seconds": 0.001945
+    },
+    "finalize_stream_outputs": {
+      "count": 36,
+      "median_seconds": 3e-06,
+      "sum_lane_seconds": 0.0005510000000000001
+    },
+    "finalize_runtime_artifacts": {
+      "count": 36,
+      "median_seconds": 8.5e-06,
+      "sum_lane_seconds": 0.000427
+    },
+    "finalize_memory_outputs": {
+      "count": 36,
+      "median_seconds": 4.9999999999999996e-06,
+      "sum_lane_seconds": 0.000381
+    },
+    "finalize_materialized_images": {
+      "count": 36,
+      "median_seconds": 2.4999999999999998e-06,
+      "sum_lane_seconds": 0.000222
+    },
+    "cp_runs_per_object_check": {
+      "count": 36,
+      "median_seconds": 3e-06,
+      "sum_lane_seconds": 0.000127
+    },
+    "step_convert_input": {
+      "count": 36,
+      "median_seconds": 1e-06,
+      "sum_lane_seconds": 5.7e-05
+    },
+    "runtime_stack_cache_get": {
+      "count": 36,
+      "median_seconds": 0.0,
+      "sum_lane_seconds": 0.0
+    },
+    "cp_executor_mode_resolution": {
+      "count": 36,
+      "median_seconds": 0.0,
+      "sum_lane_seconds": 0.0
+    }
+  }
+}

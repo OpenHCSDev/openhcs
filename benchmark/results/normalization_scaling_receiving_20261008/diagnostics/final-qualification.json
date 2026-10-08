@@ -1,0 +1,32 @@
+{
+  "scope": "Final source qualification; saved-source replay timing, not whole pipeline gain",
+  "file_sha256": {
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/runtime_image_values.py": "6735e80510f5b46f7b32f287d26e4a02bb5fdc13191b8e8e75531c36337ac96a",
+    "/home/ts/code/projects/openhcs/external/arraybridge/src/arraybridge/array_operations.py": "02379a3aff684f17c3b1c5026a2ba0f3e3f6fcd2f5e4535de987c74204a08d38",
+    "/home/ts/code/projects/openhcs/external/arraybridge/src/arraybridge/types.py": "8a6f831b39ccedf65ce31aa3e8b324ef553d8dcca62d8ae20529583a6ff3cfea",
+    "/home/ts/code/projects/openhcs/external/arraybridge/tests/test_native_geometry.py": "dc4c65195b4da1e6930b4fbc6b37be049aac7e8df2a8ad9c25ead8b09899f4da"
+  },
+  "original_owner_controls": 252,
+  "genuine_wound_pixels_and_metadata_exact": true,
+  "cupy_controls": 3,
+  "external_release_checks": {
+    "ruff": "PASS",
+    "black": "PASS",
+    "mypy": "PASS",
+    "pytest_passed": 242,
+    "pytest_skipped": 17
+  },
+  "existing_openhcs_normalization_tests": 2,
+  "receipts": [
+    "phase-analysis.json",
+    "guard-proof.json",
+    "image-request-profile.txt",
+    "concurrent-normalization-proof.json",
+    "normalization-controls.json",
+    "cupy-normalization-controls.json"
+  ],
+  "scratch_critical_three_assignment_seconds": {
+    "original": 1.174163891468197,
+    "one_owned_buffer": 0.37721221428364515
+  }
+}

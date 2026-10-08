@@ -1,0 +1,14 @@
+{
+  "input_shape": [
+    2,
+    1536,
+    2304,
+    3
+  ],
+  "input_dtype": "uint8",
+  "input_plane_axis": "RuntimePlaneAxis.RUNTIME_SLICE",
+  "edge_main_flow_projection": "MainFlowInputProjection.COMPLETE_PAYLOAD",
+  "invocation_position": 0,
+  "dependency": "StepInputDependencyKind.PIPELINE_START",
+  "loaded_source_reused": true
+}
