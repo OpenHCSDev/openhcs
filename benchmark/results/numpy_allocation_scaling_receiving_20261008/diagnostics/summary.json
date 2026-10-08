@@ -1,0 +1,134 @@
+{
+  "scope": "Saved exact original Wound JPEG numerical owner replay. Diagnostic reconstruction, not ordinary pipeline or full parity gate. Full variant uses actual ProducedImageStack canonical publication and CP input normalization. Outputs compared by exact float64 sums only; full array/scientific parity must be receiving gate.",
+  "source_head": "8c51c462a240a9323e380484ef1f6cf52cc63e40",
+  "script_sha256": {
+    "replay-full.py": "24f1d01fd15e2cdf75b93040af18a55a0f57d64d62802e128c1e1970c10b5764",
+    "replay.py": "b61548df1fa4442489dca155fca8a52e246a354dc8f424a0c8b915c3310997c9"
+  },
+  "summary": {
+    "startup-advice1": {
+      "critical_three_axes_seconds": 1.4216674258932471,
+      "critical_per_axis_seconds": [
+        0.5137681253254414,
+        0.4465629095211625,
+        0.46133639104664326
+      ],
+      "median_lane_user_per_axis": 0.20949299999999998,
+      "median_lane_system_per_axis": 0.255355,
+      "median_lane_minor_faults_per_axis": 31063.5,
+      "major_faults_total": 0,
+      "phase_medians": {
+        "normalize": 0.07321874191984534,
+        "color": 0.26232915790751576,
+        "smooth": 0.109025486279279
+      }
+    },
+    "full-startup-advice0": {
+      "critical_three_axes_seconds": 1.1407917058095336,
+      "critical_per_axis_seconds": [
+        0.38582398276776075,
+        0.3749031452462077,
+        0.38006457779556513
+      ],
+      "median_lane_user_per_axis": 0.272822,
+      "median_lane_system_per_axis": 0.10727050000000002,
+      "median_lane_minor_faults_per_axis": 49347.5,
+      "major_faults_total": 0,
+      "phase_medians": {
+        "normalize": 0.0614018184132874,
+        "color": 0.15005097119137645,
+        "publication_normalize": 0.042916099075227976,
+        "smooth": 0.10674158623442054
+      }
+    },
+    "full-startup-advice1": {
+      "critical_three_axes_seconds": 1.8829169236123562,
+      "critical_per_axis_seconds": [
+        0.6614194624125957,
+        0.6069990443065763,
+        0.6144984168931842
+      ],
+      "median_lane_user_per_axis": 0.235114,
+      "median_lane_system_per_axis": 0.36704150000000013,
+      "median_lane_minor_faults_per_axis": 48843.0,
+      "major_faults_total": 0,
+      "phase_medians": {
+        "normalize": 0.09974035620689392,
+        "color": 0.2345303324982524,
+        "publication_normalize": 0.11640175431966782,
+        "smooth": 0.1422583400271833
+      }
+    },
+    "startup-advice0": {
+      "critical_three_axes_seconds": 1.0079102227464318,
+      "critical_per_axis_seconds": [
+        0.3431319184601307,
+        0.33340200409293175,
+        0.3313763001933694
+      ],
+      "median_lane_user_per_axis": 0.25508899999999995,
+      "median_lane_system_per_axis": 0.07610900000000001,
+      "median_lane_minor_faults_per_axis": 32068.0,
+      "major_faults_total": 0,
+      "phase_medians": {
+        "normalize": 0.06115498160943389,
+        "color": 0.15073335077613592,
+        "smooth": 0.10945123434066772
+      }
+    },
+    "primed-advice1": {
+      "critical_three_axes_seconds": 1.3734519435092807,
+      "critical_per_axis_seconds": [
+        0.4569731755182147,
+        0.47615563031286,
+        0.44032313767820597
+      ],
+      "median_lane_user_per_axis": 0.2007295,
+      "median_lane_system_per_axis": 0.235626,
+      "median_lane_minor_faults_per_axis": 32050.0,
+      "major_faults_total": 0,
+      "phase_medians": {
+        "normalize": 0.09290227247402072,
+        "color": 0.22671224595978856,
+        "smooth": 0.11053413804620504
+      }
+    },
+    "primed-advice0": {
+      "critical_three_axes_seconds": 1.0204573730006814,
+      "critical_per_axis_seconds": [
+        0.34410724602639675,
+        0.3385491780936718,
+        0.33780094888061285
+      ],
+      "median_lane_user_per_axis": 0.26366449999999997,
+      "median_lane_system_per_axis": 0.0739415,
+      "median_lane_minor_faults_per_axis": 33598.0,
+      "major_faults_total": 0,
+      "phase_medians": {
+        "normalize": 0.06120263272896409,
+        "color": 0.15301534766331315,
+        "smooth": 0.1101194373331964
+      }
+    },
+    "threshold32-advice1": {
+      "critical_three_axes_seconds": 1.5646020313724875,
+      "critical_per_axis_seconds": [
+        0.5339630404487252,
+        0.512622531503439,
+        0.5180164594203234
+      ],
+      "median_lane_user_per_axis": 0.1933855,
+      "median_lane_system_per_axis": 0.30068249999999996,
+      "median_lane_minor_faults_per_axis": 44875.0,
+      "major_faults_total": 0,
+      "phase_medians": {
+        "normalize": 0.0694494228810072,
+        "color": 0.2620082888752222,
+        "smooth": 0.14630895294249058
+      }
+    }
+  },
+  "all_output_float64_sums_identical": true,
+  "policy": "Process-local NumPy _set_madvise_hugepage; independent subprocess per condition; optional libc.mallopt M_MMAP_THRESHOLD=-3=32MiB. No global sysctl/source/env mutation. Parent pinned CPU0; four forked children pinned2/3/4/5, single numeric threads.",
+  "conclusion": "NumPy advice route qualifies for actual-runtime test; full three-axis numeric critical save0.7421252178s and system CPU0.259771s/axis. Parent full-image priming alone does not explain prepared regression;32MiB mmap-threshold alone worsens partial numeric chain. No historical causal attribution of actual prepared regression from this reconstruction."
+}

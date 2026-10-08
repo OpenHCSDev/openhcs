@@ -2,6 +2,37 @@
 
 Original text is preserved below, including measurements, full instructions and machine-local paths. This linked source file is outside the supplementary PDF inputs; its relative links retain the supplement-directory base.
 
+## File inventories and reproduction bookkeeping archived on 8 October 2026
+
+The following passages were removed from the reading copy. Original linked
+records still own the file inventories, hashes and pipeline delivery evidence.
+
+The tracked [evidence index](independent_validation/README.md) links each exact
+frozen pipeline and held-out score receipt. Prediction arrays and source-image
+archives remain outside the paper package because the BBBC013 held-out result
+tree alone contains 1,472 artifacts and 672 MB. The score receipts bind their
+prediction manifests and the common corpus manifest by SHA-256. The
+[preparation record](../../benchmark/annotated_validation_20260915.md) explains
+the deterministic partitions, image normalization and evaluation definitions;
+the preparation manifest records the downloaded source identities.
+
+The [frozen nine-field pipeline source](task_only_analysis/pipelines/p001-fresh13.py)
+is supplied unchanged, with SHA256
+`8b9a70c205103ec9d1600b0592cfb9481bf989e449f049aee176803069f34203`.
+It retains the recorded output root and viewer endpoint; for reproduction,
+relocate only input/output destinations and use the source-document MCP
+validation, compilation and execution workflow with the recorded installation.
+Do not execute the file as an alternative analysis route. The input manifest
+and interpretation limits are identified in the linked review.
+
+Relocate its original import directory and metadata location to these supplied
+files when reproducing the workflow. The binding's SHA256 is
+`fdbe5bd37084b6f03a10dd8617fb503e26dbc73e011cda655cb1b028a2597dcc`.
+It matches fresh10's original source-identity record and an identical copy in
+fresh612's frozen manifest, but is not directly listed in fresh10's final manifest.
+
+## Earlier editorial cuts
+
 The [archived single-sample timing plot](../figures/slas/figure2_historical_timings.png)
 retains the May observations and their unequal clock boundaries. It is linked
 as historical evidence, not part of the current figure sequence or the final

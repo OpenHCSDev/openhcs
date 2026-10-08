@@ -15,8 +15,7 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 __version__ = "0.8.7"
 
-OpenHCSProcessEnvironment.project_dependency_gpu_import_policy()
-OpenHCSProcessEnvironment.project_numba_worker_profiling_policy()
+OpenHCSProcessEnvironment.project_dependency_import_policy()
 
 ensure_source_checkout_external_paths()
 
