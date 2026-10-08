@@ -239,7 +239,7 @@ def test_native_compiled_triangulation_retains_archive_and_control(
     started = time.perf_counter()
     polygon = Polygon(coordinates)
     polygon_seconds = time.perf_counter() - started
-    assert polygon._set_meshes.__name__ == "_set_meshes_compiled_partseg"
+    assert polygon._set_meshes.__name__ == "_set_meshes_compiled_bermuda"
     np.testing.assert_array_equal(polygon.data, coordinates)
     triangles = polygon._face_vertices[polygon._face_triangles].astype(np.float64)
     u, v = triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0]
@@ -247,6 +247,19 @@ def test_native_compiled_triangulation_retains_archive_and_control(
     points = coordinates.astype(np.float64)
     polygon_area = abs(np.sum(points[:, 0] * np.roll(points[:, 1], -1)
                               - points[:, 1] * np.roll(points[:, 0], -1))) / 2
+    # This retained contour was independently checked as simple, and its
+    # original and projected regions coincide. Preserve the original raster
+    # reference rather than recomputing it with the candidate triangulator.
+    from skimage.draw import polygon as raster_polygon
+    with np.load(os.environ["OPENHCS_TRIANGULATION_QUALIFICATION_COVERAGE"]) as coverage:
+        np.testing.assert_array_equal(coordinates, coverage["projected"])
+        expected_coverage = coverage["expected"]
+    mesh_coverage = np.zeros_like(expected_coverage)
+    for triangle in triangles:
+        rows, columns = raster_polygon(
+            triangle[:, 0], triangle[:, 1], shape=mesh_coverage.shape,
+        )
+        mesh_coverage[rows, columns] = True
 
     fields = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(source, ())
     components = StreamViewerComponentMetadataProjector.for_item_fields(
@@ -303,7 +316,7 @@ def test_native_compiled_triangulation_retains_archive_and_control(
             assert tuple(layer.scale[-2:]) == source.source_voxel_spacing.values_zyx[-2:]
             records = receiver.component_groups.existing_items_for(route_key)
             assert records[0].image_metadata.to_viewer_image_metadata() == source.to_viewer_image_metadata()
-            assert all(model._set_meshes.__name__ == "_set_meshes_compiled_partseg"
+            assert all(model._set_meshes.__name__ == "_set_meshes_compiled_bermuda"
                        for model in layer._data_view.shapes)
             snapshot = ViewerWindowSnapshotRequest.from_fields(
                 connection=ExecutionConnectionSpec(port=receiver.port, transport_mode=receiver.transport_mode),
@@ -312,15 +325,14 @@ def test_native_compiled_triangulation_retains_archive_and_control(
             response = control("screenshot", snapshot)
             assert tuple(layer.features[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE]) == identities
             assert hashlib.sha256(archive.read_bytes()).hexdigest() == original_hash
-            print(f"partsegcore={version('PartSegCore-compiled-backend')}; napari={version('napari')}; "
+            print(f"bermuda={version('bermuda')}; napari={version('napari')}; "
                   f"largest={len(coordinates)} vertices triangulated in {polygon_seconds:.3f}s; "
                   f"native all {len(shapes)} members in {native_seconds:.3f}s; "
                   f"pending observations={pending_observations}; control max={max(latencies):.3f}s; "
                   f"terminal={progress.completed_update_count}/{progress.total_update_count}; "
                   f"geometry/labels/features/calibration/source retained; snapshot={response.payload}")
-            # Keep the unresolved parity failure after collecting the actual
-            # native interaction/capture result; do not weaken it to qualify.
             assert mesh_area == pytest.approx(polygon_area, rel=1e-5)
+            np.testing.assert_array_equal(mesh_coverage, expected_coverage)
         finally:
             service.stop()
             receiver.control_transport_pump.stop()

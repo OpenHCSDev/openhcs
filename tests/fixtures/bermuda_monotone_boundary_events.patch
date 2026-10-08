@@ -1,0 +1,121 @@
+# Bermuda v0.1.8 / 9ebdb6112a27ed6263c10b76f32b7f2ab063c124, BSD-3-Clause.
+# Correct the existing sweep owner; no contour coordinates are changed.
+--- a/crates/triangulation/src/face_triangulation.rs
++++ b/crates/triangulation/src/face_triangulation.rs
+@@ -220,6 +220,27 @@
+ }
+ 
+ impl MonotonePolygonBuilder {
++    /// Close pieces at the current boundary event before continuing that side.
++    /// A later event cannot close them without crossing the intervening boundary.
++    fn finish_polygons_on_side(&mut self, interval: &mut Interval, p: Point, right_side: bool) {
++        if interval.polygons_list.len() <= 1 {
++            return;
++        }
++        if right_side {
++            for mut polygon in interval.polygons_list.drain(1..) {
++                polygon.bottom = Some(p);
++                self.monotone_polygons.push(polygon);
++            }
++        } else {
++            let retained = interval.polygons_list.pop().unwrap();
++            for mut polygon in interval.polygons_list.drain(..) {
++                polygon.bottom = Some(p);
++                self.monotone_polygons.push(polygon);
++            }
++            interval.polygons_list.push(retained);
++        }
++    }
++
+     pub fn new(edges: Vec<Segment>) -> Self {
+         let point_to_edges = get_points_segments(&edges);
+         Self {
+@@ -293,6 +314,8 @@
+             left_interval_ref.borrow_mut().last_seen = p;
+ 
+             // Update polygons
++            self.finish_polygons_on_side(&mut left_interval_ref.borrow_mut(), p, true);
++            self.finish_polygons_on_side(&mut right_interval_ref.borrow_mut(), p, false);
+             if let Some(last_polygon) = left_interval_ref.borrow_mut().polygons_list.last_mut() {
+                 last_polygon.right.push(p);
+             }
+@@ -325,29 +348,8 @@
+ 
+         let mut interval = interval_ref.borrow_mut();
+ 
+-        if interval.polygons_list.len() > 1 {
+-            if edge_top == interval.right_segment {
+-                // We are on right side of the interval
+-                // End all polygons except the first one
+-                for poly in interval.polygons_list.iter_mut().skip(1) {
+-                    let mut polygon = poly.clone();
+-                    polygon.bottom = Some(p);
+-                    self.monotone_polygons.push(polygon);
+-                }
+-            } else {
+-                // We are on left side of the interval
+-                // End all polygons except the last one
+-                if let Some((last, all_but_last)) = interval.polygons_list.split_last_mut() {
+-                    for poly in all_but_last {
+-                        let mut polygon = poly.clone();
+-                        polygon.bottom = Some(p);
+-                        self.monotone_polygons.push(polygon);
+-                    }
+-                    interval.polygons_list[0] = last.to_owned();
+-                }
+-            }
+-            interval.polygons_list.truncate(1);
+-        }
++        let right_side = edge_top == interval.right_segment;
++        self.finish_polygons_on_side(&mut interval, p, right_side);
+ 
+         // Update the remaining polygon
+         if edge_top == interval.right_segment {
+@@ -413,6 +415,7 @@
+ 
+     fn process_split_point(&mut self, p: Point, edge_left: Segment, edge_right: Segment) {
+         if let Some(interval) = self.find_interval_with_point(p) {
++            let previous_point = interval.borrow().last_seen;
+             let right_segment = interval.borrow().right_segment.clone();
+             self.segment_to_line
+                 .remove(&interval.borrow_mut().right_segment);
+@@ -432,16 +435,29 @@
+                 .insert(right_segment, new_interval.clone());
+ 
+             if interval.borrow().polygons_list.len() == 1 {
+-                let mut new_polygon = if interval.borrow().polygons_list[0].right.is_empty() {
+-                    MonotonePolygon::new_top(interval.borrow().polygons_list[0].top)
++                // The connecting diagonal starts at the last processed boundary
++                // vertex, not invariably at the last vertex of the right chain.
++                let latest_on_left =
++                    interval.borrow().polygons_list[0].left.last() == Some(&previous_point);
++                if latest_on_left {
++                    let mut new_polygon = MonotonePolygon::new_top(previous_point);
++                    new_polygon.right.push(p);
++                    let mut retained = interval.borrow_mut().polygons_list.pop().unwrap();
++                    retained.left.push(p);
++                    new_interval.borrow_mut().polygons_list.push(retained);
++                    interval.borrow_mut().polygons_list.push(new_polygon);
+                 } else {
+-                    MonotonePolygon::new_top(
+-                        *interval.borrow().polygons_list[0].right.last().unwrap(),
+-                    )
+-                };
+-                new_polygon.left.push(p);
+-                new_interval.borrow_mut().polygons_list.push(new_polygon);
+-                interval.borrow_mut().polygons_list[0].right.push(p);
++                    let mut new_polygon = if interval.borrow().polygons_list[0].right.is_empty() {
++                        MonotonePolygon::new_top(interval.borrow().polygons_list[0].top)
++                    } else {
++                        MonotonePolygon::new_top(
++                            *interval.borrow().polygons_list[0].right.last().unwrap(),
++                        )
++                    };
++                    new_polygon.left.push(p);
++                    new_interval.borrow_mut().polygons_list.push(new_polygon);
++                    interval.borrow_mut().polygons_list[0].right.push(p);
++                }
+             }
+             if interval.borrow().polygons_list.len() >= 2 {
+                 interval.borrow_mut().polygons_list[0].right.push(p);
+
