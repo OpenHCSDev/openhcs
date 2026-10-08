@@ -231,7 +231,7 @@ The OpenHCS 0.8.5 [release test](ci_official30_085/README.md) preceded the unifi
 
 The subsequent matched performance evaluation retained the complete 30-workflow manifest and compared the declared table, database and image outputs in a warmup and three measured repetitions per engine. All 120 OpenHCS observations completed without declared-output differences against complete native CellProfiler runs. These current-source observations, their output inventories and their timing boundaries are separate from the historical release comparison and are retained in the [minimum-threefold integrated-main matched benchmark record](../../benchmark/results/matched_min3_integrated_main_20261007/README.md).
 
-For the five workflows without file exports, terminal image or object-label exports were appended while preserving the original processing modules and settings. Native CellProfiler generated eight additional reference artifacts. A subsequent unified run compiled and executed all 30 workflows afresh and compared each candidate with its selected native reference values. Object labels were compared exactly after singleton-axis normalization; numerical images used the stated float tolerances. The unified run used OpenHCS 0.8.5 current source on Python 3.12.3 with NumPy 2.1.3 and SciPy 1.18.1. Native references used CellProfiler 4.2.8.1 on Python 3.9.25 with NumPy 1.24.4 and SciPy 1.9.0. Supplementary Data 1 links the export definitions, reference inventory, per-workflow comparisons and exact source identities separately from the historical release CI records.
+For the five workflows without file exports, terminal image or object-label exports were appended while preserving the original processing modules and settings. Native CellProfiler generated eight additional reference artifacts. A subsequent unified run compiled and executed all 30 workflows afresh and compared each candidate with its selected native reference values. Object labels were compared exactly after singleton-axis normalization; numerical images used the stated float tolerances. The following sections give the export definitions, reference inventory and per-workflow comparisons. The original unified-run environment was not recorded; the five-workflow export audit has its own recorded environment.
 
 The corpus contains 22 workflows and associated image sets from the official CellProfiler 3 examples repository, seven workflows and image sets from the official CellProfiler tutorials repository, and one workflow from the supplement to the CellProfiler 4 performance study [@CellProfilerExamples; @CellProfilerTutorials; @Stirling2021]. The CellProfiler project and the cited dataset contributors retain authorship and provenance for these materials. The retained manifest maps workflow names to pipeline and image locations; Supplementary Data 1-3 provide the corresponding comparison, coverage and throughput tables.
 
@@ -246,6 +246,50 @@ The acquisition scripts pin the official CellProfiler examples to
 supplement to `40abc2e600fd46b74c213999dd25c5245048dc92`.
 
 
+
+### Declared exported-file coverage
+
+The matched run checked every declared exported file in each workflow: a
+file-level fraction of 1.00. Counts below come from the original
+[matched-run reports](../../benchmark/results/matched_min3_integrated_main_20261007/README.md),
+with one warmup and three measured repetitions. All four observations per
+workflow had complete output inventories and zero image, CSV or database
+differences. The original comparator rejects files without a value-comparison
+route. This fraction describes exported files; internal intermediates and
+individual measurement columns are not its denominator.
+
+| Workflow | Declared files checked / declared files |
+| --- | --- |
+| [ExampleColocalization](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleColocalization/candidate_report.json) | 1 / 1 |
+| [ExampleCometAssay](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleCometAssay/candidate_report.json) | 6 / 6 |
+| [ExampleFly](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleFly/candidate_report.json) | 7 / 7 |
+| [ExampleFlyURL](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleFlyURL/candidate_report.json) | 7 / 7 |
+| [ExampleHuman](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleHuman/candidate_report.json) | 7 / 7 |
+| [ExampleIlluminationCorrection_Example1_AllMethod](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example1_AllMethod/candidate_report.json) | 1 / 1 |
+| [ExampleIlluminationCorrection_Example1_EachMethod](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example1_EachMethod/candidate_report.json) | 1 / 1 |
+| [ExampleIlluminationCorrection_Example2](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example2/candidate_report.json) | 3 / 3 |
+| [ExampleIlluminationCorrection_Example3](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleIlluminationCorrection_Example3/candidate_report.json) | 2 / 2 |
+| [ExampleImagingFlowCytometryObjectsInGrid](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleImagingFlowCytometryObjectsInGrid/candidate_report.json) | 1 / 1 |
+| [ExampleNeighbors](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleNeighbors/candidate_report.json) | 4 / 4 |
+| [ExamplePercentPositive](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExamplePercentPositive/candidate_report.json) | 5 / 5 |
+| [ExampleSpeckles](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleSpeckles/candidate_report.json) | 3 / 3 |
+| [ExampleTrackObjects](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleTrackObjects/candidate_report.json) | 23 / 23 |
+| [ExampleTumor](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleTumor/candidate_report.json) | 3 / 3 |
+| [ExampleUntangleAndStraightenWorms](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleUntangleAndStraightenWorms/candidate_report.json) | 1 / 1 |
+| [ExampleUntangleWorms](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleUntangleWorms/candidate_report.json) | 4 / 4 |
+| [ExampleUntangleWormsBrightField](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleUntangleWormsBrightField/candidate_report.json) | 1 / 1 |
+| [ExampleVitra](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleVitra/candidate_report.json) | 5 / 5 |
+| [ExampleWoundHealing](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleWoundHealing/candidate_report.json) | 1 / 1 |
+| [ExampleYeastColonies](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleYeastColonies/candidate_report.json) | 3 / 3 |
+| [ExampleYeastPatches](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/ExampleYeastPatches/candidate_report.json) | 7 / 7 |
+| [cp4_supplement_combine_objects](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp4_supplement_combine_objects/candidate_report.json) | 1 / 1 |
+| [cp_tutorial_3d_monolayer](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_3d_monolayer/candidate_report.json) | 8 / 8 |
+| [cp_tutorial_advanced_segmentation_final](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_advanced_segmentation_final/candidate_report.json) | 8 / 8 |
+| [cp_tutorial_beginner_segmentation_final](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_beginner_segmentation_final/candidate_report.json) | 9 / 9 |
+| [cp_tutorial_pixel_based_classification](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_pixel_based_classification/candidate_report.json) | 3 / 3 |
+| [cp_tutorial_quality_control](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_quality_control/candidate_report.json) | 3 / 3 |
+| [cp_tutorial_translocation_final](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_translocation_final/candidate_report.json) | 3 / 3 |
+| [cp_tutorial_translocation_start](../../benchmark/results/matched_min3_integrated_main_20261007/reports/singlewell/cp_tutorial_translocation_start/candidate_report.json) | 1 / 1 |
 
 ### Unified 30-workflow value comparison
 
