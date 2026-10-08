@@ -23,7 +23,11 @@ def test_existing_openhcs_manifest_owns_roi_manager_widget() -> None:
     }
     command = commands["openhcs.make_roi_manager_widget"]
     assert command["python_name"] == "openhcs.napari_roi_manager:QRoiManager"
-    assert manifest["contributions"]["widgets"] == [
+    roi_widgets = [
+        widget for widget in manifest["contributions"]["widgets"]
+        if widget["command"] == "openhcs.make_roi_manager_widget"
+    ]
+    assert roi_widgets == [
         {
             "command": "openhcs.make_roi_manager_widget",
             "display_name": "OpenHCS ROI Manager",
@@ -330,4 +334,69 @@ def test_roi_manager_virtualizes_thousands_over_one_native_shapes_owner(
 
     table.selectRow(member_count - 1)
     assert layer.selected_data == {member_count - 1}
+    manager.close()
+
+
+@pytest.mark.unit
+def test_roi_metric_columns_follow_native_features_and_preserve_selection(qtbot):
+    pytest.importorskip("napari")
+    from napari.components import ViewerModel
+    from qtpy import QtCore
+
+    from openhcs.napari_roi_manager.widgets._roi_manager import (
+        QRoiManager,
+        RoiTableColumn,
+    )
+
+    viewer = ViewerModel()
+    layer = viewer.add_shapes(
+        [np.asarray(((0, 0), (1, 1))), np.asarray(((2, 2), (3, 3)))],
+        shape_type="path",
+        features={"edge_id": [11, 12], "neuron_label": [1, 1], "length": [1.5, 2.5]},
+    )
+    manager = QRoiManager(viewer)
+    qtbot.addWidget(manager)
+    model = manager._roilist._roi_model
+    horizontal = QtCore.Qt.Orientation.Horizontal
+    editable = QtCore.Qt.ItemFlag.ItemIsEditable
+
+    assert model.columnCount() == 5
+    assert [model.headerData(index, horizontal) for index in range(5)] == [
+        "name", "type", "edge_id", "neuron_label", "length",
+    ]
+    assert model.data(model.index(1, 2)) == "12"
+    assert model.data(model.index(1, 4)) == "2.5"
+    assert not model.flags(model.index(1, 4)) & editable
+    assert not model.setData(model.index(1, 4), "999")
+    assert layer.features["length"].iat[1] == 2.5
+
+    layer.selected_data = {1}
+    assert model.setData(model.index(1, RoiTableColumn.NAME), "selected branch")
+    assert layer.selected_data == {1}
+    assert model.columnCount() == 5  # Native name is represented once.
+    assert model.data(model.index(1, RoiTableColumn.NAME)) == "selected branch"
+
+    features = layer.features.copy()
+    features["tortuosity"] = [1.0, 1.2]
+    layer.features = features
+    assert model.columnCount() == 6
+    assert model.headerData(5, horizontal) == "tortuosity"
+    assert model.data(model.index(1, 5)) == "1.2"
+    assert layer.selected_data == {1}
+    assert {index.row() for index in manager._roilist.selectionModel().selectedRows()} == {1}
+
+    layer.features = layer.features.drop(columns=["length"])
+    assert model.columnCount() == 5
+    assert "length" not in model.feature_columns
+    manager._roilist.refresh()
+    assert layer.selected_data == {1}
+
+    other = viewer.add_shapes([np.asarray(((4, 4), (5, 5)))], shape_type="path")
+    assert manager._layer is other
+    assert model.columnCount() == 2
+    assert layer.selected_data == {1}
+    viewer.layers.selection.active = layer
+    assert model.columnCount() == 5
+    assert model.data(model.index(1, 4)) == "1.2"
+    assert layer.selected_data == {1}
     manager.close()

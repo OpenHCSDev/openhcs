@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from enum import IntEnum
 from functools import partial
 from pathlib import Path
@@ -90,14 +90,50 @@ class QRoiManagerButtons(QtW.QWidget):
 class RoiTableColumn(IntEnum):
     """Columns projected directly from one native Napari Shapes layer."""
 
-    def __new__(cls, value: int, header: str):
+    def __new__(
+        cls,
+        value: int,
+        header: str,
+        read_value: Callable[[Shapes, int, str], str],
+        editable: bool = False,
+    ):
         member = int.__new__(cls, value)
         member._value_ = value
         member.header = header
+        member.read_value = read_value
+        member.editable = editable
         return member
 
-    NAME = (0, "name")
-    SHAPE_TYPE = (1, "type")
+    NAME = (
+        0,
+        "name",
+        lambda layer, row, header: (
+            str(layer.features[header].iat[row])
+            if header in layer.features.columns
+            else RoiTableColumn.default_name(row)
+        ),
+        True,
+    )
+    SHAPE_TYPE = (1, "type", lambda layer, row, _header: str(layer.shape_type[row]))
+
+    @staticmethod
+    def default_name(row: int) -> str:
+        """Supply the native ROI name when no annotation was retained."""
+
+        return f"ROI-{row:>04}"
+
+    def data(self, layer: Shapes, row: int) -> str:
+        """Read this intrinsic column from its native owner."""
+
+        return self.read_value(layer, row, self.header)
+
+    def values(self, layer: Shapes | None) -> list[str]:
+        """Project values only when an explicit bulk caller needs them."""
+
+        return (
+            [] if layer is None
+            else [self.data(layer, row) for row in range(len(layer.data))]
+        )
 
 
 class QRoiTableModel(QtCore.QAbstractTableModel):
@@ -129,7 +165,18 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
         return len(self._layer.data)
 
     def columnCount(self, parent=QtCore.QModelIndex()) -> int:
-        return 0 if parent.isValid() else len(RoiTableColumn)
+        return 0 if parent.isValid() else len(RoiTableColumn) + len(self.feature_columns)
+
+    @property
+    def feature_columns(self) -> tuple[object, ...]:
+        """Derive metric columns from native features, without a second schema."""
+
+        if self._layer is None:
+            return ()
+        return tuple(
+            column for column in self._layer.features.columns
+            if column != RoiTableColumn.NAME.header
+        )
 
     def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         if (
@@ -142,10 +189,10 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
             )
         ):
             return None
-        column = RoiTableColumn(index.column())
-        if column is RoiTableColumn.NAME:
-            return self._name(index.row())
-        return str(self._layer.shape_type[index.row()])
+        if index.column() < len(RoiTableColumn):
+            return RoiTableColumn(index.column()).data(self._layer, index.row())
+        feature = self.feature_columns[index.column() - len(RoiTableColumn)]
+        return str(self._layer.features[feature].iat[index.row()])
 
     def headerData(
         self,
@@ -157,12 +204,18 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
             orientation == QtCore.Qt.Orientation.Horizontal
             and role == QtCore.Qt.ItemDataRole.DisplayRole
         ):
-            return RoiTableColumn(section).header
+            if section < len(RoiTableColumn):
+                return RoiTableColumn(section).header
+            return str(self.feature_columns[section - len(RoiTableColumn)])
         return super().headerData(section, orientation, role)
 
     def flags(self, index):
         flags = super().flags(index)
-        if index.isValid() and RoiTableColumn(index.column()) is RoiTableColumn.NAME:
+        if (
+            index.isValid()
+            and index.column() < len(RoiTableColumn)
+            and RoiTableColumn(index.column()).editable
+        ):
             flags |= QtCore.Qt.ItemFlag.ItemIsEditable
         return flags
 
@@ -171,38 +224,22 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
             role != QtCore.Qt.ItemDataRole.EditRole
             or not index.isValid()
             or self._layer is None
-            or RoiTableColumn(index.column()) is not RoiTableColumn.NAME
+            or index.column() >= len(RoiTableColumn)
+            or not RoiTableColumn(index.column()).editable
         ):
             return False
-        names = self.column_values(RoiTableColumn.NAME)
-        names[index.row()] = str(value)
+        column = RoiTableColumn(index.column())
+        values = column.values(self._layer)
+        values[index.row()] = str(value)
         features = self._layer.features.copy()
-        features[RoiTableColumn.NAME.header] = names
+        features[column.header] = values
         self._layer.features = features
         return True
 
     def column_values(self, column: RoiTableColumn) -> list[str]:
         """Project one complete column only for explicit bulk callers."""
 
-        if self._layer is None:
-            return []
-        if column is RoiTableColumn.NAME:
-            features = self._layer.features
-            if RoiTableColumn.NAME.header in features.columns:
-                return [
-                    str(value)
-                    for value in features[RoiTableColumn.NAME.header].tolist()
-                ]
-            return [f"ROI-{index:>04}" for index in range(self.rowCount())]
-        return [str(value) for value in self._layer.shape_type]
-
-    def _name(self, row: int) -> str:
-        if self._layer is None:
-            raise RuntimeError("ROI table model has no native Shapes layer.")
-        features = self._layer.features
-        if RoiTableColumn.NAME.header in features.columns:
-            return str(features[RoiTableColumn.NAME.header].iat[row])
-        return f"ROI-{row:>04}"
+        return column.values(self._layer)
 
 
 class QRoiListWidget(QtW.QTableView):
@@ -230,10 +267,15 @@ class QRoiListWidget(QtW.QTableView):
         self.selectionModel().selectionChanged.connect(self._selection_changed)
 
     def bind_layer(self, layer: Shapes | None) -> None:
-        self._roi_model.bind_layer(layer)
+        blocker = QtCore.QSignalBlocker(self.selectionModel())
+        try:
+            self._roi_model.bind_layer(layer)
+            self.select_rows(() if layer is None else layer.selected_data)
+        finally:
+            del blocker
 
     def refresh(self) -> None:
-        self._roi_model.refresh()
+        self.bind_layer(self._roi_model._layer)
 
     def rowCount(self) -> int:
         return self._roi_model.rowCount()
@@ -262,7 +304,7 @@ class QRoiListWidget(QtW.QTableView):
                         self.model().index(span_start, RoiTableColumn.NAME),
                         self.model().index(
                             span_stop,
-                            RoiTableColumn.SHAPE_TYPE,
+                            self.model().columnCount() - 1,
                         ),
                     )
                     if row is not None:
@@ -498,18 +540,11 @@ class QRoiManager(QtW.QWidget):
             return
         self._layer_name.setText(layer.name)
         self._roilist.bind_layer(layer)
-        self._roilist.select_rows(layer.selected_data)
         self._refresh_text_features()
         self._update_controls()
 
     def _roi_names(self) -> list[str]:
-        layer = self._layer
-        if layer is None:
-            return []
-        features = layer.features
-        if "name" in features.columns:
-            return [str(value) for value in features["name"].tolist()]
-        return [f"ROI-{index:>04}" for index in range(len(layer.data))]
+        return RoiTableColumn.NAME.values(self._layer)
 
     def _refresh_text_features(self) -> None:
         combo = self._btns._text_feature_name
@@ -589,7 +624,7 @@ class QRoiManager(QtW.QWidget):
         names = self._roi_names()
         for index in indices:
             if 0 <= index < len(names) and not names[index]:
-                names[index] = f"ROI-{index:>04}"
+                names[index] = RoiTableColumn.default_name(index)
         features = layer.features.copy()
         features["name"] = names
         layer.features = features
@@ -762,7 +797,8 @@ class QRoiManager(QtW.QWidget):
         existing_features["name"] = existing_names
         layer.add(rois.data, shape_type=rois.shape_type)
         incoming_names = rois.names or [
-            f"ROI-{index:>04}" for index in range(start, len(layer.data))
+            RoiTableColumn.default_name(index)
+            for index in range(start, len(layer.data))
         ]
         incoming_features = {
             column: list(values) for column, values in (rois.features or {}).items()
