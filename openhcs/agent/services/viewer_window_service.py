@@ -97,8 +97,8 @@ from openhcs.runtime.viewer_component_system import (
 from openhcs.runtime.viewer_protocol import OpenHCSViewerControlMessageType
 from openhcs.runtime.viewer_protocol import (
     ViewerControlField,
-    ViewerControlMessageRequest,
     ViewerControlMessageType,
+    ViewerControlMessageRequest,
     ViewerControlResponseField,
     ViewerDescriptorField,
     ViewerIntensityWindowField,
@@ -1184,7 +1184,16 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         poller = zmq.Poller()
         try:
             socket.connect(control_url)
-            socket.send(pickle.dumps(message), flags=zmq.DONTWAIT)
+            wire_request = ViewerControlMessageRequest(
+                endpoint=ViewerRuntimeEndpoint(
+                    transport=connection.transport_endpoint(OPENHCS_ZMQ_CONFIG),
+                    config=OPENHCS_ZMQ_CONFIG,
+                ),
+                message_type=message[ViewerControlResponseField.TYPE.value],
+                payload=message.get(ViewerControlResponseField.PAYLOAD.value),
+                operation_deadline=deadline,
+            )
+            socket.send(pickle.dumps(wire_request.to_wire_mapping()), flags=zmq.DONTWAIT)
             poller.register(socket, zmq.POLLIN)
             events = dict(poller.poll(deadline.remaining_milliseconds()))
             if events.get(socket) != zmq.POLLIN:

@@ -14,6 +14,7 @@ from qtpy.QtWidgets import QApplication, QWidget
 from pyqt_reactive.services.window_snapshot import WindowSnapshotFrameCondition
 from zmqruntime.config import TransportMode
 from zmqruntime.transport import TransportEndpoint
+from zmqruntime.timeouts import OperationDeadline
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
@@ -56,6 +57,10 @@ def queued_viewer():
         host="localhost", port=5584, transport_mode=TransportMode.TCP
     )
     server.napari_window_title = "Queued source snapshot"
+    from openhcs.runtime.napari_streaming_handlers import NapariLayerRouteStateStore
+    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    server.config = OPENHCS_ZMQ_CONFIG
     server.accepted_control_requests = queue.Queue()
     yield app, canvas, server
     from qtpy.compat import isalive
@@ -70,7 +75,9 @@ def queued_viewer():
 def enqueue(server, capture):
     reply = Future()
     message = pickle.loads(pickle.dumps({"type": "screenshot", "payload": capture}))
-    server.accepted_control_requests.put(NapariAcceptedControlRequest(message, reply))
+    server.accepted_control_requests.put(NapariAcceptedControlRequest(
+        message, reply, observation_deadline=capture.control_deadline(),
+    ))
     server.process_messages()
     return reply
 
@@ -197,6 +204,7 @@ def test_new_control_case_requires_only_registered_declaration_and_hook(queued_v
             NapariAcceptedControlRequest(
                 {"type": DeclarationOnlyControl.message_type, "payload": 17},
                 reply,
+                observation_deadline=OperationDeadline.after_milliseconds(5000, operation="native declaration control"),
             )
         )
         server.process_messages()
@@ -245,8 +253,11 @@ def test_snapshot_original_deadline_releases_transport_without_cancelling_qt_wor
     replies = Future()
 
     def receive():
+        from zmqruntime.messages import ControlRequestHeader
         replies.set_result(pump._response_payload(
-            pickle.dumps({"type": "screenshot", "payload": request})
+            pickle.dumps(ControlRequestHeader.with_observation_budget(
+                {"type": "screenshot", "payload": replace(request, operation_deadline=None)}, request.control_deadline(),
+            ))
         ))
 
     thread = threading.Thread(target=receive)
