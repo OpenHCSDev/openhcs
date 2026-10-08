@@ -60,9 +60,8 @@ outgrowth per detected cell, cell count, total outgrowth, branches per cell,
 and mean and median process length. For the last two endpoints, we first
 averaged the corresponding per-cell values within each field, including
 zero-growth cells. Overlapping fields were not deduplicated; total outgrowth
-therefore denotes a mean field total, not unique whole-well length. Treatment means
-were divided by the same drug curve's zero-dose DMSO mean, with two technical
-wells at each concentration. Existing MetaXpress well exports supplied the
+therefore denotes a mean field total, not unique whole-well length.
+Existing MetaXpress well exports supplied the
 comparison response, not manual tracing truth. This fixed-recipe transfer was
 separate from autonomous pipeline authoring.
 
@@ -80,7 +79,7 @@ The commercial export contains 120 well summaries from two plates. The repaired 
 Each FC-A and Y27632 concentration has two technical wells. Y27632 is labelled Y27 in the export. The [six-endpoint sheet](../figures/slas/personal_neurite_effects_repaired.png) includes mean outgrowth per detected cell and the endpoints in Supplementary Figure 5.
 
 Every endpoint is divided by the same drug
-curve's DMSO mean. Dots show the two technical
+curve's zero-dose DMSO mean. Dots show the two technical
 wells at each concentration. Marks and whiskers show their mean and sample
 standard deviation after division by the observed control mean; they do not
 propagate uncertainty in that denominator or represent confidence intervals.
@@ -88,9 +87,6 @@ Dose positions are equally spaced for display, not a fitted concentration–resp
 model. Paired treatment panels use the same vertical scale. The plot and
 numerical tables are generated from the same well measurements.
 
-Each OpenHCS well endpoint is the unweighted mean of its nine field-level
-measurements. Total outgrowth is therefore a mean field total, not unique
-whole-well length.
 The commercial endpoint is an existing well export whose exact site weighting
 and software settings are not retained. The
 [MetaXpress 6 Neurite Outgrowth guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf)
@@ -106,9 +102,7 @@ technical wells do not establish biological replication or significance.
 
 OpenHCS process lengths describe the connected paths assigned to a
 soma-adjacent root, including daughter branches, rather than individual
-segments between graph junctions. Per-cell mean and median process lengths
-are averaged within each field, including zero-growth cells, then across its
-nine fields. Branches require at least three same-neuron paths and distinct
+segments between graph junctions. Branches require at least three same-neuron paths and distinct
 admitted image arms around the junction. Paths sharing one image corridor
 and graph stars confined within a foreground cap do not add branch events;
 resolved crossings are not automatically branches. These
@@ -123,8 +117,8 @@ outgrowth to expose denominator changes without inferring toxicity. The
 [source hashes](personal_neurite_repaired_morphometry/source_evidence.json) identify the
 exact submitted pipeline, source key, commercial export and all 180 native
 summaries. The comparison script processes tables only and does not tune images.
-Overlapping fields are not deduplicated, so averaged field counts are not unique
-whole-well neuron counts. Unselected wells are not filled with zero.
+Like total outgrowth, averaged field counts do not denote unique whole-well
+neurons. Unselected wells are not filled with zero.
 The [original frozen comparison](personal_neurite_baseline_morphometry/treatment_effects.csv)
 is retained separately for before/after evaluation; it was not overwritten.
 
