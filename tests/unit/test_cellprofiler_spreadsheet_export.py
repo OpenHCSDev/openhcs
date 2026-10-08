@@ -1077,8 +1077,9 @@ def test_native_csv_header_rows_preserve_quoting_and_reject_wrong_width() -> Non
     from openhcs.core._tabular_native import render_csv
 
     result = render_csv(
-        ({"raw": 3.0},),
+        ((3.0,),),
         ("raw",),
+        1,
         ",",
         Real,
         True,
@@ -1090,7 +1091,7 @@ def test_native_csv_header_rows_preserve_quoting_and_reject_wrong_width() -> Non
         ["3.0"],
     )
     with pytest.raises(ValueError, match="header width"):
-        render_csv(({"raw": 3.0},), ("raw",), ",", Real, True, (("one", "two"),))
+        render_csv(((3.0,),), ("raw",), 1, ",", Real, True, (("one", "two"),))
 
 
 def test_export_to_spreadsheet_merges_object_features_across_runtime_groups() -> None:
@@ -2344,3 +2345,215 @@ def test_partitioned_relationship_export_preserves_producer_then_axis_order(
         ]
     )
     assert len(mapped) == (0 if overlapping_declarations else 6)
+
+
+@pytest.mark.parametrize("nan_representation", tuple(SpreadsheetNanRepresentation))
+@pytest.mark.parametrize("sequence_columns", (False, True))
+def test_rendered_partitions_keep_sparse_csv_without_raw_value_transport(
+    nan_representation,
+    sequence_columns,
+):
+    import pickle
+    import numpy as np
+    from openhcs.processing.materialization.core import (
+        ColumnarCsvOutput,
+        RenderedColumnarCsvOutput,
+    )
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        CellProfilerSpreadsheetCsvOptions,
+    )
+
+    options = CellProfilerSpreadsheetCsvOptions(
+        selection=SpreadsheetFileSelection(("Image",), "Image.csv"),
+        active_subjects=("Image",),
+        delimiter=SpreadsheetDelimiter.COMMA,
+        nan_representation=nan_representation,
+    )
+    sources = (
+        {
+            "image_number": np.array([1, 1]),
+            "quoted\nfield": np.array([MEASUREMENT_SPARSE_CELL, None], object),
+            "a": np.array(["x,y", "x\ny"], object),
+        },
+        {
+            "image_number": np.array([2, 2]),
+            "quoted\nfield": np.array([np.nan, ""], object),
+            "a": np.array(['"', ""], object),
+            "extra": np.array([np.inf, "q"], object),
+        },
+    )
+    if sequence_columns:
+        sources = tuple(
+            {name: list(values) for name, values in columns.items()}
+            for columns in sources
+        )
+    outputs = tuple(
+        ColumnarCsvOutput(
+            path="Image.csv",
+            options=options,
+            content=MeasurementSparseColumnarRows(
+                columns,
+                fields=tuple(FieldSpec(name, required=False) for name in columns),
+            ),
+        )
+        for columns in sources
+    )
+    expected = (
+        ColumnarCsvOutput.compose(outputs, partition_fields=("image_number",))
+        .rendered()
+        .content
+    )
+    realized = tuple(
+        output.realized_for_composition(partition_fields=("image_number",))
+        for output in outputs
+    )
+    transported = tuple(pickle.loads(pickle.dumps(output)) for output in realized)
+    assert all(tuple(output.key_columns) == ("image_number",) for output in transported)
+    assert all(not output._decoded_columns for output in transported)
+    result = RenderedColumnarCsvOutput.compose(
+        transported, partition_fields=("image_number",)
+    )
+    assert result.content == expected
+    assert result.table_shape()[1] == 4
+    with pytest.raises(ValueError, match="overlap"):
+        RenderedColumnarCsvOutput.compose(
+            (realized[0], realized[0]), partition_fields=("image_number",)
+        )
+    sources[0]["image_number"][:] = [99, 99]
+    assert realized[0].key_columns["image_number"].tolist() == [1, 1]
+
+
+def test_rendered_matching_headers_compose_without_decoding_value_columns():
+    import numpy as np
+    from openhcs.processing.materialization.core import (
+        ColumnarCsvOutput,
+        RenderedColumnarCsvOutput,
+    )
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        CellProfilerSpreadsheetCsvOptions,
+    )
+
+    options = CellProfilerSpreadsheetCsvOptions(
+        selection=SpreadsheetFileSelection(("Image",), "Image.csv"),
+        active_subjects=("Image",),
+        delimiter=SpreadsheetDelimiter.COMMA,
+        nan_representation=SpreadsheetNanRepresentation.NULL,
+    )
+    outputs = tuple(
+        ColumnarCsvOutput(
+            path="Image.csv",
+            options=options,
+            content=MeasurementSparseColumnarRows(
+                {"image_number": np.array([number]), "value": np.array([number + 0.5])},
+                fields=(FieldSpec("image_number"), FieldSpec("value")),
+            ),
+        ).realized_for_composition(partition_fields=("image_number",))
+        for number in (1, 2)
+    )
+    result = RenderedColumnarCsvOutput.compose(
+        outputs, partition_fields=("image_number",)
+    )
+    assert result.content == b"image_number,value\n1,1.5\n2,2.5\n"
+    assert not result._decoded_columns
+    assert all(not output._decoded_columns for output in outputs)
+    assert result.table_shape() == (("image_number", "value"), 2)
+
+
+def test_csv_writer_shape_preserves_contextual_headers_and_empty_dialects():
+    from openhcs.processing.materialization.core import ColumnarCsvOutput
+    from openhcs.processing.materialization.options import CsvOptions
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        CellProfilerSpreadsheetCsvOptions,
+    )
+
+    def cp_options(subjects):
+        return CellProfilerSpreadsheetCsvOptions(
+            selection=SpreadsheetFileSelection(subjects, "out.csv"),
+            active_subjects=subjects,
+            delimiter=SpreadsheetDelimiter.COMMA,
+            nan_representation=SpreadsheetNanRepresentation.NULL,
+        )
+
+    rows = MeasurementSparseColumnarRows(
+        {"image_number": [1], "Cells_value": [2], "Nuclei_value": [3]},
+        fields=(
+            FieldSpec("image_number"),
+            FieldSpec("Cells_value"),
+            FieldSpec("Nuclei_value"),
+        ),
+    )
+    output = ColumnarCsvOutput(
+        path="out.csv", content=rows, options=cp_options(("Cells", "Nuclei"))
+    )
+    assert output.table_shape() == (("Image", "Cells", "Nuclei"), 2)
+    assert output.rendered().table_shape() == output.table_shape()
+    assert (
+        output.realized_for_composition(
+            partition_fields=("image_number",)
+        ).table_shape()
+        == output.table_shape()
+    )
+    empty = MeasurementSparseColumnarRows({}, fields=())
+    cp_empty = ColumnarCsvOutput(
+        path="empty.csv", content=empty, options=cp_options(("Image",))
+    )
+    assert cp_empty.rendered().content == b""
+    assert cp_empty.table_shape() == ((), 0)
+    generic_empty = ColumnarCsvOutput(
+        path="empty.csv", content=empty, options=CsvOptions()
+    )
+    assert generic_empty.rendered().content == b"\r\n"
+    assert generic_empty.table_shape() == ((), 0)
+    # The nominal field owner rejects empty names; the generic mapping writer
+    # still preserves the one-column blank CSV grammar.
+    from openhcs.processing.materialization.core import _render_csv_rows
+
+    with pytest.raises(ValueError, match="cannot be empty"):
+        FieldSpec("")
+    assert _render_csv_rows(({"": ""},), ("",)) == '""\r\n""\r\n'
+
+
+def test_rendered_fixed_fields_snapshot_mutable_cells_and_keep_unrendered_identity():
+    import numpy as np
+    from openhcs.processing.materialization.core import (
+        ColumnarCsvOutput,
+        RenderedColumnarCsvOutput,
+    )
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        CellProfilerSpreadsheetCsvOptions,
+    )
+
+    options = CellProfilerSpreadsheetCsvOptions(
+        selection=SpreadsheetFileSelection(("Image",), "Image.csv"),
+        active_subjects=("Image",),
+        delimiter=SpreadsheetDelimiter.COMMA,
+        nan_representation=SpreadsheetNanRepresentation.NULL,
+        fields=("value",),
+    )
+    mutable = [3, 4]
+    values = np.empty(1, object)
+    values[0] = mutable
+    source = ColumnarCsvOutput(
+        path="Image.csv",
+        options=options,
+        content=MeasurementSparseColumnarRows(
+            {"image_number": [1], "value": values, "excluded": [5]},
+            fields=(
+                FieldSpec("image_number"),
+                FieldSpec("value"),
+                FieldSpec("excluded"),
+            ),
+        ),
+    )
+    rendered = source.realized_for_composition(partition_fields=("image_number",))
+    expected = source.rendered().content
+    mutable.append(6)
+    assert rendered.content == expected
+    assert "excluded" not in rendered.columns
+    assert rendered.key_columns["image_number"].tolist() == [1]
+    assert (
+        RenderedColumnarCsvOutput.compose(
+            (rendered,), partition_fields=("image_number",)
+        ).content
+        == expected
+    )

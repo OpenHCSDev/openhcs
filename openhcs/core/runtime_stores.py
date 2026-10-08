@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass, field as dataclass_field, fields
 import inspect
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from python_introspect import RuntimeParameterDeclarationABC
 
@@ -49,35 +49,64 @@ from openhcs.core.source_matching import (
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.serialization.json import to_jsonable
 
+if TYPE_CHECKING:
+    from openhcs.processing.materialization.core import Output
+
 
 @dataclass(frozen=True, slots=True)
 class RuntimeArtifactLocation:
-    """VFS location for one persisted runtime artifact payload."""
+    """Persisted artifact location with facts retained by its writer."""
 
     path: str
     backend: str
+    table_header: tuple[str, ...] | None = dataclass_field(default=None, compare=False)
+    table_row_count: int | None = dataclass_field(default=None, compare=False)
 
     def __post_init__(self) -> None:
         if not self.path:
             raise ValueError("RuntimeArtifactLocation.path cannot be empty.")
         if not self.backend:
             raise ValueError("RuntimeArtifactLocation.backend cannot be empty.")
+        if (self.table_header is None) != (self.table_row_count is None):
+            raise ValueError("Saved table locations require both header and row count.")
+        if self.table_header is not None:
+            object.__setattr__(self, "table_header", tuple(self.table_header))
+            if not all(isinstance(name, str) for name in self.table_header):
+                raise TypeError("Saved table headers must contain text fields.")
+            if not isinstance(self.table_row_count, int) or self.table_row_count < 0:
+                raise ValueError("Saved table row count must be a nonnegative integer.")
+
+    @classmethod
+    def from_output(cls, output: "Output", backend: str) -> "RuntimeArtifactLocation":
+        """Retain writer-owned file facts after its physical values are released."""
+        shape = output.table_shape()
+        return cls(
+            path=output.path,
+            backend=backend,
+            table_header=None if shape is None else shape[0],
+            table_row_count=None if shape is None else shape[1],
+        )
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "RuntimeArtifactLocation":
         """Reconstruct one location from its transport projection."""
 
-        return cls(
-            path=str(data["path"]),
-            backend=str(data["backend"]),
-        )
+        values = {
+            declaration.name: data[declaration.name]
+            for declaration in fields(cls)
+            if declaration.name in data
+        }
+        values["path"] = str(values["path"])
+        values["backend"] = str(values["backend"])
+        return cls(**values)
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, Any]:
         """Project this location to transport primitives."""
 
         return {
-            "path": self.path,
-            "backend": self.backend,
+            declaration.name: to_jsonable(value)
+            for declaration in fields(self)
+            if (value := getattr(self, declaration.name)) is not None
         }
 
 

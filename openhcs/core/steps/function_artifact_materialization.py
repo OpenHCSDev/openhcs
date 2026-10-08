@@ -1238,7 +1238,7 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             return StepExecutionObservation.empty()
         address = RuntimeArtifactAddress.from_record(self.materialization.record)
         locations = tuple(
-            RuntimeArtifactLocation(path=output.path, backend=backend)
+            RuntimeArtifactLocation.from_output(output, backend)
             for output in outputs
         )
         paths = (

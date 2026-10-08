@@ -218,6 +218,42 @@ class MeasurementRowTextValue(MeasurementRowDeclaredValue):
 
     field_names: ClassVar[tuple[str, ...]] = ()
 
+    @staticmethod
+    def normalize_value(value: object) -> str | None:
+        """Read the shared text ownership law from one physical column cell."""
+        if value is None or is_structural_missing_measurement_cell(value):
+            return None
+        return str(value).strip() or None
+
+    @classmethod
+    def domain_from_column(
+        cls, rows: ColumnarRows, column_name: str
+    ) -> tuple[str | None, ...]:
+        """Read distinct ownership text from physical segments in row order.
+
+        Built-in text cells can be admitted before normalization. Other atomic
+        cells retain the existing text conversion law, including unhashable
+        arrays or lists. Missing physical segments own the default subject.
+        """
+        if column_name not in rows.columns:
+            return (None,)
+        raw_domain: dict[str | None, None] = {}
+        row_stop = 0
+        for offset, values in rows.column_value_segments(column_name):
+            if offset > row_stop:
+                raw_domain.setdefault(None, None)
+            for value in values:
+                text = (
+                    value
+                    if type(value) is str or type(value) is np.str_
+                    else cls.normalize_value(value)
+                )
+                raw_domain.setdefault(text, None)
+            row_stop = offset + len(values)
+        if row_stop < rows.row_count():
+            raw_domain.setdefault(None, None)
+        return tuple(dict.fromkeys(cls.normalize_value(value) for value in raw_domain))
+
     @classmethod
     def value_from_row(
         cls,
@@ -233,10 +269,8 @@ class MeasurementRowTextValue(MeasurementRowDeclaredValue):
                 field_name,
                 normalized_fields,
             )
-            if value is None:
-                continue
-            normalized = str(value).strip()
-            if normalized:
+            normalized = cls.normalize_value(value)
+            if normalized is not None:
                 return normalized
         return None
 
@@ -532,6 +566,25 @@ class MeasurementSparseColumnarRows(ColumnarRows):
     def __post_init__(self) -> None:
         self.validate_fields()
 
+    @staticmethod
+    def present_mask(
+        values: np.ndarray,
+        *,
+        missing_cell: object = MEASUREMENT_SPARSE_CELL,
+    ) -> np.ndarray:
+        """Derive physical presence without boxing dense typed scalar columns."""
+        if not values.dtype.hasobject and missing_cell is MEASUREMENT_SPARSE_CELL:
+            return np.ones(len(values), dtype=bool)
+        return np.fromiter(
+            (
+                value is not missing_cell
+                and not is_structural_missing_measurement_cell(value)
+                for value in values
+            ),
+            dtype=bool,
+            count=len(values),
+        )
+
     @classmethod
     def from_rows(
         cls,
@@ -674,20 +727,7 @@ class MeasurementSparseColumnarRows(ColumnarRows):
             )
             for name, values in source_columns.items():
                 values = ColumnarRows.column_array(values)
-                present = (
-                    np.ones(len(values), dtype=bool)
-                    if not values.dtype.hasobject
-                    and missing_cell is MEASUREMENT_SPARSE_CELL
-                    else np.fromiter(
-                        (
-                            value is not missing_cell
-                            and not is_structural_missing_measurement_cell(value)
-                            for value in values
-                        ),
-                        dtype=bool,
-                        count=len(values),
-                    )
-                )
+                present = cls.present_mask(values, missing_cell=missing_cell)
                 indexes = destinations[present]
                 admitted = values[present]
                 unique, first, inverse = (
@@ -915,6 +955,58 @@ class WideMeasurementRowAccumulator:
                 "RuntimeMeasurementRowIdentityContract."
             )
 
+    def _admit_subject(self, subject: str, scope: MeasurementScope) -> bool:
+        if scope is MeasurementScope.OBJECT and subject not in self._object_subjects:
+            self._object_subjects.append(subject)
+        return self.required_subjects is None or subject in self.required_subjects
+
+    @staticmethod
+    def _long_form_fields(
+        column_names: Iterable[str],
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        names = frozenset(column_names)
+        features = tuple(
+            name
+            for name in MeasurementRowAxisField.feature_name_field_names_ordered()
+            if name in names
+        )
+        values = tuple(
+            name
+            for name in MeasurementRowValueField.field_names_ordered()
+            if name in names
+        )
+        if features and not values:
+            raise ValueError("Long-form measurement columns have no value column.")
+        return features, values
+
+    def admits_declared_rows(
+        self,
+        rows: ColumnarRows,
+        *,
+        default_subject: str,
+        default_scope: MeasurementScope,
+    ) -> bool:
+        """Admit subject demand before projecting or copying measurement cells.
+
+        Object ownership can override the table declaration. Keep its complete
+        ordered subject roster even when none of those subjects is requested;
+        image-reference means may demand their values later.
+        """
+        if self.required_subjects is None:
+            return True
+        if not rows.row_count():
+            return False
+        self._long_form_fields(rows.columns)
+        field_name = MeasurementRowAxisField.OBJECT_NAME.value
+        object_names = MeasurementRowObjectName.domain_from_column(rows, field_name)
+        admitted = False
+        for name in object_names:
+            subject = name or default_subject
+            scope = MeasurementRowOwnership(object_name=name).scope(default_scope)
+            if self._admit_subject(subject, scope):
+                admitted = True
+        return admitted
+
     def add(
         self,
         rows: Sequence[object] | ColumnarRows,
@@ -1082,18 +1174,9 @@ class WideMeasurementRowAccumulator:
             if name in columns
         )
         object_names = columns.get(MeasurementRowAxisField.OBJECT_NAME.value)
-        feature_fields = tuple(
-            columns[name]
-            for name in MeasurementRowAxisField.feature_name_field_names_ordered()
-            if name in columns
-        )
-        value_fields = tuple(
-            columns[name]
-            for name in MeasurementRowValueField.field_names_ordered()
-            if name in columns
-        )
-        if feature_fields and not value_fields:
-            raise ValueError("Long-form measurement columns have no value column.")
+        feature_names, value_names = self._long_form_fields(columns)
+        feature_fields = tuple(columns[name] for name in feature_names)
+        value_fields = tuple(columns[name] for name in value_names)
         normalized_features = None
         if feature_fields:
             if self.required_subjects is None:
@@ -1114,28 +1197,16 @@ class WideMeasurementRowAccumulator:
         cohorts: dict[tuple[str, tuple[tuple[str, object], ...]], list[int]] = {}
         labels = np.full(row_count, missing_cell, dtype=object)
         for index in range(row_count):
-            subject = default_subject
-            owned = False
-            if object_names is not None:
-                name = object_names[index]
-                if name is not None and not is_structural_missing_measurement_cell(
-                    name
-                ):
-                    normalized = str(name).strip()
-                    if normalized:
-                        subject = normalized
-                        owned = True
-            scope = MeasurementRowOwnership(
-                object_name=subject if owned else None
-            ).scope(default_scope)
-            if (
-                scope is MeasurementScope.OBJECT
-                and subject not in self._object_subjects
-            ):
-                self._object_subjects.append(subject)
+            name = (
+                None
+                if object_names is None
+                else MeasurementRowObjectName.normalize_value(object_names[index])
+            )
+            subject = name or default_subject
+            scope = MeasurementRowOwnership(object_name=name).scope(default_scope)
+            if not self._admit_subject(subject, scope):
+                continue
             if self.required_subjects is not None:
-                if subject not in self.required_subjects:
-                    continue
                 if normalized_features is not None:
                     value = feature_fields[0][index]
                     normalized_features[index] = (
@@ -2040,13 +2111,10 @@ class ConcatenatedColumnarRowColumns(Mapping[str, Sequence[object]]):
             column_key is not None for _row_batch, column_key in physical_batches
         ):
             dense_columns = tuple(
-                columnar_row_values(row_batch, column_key)
+                ColumnarRows.column_array(columnar_row_values(row_batch, column_key))
                 for row_batch, column_key in physical_batches
             )
             if len(physical_batches) != len(self.row_batches):
-                dense_columns = tuple(
-                    ColumnarRows.column_array(column) for column in dense_columns
-                )
                 common_dtype = np.result_type(
                     *(column.dtype for column in dense_columns)
                 )

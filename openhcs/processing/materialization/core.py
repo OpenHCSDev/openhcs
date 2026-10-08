@@ -14,7 +14,7 @@ import re
 import string
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence, Sized
-from dataclasses import dataclass, field, is_dataclass, replace
+from dataclasses import dataclass, field, fields as dataclass_fields, is_dataclass, replace
 from functools import lru_cache, singledispatch
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from types import MappingProxyType
@@ -60,6 +60,8 @@ from openhcs.core.runtime_slice_projection import (
 from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
 from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
+    FieldSpec,
+    MeasurementObjectRowIdentity,
     measurement_row_mapping,
     supports_measurement_row_mapping,
 )
@@ -293,6 +295,10 @@ class Output:
     variable_components: tuple[AllComponents, ...] = ()
     image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None
 
+    def table_shape(self) -> tuple[tuple[str, ...], int] | None:
+        """Return writer-known CSV header and rows after its first header."""
+        return None
+
     def same_materialization_owner(self, other: Output) -> bool:
         """Compare current destination/source declarations, independent of content."""
         return (
@@ -482,6 +488,10 @@ class Utf8TextOutput(Output):
     """Text output stored as UTF-8 bytes for file-bundle compatibility."""
 
     content: bytes
+    table_shape_info: tuple[tuple[str, ...], int] | None = field(default=None, compare=False)
+
+    def table_shape(self) -> tuple[tuple[str, ...], int] | None:
+        return self.table_shape_info
 
     @classmethod
     def from_text(
@@ -527,61 +537,90 @@ class ColumnarCsvOutput(Output):
         return Utf8TextOutput(
             path=self.path,
             content=self.options.render(self.content).encode("utf-8"),
+            table_shape_info=self.table_shape(),
             metadata=self.metadata,
             variable_components=self.variable_components,
             image_numbers_by_axis=self.image_numbers_by_axis,
         )
 
-    def realized_for_composition(self) -> RenderedColumnarCsvOutput:
-        """Transfer a rendering-time scalar-row snapshot into its realized view.
+    def table_shape(self) -> tuple[tuple[str, ...], int]:
+        headers = self.options.header_rows(self.content)
+        return (
+            (headers[0], self.content.row_count() + len(headers) - 1)
+            if headers
+            else ((), 0)
+        )
 
-        Original producer arrays may subsequently be reused or released. The
-        realized view retains its own correlated columns, not a live mutable
-        source alias or a second independently maintained schema.
-        """
+    def realized_for_composition(
+        self,
+        *,
+        partition_fields: tuple[str, ...],
+    ) -> RenderedColumnarCsvOutput:
+        """Retain immutable formatting and only raw identity cells for composition."""
         from numbers import Real
         from openhcs.core.measurement_row_materialization import (
-            MeasurementProjectedColumnarRows,
+            MeasurementSparseColumnarRows,
             is_structural_missing_measurement_cell,
         )
 
-        columns = {}
+        if not partition_fields or any(
+            name not in self.content.columns for name in partition_fields
+        ):
+            raise ValueError(
+                "CSV realization requires its declared partition identity columns."
+            )
+        schema = self.options.csv_schema(self.content)
+        rendered_columns = schema[0]
+        keys = {}
+        presence = {}
         for name in self.content.columns:
             values = ColumnarRows.column_array(self.content.column_values(name))
-            if values.dtype.hasobject and any(
-                not (
-                    value is None
-                    or isinstance(value, (Real, str, bytes, bool, np.bool_))
-                    or is_structural_missing_measurement_cell(value)
+            selected = name in rendered_columns or name in partition_fields
+            if not selected and self.options.fields is not None:
+                continue
+            mask = MeasurementSparseColumnarRows.present_mask(values)
+            if not selected and bool(np.any(mask)):
+                continue
+            if not bool(np.all(mask)):
+                presence[name] = np.packbits(mask).tobytes()
+            if (
+                values.dtype.hasobject
+                and name in partition_fields
+                and any(
+                    not (
+                        value is None
+                        or isinstance(value, (Real, str, bytes, bool, np.bool_))
+                        or is_structural_missing_measurement_cell(value)
+                    )
+                    for value in values
                 )
-                for value in values
             ):
                 raise TypeError(
                     "CSV partition realization requires immutable scalar cells; "
                     f"column {name!r} contains opaque mutable values."
                 )
-            snapshot = np.array(values, copy=True)
-            snapshot.flags.writeable = False
-            columns[name] = snapshot
-        source = replace(
-            self,
-            content=MeasurementProjectedColumnarRows(
-                MappingProxyType(columns),
-                fields=self.content.fields,
-                declared_object_measurement_domain_covered=(
-                    self.content.covers_declared_object_measurement_domain
-                ),
-                object_row_identity=self.content.object_row_identity,
-            ),
-        )
-        header, text = source.options.render_parts(source.content)
+            if name in partition_fields:
+                snapshot = np.array(values, copy=True)
+                snapshot.flags.writeable = False
+                keys[name] = snapshot
+        header, text = self.options.render_parts(self.content, schema=schema)
         return RenderedColumnarCsvOutput(
             path=self.path,
             content=text.encode("utf-8"),
             metadata=self.metadata,
             variable_components=self.variable_components,
             image_numbers_by_axis=self.image_numbers_by_axis,
-            source=source,
+            options=self.options,
+            source_fields=self.content.fields,
+            rendered_columns=rendered_columns,
+            partition_fields=partition_fields,
+            key_columns=MappingProxyType(
+                {name: keys[name] for name in partition_fields}
+            ),
+            structural_presence=MappingProxyType(presence),
+            data_row_count=self.content.row_count(),
+            declared_object_measurement_domain_covered=self.content.covers_declared_object_measurement_domain,
+            object_row_identity=self.content.object_row_identity,
             header_content=header.encode("utf-8"),
         )
 
@@ -617,15 +656,25 @@ class ColumnarCsvOutput(Output):
                 not output.same_materialization_owner(first)
                 or output.options != first.options
             ):
-                raise ValueError("CSV partitions declare incompatible paths/schema/policy.")
+                raise ValueError(
+                    "CSV partitions declare incompatible paths/schema/policy."
+                )
             if output.image_numbers_by_axis is not None:
-                raise ValueError("CSV source numbering must be composed by its existing owner.")
+                raise ValueError(
+                    "CSV source numbering must be composed by its existing owner."
+                )
             if any(name not in output.content.columns for name in partition_fields):
-                raise ValueError("CSV partitions lack their declared source identity fields.")
-            columns = tuple(output.content.column_values(name) for name in partition_fields)
+                raise ValueError(
+                    "CSV partitions lack their declared source identity fields."
+                )
+            columns = tuple(
+                output.content.column_values(name) for name in partition_fields
+            )
             current: set[tuple[object, ...]] = set()
             for identity in zip(*columns, strict=True):
-                if any(is_structural_missing_measurement_cell(value) for value in identity):
+                if any(
+                    is_structural_missing_measurement_cell(value) for value in identity
+                ):
                     raise ValueError("CSV partitions contain unscoped/global rows.")
                 current.add(identity)
             if domains.intersection(current):
@@ -633,21 +682,194 @@ class ColumnarCsvOutput(Output):
             domains.update(current)
         return replace(
             first,
-            content=ConcatenatedColumnarRows(tuple(output.content for output in values)),
+            content=ConcatenatedColumnarRows(
+                tuple(output.content for output in values)
+            ),
         )
 
-@dataclass(frozen=True, kw_only=True)
-class RenderedColumnarCsvOutput(Utf8TextOutput):
-    """Realized CSV bytes retaining their rendering-time columnar authority."""
 
-    source: ColumnarCsvOutput
+@dataclass(frozen=True, kw_only=True)
+class RenderedColumnarCsvOutput(
+    Utf8TextOutput, ColumnarRows, Mapping[str, Sequence[object]]
+):
+    """Immutable CSV with a derived formatting view and exact raw partition keys.
+
+    Non-key cells are CSV lexemes, not original numerical measurements. Only
+    composition's identical writer policy consumes them, on header mismatch.
+    Structural presence keeps sparse schema ordering distinct from empty text.
+    """
+
+    options: CsvOptions
+    source_fields: tuple[FieldSpec, ...]
+    rendered_columns: tuple[str, ...]
+    partition_fields: tuple[str, ...]
+    key_columns: Mapping[str, np.ndarray]
+    structural_presence: Mapping[str, bytes]
+    data_row_count: int
     header_content: bytes
+    declared_object_measurement_domain_covered: bool = False
+    object_row_identity: MeasurementObjectRowIdentity | None = None
+    _format_fields: tuple[FieldSpec, ...] = field(init=False, repr=False, compare=False)
+    _decoded_columns: dict[str, np.ndarray] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def __post_init__(self) -> None:
-        if not isinstance(self.source, ColumnarCsvOutput):
-            raise TypeError("Realized CSV must retain its columnar source owner.")
+        if not isinstance(self.options, CsvOptions):
+            raise TypeError("Realized CSV requires its writer options.")
         if not self.content.startswith(self.header_content):
             raise ValueError("Realized CSV does not contain its rendered header.")
+        if self.data_row_count < 0 or tuple(self.key_columns) != self.partition_fields:
+            raise ValueError(
+                "Realized CSV requires its exact declared partition columns."
+            )
+        if any(
+            len(values) != self.data_row_count for values in self.key_columns.values()
+        ):
+            raise ValueError(
+                "Realized CSV partition columns have inconsistent row counts."
+            )
+        retained = frozenset(
+            (*self.rendered_columns, *self.key_columns, *self.structural_presence)
+        )
+        fields = tuple(
+            source if source.name in self.key_columns else replace(source, dtype=str)
+            for source in self.source_fields
+            if source.name in retained
+        )
+        declared = frozenset(field.name for field in fields)
+        fields += tuple(
+            FieldSpec(name, str, required=False)
+            for name in self.rendered_columns
+            if name not in declared
+        )
+        object.__setattr__(self, "_format_fields", fields)
+
+    def __getstate__(self):
+        # Serialize constructor evidence, not the lazily decoded formatting view.
+        return {
+            item.name: (dict(value) if isinstance(value, MappingProxyType) else value)
+            for item in dataclass_fields(self)
+            if item.init
+            for value in (getattr(self, item.name),)
+        }
+
+    def __setstate__(self, state):
+        for name, value in state.items():
+            object.__setattr__(self, name, value)
+        object.__setattr__(
+            self, "key_columns", MappingProxyType(dict(self.key_columns))
+        )
+        object.__setattr__(
+            self,
+            "structural_presence",
+            MappingProxyType(dict(self.structural_presence)),
+        )
+        for values in self.key_columns.values():
+            values.flags.writeable = False
+        object.__setattr__(self, "_decoded_columns", {})
+        self.__post_init__()
+
+    @property
+    def columns(self) -> Mapping[str, Sequence[object]]:
+        return self
+
+    @property
+    def fields(self) -> tuple[FieldSpec, ...]:
+        return self._format_fields
+
+    @property
+    def covers_declared_object_measurement_domain(self) -> bool:
+        return self.declared_object_measurement_domain_covered
+
+    def row_count(self) -> int:
+        return self.data_row_count
+
+    def __len__(self) -> int:
+        return len(self.fields)
+
+    def __iter__(self):
+        return iter(field.name for field in self.fields)
+
+    def __contains__(self, name: object) -> bool:
+        return any(field.name == name for field in self.fields)
+
+    def present_mask(self, name: str) -> np.ndarray:
+        bits = self.structural_presence.get(name)
+        if bits is None:
+            return np.full(self.data_row_count, name in self, dtype=bool)
+        return np.unpackbits(
+            np.frombuffer(bits, dtype=np.uint8), count=self.data_row_count
+        ).astype(bool)
+
+    def __getitem__(self, name: str) -> Sequence[object]:
+        from openhcs.core.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
+
+        if name not in self:
+            raise KeyError(name)
+        if name in self.key_columns:
+            return self.key_columns[name]
+        if name in self._decoded_columns:
+            return self._decoded_columns[name]
+        if name not in self.rendered_columns:
+            values = np.empty(self.data_row_count, dtype=object)
+            values.fill(MEASUREMENT_SPARSE_CELL)
+            values.flags.writeable = False
+            self._decoded_columns[name] = values
+            return values
+        reader = self.options.read_csv(self.require_text_content())
+        for _ in self.options.read_csv(self.header_content.decode("utf-8")):
+            next(reader)
+        decoded = {column: [] for column in self.rendered_columns}
+        for row in reader:
+            if len(row) != len(self.rendered_columns):
+                raise ValueError(
+                    "Realized CSV has an inconsistent physical column count."
+                )
+            for column, value in zip(self.rendered_columns, row, strict=True):
+                decoded[column].append(value)
+        for column, cells in decoded.items():
+            if len(cells) != self.data_row_count:
+                raise ValueError("Realized CSV has an inconsistent physical row count.")
+            values = np.asarray(cells, dtype=object)
+            values[~self.present_mask(column)] = MEASUREMENT_SPARSE_CELL
+            values.flags.writeable = False
+            self._decoded_columns[column] = values
+        return self._decoded_columns[name]
+
+    def iter_row_mappings(self):
+        from openhcs.core.measurement_row_materialization import (
+            is_structural_missing_measurement_cell,
+        )
+
+        names = tuple(self)
+        vectors = tuple(self[name] for name in names)
+        for row in zip(*vectors, strict=True):
+            yield {
+                name: value
+                for name, value in zip(names, row, strict=True)
+                if not is_structural_missing_measurement_cell(value)
+            }
+
+    @property
+    def source(self) -> ColumnarCsvOutput:
+        """Derive the sole rerender consumer's view from this immutable artifact."""
+        return ColumnarCsvOutput(
+            path=self.path,
+            content=self,
+            options=self.options,
+            metadata=self.metadata,
+            variable_components=self.variable_components,
+            image_numbers_by_axis=self.image_numbers_by_axis,
+        )
+
+    def table_shape(self) -> tuple[tuple[str, ...], int]:
+        headers = tuple(self.options.read_csv(self.header_content.decode("utf-8")))
+        return (
+            (tuple(headers[0]), self.data_row_count + len(headers) - 1)
+            if headers
+            else ((), 0)
+        )
 
     @classmethod
     def compose(
@@ -656,43 +878,64 @@ class RenderedColumnarCsvOutput(Utf8TextOutput):
         *,
         partition_fields: tuple[str, ...],
     ) -> RenderedColumnarCsvOutput:
-        """Compose validated realized bodies without rendering rows again."""
         values = tuple(outputs)
         if not values or any(not isinstance(output, cls) for output in values):
             raise TypeError("CSV byte composition requires realized columnar outputs.")
         first = values[0]
         if any(not output.same_materialization_owner(first) for output in values):
-            raise ValueError("Realized CSV partitions declare incompatible output ownership.")
+            raise ValueError(
+                "Realized CSV partitions declare incompatible output ownership."
+            )
         if any(output.image_numbers_by_axis is not None for output in values):
-            raise ValueError("CSV source numbering must be composed by its existing owner.")
+            raise ValueError(
+                "CSV source numbering must be composed by its existing owner."
+            )
+        if any(
+            any(name not in output.key_columns for name in partition_fields)
+            for output in values
+        ):
+            raise ValueError(
+                "Realized CSV lacks its captured raw partition identity columns."
+            )
+        declared_fields = FieldSpec.merge_exact(
+            (output.source_fields for output in values),
+            context="realized CSV source fields",
+        )
         source = ColumnarCsvOutput.compose(
-            tuple(output.source for output in values),
-            partition_fields=partition_fields,
+            tuple(output.source for output in values), partition_fields=partition_fields
         )
         if any(
             output.header_content != first.header_content
-            or output.source.content.fields != first.source.content.fields
+            or output.source_fields != first.source_fields
             for output in values
         ):
-            # Header presence can depend on actual scalar values. The original
-            # row/format owner resolves that global law, without replaying the
-            # exporter or concatenating incompatible byte representations.
-            header, text = source.options.render_parts(source.content)
-            return replace(
-                first,
-                source=source,
-                header_content=header.encode("utf-8"),
-                content=text.encode("utf-8"),
-            )
+            result = source.realized_for_composition(partition_fields=partition_fields)
+            return replace(result, source_fields=declared_fields)
+        keys = {
+            name: np.concatenate(tuple(output.key_columns[name] for output in values))
+            for name in partition_fields
+        }
+        for vector in keys.values():
+            vector.flags.writeable = False
+        presence = {}
+        for name in first:
+            if any(name in output.structural_presence for output in values):
+                presence[name] = np.packbits(
+                    np.concatenate(
+                        tuple(output.present_mask(name) for output in values)
+                    )
+                ).tobytes()
         return replace(
             first,
-            source=source,
-            content=first.header_content + b"".join(
-                output.content[len(output.header_content):] for output in values
+            content=first.header_content
+            + b"".join(
+                output.content[len(output.header_content) :] for output in values
             ),
+            partition_fields=partition_fields,
+            key_columns=MappingProxyType(keys),
+            structural_presence=MappingProxyType(presence),
+            data_row_count=sum(output.data_row_count for output in values),
         )
-
-
 
 
 class SourceSegmentAuthority:

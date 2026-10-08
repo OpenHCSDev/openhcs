@@ -1,6 +1,8 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <cmath>
+#include <cstring>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
@@ -109,23 +111,139 @@ class CsvScalarNormalization {
     }
 };
 
+class CsvColumnAccessor {
+  public:
+    virtual ~CsvColumnAccessor() = default;
+    virtual PyObject *value_at(Py_ssize_t index) const = 0;
+};
+
+class SequenceCsvColumn final : public CsvColumnAccessor {
+    PyObject *values;
+
+  public:
+    explicit SequenceCsvColumn(PyObject *column) : values(column) {}
+    PyObject *value_at(Py_ssize_t index) const override {
+        return PySequence_GetItem(values, index);
+    }
+};
+
+class EmptyCsvColumn final : public CsvColumnAccessor {
+    PyObject *empty;
+
+  public:
+    explicit EmptyCsvColumn(PyObject *value) : empty(value) {}
+    PyObject *value_at(Py_ssize_t) const override { return Py_NewRef(empty); }
+};
+
+class BufferedCsvColumn final : public CsvColumnAccessor {
+    Py_buffer buffer;
+    char format;
+
+    template <typename T> T scalar_at(Py_ssize_t index) const {
+        T value;
+        const Py_ssize_t stride = buffer.strides ? buffer.strides[0] : buffer.itemsize;
+        std::memcpy(&value, static_cast<const char *>(buffer.buf) + index * stride,
+                    sizeof(value));
+        return value;
+    }
+
+  public:
+    explicit BufferedCsvColumn(Py_buffer value) : buffer(value), format(value.format[0]) {}
+    ~BufferedCsvColumn() override { PyBuffer_Release(&buffer); }
+    static bool supports(const Py_buffer &value) {
+        if (value.ndim != 1 || !value.format || !value.format[0] || value.format[1] != '\0')
+            return false;
+        if (value.suboffsets && value.suboffsets[0] >= 0)
+            return false;
+        switch (value.format[0]) {
+        case '?': return value.itemsize == sizeof(bool);
+        case 'b': return value.itemsize == sizeof(signed char);
+        case 'B': return value.itemsize == sizeof(unsigned char);
+        case 'h': return value.itemsize == sizeof(short);
+        case 'H': return value.itemsize == sizeof(unsigned short);
+        case 'i': return value.itemsize == sizeof(int);
+        case 'I': return value.itemsize == sizeof(unsigned int);
+        case 'l': return value.itemsize == sizeof(long);
+        case 'L': return value.itemsize == sizeof(unsigned long);
+        case 'q': return value.itemsize == sizeof(long long);
+        case 'Q': return value.itemsize == sizeof(unsigned long long);
+        case 'd': return value.itemsize == sizeof(double);
+        default: return false;
+        }
+    }
+    PyObject *value_at(Py_ssize_t index) const override {
+        switch (format) {
+        case '?': return PyBool_FromLong(scalar_at<bool>(index));
+        case 'b': return PyLong_FromLong(scalar_at<signed char>(index));
+        case 'B': return PyLong_FromUnsignedLong(scalar_at<unsigned char>(index));
+        case 'h': return PyLong_FromLong(scalar_at<short>(index));
+        case 'H': return PyLong_FromUnsignedLong(scalar_at<unsigned short>(index));
+        case 'i': return PyLong_FromLong(scalar_at<int>(index));
+        case 'I': return PyLong_FromUnsignedLong(scalar_at<unsigned int>(index));
+        case 'l': return PyLong_FromLong(scalar_at<long>(index));
+        case 'L': return PyLong_FromUnsignedLong(scalar_at<unsigned long>(index));
+        case 'q': return PyLong_FromLongLong(scalar_at<long long>(index));
+        case 'Q': return PyLong_FromUnsignedLongLong(scalar_at<unsigned long long>(index));
+        case 'd': return PyFloat_FromDouble(scalar_at<double>(index));
+        default: return nullptr;
+        }
+    }
+};
+
+static std::unique_ptr<CsvColumnAccessor> csv_column_accessor(PyObject *values,
+                                                             PyObject *empty) {
+    if (values == Py_None)
+        return std::make_unique<EmptyCsvColumn>(empty);
+    if (PyObject_CheckBuffer(values)) {
+        Py_buffer buffer{};
+        if (PyObject_GetBuffer(values, &buffer, PyBUF_FULL_RO) < 0)
+            return nullptr;
+        if (BufferedCsvColumn::supports(buffer))
+            return std::make_unique<BufferedCsvColumn>(buffer);
+        PyBuffer_Release(&buffer);
+    }
+    return std::make_unique<SequenceCsvColumn>(values);
+}
+
 static PyObject *render_csv(PyObject *, PyObject *args) {
-    PyObject *rows, *columns, *real_class;
-    PyObject *header_rows = Py_None;
+    PyObject *column_values, *columns, *real_class;
+    PyObject *header_rows = Py_None, *missing_type = Py_None;
+    Py_ssize_t row_count;
     const char *delimiter;
     int null_nonfinite;
-    if (!PyArg_ParseTuple(args, "OOsOp|O", &rows, &columns, &delimiter, &real_class,
-                          &null_nonfinite, &header_rows))
+    if (!PyArg_ParseTuple(args, "OOnsOp|OO", &column_values, &columns, &row_count,
+                          &delimiter, &real_class, &null_nonfinite, &header_rows,
+                          &missing_type))
         return nullptr;
-    if (!PyTuple_Check(rows) || !PyTuple_Check(columns)) {
-        PyErr_SetString(PyExc_TypeError, "Rows and columns must be tuples");
+    if (!PyTuple_Check(column_values) || !PyTuple_Check(columns)) {
+        PyErr_SetString(PyExc_TypeError, "Column vectors and names must be tuples");
+        return nullptr;
+    }
+    if (row_count < 0 || PyTuple_Size(column_values) != PyTuple_Size(columns)) {
+        PyErr_SetString(PyExc_ValueError, "CSV requires one vector per column and a nonnegative row count");
+        return nullptr;
+    }
+    if (missing_type != Py_None && !PyType_Check(missing_type)) {
+        PyErr_SetString(PyExc_TypeError, "Structural missing-cell declaration must be a type");
         return nullptr;
     }
     if (delimiter[0] == '\0' || delimiter[1] != '\0') {
         PyErr_SetString(PyExc_ValueError, "CSV delimiter must be one ASCII character");
         return nullptr;
     }
-    Py_ssize_t column_count = PyTuple_Size(columns), row_count = PyTuple_Size(rows);
+    Py_ssize_t column_count = PyTuple_Size(columns);
+    for (Py_ssize_t col = 0; col < column_count; ++col) {
+        PyObject *values = PyTuple_GetItem(column_values, col);
+        if (values == Py_None)
+            continue;
+        Py_ssize_t count = PySequence_Size(values);
+        if (count < 0)
+            return nullptr;
+        if (count < row_count) {
+            PyErr_SetString(PyExc_ValueError, "CSV column is shorter than the declared row count");
+            return nullptr;
+        }
+    }
     if (column_count == 0)
         return PyUnicode_FromString("");
     if (header_rows != Py_None) {
@@ -159,21 +277,28 @@ static PyObject *render_csv(PyObject *, PyObject *args) {
         CsvScalarNormalization normalization(real_class, null_nonfinite);
         if (!normalization.ready())
             return nullptr;
+        std::vector<std::unique_ptr<CsvColumnAccessor>> readers;
+        readers.reserve(static_cast<size_t>(column_count));
+        for (Py_ssize_t col = 0; col < column_count; ++col) {
+            auto reader = csv_column_accessor(PyTuple_GetItem(column_values, col),
+                                              normalization.empty_value());
+            if (!reader)
+                return nullptr;
+            readers.emplace_back(std::move(reader));
+        }
         std::vector<OwnedPyObject> cells;
         cells.reserve(static_cast<size_t>(column_count));
         for (Py_ssize_t index = 0; index < row_count; ++index) {
-            PyObject *row = PyTuple_GetItem(rows, index);
             cells.clear();
             for (Py_ssize_t col = 0; col < column_count; ++col) {
-                PyObject *key = PyTuple_GetItem(columns, col);
-                OwnedPyObject value(
-                    PyDict_CheckExact(row)
-                        ? Py_XNewRef(PyDict_GetItemWithError(row, key))
-                        : PyObject_CallMethod(row, "get", "OO", key, normalization.empty_value()));
-                if (!value.get() && PyErr_Occurred())
+                OwnedPyObject value(readers[static_cast<size_t>(col)]->value_at(index));
+                if (!value.get())
                     return nullptr;
-                PyObject *normalized = normalization.normalize(
-                    value.get() ? value.get() : normalization.empty_value());
+                PyObject *cell = value.get();
+                if (missing_type != Py_None &&
+                    PyObject_TypeCheck(cell, reinterpret_cast<PyTypeObject *>(missing_type)))
+                    cell = normalization.empty_value();
+                PyObject *normalized = normalization.normalize(cell);
                 if (!normalized)
                     return nullptr;
                 cells.emplace_back(normalized);
@@ -271,7 +396,7 @@ static PyMethodDef methods[] = {
     {"assign_columns", py_assign_columns, METH_VARARGS,
      "Assign one row of declared feature columns."},
     {"render_csv", render_csv, METH_VARARGS,
-     "Render admitted spreadsheet rows with exact Python value strings."},
+     "Render admitted column vectors with exact Python value strings."},
     {nullptr, nullptr, 0, nullptr}};
 static PyModuleDef module = {PyModuleDef_HEAD_INIT, "_tabular_native", nullptr, -1, methods};
 PyMODINIT_FUNC PyInit__tabular_native(void) { return PyModule_Create(&module); }

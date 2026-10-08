@@ -177,11 +177,28 @@ class RuntimeExportObservation:
         image_outputs = tuple(
             path for path in output_files if _is_image_output_path(path)
         )
+        saved_tables = {
+            Path(location.path): (
+                cast(tuple[str, ...], location.table_header),
+                cast(int, location.table_row_count),
+            )
+            for locations in outputs.materialized_locations_by_address.values()
+            for location in locations
+            if location.table_header is not None
+        }
+        table_shapes = {
+            path: saved_tables[path] if path in saved_tables else _table_shape(path)
+            for path in table_outputs
+        }
         return cls(
             table_outputs=table_outputs,
             image_outputs=image_outputs,
-            table_headers_by_path=_table_headers_by_path(table_outputs),
-            table_row_counts_by_path=_table_row_counts_by_path(table_outputs),
+            table_headers_by_path={
+                path: shape[0] for path, shape in table_shapes.items()
+            },
+            table_row_counts_by_path={
+                path: shape[1] for path, shape in table_shapes.items()
+            },
             output_files=output_files,
             outputs=outputs,
         )
@@ -502,24 +519,9 @@ def _is_image_output_path(path: Path) -> bool:
     return ImageFileFormat.is_image_path(path)
 
 
-def _table_header(path: Path) -> tuple[str, ...]:
-    with path.open(newline="") as handle:
-        try:
-            return tuple(next(csv.reader(handle)))
-        except StopIteration:
-            return ()
-
-
-def _table_headers_by_path(paths: tuple[Path, ...]) -> Mapping[Path, tuple[str, ...]]:
-    return MappingProxyType({path: _table_header(path) for path in paths})
-
-
-def _table_row_count(path: Path) -> int:
+def _table_shape(path: Path) -> tuple[tuple[str, ...], int]:
+    """Read externally discovered tables whose writer facts are unavailable."""
     with path.open(newline="") as handle:
         reader = csv.reader(handle)
-        next(reader, None)
-        return sum(1 for _row in reader)
-
-
-def _table_row_counts_by_path(paths: tuple[Path, ...]) -> Mapping[Path, int]:
-    return MappingProxyType({path: _table_row_count(path) for path in paths})
+        header = tuple(next(reader, ()))
+        return header, sum(1 for _row in reader)
