@@ -41,6 +41,7 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
+    ConcatenatedColumnarRows,
     MEASUREMENT_SPARSE_CELL,
     MeasurementSparseColumnarRows,
     is_structural_missing_measurement_cell,
@@ -714,33 +715,6 @@ class CPATableRowProjection:
                 field_projection_cache=admitted_fields,
                 project_database_field=project_database_field,
             )
-
-    @staticmethod
-    def project_measurement_partition(
-        invocation: tuple[
-            "CPATableRowProjection",
-            tuple[RuntimeScopedMeasurementTable, ...],
-            tuple[ColumnarRows | None, ...],
-        ],
-    ) -> tuple[
-        tuple[tuple[MeasurementSubject, ColumnarRows, tuple[FieldSpec, ...]], ...], ...
-    ]:
-        """Project one admitted axis through existing worker resources."""
-        projection, tables, rows = invocation
-        return tuple(
-            (
-                tuple(
-                    projection.measurement_projections(
-                        scoped.table,
-                        scope=scoped.execution_scope,
-                        projected_rows=prepared,
-                    )
-                )
-                if prepared is not None
-                else ()
-            )
-            for scoped, prepared in zip(tables, rows, strict=True)
-        )
 
     def _measurement_subject_rows(
         self,
@@ -1567,7 +1541,7 @@ class CellProfilerAnalystProjectionBuilder:
                         )
             worker_projection = replace(row_projection, context=None)
             projected_partitions = map_partition_invocations(
-                CPATableRowProjection.project_measurement_partition,
+                CellProfilerAnalystProjectionBuilder.project_measurement_partition,
                 tuple(
                     (worker_projection, tables, partition_rows[axis_id])
                     for axis_id, tables in measurement_tables.items()
@@ -1577,17 +1551,29 @@ class CellProfilerAnalystProjectionBuilder:
                 zip(measurement_tables, projected_partitions, strict=True)
             )
         for axis_id in artifact_batch.records_by_axis:
-            image_columns, experiment_columns = self._collect_measurements(
-                tables=measurement_tables[axis_id],
-                projections=projected_by_axis.get(axis_id),
-                row_projection=row_projection,
-                image_rows_by_number=image_rows_by_number,
-                image_columns=image_columns,
-                experiment_rows=experiment_rows,
-                experiment_columns=experiment_columns,
-                object_rows_by_subject=object_rows_by_subject,
-                object_columns_by_subject=object_columns_by_subject,
-            )
+            prepared = projected_by_axis.get(axis_id)
+            if prepared is None:
+                image_columns, experiment_columns = self._collect_measurements(
+                    tables=measurement_tables[axis_id],
+                    row_projection=row_projection,
+                    image_rows_by_number=image_rows_by_number,
+                    image_columns=image_columns,
+                    experiment_rows=experiment_rows,
+                    experiment_columns=experiment_columns,
+                    object_rows_by_subject=object_rows_by_subject,
+                    object_columns_by_subject=object_columns_by_subject,
+                )
+            else:
+                image_columns, experiment_columns = self._collect_partition(
+                    prepared,
+                    row_projection=row_projection,
+                    image_rows_by_number=image_rows_by_number,
+                    image_columns=image_columns,
+                    experiment_rows=experiment_rows,
+                    experiment_columns=experiment_columns,
+                    object_rows_by_subject=object_rows_by_subject,
+                    object_columns_by_subject=object_columns_by_subject,
+                )
             for provenance, scope, alias in sources_by_axis[axis_id]:
                 row_projection.collect_image_provenance(
                     provenance,
@@ -1656,38 +1642,26 @@ class CellProfilerAnalystProjectionBuilder:
             row_projection=row_projection,
         )
 
-        object_table_values: list[CellProfilerProjectedTable] = []
-        for subject, rows in object_rows_by_subject.items():
-            object_name = subject.object_name
-            if object_name is None:
-                raise ValueError("CPA object table requires an object subject.")
-            object_table_values.append(
+        if projected_by_axis:
+            # Numbering keys include the axis namespace. Complete axis joins
+            # therefore have disjoint object identities and need no global join.
+            object_tables = tuple(
                 CellProfilerProjectedTable(
-                    table_name=dialect.object_table_name(object_name),
-                    rows=MeasurementSparseColumnarRows.from_columnar_batches(
-                        rows
-                        or (
-                            MeasurementSparseColumnarRows(
-                                MappingProxyType(
-                                    {
-                                        field.name: ()
-                                        for field in object_columns_by_subject[subject]
-                                    }
-                                ),
-                                fields=object_columns_by_subject[subject],
-                            ),
-                        ),
-                        identity_fields=(
-                            row_projection.image_id_field().name,
-                            row_projection.object_id_field(subject).name,
-                        ),
-                        values_equal=lambda left, right: bool(left == right),
+                    table_name=row_projection.dialect.object_table_name(
+                        subject.object_name
                     ),
-                    columns=object_columns_by_subject.get(subject, ()),
+                    rows=ConcatenatedColumnarRows(tuple(rows)),
+                    columns=object_columns_by_subject[subject],
                     subject=subject,
                 )
+                for subject, rows in object_rows_by_subject.items()
             )
-        object_tables = tuple(object_table_values)
+        else:
+            object_tables = self._join_object_tables(
+                object_rows_by_subject,
+                object_columns_by_subject,
+                row_projection=row_projection,
+            )
         image_columns = self._collect_image_aggregates(
             settings=settings,
             object_tables=tuple(
@@ -1736,8 +1710,152 @@ class CellProfilerAnalystProjectionBuilder:
             image_set_numbering=row_projection.image_set_numbering,
         )
 
+    @staticmethod
+    def project_measurement_partition(
+        invocation: tuple[
+            "CPATableRowProjection",
+            tuple[RuntimeScopedMeasurementTable, ...],
+            tuple[ColumnarRows | None, ...],
+        ],
+    ) -> CellProfilerAnalystProjection:
+        """Complete the measurement tables in one admitted axis namespace."""
+        projection, tables, rows = invocation
+        projected = tuple(
+            (
+                tuple(
+                    projection.measurement_projections(
+                        scoped.table,
+                        scope=scoped.execution_scope,
+                        projected_rows=prepared,
+                    )
+                )
+                if prepared is not None
+                else ()
+            )
+            for scoped, prepared in zip(tables, rows, strict=True)
+        )
+        image_rows: dict[int, dict[str, Any]] = {}
+        experiment_rows: list[Mapping[str, Any]] = []
+        object_rows: dict[MeasurementSubject, list[ColumnarRows]] = {}
+        object_columns: dict[MeasurementSubject, tuple[FieldSpec, ...]] = {}
+        image_columns, experiment_columns = (
+            CellProfilerAnalystProjectionBuilder._collect_measurements(
+                tables=tables,
+                projections=projected,
+                row_projection=projection,
+                image_rows_by_number=image_rows,
+                image_columns=(),
+                experiment_rows=experiment_rows,
+                experiment_columns=(),
+                object_rows_by_subject=object_rows,
+                object_columns_by_subject=object_columns,
+            )
+        )
+        return CellProfilerAnalystProjection(
+            image_table=CellProfilerProjectedTable(
+                table_name=projection.dialect.image_table_name(),
+                rows=tuple(image_rows.values()),
+                columns=image_columns,
+                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            ),
+            experiment_table=CellProfilerProjectedTable(
+                table_name=projection.dialect.object_table_name("Experiment"),
+                rows=tuple(experiment_rows),
+                columns=experiment_columns,
+                subject=MeasurementSubject(MeasurementScope.EXPERIMENT, "Experiment"),
+            ),
+            object_tables=CellProfilerAnalystProjectionBuilder._join_object_tables(
+                object_rows, object_columns, row_projection=projection
+            ),
+            relationship_tables=(),
+        )
+
+    @staticmethod
+    def _join_object_tables(
+        object_rows_by_subject: Mapping[MeasurementSubject, Sequence[ColumnarRows]],
+        object_columns_by_subject: Mapping[MeasurementSubject, tuple[FieldSpec, ...]],
+        *,
+        row_projection: CPATableRowProjection,
+    ) -> tuple[CellProfilerProjectedTable, ...]:
+        object_table_values: list[CellProfilerProjectedTable] = []
+        for subject, rows in object_rows_by_subject.items():
+            object_name = subject.object_name
+            if object_name is None:
+                raise ValueError("CPA object table requires an object subject.")
+            object_table_values.append(
+                CellProfilerProjectedTable(
+                    table_name=row_projection.dialect.object_table_name(object_name),
+                    rows=MeasurementSparseColumnarRows.from_columnar_batches(
+                        rows
+                        or (
+                            MeasurementSparseColumnarRows(
+                                MappingProxyType(
+                                    {
+                                        field.name: ()
+                                        for field in object_columns_by_subject[subject]
+                                    }
+                                ),
+                                fields=object_columns_by_subject[subject],
+                            ),
+                        ),
+                        identity_fields=(
+                            row_projection.image_id_field().name,
+                            row_projection.object_id_field(subject).name,
+                        ),
+                        values_equal=lambda left, right: bool(left == right),
+                    ),
+                    columns=object_columns_by_subject.get(subject, ()),
+                    subject=subject,
+                )
+            )
+        return tuple(object_table_values)
+
+    @classmethod
+    def _collect_partition(
+        cls,
+        prepared: CellProfilerAnalystProjection,
+        *,
+        row_projection: CPATableRowProjection,
+        image_rows_by_number: dict[int, dict[str, Any]],
+        image_columns: tuple[FieldSpec, ...],
+        experiment_rows: list[Mapping[str, Any]],
+        experiment_columns: tuple[FieldSpec, ...],
+        object_rows_by_subject: dict[MeasurementSubject, list[ColumnarRows]],
+        object_columns_by_subject: dict[MeasurementSubject, tuple[FieldSpec, ...]],
+    ) -> tuple[tuple[FieldSpec, ...], tuple[FieldSpec, ...]]:
+        image = prepared.image_table
+        image_columns = FieldSpec.merge_exact(
+            (image_columns, image.columns),
+            context=f"CPA table {image.table_name!r} fields",
+        )
+        cls._collect_image_rows(
+            owner=image.table_name,
+            rows=image.rows,
+            row_projection=row_projection,
+            target=image_rows_by_number,
+        )
+        experiment = prepared.experiment_table
+        experiment_columns = FieldSpec.merge_exact(
+            (experiment_columns, experiment.columns),
+            context=f"CPA table {experiment.table_name!r} fields",
+        )
+        cls._merge_experiment_rows(
+            owner=experiment.table_name, rows=experiment.rows, target=experiment_rows
+        )
+        for table in prepared.object_tables:
+            subject = table.subject
+            if subject is None or subject.object_name is None:
+                raise ValueError("CPA object table requires an object subject.")
+            object_columns_by_subject[subject] = FieldSpec.merge_exact(
+                (object_columns_by_subject.get(subject, ()), table.columns),
+                context=f"CPA table {table.table_name!r} fields",
+            )
+            object_rows_by_subject.setdefault(subject, []).append(table.rows)
+        return image_columns, experiment_columns
+
+    @classmethod
     def _collect_measurements(
-        self,
+        cls,
         *,
         tables: Sequence[RuntimeScopedMeasurementTable],
         row_projection: CPATableRowProjection,
@@ -1766,7 +1884,7 @@ class CellProfilerAnalystProjectionBuilder:
             strict=True,
         ):
             table = scoped_table.table
-            image_columns, experiment_columns = self._collect_measurement_table(
+            image_columns, experiment_columns = cls._collect_measurement_table(
                 table=table,
                 projections=projected,
                 scope=scoped_table.execution_scope,
@@ -1780,8 +1898,9 @@ class CellProfilerAnalystProjectionBuilder:
             )
         return image_columns, experiment_columns
 
+    @classmethod
     def _collect_measurement_table(
-        self,
+        cls,
         *,
         table: MeasurementTable,
         scope: RuntimeExecutionAxisScope | None,
@@ -1820,8 +1939,8 @@ class CellProfilerAnalystProjectionBuilder:
                     (image_columns, columns),
                     context=f"CPA table {image_table_name!r} fields",
                 )
-                self._collect_image_rows(
-                    table=table,
+                cls._collect_image_rows(
+                    owner=table.name,
                     rows=rows,
                     row_projection=row_projection,
                     target=image_rows_by_number,
@@ -1835,8 +1954,8 @@ class CellProfilerAnalystProjectionBuilder:
                     (experiment_columns, columns),
                     context=f"CPA table {experiment_table_name!r} fields",
                 )
-                self._merge_experiment_rows(
-                    table=table,
+                cls._merge_experiment_rows(
+                    owner=table.name,
                     rows=rows,
                     target=experiment_rows,
                 )
@@ -1850,7 +1969,7 @@ class CellProfilerAnalystProjectionBuilder:
                 (object_columns_by_subject.get(subject, ()), columns),
                 context=f"CPA table {object_table_name!r} fields",
             )
-            self._merge_object_rows(
+            cls._merge_object_rows(
                 table=table,
                 rows=rows,
                 subject=subject,
@@ -1859,20 +1978,22 @@ class CellProfilerAnalystProjectionBuilder:
             )
         return image_columns, experiment_columns
 
+    @staticmethod
     def _collect_image_rows(
-        self,
         *,
-        table: MeasurementTable,
-        rows: tuple[Mapping[str, Any], ...],
+        owner: str,
+        rows: Sequence[Mapping[str, Any]] | ColumnarRows,
         row_projection: CPATableRowProjection,
         target: dict[int, dict[str, Any]],
     ) -> None:
         image_id_field = row_projection.image_id_field()
-        for row in rows:
+        for row in (
+            rows.iter_row_mappings() if isinstance(rows, ColumnarRows) else rows
+        ):
             image_number = row_projection.required_int(
                 row,
                 image_id_field,
-                table.name,
+                owner,
             )
             projected_row = target.setdefault(
                 image_number,
@@ -1887,13 +2008,13 @@ class CellProfilerAnalystProjectionBuilder:
     @staticmethod
     def _merge_experiment_rows(
         *,
-        table: MeasurementTable,
+        owner: str,
         rows: Sequence[Mapping[str, Any]],
         target: list[Mapping[str, Any]],
     ) -> None:
         if len(rows) > 1:
             raise ValueError(
-                f"CPA experiment measurement table '{table.name}' must contain "
+                f"CPA experiment measurement table '{owner}' must contain "
                 f"at most one row, got {len(rows)}."
             )
         if not rows:
