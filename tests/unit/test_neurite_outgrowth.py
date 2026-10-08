@@ -97,11 +97,13 @@ def _cell_body_count_implementation():
 
 
 @pytest.mark.parametrize("seed_factor", [None, 1.2])
-def test_admission_exports_the_original_independent_gates(seed_factor):
+@pytest.mark.parametrize("enhance_neurites", [True, False])
+def test_admission_exports_the_original_independent_gates(seed_factor, enhance_neurites):
     image = _draw_fluorescent_neuron(branched=True)[0]
     settings = MetaXpressOutgrowthSettings(
         maximum_width=3, intensity_above_local_background=100,
         candidate_hysteresis_seed_correction_factor=seed_factor,
+        enhance_neurites=enhance_neurites,
     )
     result = _identify_neurites_cellprofiler(
         image, _cell_body_settings(), settings, 1.0, bright_objects=True
@@ -116,8 +118,14 @@ def test_admission_exports_the_original_independent_gates(seed_factor):
         result.mask, planes.retained_support & planes.local_support
     )
     assert np.all(planes.retained_support <= planes.threshold_support)
-    if seed_factor is None:
+    if seed_factor is None or not enhance_neurites:
         assert planes.retained_support is planes.threshold_support
+    if not enhance_neurites:
+        assert planes.retained_support is planes.local_support
+        assert result.mask is planes.local_support
+        assert np.isnan(planes.enhanced_response).all()
+    else:
+        assert np.isfinite(planes.enhanced_response).all()
     assert np.issubdtype(planes.enhanced_response.dtype, np.floating)
     assert np.issubdtype(planes.local_response.dtype, np.floating)
     for output, field in zip(planes.selected_outputs(2), fields(planes), strict=True):
@@ -129,8 +137,9 @@ def test_admission_exports_the_original_independent_gates(seed_factor):
 
 @pytest.mark.parametrize("branched", [False, True])
 @pytest.mark.parametrize("with_nuclei", [False, True])
+@pytest.mark.parametrize("enhance_neurites", [True, False])
 def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(
-    branched, with_nuclei
+    branched, with_nuclei, enhance_neurites
 ):
     image = _draw_fluorescent_neuron(branched=branched)
     if with_nuclei:
@@ -148,6 +157,7 @@ def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(
     pixel_growth = PixelOutgrowthSettings(
         maximum_width=3, intensity_above_local_background=100,
         minimum_cell_growth_to_log_as_significant=20,
+        enhance_neurites=enhance_neurites,
     )
     contract = CallableContract.from_callable(neurite_outgrowth_metaxpress_pixels)
     assert contract.artifact_inputs.names() == ()
@@ -168,6 +178,7 @@ def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(
         outgrowth=MetaXpressOutgrowthSettings(
             maximum_width=1.5, intensity_above_local_background=100,
             minimum_cell_growth_to_log_as_significant=10,
+            enhance_neurites=enhance_neurites,
         ),
         pixel_size=0.5,
         neurite_channel_index=1 if with_nuclei else 0,
@@ -471,6 +482,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "minimum_cell_growth_to_log_as_significant",
         "candidate_threshold_correction_factor",
         "candidate_hysteresis_seed_correction_factor",
+        "enhance_neurites",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",
@@ -1779,6 +1791,21 @@ def test_neurite_candidate_and_secondary_ownership_thresholds_are_independent():
     assert permissive_candidate_factor < (
         engine.secondary_ownership_threshold_correction_factor
     )
+
+
+@pytest.mark.parametrize("settings_type", [MetaXpressOutgrowthSettings, PixelOutgrowthSettings])
+def test_disabled_enhancement_ignores_its_inactive_thresholds(settings_type):
+    settings_type(
+        enhance_neurites=False,
+        candidate_threshold_correction_factor=0,
+        candidate_hysteresis_seed_correction_factor=0,
+    ).validate()
+
+
+@pytest.mark.parametrize("value", [0, 1, None, "false"])
+def test_enhancement_toggle_requires_a_boolean(value):
+    with pytest.raises(ValueError, match="enhance_neurites must be a boolean"):
+        MetaXpressOutgrowthSettings(enhance_neurites=value).validate()
 
 
 @pytest.mark.parametrize("correction_factor", [0.0, -0.1, np.inf, np.nan])

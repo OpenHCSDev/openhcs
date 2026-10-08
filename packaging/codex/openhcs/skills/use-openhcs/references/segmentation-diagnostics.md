@@ -279,7 +279,18 @@ biology elsewhere; retain a faint-path regression control.
 ### Separate support recovery from rooted graph validity
 
 For `neurite_outgrowth_metaxpress`, reflect the registered settings before
-choosing a sensitivity change. Initial admission intersects the enhanced
+choosing a sensitivity change. Embedded enhancement is optional:
+`outgrowth.enhance_neurites=False` bypasses tubeness, adaptive thresholding and
+its seed retention, leaving local-background admission with unchanged soma and
+topology stages. Preprocessing may be separate steps or earlier callables in
+the same FunctionStep chain; use the appropriate source/axis contract rather
+than forcing it inside the detector. Compare methods at supported missing
+shafts and nuisance controls, not just aggregate length. A bypass is not a
+claim of MetaXpress algorithm equivalence. The skipped enhanced-response
+checkpoint is all-NaN; threshold/retained support then records the actual local
+support, not an executed enhanced gate.
+
+With enhancement enabled, initial admission intersects the enhanced
 candidate mask with local-background response support. Lowering
 `intensity_above_local_background` cannot restore pixels excluded by the
 enhanced gate; lowering `candidate_threshold_correction_factor` cannot override

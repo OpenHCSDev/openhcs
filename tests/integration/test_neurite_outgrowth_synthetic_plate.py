@@ -12,6 +12,7 @@ from contextlib import redirect_stderr, redirect_stdout
 
 import openhcs  # noqa: F401 - prefer repository submodules before direct imports
 import numpy as np
+import pytest
 import tifffile
 from objectstate import ObjectStateRegistry
 from polystore.roi import PolylineShape, load_rois_from_zip
@@ -72,6 +73,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressOutgrowthSettings,
     neurite_outgrowth_metaxpress,
 )
+from openhcs.processing.backends.processors.numpy_processor import percentile_normalize_plane
 from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
@@ -92,13 +94,95 @@ def _write_known_neurite_images(plate_dir):
 
     image_dir = plate_dir / "TimePoint_1"
     for site in (1, 2):
-        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w1_z001_t001.tif", neurites)
-        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w2_z001_t001.tif", nuclei)
+        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w1.tif", neurites)
+        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w2.tif", nuclei)
     return np.stack((neurites, nuclei))
 
 
+@pytest.mark.parametrize("layout", ["embedded", "chain", "separate"])
+def test_neurite_enhancement_is_optional_with_modular_preprocessing(tmp_path, layout):
+    plate_dir = tmp_path / "synthetic_neurite_plate"
+    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+        SyntheticMicroscopyGenerator(
+            output_dir=str(plate_dir), grid_size=(1, 1), tile_size=(96, 128),
+            overlap_percent=10, stage_error_px=1, wavelengths=2,
+            z_stack_levels=1, num_cells=1, wells=["A01"],
+            format="ImageXpress", random_seed=11,
+        ).generate_dataset()
+    source = _write_known_neurite_images(plate_dir)
+    processing = LazyProcessingConfig(
+        variable_components=[VariableComponents.CHANNEL], group_by=GroupBy.SITE,
+    )
+    preprocessing = (percentile_normalize_plane, {
+        "plane_index": 0, "low_percentile": 0, "high_percentile": 100,
+        "target_min": 0, "target_max": 2000,
+    })
+    tracing = (neurite_outgrowth_metaxpress, {
+        "cell_body": MetaXpressCellBodySettings(
+            approximate_max_width=30, minimum_area=100,
+            intensity_above_local_background=100,
+        ),
+        "outgrowth": MetaXpressOutgrowthSettings(
+            maximum_width=3, intensity_above_local_background=100,
+            enhance_neurites=layout == "embedded",
+        ),
+        "use_nuclear_stain": True,
+        "nuclear_stain": MetaXpressNuclearSettings(
+            channel_index=1, approx_min_width=6, approx_max_width=14,
+            intensity_above_local_background=200,
+        ),
+    })
+    steps = [FunctionStep(
+        func=[preprocessing, tracing] if layout == "chain" else tracing,
+        processing_config=processing,
+    )]
+    if layout == "separate":
+        steps.insert(0, FunctionStep(func=preprocessing, processing_config=processing))
+    ObjectStateRegistry.clear()
+    try:
+        ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig(
+            num_workers=1, use_threading=True, microscope=Microscope.IMAGEXPRESS,
+            vfs_config=VFSConfig(materialization_backend=MaterializationBackend.DISK),
+            path_planning_config=PathPlanningConfig(output_dir_suffix="_modular"),
+            analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
+        ))
+        orchestrator = PipelineOrchestrator(plate_dir, pipeline_config=PipelineConfig()).initialize()
+        progress_queue = queue.Queue()
+        set_progress_queue(progress_queue)
+        compiled = orchestrator.compile_pipelines(pipeline_definition=steps, well_filter=["A01"])
+        results = orchestrator.execute_compiled_plate(
+            execution_bundle=compiled,
+            progress_queue=progress_queue,
+            progress_context={
+                "execution_id": f"test::{layout}::{time.time_ns()}",
+                "plate_id": str(plate_dir), "axis_id": "",
+            },
+        )
+        assert results["A01"].is_success(), results["A01"].error_message
+        summaries = list(tmp_path.rglob("*neurite_outgrowth_summary*.csv"))
+        assert len(summaries) == 2
+        for path in summaries:
+            with path.open(newline="") as stream:
+                row, = csv.DictReader(stream)
+            assert int(row["number_of_cells"]) == 1
+            assert float(row["total_outgrowth"]) > 0
+            assert int(row["total_processes"]) > 0
+        checkpoints = list(tmp_path.rglob("*neurite_enhanced_response.checkpoint.tif"))
+        assert len(checkpoints) == 2
+        for path in checkpoints:
+            response = tifffile.imread(path)
+            assert bool(np.isnan(response).all()) == (layout != "embedded")
+        for channel in (1, 2):
+            np.testing.assert_array_equal(tifffile.imread(
+                plate_dir / "TimePoint_1" / f"A01_s001_w{channel}.tif"
+            ), source[channel - 1])
+    finally:
+        set_progress_queue(None)
+        ObjectStateRegistry.clear()
+
+
 def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
-    tmp_path, caplog, monkeypatch
+    tmp_path, caplog, monkeypatch, viewer_ack_return_route
 ):
     caplog.set_level(logging.CRITICAL)
     plate_dir = tmp_path / "synthetic_neurite_plate"
@@ -199,6 +283,9 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         assert compiled_pattern is not None
         compiled_invocation = next(compiled_pattern.iter_invocations())
         assert compiled_invocation.kwargs_dict["pixel_size"] == 0.65
+        fixture_spacing = SourceVoxelSpacing(
+            (compiled_invocation.kwargs_dict["pixel_size"],) * 2
+        )
         expected = CallableContract.from_callable(
             neurite_outgrowth_metaxpress
         ).resolve_raw_runtime_callable()(
@@ -310,23 +397,15 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 np.testing.assert_array_equal(retained, expected_labels)
 
         checkpoint_paths = []
-        for artifact_name, expected_checkpoint in zip(
-            (
-                "neurite_candidate_mask",
-                "neurite_unrooted_residual",
-                "neurite_secondary_ownership",
-                "neurite_topology_dropped_trace",
-                "neurite_topology_added_trace",
-                "neurite_enhanced_response",
-                "neurite_threshold_support",
-                "neurite_retained_support",
-                "neurite_local_response",
-                "neurite_local_support",
-            ),
+        checkpoint_specs = CallableContract.from_callable(
+            neurite_outgrowth_metaxpress
+        ).artifact_outputs[6:-1]
+        for artifact, expected_checkpoint in zip(
+            checkpoint_specs,
             expected[7:-1],
             strict=True,
         ):
-            paths = tuple(tmp_path.rglob(f"*_{artifact_name}.checkpoint.tif"))
+            paths = tuple(tmp_path.rglob(f"*_{artifact.name}.checkpoint.tif"))
             assert len(paths) == 2
             checkpoint_paths.extend(paths)
             for path in paths:
@@ -335,7 +414,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     retained,
                     np.asarray(expected_checkpoint)[0],
                 )
-        assert len({path.name for path in checkpoint_paths}) == 20
+        assert len({path.name for path in checkpoint_paths}) == 2 * len(checkpoint_specs)
 
         assert compiled_plan.output_plate_root is not None
         output_plate_root = Path(compiled_plan.output_plate_root)
@@ -365,9 +444,11 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             )
             assert projection.image_metadata.source_provenance.source_plane_count == 2
 
-            # Exercise the real stream projection of the compiled writer outputs.
-            # Artifact storage axes are legitimately empty; source image planes are not.
-            assert len(dense_outputs) == 18
+        # Exercise every retained label/checkpoint, including declared diagnostics.
+        # Artifact storage axes are legitimately empty; source image planes are not.
+        assert set(dense_outputs) == {
+            str(path) for path in (*all_label_paths, *checkpoint_paths)
+        }
         stream_kwargs = ViewerStreamBackendCallKwargs(
             ViewerStreamBackendKwargs(
                 ViewerStreamRequest(
@@ -416,6 +497,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 batch = StreamingBatchMessageBuilder.build(
                     backend,
                     StreamingBatchMessageRequest(
+                        return_route=viewer_ack_return_route,
                         data_list=[output.content for output in outputs],
                         file_paths=[output.path for output in outputs],
                         stream_request=request,
@@ -427,9 +509,8 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 )
                 for output, item in zip(outputs, batch.batch_images, strict=True):
                     assert output.variable_components == ()
-                    # This fixture injects physical pixel_size into the callable,
-                    # but does not declare voxel spacing on its runtime images.
-                    assert output.metadata.source_voxel_spacing == SourceVoxelSpacing()
+                    # Generated HTD calibration survives into every runtime image.
+                    assert output.metadata.source_voxel_spacing == fixture_spacing
                     if checkpoint_batch:
                         assert "_w1_" in Path(output.path).name
                     else:

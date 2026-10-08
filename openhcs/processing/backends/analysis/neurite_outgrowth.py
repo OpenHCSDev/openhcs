@@ -882,9 +882,10 @@ class MetaXpressOutgrowthSettings:
     intensity_above_local_background: float = 50.0
     """Per-pixel local-background response cutoff in consumed-image units.
 
-    Initial process admission requires BOTH the enhanced candidate mask and
-    this local-response gate. At this initial admission stage, lowering the
-    cutoff cannot admit pixels excluded by the enhanced candidate mask. Later
+    With enhancement enabled, initial admission requires BOTH the enhanced
+    candidate mask and this local-response gate. Lowering this cutoff cannot
+    admit pixels excluded by that mask. With enhancement disabled, this cutoff
+    alone supplies initial shaft support. Later
     rooting, ownership and signal-supported repair determine reported traces.
     """
 
@@ -905,11 +906,24 @@ class MetaXpressOutgrowthSettings:
     candidate_hysteresis_seed_correction_factor: float | None = None
     """Optional stricter seed threshold retaining connected dim candidates."""
 
+    enhance_neurites: bool = True
+    """Apply the embedded tubeness/adaptive-threshold candidate gate.
+
+    Disable to admit shafts using only the local-background response cutoff.
+    Preprocessing may instead be declared in earlier pipeline steps or earlier
+    callables in this step's function chain. Candidate correction and hysteresis
+    settings apply only with enhancement enabled. Soma exclusion, rooting and
+    measurements are unchanged; bypassing this gate does not establish vendor
+    algorithm equivalence or biological acceptance.
+    """
+
     def maximum_width_px(self, coordinate_scale: float) -> float:
         """Project this declaration's outgrowth width into image pixels."""
         return self.maximum_width / coordinate_scale
 
     def validate(self) -> None:
+        if type(self.enhance_neurites) is not bool:
+            raise ValueError("outgrowth.enhance_neurites must be a boolean")
         if not np.isfinite(self.maximum_width) or self.maximum_width <= 0:
             raise ValueError("outgrowth.maximum_width must be > 0")
         if (
@@ -924,6 +938,8 @@ class MetaXpressOutgrowthSettings:
             raise ValueError(
                 "outgrowth.minimum_cell_growth_to_log_as_significant must be >= 0"
             )
+        if not self.enhance_neurites:
+            return
         if (
             not np.isfinite(self.candidate_threshold_correction_factor)
             or self.candidate_threshold_correction_factor <= 0
@@ -1251,6 +1267,9 @@ class NeuriteAdmissionPlanes(NeuriteDiagnosticPlanes):
     retained_support follows it. With retention disabled they are the same
     computed support, not evidence of an executed seed gate. local_support is
     the independent raw-unit response gate, before intersection/body exclusion.
+    When enhancement is disabled, enhanced_response is an all-NaN unexecuted
+    checkpoint; threshold_support and retained_support are the actual local
+    threshold support, not fabricated evidence of an executed enhanced gate.
     """
 
     enhanced_response: np.ndarray
@@ -1821,7 +1840,10 @@ def neurite_outgrowth_metaxpress(
     ``(C, Y, X)`` and should be produced by a step whose variable component is
     ``CHANNEL``. Outgrowth detection is independent of the significant-growth
     threshold. CellProfiler-compatible primary-object, tubeness, adaptive Otsu,
-    and medial-axis leaves provide the opinionated segmentation engine. Final
+    and medial-axis leaves provide the opinionated segmentation engine.
+    ``outgrowth.enhance_neurites=False`` bypasses the embedded tubeness/adaptive
+    gate, including its seed retention. Preprocessing can precede this callable
+    in a FunctionStep chain or in separate steps. Final
     soma-rooted path ownership determines both measurements and rendered masks;
     disconnected traces are omitted from the rendered ownership mask.
 
@@ -2131,56 +2153,56 @@ def _identify_neurites_cellprofiler(
 
     outgrowth_width_px = settings.maximum_width_px(coordinate_scale)
     body_width_px = cell_body.maximum_width_px(coordinate_scale)
-    cp_image = _cellprofiler_foreground_image(
-        image,
-        bright_objects=bright_objects,
-    )
-    enhanced = _raw_processing_leaf(enhance_or_suppress_features)(
-        cp_image,
-        **CELLPROFILER_NEURITE_ENGINE_PROFILE.enhancement_kwargs(
-            smoothing_value=max(0.5, 0.375 * outgrowth_width_px),
-        ),
-    )
-    cp_mask_payload, _ = _raw_processing_leaf(threshold)(
-        enhanced,
-        **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
-            window_size=_cellprofiler_adaptive_window(body_width_px, image.shape),
-            smoothing=max(0.0, 0.25 * outgrowth_width_px),
-            correction_factor=settings.candidate_threshold_correction_factor,
-        ),
-    )
-    cp_mask = np.asarray(image_payload_data(cp_mask_payload)) > 0
-    threshold_support = cp_mask
-    if settings.candidate_hysteresis_seed_correction_factor is not None:
-        seed_mask_payload, _ = _raw_processing_leaf(threshold)(
-            enhanced,
-            **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
-                window_size=_cellprofiler_adaptive_window(
-                    body_width_px,
-                    image.shape,
-                ),
-                smoothing=max(0.0, 0.25 * outgrowth_width_px),
-                correction_factor=(
-                    settings.candidate_hysteresis_seed_correction_factor
-                ),
-            ),
-        )
-        seed_mask = np.asarray(image_payload_data(seed_mask_payload)) > 0
-        cp_mask = _seeded_candidate_components(cp_mask, seed_mask)
     response = local_background_response(
         image,
         object_width_px=outgrowth_width_px,
         bright_objects=bright_objects,
     )
     local_support = response >= settings.intensity_above_local_background
+    if settings.enhance_neurites:
+        cp_image = _cellprofiler_foreground_image(
+            image,
+            bright_objects=bright_objects,
+        )
+        enhanced = _raw_processing_leaf(enhance_or_suppress_features)(
+            cp_image,
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.enhancement_kwargs(
+                smoothing_value=max(0.5, 0.375 * outgrowth_width_px),
+            ),
+        )
+        cp_mask_payload, _ = _raw_processing_leaf(threshold)(
+            enhanced,
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
+                window_size=_cellprofiler_adaptive_window(body_width_px, image.shape),
+                smoothing=max(0.0, 0.25 * outgrowth_width_px),
+                correction_factor=settings.candidate_threshold_correction_factor,
+            ),
+        )
+        cp_mask = np.asarray(image_payload_data(cp_mask_payload)) > 0
+        threshold_support = cp_mask
+        if settings.candidate_hysteresis_seed_correction_factor is not None:
+            seed_mask_payload, _ = _raw_processing_leaf(threshold)(
+                enhanced,
+                **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
+                    window_size=_cellprofiler_adaptive_window(body_width_px, image.shape),
+                    smoothing=max(0.0, 0.25 * outgrowth_width_px),
+                    correction_factor=settings.candidate_hysteresis_seed_correction_factor,
+                ),
+            )
+            seed_mask = np.asarray(image_payload_data(seed_mask_payload)) > 0
+            cp_mask = _seeded_candidate_components(cp_mask, seed_mask)
+        enhanced_response = np.asarray(image_payload_data(enhanced))
+        outgrowth_mask = cp_mask & local_support
+    else:
+        enhanced_response = np.full(image.shape, np.nan, dtype=np.float32)
+        threshold_support = cp_mask = outgrowth_mask = local_support
     soma_attachment_response = local_background_response(
         image, object_width_px=body_width_px, bright_objects=bright_objects,
     )
-    outgrowth_mask = cp_mask & local_support
     return NeuriteAdmissionResult(
         outgrowth_mask,
         NeuriteAdmissionPlanes(
-            np.asarray(image_payload_data(enhanced)), threshold_support, cp_mask,
+            enhanced_response, threshold_support, cp_mask,
             response, local_support, soma_attachment_response,
         ),
         outgrowth_width_px,
