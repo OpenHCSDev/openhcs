@@ -48,8 +48,8 @@
 #   - Python 3.12 on Linux
 #   - Full integration test suite against wheel installation
 #
-# Group 7: Official30 headless parity (1 job)
-#   - Python 3.12 on Linux
+# Group 7: Official30 headless parity (4 jobs)
+#   - Python 3.12 on Linux and Python 3.14 on Linux, Windows, macOS
 #   - Acquires the manifest-pinned inputs and compares all 30 cases against the
 #     committed native CellProfiler references over the real ZMQ execution path
 #
@@ -2002,11 +2002,27 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # Run the canonical 30-case headless value comparator once. The cross-OS/
-  # Python matrix above owns generated public-boundary coverage; this lane owns
-  # semantic parity against committed native CellProfiler outputs.
+  # Compare all 30 workflows against committed native CellProfiler outputs.
+  # Saved references do not require the optional Centrosome oracle on Python 3.14.
+  # Keep the established 3.12 Linux lane and require 3.14 parity on every OS.
   official30-headless-parity:
-    runs-on: ubuntu-latest
+    name: official30-headless-parity (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.14"
+          - os: windows-latest
+            python-version: "3.14"
+          - os: macos-latest
+            python-version: "3.14"
+    defaults:
+      run:
+        shell: bash
     needs: parity-scope
     if: needs.parity-scope.outputs.relevant == 'true'
     timeout-minutes: 90
@@ -2016,19 +2032,26 @@ jobs:
       OPENHCS_CPU_ONLY: true
       QT_QPA_PLATFORM: offscreen
       MPLBACKEND: Agg
+      NUMBA_DISABLE_INTEL_SVML: ${{ runner.os == 'macOS' && '1' || '0' }}
 
     steps:
+      - name: Enable Windows long paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
 
-      - name: Setup Python 3.12
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install headless runtime libraries
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgl1
@@ -2109,7 +2132,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: official30-headless-parity
+          name: official30-headless-parity-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |
             ${{ runner.temp }}/openhcs-official30/pytest/**/official30/observations.jsonl
             ${{ runner.temp }}/openhcs-official30/pytest/**/official30/observations.csv
@@ -2123,7 +2146,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: official30-headless-zmq-logs
+          name: official30-headless-zmq-logs-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |
             ~/.local/share/openhcs/logs
             ~/.local/state/openhcs/logs
