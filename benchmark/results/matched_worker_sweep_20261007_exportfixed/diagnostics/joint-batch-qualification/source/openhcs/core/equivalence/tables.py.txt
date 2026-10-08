@@ -86,7 +86,9 @@ class RuntimeTableSnapshot:
     column_context: tuple[str | None, ...] = ()
     _measurement_views: dict[
         RuntimeMeasurementRowIdentityContract, tuple[MeasurementTable, ...]
-    ] = field(default_factory=dict, init=False, repr=False, compare=False)
+    ] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def for_image_numbers(
         self,
@@ -199,45 +201,32 @@ class RuntimeTableSnapshot:
 
         dialect = policy.measurement_dialect
         schema = runtime_measurement_row_schema_for_header(
-            self.header,
-            dialect.row_qualifiers,
-            dialect.row_identity_contract,
+            self.header, dialect.row_qualifiers, dialect.row_identity_contract,
             dialect.non_measurement_field_prefixes,
         )
         indexes = frozenset(
-            index
-            for index, name in enumerate(self.header)
+            index for index, name in enumerate(self.header)
             if normalize_runtime_identifier(name) == "image_number"
-            or (
-                index in schema.feature_indexes
-                and image_number_reference_measurement_field(name)
-            )
+            or (index in schema.feature_indexes
+                and image_number_reference_measurement_field(name))
         )
         rows = tuple(
             tuple(
-                (
-                    str(image_number_offset.normalized_image_number(value))
-                    if index in indexes
-                    else value
-                )
+                str(image_number_offset.normalized_image_number(value))
+                if index in indexes else value
                 for index, value in enumerate(row)
             )
             for row in self.rows
         )
         return (
-            self.path.name,
-            self.header,
-            self.column_context,
-            rows,
+            self.path.name, self.header, self.column_context, rows,
             image_number_offset.value if schema.long_form_value_indexes else None,
         )
 
     def required_rows(self) -> tuple[tuple[str, ...], ...]:
         """Admit actual rows when a consumer needs a determining declaration."""
         if not self.rows:
-            raise ValueError(
-                f"Runtime table {self.path} has no determining declaration rows."
-            )
+            raise ValueError(f"Runtime table {self.path} has no determining declaration rows.")
         return self.rows
 
     @property

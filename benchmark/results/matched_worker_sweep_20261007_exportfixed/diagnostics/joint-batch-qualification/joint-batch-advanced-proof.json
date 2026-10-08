@@ -1,0 +1,91 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY saved actualD06 Advanced12 warmup; CPU0 numericalthreads1; final scratch SQL and shared batch owner, no science/livecache writes",
+  "axes": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009",
+    "W010",
+    "W011",
+    "W012"
+  ],
+  "distinct_joint_inputs": 1,
+  "batch_preparation": {
+    "cpu_seconds": 16.522138281,
+    "wall_seconds": 30.707994904369116
+  },
+  "ordinary_one_axis_fresh_projection": {
+    "cpu_seconds": 4.915393878,
+    "wall_seconds": 9.554843333549798
+  },
+  "whole_saved_one_axis_original": {
+    "cpu_seconds": 6.5925013360000015,
+    "wall_seconds": 12.866100231185555
+  },
+  "whole_saved_one_axis_optimized": {
+    "cpu_seconds": 2.527153755999997,
+    "wall_seconds": 4.584666810929775
+  },
+  "whole_returned_payload_exact": true,
+  "unordered_manifest_admission": "Only compared_output_files frozenset JSON order normalized",
+  "entire_fresh_payload_exact": true,
+  "directed_relationship_groups_exact": 7,
+  "feature_keys": 1667,
+  "scalar_alias_heterogeneous_controls": [
+    {
+      "raw_values": [
+        "1",
+        "2",
+        "5"
+      ],
+      "payloads_exact": true,
+      "heterogeneous_objects_distinct": true
+    },
+    {
+      "raw_values": [
+        "1",
+        "2",
+        ""
+      ],
+      "payloads_exact": true,
+      "heterogeneous_objects_distinct": true
+    },
+    {
+      "raw_values": [
+        "1",
+        "2",
+        "NaN"
+      ],
+      "payloads_exact": true,
+      "heterogeneous_objects_distinct": true
+    },
+    {
+      "raw_values": [
+        "1",
+        "2",
+        "inf"
+      ],
+      "payloads_exact": true,
+      "heterogeneous_objects_distinct": true
+    },
+    {
+      "context_difference": true,
+      "ordinary_payloads_exact": true,
+      "distinct_derived_objects": true
+    }
+  ],
+  "source_hashes_at_import": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/benchmark/matched_cellprofiler_batch.py": "0628f68628976386ed8eb8a123e4e14a18728f2efca01e8840060f1809469b1e",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/benchmark/cellprofiler_export_equivalence.py": "83cb56f88261fce87afa6b02f9aaae92a899fab692a482e373da0e5ac77c6500",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/runtime_equivalence.py": "c86aa57bcdd64a11984a7ef48090786d0a3966f42c1d59b4306791ad233165be",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/equivalence/outputs.py": "8b03565e570d90fc5a5202318d220562cdf27b850ff112297ea677d7e9faebb5",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/equivalence/tables.py": "135e7b6803c758c2e51504acaf18919fe79d27befab9f1a941b4a8bc7e3e9d2f"
+  },
+  "runtime_import_root": "/home/ts/code/projects/openhcs-cp-registry-control"
+}

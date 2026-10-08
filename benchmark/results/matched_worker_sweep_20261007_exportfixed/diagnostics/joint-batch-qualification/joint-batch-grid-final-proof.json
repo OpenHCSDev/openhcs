@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY saved actualD06 Grid12 warmup, CPU0 numericalthreads1; currentv6 fullcomparison plus scratch batch-owner candidate-derived payload; no science or activecache writes",
+  "axes": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009",
+    "W010",
+    "W011",
+    "W012"
+  ],
+  "distinct_joint_inputs": 1,
+  "batch_preparation": {
+    "cpu_seconds": 29.921538842,
+    "wall_seconds": 54.68706578016281
+  },
+  "actual_12_payload_executor_transport": {
+    "cpu_seconds": 2.5082176629999964,
+    "wall_seconds": 5.78652813192457,
+    "child_cpu_seconds": 2.621454
+  },
+  "ordinary_full_clock_reused_from_prior_receiving": true,
+  "payload_bytes": 9235912,
+  "payload_pickle_roundtrip_and_fact_reconstruction": {
+    "cpu_seconds": 0.7336311599999981,
+    "wall_seconds": 1.4748093141242862
+  },
+  "whole_saved_one_axis_original": {
+    "cpu_seconds": 19.585480843,
+    "wall_seconds": 21.680914035066962
+  },
+  "whole_saved_one_axis_optimized": {
+    "cpu_seconds": 6.780180432999998,
+    "wall_seconds": 7.748810725286603
+  },
+  "whole_returned_payload_exact": true,
+  "fresh_fact_payload_exact": true,
+  "source_hashes_at_import": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/benchmark/matched_cellprofiler_batch.py": "95acd5f6a31cb04b138fe8926868a99dd99e7550203ef76d9865ea3946001b69",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/runtime_equivalence.py": "c86aa57bcdd64a11984a7ef48090786d0a3966f42c1d59b4306791ad233165be",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/equivalence/outputs.py": "8b03565e570d90fc5a5202318d220562cdf27b850ff112297ea677d7e9faebb5",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/equivalence/tables.py": "135e7b6803c758c2e51504acaf18919fe79d27befab9f1a941b4a8bc7e3e9d2f"
+  },
+  "runtime_import_root": "/home/ts/code/projects/openhcs-cp-registry-control"
+}

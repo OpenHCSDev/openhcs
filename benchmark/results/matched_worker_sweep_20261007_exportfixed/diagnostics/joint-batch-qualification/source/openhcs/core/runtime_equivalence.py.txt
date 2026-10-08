@@ -1701,11 +1701,7 @@ RuntimeMeasurementFactCachePayload = tuple[
 
 
 RuntimeRelationshipCorrelationCachePayload = tuple[
-    tuple[
-        RuntimeMeasurementFeatureCachePayload,
-        tuple[tuple[tuple[int, int | None], tuple[int, int | None]], ...],
-        int | None,
-    ],
+    tuple[RuntimeMeasurementFeatureCachePayload, tuple[tuple[tuple[int, int | None], tuple[int, int | None]], ...], int | None],
     ...,
 ]
 RuntimeMeasurementSnapshotCachePayload = tuple[
@@ -1738,10 +1734,7 @@ class RuntimeMeasurementSnapshot:
             )
         )
         return cls._from_scoped_output_tables(
-            tables,
-            image_offset,
-            policy=policy,
-            known_source_names=known_source_names,
+            tables, image_offset, policy=policy, known_source_names=known_source_names,
         )
 
     @classmethod
@@ -1764,12 +1757,8 @@ class RuntimeMeasurementSnapshot:
                 RuntimeImageNumberOffset._offset_from_values(
                     value
                     for table in snapshot.tables
-                    if not ExportedRelationshipMeasurementSemantics.supports_table(
-                        table
-                    )
-                    for value in table.measurement_image_number_values(
-                        policy.measurement_dialect
-                    )
+                    if not ExportedRelationshipMeasurementSemantics.supports_table(table)
+                    for value in table.measurement_image_number_values(policy.measurement_dialect)
                 )
             )
             identity = tuple(
@@ -1786,18 +1775,11 @@ class RuntimeMeasurementSnapshot:
                     )
                 )
                 if validated_offset != image_offset:
-                    return tuple(
-                        cls.from_output_snapshot(
-                            item,
-                            policy=policy,
-                            known_source_names=known_source_names,
-                        )
-                        for item in snapshots
-                    )
+                    return tuple(cls.from_output_snapshot(
+                        item, policy=policy, known_source_names=known_source_names,
+                    ) for item in snapshots)
                 facts = cls._from_scoped_output_tables(
-                    tables,
-                    image_offset,
-                    policy=policy,
+                    tables, image_offset, policy=policy,
                     known_source_names=known_source_names,
                 )
                 admitted.append((identity, facts))
@@ -1814,8 +1796,7 @@ class RuntimeMeasurementSnapshot:
         known_source_names: tuple[str, ...],
     ) -> RuntimeMeasurementSnapshot:
         state = RuntimeMeasurementProjectionState(
-            policy=policy,
-            known_source_names=known_source_names,
+            policy=policy, known_source_names=known_source_names,
         )
         correlations = (
             ExportedRelationshipMeasurementSemantics.correlated_object_relationships(

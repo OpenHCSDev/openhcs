@@ -1,0 +1,35 @@
+import gzip,hashlib,inspect,json,os,pickle,sys,time
+from pathlib import Path
+assert os.sched_getaffinity(0)=={0}
+root=Path(__file__).parent;prod=Path('/home/ts/code/projects/openhcs-cp-registry-control');art=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');overlay=root/'joint-batch-overlay';sys.path.insert(0,str(prod))
+import openhcs.core,benchmark
+openhcs.core.__path__[:0]=[str(overlay/'openhcs/core'),str(art/'openhcs/core')];benchmark.__path__[:0]=[str(overlay/'benchmark'),str(art/'benchmark')]
+import openhcs.core.equivalence
+openhcs.core.equivalence.__path__.insert(0,str(overlay/'openhcs/core/equivalence'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.matched_cellprofiler_batch import _saved_output_equivalence
+from benchmark.native_measurement_facts import retained_native_measurement_snapshot
+from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.serialization.json import to_jsonable
+assert OpenHCSRuntimeImportAuthority.current().import_root==prod
+case=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid');native=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/ExampleImagingFlowCytometryObjectsInGrid')
+with gzip.open(case/'candidate_evidence/-1/observation.pkl','rb') as f:observation=pickle.load(f)
+policy=_strict_cellprofiler_runtime_equivalence_policy();axes=tuple(observation.exports.outputs.execution_axes) if hasattr(observation.exports.outputs,'execution_axes') else tuple(next(iter(observation.exports.outputs.image_numbers_by_export_path.values())))
+clock=lambda:(time.process_time(),time.perf_counter())
+def elapsed(start):return {'cpu_seconds':time.process_time()-start[0],'wall_seconds':time.perf_counter()-start[1]}
+t=clock();raw=tuple(RuntimeTableSnapshot.from_csv(p) for p in observation.exports.table_outputs);snapshots=tuple(RuntimeOutputSnapshot(tables=RuntimeOutputSnapshot.exported_table_snapshots(observation.exports.for_execution_axis(axis),execution_axis_id=axis,measurement_dialect=policy.measurement_dialect,source_tables=raw)) for axis in axes);facts=RuntimeMeasurementSnapshot.from_output_snapshots(snapshots,policy=policy);batch_clock=elapsed(t)
+assert len(facts)==12 and len({id(f) for f in facts})==1
+payload=facts[1].to_cache_payload();t=clock();transport=pickle.dumps(payload,protocol=5);decoded=RuntimeMeasurementSnapshot.from_cache_payload(pickle.loads(transport));transport_clock=elapsed(t);assert decoded.to_cache_payload()==payload
+axis='W002';t=clock();oracle=RuntimeMeasurementSnapshot.from_output_snapshot(snapshots[1],policy=policy);oracle_clock=elapsed(t);assert oracle.to_cache_payload()==payload
+# Warm only the private retained-native cache, never the live cache.
+cache=root/'joint-batch-private-native';native_root=native/'native/-1'/axis;native_snapshot=RuntimeOutputSnapshot.from_output_root(native_root);report_sha=hashlib.sha256((native/'native_report.json').read_bytes()).hexdigest();retained_native_measurement_snapshot(native_snapshot,policy=policy,source_table_paths=tuple(t.path for t in native_snapshot.tables),cache_root=cache,reference_report_sha256=report_sha,source_commit='d06b7226c82fc6de8ab6b644f3bec417f4b7b922')
+kwargs=dict(policy=policy,source_workspaces=(case/'candidate/-1/source_workspace_matched_pilot',),execution_axis_id=axis,native_measurement_cache_root=cache,native_reference_report_sha256=report_sha,production_source_commit='d06b7226c82fc6de8ab6b644f3bec417f4b7b922')
+t=clock();original=_saved_output_equivalence(native_root,observation.exports.for_execution_axis(axis),**kwargs);original_clock=elapsed(t);t=clock();optimized=_saved_output_equivalence(native_root,observation.exports.for_execution_axis(axis),candidate_measurement_payload=payload,**kwargs);optimized_clock=elapsed(t)
+assert to_jsonable(original)==to_jsonable(optimized)
+assert not optimized[0].differences and not optimized[1].differences and not optimized[2]
+for name,result in [('original',original),('optimized',optimized)]: (root/f'joint-batch-grid-{name}-full-result.json').write_text(json.dumps(to_jsonable(result),indent=2,sort_keys=True)+'\n')
+proof={'status':'PASS','scope':'DIAGNOSTIC_ONLY saved actualD06 Grid12 warmup, CPU0 numericalthreads1; currentv6 fullcomparison plus scratch batch-owner candidate-derived payload; no science or activecache writes','axes':axes,'distinct_joint_inputs':len({id(f) for f in facts}),'batch_preparation':batch_clock,'ordinary_one_axis_fresh_projection':oracle_clock,'payload_bytes':len(transport),'payload_pickle_roundtrip_and_fact_reconstruction':transport_clock,'whole_saved_one_axis_original':original_clock,'whole_saved_one_axis_optimized':optimized_clock,'whole_returned_payload_exact':True,'fresh_fact_payload_exact':True,'source_hashes':{str(Path(inspect.getsourcefile(owner))):hashlib.sha256(Path(inspect.getsourcefile(owner)).read_bytes()).hexdigest() for owner in (_saved_output_equivalence,RuntimeMeasurementSnapshot,RuntimeOutputSnapshot,RuntimeTableSnapshot)},'runtime_import_root':str(OpenHCSRuntimeImportAuthority.current().import_root)}
+(root/'joint-batch-grid-proof.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof),flush=True)

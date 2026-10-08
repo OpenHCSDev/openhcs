@@ -1,0 +1,37 @@
+import gzip,hashlib,inspect,json,os,pickle,sys,time
+from pathlib import Path
+assert os.sched_getaffinity(0)=={0}
+root=Path(__file__).parent;prod=Path('/home/ts/code/projects/openhcs-cp-registry-control');art=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');sys.path.insert(0,str(prod))
+import openhcs.core,benchmark
+openhcs.core.__path__.insert(0,str(art/'openhcs/core'));benchmark.__path__.insert(0,str(art/'benchmark'))
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.cellprofiler_export_equivalence import _sqlite_tables,_declared_sqlite_table_subjects
+from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset,image_number_reference_measurement_field,runtime_measurement_row_schema_for_header
+from openhcs.core.equivalence.policy import normalize_runtime_identifier
+policy=_strict_cellprofiler_runtime_equivalence_policy()
+def normalized_input(table,offset):
+ schema=runtime_measurement_row_schema_for_header(table.header,policy.measurement_dialect.row_qualifiers,policy.measurement_dialect.row_identity_contract,policy.measurement_dialect.non_measurement_field_prefixes)
+ indexes=frozenset(i for i,name in enumerate(table.header) if normalize_runtime_identifier(name)=='image_number' or (i in schema.feature_indexes and image_number_reference_measurement_field(name)))
+ return (table.path.name,table.header,table.column_context,tuple(tuple(str(offset.normalized_image_number(v)) if i in indexes else v for i,v in enumerate(row)) for row in table.rows))
+base=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture/cases');proof={'scope':'DIAGNOSTIC_ONLY actual joint axis inputs; savedD06, currentv6 owner; no fact projection or science','cases':{}}
+for name in ('ExampleImagingFlowCytometryObjectsInGrid','cp_tutorial_advanced_segmentation_final'):
+ case=base/name
+ with gzip.open(case/'candidate_evidence/-1/observation.pkl','rb') as f:observation=pickle.load(f)
+ cpu=time.process_time();wall=time.perf_counter();rows=[];first=None
+ if 'Grid' in name:
+  path=next(p for p in observation.exports.table_outputs);raw=RuntimeTableSnapshot.from_csv(path);mapping=observation.exports.outputs.image_numbers_by_export_path[path];domain=tuple(n for ns in mapping.values() for n in ns)
+ else:
+  path=next(p for p in observation.exports.output_files if p.suffix=='.db');subjects=_declared_sqlite_table_subjects(tuple(p for p in observation.exports.output_files if p.suffix=='.properties'))[path.name];mapping=observation.exports.outputs.image_numbers_by_export_path[path];domain=tuple(n for ns in mapping.values() for n in ns)
+ for axis,numbers in mapping.items():
+  offset=RuntimeImageNumberOffset.from_table_rows(('image_number',),tuple((str(n),) for n in numbers))
+  if 'Grid' in name: tables=(raw.for_image_numbers(numbers,dialect=policy.measurement_dialect,image_number_domain=domain),)
+  else: tables=tuple(t for table_name,(schema,t) in _sqlite_tables(path,subjects,policy,image_numbers=numbers,image_number_domain=domain).items() if table_name in subjects)
+  inputs=tuple(normalized_input(table,offset) for table in tables)
+  if first is None:first=inputs
+  mismatches=[a[0] for a,b in zip(first,inputs,strict=True) if a!=b]
+  rows.append({'axis':axis,'complete_joint_measurement_inputs_equal':inputs==first,'mismatching_tables':mismatches,'tables':len(tables),'rows':sum(len(t.rows) for t in tables),'raw_cells':sum(len(t.rows)*len(t.header) for t in tables)})
+  del inputs,tables
+ entry={'cpu_seconds':time.process_time()-cpu,'wall_seconds':time.perf_counter()-wall,'axes':rows};proof['cases'][name]=entry;print(json.dumps({name:entry}),flush=True)
+ del first,observation
+(root/'batch-input-admission.json').write_text(json.dumps(proof,indent=2)+'\n')

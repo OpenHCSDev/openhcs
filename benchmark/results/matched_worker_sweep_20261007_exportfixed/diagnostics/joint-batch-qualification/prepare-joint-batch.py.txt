@@ -1,0 +1,334 @@
+from pathlib import Path
+import difflib,hashlib,json
+root=Path(__file__).parent;prod=Path('/home/ts/code/projects/openhcs-cp-registry-control');art=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');overlay=root/'joint-batch-overlay';preimages={};diff=[]
+def save(relative,source,new):
+ target=overlay/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(new);preimages[relative]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'overlay_sha256':hashlib.sha256(target.read_bytes()).hexdigest()};diff.extend(difflib.unified_diff(source.read_text().splitlines(True),new.splitlines(True),fromfile='a/'+relative,tofile='b/'+relative))
+rel='openhcs/core/equivalence/tables.py';source=art/rel;s=source.read_text();needle='    def required_rows(self) -> tuple[tuple[str, ...], ...]:\n';assert s.count(needle)==1
+method='''    def measurement_image_number_values(self, dialect: RuntimeMeasurementDialect):
+        """Derive admitted row identity scalars without decoding wide columns."""
+        indexes = frozenset(
+            index
+            for _, _, subject_indexes in self.measurement_subject_columns(dialect)
+            for index in subject_indexes
+            if normalize_runtime_identifier(self.header[index]) == "image_number"
+        )
+        return (row[index] for row in self.rows for index in indexes)
+
+    def measurement_input_key(
+        self,
+        policy: RuntimeEquivalencePolicy,
+        image_number_offset: RuntimeImageNumberOffset,
+    ) -> tuple[object, ...]:
+        """Return exact joint projection input, preserving every saved column.
+
+        This is an equality admission, not a tolerance hash or feature marginal.
+        Only schema-owned image references change to the admitted local domain.
+        Long-form values can name references dynamically, so retain their offset.
+        """
+        from openhcs.core.equivalence.measurement_rows import (
+            image_number_reference_measurement_field,
+            runtime_measurement_row_schema_for_header,
+        )
+
+        dialect = policy.measurement_dialect
+        schema = runtime_measurement_row_schema_for_header(
+            self.header, dialect.row_qualifiers, dialect.row_identity_contract,
+            dialect.non_measurement_field_prefixes,
+        )
+        indexes = frozenset(
+            index for index, name in enumerate(self.header)
+            if normalize_runtime_identifier(name) == "image_number"
+            or (index in schema.feature_indexes
+                and image_number_reference_measurement_field(name))
+        )
+        rows = tuple(
+            tuple(
+                str(image_number_offset.normalized_image_number(value))
+                if index in indexes else value
+                for index, value in enumerate(row)
+            )
+            for row in self.rows
+        )
+        return (
+            self.path.name, self.header, self.column_context, rows,
+            image_number_offset.value if schema.long_form_value_indexes else None,
+        )
+
+'''
+save(rel,source,s.replace(needle,method+needle))
+rel='openhcs/core/runtime_equivalence.py';source=prod/rel;s=source.read_text();start=s.index('        state = RuntimeMeasurementProjectionState(',s.index('    def from_output_snapshot('));end=s.index('\n    @classmethod\n    def from_artifact_execution_observation',start)
+old=s[start:end];assert old.count('        tables, image_offset = (')==1
+replacement='''        tables, image_offset = (
+            ExportedRelationshipMeasurementSemantics.validated_output_tables(
+                snapshot.tables, policy
+            )
+        )
+        return cls._from_scoped_output_tables(
+            tables, image_offset, policy=policy, known_source_names=known_source_names,
+        )
+
+    @classmethod
+    def from_output_snapshots(
+        cls,
+        snapshots: tuple[RuntimeOutputSnapshot, ...],
+        *,
+        policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+        known_source_names: tuple[str, ...] = (),
+    ) -> tuple[RuntimeMeasurementSnapshot, ...]:
+        """Derive facts once per exact admitted joint input in one actual batch.
+
+        Every axis retains exact joint-input admission. Heterogeneous inputs
+        derive independent facts. No state survives this call or changes tolerances.
+        """
+        admitted = []
+        results = []
+        for snapshot in snapshots:
+            image_offset = RuntimeImageNumberOffset(
+                RuntimeImageNumberOffset._offset_from_values(
+                    value
+                    for table in snapshot.tables
+                    if not ExportedRelationshipMeasurementSemantics.supports_table(table)
+                    for value in table.measurement_image_number_values(policy.measurement_dialect)
+                )
+            )
+            identity = tuple(
+                table.measurement_input_key(policy, image_offset)
+                for table in snapshot.tables
+            )
+            facts = next(
+                (facts for previous, facts in admitted if previous == identity), None
+            )
+            if facts is None:
+                tables, validated_offset = (
+                    ExportedRelationshipMeasurementSemantics.validated_output_tables(
+                        snapshot.tables, policy
+                    )
+                )
+                if validated_offset != image_offset:
+                    return tuple(cls.from_output_snapshot(
+                        item, policy=policy, known_source_names=known_source_names,
+                    ) for item in snapshots)
+                facts = cls._from_scoped_output_tables(
+                    tables, image_offset, policy=policy,
+                    known_source_names=known_source_names,
+                )
+                admitted.append((identity, facts))
+            results.append(facts)
+        return tuple(results)
+
+    @classmethod
+    def _from_scoped_output_tables(
+        cls,
+        tables: tuple[RuntimeScopedMeasurementTable, ...],
+        image_offset: RuntimeImageNumberOffset,
+        *,
+        policy: RuntimeEquivalencePolicy,
+        known_source_names: tuple[str, ...],
+    ) -> RuntimeMeasurementSnapshot:
+        state = RuntimeMeasurementProjectionState(
+            policy=policy, known_source_names=known_source_names,
+        )
+        correlations = (
+            ExportedRelationshipMeasurementSemantics.correlated_object_relationships(
+                tables, image_offset
+            )
+        )
+        state.record_measurement_tables(tables, None)
+        state.required_measurement_keys = frozenset(state.explicit_measurement_keys)
+        return cls(
+            measurement_fact_counts=state.project_measurement_fact_counts(),
+            correlated_relationships=correlations,
+        )
+'''
+save(rel,source,s[:start]+replacement+s[end:])
+(root/'joint-batch-projection.patch').write_text(''.join(diff));(root/'joint-batch-preimages.json').write_text(json.dumps(preimages,indent=2)+'\n')
+print(json.dumps(preimages))
+rel='openhcs/core/equivalence/outputs.py';source=art/rel;s=source.read_text();start=s.index('        tables = tuple(',s.index('    def from_export_observation('));end=s.index('\n    @classmethod\n    def image_snapshots(',start);old=s[start:end]
+block_end=old.index('        return cls(');table_block=old[:block_end];table_block=table_block.replace('        tables = tuple(\n            RuntimeTableSnapshot.from_csv(path) for path in observation.table_outputs\n        )','''        tables = (
+            tuple(RuntimeTableSnapshot.from_csv(path) for path in observation.table_outputs)
+            if source_tables is None else source_tables
+        )
+        if tuple(table.path for table in tables) != observation.table_outputs:
+            raise ValueError("Prepared table sources differ from actual export observation.")''')
+replacement='''        return cls(
+            tables=cls.exported_table_snapshots(
+                observation, execution_axis_id=execution_axis_id,
+                measurement_dialect=measurement_dialect,
+            ),
+            images=cls.image_snapshots(
+                observation.image_outputs, source_workspaces=source_workspaces,
+                image_set_policy=image_set_policy,
+            ),
+        )
+
+    @classmethod
+    def exported_table_snapshots(
+        cls,
+        observation: RuntimeExportObservation,
+        *,
+        execution_axis_id: str | None = None,
+        measurement_dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        source_tables: tuple[RuntimeTableSnapshot, ...] | None = None,
+    ) -> tuple[RuntimeTableSnapshot, ...]:
+        """Derive each actual axis from admitted physical export tables."""
+'''+table_block+'''        return RuntimeTableNamespaceAdapter.normalize(tables)
+'''
+save(rel,source,s[:start]+replacement+s[end:])
+rel='benchmark/matched_cellprofiler_batch.py';source=art/rel;s=source.read_text();start=s.index('def _saved_output_equivalence(');end=s.index('\ndef _native_python_executable',start);block=s[start:end]
+block=block.replace('    production_source_commit: str | None = None,\n','    production_source_commit: str | None = None,\n    candidate_measurement_payload: tuple | None = None,\n',1)
+needle='''        RuntimeMeasurementSnapshot.from_output_snapshot(
+            candidate_snapshot, policy=policy
+        ),''';assert needle in block
+block=block.replace(needle,'''        (
+            RuntimeMeasurementSnapshot.from_output_snapshot(candidate_snapshot, policy=policy)
+            if candidate_measurement_payload is None
+            else RuntimeMeasurementSnapshot.from_cache_payload(candidate_measurement_payload)
+        ),''')
+save(rel,source,s[:start]+block+s[end:])
+(root/'joint-batch-projection.patch').write_text(''.join(diff));(root/'joint-batch-preimages.json').write_text(json.dumps(preimages,indent=2)+'\n')
+# The existing SQL comparison boundary retains all its schema/raw/CPA checks;
+# only its final candidate fact projection receives a batch-derived payload.
+rel='benchmark/cellprofiler_export_equivalence.py';source=art/rel;s=source.read_text()
+s=s.replace('    RuntimeMeasurementSnapshot,\n','    RuntimeMeasurementSnapshot,\n    RuntimeMeasurementSnapshotCachePayload,\n',1)
+def edit_function(text,name,edit):
+ start=text.index('def '+name+'(');end=text.find('\ndef ',start+4)
+ if end<0:end=len(text)
+ return text[:start]+edit(text[start:end])+text[end:]
+def add_map(block):return block.replace('    production_source_commit: str | None = None,\n','    production_source_commit: str | None = None,\n    candidate_measurement_payloads: Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None = None,\n',1)
+def add_payload(block):return block.replace('    production_source_commit: str | None = None,\n','    production_source_commit: str | None = None,\n    candidate_measurement_payload: RuntimeMeasurementSnapshotCachePayload | None = None,\n',1)
+s=edit_function(s,'cellprofiler_database_export_equivalence',lambda b:add_map(b).replace('            production_source_commit=production_source_commit,\n','            production_source_commit=production_source_commit,\n            candidate_measurement_payloads=candidate_measurement_payloads,\n',1))
+s=edit_function(s,'_sqlite_export_equivalence',lambda b:add_map(b).replace('                production_source_commit=production_source_commit,\n','                production_source_commit=production_source_commit,\n                candidate_measurement_payload=(None if candidate_measurement_payloads is None else candidate_measurement_payloads.get(candidate_by_name[name])),\n',1))
+s=edit_function(s,'_sqlite_database_differences',lambda b:add_payload(b).replace('                production_source_commit=production_source_commit,\n','                production_source_commit=production_source_commit,\n                candidate_measurement_payload=candidate_measurement_payload,\n',1))
+s=edit_function(s,'_sqlite_measurement_cohort_differences',lambda b:add_payload(b).replace('''        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot(tables=candidate_tables), policy=policy
+        ),''','''        (
+            RuntimeMeasurementSnapshot.from_output_snapshot(
+                RuntimeOutputSnapshot(tables=candidate_tables), policy=policy
+            ) if candidate_measurement_payload is None
+            else RuntimeMeasurementSnapshot.from_cache_payload(candidate_measurement_payload)
+        ),'''))
+# Extract the exact existing parser/scope logic, so preparation and ordinary SCI
+# use one owner rather than maintaining two selection recipes.
+start=s.index('    candidate_tables = _sqlite_tables(',s.index('def _sqlite_database_differences'));end=s.index('    differences: list[RuntimeEquivalenceDifference]',start);scope=s[start:end]
+s=s[:start]+'''    candidate_tables = _candidate_sqlite_tables(
+        candidate_path, candidate_subjects, policy,
+        candidate_image_numbers=candidate_image_numbers,
+        candidate_image_number_domain=candidate_image_number_domain,
+    )
+'''+s[end:]
+helpers='''def _candidate_sqlite_tables(
+    candidate_path: Path,
+    candidate_subjects: Mapping[str, MeasurementSubject],
+    policy: RuntimeEquivalencePolicy,
+    *,
+    candidate_image_numbers: tuple[int, ...] | None,
+    candidate_image_number_domain: tuple[int, ...] | None,
+):
+'''+scope+'''    return candidate_tables
+
+
+def cellprofiler_database_measurement_payloads(
+    candidate_exports: RuntimeExportObservation,
+    execution_axes: tuple[str, ...],
+    *,
+    policy: RuntimeEquivalencePolicy,
+) -> tuple[Mapping[Path, RuntimeMeasurementSnapshotCachePayload], ...]:
+    """Derive actual per-axis database facts through the shared batch owner."""
+    results = tuple({} for _ in execution_axes)
+    snapshots = []
+    destinations = []
+    for index, axis in enumerate(execution_axes):
+        exports = candidate_exports.for_execution_axis(axis)
+        properties = _outputs_with_suffix(exports, ".properties")
+        subjects_by_name = _declared_sqlite_table_subjects(properties)
+        paths = _declared_sqlite_paths(_outputs_with_suffix(exports, ".db"), properties)
+        for path in paths:
+            numbers_by_axis = exports.outputs.image_numbers_by_export_path.get(path)
+            if numbers_by_axis is None or axis not in numbers_by_axis:
+                continue
+            subjects = subjects_by_name.get(path.name, {})
+            domain = tuple(number for numbers in numbers_by_axis.values() for number in numbers)
+            tables = _candidate_sqlite_tables(
+                path, subjects, policy,
+                candidate_image_numbers=numbers_by_axis[axis],
+                candidate_image_number_domain=domain,
+            )
+            snapshots.append(RuntimeOutputSnapshot(tables=tuple(
+                table for name, (_, table) in tables.items() if name in subjects
+            )))
+            destinations.append((index, path))
+    facts = RuntimeMeasurementSnapshot.from_output_snapshots(tuple(snapshots), policy=policy)
+    payloads = {key: fact.to_cache_payload() for key, fact in {id(fact): fact for fact in facts}.items()}
+    for (index, path), fact in zip(destinations, facts, strict=True):
+        results[index][path] = payloads[id(fact)]
+    return results
+
+
+'''
+idx=s.index('def _sqlite_tables(');s=s[:idx]+helpers+s[idx:];save(rel,source,s)
+# Concrete existing-driver batch preparation, without another comparison owner.
+rel='benchmark/matched_cellprofiler_batch.py';source=art/rel;s=(overlay/rel).read_text()
+s=s.replace('    RuntimeMeasurementSnapshot,\n','    RuntimeMeasurementSnapshot,\n    RuntimeMeasurementSnapshotCachePayload,\n',1).replace('candidate_measurement_payload: tuple | None','candidate_measurement_payload: RuntimeMeasurementSnapshotCachePayload | None')
+s=s.replace('    candidate_measurement_payload: RuntimeMeasurementSnapshotCachePayload | None = None,\n','    candidate_measurement_payload: RuntimeMeasurementSnapshotCachePayload | None = None,\n    candidate_database_measurement_payloads: Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None = None,\n',1)
+start=s.index('def _saved_output_equivalence');end=s.index('\ndef _native_python_executable',start);block=s[start:end].replace('        production_source_commit=production_source_commit,\n','        production_source_commit=production_source_commit,\n        candidate_measurement_payloads=candidate_database_measurement_payloads,\n',1);s=s[:start]+block+s[end:]
+# Imports are explicit known modules; no optional-import fallback.
+s=s.replace('    cellprofiler_database_export_equivalence,\n','    cellprofiler_database_export_equivalence,\n    cellprofiler_database_measurement_payloads,\n',1)
+s=s.replace('from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot\n','from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot\nfrom openhcs.core.equivalence.tables import RuntimeTableSnapshot\n',1)
+needle='            comparison_tasks = tuple(\n';assert s.count(needle)==1
+prep='''            source_tables = tuple(
+                RuntimeTableSnapshot.from_csv(path) for path in candidate_exports.table_outputs
+            )
+            candidate_facts = RuntimeMeasurementSnapshot.from_output_snapshots(
+                tuple(RuntimeOutputSnapshot(tables=RuntimeOutputSnapshot.exported_table_snapshots(
+                    exports, execution_axis_id=well,
+                    measurement_dialect=policy.measurement_dialect,
+                    source_tables=tuple(table for table in source_tables if table.path in exports.table_outputs),
+                )) for well, exports in zip(wells, assignment_exports, strict=True)),
+                policy=policy,
+            )
+            candidate_payloads = {
+                key: facts.to_cache_payload()
+                for key, facts in {id(facts): facts for facts in candidate_facts}.items()
+            }
+            database_payloads = cellprofiler_database_measurement_payloads(
+                candidate_exports, tuple(wells), policy=policy,
+            )
+'''
+s=s.replace(needle,prep+needle)
+start=s.index(needle);end=s.index('            if args.comparison_workers == 1:',start);block=s[start:end]
+block=block.replace('                    execution_axis_id=well,\n','                    execution_axis_id=well,\n                    candidate_measurement_payload=candidate_payloads[id(facts)],\n                    candidate_database_measurement_payloads=database_facts,\n')
+block=block.replace('                for well, directory, exports in zip(','                for well, directory, exports, facts, database_facts in zip(').replace('                    assignment_exports,\n','                    assignment_exports,\n                    candidate_facts, database_payloads,\n');s=s[:start]+block+s[end:]
+# Replace the earlier provisional driver fragment in the output diff.
+diff=[]
+preimages[rel]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
+(overlay/rel).write_text(s);preimages[rel]['overlay_sha256']=hashlib.sha256((overlay/rel).read_bytes()).hexdigest()
+for relative,entry in preimages.items():
+ source=Path(entry['path']);diff.extend(difflib.unified_diff(source.read_text().splitlines(True),(overlay/relative).read_text().splitlines(True),fromfile='a/'+relative,tofile='b/'+relative))
+(root/'joint-batch-projection.patch').write_text(''.join(diff));(root/'joint-batch-preimages.json').write_text(json.dumps(preimages,indent=2)+'\n')
+rel='benchmark/matched_cellprofiler_batch.py';source=art/rel;s=(overlay/rel).read_text()
+s=s.replace('    candidate_measurement_payload: RuntimeMeasurementSnapshotCachePayload | None = None,\n','    candidate_measurement_payload: RuntimeMeasurementSnapshotCachePayload | None = None,\n    candidate_measurement_source_sha256: Mapping[Path, str] | None = None,\n',1)
+needle='    database_report = cellprofiler_database_export_equivalence(\n';assert s.count(needle)==1
+guard='''    if candidate_measurement_payload is not None or candidate_database_measurement_payloads is not None:
+        if candidate_measurement_source_sha256 is None or not frozenset(
+            candidate_exports.output_files
+        ) <= candidate_measurement_source_sha256.keys():
+            raise ValueError("Derived candidate facts require their actual source inventory.")
+        if any(sha256_file(path) != candidate_measurement_source_sha256[path]
+               for path in candidate_exports.output_files):
+            candidate_measurement_payload = None
+            candidate_database_measurement_payloads = None
+''';s=s.replace(needle,guard+needle,1)
+needle='            source_tables = tuple(\n';assert s.count(needle)==1
+s=s.replace(needle,'''            prepared_source_inventory = _output_inventory(output_dir, actual_output_files)
+            prepared_source_sha256 = {
+                output_dir / row["path"]: row["sha256"] for row in prepared_source_inventory
+            }
+'''+needle,1)
+needle='            comparison_tasks = tuple(\n';s=s.replace(needle,'''            if _output_inventory(output_dir, actual_output_files) != prepared_source_inventory:
+                raise RuntimeError("Candidate outputs changed while deriving batch facts.")
+'''+needle,1)
+s=s.replace('                    candidate_measurement_payload=candidate_payloads[id(facts)],\n','                    candidate_measurement_payload=candidate_payloads[id(facts)],\n                    candidate_measurement_source_sha256=prepared_source_sha256,\n',1)
+(overlay/rel).write_text(s);preimages[rel]['overlay_sha256']=hashlib.sha256((overlay/rel).read_bytes()).hexdigest();diff=[]
+for relative,entry in preimages.items():
+ original=Path(entry['path']).read_text();new=(overlay/relative).read_text();diff.extend(difflib.unified_diff(original.splitlines(True),new.splitlines(True),fromfile='a/'+relative,tofile='b/'+relative))
+(root/'joint-batch-projection.patch').write_text(''.join(diff));(root/'joint-batch-preimages.json').write_text(json.dumps(preimages,indent=2)+'\n')

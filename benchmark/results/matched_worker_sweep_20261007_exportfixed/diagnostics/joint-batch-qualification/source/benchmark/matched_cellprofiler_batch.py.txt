@@ -150,9 +150,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--native-jobs", type=int, default=1)
     parser.add_argument("--comparison-workers", type=int, default=1)
     parser.add_argument(
-        "--comparison-cpus",
-        type=int,
-        nargs="+",
+        "--comparison-cpus", type=int, nargs="+",
         help="Explicit CPU affinity for saved-output qualification workers.",
     )
     parser.add_argument("--native-python", type=Path, required=True)
@@ -233,9 +231,7 @@ def _source_input_inventory(
     """Hash the selected native source universe, following symlinks."""
 
     placements = tuple(
-        sorted(
-            source_universe.placements, key=lambda placement: placement.relative_path
-        )
+        sorted(source_universe.placements, key=lambda placement: placement.relative_path)
     )
     if not placements:
         raise ValueError("Native selected-source universe contains no input files.")
@@ -267,7 +263,6 @@ def _require_compared_output_inventory(
     from openhcs.core.equivalence.relationships import (
         ExportedRelationshipMeasurementSemantics,
     )
-
     # The inventory's default dialect is deliberately separate from the CSV
     # comparison policy. Retain its edge admission without rebuilding scalar
     # measurement counters already consumed by the value comparison.
@@ -372,9 +367,7 @@ def _saved_output_equivalence(
     production_source_commit: str | None = None,
     candidate_measurement_payload: RuntimeMeasurementSnapshotCachePayload | None = None,
     candidate_measurement_source_sha256: Mapping[Path, str] | None = None,
-    candidate_database_measurement_payloads: (
-        Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None
-    ) = None,
+    candidate_database_measurement_payloads: Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None = None,
 ) -> tuple[
     RuntimeEquivalenceReport,
     RuntimeEquivalenceReport,
@@ -384,22 +377,13 @@ def _saved_output_equivalence(
     int,
 ]:
     """Compare full saved outputs; retain reports and counts, not decoded pixels."""
-    if (
-        candidate_measurement_payload is not None
-        or candidate_database_measurement_payloads is not None
-    ):
-        if (
-            candidate_measurement_source_sha256 is None
-            or not frozenset(candidate_exports.output_files)
-            <= candidate_measurement_source_sha256.keys()
-        ):
-            raise ValueError(
-                "Derived candidate facts require their actual source inventory."
-            )
-        if any(
-            sha256_file(path) != candidate_measurement_source_sha256[path]
-            for path in candidate_exports.output_files
-        ):
+    if candidate_measurement_payload is not None or candidate_database_measurement_payloads is not None:
+        if candidate_measurement_source_sha256 is None or not frozenset(
+            candidate_exports.output_files
+        ) <= candidate_measurement_source_sha256.keys():
+            raise ValueError("Derived candidate facts require their actual source inventory.")
+        if any(sha256_file(path) != candidate_measurement_source_sha256[path]
+               for path in candidate_exports.output_files):
             candidate_measurement_payload = None
             candidate_database_measurement_payloads = None
     database_report = cellprofiler_database_export_equivalence(
@@ -431,13 +415,9 @@ def _saved_output_equivalence(
             source_commit=production_source_commit,
         ),
         (
-            RuntimeMeasurementSnapshot.from_output_snapshot(
-                candidate_snapshot, policy=policy
-            )
+            RuntimeMeasurementSnapshot.from_output_snapshot(candidate_snapshot, policy=policy)
             if candidate_measurement_payload is None
-            else RuntimeMeasurementSnapshot.from_cache_payload(
-                candidate_measurement_payload
-            )
+            else RuntimeMeasurementSnapshot.from_cache_payload(candidate_measurement_payload)
         ),
         policy=policy,
     )
@@ -824,15 +804,11 @@ def _reuse_native_report(
     original_source_universe = NativeCellProfilerSelectedSourceUniverse(
         tuple(Path(row["source_path"]) for row in origin["native_input_inventory"]),
         placements=tuple(
-            NativeCellProfilerSourcePlacement(
-                Path(row["source_path"]), Path(row["path"])
-            )
+            NativeCellProfilerSourcePlacement(Path(row["source_path"]), Path(row["path"]))
             for row in origin["native_input_inventory"]
         ),
     )
-    original_inventory = json.loads(
-        json.dumps(_source_input_inventory(original_source_universe))
-    )
+    original_inventory = json.loads(json.dumps(_source_input_inventory(original_source_universe)))
     if (
         original_inventory != origin["native_input_inventory"]
         or original_inventory != current_inventory
@@ -1139,13 +1115,8 @@ def main(argv: list[str] | None = None) -> int:
             raise FileNotFoundError("Native reference cases root does not exist.")
     if args.repeat_assignments is not None and args.repeat_assignments < 1:
         raise ValueError("Repeated assignment count must be positive.")
-    if (
-        args.native_measurement_cache_root is not None
-        and args.native_reference_root is None
-    ):
-        raise ValueError(
-            "Native semantic cache requires retained native source custody."
-        )
+    if args.native_measurement_cache_root is not None and args.native_reference_root is None:
+        raise ValueError("Native semantic cache requires retained native source custody.")
     if args.native_execution_model is not None and not args.candidate_only:
         raise ValueError("A native execution model requires candidate-only capture.")
     if args.candidate_only and (
@@ -1186,10 +1157,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _harness_source_inventory(project_root: Path) -> dict[str, str]:
     """Seal benchmark sources and the actual qualifier core search roots."""
-    roots = (
-        project_root / "benchmark",
-        *(Path(root) for root in openhcs.core.__path__),
-    )
+    roots = (project_root / "benchmark", *(Path(root) for root in openhcs.core.__path__))
     return {
         str(path.resolve()): sha256_file(path)
         for root in roots
@@ -1301,8 +1269,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         "comparison_cpus": args.comparison_cpus,
         "native_measurement_cache_root": (
             str(args.native_measurement_cache_root.expanduser().resolve())
-            if args.native_measurement_cache_root is not None
-            else None
+            if args.native_measurement_cache_root is not None else None
         ),
         "production_source_root": str(production_root),
         "benchmark_harness": {
@@ -1695,9 +1662,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                     candidate_exports,
                     policy=policy,
                     native_measurement_cache_root=args.native_measurement_cache_root,
-                    native_reference_report_sha256=provenance.get(
-                        "native_reference_report_sha256"
-                    ),
+                    native_reference_report_sha256=provenance.get("native_reference_report_sha256"),
                     production_source_commit=source_commit,
                     source_workspaces=completed.output_roots,
                     image_set_policy=image_set_policy,
@@ -1715,53 +1680,30 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 raise RuntimeError(
                     "Assignment comparison does not cover every declared output file."
                 )
-            prepared_source_inventory = _output_inventory(
-                output_dir, actual_output_files
-            )
+            prepared_source_inventory = _output_inventory(output_dir, actual_output_files)
             prepared_source_sha256 = {
-                output_dir / row["path"]: row["sha256"]
-                for row in prepared_source_inventory
+                output_dir / row["path"]: row["sha256"] for row in prepared_source_inventory
             }
             source_tables = tuple(
-                RuntimeTableSnapshot.from_csv(path)
-                for path in candidate_exports.table_outputs
+                RuntimeTableSnapshot.from_csv(path) for path in candidate_exports.table_outputs
             )
             candidate_facts = RuntimeMeasurementSnapshot.from_output_snapshots(
-                tuple(
-                    RuntimeOutputSnapshot(
-                        tables=RuntimeOutputSnapshot.exported_table_snapshots(
-                            exports,
-                            execution_axis_id=well,
-                            measurement_dialect=policy.measurement_dialect,
-                            source_tables=tuple(
-                                table
-                                for table in source_tables
-                                if table.path in exports.table_outputs
-                            ),
-                        )
-                    )
-                    for well, exports in zip(wells, assignment_exports, strict=True)
-                ),
+                tuple(RuntimeOutputSnapshot(tables=RuntimeOutputSnapshot.exported_table_snapshots(
+                    exports, execution_axis_id=well,
+                    measurement_dialect=policy.measurement_dialect,
+                    source_tables=tuple(table for table in source_tables if table.path in exports.table_outputs),
+                )) for well, exports in zip(wells, assignment_exports, strict=True)),
                 policy=policy,
             )
             candidate_payloads = {
                 key: facts.to_cache_payload()
-                for key, facts in {
-                    id(facts): facts for facts in candidate_facts
-                }.items()
+                for key, facts in {id(facts): facts for facts in candidate_facts}.items()
             }
             database_payloads = cellprofiler_database_measurement_payloads(
-                candidate_exports,
-                tuple(wells),
-                policy=policy,
+                candidate_exports, tuple(wells), policy=policy,
             )
-            if (
-                _output_inventory(output_dir, actual_output_files)
-                != prepared_source_inventory
-            ):
-                raise RuntimeError(
-                    "Candidate outputs changed while deriving batch facts."
-                )
+            if _output_inventory(output_dir, actual_output_files) != prepared_source_inventory:
+                raise RuntimeError("Candidate outputs changed while deriving batch facts.")
             comparison_tasks = tuple(
                 partial(
                     _saved_output_equivalence,
@@ -1769,9 +1711,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                     exports,
                     policy=policy,
                     native_measurement_cache_root=args.native_measurement_cache_root,
-                    native_reference_report_sha256=provenance.get(
-                        "native_reference_report_sha256"
-                    ),
+                    native_reference_report_sha256=provenance.get("native_reference_report_sha256"),
                     production_source_commit=source_commit,
                     source_workspaces=completed.output_roots,
                     image_set_policy=image_set_policy,
@@ -1784,8 +1724,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                     wells,
                     native_comparison_directories,
                     assignment_exports,
-                    candidate_facts,
-                    database_payloads,
+                    candidate_facts, database_payloads,
                     strict=True,
                 )
             )

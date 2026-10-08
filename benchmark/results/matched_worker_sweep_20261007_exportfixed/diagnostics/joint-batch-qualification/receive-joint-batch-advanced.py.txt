@@ -1,0 +1,43 @@
+import gzip,hashlib,inspect,json,os,pickle,sys,time
+from pathlib import Path
+assert os.sched_getaffinity(0)=={0}
+root=Path(__file__).parent;prod=Path('/home/ts/code/projects/openhcs-cp-registry-control');art=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');overlay=root/'joint-batch-overlay';sys.path.insert(0,str(prod))
+import openhcs.core,benchmark
+openhcs.core.__path__[:0]=[str(overlay/'openhcs/core'),str(art/'openhcs/core')];benchmark.__path__[:0]=[str(overlay/'benchmark'),str(art/'benchmark')]
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.matched_cellprofiler_batch import _saved_output_equivalence
+from benchmark.native_measurement_facts import retained_native_measurement_snapshot
+from benchmark.file_digest import sha256_file
+from benchmark.cellprofiler_export_equivalence import cellprofiler_database_measurement_payloads,_sqlite_tables,_declared_sqlite_table_subjects,_candidate_sqlite_tables
+from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.serialization.json import to_jsonable
+assert OpenHCSRuntimeImportAuthority.current().import_root==prod
+imported_hashes={str(Path(inspect.getsourcefile(owner))):hashlib.sha256(Path(inspect.getsourcefile(owner)).read_bytes()).hexdigest() for owner in (_saved_output_equivalence,cellprofiler_database_measurement_payloads,RuntimeMeasurementSnapshot,RuntimeOutputSnapshot,RuntimeTableSnapshot)}
+case=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture/cases/cp_tutorial_advanced_segmentation_final');native=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final')
+with gzip.open(case/'candidate_evidence/-1/observation.pkl','rb') as f:observation=pickle.load(f)
+policy=_strict_cellprofiler_runtime_equivalence_policy();path=next(p for p in observation.exports.output_files if p.suffix=='.db');axes=tuple(observation.exports.outputs.image_numbers_by_export_path[path]);clock=lambda:(time.process_time(),time.perf_counter())
+def elapsed(t):return {'cpu_seconds':time.process_time()-t[0],'wall_seconds':time.perf_counter()-t[1]}
+t=clock();source_hashes={p:sha256_file(p) for p in observation.exports.output_files};prepared=cellprofiler_database_measurement_payloads(observation.exports,axes,policy=policy);assert source_hashes=={p:sha256_file(p) for p in observation.exports.output_files};batch_clock=elapsed(t);assert len(prepared)==12 and len({id(p[path]) for p in prepared})==1
+facts=RuntimeMeasurementSnapshot.from_cache_payload(prepared[1][path]);assert len(facts.correlated_relationships)==7
+numbers=observation.exports.outputs.image_numbers_by_export_path[path]['W002'];domain=tuple(n for ns in observation.exports.outputs.image_numbers_by_export_path[path].values() for n in ns);subjects=_declared_sqlite_table_subjects(tuple(p for p in observation.exports.output_files if p.suffix=='.properties'))[path.name]
+tables=_candidate_sqlite_tables(path,subjects,policy,candidate_image_numbers=numbers,candidate_image_number_domain=domain);t=clock();oracle=RuntimeMeasurementSnapshot.from_output_snapshot(RuntimeOutputSnapshot(tables=tuple(table for name,(_,table) in tables.items() if name in subjects)),policy=policy);oracle_clock=elapsed(t);assert oracle.to_cache_payload()==facts.to_cache_payload()
+axis='W002';native_root=native/'native/-1'/axis;reference_db=next(native_root.glob('*.db'));reference_subjects=_declared_sqlite_table_subjects(tuple(native_root.glob('*.properties')))[reference_db.name];reference_tables=_sqlite_tables(reference_db,reference_subjects,policy);snapshot=RuntimeOutputSnapshot(tables=tuple(t for name,(_,t) in reference_tables.items() if name in reference_subjects));report_sha=hashlib.sha256((native/'native_report.json').read_bytes()).hexdigest();cache=root/'joint-batch-private-native'
+retained_native_measurement_snapshot(snapshot,policy=policy,source_table_paths=(reference_db,),cache_root=cache,reference_report_sha256=report_sha,source_commit='d06b7226c82fc6de8ab6b644f3bec417f4b7b922',projection_producer=(_sqlite_tables,reference_subjects))
+kwargs=dict(policy=policy,source_workspaces=(case/'candidate/-1/source_workspace_matched_pilot',),execution_axis_id=axis,native_measurement_cache_root=cache,native_reference_report_sha256=report_sha,production_source_commit='d06b7226c82fc6de8ab6b644f3bec417f4b7b922')
+t=clock();ordinary=_saved_output_equivalence(native_root,observation.exports.for_execution_axis(axis),**kwargs);ordinary_clock=elapsed(t);t=clock();optimized=_saved_output_equivalence(native_root,observation.exports.for_execution_axis(axis),candidate_database_measurement_payloads=prepared[1],candidate_measurement_source_sha256=source_hashes,**kwargs);optimized_clock=elapsed(t)
+left=to_jsonable(ordinary);right=to_jsonable(optimized)
+for item in (left,right):
+ for index in (0,1):item[index]['compared_output_files']=sorted(item[index]['compared_output_files'])
+assert left==right;assert not optimized[0].differences and not optimized[1].differences and not optimized[2]
+for name,payload in [('original',left),('optimized',right)]: (root/f'joint-batch-advanced-{name}-full-result.json').write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+# Cheap owner-level admission counterexamples: heterogeneous values, missing and
+# nonfinite cells, context differences, and duplicated identity-field aliases.
+controls=[]
+for values in (('1','2','5'),('1','2',''),('1','2','NaN'),('1','2','inf')):
+ a=RuntimeTableSnapshot(Path('alias.csv'),('image_number','IMAGE_NUMBER','Intensity'),(values,));b=RuntimeTableSnapshot(Path('alias.csv'),a.header,((values[0],values[1],'8'),));snaps=(RuntimeOutputSnapshot(tables=(a,)),RuntimeOutputSnapshot(tables=(b,)));batch=RuntimeMeasurementSnapshot.from_output_snapshots(snaps,policy=policy);expected=tuple(RuntimeMeasurementSnapshot.from_output_snapshot(s,policy=policy) for s in snaps);assert tuple(s.to_cache_payload() for s in batch)==tuple(s.to_cache_payload() for s in expected);controls.append({'raw_values':values,'payloads_exact':True,'heterogeneous_objects_distinct':batch[0] is not batch[1]})
+a=RuntimeTableSnapshot(Path('context.csv'),('image_number','Intensity'),(('1','5'),));b=RuntimeTableSnapshot(a.path,a.header,a.rows,('Image','Image'));snaps=(RuntimeOutputSnapshot(tables=(a,)),RuntimeOutputSnapshot(tables=(b,)));batch=RuntimeMeasurementSnapshot.from_output_snapshots(snaps,policy=policy);expected=tuple(RuntimeMeasurementSnapshot.from_output_snapshot(s,policy=policy) for s in snaps);assert tuple(f.to_cache_payload() for f in batch)==tuple(f.to_cache_payload() for f in expected);assert batch[0] is not batch[1];controls.append({'context_difference':True,'ordinary_payloads_exact':True,'distinct_derived_objects':True})
+proof={'status':'PASS','scope':'DIAGNOSTIC_ONLY saved actualD06 Advanced12 warmup; CPU0 numericalthreads1; final scratch SQL and shared batch owner, no science/livecache writes','axes':axes,'distinct_joint_inputs':1,'batch_preparation':batch_clock,'ordinary_one_axis_fresh_projection':oracle_clock,'whole_saved_one_axis_original':ordinary_clock,'whole_saved_one_axis_optimized':optimized_clock,'whole_returned_payload_exact':True,'unordered_manifest_admission':'Only compared_output_files frozenset JSON order normalized','entire_fresh_payload_exact':True,'directed_relationship_groups_exact':7,'feature_keys':len(facts.measurement_fact_counts),'scalar_alias_heterogeneous_controls':controls,'source_hashes_at_import':imported_hashes,'runtime_import_root':str(OpenHCSRuntimeImportAuthority.current().import_root)}
+(root/'joint-batch-advanced-proof.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof),flush=True)

@@ -1,0 +1,209 @@
+{
+  "scope": "DIAGNOSTIC_ONLY actual joint axis inputs; savedD06, currentv6 owner; no fact projection or science",
+  "cases": {
+    "ExampleImagingFlowCytometryObjectsInGrid": {
+      "cpu_seconds": 4.812341736,
+      "wall_seconds": 5.2625916833058,
+      "axes": [
+        {
+          "axis": "W001",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W002",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W003",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W004",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W005",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W006",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W007",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W008",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W009",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W010",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W011",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        },
+        {
+          "axis": "W012",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 1,
+          "rows": 1800,
+          "raw_cells": 948600
+        }
+      ]
+    },
+    "cp_tutorial_advanced_segmentation_final": {
+      "cpu_seconds": 6.180356498,
+      "wall_seconds": 6.231547271832824,
+      "axes": [
+        {
+          "axis": "W001",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W002",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W003",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W004",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W005",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W006",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W007",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W008",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W009",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W010",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W011",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        },
+        {
+          "axis": "W012",
+          "complete_joint_measurement_inputs_equal": true,
+          "mismatching_tables": [],
+          "tables": 8,
+          "rows": 3458,
+          "raw_cells": 448692
+        }
+      ]
+    }
+  }
+}

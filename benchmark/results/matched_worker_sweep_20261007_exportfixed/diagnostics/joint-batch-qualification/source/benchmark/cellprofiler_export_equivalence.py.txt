@@ -58,9 +58,7 @@ def cellprofiler_database_export_equivalence(
     native_measurement_cache_root: Path | None = None,
     native_reference_report_sha256: str | None = None,
     production_source_commit: str | None = None,
-    candidate_measurement_payloads: (
-        Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None
-    ) = None,
+    candidate_measurement_payloads: Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None = None,
 ) -> RuntimeEquivalenceReport:
     """Compare SQLite databases and CPA properties emitted by CellProfiler."""
 
@@ -275,9 +273,7 @@ def _native_sqlite_shard_differences(
             candidates = tuple(table for _, table in tables)
         if subject is not None:
             for index, cohort in enumerate(measurement_candidates):
-                cohort.append(
-                    candidates[0] if len(candidates) == 1 else candidates[index]
-                )
+                cohort.append(candidates[0] if len(candidates) == 1 else candidates[index])
         for candidate in candidates:
             differences.extend(
                 RuntimeEquivalenceDifference(
@@ -285,9 +281,7 @@ def _native_sqlite_shard_differences(
                     f"Native shard table {name!r}: {difference.message}",
                 )
                 for difference in _sqlite_table_value_differences(
-                    reference_table,
-                    candidate,
-                    policy,
+                    reference_table, candidate, policy,
                     measurement_subject=subject,
                 )
             )
@@ -339,9 +333,7 @@ def _sqlite_export_equivalence(
     native_measurement_cache_root: Path | None = None,
     native_reference_report_sha256: str | None = None,
     production_source_commit: str | None = None,
-    candidate_measurement_payloads: (
-        Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None
-    ) = None,
+    candidate_measurement_payloads: Mapping[Path, RuntimeMeasurementSnapshotCachePayload] | None = None,
 ) -> RuntimeEquivalenceReport:
     differences, reference_by_name, candidate_by_name = _named_output_differences(
         reference_paths,
@@ -378,11 +370,7 @@ def _sqlite_export_equivalence(
                 native_measurement_cache_root=native_measurement_cache_root,
                 native_reference_report_sha256=native_reference_report_sha256,
                 production_source_commit=production_source_commit,
-                candidate_measurement_payload=(
-                    None
-                    if candidate_measurement_payloads is None
-                    else candidate_measurement_payloads.get(candidate_by_name[name])
-                ),
+                candidate_measurement_payload=(None if candidate_measurement_payloads is None else candidate_measurement_payloads.get(candidate_by_name[name])),
             )
         )
         compared_paths.update((reference_by_name[name], candidate_by_name[name]))
@@ -405,9 +393,7 @@ def _sqlite_database_differences(
 ) -> tuple[RuntimeEquivalenceDifference, ...]:
     reference_tables = _sqlite_tables(reference_path, reference_subjects, policy)
     candidate_tables = _candidate_sqlite_tables(
-        candidate_path,
-        candidate_subjects,
-        policy,
+        candidate_path, candidate_subjects, policy,
         candidate_image_numbers=candidate_image_numbers,
         candidate_image_number_domain=candidate_image_number_domain,
     )
@@ -442,9 +428,7 @@ def _sqlite_database_differences(
             else None
         )
         table_report = _sqlite_table_value_differences(
-            reference_table,
-            candidate_table,
-            policy,
+            reference_table, candidate_table, policy,
             measurement_subject=subject,
         )
         differences.extend(
@@ -456,21 +440,15 @@ def _sqlite_database_differences(
             for difference in table_report
         )
     reference_measurements = tuple(
-        table
-        for name, (_, table) in reference_tables.items()
-        if name in reference_subjects
+        table for name, (_, table) in reference_tables.items() if name in reference_subjects
     )
     candidate_measurements = tuple(
-        table
-        for name, (_, table) in candidate_tables.items()
-        if name in candidate_subjects
+        table for name, (_, table) in candidate_tables.items() if name in candidate_subjects
     )
     if reference_measurements or candidate_measurements:
         differences.extend(
             _sqlite_measurement_cohort_differences(
-                reference_measurements,
-                candidate_measurements,
-                policy,
+                reference_measurements, candidate_measurements, policy,
                 reference_source_path=reference_path,
                 reference_subjects=reference_subjects,
                 native_measurement_cache_root=native_measurement_cache_root,
@@ -545,11 +523,8 @@ def _sqlite_measurement_cohort_differences(
         (
             RuntimeMeasurementSnapshot.from_output_snapshot(
                 RuntimeOutputSnapshot(tables=candidate_tables), policy=policy
-            )
-            if candidate_measurement_payload is None
-            else RuntimeMeasurementSnapshot.from_cache_payload(
-                candidate_measurement_payload
-            )
+            ) if candidate_measurement_payload is None
+            else RuntimeMeasurementSnapshot.from_cache_payload(candidate_measurement_payload)
         ),
     )
     for snapshot in snapshots:
@@ -566,9 +541,7 @@ def _candidate_sqlite_tables(
     candidate_image_number_domain: tuple[int, ...] | None,
 ):
     candidate_tables = _sqlite_tables(
-        candidate_path,
-        candidate_subjects,
-        policy,
+        candidate_path, candidate_subjects, policy,
         image_numbers=candidate_image_numbers,
         image_number_domain=candidate_image_number_domain,
     )
@@ -623,31 +596,18 @@ def cellprofiler_database_measurement_payloads(
             if numbers_by_axis is None or axis not in numbers_by_axis:
                 continue
             subjects = subjects_by_name.get(path.name, {})
-            domain = tuple(
-                number for numbers in numbers_by_axis.values() for number in numbers
-            )
+            domain = tuple(number for numbers in numbers_by_axis.values() for number in numbers)
             tables = _candidate_sqlite_tables(
-                path,
-                subjects,
-                policy,
+                path, subjects, policy,
                 candidate_image_numbers=numbers_by_axis[axis],
                 candidate_image_number_domain=domain,
             )
-            snapshots.append(
-                RuntimeOutputSnapshot(
-                    tables=tuple(
-                        table for name, (_, table) in tables.items() if name in subjects
-                    )
-                )
-            )
+            snapshots.append(RuntimeOutputSnapshot(tables=tuple(
+                table for name, (_, table) in tables.items() if name in subjects
+            )))
             destinations.append((index, path))
-    facts = RuntimeMeasurementSnapshot.from_output_snapshots(
-        tuple(snapshots), policy=policy
-    )
-    payloads = {
-        key: fact.to_cache_payload()
-        for key, fact in {id(fact): fact for fact in facts}.items()
-    }
+    facts = RuntimeMeasurementSnapshot.from_output_snapshots(tuple(snapshots), policy=policy)
+    payloads = {key: fact.to_cache_payload() for key, fact in {id(fact): fact for fact in facts}.items()}
     for (index, path), fact in zip(destinations, facts, strict=True):
         results[index][path] = payloads[id(fact)]
     return results
@@ -729,24 +689,16 @@ def _sqlite_tables(
                 )
                 identity_fields = (
                     policy.measurement_dialect.row_identity_contract.selected_image_identity_fields(
-                        frozenset(
-                            normalize_runtime_identifier(name)
-                            for name in semantic_header
-                        )
+                        frozenset(normalize_runtime_identifier(name) for name in semantic_header)
                     )
                     if declared is None
-                    else frozenset(
-                        normalize_runtime_identifier(name) for name in declared
-                    )
+                    else frozenset(normalize_runtime_identifier(name) for name in declared)
                 )
                 identity_indexes = tuple(
-                    index
-                    for index, name in enumerate(semantic_header)
+                    index for index, name in enumerate(semantic_header)
                     if normalize_runtime_identifier(name) in identity_fields
                 )
-                identity_header = tuple(
-                    semantic_header[index] for index in identity_indexes
-                )
+                identity_header = tuple(semantic_header[index] for index in identity_indexes)
                 if identity_indexes:
                     identity_columns = tuple(
                         _quote_sqlite_identifier(external_header[index])
@@ -768,7 +720,7 @@ def _sqlite_tables(
                         image_identity_fields=declared,
                         image_number_domain=image_number_domain,
                     )
-                    placeholders = ", ".join("?" for _ in image_numbers)
+                    placeholders = ', '.join('?' for _ in image_numbers)
                     row_query += " WHERE " + " AND ".join(
                         f"CAST({column} AS REAL) IN ({placeholders})"
                         for column in identity_columns

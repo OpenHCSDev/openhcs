@@ -1,0 +1,47 @@
+{
+  "scope": "DIAGNOSTIC_ONLY saved-artifact qualification, not pipeline execution or official benchmark timing",
+  "Grid12": {
+    "ordinary_one_axis_CPU_s": 19.585480843,
+    "prepared_one_axis_CPU_s_including_fact_reconstruction_full_SCI_and_SHA_guard": 6.606510701000001,
+    "batch_parse_selection_joint_admission_and_one_projection_CPU_s": 29.921538842,
+    "parent_before_after_hash_CPU_s": 0.153694424,
+    "actual12_payload_IPC_parent_CPU_s": 2.5082176629999964,
+    "actual12_payload_IPC_children_CPU_s": 2.621454,
+    "actual12_payload_IPC_contended_wall_s": 5.78652813192457,
+    "payload_bytes_per_task": 9235912,
+    "ordinary_batch_CPU_model_s": 235.025770116,
+    "optimized_batch_CPU_conservative_model_s": 114.48303334100001,
+    "CPU_model_reduction_fraction": 0.5128915723390868,
+    "ordinary_two_core_wall_model_s": 117.512885058,
+    "optimized_two_core_wall_conservative_model_s": 75.50082560392458,
+    "observed_full12_batch_wall_comparison": null,
+    "limits": [
+      "Per-axis clocks evaluate for_execution_axis in the argument expression; actual driver constructs these views before task submission. Preparation clock also constructs them. The ledger therefore conservatively overcharges optimized context creation rather than understating it.",
+      "The all12_axis_source_hashing field in binding proof includes creation of12 export views, not pure hashing. It is NOT added again: the prepared full SCI clock already includes its own source hash.",
+      "Actual IPC uses twelve real 9.24MB typed payloads through the same2-fork executor and returns only lengths; full SCI CPU is separately charged. This is transport pricing, not a twelve-axis full SCI wall run.",
+      "CPU0 was shared with live qualification; wall clocks cannot establish an uncontended end-to-end speedup. The reported batch wall values are models.",
+      "The provisional original Grid full SCI clock/report was retained to avoid rerunning ordinary expensive projection. Its ordinary SCI algorithm is unchanged; the provisional receipt source-file hashes were collected at the end and do not establish the earlier loaded driver revision. Final guarded receiver captures all loaded owner file hashes at import."
+    ]
+  },
+  "Advanced12": {
+    "batch_preparation_CPU_s_including_before_after_SHA": 16.522138281,
+    "ordinary_one_axis_CPU_s": 6.5925013360000015,
+    "prepared_one_axis_CPU_s_including_full_SCI_and_SHA_guard": 2.527153755999997,
+    "ordinary_two_core_wall_model_preIPC_s": 39.55500801600001,
+    "prepared_two_core_wall_model_preIPC_s": 31.685060816999982,
+    "actual_SQL_payload_IPC_measurement": null,
+    "limits": [
+      "Both full SCI clocks have the same private warmed native fact scope. All12 candidate cohorts share one exact joint input. SQL model excludes its not-yet-measured payload IPC; do not call it a measured batch speedup.",
+      "The final SQL producer now derives individual path owners through for_execution_axis and flattens admitted cohorts into the same batch owner. Axis-specific genuine DB receiving passed; the earlier shared-path fullSCI/pricing remains retained evidence. The minor owner-loop correction was not separately repriced; no final SQL batch wall speedup is measured."
+    ]
+  },
+  "native_source_rebuild": {
+    "receiving_scope": "Native facts warmed outside clocks in a private cache; active cache never read for mutation or written.",
+    "promotion_scope": "Modified generic projection owner source invalidates source-bound retained native cache identities. No migration or spoofing. All32 reference/repetition facts may require rebuild per workflow on first subsequent cohort; subsequent modes reuse them.",
+    "Grid_actual_reference_cold_CPU_s_previously_measured": 9.177,
+    "Grid32_reference_rebuild_CPU_model_s": 293.664,
+    "Grid12_four_rep_CPU_net_model_after_one_rebuild_s": 188.50694709999993,
+    "warning": "One subsequent workflow/mode alone may lose much of its wall saving to native recold plus serial preparation. Strong payoff transfers across repeated multi-axis qualification modes; this patch is not evidence of faster scientific pipeline execution."
+  },
+  "production_consumer": "Existing repeated-assignment task construction in benchmark.matched_cellprofiler_batch prepares exact batch-derived CSV/SQL RuntimeMeasurementSnapshot payloads once, passes existing typed payloads to existing full comparer; source fingerprints before/after preparation and per child bind actual candidate bytes. Changed bytes fall back to ordinary fresh projection. Root applies only after frozen capture terminal."
+}
