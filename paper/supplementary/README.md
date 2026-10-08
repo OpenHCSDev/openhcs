@@ -480,28 +480,32 @@ link the plotted values to the original evaluations.
 
 ## Supplementary Data 8. Autonomous analysis evidence
 
-### Linked source artwork and assisted mosaic evidence
+### Source artwork and assisted mosaic review
 
-Main Figure 5 shows public shafts and autonomous laboratory-field analysis.
+Main Figure 5 shows public shafts, autonomous laboratory-field analysis and
+assisted treatment responses.
 The separate [assisted nine-field mosaic artwork](../figures/slas/p001_stitched_dev13_native.png)
-and [retained overlap/core layout](../figures/slas/supp_neurite_morphology.png)
-document acquisition-placed stitching, not another quantitative comparison.
+and [overlap/core layout](../figures/slas/supp_neurite_morphology.png)
+show stitching at the acquisition coordinates.
 One pooled percentile pair was fitted per complete nine-field channel stack
-before assembly. Faint segments and crowded ownership remained incomplete.
+before assembly. Some faint segments were missed, and ownership was unresolved
+in crowded regions.
 The [completed all-channel continuation](task_only_analysis/p001-allchannel25-qualified-completion.rst)
 reported 1,740 soma candidates and 123,054 micrometres of computed outgrowth
-at the declared spacing. These continuation totals do not belong to the earlier
-sampled panels and are not ground-truth lengths or a unique biological census.
+at the declared spacing. These computed totals describe the continuation;
+the earlier panels show sampled regions. Overlapping fields and uncertain
+ownership prevent their interpretation as a unique biological census, and no
+spatial reference validates the lengths.
 
 The independent BBBC039 repeat matched 20,207 of 23,615 reference instances,
 with 1,164 excess predictions and 3,408 misses. The earlier author matched
 20,521, with 1,153 excess predictions and 3,094 misses. Pooled F1 values are
 0.898 and 0.906, respectively, at intersection over union ≥ 0.5. The
-[original independent-author sheet](../figures/slas/bbbc039_independent_repeat.png)
-and its source record retain this comparison; annotation-empty fields coincide
+[independent-author sheet](../figures/slas/bbbc039_independent_repeat.png)
+shows this comparison; annotation-empty fields coincide
 at the scatter origin.
 
-Original artwork retains wider context and source records:
+The original artwork shows wider image regions and additional comparisons:
 [process architecture](../figures/slas/process_architecture.png),
 [runtime composition](../figures/slas/runtime_composition.png),
 [compiler preparation](../figures/slas/compiler_preparation.png),
@@ -522,7 +526,7 @@ DNA/actin source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 
 ### Scientific instructions supplied to authors
 
-The [instruction archive](task_only_analysis/original_task_briefs.json) maps trial identifiers to original documents and byte hashes. The table summarizes scientific instructions and uses trial labels with the dataset prefix omitted. Full trial and session identifiers, operational paths, display settings and resource restrictions remain in the archive. The thick-shaft-only target was clarified after the neurite run and was not part of its original brief.
+The [instruction archive](task_only_analysis/original_task_briefs.json) links each trial to its original brief. The table summarizes scientific instructions and omits the dataset prefix from trial labels. Session details and operational instructions are available in the archive. The thick-shaft-only target was clarified after the neurite run and was absent from its original brief.
 
 | Brief | Trial labels | Scientific instruction |
 | --- | --- | --- |
@@ -545,14 +549,14 @@ The [instruction archive](task_only_analysis/original_task_briefs.json) maps tri
 
 The three earlier prospective trials have no recoverable original instruction file. Their design and data partitions are described in Supplementary Data 7. The historical Brief 14 records inherited conversation. Original launch records for R0010_FRESH09_96 and R0010_FRESH26_94 identify new execution sessions, with memory disabled and no parent thread, resume or fork. The historical context statement therefore does not classify these two trials. Their launch-source references are indexed by the [trial resource CSV](task_only_analysis/trial_resources.csv) and [accounting reference](task_only_analysis/trial_resources.rst). Other trials mapped to Brief 14 have not been audited for launch context.
 
-The current skill describes intended inspection and repair practice. Its later additions are not evidence that earlier authors followed those instructions. Main Figure 3 separates this intended workflow from a recorded H001 example; its wall times come from the original resource catalogue, and its candidate sequence comes from the author's retained report. No universal count of review rounds is inferred from screenshot totals.
+The current skill describes inspection and repair practice, including additions made after earlier trials. Main Figure 3 shows that procedure alongside the H001 author's actual decisions. Wall times come from the trial resource catalogue, and the candidate sequence comes from the author's report; screenshot counts were not used to estimate review rounds.
 
 Supplementary Figures 2–5 group additional evidence by assay. Main Figure 4 shows
-translocation and volume localisation; main Figure 5 shows public and personal
-field-by-field neurite analysis. The assisted mosaic is retained as linked
-development evidence below, not an additional display figure. Reference evaluation
-follows pipeline selection; examples lacking exhaustive annotations do not
-receive an accuracy percentage.
+translocation and volume localisation; main Figure 5 shows public and laboratory
+field-by-field neurite analysis and assisted treatment responses. The assisted
+mosaic is linked below as a development example. Reference evaluation follows
+pipeline selection; examples lacking exhaustive annotations do not receive an
+accuracy percentage.
 
 - [Bright-object analysis](task_only_analysis/h001-fresh25-qualified-review.rst).
 - [Volume localisation](task_only_analysis/h002-fresh23-paired-localisation.rst).
