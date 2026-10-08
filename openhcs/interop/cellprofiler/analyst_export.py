@@ -3226,9 +3226,15 @@ class CPASQLiteRenderer:
 
     @staticmethod
     def _sqlite_value(value: Any) -> int | float | str | bytes | None:
+        # Native SQLite scalars already satisfy the transport contract. Numeric
+        # ABC admission is only needed for non-native scalar implementations.
+        if value is None or type(value) in (int, float, str, bytes):
+            return value
         if isinstance(value, bool):
             return int(value)
-        if value is None or isinstance(value, (str, bytes)):
+        if isinstance(value, np.floating):
+            return float(value)
+        if isinstance(value, (str, bytes)):
             return value
         if isinstance(value, Integral):
             return int(value)
