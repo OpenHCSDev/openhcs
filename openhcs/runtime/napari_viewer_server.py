@@ -1196,7 +1196,7 @@ class NapariComponentAwareDisplayCoordinator:
             for route in routes:
                 viewer.layers.remove(server.layer_route_state.layer(route))
                 self.purge_route(server, route)
-            server.display_pipeline.reconcile_mounted_axis_projections(rematerialize=True)
+            server.display_pipeline.reconcile_mounted_axis_projections()
             if viewport is not None:
                 viewport.apply(presentation)
             return routes
@@ -2608,7 +2608,6 @@ class NapariLayerDisplayPipeline:
         viewer_component_values: ComponentValues | None = None,
         display_layout: ViewerComponentLayout | None = None,
         apply: bool = True,
-        rematerialize: bool = False,
     ) -> None:
         """Align mounted routes with the viewer-wide semantic coordinate domain.
 
@@ -2618,8 +2617,9 @@ class NapariLayerDisplayPipeline:
         also shares the declaration-owned native axis slots. Adding stack slots
         rematerializes through the original display handler without changing
         grouping or source coordinates. Shape-neutral domain changes update the
-        transform directly; other extent changes still require explicit
-        rematerialization instead of leaving silently misaligned layers.
+        transform directly; changed extents rematerialize from the retained
+        source items through their declared display handler. The request owns
+        that decision equally for stream expansion, pruning and retirement.
         """
 
         requests: list[NapariRematerializationRequest] = []
@@ -2659,17 +2659,6 @@ class NapariLayerDisplayPipeline:
                 original_presentation=state.presentation,
                 native_frame=self.server.viewer.dims,
             )
-            if (
-                request.requires_rematerialization
-                and not request.slots_changed
-                and not rematerialize
-            ):
-                raise ValueError(
-                    "Napari shared semantic axis expansion requires route "
-                    f"{route_key!r} to be rematerialized; old component shape="
-                    f"{state.presentation.aligned_component_shape()!r}, new="
-                    f"{presentation.aligned_component_shape()!r}."
-                )
             requests.append(request)
 
         if not apply or not requests:
@@ -7002,7 +6991,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
             if route_key not in retained_routes:
                 _NAPARI_COMPONENT_DISPLAY_COORDINATOR.purge_route(self, route_key)
         self.component_values.retain_routes(retained_routes)
-        self.display_pipeline.reconcile_mounted_axis_projections(rematerialize=True)
+        self.display_pipeline.reconcile_mounted_axis_projections()
         if not retained_routes:
             self.component_name_metadata.clear()
         self.layer_route_state.clear_update_errors()

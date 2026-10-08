@@ -76,8 +76,8 @@ def wire_receiver(receiver):
         )
     )
 
-    def send(item):
-        socket.send(wire_batch(item))
+    def send(item, **options):
+        socket.send(wire_batch(item, **options))
         return socket.recv_json()
 
     try:
@@ -90,10 +90,10 @@ def wire_receiver(receiver):
         remove_ipc_socket(receiver.port, receiver.config)
 
 
-def wire_batch(item):
+def wire_batch(item, *, producer=None, domains=None):
     items = item if isinstance(item, list) else [item]
     config = NapariDisplayConfig(channel_mode=NapariDimensionMode.LAYER)
-    producer = StreamProducerIdentity.pipeline_output(
+    producer = producer or StreamProducerIdentity.pipeline_output(
         output_kind="artifact",
         output_key="test",
         projection_key="test",
@@ -109,7 +109,7 @@ def wire_batch(item):
                 component_order=config.COMPONENT_ORDER,
                 extra=config.display_payload_extra(),
             ).to_wire_mapping(),
-            "component_value_domain": {
+            "component_value_domain": domains or {
                 key: sorted({row["metadata"].get(key, value) for row in items})
                 for key, value in image_item()["metadata"].items()
             },
@@ -395,6 +395,135 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         control.close(linger=0)
         context.term()
         remove_ipc_socket(control_port, receiver.config)
+
+
+def test_native_sparse_raw_domain_expands_and_preserves_source_frame(
+    receiver, wire_receiver, qtbot, tmp_path,
+):
+    """Author103's sparse manual -> full pipeline domain, through native transport."""
+    from qtpy.QtCore import QTimer
+    from polystore.streaming.identity import FixedStreamProducerIdentityKind
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source_metadata import SourceVoxelSpacing
+    from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions, ViewerRoutedImageControlOptions
+    from openhcs.runtime.napari_viewer_server import NapariMountedRouteControlMessageAction
+    from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
+    from openhcs.agent.dto.execution import ExecutionConnectionSpec
+    from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
+    from openhcs.runtime.viewer_protocol import ViewerRuntimeEndpoint
+
+    domains = {"site": [1, 3, 9], "channel": [1, 2], "z_index": [1],
+               "timepoint": [1], "well": ["A01", "A02", "A03", "A04"]}
+    selected = (("A01", 1), ("A02", 3), ("A03", 9), ("A04", 1))
+    calibration = ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65))).to_viewer_image_metadata()
+    manual = StreamProducerIdentity.fixed_output(FixedStreamProducerIdentityKind.MANUAL, "selected_images_sparse")
+    raw = [{"path": f"{well}_s{site}_w{channel}.tif", "data_type": "image",
+            "data": np.full((16, 16), index * 10 + channel - 1, dtype=np.uint16).tolist(),
+            "dtype": "uint16", "shape": [16, 16], "image_metadata": calibration,
+            "metadata": {"well": well, "site": site, "channel": channel, "z_index": 1, "timepoint": 1}}
+           for index, (well, site) in enumerate(selected) for channel in (1, 2)]
+    endpoint = ViewerRuntimeEndpoint(receiver.endpoint, receiver.config)
+    receiver.control_transport_pump.start()
+    service = QTimer()
+    service.timeout.connect(receiver.process_accepted_stream_messages)
+    service.timeout.connect(receiver.process_messages)
+    service.start(20)
+    receiver.viewer.show()
+    with ThreadPoolExecutor(max_workers=1) as worker:
+        def control(kind, payload=None, timeout=5):
+            future = worker.submit(ViewerControlMessageRequest(endpoint, kind, payload, timeout=timeout).send)
+            while not future.done():
+                qtbot.wait(20)
+            return future.result()
+
+        def terminal():
+            while True:
+                progress = ViewerSettleProgress.from_response(control("settle"))
+                if progress.phase is ViewerSettlePhase.COMPLETE:
+                    return progress
+                assert progress.phase is ViewerSettlePhase.RUNNING
+                qtbot.wait(20)
+
+        try:
+            assert wire_receiver(raw, producer=manual, domains=domains)["status"] == "success"
+            terminal()
+            raw_routes = {receiver.component_groups.existing_items_for(route)[0].address.components["channel"]: route
+                          for route in receiver.layer_route_state.layers}
+            primary, hidden = raw_routes[1], raw_routes[2]
+            old_items = tuple(receiver.component_groups.existing_items_for(primary))
+            source_buffers = tuple(item.data for item in old_items)
+            raw_layer = receiver.layer_route_state.layer(primary)
+            assert raw_layer.data.shape[:4] == (3, 1, 1, 4)
+            raw_layer.contrast_limits, raw_layer.gamma, raw_layer.opacity = (0, 50), 0.8, 0.45
+            receiver.layer_route_state.layer(hidden).visible = False
+            assert control("navigate", ViewerNavigationControlOptions(
+                route_key=primary, axis_indices={"site": 2, "well": 2}, selected=True,
+            )).succeeded()
+            geometry_routes = []
+            for kind in ("points", "shapes"):
+                row = {"path": f"A03_s9_{kind}.roi.zip", "data_type": kind,
+                       "image_metadata": calibration, "metadata": {**raw[0]["metadata"], "well": "A03", "site": 9},
+                       "shapes": [{"type": "points" if kind == "points" else "path",
+                                   "coordinates": [[4, 4]] if kind == "points" else [[4, 4], [8, 8]],
+                                   "metadata": {"label": 7}}]}
+                assert wire_receiver(row, producer=StreamProducerIdentity.fixed_output(
+                    FixedStreamProducerIdentityKind.MANUAL, f"selected_{kind}",
+                ), domains=domains)["status"] == "success"
+                terminal()
+                route = next(key for key in receiver.layer_route_state.layers if f"selected_{kind}" in key)
+                assert control("navigate", ViewerNavigationControlOptions(route_key=route, data_index=0, selected=True)).succeeded()
+                layer = receiver.layer_route_state.layer(route)
+                assert layer.selected_data == {0}
+                layer.visible = kind == "shapes"
+                geometry_routes.append((route, tuple(layer.features[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE])))
+            assert control("navigate", ViewerNavigationControlOptions(
+                route_key=primary, axis_indices={"site": 2, "well": 2}, selected=True,
+            )).succeeded()
+            full_domains = {**domains, "site": list(range(1, 10))}
+            normalized = [{**row, "path": f"normalized_{well}_s{site}.tif",
+                           "data": np.full((16, 16), site / 10).tolist(), "dtype": "float32",
+                           "metadata": {**row["metadata"], "well": well, "site": site, "channel": 1}}
+                          for well in domains["well"] for site in full_domains["site"] for row in raw[:1]]
+            assert wire_receiver(normalized, domains=full_domains)["status"] == "success"
+            final = terminal()
+            raw_layer = receiver.layer_route_state.layer(primary)
+            state = receiver.layer_route_state.dimension_state_for(primary)
+            assert raw_layer.data.shape[:4] == (9, 1, 1, 4)
+            assert receiver.viewer.dims.current_step[0] == 8  # Source Site9, not old ordinal2.
+            assert receiver.viewer.dims.current_step[3] == 2
+            assert receiver.display_pipeline.native_frame_applied(include_hidden=True)
+            assert not receiver.layer_route_state.layer(hidden).visible
+            assert tuple(raw_layer.contrast_limits) == (0, 50) and raw_layer.gamma == 0.8 and raw_layer.opacity == 0.45
+            assert tuple(raw_layer.scale[-2:]) == (0.65, 0.65)
+            assert tuple(receiver.component_groups.existing_items_for(primary)) == old_items
+            assert all(item.data is source for item, source in zip(old_items, source_buffers, strict=True))
+            assert np.max(raw_layer._data_view) == 20
+            for route, identities in geometry_routes:
+                layer = receiver.layer_route_state.layer(route)
+                assert layer.selected_data == {0}
+                assert tuple(layer.features[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE]) == identities
+                assert tuple(layer.scale[-2:]) == (0.65, 0.65)
+                assert layer.visible == ("selected_shapes" in route)
+            # Real black source and unavailable padded frame are not the same record.
+            def records(site):
+                return NapariMountedRouteControlMessageAction.matched_image_records(
+                    list(old_items), state, ViewerRoutedImageControlOptions(
+                        route_key=primary, axis_indices={"site": site, "well": 0},
+                    ),
+                )
+            assert len(records(0)) == 1 and np.count_nonzero(records(0)[0][1]) == 0
+            assert not records(1)
+            snapshot = ViewerWindowSnapshotRequest.from_fields(
+                connection=ExecutionConnectionSpec(port=receiver.port, transport_mode=receiver.transport_mode),
+                output_dir_path=str(tmp_path),
+            )
+            assert control("screenshot", snapshot).succeeded()
+            print(f"native sparse->full: component shape3x1x1x4->9x1x1x4; source Site9/wellA03 retained; "
+                  f"raw buffers unchanged; hidden route/calibration/presentation retained; "
+                  f"black source=1 record, missing frame=0; snapshot saved; terminal={final.completed_update_count}/{final.total_update_count}")
+        finally:
+            service.stop()
+            receiver.control_transport_pump.stop()
 
 
 def test_payload_load_failure_is_rejected_before_route_creation(receiver):

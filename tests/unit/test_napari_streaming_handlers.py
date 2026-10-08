@@ -2086,7 +2086,7 @@ def test_paired_raw_projection_keeps_one_inherited_algorithm_owner():
     )
 
 
-def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_rematerialization():
+def test_napari_display_pipeline_rematerializes_sparse_peer_from_retained_sources():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     ViewerModel = pytest.importorskip("napari.components").ViewerModel
     server = _FakeNapariServer()
@@ -2137,8 +2137,8 @@ def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_remater
     server.layer_route_state.set_title(inserted_route, "Channel 2")
     server.component_groups.items_for(inserted_route).append(inserted_item)
 
-    with pytest.raises(ValueError, match="requires route .* to be rematerialized"):
-        pipeline.display_layer_batch(
+    with server.viewer._layer_slicer.force_sync():
+        inserted_work = pipeline.display_layer_batch(
             layer_key=inserted_route,
             items=[inserted_item],
             display_payload=NapariPendingLayerUpdate.from_semantics(
@@ -2149,6 +2149,13 @@ def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_remater
             ),
             component_names_metadata=ViewerComponentNameMetadata.empty(),
         )
+        assert inserted_work.advance()
+    sparse = server.layer_route_state.layer(sparse_route)
+    presentation = server.layer_route_state.dimension_state_for(sparse_route).presentation
+    assert sparse.data.shape[:-2] == presentation.aligned_component_shape()
+    np.testing.assert_array_equal(np.squeeze(sparse.data)[:, 0, 0], [1, 0, 3])
+    assert server.component_groups.existing_items_for(sparse_route) == sparse_items
+    assert tuple(item.address.components['channel'] for item in sparse_items) == (1, 3)
 
 
 def test_napari_display_pipeline_projects_aggregate_payload_axes_into_route_domain():
