@@ -1,0 +1,147 @@
+--- a/napari/layers/shapes/_shape_list.py
++++ b/napari/layers/shapes/_shape_list.py
+@@ -454,14 +454,9 @@
+ 
+         self._ndisplay = ndisplay
+         self._mesh.ndisplay = self.ndisplay
+-        self._vertices = np.empty((0, self.ndisplay))
+-        self._index = np.empty((0), dtype=int)
+-        for index in range(len(self.shapes)):
+-            shape = self.shapes[index]
++        for shape in self.shapes:
+             shape.ndisplay = self.ndisplay
+-            self.remove(index, renumber=False)
+-            self.add(shape, shape_index=index)
+-        self._update_z_order()
++        self._rebuild_meshes()
+ 
+     @property
+     def slice_keys(self) -> npt.NDArray:
+@@ -570,24 +565,17 @@
+                 np.abs(self.slice_keys - slice_key) < 0.5, axis=(1, 2)
+             )
+         else:
+-            self._displayed = np.array([])
+-        disp_indices = np.where(self._displayed)[0]
++            self._displayed = np.empty(0, dtype=bool)
+ 
+         z_order = self._mesh.triangles_z_order
+-        disp_tri = np.isin(
+-            self._mesh.triangles_index[z_order, 0], disp_indices
+-        )
+-        self._mesh.displayed_triangles = self._mesh.triangles[z_order][
+-            disp_tri
++        displayed_rows = z_order[
++            self._displayed[self._mesh.triangles_index[z_order, 0]]
+         ]
+-        self._mesh.displayed_triangles_index = self._mesh.triangles_index[
+-            z_order
+-        ][disp_tri]
+-        self._mesh.displayed_triangles_colors = self._mesh.triangles_colors[
+-            z_order
+-        ][disp_tri]
++        self._mesh.displayed_triangles = self._mesh.triangles[displayed_rows]
++        self._mesh.displayed_triangles_index = self._mesh.triangles_index[displayed_rows]
++        self._mesh.displayed_triangles_colors = self._mesh.triangles_colors[displayed_rows]
+ 
+-        disp_vert = np.isin(self._index, disp_indices)
++        disp_vert = self._displayed[self._index]
+         self.displayed_vertices = self._vertices[disp_vert]
+         self.displayed_index = self._index[disp_vert]
+ 
+@@ -837,6 +825,25 @@
+             (self._mesh.triangles_colors, mesh_triangles_colors)
+         )
+ 
++    def _rebuild_meshes(self):
++        """Reassemble the existing projections once, retaining Shape identities."""
++        face_colors, edge_colors = self._face_color, self._edge_color
++        if self.shapes:
++            arrays = _preallocate_arrays(
++                self.shapes, _calculate_array_sizes(self.shapes)
++            )
++            _fill_arrays(0, 0, self.shapes, face_colors, edge_colors, arrays)
++        self._vertices = np.empty((0, self.ndisplay))
++        self._index = np.empty((0), dtype=int)
++        self._z_index = np.empty((0), dtype=int)
++        self._face_color = np.empty((0, 4))
++        self._edge_color = np.empty((0, 4))
++        self._mesh.clear()
++        if self.shapes:
++            self._extend_meshes(face_colors, edge_colors, arrays)
++        self._clear_cache()
++        self._update_z_order()
++
+     def _add_multiple_shapes(
+         self,
+         shapes,
+@@ -1167,13 +1174,13 @@
+         dims_order : (D,) list
+             Order that the dimensions are rendered in.
+         """
+-        for index in range(len(self.shapes)):
+-            if self.shapes[index].dims_order != dims_order:
+-                shape = self.shapes[index]
++        changed = False
++        for shape in self.shapes:
++            if tuple(shape.dims_order) != tuple(dims_order):
+                 shape.dims_order = dims_order
+-                self.remove(index, renumber=False)
+-                self.add(shape, shape_index=index)
+-        self._update_z_order()
++                changed = True
++        if changed:
++            self._rebuild_meshes()
+ 
+     def update_z_index(self, index, z_index):
+         """Updates the z order of a single shape located at index.
+--- a/napari/layers/shapes/_shapes_models/shape.py
++++ b/napari/layers/shapes/_shapes_models/shape.py
+@@ -223,10 +223,18 @@
+ 
+     @dims_order.setter
+     def dims_order(self, dims_order):
+-        if self.dims_order == dims_order:
++        if tuple(self.dims_order) == tuple(dims_order):
+             return
++        previous_order = self.dims_order
+         self._dims_order = dims_order
+-        self._update_displayed_data()
++        if tuple(previous_order[-self.ndisplay :]) == tuple(dims_order[-self.ndisplay :]):
++            # Hidden-axis order changes the slice-key columns, not geometry.
++            # Preserve each subtype's already-rounded native slice bounds.
++            hidden_order = previous_order[: -self.ndisplay]
++            columns = [hidden_order.index(axis) for axis in self.dims_not_displayed]
++            self.slice_key = self.slice_key[:, columns]
++        else:
++            self._update_displayed_data()
+ 
+     @cached_property
+     def dims_displayed(self):
+--- a/napari/layers/shapes/shapes.py
++++ b/napari/layers/shapes/shapes.py
+@@ -2404,7 +2404,23 @@
+                 self._clipboard = {}
+ 
+             if self._slice_input.order != self._display_order_stored:
+-                self.selected_data = set()
++                same_displayed_axes = (
++                    tuple(self._display_order_stored[-ndisplay:])
++                    == tuple(self._slice_input.order[-ndisplay:])
++                )
++                if same_displayed_axes:
++                    # The same field remains visible. Slice keys follow the
++                    # hidden-axis order; selection still names the same Shapes.
++                    hidden_order = self._display_order_stored[:-ndisplay]
++                    columns = [
++                        hidden_order.index(axis)
++                        for axis in self._slice_input.order[:-ndisplay]
++                    ]
++                    self._data_view.slice_key = np.asarray(
++                        self._data_view.slice_key
++                    )[columns]
++                else:
++                    self.selected_data = set()
+                 self._data_view.update_dims_order(self._slice_input.order)
+                 self._display_order_stored = copy(self._slice_input.order)
+                 # Clear clipboard if dimensions swap

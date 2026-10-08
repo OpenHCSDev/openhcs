@@ -219,7 +219,7 @@ def test_native_compiled_triangulation_retains_archive_and_control(
     from openhcs.core.steps.stream_component_semantics import (
         StreamImagePayloadMetadataProjector, StreamViewerComponentMetadataProjector,
     )
-    from openhcs.runtime.viewer_controls import ViewerStateControlOptions
+    from openhcs.runtime.viewer_controls import ViewerStateControlOptions, ViewerNavigationControlOptions
     from openhcs.runtime.viewer_protocol import ViewerRuntimeEndpoint
     from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
     from openhcs.agent.dto.execution import ExecutionConnectionSpec
@@ -318,6 +318,45 @@ def test_native_compiled_triangulation_retains_archive_and_control(
             assert records[0].image_metadata.to_viewer_image_metadata() == source.to_viewer_image_metadata()
             assert all(model._set_meshes.__name__ == "_set_meshes_compiled_bermuda"
                        for model in layer._data_view.shapes)
+            if os.environ.get("OPENHCS_SHAPE_ACTIVATION_QUALIFICATION"):
+                original_models = tuple(layer._data_view.shapes)
+                original_mesh = layer._data_view._mesh
+                original_faces = tuple(model._face_vertices for model in original_models)
+                original_edges = tuple(model._edge_vertices for model in original_models)
+                original_order = tuple(receiver.viewer.dims.order)
+                assert len(original_order) > 3
+                reordered = (*reversed(original_order[:-2]), *original_order[-2:])
+                assert reordered != original_order
+                layer.selected_data = {0}
+                activation_times = []
+
+                def reorder():
+                    activation_start = time.perf_counter()
+                    receiver.viewer.dims.order = reordered
+                    activation_times.append(time.perf_counter() - activation_start)
+
+                # Actual native dimension activation, with a real control request
+                # awaiting Qt at the same time; no delayed or mocked work.
+                QTimer.singleShot(0, reorder)
+                control("state", ViewerStateControlOptions(
+                    include_component_values=False, include_payload_summaries=False,
+                ))
+                assert activation_times
+                assert layer.selected_data == {0}
+                assert tuple(layer._data_view.shapes) == original_models
+                assert layer._data_view._mesh is original_mesh
+                assert all(model._face_vertices is faces and model._edge_vertices is edges
+                           for model, faces, edges in zip(original_models, original_faces, original_edges, strict=True))
+                for visible in (False, True):
+                    control("navigate", ViewerNavigationControlOptions(route_key=route_key, visible=visible))
+                    assert layer.visible is visible
+                assert layer.selected_data == {0}
+                assert tuple(layer.features[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE]) == identities
+                for native, shape in zip(layer.data, shapes, strict=True):
+                    np.testing.assert_array_equal(native[:, -2:], np.asarray(shape["coordinates"], dtype=np.float32))
+                print(f"native retained-scene activation: hidden dimension reorder={activation_times[0]:.3f}s; "
+                      f"visibility off/on and real state controls succeeded within original 5s budgets; "
+                      f"{len(shapes)} contours, Shape/Mesh identities, face/edge geometry and selection retained", flush=True)
             snapshot = ViewerWindowSnapshotRequest.from_fields(
                 connection=ExecutionConnectionSpec(port=receiver.port, transport_mode=receiver.transport_mode),
                 output_dir_path=str(tmp_path),
