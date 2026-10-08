@@ -573,6 +573,14 @@ receive an accuracy percentage.
 - [Trial wall times, usage and dated model/software identities](task_only_analysis/trial_resources.rst),
   with the [complete resource catalogue](task_only_analysis/trial_resources.csv).
 
+Two additional final-pipeline repeats appear in main Table 2. H001 fresh25
+rotation selected 62 labels after matched image review; no computational-reference
+score was reported for that repeat. H002 fresh23 rotation matched all 15 annotated
+centres within 30 voxels, with mean error 4.8580507660 voxels and eleven unmatched
+predictions. The original records linked above give their selected candidates and
+review scope. These repeats are separate from the H001 fresh586 and H002 fresh15
+trials plotted in main Figures 3–4.
+
 The [frozen nine-field pipeline source](task_only_analysis/pipelines/p001-fresh13.py)
 is supplied unchanged, with SHA256
 `8b9a70c205103ec9d1600b0592cfb9481bf989e449f049aee176803069f34203`.

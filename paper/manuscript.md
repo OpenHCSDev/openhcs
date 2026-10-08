@@ -152,7 +152,9 @@ Table 2. Trial-level results. Labels identify authors in Supplementary Data 7–
 | BBBC013, earlier trial | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
 | BBBC013, fresh23 | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
 | H001, fresh586 | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
+| H001, fresh25 rotation | gpt-6.1-sol | One development image | Final labels; matched image review | 62; no reference score |
 | H002, fresh15 | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
+| H002, fresh23 rotation | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.86 voxels |
 | Retina, fresh09 | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
 | Retina, fresh26 | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
 | Public neurites, fresh20 | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
@@ -208,7 +210,7 @@ The H001 author matched 59 of 64 computational-reference objects and raised F1 f
 ![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-**(I)** Raw image, initial OpenHCS analysis and published NeuronCyto II algorithm output [@NeuronCytoII] (CC BY-NC 4.0), displayed at the same field scale. **(II)** Matched raw, soma/path and combined views of the autonomous P001 analysis. **(III)** Assisted 20-well responses relative to each drug's DMSO mean; dots are two technical wells per dose and whiskers are sample SD. Transfer methods and results are in Supplementary Figure 5. [TODO: move panel III to the supplement after authorization to split the existing artwork.]
+**(I)** Raw image, initial OpenHCS analysis and published NeuronCyto II algorithm output [@NeuronCytoII] (CC BY-NC 4.0), displayed at the same field scale. **(II)** Matched raw, soma/path and combined views of the autonomous P001 analysis. **(III)** Assisted 20-well responses relative to each drug's DMSO mean; dots are two technical wells per dose and whiskers are sample SD. The supplementary Treatment evaluation and endpoint definitions section gives the methods; Supplementary Figure 5 shows additional endpoints. [TODO: move panel III to the supplement after authorization to split the existing artwork.]
 :::
 
 ### Imported CellProfiler workflows reproduce native outputs
