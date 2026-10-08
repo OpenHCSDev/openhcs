@@ -31,8 +31,16 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerItem,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.artifacts import (
+    ArtifactSpec,
+    ObjectLabelsArtifactType,
+    ObjectArtifactSubjectBinding,
+)
+from openhcs.core.source_image_provenance import SourceImageProvenance
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.runtime.napari_viewer_server import (
     NapariLayerIsolationControlMessageAction,
+    NapariLayerDisplayPipeline,
     NapariNavigationControlMessageAction,
     NapariResultElementSelectionAuthority,
     NapariResultSelectionController,
@@ -134,6 +142,10 @@ class _ResultSelectionDock:
 
 
 class _ViewerServerHarness(SimpleNamespace):
+
+    def require_viewer(self):
+        return NapariViewerServer.require_viewer(self)
+
     def require_result_selection_surface(self) -> NapariResultSelectionSurface:
         return self.result_selection_surface
 
@@ -159,6 +171,8 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=
             manager=SimpleNamespace(),
         ),
     )
+    server.display_pipeline = NapariLayerDisplayPipeline(server)
+    server.display_pipeline.dimension_label_overlay = overlay
     server.result_selection_controller = NapariResultSelectionController(server)
     if NapariResultElementSelectionAuthority.state(layer).supported:
         from napari.layers import Points
@@ -190,10 +204,18 @@ def test_native_navigation_acknowledges_exact_bound_linked_selection(qtbot):
 
     viewer = ViewerModel()
     paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
-    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
-    linked = viewer.add_shapes(paths[:2], shape_type="path", features={"owner": [8, 9]})
+    layer = viewer.add_shapes(
+        paths,
+        shape_type="path",
+        features={"owner": [8, 8, 9], "subject": ["native-test-subject"] * 3},
+    )
+    linked = viewer.add_shapes(
+        paths[:2],
+        shape_type="path",
+        features={"owner": [8, 9], "subject": ["native-test-subject"] * 2},
+    )
     # This is an explicitly bound semantic subject, not a hardcoded neuron feature.
-    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    binding = NapariResultSelectionGroupBinding("subject", "owner")
     server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
     server.result_selection_controller.bind(linked, group_binding=binding)
     original_data = [coordinates.copy() for coordinates in layer.data]
@@ -218,13 +240,127 @@ def test_singleton_selection_expands_only_after_queued_navigation(qtbot):
 
     viewer = ViewerModel()
     paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
-    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
-    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    layer = viewer.add_shapes(
+        paths,
+        shape_type="path",
+        features={"owner": [8, 8, 9], "subject": ["native-test-subject"] * 3},
+    )
+    binding = NapariResultSelectionGroupBinding("subject", "owner")
     _viewer_server(viewer, layer, group_binding=binding)
     state = NapariResultElementSelectionAuthority.select(layer, 1)
     assert state.selected_data_indices == (1,)
     assert layer.selected_data == {1}
     qtbot.waitUntil(lambda: layer.selected_data == {0, 1}, timeout=1000)
+
+
+def test_scoped_subject_selection_and_recolor_do_not_cross_fields(qtbot):
+    """Exercise native Shapes and the real group controller, without a window."""
+    from napari.components import ViewerModel
+
+    binding = ObjectArtifactSubjectBinding(
+        ArtifactSpec.output("neurons", ObjectLabelsArtifactType).ref(),
+        "label",
+    )
+    tokens = tuple(
+        binding.subject_token(
+            producer_step_scope_id="synthetic-step",
+            producer_step_index=0,
+            source_provenance=SourceImageProvenance(
+                source_component_metadata={
+                    "well": "A01",
+                    "site": site,
+                    "channel": 1,
+                }
+            ),
+            identity_policy=SourceImageSetIdentityPolicy(),
+        )
+        for site in (1, 2)
+    )
+    viewer = ViewerModel()
+    viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
+    paths = [
+        np.array([[site, 1, edge], [site, 2, edge + 1]], dtype=float)
+        for site in (0, 1)
+        for edge in (1, 2)
+    ]
+    graph = viewer.add_shapes(
+        paths,
+        shape_type="path",
+        features={"edge_id": [1, 2, 1, 2]},
+        metadata={
+            binding.SUBJECT_FEATURE: (tokens[0], tokens[0], tokens[1], tokens[1]),
+            binding.SUBJECT_ID_FEATURE: (1, 1, 1, 1),
+        },
+        edge_color="magenta",
+    )
+    bodies = viewer.add_shapes(
+        paths[::2],
+        shape_type="path",
+        features={"label": [1, 1]},
+        metadata={binding.SUBJECT_FEATURE: tokens, binding.SUBJECT_ID_FEATURE: (1, 1)},
+        edge_color="cyan",
+    )
+    viewer.dims.current_step = (0, 0, 0)
+    server, _, _, _ = _viewer_server(viewer, graph)
+    controller = server.result_selection_controller
+    controller.bind(bodies)
+    assert controller._linked_group_members(graph, 1) == (
+        (graph, (0, 1)),
+        (bodies, (0,)),
+    )
+    assert controller.select(graph, 1).selected_data_indices == (0, 1)
+    assert bodies.selected_data == {0}
+    original_graph_colors = np.asarray(graph.edge_color).copy()
+    original_body_colors = np.asarray(bodies.edge_color).copy()
+    controller.set_result_group_color(graph, (1.0, 0.5, 0.0, 1.0))
+    np.testing.assert_allclose(np.asarray(graph.edge_color)[:2], [[1, 0.5, 0, 1]] * 2)
+    np.testing.assert_array_equal(
+        np.asarray(graph.edge_color)[2:], original_graph_colors[2:]
+    )
+    np.testing.assert_array_equal(
+        np.asarray(bodies.edge_color)[1:], original_body_colors[1:]
+    )
+    viewer.dims.current_step = (1, 0, 0)
+    assert controller.select(graph, 3).selected_data_indices == (2, 3)
+    assert bodies.selected_data == {1}
+    assert controller._linked_group_members(graph, 3) == (
+        (graph, (2, 3)),
+        (bodies, (1,)),
+    )
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        {ObjectArtifactSubjectBinding.SUBJECT_FEATURE: ("scoped",)},
+        {ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: (1,)},
+        {
+            ObjectArtifactSubjectBinding.SUBJECT_FEATURE: "scoped",
+            ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: (1,),
+        },
+        {
+            ObjectArtifactSubjectBinding.SUBJECT_FEATURE: ("scoped", "other"),
+            ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: (1,),
+        },
+        {
+            ObjectArtifactSubjectBinding.SUBJECT_FEATURE: (None,),
+            ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: (1,),
+        },
+    ],
+)
+def test_native_subject_binding_refuses_incomplete_or_misaligned_rows(metadata):
+    from napari.layers import Shapes
+    from openhcs.runtime.napari_viewer_server import NapariResultSelectionGroupAuthority
+
+    layer = Shapes(
+        [np.array([[0, 0], [1, 1]], dtype=float)],
+        shape_type="path",
+        features={"edge_id": [1]},
+        metadata=metadata,
+    )
+    with pytest.raises(ValueError):
+        declared = NapariResultSelectionGroupAuthority.declared_binding(layer)
+        NapariResultSelectionGroupAuthority.index(layer, declared)
 
 
 def test_linked_selection_projects_off_slice_members_without_changing_subject(qtbot):
@@ -233,11 +369,19 @@ def test_linked_selection_projects_off_slice_members_without_changing_subject(qt
     viewer = ViewerModel()
     viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
     paths = [np.array([[0, i, i], [0, i + 1, i + 1]], dtype=float) for i in range(2)]
-    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8]})
+    layer = viewer.add_shapes(
+        paths,
+        shape_type="path",
+        features={"owner": [8, 8], "subject": ["native-test-subject"] * 2},
+    )
     linked_paths = [coordinates + [1, 0, 0] for coordinates in paths]
-    linked = viewer.add_shapes(linked_paths, shape_type="path", features={"owner": [8, 8]})
+    linked = viewer.add_shapes(
+        linked_paths,
+        shape_type="path",
+        features={"owner": [8, 8], "subject": ["native-test-subject"] * 2},
+    )
     viewer.dims.current_step = (0, 0, 0)
-    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    binding = NapariResultSelectionGroupBinding("subject", "owner")
     server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
     server.result_selection_controller.bind(linked, group_binding=binding)
     original_data = [coordinates.copy() for coordinates in linked.data]
@@ -266,13 +410,15 @@ def test_linked_points_use_the_same_native_slice_projection(qtbot):
     viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
     layer = viewer.add_shapes(
         [np.array([[0, 0, 0], [0, 1, 1]], dtype=float)],
-        shape_type="path", features={"owner": [8]},
+        shape_type="path",
+        features={"owner": [8], "subject": ["native-test-subject"]},
     )
     linked = viewer.add_points(
-        np.array([[0, 2, 2], [1, 3, 3]], dtype=float), features={"owner": [8, 8]},
+        np.array([[0, 2, 2], [1, 3, 3]], dtype=float),
+        features={"owner": [8, 8], "subject": ["native-test-subject"] * 2},
     )
     viewer.dims.current_step = (0, 0, 0)
-    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    binding = NapariResultSelectionGroupBinding("subject", "owner")
     server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
     server.result_selection_controller.bind(linked, group_binding=binding)
 
@@ -290,8 +436,12 @@ def test_bound_selection_rejects_unrelated_native_members(qtbot):
 
     viewer = ViewerModel()
     paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
-    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
-    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    layer = viewer.add_shapes(
+        paths,
+        shape_type="path",
+        features={"owner": [8, 8, 9], "subject": ["native-test-subject"] * 3},
+    )
+    binding = NapariResultSelectionGroupBinding("subject", "owner")
     server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
     mutating = False
 
@@ -535,14 +685,19 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
             ),
         ],
         shape_type=["polygon", "polygon"],
-        features={"label": [11, 12], "area": [3.0, 4.0], "owner": [8, 8]},
+        features={
+            "label": [11, 12],
+            "area": [3.0, 4.0],
+            "owner": [8, 8],
+            "subject": ["native-test-subject"] * 2,
+        },
         ndim=4,
         name="Result ROIs",
     )
     server, _overlay, _result_selection_dock, _qt_window = _viewer_server(
         viewer,
         layer,
-        group_binding=NapariResultSelectionGroupBinding("native-test-subject", "owner"),
+        group_binding=NapariResultSelectionGroupBinding("subject", "owner"),
     )
     projection = ViewerLayerAxisProjection(
         projected_axis_components=("channel", "z"),

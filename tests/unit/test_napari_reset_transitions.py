@@ -969,12 +969,26 @@ def test_controller_remount_retains_linked_subject_members_and_binding(receiver)
     viewer = receiver.viewer
     paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
     feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
-    old = viewer.add_shapes(paths, shape_type="path",
-                            features={feature: ["a", "b", "c"], "owner": [8, 8, 9]})
-    linked = viewer.add_shapes(paths[:2], shape_type="path",
-                               features={feature: ["x", "y"], "owner": [8, 9]})
+    old = viewer.add_shapes(
+        paths,
+        shape_type="path",
+        features={
+            feature: ["a", "b", "c"],
+            "owner": [8, 8, 9],
+            "subject": ["independent-subject"] * 3,
+        },
+    )
+    linked = viewer.add_shapes(
+        paths[:2],
+        shape_type="path",
+        features={
+            feature: ["x", "y"],
+            "owner": [8, 9],
+            "subject": ["independent-subject"] * 2,
+        },
+    )
     controller = receiver.result_selection_controller
-    binding = NapariResultSelectionGroupBinding("independent-subject", "owner")
+    binding = NapariResultSelectionGroupBinding("subject", "owner")
     controller.bind(old, binding)
     controller.bind(linked, binding)
     controller.select(old, 0)
@@ -982,8 +996,15 @@ def test_controller_remount_retains_linked_subject_members_and_binding(receiver)
     receiver.layer_route_state.set_layer("retained-selection", old)
     with controller.preserve_selection("retained-selection"):
         viewer.layers.remove(old)
-        replacement = viewer.add_shapes(paths[::-1], shape_type="path",
-                                        features={feature: ["c", "b", "a"], "owner": [9, 8, 8]})
+        replacement = viewer.add_shapes(
+            paths[::-1],
+            shape_type="path",
+            features={
+                feature: ["c", "b", "a"],
+                "owner": [9, 8, 8],
+                "subject": ["independent-subject"] * 3,
+            },
+        )
         receiver.layer_route_state.set_layer("retained-selection", replacement)
     QApplication.instance().processEvents()
     assert replacement.selected_data == {1, 2} and linked.selected_data == {0}
@@ -1028,7 +1049,11 @@ def test_controller_refuses_off_slice_remapped_selection_before_native_assignmen
 
     def mount(z_index):
         data = [path + [z_index, 0, 0] for path in coordinates]
-        features = {feature: ["a", "b"], "owner": [8, 8]}
+        features = {
+            feature: ["a", "b"],
+            "owner": [8, 8],
+            "subject": ["retained-subject"] * 2,
+        }
         if data_type is StreamingDataType.POINTS:
             return viewer.add_points([path[0] for path in data], features=features)
         return viewer.add_shapes(data, shape_type="path", features=features)
@@ -1036,7 +1061,7 @@ def test_controller_refuses_off_slice_remapped_selection_before_native_assignmen
     old = mount(0)
     viewer.dims.current_step = (0, 0, 0)
     controller = receiver.result_selection_controller
-    controller.bind(old, NapariResultSelectionGroupBinding("retained-subject", "owner"))
+    controller.bind(old, NapariResultSelectionGroupBinding("subject", "owner"))
     controller.select(old, 0)
     assert old.selected_data == {0, 1}
     receiver.layer_route_state.set_layer("retained-selection", old)

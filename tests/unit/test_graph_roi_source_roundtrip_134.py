@@ -3,6 +3,7 @@
 from openhcs.core.artifacts import ImageArtifactType
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -19,6 +20,8 @@ from openhcs.core.artifacts import (
     SpatialGraphArtifactType,
 )
 from openhcs.core.config import NapariStreamingConfig
+from openhcs.constants.constants import AllComponents
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
@@ -28,16 +31,23 @@ from openhcs.core.runtime_spatial_graph import (
     SpatialGraphNode,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source_image_provenance import SourceImageProvenance
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.runtime_object_labels import (
+    ObjectLabelPayload,
+    ObjectLabelVariantData,
+)
 from openhcs.core.source_metadata import SourceVoxelSpacing
 
 from openhcs.core.viewer_streaming_service import RoiStreamingRequest, StreamingService
 from openhcs.processing.materialization import (
     MaterializationSpec,
     SpatialGraphROIOptions,
+    ROIOptions,
     materialization_outputs,
     materialize,
 )
-
 
 @pytest.fixture(autouse=True)
 def no_optional_storage_bootstrap(monkeypatch):
@@ -112,7 +122,7 @@ def graph_and_plan(*, plane, graph_type=SpatialGraph, extra_features=None):
     return graph, plan
 
 
-def contextualize(graph, plan):
+def contextualize(graph, plan, *, site=1):
     metadata = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -120,7 +130,7 @@ def contextualize(graph, plan):
             component_metadata=tuple(
                 {
                     "well": "A01",
-                    "site": 1,
+                    "site": site,
                     "channel": channel,
                     "z_index": 1,
                     "timepoint": 1,
@@ -228,6 +238,136 @@ def test_independent_graph_capability_and_new_feature_need_no_consumers(tmp_path
         ROIArchiveSourceMetadata.FIELD not in roi.metadata
         for roi in ROIArchiveSourceMetadata.geometry(restored)
     )
+
+
+def test_original_source_scope_separates_sites_and_links_label_and_graph_zip(tmp_path):
+    """Artifact filenames do not own either grouping or field identity."""
+    manager = FileManager({"disk": DiskStorageBackend()})
+    subject_tokens = []
+    for site in (1, 2):
+        original, graph_plan = graph_and_plan(plane=1)
+        graph = contextualize(original, graph_plan, site=site)
+        labels = np.zeros((16, 16), dtype=np.uint16)
+        labels[2:6, 3:7] = 7
+        body = ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(labels=labels),
+            source_provenance=graph.source_provenance,
+        )
+        body_plan = ArtifactOutputPlan(
+            name="cell_bodies",
+            path="/engineering/body.pkl",
+            artifact_type=ObjectLabelsArtifactType,
+            relations=(
+                ObjectArtifactMemberSubjectRelation(
+                    source=graph_plan.object_subject_binding().source,
+                ),
+            ),
+            producer_step_index=graph_plan.producer_step_index,
+            producer_step_scope_id=graph_plan.producer_step_scope_id,
+        )
+        archives = []
+        for data, plan, options, filename in (
+            (graph, graph_plan, SpatialGraphROIOptions(), "unrelated_graph"),
+            (body, body_plan, ROIOptions(min_area=1), "unrelated_body"),
+        ):
+            path = materialize(
+                MaterializationSpec(options),
+                data,
+                str(tmp_path / str(site) / filename),
+                manager,
+                ["disk"],
+                output_plan=plan,
+            )
+            archives.append(load_rois_from_zip(Path(path)))
+        graph_rois, body_rois = archives
+        token = graph_rois[0].metadata[ObjectArtifactSubjectBinding.SUBJECT_FEATURE]
+        assert all(
+            roi.metadata[ObjectArtifactSubjectBinding.SUBJECT_FEATURE] == token
+            for rois in archives
+            for roi in rois
+        )
+        assert all(
+            roi.metadata[ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE] == 7
+            for rois in archives
+            for roi in rois
+        )
+        assert [roi.metadata["edge_id"] for roi in graph_rois] == [1, 2]
+        assert len(body_rois) == 1
+        subject_tokens.append(token)
+    assert subject_tokens[0] != subject_tokens[1]
+
+
+@pytest.mark.parametrize("named_planes", [False, True])
+def test_compiled_source_plane_members_share_subject_without_merging_site_groups(
+    named_planes,
+):
+    from openhcs.processing.materialization.core import MaterializationContext
+
+    original, plan = graph_and_plan(plane=0)
+    context = SimpleNamespace(
+        step_plans={
+            4: CompiledStepPlan(
+                step_index=4,
+                step_name="neurite",
+                step_type="FunctionStep",
+                axis_id="A01",
+                source_binding_plan=CompiledSourceBindingPlan(
+                    source_stack_components=(
+                        (AllComponents.CHANNEL,) if named_planes else ()
+                    ),
+                ),
+                variable_components=() if named_planes else (AllComponents.CHANNEL,),
+                group_by=AllComponents.SITE,
+            )
+        }
+    )
+    writer = MaterializationContext(
+        base_path="/engineering/irrelevant-name",
+        backends=[],
+        backend_kwargs={},
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        extra_inputs={},
+        context=context,
+        pipeline_position=4,
+        output_plan=plan,
+    )
+    tokens = {}
+    for site in (1, 2):
+        for channel in (1, 2):
+            tokens[site, channel] = writer.object_subject_metadata(
+                {"neuron_label": 7},
+                ImagePayloadMetadata(
+                    source_component_metadata={
+                        "well": "A01",
+                        "site": site,
+                        "channel": channel,
+                    }
+                ),
+            )[ObjectArtifactSubjectBinding.SUBJECT_FEATURE]
+    assert tokens[1, 1] == tokens[1, 2]
+    assert tokens[2, 1] == tokens[2, 2]
+    assert tokens[1, 1] != tokens[2, 1]
+
+
+@pytest.mark.parametrize("sites", [(), (1, 2), (1, None)])
+def test_object_subject_refuses_missing_or_ambiguous_source_domain(sites):
+    _, plan = graph_and_plan(plane=0)
+    provenance = SourceImageProvenance(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(None for _ in sites),
+            component_metadata=tuple(
+                None if site is None else {"well": "A01", "site": site}
+                for site in sites
+            ),
+        ),
+    )
+    with pytest.raises(ValueError, match="one positively identified source"):
+        plan.object_subject_binding().subject_token(
+            producer_step_scope_id=plan.producer_step_scope_id,
+            producer_step_index=plan.producer_step_index,
+            source_provenance=provenance,
+            identity_policy=SourceImageSetIdentityPolicy(),
+        )
 
 
 @pytest.mark.parametrize("invalid", ["absent", "unbound", "mixed", "conflicting"])

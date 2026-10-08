@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     )
     from openhcs.core.runtime_tabular_values import ColumnarRows
     from openhcs.core.source_image_provenance import SourceImageProvenance
+    from openhcs.core.source_matching import SourceImageSetIdentityPolicy
     from openhcs.core.runtime_measurements import (
         MeasurementSubject,
         MeasurementTable,
@@ -1993,8 +1994,23 @@ class ObjectArtifactSubjectBinding:
         *,
         producer_step_scope_id: str | None,
         producer_step_index: int | str | None,
+        source_provenance: SourceImageProvenance,
+        identity_policy: SourceImageSetIdentityPolicy,
     ) -> str:
-        """Return one scalar token shared by sibling outputs from this producer."""
+        """Identify the producer's object domain, not a field-local label alone."""
+
+        domains = tuple(
+            dict.fromkeys(
+                source_provenance.image_set_plane_identities(identity_policy)
+                or (source_provenance.image_set_identities(identity_policy),)
+            )
+        )
+        if len(domains) != 1 or len(domains[0]) != 1:
+            raise ValueError(
+                "Object-subject binding requires one positively identified source "
+                "image set per member, not missing or multiple source domains."
+            )
+        source_identity = next(iter(domains[0]))
 
         return json.dumps(
             (
@@ -2003,6 +2019,7 @@ class ObjectArtifactSubjectBinding:
                 self.source.name,
                 producer_step_scope_id,
                 producer_step_index,
+                source_identity.components,
             ),
             separators=(",", ":"),
         )
@@ -2013,6 +2030,8 @@ class ObjectArtifactSubjectBinding:
         *,
         producer_step_scope_id: str | None,
         producer_step_index: int | str | None,
+        source_provenance: SourceImageProvenance,
+        identity_policy: SourceImageSetIdentityPolicy,
     ) -> dict[str, object]:
         """Project the declared local member identity to framework metadata."""
 
@@ -2025,6 +2044,8 @@ class ObjectArtifactSubjectBinding:
             self.SUBJECT_FEATURE: self.subject_token(
                 producer_step_scope_id=producer_step_scope_id,
                 producer_step_index=producer_step_index,
+                source_provenance=source_provenance,
+                identity_policy=identity_policy,
             ),
             self.SUBJECT_ID_FEATURE: features[self.id_field],
         }

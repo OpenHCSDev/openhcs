@@ -3930,7 +3930,7 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
             "branch_distance_um": [2.0, 2.4, 3.1],
         },
         metadata={
-            subject_feature: "neurons@step-4",
+            subject_feature: ("neurons@step-4",) * 3,
             subject_id_feature: (1, 1, 2),
         },
         edge_color=["magenta", "magenta", "lime"],
@@ -3947,7 +3947,7 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
             "branches": [2, 1],
         },
         metadata={
-            subject_feature: "neurons@step-4",
+            subject_feature: ("neurons@step-4",) * 2,
             subject_id_feature: (1, 2),
         },
         edge_color=["magenta", "lime"],
@@ -5747,9 +5747,53 @@ def test_napari_shape_payload_hides_framework_subject_columns_in_layer_metadata(
     assert ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE not in payload.features
     assert payload.features["edge_id"] == [10, 11]
     assert payload.result_metadata == {
-        ObjectArtifactSubjectBinding.SUBJECT_FEATURE: "neurons",
+        ObjectArtifactSubjectBinding.SUBJECT_FEATURE: ("neurons", "neurons"),
         ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: (3, 3),
     }
+
+
+def test_napari_shape_payload_keeps_row_subjects_across_fields_and_chunks():
+    payload = NapariShapeLayerPayload.build(
+        layer_items=[
+            _layer_item(
+                {"site": site},
+                [
+                    {
+                        "type": "path",
+                        "coordinates": [[0, 0], [1, edge]],
+                        "metadata": {
+                            "label": 1,
+                            "edge_id": edge,
+                            ObjectArtifactSubjectBinding.SUBJECT_FEATURE: f"neurons-site-{site}",
+                            ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: 1,
+                        },
+                    }
+                    for edge in (1, 2)
+                ],
+                stream_layer_data_type=StreamingDataType.SHAPES,
+            )
+            for site in (1, 2)
+        ],
+        axis_projection=_axis_projection(["site"], {"site": [1, 2]}),
+    )
+    feature = ObjectArtifactSubjectBinding.SUBJECT_FEATURE
+    assert payload.result_metadata[feature] == (
+        "neurons-site-1",
+        "neurons-site-1",
+        "neurons-site-2",
+        "neurons-site-2",
+    )
+    assert payload.features["edge_id"] == [1, 2, 1, 2]
+    assert [coordinates[0, 0] for coordinates in payload.data] == [0, 0, 1, 1]
+    chunks = payload.chunks(max_shape_count=3, max_vertex_count=100)
+    assert [chunk.result_metadata[feature] for chunk in chunks] == [
+        ("neurons-site-1", "neurons-site-1", "neurons-site-2"),
+        ("neurons-site-2",),
+    ]
+    assert [
+        chunk.result_metadata[ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE]
+        for chunk in chunks
+    ] == [(1, 1, 1), (1,)]
 
 
 def test_napari_shape_layer_payload_accepts_registered_native_ellipse_kind():

@@ -426,6 +426,7 @@ def test_graph_roi_projects_declared_object_subject_without_losing_edge_identity
             for edge in base_graph.edges
         ),
         coordinate_spacing=base_graph.coordinate_spacing,
+        source_component_metadata={"well": "A01", "site": 1, "channel": 1},
     )
     output_plan = ArtifactOutputPlan(
         name="neurite_graph",

@@ -74,6 +74,7 @@ from openhcs.core.source_image_provenance import (
     VariableComponentAxisProjection,
 )
 from openhcs.core.source_matching import (
+    SourceImageSetIdentityPolicy,
     source_component_metadata_value,
     source_metadata_value,
 )
@@ -2524,8 +2525,50 @@ class MaterializationContext:
     output_plan: ArtifactOutputPlan | None = None
     materialization_spec: MaterializationSpec | None = None
 
+    def object_subject_metadata(
+        self,
+        features: Mapping[str, object],
+        metadata: ImagePayloadMetadata,
+    ) -> dict[str, object]:
+        """Bind every ROI writer through the original source-domain declarations."""
+        if self.output_plan is None:
+            return {}
+        binding = self.output_plan.object_subject_binding()
+        if binding is None:
+            return {}
+        policy = SourceImageSetIdentityPolicy()
+        if self.context is not None:
+            if self.pipeline_position is None:
+                raise ValueError(
+                    "Object-subject materialization requires its compiled step."
+                )
+            plan = self.context.step_plans[self.pipeline_position]
+            # A processing group is an independent invocation, not proof that
+            # its coordinate is a shared object plane. Source declarations and
+            # compiled input-stack axes own plane membership, not group_by.
+            policy = SourceImageSetIdentityPolicy.from_source_bindings(
+                plan.source_binding_plan,
+            )
+            policy = SourceImageSetIdentityPolicy(
+                frozenset(
+                    ComponentSet.collect(
+                        policy.plane_member_components,
+                        plan.require_variable_components(),
+                    )
+                )
+            )
+        return binding.feature_metadata(
+            features,
+            producer_step_scope_id=self.output_plan.producer_step_scope_id,
+            producer_step_index=self.output_plan.producer_step_index,
+            source_provenance=metadata.source_provenance,
+            identity_policy=policy,
+        )
+
     def named_source_filename(
-        self, metadata: ImagePayloadMetadata, extension: str,
+        self,
+        metadata: ImagePayloadMetadata,
+        extension: str,
     ) -> str | None:
         """Name a retained image from the actual rendering purpose and role."""
         if self.materialization_spec is None:
@@ -3802,28 +3845,13 @@ def _write_roi_zip(
                 spatial_origin_yx=source_domain.origin_yx,
                 source_spatial_shape_yx=source_domain.source_shape_yx,
             )
-            if ctx.output_plan is not None:
-                object_subject_binding = ctx.output_plan.object_subject_binding()
-                if object_subject_binding is not None:
-                    rois = [
-                        replace(
-                            roi,
-                            metadata={
-                                **roi.metadata,
-                                **object_subject_binding.feature_metadata(
-                                    roi.metadata,
-                                    producer_step_scope_id=(
-                                        ctx.output_plan.producer_step_scope_id
-                                    ),
-                                    producer_step_index=(
-                                        ctx.output_plan.producer_step_index
-                                    ),
-                                ),
-                            },
-                        )
-                        for roi in rois
-                    ]
-            target_rois.extend(rois)
+            for roi in rois:
+                subject_metadata = ctx.object_subject_metadata(
+                    roi.metadata, item.metadata
+                )
+                if subject_metadata:
+                    roi = replace(roi, metadata={**roi.metadata, **subject_metadata})
+                target_rois.append(roi)
 
         total_roi_count += len(target_rois)
         if target_rois:
@@ -4135,15 +4163,6 @@ def _write_spatial_graph_roi_zip(
             )
         segment_lengths = np.linalg.norm(np.diff(coordinates, axis=0), axis=1)
         edge_features = edge.feature_mapping()
-        object_subject_metadata: Mapping[str, object] = {}
-        if ctx.output_plan is not None:
-            object_subject_binding = ctx.output_plan.object_subject_binding()
-            if object_subject_binding is not None:
-                object_subject_metadata = object_subject_binding.feature_metadata(
-                    edge_features,
-                    producer_step_scope_id=ctx.output_plan.producer_step_scope_id,
-                    producer_step_index=ctx.output_plan.producer_step_index,
-                )
         metadata = {
             "label": edge.edge_id,
             "area": 0.0,
@@ -4154,7 +4173,7 @@ def _write_spatial_graph_roi_zip(
             "source_node_id": edge.source_node_id,
             "target_node_id": edge.target_node_id,
             **edge_features,
-            **object_subject_metadata,
+            **ctx.object_subject_metadata(edge_features, source_metadata),
         }
         rois.append(
             ROI(

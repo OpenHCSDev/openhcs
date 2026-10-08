@@ -2251,13 +2251,12 @@ class NapariShapeLayerPayload:
 
     def _slice(self, start: int, stop: int) -> "NapariShapeLayerPayload":
         result_metadata = dict(self.result_metadata)
-        subject_ids = result_metadata.get(
-            ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE
-        )
-        if isinstance(subject_ids, tuple):
-            result_metadata[ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE] = (
-                subject_ids[start:stop]
-            )
+        for feature in (
+            ObjectArtifactSubjectBinding.SUBJECT_FEATURE,
+            ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE,
+        ):
+            if feature in result_metadata:
+                result_metadata[feature] = result_metadata[feature][start:stop]
         return NapariShapeLayerPayload(
             data=self.data[start:stop],
             shape_types=self.shape_types[start:stop],
@@ -2358,7 +2357,11 @@ class NapariShapeLayerPayload:
                             "OpenHCS ROI subject metadata requires both subject and ID."
                         )
                     subject_metadata_member_count += 1
-                    object_subject_tokens.append(cls._feature_value(subject_token))
+                    if not isinstance(subject_token, str) or not subject_token:
+                        raise ValueError(
+                            "OpenHCS ROI subject tokens must be nonempty strings."
+                        )
+                    object_subject_tokens.append(subject_token)
                     object_subject_ids.append(cls._feature_value(subject_id))
                 feature_columns.append(
                     metadata,
@@ -2375,13 +2378,10 @@ class NapariShapeLayerPayload:
                 raise ValueError(
                     "One Napari result layer cannot mix subject-bound and unbound ROIs."
                 )
-            subject_tokens = tuple(dict.fromkeys(object_subject_tokens))
-            if len(subject_tokens) != 1:
-                raise ValueError(
-                    "One Napari result layer cannot mix multiple object subjects."
-                )
             result_metadata = {
-                ObjectArtifactSubjectBinding.SUBJECT_FEATURE: subject_tokens[0],
+                ObjectArtifactSubjectBinding.SUBJECT_FEATURE: tuple(
+                    object_subject_tokens
+                ),
                 ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: tuple(
                     object_subject_ids
                 ),

@@ -3407,12 +3407,16 @@ class NapariResultElementSelectionState:
 
 @dataclass(frozen=True, slots=True)
 class NapariResultSelectionGroupBinding:
-    """Bind native feature rows to one declared cross-layer object subject."""
+    """Declare the native columns owning each row's object-domain and local ID."""
 
-    subject_token: object
+    subject_feature: str
     id_feature: str
 
     def __post_init__(self) -> None:
+        if not self.subject_feature:
+            raise ValueError(
+                "NapariResultSelectionGroupBinding.subject_feature cannot be empty."
+            )
         if not self.id_feature:
             raise ValueError(
                 "NapariResultSelectionGroupBinding.id_feature cannot be empty."
@@ -3423,40 +3427,38 @@ class NapariResultSelectionGroupBinding:
 class NapariResultSelectionGroupState:
     """One object subject represented by one or more native feature rows."""
 
-    subject_token: object
-    subject_id: object
+    subject_token: str
+    subject_id: Hashable
     member_indices: tuple[int, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class NapariResultSelectionGroupIndex:
-    """Runtime-derived member lookup for one declared object subject."""
+    """Runtime-derived lookup by full object identity, across aggregated fields."""
 
     binding: NapariResultSelectionGroupBinding
-    subject_ids_by_index: tuple[Hashable, ...]
-    member_indices_by_subject_id: Mapping[Hashable, tuple[int, ...]]
+    subjects_by_index: tuple[tuple[str, Hashable], ...]
+    member_indices_by_subject: Mapping[tuple[str, Hashable], tuple[int, ...]]
 
     def state(self, data_index: int) -> NapariResultSelectionGroupState:
         """Resolve one feature row without rescanning mounted layer features."""
 
-        if data_index < 0 or data_index >= len(self.subject_ids_by_index):
+        if data_index < 0 or data_index >= len(self.subjects_by_index):
             raise ValueError(
                 f"Result group data index {data_index} is outside "
-                f"{len(self.subject_ids_by_index)} row(s)."
+                f"{len(self.subjects_by_index)} row(s)."
             )
-        subject_id = self.subject_ids_by_index[data_index]
+        subject_token, subject_id = self.subjects_by_index[data_index]
         return NapariResultSelectionGroupState(
-            subject_token=self.binding.subject_token,
+            subject_token=subject_token,
             subject_id=subject_id,
-            member_indices=self.member_indices_by_subject_id[subject_id],
+            member_indices=self.member_indices_by_subject[(subject_token, subject_id)],
         )
 
-    def members_for(self, subject_id: object) -> tuple[int, ...]:
+    def members_for(self, subject_token: str, subject_id: Hashable) -> tuple[int, ...]:
         """Return members for one compatible cross-layer subject identifier."""
 
-        if not isinstance(subject_id, Hashable):
-            return ()
-        return self.member_indices_by_subject_id.get(subject_id, ())
+        return self.member_indices_by_subject.get((subject_token, subject_id), ())
 
 
 class NapariResultSelectionGroupAuthority:
@@ -3488,25 +3490,32 @@ class NapariResultSelectionGroupAuthority:
         cls,
         layer: NapariLayerHandle,
     ) -> NapariResultSelectionGroupBinding | None:
-        layer_metadata = cast(NapariShapesLayerHandle, layer).metadata
-        metadata_subject = layer_metadata.get(
-            ObjectArtifactSubjectBinding.SUBJECT_FEATURE
+        metadata_subjects = cls.feature_values(
+            layer,
+            ObjectArtifactSubjectBinding.SUBJECT_FEATURE,
         )
         metadata_ids = cls.feature_values(
             layer,
             ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE,
         )
-        if metadata_subject is not None or metadata_ids is not None:
-            if metadata_subject is None or metadata_ids is None:
+        if (
+            ObjectArtifactSubjectBinding.SUBJECT_FEATURE in layer.metadata
+            or ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE in layer.metadata
+            or ObjectArtifactSubjectBinding.SUBJECT_FEATURE in layer.features
+            or ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE in layer.features
+        ):
+            if metadata_subjects is None or metadata_ids is None:
                 raise ValueError(
                     "OpenHCS result layer metadata requires both subject and ID values."
                 )
-            if len(metadata_ids) != len(layer.features):
+            if len(metadata_ids) != len(layer.features) or len(
+                metadata_subjects
+            ) != len(layer.features):
                 raise ValueError(
-                    "OpenHCS result layer subject IDs do not align with feature rows."
+                    "OpenHCS result layer subjects and IDs do not align with feature rows."
                 )
             return NapariResultSelectionGroupBinding(
-                subject_token=metadata_subject,
+                subject_feature=ObjectArtifactSubjectBinding.SUBJECT_FEATURE,
                 id_feature=ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE,
             )
 
@@ -3521,27 +3530,37 @@ class NapariResultSelectionGroupAuthority:
         """Derive the immutable row-to-subject lookup when a layer is mounted."""
 
         values = cls.feature_values(layer, binding.id_feature)
-        if values is None:
+        tokens = cls.feature_values(layer, binding.subject_feature)
+        if values is None or tokens is None:
+            raise ValueError("Bound result group subject or ID feature is absent.")
+        if len(values) != len(layer.features) or len(tokens) != len(layer.features):
             raise ValueError(
-                f"Bound result group feature {binding.id_feature!r} is absent."
+                "Bound result group subjects and IDs must align with feature rows."
             )
-        members_by_subject_id: dict[Hashable, list[int]] = {}
-        subject_ids: list[Hashable] = []
-        for data_index, subject_id in enumerate(values):
-            if not isinstance(subject_id, Hashable):
+        members_by_subject: dict[tuple[str, Hashable], list[int]] = {}
+        subjects: list[tuple[str, Hashable]] = []
+        for data_index, (token, subject_id) in enumerate(
+            zip(tokens, values, strict=True)
+        ):
+            if not isinstance(token, str) or not token:
+                raise ValueError(
+                    "OpenHCS result group subject tokens must be nonempty strings."
+                )
+            if subject_id is None or not isinstance(subject_id, Hashable):
                 raise TypeError(
-                    "OpenHCS result group subject IDs must be hashable; "
+                    "OpenHCS result group subject IDs must be non-null and hashable; "
                     f"row {data_index} carried {type(subject_id).__name__}."
                 )
-            subject_ids.append(subject_id)
-            members_by_subject_id.setdefault(subject_id, []).append(data_index)
+            subject = (token, subject_id)
+            subjects.append(subject)
+            members_by_subject.setdefault(subject, []).append(data_index)
         return NapariResultSelectionGroupIndex(
             binding=binding,
-            subject_ids_by_index=tuple(subject_ids),
-            member_indices_by_subject_id=MappingProxyType(
+            subjects_by_index=tuple(subjects),
+            member_indices_by_subject=MappingProxyType(
                 {
-                    subject_id: tuple(indices)
-                    for subject_id, indices in members_by_subject_id.items()
+                    subject: tuple(indices)
+                    for subject, indices in members_by_subject.items()
                 }
             ),
         )
@@ -4020,9 +4039,10 @@ class NapariResultSelectionController:
         source_group = source_index.state(data_index)
         linked: list[tuple[NapariLayerHandle, tuple[int, ...]]] = []
         for candidate, candidate_index in tuple(self._group_indices.items()):
-            if candidate_index.binding.subject_token != source_group.subject_token:
-                continue
-            member_indices = candidate_index.members_for(source_group.subject_id)
+            member_indices = candidate_index.members_for(
+                source_group.subject_token,
+                source_group.subject_id,
+            )
             if member_indices:
                 linked.append((cast(NapariLayerHandle, candidate), member_indices))
         return tuple(linked) or ((layer, source_group.member_indices),)
