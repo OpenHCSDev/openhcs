@@ -42,7 +42,6 @@ for axis, records in batch.records_by_axis.items():
             export.CELLPROFILER_MEASUREMENT_DIALECT.projected_feature_name,
             default_subject=export._measurement_subject_name(table),
             default_scope=table.subject.scope,
-            source_image_name=table.source_image_name,
             object_id_field=table.subject.object_id_field,
             qualifier_field_names=export.measurement_qualifier_field_names(
                 export.CELLPROFILER_MEASUREMENT_DIALECT

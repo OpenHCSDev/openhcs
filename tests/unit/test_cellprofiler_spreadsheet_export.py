@@ -2244,3 +2244,103 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
     assert len(mapped) == (
         0 if selection_mode in ("relationships", "experiment", "all") else 12
     )
+
+
+@pytest.mark.parametrize("overlapping_declarations", (False, True))
+def test_partitioned_relationship_export_preserves_producer_then_axis_order(
+    overlapping_declarations: bool,
+) -> None:
+    from dataclasses import replace
+    from openhcs.processing.materialization.core import ColumnarCsvOutput
+    from openhcs.core.runtime_batch_contracts import (
+        RuntimeArtifactPartitionBatchRequest,
+    )
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        _partitioned_spreadsheet_export,
+    )
+
+    records = {}
+    for axis in ("W001", "W002"):
+        image = _measurement_record(
+            "images",
+            axis_id=axis,
+            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            rows=({"slice_index": 0, "Count": 2},),
+        )
+        edges = []
+        for ordinal, name in enumerate(("parents", "children"), 1):
+            record = _relationship_record(name, axis_id=axis)
+            declaration = replace(
+                record.data.declaration,
+                producer_module_number=1 if overlapping_declarations else ordinal,
+                source_id_field="parent_number" if ordinal == 1 else "child_number",
+                target_id_field="child_number" if ordinal == 1 else "parent_number",
+            )
+            relationship = ObjectRelationship.from_payload(
+                name=name,
+                declaration=declaration,
+                payload=DirectedObjectRelationshipPayload(
+                    source_ids=(1,),
+                    target_ids=(2,),
+                    slice_indices=(0,),
+                    slice_count=1,
+                ),
+                source_provenance=image.data.source_provenance,
+            )
+            edges.append(replace(record, data=relationship))
+        records[axis] = (image, *edges)
+    batch = RuntimeArtifactBatch(
+        input_specs=(
+            ArtifactSpec.input("images", MeasurementsArtifactType),
+            ArtifactSpec.input("parents", RelationshipsArtifactType),
+            ArtifactSpec.input("children", RelationshipsArtifactType),
+        ),
+        records_by_axis=records,
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    kwargs = dict(
+        export_all_measurement_types=False,
+        file_selections=(
+            SpreadsheetFileSelection(("Image",), "Image.csv"),
+            SpreadsheetFileSelection(("Object relationships",), "Edges.csv"),
+        ),
+        add_filename_prefix=False,
+    )
+    expected = render_spreadsheet_bundle(batch, **kwargs)
+    mapped = []
+
+    def map_partitions(func, requests):
+        mapped.extend(requests)
+        return tuple(func(request) for request in requests)
+
+    request = RuntimeArtifactPartitionBatchRequest.from_contract(
+        CallableContract.from_callable(export_to_spreadsheet),
+        artifact_batch=batch,
+        kwargs=kwargs,
+        runtime_context=None,
+        map_partition_invocations=map_partitions,
+    )
+    actual = {
+        path: (
+            output.rendered() if isinstance(output, ColumnarCsvOutput) else output
+        ).require_text_content()
+        for path, output in _partitioned_spreadsheet_export(request).items()
+    }
+    assert actual == expected
+    assert [
+        (
+            invocation.artifact_batch.input_specs[0].name,
+            next(iter(invocation.artifact_batch.records_by_axis)),
+        )
+        for invocation in mapped[2:]
+    ] == (
+        []
+        if overlapping_declarations
+        else [
+            ("parents", "W001"),
+            ("parents", "W002"),
+            ("children", "W001"),
+            ("children", "W002"),
+        ]
+    )
+    assert len(mapped) == (0 if overlapping_declarations else 6)

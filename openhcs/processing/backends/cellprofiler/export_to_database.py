@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import inspect
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -24,6 +24,12 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
 from openhcs.core.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.runtime_batch_contracts import (
+    RuntimeArtifactPartitionBatchRequest,
+    RuntimeBatchExecutionDomain,
+    runtime_batch_executor,
+    runtime_callable_defaults,
+)
 from openhcs.interop.cellprofiler.analyst_export import (
     CPAImageChannelSpec,
     CPAPropertiesRenderer,
@@ -825,6 +831,64 @@ class ExportToDatabaseModule(ArtifactExportModule):
         )
 
     @staticmethod
+    def prepare_bundle(
+        artifact_batch: RuntimeArtifactBatch,
+        context: ProcessingContext | None,
+        parameters: Mapping[str, Any],
+        *,
+        map_partition_invocations: (
+            Callable[[Callable[[object], object], Sequence[object]], tuple[object, ...]]
+            | None
+        ) = None,
+    ) -> dict[str, bytes | str]:
+        """Prepare the database through one serial or partitioned export owner."""
+        settings = CellProfilerDatabaseExportSettings.from_export_parameters(parameters)
+        resolved_channels = (
+            CPAImageChannelSpec.defaults_for_artifacts(
+                artifact_batch.specs_of_type(ImageArtifactType),
+                source_binding_plan=artifact_batch.source_binding_plan,
+            )
+            if parameters["include_all_images"]
+            else tuple(parameters["image_channels"])
+        )
+        projection = CellProfilerAnalystProjectionBuilder(
+            source_binding_plan=artifact_batch.source_binding_plan,
+            context=context,
+        ).build(
+            artifact_batch,
+            settings,
+            resolved_channels,
+            map_partition_invocations=map_partition_invocations,
+        )
+        dialect = projection.database_dialect(
+            CellProfilerDatabaseColumnDialect(settings.table_prefix),
+            settings,
+        )
+        bundle: dict[str, bytes | str] = {
+            settings.sqlite_file: CPASQLiteRenderer(dialect).render(
+                projection, settings
+            )
+        }
+        text_files = (
+            *(
+                (file.file_name, file.text)
+                for file in CPAPropertiesRenderer(dialect).render(
+                    settings, resolved_channels, projection
+                )
+            ),
+            *settings.workspace_files(dialect).items(),
+        )
+        for file_name, text in text_files:
+            if file_name in bundle:
+                raise ValueError(
+                    f"ExportToDatabase emits duplicate file {file_name!r}."
+                )
+            bundle[file_name] = text
+        if projection.image_set_numbering is not None:
+            projection.image_set_numbering.observe_export_paths(context, tuple(bundle))
+        return bundle
+
+    @staticmethod
     def _block_with_records(
         block: ModuleBlock,
         additional_records: Sequence[ModuleSetting],
@@ -836,6 +900,21 @@ class ExportToDatabaseModule(ArtifactExportModule):
         )
 
 
+def _partitioned_database_export(
+    request: RuntimeArtifactPartitionBatchRequest,
+) -> dict[str, bytes | str]:
+    return ExportToDatabaseModule.prepare_bundle(
+        request.artifact_batch,
+        request.runtime_context,
+        {**runtime_callable_defaults(request.func), **request.kwargs},
+        map_partition_invocations=request.map_partition_invocations,
+    )
+
+
+@runtime_batch_executor(
+    RuntimeBatchExecutionDomain.ARTIFACT_PARTITIONS,
+    _partitioned_database_export,
+)
 @execution_scope(FunctionStepExecutionScope.PLATE)
 @runtime_bound_parameters(RuntimeArtifactBatch)
 def export_to_database(
@@ -887,68 +966,4 @@ def export_to_database(
             ``wants_group_fields`` is enabled.
     """
 
-    settings = CellProfilerDatabaseExportSettings(
-        sqlite_file=sqlite_file,
-        experiment_name=experiment_name,
-        table_prefix=table_prefix if add_table_prefix else "",
-        object_table_mode=object_table_mode,
-        selected_objects=selected_objects,
-        wants_properties_file=wants_properties_file,
-        wants_workspace_file=wants_workspace_file,
-        workspace_panels=workspace_panels,
-        wants_relationship_tables=wants_relationship_tables,
-        maximum_column_name_length=maximum_column_name_length,
-        location_object=location_object,
-        plate_type=plate_type,
-        plate_metadata=plate_metadata,
-        well_metadata=well_metadata,
-        image_url_prepend=image_url_prepend if access_images_via_url else "",
-        group_fields=group_fields if wants_group_fields else (),
-        classification_type=classification_type,
-        phenotype_class_table=phenotype_class_table,
-        calculate_per_image_mean=calculate_per_image_mean,
-        calculate_per_image_median=calculate_per_image_median,
-        calculate_per_image_standard_deviation=(calculate_per_image_standard_deviation),
-        write_image_thumbnails=write_image_thumbnails,
-        thumbnail_image_names=(thumbnail_image_names if write_image_thumbnails else ()),
-        auto_scale_thumbnail_intensities=auto_scale_thumbnail_intensities,
-    )
-    resolved_channels = (
-        CPAImageChannelSpec.defaults_for_artifacts(
-            artifact_batch.specs_of_type(ImageArtifactType),
-            source_binding_plan=artifact_batch.source_binding_plan,
-        )
-        if include_all_images
-        else tuple(image_channels)
-    )
-    projection = CellProfilerAnalystProjectionBuilder(
-        source_binding_plan=artifact_batch.source_binding_plan,
-        context=context,
-    ).build(
-        artifact_batch,
-        settings,
-        resolved_channels,
-    )
-    dialect = projection.database_dialect(
-        CellProfilerDatabaseColumnDialect(settings.table_prefix),
-        settings,
-    )
-    bundle: dict[str, bytes | str] = {
-        settings.sqlite_file: CPASQLiteRenderer(dialect).render(projection, settings)
-    }
-    text_files = (
-        *(
-            (file.file_name, file.text)
-            for file in CPAPropertiesRenderer(dialect).render(
-                settings, resolved_channels, projection
-            )
-        ),
-        *settings.workspace_files(dialect).items(),
-    )
-    for file_name, text in text_files:
-        if file_name in bundle:
-            raise ValueError(f"ExportToDatabase emits duplicate file {file_name!r}.")
-        bundle[file_name] = text
-    if projection.image_set_numbering is not None:
-        projection.image_set_numbering.observe_export_paths(context, tuple(bundle))
-    return bundle
+    return ExportToDatabaseModule.prepare_bundle(artifact_batch, context, locals())
