@@ -234,7 +234,13 @@ class WellAggregation(ABC):
     def load_planes(self, summaries):
         """Decode once, retaining the native well/site identity for pairing."""
         planes, paths = {}, []
-        for path in sorted(summaries.glob("*_neurite_outgrowth_summary_*details.csv")):
+        summary_paths = []
+        for directory in self.summary_directories(summaries):
+            found = sorted(directory.glob("*_neurite_outgrowth_summary_*details.csv"))
+            if not found:
+                raise ValueError(f"No measured native summaries in declared directory: {directory}")
+            summary_paths.extend(found)
+        for path in summary_paths:
             row = NativeSummary.read(path)
             identity = (row.well, row.site)
             if identity in planes:
@@ -243,6 +249,11 @@ class WellAggregation(ABC):
             paths.append(path)
             paths.append(NativeSummary.cells_path(path))
         return planes, paths
+
+    @staticmethod
+    def summary_directories(summaries):
+        """A single native directory or an explicitly declared directory sequence."""
+        return (summaries,) if isinstance(summaries, Path) else tuple(summaries)
 
     def aggregate_planes(self, planes):
         grouped = {}
@@ -440,10 +451,16 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
         "generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "baseline": "each drug curve's own zero-dose DMSO wells",
     }
+    directories = aggregation.summary_directories(summaries)
+    if len(directories) > 1:
+        evidence["native_summary_directories"] = [str(directory) for directory in directories]
     if paired:
+        guided_directories = aggregation.summary_directories(guided_summaries)
         evidence["endpoint_units"] = {metric: endpoint_declarations()[metric].unit for metric in metrics}
         evidence["guided_openhcs"] = {"label": guided_label, "pipeline_source": str(guided_pipeline),
-                                     "summaries": str(guided_summaries), "matched_sites": len(planes),
+                                     "summaries": (str(guided_directories[0]) if len(guided_directories) == 1 else
+                                                   [str(directory) for directory in guided_directories]),
+                                     "matched_sites": len(planes),
                                      "role": "scientist-guided comparator, not ground truth",
                                      "aggregation_protocol": aggregation.name}
     (output / "source_evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
@@ -452,15 +469,17 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("reference", "key", "summaries", "output", "pipeline"):
+    for name in ("reference", "key", "output", "pipeline"):
         parser.add_argument(f"--{name}", type=Path, required=True)
+    parser.add_argument("--summaries", type=Path, nargs="+", required=True,
+                        help="Declared native result directories; each well/site must occur exactly once across all.")
     parser.add_argument("--coded-plate", required=True,
                         help="Source plate identity in the evaluation key, not the output directory name")
     parser.add_argument("--metrics", nargs="+", choices=METRICS,
                         help="Defaults to mean outgrowth/count; guided comparisons default to all declared endpoints.")
     parser.add_argument("--reference-workbook", type=Path,
                         help="Original workbook supplies selected endpoints at the CSV's retained Excel row identities.")
-    parser.add_argument("--guided-summaries", type=Path,
+    parser.add_argument("--guided-summaries", type=Path, nargs="+",
                         help="Optional scientist-guided native summaries; must match the blind well/site coverage and aggregation.")
     parser.add_argument("--guided-pipeline", type=Path)
     parser.add_argument("--guided-label", help="Explicit scientist-guided comparator label; never ground truth.")

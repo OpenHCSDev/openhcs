@@ -121,6 +121,34 @@ class GuidedComparisonTests(unittest.TestCase):
             self.compare(self.root / "bad", guided_summaries=self.guided)
         self.assertFalse((self.root / "bad").exists())
 
+    def test_multiple_directories_cli_and_duplicate_identity_rejection(self):
+        directories = []
+        for parent in (self.blind, self.guided):
+            parts = [parent / "first", parent / "rest"]
+            for part in parts:
+                part.mkdir()
+            for path in list(parent.glob("*.csv")):
+                part = parts[0] if path.name.startswith("A01_") else parts[1]
+                path.rename(part / path.name)
+            directories.append(parts)
+        output = self.root / "multi"
+        subprocess.run([sys.executable, str(SOURCE), "--reference", str(self.reference),
+                        "--key", str(self.key), "--summaries", *map(str, directories[0]),
+                        "--pipeline", str(self.pipeline), "--coded-plate", "P001",
+                        "--aggregation", "site-mean", "--output", str(output),
+                        "--guided-summaries", *map(str, directories[1]),
+                        "--guided-pipeline", str(self.guided_pipeline),
+                        "--guided-label", "Scientist-guided fixture"],
+                       check=True, capture_output=True, text=True)
+        self.assertEqual(len(evaluator.read_rows(output / "paired_sites.csv")), 90)
+        evidence = json.loads((output / "source_evidence.json").read_text())
+        self.assertEqual(evidence["native_summary_directories"], list(map(str, directories[0])))
+        self.assertEqual(evidence["guided_openhcs"]["summaries"], list(map(str, directories[1])))
+        with self.assertRaisesRegex(ValueError, "Duplicate native well/site"):
+            evaluator.SiteMeanWellAggregation().load_planes([*directories[0], directories[0][0]])
+        with self.assertRaisesRegex(ValueError, "No measured native summaries"):
+            evaluator.SiteMeanWellAggregation().load_planes([*directories[0], self.root / "absent"])
+
     def test_coverage_units_protocol_and_reconciliation(self):
         path = self.guided / "A01_s9_neurite_outgrowth_summary_plane_details.csv"
         original = path.read_text()
