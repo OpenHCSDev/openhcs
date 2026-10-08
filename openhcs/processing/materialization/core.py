@@ -5,6 +5,7 @@ Key idea: the abstraction boundary is the output *format* (writers), not per-ana
 
 from __future__ import annotations
 
+import copy
 import csv
 import io
 import json
@@ -556,7 +557,7 @@ class ColumnarCsvOutput(Output):
         *,
         partition_fields: tuple[str, ...],
     ) -> RenderedColumnarCsvOutput:
-        """Retain immutable formatting and only raw identity cells for composition."""
+        """Retain formatting, identity and physical scalar laws for composition."""
         from numbers import Real
         from openhcs.core.measurement_row_materialization import (
             MeasurementSparseColumnarRows,
@@ -571,8 +572,10 @@ class ColumnarCsvOutput(Output):
             )
         schema = self.options.csv_schema(self.content)
         rendered_columns = schema[0]
-        keys = {}
         presence = {}
+        physical_dtypes = {}
+        nonfinite_codes = {}
+        raw_columns = {}
         for name in self.content.columns:
             values = ColumnarRows.column_array(self.content.column_values(name))
             selected = name in rendered_columns or name in partition_fields
@@ -599,10 +602,40 @@ class ColumnarCsvOutput(Output):
                     "CSV partition realization requires immutable scalar cells; "
                     f"column {name!r} contains opaque mutable values."
                 )
+            if name in rendered_columns and name not in partition_fields:
+                physical_dtypes[name] = ((len(values), values.dtype),)
+                # These scalar grammars round-trip at their original precision.
+                # Extended and exotic scalar grammars retain their original
+                # carrier instead of guessing an inverse from display text.
+                if values.dtype.kind not in "biufcOU" or (
+                    values.dtype.kind in "fc"
+                    and values.dtype.itemsize > (8 if values.dtype.kind == "f" else 16)
+                ):
+                    snapshot = (
+                        copy.deepcopy(values)
+                        if values.dtype.hasobject
+                        else np.array(values, copy=True)
+                    )
+                    snapshot.flags.writeable = False
+                    raw_columns[name] = snapshot
+                elif values.dtype.kind == "f":
+                    if bool(np.any(~np.isfinite(values))):
+                        codes = np.zeros(len(values), dtype=np.uint8)
+                        codes[np.isnan(values)] = 1
+                        codes[np.isposinf(values)] = 2
+                        codes[np.isneginf(values)] = 3
+                        nonfinite_codes[name] = (
+                            RenderedColumnarCsvOutput.pack_nonfinite_codes(codes)
+                        )
             if name in partition_fields:
                 snapshot = np.array(values, copy=True)
                 snapshot.flags.writeable = False
-                keys[name] = snapshot
+                raw_columns[name] = snapshot
+        for name in rendered_columns:
+            if name not in self.content.columns:
+                presence[name] = np.packbits(
+                    np.zeros(self.content.row_count(), dtype=bool)
+                ).tobytes()
         header, text = self.options.render_parts(self.content, schema=schema)
         return RenderedColumnarCsvOutput(
             path=self.path,
@@ -614,10 +647,10 @@ class ColumnarCsvOutput(Output):
             source_fields=self.content.fields,
             rendered_columns=rendered_columns,
             partition_fields=partition_fields,
-            key_columns=MappingProxyType(
-                {name: keys[name] for name in partition_fields}
-            ),
             structural_presence=MappingProxyType(presence),
+            physical_dtypes=MappingProxyType(physical_dtypes),
+            nonfinite_codes=MappingProxyType(nonfinite_codes),
+            raw_columns=MappingProxyType(raw_columns),
             data_row_count=self.content.row_count(),
             declared_object_measurement_domain_covered=self.content.covers_declared_object_measurement_domain,
             object_row_identity=self.content.object_row_identity,
@@ -694,8 +727,10 @@ class RenderedColumnarCsvOutput(
 ):
     """Immutable CSV with a derived formatting view and exact raw partition keys.
 
-    Non-key cells are CSV lexemes, not original numerical measurements. Only
-    composition's identical writer policy consumes them, on header mismatch.
+    Composition alone consumes the derived cells under the identical writer
+    policy. Physical dtype segments restore numerical promotion on header
+    mismatch; sparse nonfinite codes recover distinctions erased by NULL.
+    Exotic scalar carriers and identity columns share one immutable raw owner.
     Structural presence keeps sparse schema ordering distinct from empty text.
     """
 
@@ -703,8 +738,10 @@ class RenderedColumnarCsvOutput(
     source_fields: tuple[FieldSpec, ...]
     rendered_columns: tuple[str, ...]
     partition_fields: tuple[str, ...]
-    key_columns: Mapping[str, np.ndarray]
     structural_presence: Mapping[str, bytes]
+    physical_dtypes: Mapping[str, tuple[tuple[int, np.dtype], ...]]
+    nonfinite_codes: Mapping[str, bytes]
+    raw_columns: Mapping[str, np.ndarray]
     data_row_count: int
     header_content: bytes
     declared_object_measurement_domain_covered: bool = False
@@ -733,9 +770,7 @@ class RenderedColumnarCsvOutput(
             (*self.rendered_columns, *self.key_columns, *self.structural_presence)
         )
         fields = tuple(
-            source if source.name in self.key_columns else replace(source, dtype=str)
-            for source in self.source_fields
-            if source.name in retained
+            source for source in self.source_fields if source.name in retained
         )
         declared = frozenset(field.name for field in fields)
         fields += tuple(
@@ -758,17 +793,43 @@ class RenderedColumnarCsvOutput(
         for name, value in state.items():
             object.__setattr__(self, name, value)
         object.__setattr__(
-            self, "key_columns", MappingProxyType(dict(self.key_columns))
-        )
-        object.__setattr__(
             self,
             "structural_presence",
             MappingProxyType(dict(self.structural_presence)),
         )
-        for values in self.key_columns.values():
+        for name in ("physical_dtypes", "nonfinite_codes", "raw_columns"):
+            object.__setattr__(self, name, MappingProxyType(dict(getattr(self, name))))
+        for values in self.raw_columns.values():
             values.flags.writeable = False
         object.__setattr__(self, "_decoded_columns", {})
         self.__post_init__()
+
+    @staticmethod
+    def pack_nonfinite_codes(codes: np.ndarray) -> bytes:
+        """Encode finite/NaN/+Inf/-Inf as two bits per original float cell."""
+        return np.packbits(
+            np.column_stack((codes & 1, codes >> 1)).reshape(-1)
+        ).tobytes()
+
+    def column_nonfinite_codes(self, name: str) -> np.ndarray:
+        bits = self.nonfinite_codes.get(name)
+        if bits is None:
+            return np.zeros(self.data_row_count, dtype=np.uint8)
+        pairs = np.unpackbits(
+            np.frombuffer(bits, dtype=np.uint8), count=2 * self.data_row_count
+        ).reshape(-1, 2)
+        return pairs[:, 0] | (pairs[:, 1] << 1)
+
+    @property
+    def key_columns(self) -> Mapping[str, np.ndarray]:
+        """Derive raw identity columns from the one retained carrier owner."""
+        return MappingProxyType(
+            {
+                name: self.raw_columns[name]
+                for name in self.partition_fields
+                if name in self.raw_columns
+            }
+        )
 
     @property
     def columns(self) -> Mapping[str, Sequence[object]]:
@@ -807,8 +868,8 @@ class RenderedColumnarCsvOutput(
 
         if name not in self:
             raise KeyError(name)
-        if name in self.key_columns:
-            return self.key_columns[name]
+        if name in self.raw_columns:
+            return self.raw_columns[name]
         if name in self._decoded_columns:
             return self._decoded_columns[name]
         if name not in self.rendered_columns:
@@ -831,8 +892,46 @@ class RenderedColumnarCsvOutput(
         for column, cells in decoded.items():
             if len(cells) != self.data_row_count:
                 raise ValueError("Realized CSV has an inconsistent physical row count.")
-            values = np.asarray(cells, dtype=object)
-            values[~self.present_mask(column)] = MEASUREMENT_SPARSE_CELL
+            if column in self.raw_columns:
+                continue
+            segments = []
+            codes = (
+                self.column_nonfinite_codes(column)
+                if column in self.nonfinite_codes
+                else None
+            )
+            offset = 0
+            for count, dtype in self.physical_dtypes.get(
+                column, ((len(cells), np.dtype(object)),)
+            ):
+                texts = cells[offset : offset + count]
+                if dtype.kind == "b":
+                    values = np.asarray([text == "True" for text in texts], dtype=dtype)
+                elif dtype.kind in "iufcU":
+                    # NULL erases nonfinite floats; restore their exact original
+                    # class/sign below before numerical dtype promotion occurs.
+                    values = np.asarray(
+                        (
+                            [text if text else "nan" for text in texts]
+                            if dtype.kind == "f"
+                            else texts
+                        ),
+                        dtype=dtype,
+                    )
+                else:
+                    values = np.asarray(texts, dtype=object)
+                if dtype.kind == "f" and codes is not None:
+                    original = codes[offset : offset + count]
+                    values[original == 1] = np.nan
+                    values[original == 2] = np.inf
+                    values[original == 3] = -np.inf
+                segments.append(values)
+                offset += count
+            values = np.concatenate(segments) if segments else np.empty(0, dtype=object)
+            mask = self.present_mask(column)
+            if not bool(np.all(mask)):
+                values = values.astype(object)
+                values[~mask] = MEASUREMENT_SPARSE_CELL
             values.flags.writeable = False
             self._decoded_columns[column] = values
         return self._decoded_columns[name]
@@ -902,7 +1001,15 @@ class RenderedColumnarCsvOutput(
             context="realized CSV source fields",
         )
         source = ColumnarCsvOutput.compose(
-            tuple(output.source for output in values), partition_fields=partition_fields
+            tuple(
+                (
+                    output
+                    if output.source_fields == declared_fields
+                    else replace(output, source_fields=declared_fields)
+                ).source
+                for output in values
+            ),
+            partition_fields=partition_fields,
         )
         if any(
             output.header_content != first.header_content
@@ -925,6 +1032,32 @@ class RenderedColumnarCsvOutput(
                         tuple(output.present_mask(name) for output in values)
                     )
                 ).tobytes()
+        physical_dtypes = {}
+        nonfinite_codes = {}
+        raw_columns = dict(keys)
+        for name in first.rendered_columns:
+            physical_dtypes[name] = tuple(
+                segment
+                for output in values
+                for segment in output.physical_dtypes.get(
+                    name, ((output.data_row_count, np.dtype(object)),)
+                )
+            )
+            if any(name in output.nonfinite_codes for output in values):
+                codes = np.concatenate(
+                    tuple(output.column_nonfinite_codes(name) for output in values)
+                )
+                nonfinite_codes[name] = cls.pack_nonfinite_codes(codes)
+            if name not in partition_fields and any(
+                name in output.raw_columns for output in values
+            ):
+                # Exotic columns require their exact original carrier. Other
+                # numerical/display columns remain compact and undecoded.
+                raw = np.concatenate(
+                    tuple(output.column_values(name) for output in values)
+                )
+                raw.flags.writeable = False
+                raw_columns[name] = raw
         return replace(
             first,
             content=first.header_content
@@ -932,8 +1065,10 @@ class RenderedColumnarCsvOutput(
                 output.content[len(output.header_content) :] for output in values
             ),
             partition_fields=partition_fields,
-            key_columns=MappingProxyType(keys),
             structural_presence=MappingProxyType(presence),
+            physical_dtypes=MappingProxyType(physical_dtypes),
+            nonfinite_codes=MappingProxyType(nonfinite_codes),
+            raw_columns=MappingProxyType(raw_columns),
             data_row_count=sum(output.data_row_count for output in values),
         )
 

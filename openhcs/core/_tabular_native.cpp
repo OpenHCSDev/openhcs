@@ -196,11 +196,19 @@ static std::unique_ptr<CsvColumnAccessor> csv_column_accessor(PyObject *values,
         return std::make_unique<EmptyCsvColumn>(empty);
     if (PyObject_CheckBuffer(values)) {
         Py_buffer buffer{};
-        if (PyObject_GetBuffer(values, &buffer, PyBUF_FULL_RO) < 0)
-            return nullptr;
-        if (BufferedCsvColumn::supports(buffer))
-            return std::make_unique<BufferedCsvColumn>(buffer);
-        PyBuffer_Release(&buffer);
+        if (PyObject_GetBuffer(values, &buffer, PyBUF_FULL_RO) < 0) {
+            // Some valid sequence carriers cannot expose their dtype through
+            // the buffer protocol (for example NumPy datetime columns).
+            if (!PyErr_ExceptionMatches(PyExc_ValueError) &&
+                !PyErr_ExceptionMatches(PyExc_BufferError) &&
+                !PyErr_ExceptionMatches(PyExc_TypeError))
+                return nullptr;
+            PyErr_Clear();
+        } else {
+            if (BufferedCsvColumn::supports(buffer))
+                return std::make_unique<BufferedCsvColumn>(buffer);
+            PyBuffer_Release(&buffer);
+        }
     }
     return std::make_unique<SequenceCsvColumn>(values);
 }

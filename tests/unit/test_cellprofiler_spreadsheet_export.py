@@ -2557,3 +2557,229 @@ def test_rendered_fixed_fields_snapshot_mutable_cells_and_keep_unrendered_identi
         ).content
         == expected
     )
+
+
+@pytest.mark.parametrize("nan_representation", tuple(SpreadsheetNanRepresentation))
+def test_compact_csv_fallback_preserves_physical_dtype_promotion(nan_representation):
+    import pickle
+    import numpy as np
+    from openhcs.processing.materialization.core import (
+        ColumnarCsvOutput,
+        RenderedColumnarCsvOutput,
+    )
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        CellProfilerSpreadsheetCsvOptions,
+    )
+
+    options = CellProfilerSpreadsheetCsvOptions(
+        selection=SpreadsheetFileSelection(("Image",), "Image.csv"),
+        active_subjects=("Image",),
+        delimiter=SpreadsheetDelimiter.COMMA,
+        nan_representation=nan_representation,
+    )
+    pairs = (
+        (np.array([1.1], np.float32), np.array([1.1], np.float64)),
+        (np.array([False, True]), np.array([2, 3])),
+        (np.array([np.nan, np.inf, -np.inf]), np.array([1j, 2j, 3j])),
+        (np.array([np.nan, np.inf, -np.inf]), np.array(["x", "y", "z"])),
+        (np.array([b"a", b"b"]), np.array(["x", "y"])),
+        (
+            np.array(["2000-01-01"], dtype="datetime64[D]"),
+            np.array(["2000-01-02T01:02"], dtype="datetime64[m]"),
+        ),
+        (np.array([2**63 - 1], np.int64), np.array([1.1], np.float64)),
+        (np.array([np.longdouble("1e4000")]), np.array([1.1])),
+        (np.array([1.1], np.float32), np.array([None], object)),
+    )
+    for left, right in pairs:
+        sources = tuple(
+            ColumnarCsvOutput(
+                path="Image.csv",
+                options=options,
+                content=MeasurementSparseColumnarRows(
+                    columns,
+                    fields=tuple(
+                        FieldSpec(
+                            name, float if name == "value" else None, required=False
+                        )
+                        for name in columns
+                    ),
+                ),
+            )
+            for columns in (
+                {"image_number": np.full(len(left), 1), "value": left},
+                {
+                    "image_number": np.full(len(right), 2),
+                    "value": right,
+                    "extra": np.ones(len(right)),
+                },
+            )
+        )
+        expected = (
+            ColumnarCsvOutput.compose(sources, partition_fields=("image_number",))
+            .rendered()
+            .content
+        )
+        rendered = tuple(
+            pickle.loads(
+                pickle.dumps(
+                    source.realized_for_composition(partition_fields=("image_number",))
+                )
+            )
+            for source in sources
+        )
+        if "value" in rendered[0].raw_columns:
+            left[:] = np.zeros_like(left)
+        actual = RenderedColumnarCsvOutput.compose(
+            rendered, partition_fields=("image_number",)
+        )
+        assert actual.content == expected, (
+            left.dtype,
+            right.dtype,
+            actual.content,
+            expected,
+        )
+        assert all(
+            not values.flags.writeable
+            for output in rendered
+            for values in output.raw_columns.values()
+        )
+        for output in rendered:
+            assert all(
+                len(bits) == (2 * output.data_row_count + 7) // 8
+                for bits in output.nonfinite_codes.values()
+            )
+
+
+def test_compact_csv_nested_fast_compose_keeps_original_dtype_segments():
+    import numpy as np
+    from openhcs.processing.materialization.core import (
+        ColumnarCsvOutput,
+        RenderedColumnarCsvOutput,
+    )
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        CellProfilerSpreadsheetCsvOptions,
+    )
+
+    options = CellProfilerSpreadsheetCsvOptions(
+        selection=SpreadsheetFileSelection(("Image",), "Image.csv"),
+        active_subjects=("Image",),
+        delimiter=SpreadsheetDelimiter.COMMA,
+        nan_representation=SpreadsheetNanRepresentation.NULL,
+    )
+    sources = tuple(
+        ColumnarCsvOutput(
+            path="Image.csv",
+            options=options,
+            content=MeasurementSparseColumnarRows(
+                columns,
+                fields=tuple(FieldSpec(name, required=False) for name in columns),
+            ),
+        )
+        for columns in (
+            {
+                "image_number": np.array([1, 1]),
+                "value": np.array([1.1, np.inf], np.float32),
+            },
+            {
+                "image_number": np.array([2, 2]),
+                "value": np.array([1.1, -np.inf], np.float64),
+            },
+            {
+                "image_number": np.array([3]),
+                "value": np.array([1j]),
+                "extra": np.array([5]),
+            },
+        )
+    )
+    rendered = tuple(
+        source.realized_for_composition(partition_fields=("image_number",))
+        for source in sources
+    )
+    first = RenderedColumnarCsvOutput.compose(
+        rendered[:2], partition_fields=("image_number",)
+    )
+    assert not first._decoded_columns
+    result = RenderedColumnarCsvOutput.compose(
+        (first, rendered[2]), partition_fields=("image_number",)
+    )
+    expected = (
+        ColumnarCsvOutput.compose(sources, partition_fields=("image_number",))
+        .rendered()
+        .content
+    )
+    assert result.content == expected
+
+
+def test_compact_csv_preserves_original_semantic_schema_conflicts():
+    import numpy as np
+    from openhcs.processing.materialization.core import (
+        ColumnarCsvOutput,
+        RenderedColumnarCsvOutput,
+    )
+    from openhcs.processing.materialization.options import CsvOptions
+
+    outputs = tuple(
+        ColumnarCsvOutput(
+            path="out.csv",
+            options=CsvOptions(),
+            content=MeasurementSparseColumnarRows(
+                {"image_number": np.array([number]), "value": np.array([1.1])},
+                fields=(FieldSpec("image_number"), FieldSpec("value", declared)),
+            ),
+        ).realized_for_composition(partition_fields=("image_number",))
+        for number, declared in ((1, float), (2, str))
+    )
+    with pytest.raises(ValueError, match="Conflicting"):
+        RenderedColumnarCsvOutput.compose(outputs, partition_fields=("image_number",))
+
+
+def test_compact_csv_requested_absent_field_uses_original_merged_declaration():
+    import numpy as np
+    from openhcs.processing.materialization.core import (
+        ColumnarCsvOutput,
+        RenderedColumnarCsvOutput,
+    )
+    from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
+        CellProfilerSpreadsheetCsvOptions,
+    )
+
+    options = CellProfilerSpreadsheetCsvOptions(
+        selection=SpreadsheetFileSelection(("Image",), "Image.csv"),
+        active_subjects=("Image",),
+        delimiter=SpreadsheetDelimiter.COMMA,
+        nan_representation=SpreadsheetNanRepresentation.NULL,
+        fields=("image_number", "value"),
+    )
+    sources = (
+        ColumnarCsvOutput(
+            path="Image.csv",
+            options=options,
+            content=MeasurementSparseColumnarRows(
+                {"image_number": np.array([1])},
+                fields=(FieldSpec("image_number"),),
+            ),
+        ),
+        ColumnarCsvOutput(
+            path="Image.csv",
+            options=options,
+            content=MeasurementSparseColumnarRows(
+                {"image_number": np.array([2]), "value": np.array([1.1], np.float32)},
+                fields=(FieldSpec("image_number"), FieldSpec("value", float)),
+            ),
+        ),
+    )
+    expected = (
+        ColumnarCsvOutput.compose(sources, partition_fields=("image_number",))
+        .rendered()
+        .content
+    )
+    result = RenderedColumnarCsvOutput.compose(
+        tuple(
+            source.realized_for_composition(partition_fields=("image_number",))
+            for source in sources
+        ),
+        partition_fields=("image_number",),
+    )
+    assert result.content == expected
+    assert result.source.content.fields[1] == FieldSpec("value", float)
