@@ -3809,12 +3809,21 @@ def test_napari_runtime_launch_carries_the_projected_scope_accent():
     assert arguments.expressions[-1].source == "'127.0.0.1'"
 
 
-def test_napari_roi_manager_selects_authoritative_shapes_members(qtbot):
-    from napari.components import ViewerModel
+@pytest.fixture
+def native_roi_viewer(qtbot):
+    napari = pytest.importorskip("napari")
+    viewer = napari.Viewer(show=False)
+    try:
+        yield viewer
+    finally:
+        viewer.close()
+
+
+def test_napari_roi_manager_selects_authoritative_shapes_members(qtbot, native_roi_viewer):
 
     from openhcs.napari_roi_manager import QRoiManager
 
-    viewer = ViewerModel()
+    viewer = native_roi_viewer
     layer = viewer.add_shapes(
         [
             np.array([[0, 0], [0, 2], [2, 2]], dtype=float),
@@ -3852,12 +3861,26 @@ def test_napari_roi_manager_selects_authoritative_shapes_members(qtbot):
 
 
 def _native_roi_selection_server(napari_viewer_server, viewer, layers):
-    server = napari_viewer_server.NapariViewerServer.__new__(
-        napari_viewer_server.NapariViewerServer
+    # Construct the actual receiver, including its native-frame consumer.
+    # Transport is not started: these checks enter through native ROI controls.
+    server = napari_viewer_server.NapariViewerServer(
+        NapariViewerServerRequest(port=6200, viewer_title="ROI selection test"),
     )
     server.viewer = viewer
-    server.layer_route_state = NapariLayerRouteStateStore.empty()
     for route_key, layer, site_count in layers:
+        # Selection resolves coordinate meaning from the retained source type,
+        # not from native layer appearance. Keep the fixture's actual geometry
+        # in the same source-item owner used by streamed mounts.
+        server.component_groups.items_for(route_key).append(
+            _layer_item(
+                {},
+                data=[
+                    {"type": shape_type, "coordinates": coordinates}
+                    for shape_type, coordinates in zip(layer.shape_type, layer.data)
+                ],
+                stream_layer_data_type=StreamingDataType.SHAPES,
+            )
+        )
         has_stack_axis = layer.ndim > 2
         projected_axis_components = ("site",) if has_stack_axis else ()
         component_values = {"site": list(range(site_count))} if has_stack_axis else {}
@@ -3878,9 +3901,6 @@ def _native_roi_selection_server(napari_viewer_server, viewer, layers):
                 ),
             ),
         )
-    server.result_selection_controller = (
-        napari_viewer_server.NapariResultSelectionController(server)
-    )
     for _route_key, layer, _site_count in layers:
         server.result_selection_controller.bind(layer)
     return server
@@ -3889,15 +3909,15 @@ def _native_roi_selection_server(napari_viewer_server, viewer, layers):
 def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
     qtbot,
     monkeypatch,
+    native_roi_viewer,
 ):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    from napari.components import ViewerModel
 
     subject_feature = napari_viewer_server.ObjectArtifactSubjectBinding.SUBJECT_FEATURE
     subject_id_feature = (
         napari_viewer_server.ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE
     )
-    viewer = ViewerModel()
+    viewer = native_roi_viewer
     graph_layer = viewer.add_shapes(
         [
             np.array([[0, 0], [0, 2]], dtype=float),
@@ -3979,16 +3999,15 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
     assert tuple(viewer.layers) == original_order
 
 
-def test_roi_manager_selection_reveals_3d_roi_on_its_exact_slice(qtbot, monkeypatch):
+def test_roi_manager_selection_reveals_3d_roi_on_its_exact_slice(qtbot, monkeypatch, native_roi_viewer):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    from napari.components import ViewerModel
     from napari.settings import get_settings
 
     from openhcs.napari_roi_manager import QRoiManager
 
     settings = get_settings()
     monkeypatch.setattr(settings.appearance.highlight, "highlight_thickness", 1)
-    viewer = ViewerModel(ndisplay=2)
+    viewer = native_roi_viewer
     viewer.add_image(
         np.zeros((6, 64, 64), dtype=np.uint8),
         name="Reference image",
@@ -4067,11 +4086,10 @@ def test_roi_manager_selection_reveals_3d_roi_on_its_exact_slice(qtbot, monkeypa
     assert tuple(viewer.layers) == reordered_layers
 
 
-def test_empty_shapes_selection_does_not_change_viewer_context(qtbot):
+def test_empty_shapes_selection_does_not_change_viewer_context(qtbot, native_roi_viewer):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    from napari.components import ViewerModel
 
-    viewer = ViewerModel(ndisplay=2)
+    viewer = native_roi_viewer
     viewer.add_image(
         np.zeros((5, 32, 32), dtype=np.uint8),
         name="Reference image",
@@ -4109,9 +4127,9 @@ def test_empty_shapes_selection_does_not_change_viewer_context(qtbot):
 def test_roi_selection_preserves_user_adjusted_native_highlight_thickness(
     qtbot,
     monkeypatch,
+    native_roi_viewer,
 ):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    from napari.components import ViewerModel
     from napari.settings import get_settings
 
     settings = get_settings()
@@ -4121,7 +4139,7 @@ def test_roi_selection_preserves_user_adjusted_native_highlight_thickness(
         "highlight_color",
         [0.3, 0.9, 0.2, 1.0],
     )
-    viewer = ViewerModel()
+    viewer = native_roi_viewer
     layer = viewer.add_shapes(
         [np.array([[10, 10], [10, 20], [20, 20]], dtype=float)],
         shape_type="polygon",
@@ -4190,14 +4208,13 @@ def test_roi_selection_toolbar_adjusts_native_highlight_setting(qtbot, monkeypat
     qtbot.waitUntil(lambda: "#00ff00" in color.styleSheet(), timeout=2_000)
 
 
-def test_roi_layer_color_button_recolors_every_shape(qtbot, monkeypatch):
+def test_roi_layer_color_button_recolors_every_shape(qtbot, monkeypatch, native_roi_viewer):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    from napari.components import ViewerModel
     from qtpy.QtCore import Qt
     from qtpy.QtGui import QColor
     from qtpy.QtWidgets import QColorDialog, QDockWidget, QMainWindow, QPushButton, QWidget
 
-    viewer = ViewerModel()
+    viewer = native_roi_viewer
     layer = viewer.add_shapes(
         [
             np.array([[0, 0], [0, 2], [2, 2]], dtype=float),
