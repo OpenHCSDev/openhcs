@@ -77,19 +77,19 @@ printf 'MemAvailable: 4718592 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing no_invented_future_ram_reservation
 printf 'MemAvailable: 1048576 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing below_reserve_observation
-rg -q 'Memory warning:' "$runtime/resources-below_reserve_observation.ram"
+rg -q 'no numeric RAM admission floor' "$runtime/resources-below_reserve_observation.ram"
 rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-below_reserve_observation.psi"
 # Recorded retinal receipt rounded to 1.607 GiB: preserve low RAM as a real
 # warning, not a reason to lose bounded status/cleanup on an existing client.
 printf 'MemAvailable: 1685062 kB\n' > "$scratch/host/meminfo"
 export CONTROLLED_HOST_LEVEL=critical
 run 0 ongoing retinal_status_under_pressure
-rg -q 'MemAvailable 1.607 GiB; desktopReserve 2048 MiB; policy=warning' "$runtime/resources-retinal_status_under_pressure.ram"
+rg -q 'MemAvailable 1.607 GiB; no numeric RAM admission floor' "$runtime/resources-retinal_status_under_pressure.ram"
 jq -e '.level=="critical"' "$runtime/resources-retinal_status_under_pressure.json" >/dev/null
 unset CONTROLLED_HOST_LEVEL
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
-run 76 full low_ram_bulk_rejected
-run 76 replacement low_ram_startup_rejected
+run 0 full low_ram_not_numeric_veto
+run 0 replacement low_ram_not_numeric_startup_veto
 printf 'MemAvailable: invalid kB\n' > "$scratch/host/meminfo"
 run 76 ongoing malformed_ram
 printf 'MemTotal: 4194304 kB\n' > "$scratch/host/meminfo"
@@ -172,14 +172,14 @@ test "$(rg -c '^Current ' "$runtime/resources-selected_output_only.output")" = 1
 run 0 ledger complete_growth_forecast
 test "$(rg -c '^Current ' "$runtime/resources-complete_growth_forecast.output")" = 2
 run 0 ongoing continuing_original_scope_owner
-rg -q 'desktopReserve 2048 MiB' "$runtime/resources-continuing_original_scope_owner.ram"
+rg -q 'no numeric RAM admission floor' "$runtime/resources-continuing_original_scope_owner.ram"
 export CONTROLLED_SCI_MAX=268435456 CONTROLLED_SCI_CURRENT=134217728
 export CONTROLLED_CLI_MAX=0 CONTROLLED_CLI_CURRENT=0
 printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
 run 0 full headless_disabled_cli ADMIN
 admin_runtime="$scratch/admin-run/ADMIN/author-workspace/output/runtime"
-rg -q 'desktopReserve 2048 MiB' "$admin_runtime/resources-headless_disabled_cli.ram"
+rg -q 'no numeric RAM admission floor' "$admin_runtime/resources-headless_disabled_cli.ram"
 export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_SCI_CURRENT=1342177280
 export CONTROLLED_CLI_MAX=536870912 CONTROLLED_CLI_CURRENT=268435456
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"

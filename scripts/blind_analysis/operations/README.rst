@@ -225,21 +225,23 @@ Operation-scoped pressure and disabled endpoints
 ------------------------------------------------
 
 The original resource-check.sh owns operation admission. RAM decisions use
-actual host MemAvailable and the existing desktop reserve, not a child/fleet
-MemoryMax or an absent scope's invented future ceiling. The exact kernel-owned
+actual host MemAvailable, aggregate usage, pressure and expected incremental
+buffers, not a generic desktop reserve, child/fleet MemoryMax or an absent
+scope's invented future ceiling. The exact kernel-owned
 common family supplies measured charge, swap and one RSS/PSS snapshot; resident
 use is already reflected in MemAvailable and is never reserved a second time.
 RSS/PSS are observations, not a guarantee about an operation's future buffers.
-The operator watches real growth/pressure and stages work before the desktop
-reserve is exhausted. No background poller, PID roster or second budget owner.
+The operator watches real growth/pressure and sizes or defers additional work
+against actual headroom. No background poller, PID roster or second budget owner.
 Missing/inactive common ownership still rejects. Helper InvocationID, active
 state and common-family membership stay required, but old helper memory/swap
 limit equality is not health. Helper roles derive from the original performer
 files, not another cap map; headless VNC0 needs no GUI helper family.
 
 Full-stall PSI is telemetry in every operation mode, not a numeric admission
-ceiling. The successor projector deletes the old cutoff field and the publisher
-does not carry it into future funding. No replacement threshold, override flag
+ceiling. The successor projector deletes the old cutoff field. The publisher
+retains original fields only for funded sealed readers that still require them;
+new guards do not consume those cutoffs. No replacement threshold, override flag
 or second guard is introduced. Preserve the kernel's actual10/60/300 windows;
 interpret recent10/60 pressure alongside MemAvailable, family RSS/PSS and the
 specific operation's expected additional buffers. Stage a small receiving case
@@ -248,9 +250,11 @@ universal stop. Defer additional cold/heavy work when actual desktop pressure
 warrants it. PASS reports valid custody and observations, not a guarantee that
 an arbitrary allocation fits.
 
-MemAvailable below the declared desktop reserve warns for ongoing work:
-observing a running job and releasing owned buffers must remain possible under
-real pressure. Startup and large allocations retain their desktop reserve check.
+MemAvailable is validated and reported in every mode, with no numeric RAM floor.
+Malformed, duplicate or missing telemetry rejects. A valid observation does not
+prove that the next allocation fits: size its real additional buffers alongside
+aggregate usage, paging and pressure. Observing a running job and releasing owned
+buffers must remain possible under real pressure.
 Preserve original refusals and frozen operation bytes; a new named pre-dispatch
 observation is not permission to replay an UNKNOWN or start another client.
 

@@ -8,13 +8,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "$1" "${2:?slot}"
 phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
 mode=${4:?explicit operation mode: ongoing, full, replacement, bootstrap or ledger}
-# Growth qualification is not a universal stop for a bounded continuation.
-# Desktop reserve describes future growth admission. Below-reserve
-# ongoing observations must still be able to resolve jobs and release buffers.
+# Operation mode governs declared deadlines and custody, not a numeric RAM floor.
 case "$mode" in
-  ongoing) memory_policy=warning; deadline_policy=warning ;;
-  full|replacement|bootstrap) memory_policy=reject; deadline_policy=reject ;;
-  ledger) memory_policy=ledger; deadline_policy=warning ;;
+  ongoing|ledger) deadline_policy=warning ;;
+  full|replacement|bootstrap) deadline_policy=reject ;;
   *) exit 64 ;;
 esac
 runtime="$FLEET_WORKSPACE/output/runtime"
@@ -127,7 +124,6 @@ set -e
 printf '%s\n' "$status" > "$receipt.helper-exit"
 printf 'Host helper diagnostic only (status %s):\n' "$status"
 cat "$receipt.json"
-floor=$(jq -er '.proposed_resource_envelope.desktop_growth_reserve_mib' <<< "$FLEET_PROGRAM")
 # The existing slice identifies the physical family, not an invented capacity.
 # Charge and swap are observations; never derive host headroom from a hard cap.
 current=$(systemctl --user show "$FLEET_SLICE" -p MemoryCurrent --value)
@@ -150,15 +146,11 @@ printf 'Family snapshot RSS=%sKiB PSS=%sKiB observed=%s unavailable=%s (not an a
 if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
   if [[ "$mode" == bootstrap ]]; then fleet_require_bootstrap_custody; else fleet_require_helpers; fi
 fi
-awk -v floor="$floor" -v policy="$memory_policy" '
+awk '
   /^MemAvailable:/ {
     if(seen++ || NF!=3 || $2 !~ /^[0-9]+$/ || $3!="kB") invalid=1
     else {
-      printf "MemAvailable %.3f GiB; desktopReserve %d MiB; policy=%s\n",$2/1048576,floor,policy
-      if($2<floor*1024) {
-        below=1
-        printf "Memory %s: below desktop reserve. Resolve existing jobs and release owned buffers with bounded observations/cleanup; no cold launch or bulk allocation permission. Stage real buffers against current availability.\n",policy
-      }
+      printf "MemAvailable %.3f GiB; no numeric RAM admission floor; size incremental buffers against host availability, aggregate usage and pressure\n",$2/1048576
     }
   }
   END {
@@ -166,7 +158,6 @@ awk -v floor="$floor" -v policy="$memory_policy" '
       print "Invalid MemAvailable observation" > "/dev/stderr"
       exit 76
     }
-    if(below && policy=="reject") exit 76
   }
 ' /proc/meminfo | tee "$receipt.ram"
 printf 'Pressure observation mode=%s; no numeric PSI admission cutoff. Assess recent10/60 windows with host availability, family RSS/PSS and actual incremental buffers; reduce workers or defer expansion when real pressure warrants it. Admission PASS is not an allocation guarantee.\n' "$mode" | tee "$receipt.psi-policy"

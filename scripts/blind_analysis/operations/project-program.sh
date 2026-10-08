@@ -103,11 +103,11 @@ case "$mode" in
       jq -e --arg member "$member" --arg owner "$owner" '[.authors[] |
         select(.slot==$member and .run_owner_root==$owner)] | length==1' "$owner/program.json" >/dev/null
       # Sealed predecessors read their declared original FUND fields. Derive
-      # required fields from each immutable reader; new guards consume neither.
+      # required fields from each immutable reader; new guards consume none.
       # Normal terminal retirement removes the last reader, then the field.
       if [[ "$mode" == publish ]]; then
         reader_fields=$(jq -ce '[.proposed_resource_envelope | keys[] |
-          select(.=="full_memory_psi_max_percent" or .=="minimum_home_ongoing_gib")]' "$owner/program.json")
+          select(.=="full_memory_psi_max_percent" or .=="minimum_home_ongoing_gib" or .=="desktop_growth_reserve_mib")]' "$owner/program.json")
         retained_reader_contract=$(jq -c --argjson fields "$reader_fields" \
           --argjson retained "$retained_reader_contract" '
           .proposed_resource_envelope | with_entries(
@@ -119,8 +119,7 @@ case "$mode" in
     trap 'test ! -e "$pending" || unlink "$pending"' EXIT
     # Never mirror physical run declarations into the mutable membership owner.
     jq --argjson retained_reader_contract "$retained_reader_contract" '{scope_slice, retained_output_roots, authors:.funded_members,
-      proposed_resource_envelope:(.proposed_resource_envelope | {
-        desktop_growth_reserve_mib} + $retained_reader_contract)
+      proposed_resource_envelope:$retained_reader_contract
     }' "$run/program.json" > "$pending"
     mv "$pending" "$funding/program.json"
     sha256sum "$funding/program.json"
