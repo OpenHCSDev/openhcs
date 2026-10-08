@@ -10,13 +10,13 @@ Each ratio uses one complete native first-use-inclusive batch divided by the med
 
 | OpenHCS assignments / workers | Native reference | Execution minimum / median | Total minimum / median |
 | --- | --- | --- | --- |
-| [1 / 1](data/first_use/singlewell/) | Actual first batch | 3.542× / 6.393× | 2.660× / 4.066× |
-| [8 / 2](data/first_use/8assignments-2workers/) | Actual first batch | 2.661× / 6.804× | 2.540× / 6.071× |
-| [12 / 1](data/first_use/12assignments-1worker/) | Projected; target n=0 | 2.557× / 4.560× | 2.335× / 4.274× |
-| [12 / 2](data/first_use/12assignments-2workers/) | Projected; target n=0 | 2.670× / 7.327× | 2.576× / 6.852× |
-| [12 / 3](data/first_use/12assignments-3workers/) | Projected; target n=0 | 2.894× / 9.015× | 2.755× / 7.999× |
-| [12 / 4](data/first_use/12assignments-4workers/) | Projected; target n=0 | 2.993× / 10.781× | 2.843× / 9.209× |
-| [16 / 4](data/first_use/16assignments-4workers/) | Projected; target n=0 | 2.944× / 10.301× | 2.848× / 9.168× |
+| [1 / 1](data/first_use/singlewell/first_use_execution_summary.csv) | Actual first batch | 3.542× / 6.393× | 2.660× / 4.066× |
+| [8 / 2](data/first_use/8assignments-2workers/first_use_execution_summary.csv) | Actual first batch | 2.661× / 6.804× | 2.540× / 6.071× |
+| [12 / 1](data/first_use/12assignments-1worker/first_use_execution_summary.csv) | Projected; target n=0 | 2.557× / 4.560× | 2.335× / 4.274× |
+| [12 / 2](data/first_use/12assignments-2workers/first_use_execution_summary.csv) | Projected; target n=0 | 2.670× / 7.327× | 2.576× / 6.852× |
+| [12 / 3](data/first_use/12assignments-3workers/first_use_execution_summary.csv) | Projected; target n=0 | 2.894× / 9.015× | 2.755× / 7.999× |
+| [12 / 4](data/first_use/12assignments-4workers/first_use_execution_summary.csv) | Projected; target n=0 | 2.993× / 10.781× | 2.843× / 9.209× |
+| [16 / 4](data/first_use/16assignments-4workers/first_use_execution_summary.csv) | Projected; target n=0 | 2.944× / 10.301× | 2.848× / 9.168× |
 
 Actual OpenHCS one-to-four-worker execution scaling on twelve fixed assignments has median 2.269222×, minimum 1.085641× (Neighbors) and maximum 3.093718× (Illumination Correction Example 2). These actual same-workload controls are distinct from CellProfiler-relative speedups and do not establish ideal fourfold scaling.
 
@@ -38,7 +38,7 @@ Native prepared-invocation total adds the actual first anchor preparation durati
 - May execution: [logarithmic](figures/may/execution/may_execution_mean_workflow_points_log.png), [linear](figures/may/execution/may_execution_mean_workflow_points.png), [paired clocks and ratios](figures/may/execution/first_use_workflow_metrics.csv).
 - May total: [logarithmic](figures/may/total/may_total_mean_workflow_points_log.png), [linear](figures/may/total/may_total_mean_workflow_points.png), [paired clocks and ratios](figures/may/total/first_use_workflow_metrics.csv).
 - Actual fixed-twelve execution [scaling](figures/fixed12/execution/scaling/derived_workflow_metrics.csv) and [efficiency](figures/fixed12/execution/efficiency/derived_workflow_metrics.csv); total [scaling](figures/fixed12/total/scaling/derived_workflow_metrics.csv) and [efficiency](figures/fixed12/total/efficiency/derived_workflow_metrics.csv).
-- Original [reports](reports/), [qualified summaries and custody](data/first_use/), [commands and environment seals](protocol/). Generated provenance retains figure inputs, sources and output hashes.
+- Original reports reside in `reports/`; [summary custody](data/first_use/16assignments-4workers/summary_custody.json), [sealed command](protocol/16assignments-4workers/command.json) and [environment/source seal](protocol/16assignments-4workers/environment-source-seal.json) bind each mode. Generated provenance retains figure inputs, sources and output hashes.
 
 The same renderer produces manuscript-consumable assets at `paper/figures/slas/benchmark-publication`; the existing paper-build owner resolves declared numerical spans from its generated include. No separate painter, parser or manually maintained numerical claim authority is introduced.
 

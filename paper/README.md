@@ -99,7 +99,7 @@ Pandoc, LibreOffice and Poppler on Linux, then install the pinned shared package
 
 ```sh
 python -m venv /path/to/paper-build-env
-/path/to/paper-build-env/bin/python -m pip install -r paper/requirements-build.txt
+/path/to/paper-build-env/bin/python -m pip install --upgrade --force-reinstall -r paper/requirements-build.txt
 /path/to/paper-build-env/bin/python paper/build_paper.py build
 /path/to/paper-build-env/bin/python paper/build_paper.py status
 /path/to/paper-build-env/bin/python paper/build_paper.py snapshot --label pi-review
