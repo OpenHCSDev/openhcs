@@ -210,7 +210,7 @@ The H001 author matched 59 of 64 computational-reference objects and raised F1 f
 ![Public neurite shafts, matched autonomous laboratory-field analysis and measured drug responses after assisted repair.](figures/slas/submission_neurite_results.png){width=6in}
 
 ::: {custom-style="ImageCaption"}
-**(I)** Raw image, initial OpenHCS analysis and published NeuronCyto II algorithm output [@NeuronCytoII] (CC BY-NC 4.0), displayed at the same field scale. **(II)** Matched raw, soma/path and combined views of the autonomous P001 analysis. **(III)** Assisted 20-well responses relative to each drug's DMSO mean; dots are two technical wells per dose and whiskers are sample SD. The supplementary Treatment evaluation and endpoint definitions section gives the methods; Supplementary Figure 5 shows additional endpoints. [TODO: move panel III to the supplement after authorization to split the existing artwork.]
+**(I)** Raw image, initial OpenHCS analysis and published NeuronCyto II algorithm output [@NeuronCytoII] (CC BY-NC 4.0), displayed at the same field scale. **(II)** Matched raw, soma/path and combined views of the autonomous P001 analysis. **(III)** Assisted 20-well responses relative to each drug's DMSO mean; dots are two technical wells per dose and whiskers are sample SD. The supplementary Treatment evaluation and endpoint definitions section gives the methods; Supplementary Figure 5 shows additional endpoints.
 :::
 
 ### Imported CellProfiler workflows reproduce native outputs
