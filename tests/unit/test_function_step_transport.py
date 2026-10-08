@@ -449,34 +449,69 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     pattern = replace(
         pattern, groups=(replace(pattern.groups[0], invocations=(invocation,)),)
     )
+    shared_items = replace(
+        captured,
+        groups=(replace(
+            captured.groups[0],
+            items=(captured_item, replace(captured_item, key=replace(captured_item.key, position=1))),
+        ),),
+    )
+    first_item, second_item = tuple(
+        FunctionStepTransportAuthority.normalize_function_spec(shared_items).iter_items()
+    )
+    assert first_item.contract is second_item.contract
+    repeated_group = replace(
+        pattern.groups[0],
+        invocations=(invocation, replace(invocation, key=replace(invocation.key, position=1))),
+    )
+    first_invocation, second_invocation = (
+        FunctionStepTransportAuthority.normalize_compiled_group(repeated_group).invocations
+    )
+    assert first_invocation.contract is second_invocation.contract
     prepared_callable = invocation.contract.resolve_runtime_callable()
     plan = CompiledStepPlan(
         step_index=0, step_name="Crop", step_type="FunctionStep", axis_id="A01",
-        func=captured, compiled_function_pattern=pattern,
+        compiled_function_pattern=pattern,
     )
     context = ProcessingContext(
         axis_id="A01", step_plans={0: plan},
         filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
     )
     context.freeze()
+    second_invocation = replace(
+        invocation, kwargs=(("left_right_rectangle_positions", (2, 5)),),
+    )
+    second_pattern = replace(
+        pattern, groups=(replace(pattern.groups[0], invocations=(second_invocation,)),),
+    )
+    second_plan = replace(plan, axis_id="A02", compiled_function_pattern=second_pattern)
+    second_context = ProcessingContext(
+        axis_id="A02", step_plans={0: second_plan}, filemanager=context.filemanager,
+    )
+    second_context.freeze()
+    contexts = {"A01": context, "A02": second_context}
     bundle = CompiledExecutionBundle.from_runtime_contexts(
-        pipeline_definition=(), runtime_contexts={"A01": context},
-        worker_assignments={"worker_0": ["A01"]},
+        pipeline_definition=(), runtime_contexts=contexts,
+        worker_assignments={"worker_0": ["A01", "A02"]},
         runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-            GlobalPipelineConfig(), compiled_contexts={"A01": context}, server_mode=False,
+            GlobalPipelineConfig(), compiled_contexts=contexts, server_mode=False,
         ),
     )
     transport_context = bundle.transport_contexts["A01"]
     transport_plan = transport_context.step_plans[0]
     assert transport_context is not context
     assert transport_plan is not plan
-    (transport_item,) = tuple(transport_plan.func.iter_items())
-    assert transport_item.contract.metadata.prepare is None
-    assert transport_item.func.metadata.prepare is None
     (transport_invocation,) = tuple(transport_plan.compiled_function_pattern.iter_invocations())
+    second_transport_invocation = next(
+        bundle.transport_contexts["A02"].step_plans[0].compiled_function_pattern.iter_invocations()
+    )
+    assert transport_invocation.contract is second_transport_invocation.contract
+    assert transport_invocation.func is second_transport_invocation.func
+    assert transport_invocation.kwargs != second_transport_invocation.kwargs
+    assert second_transport_invocation.kwargs == second_invocation.kwargs
     assert transport_invocation.contract.metadata.prepare is None
     assert invocation.contract.metadata.prepare is not None
-    assert plan.func is captured and reference.metadata.prepare is not None
+    assert reference.metadata.prepare is not None
     assert next(captured.iter_items()).contract.metadata.prepare is not None
     assert plan.compiled_function_pattern is pattern
     assert invocation.contract.resolve_runtime_callable() is prepared_callable
@@ -498,10 +533,6 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     RuntimeExecutionTransportSerialization.register()
     restored = pickle.loads(pickle.dumps(serialized_bundle))
     restored_plan = restored.runtime_contexts["A01"].step_plans[0]
-    (restored_item,) = tuple(restored_plan.func.iter_items())
-    assert restored_item.contract.metadata.prepare is None
-    assert restored_item.func.metadata.prepare is None
-    assert restored_item.func.resolve() is reference.resolve()
     (restored_invocation,) = tuple(
         restored_plan.compiled_function_pattern.iter_invocations()
     )
@@ -509,6 +540,12 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
         restored_invocation.runtime_callable
         is restored_invocation.contract.resolve_runtime_callable()
     )
+    second_restored_invocation = next(
+        restored.runtime_contexts["A02"].step_plans[0].compiled_function_pattern.iter_invocations()
+    )
+    assert restored_invocation.contract is second_restored_invocation.contract
+    assert restored_invocation.runtime_callable is second_restored_invocation.runtime_callable
+    assert second_restored_invocation.kwargs == second_invocation.kwargs
     assert restored_invocation.contract is not transport_invocation.contract
     assert (
         CallableContractRuntimeCache.process_cache().get_bound(

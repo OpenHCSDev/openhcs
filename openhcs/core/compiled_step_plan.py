@@ -268,7 +268,6 @@ class CompiledStepPlan:
     step_type: str
     axis_id: str
     step_scope_id: str | None = None
-    func: Any = None
     input_dir: Path | None = None
     output_dir: Path | None = None
     output_plate_root: str | None = None

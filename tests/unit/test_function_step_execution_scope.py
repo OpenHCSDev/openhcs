@@ -408,7 +408,6 @@ def _plate_step_plan(
         step_name=func.__name__,
         step_type="FunctionStep",
         axis_id=axis_id,
-        func=func,
         input_dir=Path("/plate/images"),
         output_dir=Path("/plate/images"),
         output_plate_root="/plate",

@@ -84,21 +84,30 @@ class FunctionStepTransportAuthority:
 
     @classmethod
     def normalize_contexts(cls, contexts: Mapping[str, Any]) -> dict[str, Any]:
+        # Preserve declaration aliases across axis-specific executable bindings.
+        # The identity table lives only for this normalization.
+        contracts: dict[int, CallableContract] = {}
         return {
-            axis_id: cls.normalize_context(context)
+            axis_id: cls.normalize_context(context, contracts=contracts)
             for axis_id, context in contexts.items()
         }
 
     @classmethod
-    def normalize_context(cls, context: Any) -> Any:
+    def normalize_context(
+        cls,
+        context: Any,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
+    ) -> Any:
         """Derive transport plans without replacing prepared runtime contracts."""
+        if contracts is None:
+            contracts = {}
         transport_context = copy(context)
         transport_context.step_plans = {
             step_id: replace(
                 step_plan,
-                func=cls.normalize_function_spec(step_plan.func),
                 compiled_function_pattern=cls.normalize_compiled_pattern(
-                    step_plan.compiled_function_pattern
+                    step_plan.compiled_function_pattern, contracts=contracts,
                 ),
             )
             for step_id, step_plan in context.step_plans.items()
@@ -120,13 +129,14 @@ class FunctionStepTransportAuthority:
     @classmethod
     def normalize_function_spec(cls, func_spec: Any) -> Any:
         if isinstance(func_spec, NormalizedFunctionPattern):
+            contracts: dict[int, CallableContract] = {}
             return replace(
                 func_spec,
                 groups=tuple(
                     replace(
                         group,
                         items=tuple(
-                            cls.normalize_compiled_invocation(item)
+                            cls.normalize_compiled_invocation(item, contracts=contracts)
                             for item in group.items
                         ),
                     )
@@ -201,10 +211,17 @@ class FunctionStepTransportAuthority:
     def normalize_compiled_pattern(
         cls,
         pattern: CompiledFunctionPattern | None,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
     ) -> CompiledFunctionPattern | None:
         if pattern is None:
             return None
-        groups = tuple(cls.normalize_compiled_group(group) for group in pattern.groups)
+        if contracts is None:
+            contracts = {}
+        groups = tuple(
+            cls.normalize_compiled_group(group, contracts=contracts)
+            for group in pattern.groups
+        )
         if all(
             normalized is original
             for normalized, original in zip(groups, pattern.groups)
@@ -216,9 +233,13 @@ class FunctionStepTransportAuthority:
     def normalize_compiled_group(
         cls,
         group: CompiledFunctionGroup,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
     ) -> CompiledFunctionGroup:
+        if contracts is None:
+            contracts = {}
         invocations = tuple(
-            cls.normalize_compiled_invocation(invocation)
+            cls.normalize_compiled_invocation(invocation, contracts=contracts)
             for invocation in group.invocations
         )
         if all(
@@ -232,8 +253,12 @@ class FunctionStepTransportAuthority:
     def normalize_compiled_invocation(
         cls,
         invocation: NormalizedFunctionItem,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
     ) -> NormalizedFunctionItem:
-        contract = cls.normalize_callable_contract(invocation.contract)
+        contract = cls.normalize_callable_contract(
+            invocation.contract, contracts=contracts,
+        )
         if contract is invocation.contract:
             return invocation
         return replace(invocation, contract=contract)
@@ -242,16 +267,18 @@ class FunctionStepTransportAuthority:
     def normalize_callable_contract(
         cls,
         contract: CallableContract,
+        *,
+        contracts: dict[int, CallableContract] | None = None,
     ) -> CallableContract:
+        if contracts is not None and id(contract) in contracts:
+            return contracts[id(contract)]
         normalized_func = cls.normalize_function_spec(contract.func)
         metadata = cls.normalize_callable_metadata(contract.metadata)
-        if (
-            normalized_func is contract.func
-            and metadata is contract.metadata
-        ):
-            return contract
-        return replace(
-            contract,
-            func=normalized_func,
-            metadata=metadata,
+        normalized = (
+            contract
+            if normalized_func is contract.func and metadata is contract.metadata
+            else replace(contract, func=normalized_func, metadata=metadata)
         )
+        if contracts is not None:
+            contracts[id(contract)] = normalized
+        return normalized
