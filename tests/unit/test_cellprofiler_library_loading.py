@@ -871,6 +871,17 @@ def test_smooth_matches_cellprofiler_unmasked_gaussian_edge_normalization():
     assert np.allclose(image_payload_data(result), expected.astype(np.float32))
 
 
+@pytest.mark.parametrize("direction", tuple(EdgeDirection))
+def test_edge_direction_round_trips_through_compiled_worker_transport(direction):
+    import pickle
+
+    assert EdgeDirection(direction.value) is direction
+    restored = pickle.loads(pickle.dumps(direction, protocol=pickle.HIGHEST_PROTOCOL))
+    assert restored is direction
+    assert restored.includes_horizontal_response == direction.includes_horizontal_response
+    assert restored.includes_vertical_response == direction.includes_vertical_response
+
+
 def test_enhance_edges_accepts_nominal_method_and_direction():
     image = np.zeros((9, 9), dtype=np.float32)
     image[:, 5:] = 1.0
