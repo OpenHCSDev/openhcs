@@ -6,6 +6,7 @@ import logging
 from abc import abstractmethod
 from dataclasses import dataclass, replace
 from functools import lru_cache
+from hashlib import md5
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Sequence
 
@@ -193,7 +194,7 @@ class ImageFileSourceMetadata:
 
 @dataclass(frozen=True, slots=True)
 class ImageFileRevision:
-    """Physical file identity and timestamps determining header reuse."""
+    """Physical file identity and timestamps determining source-fact reuse."""
 
     path: Path
     device: int
@@ -213,6 +214,26 @@ class ImageFileRevision:
             modified_ns=stat.st_mtime_ns,
             changed_ns=stat.st_ctime_ns,
         )
+
+    @lru_cache(maxsize=4096)
+    def md5_digest(self) -> str:
+        """Derive a bounded, lazy content fact for this exact physical revision.
+
+        A first read must still belong to the captured revision. Failed or
+        changing reads are not cached; an already observed digest remains a
+        fact about its immutable revision. Current-file consumers construct a
+        fresh revision before querying it.
+        """
+        if ImageFileRevision.from_path(self.path) != self:
+            raise ValueError(
+                f"Image file revision changed before reading content digest: {self.path}."
+            )
+        content = self.path.read_bytes()
+        if ImageFileRevision.from_path(self.path) != self:
+            raise ValueError(
+                f"Image file revision changed while reading content digest: {self.path}."
+            )
+        return md5(content, usedforsecurity=False).hexdigest()
 
 
 class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegisterMeta):

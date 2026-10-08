@@ -1,4 +1,6 @@
 import os
+from hashlib import md5
+from pathlib import Path
 from contextlib import nullcontext
 from dataclasses import replace
 
@@ -9,6 +11,7 @@ import tifffile
 from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     ImageFileSourceMetadata,
+    ImageFileRevision,
     NumpyImageFileFormat,
     PngImageFileFormat,
     SourceImagePixelSemantics,
@@ -18,12 +21,135 @@ from openhcs.core.image_file_serialization import (
     prepare_disk_image_payloads,
     require_image_file_source_metadata,
 )
+
+
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 
+
+def test_content_digest_is_lazy_shared_and_bounded(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "digest.tif"
+    tifffile.imwrite(path, np.arange(20, dtype=np.uint16).reshape(4, 5))
+    expected = md5(path.read_bytes(), usedforsecurity=False).hexdigest()
+    original = Path.read_bytes
+    reads = []
+
+    def read_bytes(self):
+        reads.append(self)
+        return original(self)
+
+    ImageFileRevision.md5_digest.cache_clear()
+    monkeypatch.setattr(Path, "read_bytes", read_bytes)
+    require_image_file_source_metadata(path)
+    assert reads == []
+    for _ in range(3):
+        assert ImageFileRevision.from_path(path).md5_digest() == expected
+    assert reads == [path]
+    assert ImageFileRevision.md5_digest.cache_parameters() == {
+        "maxsize": 4096, "typed": False,
+    }
+
+
+def test_content_digest_detects_same_size_rewrite_with_restored_mtime(tmp_path) -> None:
+    path = tmp_path / "digest.tif"
+    path.write_bytes(b"old source")
+    before_stat = path.stat()
+    before = ImageFileRevision.from_path(path)
+    first = before.md5_digest()
+    path.write_bytes(b"new source")
+    os.utime(path, ns=(before_stat.st_atime_ns, before_stat.st_mtime_ns))
+    after = ImageFileRevision.from_path(path)
+    assert after.size == before.size
+    assert after.modified_ns == before.modified_ns
+    assert after.changed_ns != before.changed_ns
+    assert after.md5_digest() == md5(b"new source", usedforsecurity=False).hexdigest()
+    assert after.md5_digest() != first
+    assert before.md5_digest() == first  # An observed revision retains its own fact.
+
+
+def test_content_digest_refuses_stale_first_read_without_caching(tmp_path) -> None:
+    path = tmp_path / "digest.tif"
+    path.write_bytes(b"old")
+    before = ImageFileRevision.from_path(path)
+    path.write_bytes(b"new")
+    ImageFileRevision.md5_digest.cache_clear()
+    for _ in range(2):
+        with pytest.raises(ValueError, match="changed before reading content digest"):
+            before.md5_digest()
+    assert ImageFileRevision.md5_digest.cache_info().currsize == 0
+    assert ImageFileRevision.from_path(path).md5_digest() == md5(
+        b"new", usedforsecurity=False,
+    ).hexdigest()
+
+
+def test_content_digest_refuses_mutation_during_read_without_caching(
+    tmp_path, monkeypatch,
+) -> None:
+    path = tmp_path / "digest.tif"
+    path.write_bytes(b"old")
+    before = ImageFileRevision.from_path(path)
+    original = Path.read_bytes
+
+    def read_then_change(self):
+        content = original(self)
+        self.write_bytes(b"new")
+        return content
+
+    ImageFileRevision.md5_digest.cache_clear()
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "read_bytes", read_then_change)
+        with pytest.raises(ValueError, match="changed while reading content digest"):
+            before.md5_digest()
+    assert ImageFileRevision.md5_digest.cache_info().currsize == 0
+    assert ImageFileRevision.from_path(path).md5_digest() == md5(
+        b"new", usedforsecurity=False,
+    ).hexdigest()
+
+
+def test_content_digest_does_not_cache_read_errors(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "digest.tif"
+    path.write_bytes(b"source")
+    revision = ImageFileRevision.from_path(path)
+    original = Path.read_bytes
+    reads = []
+
+    def fail_once(self):
+        reads.append(self)
+        if len(reads) == 1:
+            raise PermissionError("original content read refused")
+        return original(self)
+
+    ImageFileRevision.md5_digest.cache_clear()
+    monkeypatch.setattr(Path, "read_bytes", fail_once)
+    with pytest.raises(PermissionError, match="original content read refused"):
+        revision.md5_digest()
+    assert ImageFileRevision.md5_digest.cache_info().currsize == 0
+    assert revision.md5_digest() == md5(b"source", usedforsecurity=False).hexdigest()
+    assert reads == [path, path]
+
+
+def test_content_digest_detects_replacement_deletion_and_recreation(tmp_path) -> None:
+    path = tmp_path / "digest.tif"
+    path.write_bytes(b"old")
+    before = ImageFileRevision.from_path(path)
+    old_digest = before.md5_digest()
+    replacement = tmp_path / "replacement.tif"
+    replacement.write_bytes(b"new")
+    os.utime(replacement, ns=(path.stat().st_atime_ns, before.modified_ns))
+    replacement.replace(path)
+    after = ImageFileRevision.from_path(path)
+    assert after.size == before.size
+    assert after.modified_ns == before.modified_ns
+    assert after.inode != before.inode
+    assert after.md5_digest() != old_digest
+    path.unlink()
+    with pytest.raises(FileNotFoundError):
+        ImageFileRevision.from_path(path)
+    path.write_bytes(b"old")
+    assert ImageFileRevision.from_path(path).md5_digest() == old_digest
 
 def test_jpeg_disk_serialization_scales_unit_float_image_to_uint8() -> None:
     image = np.array([[0.0, 0.5, 1.0]], dtype=np.float32)

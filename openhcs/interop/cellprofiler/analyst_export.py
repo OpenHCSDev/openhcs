@@ -16,7 +16,6 @@ from collections import defaultdict
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, fields, replace
 from enum import Enum
-from hashlib import md5
 from io import BytesIO
 from itertools import chain
 from numbers import Integral, Real
@@ -38,7 +37,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.image_file_serialization import ImageFileFormat, ImageFileRevision
 from openhcs.core.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
     ConcatenatedColumnarRows,
@@ -222,10 +221,9 @@ def _source_image_projection_values(
             source_axis_indices
         ),
         CellProfilerSourceImageProjectionField.HEIGHT: height,
-        CellProfilerSourceImageProjectionField.MD5_DIGEST: md5(
-            source_path.read_bytes(),
-            usedforsecurity=False,
-        ).hexdigest(),
+        CellProfilerSourceImageProjectionField.MD5_DIGEST: (
+            ImageFileRevision.from_path(source_path).md5_digest()
+        ),
         CellProfilerSourceImageProjectionField.SCALING: scaling,
         CellProfilerSourceImageProjectionField.SERIES: 0,
         CellProfilerSourceImageProjectionField.URL: source_path.resolve().as_uri(),

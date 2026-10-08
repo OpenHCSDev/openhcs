@@ -893,6 +893,7 @@ def _borrowed_source_export_fixture(
     context.microscope_handler = SimpleNamespace(
         source_admission_config=lambda: None,
         metadata_handler=SimpleNamespace(
+            source_workspace_root=lambda _plate_path: tmp_path,
             source_workspace_metadata_document=lambda _plate_path: document,
         )
     )
@@ -1988,6 +1989,80 @@ def test_database_projection_includes_derived_grid_measurements() -> None:
         "Image_DefinedGrid_Grid_YLocationOfLowestYSpot": 57,
         "Image_DefinedGrid_Grid_YSpacing": 103.25,
     }
+
+
+def test_source_digest_is_shared_across_image_numbers_and_channel_aliases(
+    tmp_path, monkeypatch,
+):
+    from collections import defaultdict
+    from hashlib import md5
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.image_file_serialization import ImageFileRevision
+    from openhcs.core.source_image_provenance import SourceImageProvenance
+    import tifffile
+
+    source = tmp_path / "source.tif"
+    tifffile.imwrite(source, np.arange(64, dtype=np.uint16).reshape(8, 8))
+    expected = md5(source.read_bytes(), usedforsecurity=False).hexdigest()
+    original = Path.read_bytes
+    reads = []
+
+    def read_bytes(self):
+        reads.append(self)
+        return original(self)
+
+    ImageFileRevision.md5_digest.cache_clear()
+    monkeypatch.setattr(Path, "read_bytes", read_bytes)
+    owner = CPATableRowProjection(
+        CellProfilerDatabaseColumnDialect(),
+        CellProfilerImageSetNumbering(SourceImageSetIdentityPolicy()),
+    )
+    rows, metadata = {}, defaultdict(list)
+    for axis_id in ("W001", "W002"):
+        for alias in ("DNA", "Tubulin"):
+            owner.collect_image_provenance(
+                SourceImageProvenance(
+                    source_path=str(source),
+                    source_component_metadata={"well": "A01", "site": "1"},
+                    source_image_names=(alias,),
+                ),
+                scope=RuntimeExecutionAxisScope(axis_id),
+                source_image_name=alias,
+                image_rows_by_number=rows,
+                source_metadata_by_image_number=metadata,
+            )
+    assert tuple(rows) == (1, 2)
+    for image_number, row in rows.items():
+        assert row["ImageNumber"] == image_number
+        assert row["Image_MD5Digest_DNA"] == expected
+        assert row["Image_MD5Digest_Tubulin"] == expected
+        assert row["Image_Height_DNA"] == row["Image_Height_Tubulin"] == 8
+        assert len(metadata[image_number]) == 2
+    assert reads == [source]
+
+
+def test_source_projection_frame_error_precedes_digest_read(tmp_path, monkeypatch):
+    import tifffile
+    import openhcs.interop.cellprofiler.analyst_export as export
+    from openhcs.core.image_file_serialization import ImageFileRevision
+
+    source = tmp_path / "source.tif"
+    tifffile.imwrite(
+        source, np.zeros((3, 4, 5), dtype=np.uint16),
+        photometric="minisblack", metadata={"axes": "ZYX"},
+    )
+
+    def forbidden_read(self):
+        raise AssertionError("Content digest read before frame validation")
+
+    ImageFileRevision.md5_digest.cache_clear()
+    monkeypatch.setattr(Path, "read_bytes", forbidden_read)
+    with pytest.raises(ValueError, match="Source frame index True"):
+        export._source_image_projection_values(
+            source, "DNA", CellProfilerDatabaseColumnDialect(),
+            source_axis_indices=(True,),
+        )
+    assert ImageFileRevision.md5_digest.cache_info().currsize == 0
 
 
 def test_repeated_source_contributors_share_physical_projection(tmp_path, monkeypatch):
