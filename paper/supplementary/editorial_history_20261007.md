@@ -1042,3 +1042,68 @@ Without spatial tracing truth, remaining branch
 recall, neurite assignment and differences between measurement definitions
 cannot be distinguished. These results are from the completed assisted
 evaluation, not a fresh autonomous success.
+
+## Superseded matched scaling descriptions archived on 8 October 2026
+
+The text below preserves the earlier supplementary description verbatim. Its
+uses of “current” refer to that historical description, not the seven-mode
+thirty-workflow sweep now used in the manuscript.
+
+### Retained historical panels and numerical tables
+
+
+- [Prior thirty-workflow matched record](../../benchmark/results/matched_min3_integrated_main_20261007/README.md), retaining its original engine-median timing policy separately from the current first-use sweep.
+- [Prior paired runtime panel](../figures/slas/benchmark-publication/measured_benchmark_workflow_runtimes.png), a historical snapshot rather than the timing source for current main Figure 6.
+- [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
+- [Eight-assignment measured source record](../../benchmark/results/official30_matched_20261006/README.md), including the matched one-process baseline used for the two-worker comparison.
+- [Retained nine- and sixteen-assignment paired clock panels](../figures/slas/supp_matched_scaling.png), with the original separate capture heads.
+- [Single-core amortization: execution, total and paired nonexecution time](../figures/slas/matched_postgrid_20261006/single-core-amortization/measured_single_core_amortization.png).
+- [Nine-assignment execution ratios](../figures/slas/matched_latestmain_nine_20261006/primary-execution/measured_execution_metrics_long.csv) and [total ratios](../figures/slas/matched_latestmain_nine_20261006/primary-total/measured_total_metrics_long.csv), with the [qualified source record](../../benchmark/results/matched_latestmain_nine_20261006/README.md).
+- [Sixteen-assignment execution ratios](../figures/slas/matched_lastconsumer_20261006/primary-execution/measured_execution_metrics_long.csv) and [total ratios](../figures/slas/matched_lastconsumer_20261006/primary-total/measured_total_metrics_long.csv), with the [qualified source record](../../benchmark/results/matched_lastconsumer_20261006/README.md).
+- Additional independent-CellProfiler-process controls: [nine-assignment execution](../figures/slas/matched_latestmain_nine_20261006/independent-cp-calibration-execution/measured_execution_seconds.png), [nine-assignment total](../figures/slas/matched_latestmain_nine_20261006/independent-cp-calibration-total/measured_total_seconds.png), [sixteen-assignment execution](../figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-execution/measured_execution_seconds.png) and [sixteen-assignment total](../figures/slas/matched_lastconsumer_20261006/independent-cp-calibration-total/measured_total_seconds.png).
+
+Single-core amortization uses one worker and one numerical thread, with actual
+medians over three measured repetitions after warmup at 1, 9 and 16 repeated
+assignments of one biological source sample. Connecting lines join observations.
+OpenHCS nonexecution time is the median paired difference between total and full
+server execution per assignment; it is not a kernel/runtime decomposition.
+Those observations passed declared-output comparisons on revision `eb773573c`.
+Their selected workflows were not reselected from the final single-sample rankings.
+The [earlier three-workflow sixteen-assignment checkpoint](../../benchmark/results/matched_postgrid_20261006/README.md)
+and its [passive-counter diagnostics](../../benchmark/results/matched_postgrid_20261006/diagnostics/3d-same-step-scaling-counter-comparison.json)
+remain separate records. Increased system time, process swap and major faults
+support a working-set/reclaim contribution; they do not identify an allocation
+owner or establish that later fixes eliminate paging.
+
+### Matched scaling protocol
+
+The earlier revision `eb773573c` supplies the measured 1, 9 and 16-assignment
+series for illumination correction Example 3, Vitra and 3D monolayer.
+Revision `d8678dbd4` supplies matched eight-assignment
+observations with one and two workers for all three workflows, with its own
+same-revision single-assignment observations. The later nine-assignment record at `71aded26c`
+supplies one- and three-worker observations for all three workflows; the later
+sixteen-assignment record at `2cda84a369` supplies one- and four-worker
+observations for the 3D monolayer only. The current full-cohort revision
+`3894ca3a0` supplies one-assignment, one-worker observations, not a current
+multiworker sweep. Two-, three- and four-worker captures have different revisions,
+assignment counts and cohort sizes; they are not a single matched 1–4-worker sweep.
+Eight, nine and sixteen assignments repeat each workflow's existing source sample;
+they are not independent biological wells. No averages across unlike workflows
+or revisions are used here.
+
+Execution includes worker coordination, saving, plate exports and finalization.
+Total includes disjoint compile and execute client submit/wait phases. Endpoint,
+library and kernel readiness and subsequent scientific comparison are outside
+the clocks; native total excludes one-time pipeline loading and JVM startup.
+Main Figure 6 reports the full single-sample cohort. The tables above give exact
+ratios, independent-CellProfiler-process controls and single-core amortization.
+
+Warmup and three measured repetitions passed each workflow's declared-output
+comparisons. The original [eight-/nine-assignment sheet](../figures/slas/supp_matched_worker_speedups.png)
+and [four-worker sheet](../figures/slas/supp_matched_worker_speedups_continued_2.png)
+provide the inputs to the consolidated worker-comparison layout.
+
+The selected-workflow comparisons use one stock CellProfiler process and the
+declared OpenHCS worker count. Additional independent CellProfiler processes
+provide a calibration.
