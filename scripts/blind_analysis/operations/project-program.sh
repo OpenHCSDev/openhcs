@@ -102,14 +102,16 @@ case "$mode" in
       test "$(jq -er '.funding_root' "$owner/program.json")" = "$funding"
       jq -e --arg member "$member" --arg owner "$owner" '[.authors[] |
         select(.slot==$member and .run_owner_root==$owner)] | length==1' "$owner/program.json" >/dev/null
-      # Sealed predecessors still read this original FUND field. New run
-      # declarations/guards no longer declare or consume it. Retain its current
-      # value only while an actual funded writer declares that contract; the
-      # same terminal retirement removes it after the final reader leaves.
-      if [[ "$mode" == publish ]] && jq -e \
-        '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$owner/program.json" >/dev/null; then
-        retained_reader_contract=$(jq -c '.proposed_resource_envelope |
-          {full_memory_psi_max_percent} | with_entries(select(.value != null))' "$funding/program.json")
+      # Sealed predecessors read their declared original FUND fields. Derive
+      # required fields from each immutable reader; new guards consume neither.
+      # Normal terminal retirement removes the last reader, then the field.
+      if [[ "$mode" == publish ]]; then
+        reader_fields=$(jq -ce '[.proposed_resource_envelope | keys[] |
+          select(.=="full_memory_psi_max_percent" or .=="minimum_home_ongoing_gib")]' "$owner/program.json")
+        retained_reader_contract=$(jq -c --argjson fields "$reader_fields" \
+          --argjson retained "$retained_reader_contract" '
+          .proposed_resource_envelope | with_entries(
+            select(.key as $key | $fields | index($key))) | $retained + .' "$funding/program.json")
       fi
     done < <(jq -c '.[]' <<< "$members")
     if [[ "$mode" == publish ]]; then cp "$funding/program.json" "$run/publication-before.json"; fi
