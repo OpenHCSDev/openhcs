@@ -1735,9 +1735,21 @@ def test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces():
     assert summary["resolved_crossovers"] == 1
     assert traces[64, 105] == horizontal_owner
     assert traces[105, 75] == vertical_owner
-    assert traces[64, 75] in {horizontal_owner, vertical_owner}
+    # Thinning may route diagonally around the foreground centre. The filled
+    # mask owns that pixel; the graph, not a mandatory centre pixel, owns paths.
+    assert neurons[64, 75] in {horizontal_owner, vertical_owner}
     np.testing.assert_array_equal(neurons[traces > 0], traces[traces > 0])
     np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
+    morphology = result[-1]
+    morphology.require_directed_forest()
+    assert {root.feature_mapping()["neuron_label"] for root in morphology.roots()} == {
+        horizontal_owner, vertical_owner,
+    }
+    for owner, distal in ((horizontal_owner, (64, 105)), (vertical_owner, (105, 75))):
+        paths = [edge.coordinates for edge in morphology.edges
+                 if edge.feature_mapping()["neuron_label"] == owner]
+        assert paths
+        assert any(np.any(np.all(path == distal, axis=1)) for path in paths)
 
 
 def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
