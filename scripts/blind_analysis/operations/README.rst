@@ -75,6 +75,22 @@ custody, original admission and the immutable RUN freeze. The launcher preserves
 fresh masked history, readonly raw input, original configured model/provider,
 per-author lock, recording and CLI scope. It does not adopt an existing author.
 
+The run's qualification_receipt supplies the exact ordered python_source_roots
+used during package qualification. slot-env.sh binds that closure once, without
+inheriting PYTHONPATH or reconstructing dependency paths. Package declarations
+resolve the skill bundle and knowledge manifest under those bindings. Preflight,
+author, MCP and native children share them. Knowledge read permission contains
+only manifest-declared sources and skill resources, not the entire checkout.
+Fresh helpers retain stderr in their original helper root's helper-logs directory,
+named by the existing helper unit plus role/display; their original
+launch handles and systemd invocations remain the process-custody authority.
+Use ``launch-author.sh FUNDING SLOT --qualify`` before author launch to open
+the native recorded MCP shell with the SAME sandbox and software bindings.
+Its separate qualification scope/profile and transcript do not start the
+author clock or create an author turn. Verify health and close that original
+shell before invoking the ordinary author launch. Unknown operations fail
+before any provider invocation; they never fall through to author launch.
+
 For an explicitly declared same-author continuation (``fresh_history=false``
 with an already forked ``native_thread_id``), the original slot owner projects
 the closed ``writer_handoff`` declarations into native history and scientific

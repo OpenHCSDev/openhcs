@@ -108,6 +108,64 @@ FLEET_INSTALL=$(jq -er '.source_install' "$FLEET_RUN_ROOT/program.json")
 FLEET_PYTHON=$(jq -er '.python' "$FLEET_RUN_ROOT/program.json")
 FLEET_OPERATIONS=$(jq -er '.operation_owner_root' "$FLEET_RUN_ROOT/program.json")
 FLEET_PHASE=$(jq -er '.phase' "$FLEET_RUN_ROOT/program.json")
+# The immutable qualification owns the complete source closure. Never inherit
+# an operator's PYTHONPATH or let a performer reconstruct package locations.
+qualification=$(jq -er '.qualification_receipt' <<< "$FLEET_RUN_PROGRAM")
+test "$(jq -er '.target' "$qualification")" = "$FLEET_INSTALL"
+PYTHONPATH=$(jq -er --arg root "$FLEET_INSTALL" '
+  .python_source_roots | select(type=="array" and length>0 and .[0]==$root) |
+  if all(.[]; type=="string" and startswith("/") and
+    (contains(":")|not) and (contains("\n")|not))
+  then join(":") else error("invalid qualified Python roots") end' "$qualification")
+export PYTHONPATH
+while IFS= read -r source_root; do test -d "$source_root"; done \
+  < <(tr ':' '\n' <<< "$PYTHONPATH")
+software_paths=$("$FLEET_PYTHON" -B - "$qualification" <<'PY'
+import json
+import sys
+from pathlib import Path
+from openhcs.agent.skill_sync import installed_skill_bundle
+from openhcs.agent.knowledge_manifest import (
+    default_repo_root, default_knowledge_base_manifest_path,
+    knowledge_base_source_paths_from_manifest,
+)
+from openhcs.agent.knowledge_manifest_schema import (
+    DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH,
+    PackagedComparisonManifestSnapshot, knowledge_source_projections,
+)
+qualification = json.loads(Path(sys.argv[1]).read_text())
+bundle = installed_skill_bundle()
+skill, = (root for root in bundle.skill_roots() if root.name == "use-openhcs")
+source_root = default_repo_root().resolve()
+projection_root = Path(qualification["knowledge_projection_root"])
+originals = knowledge_source_projections(
+    default_knowledge_base_manifest_path(), source_root=source_root)
+frozen = knowledge_source_projections(
+    projection_root / DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH,
+    source_root=projection_root, recipe_type=PackagedComparisonManifestSnapshot)
+assert originals.keys() == frozen.keys(), "Knowledge projections disagree"
+mounts = []
+for relative, original in originals.items():
+    if not original.resolve().is_relative_to(source_root):
+        retained = frozen[relative]
+        assert retained.is_file(), retained
+        mounts.append({"source": str(retained), "target": str(original)})
+print(json.dumps({
+    "skill": str(skill.resolve()),
+    "knowledge_root": str(default_repo_root().resolve()),
+    "knowledge_manifest": str(default_knowledge_base_manifest_path().resolve()),
+    "knowledge_read_roots": [str(path) for path in dict.fromkeys(
+        (*knowledge_base_source_paths_from_manifest(), *bundle.source_paths()))],
+    "knowledge_mounts": mounts,
+}))
+PY
+)
+FLEET_SKILL=$(jq -er '.skill' <<< "$software_paths")
+FLEET_KNOWLEDGE_ROOT=$(jq -er '.knowledge_root' <<< "$software_paths")
+FLEET_KNOWLEDGE_MANIFEST=$(jq -er '.knowledge_manifest' <<< "$software_paths")
+FLEET_KNOWLEDGE_READ_ROOTS=$(jq -er '.knowledge_read_roots | join(":")' <<< "$software_paths")
+FLEET_KNOWLEDGE_MOUNTS=$(jq -ce '.knowledge_mounts' <<< "$software_paths")
+export FLEET_SKILL FLEET_KNOWLEDGE_ROOT FLEET_KNOWLEDGE_MANIFEST FLEET_KNOWLEDGE_READ_ROOTS FLEET_KNOWLEDGE_MOUNTS
 FLEET_DISPLAY=$(jq -er '.display' <<< "$slot")
 FLEET_CPU=$(jq -er '.cpu' <<< "$slot")
 FLEET_INPUT=$(jq -er '.input_root' <<< "$slot")
