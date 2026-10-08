@@ -643,7 +643,7 @@ def test_zmq_server_stop_releases_process_resources_when_transport_stop_fails(
 
 
 def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_gate(
-    tmp_path,
+    tmp_path, monkeypatch,
 ):
     import json
     from polystore.base import reset_memory_backend
@@ -703,12 +703,28 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
             server_mode=True,
         ),
     )
-    reset_memory_backend()
-    runtime = PipelineOrchestrator(
+    compiled_zarr = context.filemanager.registry[Backend.ZARR.value]
+    interleaved = PipelineOrchestrator(
         plate_path=tmp_path, pipeline_config=PipelineConfig()
     )
+    assert interleaved.filemanager.registry[Backend.ZARR.value] is not compiled_zarr
+    reset_memory_backend()
+
+    def reject_configuration_work(*args, **kwargs):
+        raise AssertionError("Compiled adoption must use the admitted domain")
+
+    monkeypatch.setattr(PipelineOrchestrator, "get_effective_config", reject_configuration_work)
+    monkeypatch.setattr(
+        "openhcs.core.orchestrator.orchestrator.ZarrStorageBackend",
+        reject_configuration_work,
+    )
+    runtime = PipelineOrchestrator.from_compiled_execution(
+        bundle, plate_path=tmp_path, pipeline_config=PipelineConfig()
+    )
     runtime.execution_id = "next-execution"
-    runtime.adopt_compiled_execution(bundle)
+    assert runtime.filemanager.registry[Backend.ZARR.value] is compiled_zarr
+    assert runtime.metadata_cache is not previous.metadata_cache
+    assert runtime._visualizers is not previous._visualizers
     assert runtime.filemanager is not previous.filemanager
     assert (
         runtime.filemanager.registry[Backend.VIRTUAL_WORKSPACE.value]
@@ -740,9 +756,86 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     runtime._execution_cancellation.finish(signal)
     metadata_path.unlink()
     tmp_path.rmdir()
-    unavailable = PipelineOrchestrator(
-        plate_path=tmp_path, pipeline_config=PipelineConfig()
-    )
     with pytest.raises(FileNotFoundError):
-        unavailable.adopt_compiled_execution(bundle)
-    assert not unavailable.is_initialized()
+        PipelineOrchestrator.from_compiled_execution(
+            bundle, plate_path=tmp_path, pipeline_config=PipelineConfig()
+        )
+
+
+def test_compiled_axis_selection_uses_admitted_axes_and_debug_policy():
+    def reject_source_discovery(*args, **kwargs):
+        raise AssertionError("Compiled axes must not trigger config/source discovery")
+
+    orchestrator = SimpleNamespace(get_component_keys=reject_source_discovery)
+    bundle = SimpleNamespace(axis_ids=("A01", "A02"))
+    policy = SimpleNamespace(axis_filter_for_available=lambda axes: list(axes[:1]))
+    assert ZMQExecutionServer._wells_for_execution(
+        None, orchestrator, policy, execution_bundle=bundle
+    ) == ["A01"]
+    assert ZMQExecutionServer._wells_for_execution(
+        ("A02",), orchestrator, policy, execution_bundle=bundle
+    ) == ["A02"]
+
+
+def test_compiled_request_keeps_config_scope_without_resolving_configuration(monkeypatch):
+    server = ZMQExecutionServer(port=5555)
+    global_config = GlobalPipelineConfig(
+        processing_config=ProcessingConfig(group_by=GroupBy.CHANNEL)
+    )
+    context = ZMQExecutionContext(
+        execution_id="compiled-adoption",
+        request_payload=ZMQExecutionRequestPayload(
+            identity=ZMQExecutionIdentity(plate_id="/tmp/plate"),
+            pipeline_code="pipeline_steps = []",
+            config_transport=ZMQExecutionConfigTransport(),
+            compile_control=ZMQExecutionCompileControl(compile_artifact_id="artifact"),
+        ),
+        pipeline_steps=[],
+        configs=OpenHCSExecutionConfigBundle(global_config, PipelineConfig()),
+    )
+    bundle = SimpleNamespace(axis_ids=("A01",))
+    server._compiled_artifacts["artifact"] = SimpleNamespace(
+        compilation=SimpleNamespace(execution_bundle=bundle)
+    )
+    server.active_executions[context.execution_id] = ExecutionRecord(
+        execution_id=context.execution_id,
+        plate_id=context.plate_id,
+        client_address=None,
+        status=ExecutionStatus.RUNNING.value,
+    )
+    policy = SimpleNamespace(axis_filter_for_available=lambda axes: list(axes))
+    monkeypatch.setattr(
+        zmq_execution_server_module,
+        "ZMQOrchestratorEnvironmentRequest",
+        lambda **kwargs: SimpleNamespace(prepare=lambda: SimpleNamespace(
+            debug_execution_policy=policy,
+            debug_execution_config=None,
+            plate_path_str=context.plate_id,
+        )),
+    )
+
+    def reject_resolution(*args, **kwargs):
+        raise AssertionError("Compiled request must not resolve the saved config again")
+
+    monkeypatch.setattr(
+        zmq_execution_server_module.ObjectState, "resolve_saved_object", reject_resolution
+    )
+    initialized = []
+    monkeypatch.setattr(
+        server, "_initialize_orchestrator",
+        lambda *args, **kwargs: initialized.append(kwargs) or object(),
+    )
+    compilations = []
+    monkeypatch.setattr(
+        server, "_resolve_compilation",
+        lambda **kwargs: compilations.append(kwargs) or object(),
+    )
+    monkeypatch.setattr(server, "_record_compilation_outputs", lambda *args: None)
+    marker = object()
+    monkeypatch.setattr(server, "_finish_compilation_or_execute", lambda **kwargs: marker)
+    assert server._execute_with_orchestrator(context) is marker
+    assert initialized[0]["execution_bundle"] is bundle
+    assert initialized[0]["resolved_config"] is None
+    assert compilations[0]["resolved_config"] is None
+    assert compilations[0]["wells"] == ["A01"]
+    assert get_current_global_config(GlobalPipelineConfig, use_live=False) is global_config

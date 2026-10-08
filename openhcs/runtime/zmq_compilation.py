@@ -75,7 +75,7 @@ class ZMQCompilationRequest:
     plate_id: str
     pipeline_steps: list[AbstractStep]
     orchestrator: "PipelineOrchestrator"
-    resolved_config: GlobalPipelineConfig
+    resolved_config: GlobalPipelineConfig | None
     wells: list[str]
     compile_artifact_id: str | None
     compilation_signature: str
@@ -142,6 +142,9 @@ class ZMQCompilationRequest:
 
     def compile_fresh(self) -> ZMQCompilationResult:
         from openhcs.core.progress import set_progress_queue
+
+        if self.resolved_config is None:
+            raise ValueError("Fresh compilation requires resolved configuration.")
 
         set_progress_queue(self.compiler_progress_queue)
         try:

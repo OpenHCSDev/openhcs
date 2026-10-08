@@ -186,7 +186,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
         plate_id="/tmp/plate",
         pipeline_steps=[],
         orchestrator=None,
-        resolved_config=GlobalPipelineConfig(),
+        resolved_config=None,
         wells=["A01"],
         compile_artifact_id="artifact-1",
         compilation_signature="signature",
