@@ -155,33 +155,35 @@ class ZMQResultsSummaryEnricher:
 
 @dataclass(frozen=True, slots=True)
 class ZMQWorkerCleanup:
-    """Gracefully cancels OpenHCS orchestrators before base worker cleanup."""
+    """Cancel the exact execution resources owned by existing orchestrators."""
 
     active_executions: dict[str, Any]
 
-    def cancel_execution(self, execution_id: str) -> None:
-        """Request cooperative cancellation for one execution orchestrator."""
+    def cancel_execution(self, execution_id: str) -> int:
+        """Cancel one execution and count its terminated worker processes."""
 
         record = self.active_executions.get(execution_id)
         if record is None:
-            return
+            return 0
         orchestrator = record.get_extra("orchestrator")
         if orchestrator is None:
-            return
+            return 0
         logger.info("[%s] Requesting graceful cancellation...", execution_id)
-        orchestrator.cancel_execution()
+        return orchestrator.cancel_execution()
 
-    def cancel_orchestrators(self) -> None:
-        for execution_id, record in self.active_executions.items():
-            orchestrator = record.get_extra("orchestrator")
-            if orchestrator is None:
-                continue
+    def cancel_orchestrators(self) -> int:
+        terminated = 0
+        errors: list[Exception] = []
+        for execution_id in tuple(self.active_executions):
             try:
-                logger.info("[%s] Requesting graceful cancellation...", execution_id)
-                orchestrator.cancel_execution()
+                terminated += self.cancel_execution(execution_id)
             except Exception as error:
+                errors.append(error)
                 logger.warning(
                     "[%s] Graceful cancellation failed: %s",
                     execution_id,
                     error,
                 )
+        if errors:
+            raise errors[0]
+        return terminated

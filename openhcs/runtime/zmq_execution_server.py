@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing
+import os
 import sys
 import time
 from collections.abc import Sequence
@@ -26,6 +28,7 @@ from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
+from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
@@ -191,14 +194,53 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         self._compiled_artifacts: dict[str, ZMQCompileArtifactRecord] = {}
         self._compiled_artifact_ttl_seconds = config.compiled_artifact_ttl_seconds
         self._server_environment = RuntimeEnvironmentSnapshot.current()
+        self._prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
+
+    def prepare_runtime_capabilities(
+        self,
+        status_callback: EndpointStartupStatusCallback | None = None,
+    ) -> None:
+        super().prepare_runtime_capabilities(status_callback)
+        self._prepare_worker_resources()
+
+    def _prepare_worker_resources(self) -> None:
+        """Prepare inherited workers before endpoint execution threads start."""
+        if self._prepared_worker_runner is not None:
+            return
+        if "fork" not in multiprocessing.get_all_start_methods():
+            return
+        capacity = (
+            len(os.sched_getaffinity(0))
+            if sys.platform.startswith("linux")
+            else (os.cpu_count() or 1)
+        )
+        runner = PreparedForkWorkerLaneRunner(
+            multiprocessing_context=multiprocessing.get_context("fork"),
+            capacity=capacity,
+        )
+        try:
+            runner.prepare()
+        except BaseException:
+            runner.close()
+            raise
+        self._prepared_worker_runner = runner
 
     def stop(self) -> None:
         """Stop transport and every exact process resource owned by this server."""
 
+        self._running = False
         try:
-            super().stop()
+            try:
+                ZMQWorkerCleanup(self.active_executions).cancel_orchestrators()
+            finally:
+                if self._prepared_worker_runner is not None:
+                    self._prepared_worker_runner.close()
+                    self._prepared_worker_runner = None
         finally:
-            cleanup_backend_connections(include_process_resources=True)
+            try:
+                super().stop()
+            finally:
+                cleanup_backend_connections(include_process_resources=True)
 
     def handle_control_message(self, message):
         if ZMQControlMessageRouter.handles(message):
@@ -782,6 +824,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 request_context.execution_id
             ],
             forward_worker_progress=self._forward_worker_progress,
+            prepared_worker_runner=self._prepared_worker_runner,
         ).execute()
         self._export_runtime_observation(
             request_context=request_context,
@@ -921,11 +964,9 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
 
     def _kill_worker_processes(self) -> int:
         """OpenHCS-specific worker cleanup (graceful cancellation + kill)."""
-        ZMQWorkerCleanup(self.active_executions).cancel_orchestrators()
-        return super()._kill_worker_processes()
+        return ZMQWorkerCleanup(self.active_executions).cancel_orchestrators()
 
     def _interrupt_execution(self, execution_id: str) -> int:
         """Cancel the targeted orchestrator before terminating its workers."""
 
-        ZMQWorkerCleanup(self.active_executions).cancel_execution(execution_id)
-        return super()._kill_worker_processes()
+        return ZMQWorkerCleanup(self.active_executions).cancel_execution(execution_id)

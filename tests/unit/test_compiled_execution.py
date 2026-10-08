@@ -48,6 +48,7 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
 
+
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
     return CompiledRuntimeEnvironmentPlan(
         worker_start=CompiledWorkerStartPlan(
@@ -191,7 +192,10 @@ def test_consolidation_does_not_require_parent_payload_records(
     )
 
     assert bundle.requires_parent_runtime_observation is False
-    assert RuntimeObservationMode.for_compiled_bundle(bundle) is RuntimeObservationMode.OMIT
+    assert (
+        RuntimeObservationMode.for_compiled_bundle(bundle)
+        is RuntimeObservationMode.OMIT
+    )
 
 
 def test_runtime_observation_mode_can_only_be_strengthened() -> None:
@@ -224,7 +228,8 @@ def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
             RuntimeValue.normalize(
                 output_plan,
                 ImageMetadataPayload(
-                    data=pixels, metadata=ImagePayloadMetadata(source_dtype="float32"),
+                    data=pixels,
+                    metadata=ImagePayloadMetadata(source_dtype="float32"),
                 ),
                 axis_id=context.axis_id,
             ),
@@ -340,8 +345,10 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         *,
         context_key,
         cancellation=None,
+        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
     ):
         assert context_key == "A01"
+        assert runtime_observation_mode is RuntimeObservationMode.MERGE_INTO_PARENT
         current_records.append(
             context.runtime_value_store.replace(
                 measurement_value(2),
@@ -500,12 +507,16 @@ def test_worker_lane_releases_previous_axis_stack_before_next_axis(
 )
 @pytest.mark.parametrize("release_process_resources", (True, False))
 def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
-    monkeypatch, observation_mode, release_process_resources,
+    monkeypatch,
+    observation_mode,
+    release_process_resources,
 ):
     references = []
     contexts = [ProcessingContext(axis_id=axis) for axis in ("A01", "A02", "A03")]
     output_plan = ArtifactOutputPlan(
-        name="processed", path="/memory/processed.pkl", artifact_type=ImageArtifactType,
+        name="processed",
+        path="/memory/processed.pkl",
+        artifact_type=ImageArtifactType,
     )
 
     def execute_axis(_pipeline, context, _lane, **_kwargs):
@@ -514,7 +525,8 @@ def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
         references.append(weakref.ref(pixels))
         context.runtime_value_store.record(
             RuntimeValue.normalize(output_plan, pixels, axis_id=context.axis_id),
-            path=output_plan.path, backend="memory",
+            path=output_plan.path,
+            backend="memory",
         )
         return ExecutionResult.success(context.axis_id)
 
@@ -526,8 +538,10 @@ def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
             (context.axis_id, [(context.axis_id, context)]) for context in contexts
         ],
         lane_context=WorkerLaneExecutionContext(
-            execution_id="execution", plate_id="plate",
-            debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker",
+            execution_id="execution",
+            plate_id="plate",
+            debug_execution_policy=NoOpDebugExecutionPolicy(),
+            worker_slot="worker",
             worker_assignments={"worker": [context.axis_id for context in contexts]},
         ),
         runtime_observation_mode=observation_mode,

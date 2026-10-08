@@ -51,6 +51,7 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.worker_execution import (
+    PreparedForkWorkerLaneRunner,
     WorkerExecutorFactory,
     WorkerExecutorResources,
 )
@@ -164,6 +165,7 @@ class CompiledPlateExecutionRequest(ProgressExecutionContext):
     progress_queue: ProgressQueue | None
     runtime_observation_mode: RuntimeObservationMode
     debug_execution_policy: DebugExecutionPolicy
+    prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
 
     @property
     def pipeline_definition(self) -> List[AbstractStep]:
@@ -245,6 +247,7 @@ def execute_compiled_plate_request(
         ).create(
             runtime_environment=validated.runtime_environment,
             actual_max_workers=validated.actual_max_workers,
+            prepared_worker_runner=request.prepared_worker_runner,
         )
 
         execution_bundle = request.execution_bundle
@@ -254,7 +257,7 @@ def execute_compiled_plate_request(
         plate_runtime_observation = RuntimeExecutionObservation()
         try:
             executor_resources.install_execution_bundle(execution_bundle)
-            orchestrator._executor = executor_resources.executor
+            orchestrator._executor_resources = executor_resources
             try:
                 with executor_resources.execution_context():
                     worker_assignment_plan = executor_resources.plan_worker_lanes(
@@ -273,8 +276,12 @@ def execute_compiled_plate_request(
                             parent_contexts=validated.compiled_contexts,
                         )
                     )
-                    if any(result.is_cancelled() for result in execution_results.values()):
-                        raise ExecutionCancelledError("Execution cancelled during worker execution")
+                    if any(
+                        result.is_cancelled() for result in execution_results.values()
+                    ):
+                        raise ExecutionCancelledError(
+                            "Execution cancelled during worker execution"
+                        )
                     cancellation.raise_if_requested("after worker execution")
                     if execution_results.is_success():
                         plate_runtime_observation = execute_plate_scoped_steps(
@@ -283,7 +290,8 @@ def execute_compiled_plate_request(
                             progress_context=validated,
                             executor_resources=(
                                 executor_resources
-                                if validated.actual_max_workers > 1 else None
+                                if validated.actual_max_workers > 1
+                                else None
                             ),
                         )
                     executor_resources.shutdown_executor()
@@ -299,6 +307,7 @@ def execute_compiled_plate_request(
             finally:
                 executor_resources.clear_execution_bundle()
                 executor_resources.release_parent_runtime_resources(execution_bundle)
+                orchestrator._executor_resources = None
 
             if execution_results.is_success():
                 consolidate_analysis_outputs(
@@ -612,16 +621,18 @@ def execute_plate_scoped_steps(
                 for key, context in compiled_contexts.items()
                 if context is owner_context
             )
-            observation = StepExecutionObservation.combine((
-                StepExecutionObservation.combine(
-                    item.observation(owner_plan, owner_context)
-                    for item in materializations
-                ),
-                StepExecutionObservation(
-                    materialized_locations_by_address=MappingProxyType({}),
-                    source_projection_entries_by_target=projection_entries,
-                ),
-            ))
+            observation = StepExecutionObservation.combine(
+                (
+                    StepExecutionObservation.combine(
+                        item.observation(owner_plan, owner_context)
+                        for item in materializations
+                    ),
+                    StepExecutionObservation(
+                        materialized_locations_by_address=MappingProxyType({}),
+                        source_projection_entries_by_target=projection_entries,
+                    ),
+                )
+            )
             owner_context.record_completed_step_outputs(observation)
             observations_by_context[owner_context_key].append(observation)
         _emit_execution_progress(
