@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from polystore.exceptions import MetadataNotFoundError
 from polystore.virtual_workspace import SourcePixelRef
+from polystore.source_tile_geometry import SourceTileGeometry
 
 from openhcs.agent.dto.plate import (
     PlateFileQueryRequest,
@@ -25,6 +26,7 @@ from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingU
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
+    SourcePlaneProjection,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
@@ -185,6 +187,55 @@ def test_no_main_output_rejects_conflicting_workspace_addresses(tmp_path):
         context.handler.metadata_handler.workspace_mapping_metadata(root)
 
 
+def test_mixed_plane_and_artifact_projections_keep_scope_and_storage_independent(tmp_path):
+    inspection, declarations = declared_output(tmp_path / "output", ("one", "two"))
+    path, pixels, artifact, _ = declarations[0]
+    root = path.parent.parent
+    planes = []
+    for site in range(1, 5):
+        plane_path = path.parent / f"plane-{site}.tif"
+        ImageFileFormat.require_path(plane_path).write(plane_path, pixels)
+        row, column = divmod(site - 1, 2)
+        planes.append(SourcePlaneProjection(
+            address=OpenHCSPlaneAddress.from_values("A01", site, 2, 1, 1),
+            ref=SourcePixelRef("disk", str(plane_path.relative_to(root))),
+            source_metadata={SourceTileGeometry.metadata_field: SourceTileGeometry(
+                x_pixels=column * 6, y_pixels=row * 5,
+                row=row, column=column, width_pixels=6, height_pixels=5,
+            ).as_metadata_value()},
+            image_metadata=artifact.image_metadata,
+        ))
+    declaration = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser()).metadata_dict(
+        SourceProjectionSet(tuple(planes)),
+        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        source_filename_parser_name="SourceSchemaFilenameParser",
+        grid_dimensions=[2, 2], pixel_size=1,
+        projection_paths=tuple((plane, plane.ref.backend_address) for plane in planes),
+    )
+    AtomicMetadataWriter().replace_subdirectory_metadata(
+        root / "openhcs_metadata.json", path.parent.name, declaration,
+    )
+    context, errors, _ = inspection.open_context(PlatePathInspectionRequest(plate_path=str(root)))
+    assert errors == ()
+    owner = context.handler.metadata_handler
+    assert owner.get_source_filename_parser_name(root) == "SourceSchemaFilenameParser"
+    with pytest.raises(ValueError, match="disagree on 'grid_dimensions'"):
+        owner.get_metadata_grid_dimensions(root)
+    with pytest.raises(MetadataNotFoundError, match="none is marked main"):
+        owner.determine_main_subdirectory(root)
+    assert owner.get_metadata_grid_dimensions(root / "saved-0") == [2, 2]
+    assert owner.get_metadata_grid_dimensions(root / "saved-1") == []
+    assert owner.get_metadata_grid_dimensions(root / "saved-0") == [2, 2]
+    assert context.handler.initialize_workspace(root / "saved-0", context.filemanager) == root / "saved-0"
+    for scope, count in ((root, 5), (root / "saved-0", 4), (root / "saved-1", 1)):
+        result = inspection.query_files(PlateFileQueryRequest.from_fields(
+            plate_path=str(scope), kind="image", include_previews=False,
+        ))
+        assert result.errors == result.warnings == ()
+        assert result.total_count == count
+        assert all(record.full_virtual_path == str(root / record.virtual_path) for record in result.records)
+
+
 @pytest.mark.parametrize("main_branch", ("saved-0", "unmapped"))
 def test_read_only_reopening_does_not_replace_explicit_input_authority(
     tmp_path, main_branch
@@ -250,12 +301,14 @@ def test_metadata_projection_uses_one_document_loader_and_writer_invalidation(
 
     monkeypatch.setattr(context.filemanager, "load", observe)
     document = owner.source_workspace_metadata_document(root)
-    assert owner.get_pixel_size(root) == 1
+    assert owner.get_metadata_pixel_size(root) == 1
+    with pytest.raises(ValueError, match="micrometer calibration"):
+        owner.get_pixel_size(root)
     assert len(owner.get_image_files(root, all_subdirs=True)) == 2
     assert owner.source_workspace_metadata_document(root) is document
     assert loaded == [str(root / "openhcs_metadata.json")]
     owner.update_available_backends(root, {"disk": True})
-    assert owner.get_pixel_size(root) == 1
+    assert owner.get_metadata_pixel_size(root) == 1
     assert len(loaded) == 2
     assert owner.source_workspace_metadata_document(root) is not document
 

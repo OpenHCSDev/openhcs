@@ -932,10 +932,11 @@ class VirtualWorkspaceSourceProjectionAuthority:
     def projection_if_available(
         self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
+        workspace_root = self.metadata_handler.source_workspace_root(self.plate_path)
         for metadata in self.metadata_documents():
             if self.cache is None:
                 projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
-                    self.plate_path,
+                    workspace_root,
                     metadata,
                 )
                 if projection is not None and self.source_bindings is not None:
@@ -946,7 +947,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
                     ).admit_prepared_projection(projection)
             else:
                 projection = self.cache.projection_for(
-                    self.plate_path, metadata, source_bindings=self.source_bindings,
+                    workspace_root, metadata, source_bindings=self.source_bindings,
                 )
             if projection is None:
                 continue

@@ -462,6 +462,10 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     or raise an exception explaining why the contract cannot be satisfied.
     """
 
+    def source_workspace_root(self, plate_path: Union[str, Path]) -> Path:
+        """Return the storage anchor for this owner's workspace-relative addresses."""
+        return Path(plate_path)
+
     def source_workspace_metadata_document(
         self,
         plate_path: Union[str, Path],

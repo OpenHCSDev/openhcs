@@ -288,6 +288,8 @@ class PlateImageInventory:
         source_ref: SourcePixelRef | None = None,
         source_metadata: Mapping[str, JsonValue] | None = None,
     ) -> PlateImageRecord:
+        if projection is not None and projection.workspace_root is not None:
+            plate_path = Path(projection.workspace_root)
         full_virtual_path = str(plate_path / image_file)
         lookup = VirtualWorkspacePathLookup.from_paths(
             image_file,
