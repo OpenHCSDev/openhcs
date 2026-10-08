@@ -21,6 +21,7 @@ from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
 from openhcs.runtime.napari_viewer_server import (
     NapariAcceptedControlRequest,
     NapariControlMessageAction,
+    NapariLayerDisplayPipeline,
     NapariScreenshotControlMessageAction,
     NapariViewerServer,
 )
@@ -62,6 +63,7 @@ def queued_viewer():
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
     server.config = OPENHCS_ZMQ_CONFIG
     server.accepted_control_requests = queue.Queue()
+    server.display_pipeline = NapariLayerDisplayPipeline(server)
     yield app, canvas, server
     from qtpy.compat import isalive
 
@@ -218,7 +220,7 @@ def test_deferred_reply_projection_error_completes_accepted_request(
 ):
     app, _, server = queued_viewer
 
-    def reject_native_projection(server, response):
+    def reject_native_projection(server, response, dimensions):
         raise ValueError("native dimension projection failed")
 
     monkeypatch.setattr(
