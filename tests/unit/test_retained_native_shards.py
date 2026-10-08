@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+import benchmark.matched_cellprofiler_batch as matched_batch
+from benchmark.adapters.cellprofiler import NativeCellProfilerSelectedSourceUniverse
 from benchmark.matched_cellprofiler_batch import (
     _concurrent_timing,
     _native_reference_inventory,
@@ -104,6 +106,97 @@ def test_original_partitions_and_simultaneous_clocks_are_admitted(native_runs):
     assert _concurrent_timing(reports, 0)[
         "pipeline_execution_makespan_seconds"
     ] == pytest.approx(2.0)
+
+
+@pytest.mark.parametrize(
+    "change",
+    ("relocated", "changed-bytes", "changed-size", "changed-name", "retained-mutated"),
+)
+def test_retained_source_reuse_preserves_content_identity_across_staging(
+    native_runs, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, change: str
+):
+    whole, _ = native_runs
+    original = tmp_path / "original-input" / "metadata.csv"
+    current = tmp_path / "current-input" / "metadata.csv"
+    for source in (original, current):
+        source.parent.mkdir()
+        source.write_bytes(b"Image,Well\nimage.tif,A01\n")
+    pipeline = tmp_path / "pipeline.cppipe"
+    pipeline.write_text("unchanged effective pipeline")
+    worker = tmp_path / "native_worker.py"
+    worker.write_text("native worker source")
+    worker.with_name("native_batch_contracts.py").write_text("native contract source")
+    whole = replace(
+        whole,
+        request=replace(
+            whole.request, pipeline_path=str(pipeline), input_dir=str(original.parent)
+        ),
+    )
+    report = json.loads(json.dumps(asdict(whole)))
+    Path(whole.request.report_path).write_text(json.dumps(report))
+    (tmp_path / "native_request.json").write_text(json.dumps(asdict(whole.request)))
+    origin = {
+        "case": "selected-metadata",
+        "wells": ["W001", "W002"],
+        "selected_source_wells": ["A01"],
+        "assignment_scope": "independent repeated source assignments",
+        "cppipe_sha256": matched_batch.sha256_file(pipeline),
+        "native_worker_sha256": matched_batch.sha256_file(worker),
+        "native_contract_sha256": matched_batch.sha256_file(
+            worker.with_name("native_batch_contracts.py")
+        ),
+        "native_job_count": 1,
+        "thread_environment": {"OMP_NUM_THREADS": "1"},
+        "native_image_set_count": 2,
+        "source_commit": "retained-source",
+        "native_input_inventory": json.loads(
+            json.dumps(
+                matched_batch._source_input_inventory(
+                    NativeCellProfilerSelectedSourceUniverse((original,))
+                )
+            )
+        ),
+    }
+    (tmp_path / "pilot_provenance.json").write_text(json.dumps(origin))
+    if change == "changed-bytes":
+        current.write_bytes(current.read_bytes().replace(b"A01", b"A02"))
+    elif change == "changed-size":
+        current.write_bytes(current.read_bytes() + b"extra")
+    elif change == "changed-name":
+        current = current.rename(current.with_name("other.csv"))
+    elif change == "retained-mutated":
+        original.write_bytes(original.read_bytes().replace(b"A01", b"A02"))
+    provenance = {
+        **origin,
+        "native_input_inventory": matched_batch._source_input_inventory(
+            NativeCellProfilerSelectedSourceUniverse((current,))
+        ),
+    }
+    monkeypatch.setattr(
+        matched_batch, "_probe_native_environment", lambda *_: whole.environment
+    )
+
+    def reuse():
+        return matched_batch._reuse_native_report(
+            tmp_path,
+            native_payload=asdict(
+                replace(whole.request, input_dir=str(current.parent))
+            ),
+            native_python=Path("native-python"),
+            native_worker=worker,
+            provenance=provenance,
+        )
+
+    if change != "relocated":
+        with pytest.raises(RuntimeError, match="source images or metadata differ"):
+            reuse()
+        return
+    assert reuse() == report
+    assert origin["native_input_inventory"][0]["source_path"] == str(original)
+    assert provenance["native_input_inventory"][0]["source_path"] == str(current)
+    assert provenance["native_reference_report_sha256"] == matched_batch.sha256_file(
+        tmp_path / "native_report.json"
+    )
 
 
 @pytest.mark.parametrize(

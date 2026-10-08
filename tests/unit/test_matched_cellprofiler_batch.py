@@ -5,6 +5,7 @@ import json
 from dataclasses import asdict, replace
 from pathlib import Path
 from subprocess import CompletedProcess
+from types import SimpleNamespace
 
 import pytest
 from objectstate.context_manager import config_context
@@ -288,6 +289,111 @@ def test_pilot_parser_requires_one_sampling_declaration() -> None:
     ).requested_wells == ["A01", "B12"]
     with pytest.raises(SystemExit):
         parser.parse_args((*common, "--well-count", "2", "--well", "A01"))
+
+
+def test_native_reference_preflight_requires_retained_candidate_mode(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with pytest.raises(ValueError, match="requires candidate-only retained references"):
+        matched_batch.main(
+            [
+                "--manifest",
+                "manifest.json",
+                "--all-cases",
+                "--well-count",
+                "1",
+                "--output-dir",
+                str(tmp_path / "preflight"),
+                "--native-python",
+                "native-python",
+                "--preflight-native-references",
+            ]
+        )
+
+    def reject_fresh_native(*args, **kwargs):
+        raise AssertionError("Native preflight must never fall back to fresh execution")
+
+    monkeypatch.setattr(matched_batch, "_invoke_native_worker", reject_fresh_native)
+    args = matched_batch._parser().parse_args(
+        [
+            "--manifest",
+            "manifest.json",
+            "--case",
+            "selected",
+            "--well-count",
+            "1",
+            "--output-dir",
+            str(tmp_path / "preflight"),
+            "--native-python",
+            "native-python",
+            "--preflight-native-references",
+            "--candidate-only",
+        ]
+    )
+    with pytest.raises(ValueError, match="requires candidate-only retained references"):
+        matched_batch._run_case(args, None)
+
+
+def test_native_reference_preflight_never_acquires_an_execution_endpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    reference = tmp_path / "retained"
+    reference.mkdir()
+    cases = (SimpleNamespace(name="first"), SimpleNamespace(name="second"))
+    monkeypatch.setattr(matched_batch, "load_comparison_cases", lambda _: cases)
+    received = []
+
+    def admitted_case(args, client):
+        assert args.preflight_native_references and args.candidate_only
+        assert client is None
+        received.append(args.case)
+        args.output_dir.mkdir(parents=True)
+        (args.output_dir / "native_reference_preflight.json").write_text(
+            json.dumps({"status": "PASS", "case": args.case})
+        )
+        return 0
+
+    def reject_endpoint(*args, **kwargs):
+        raise AssertionError(
+            "Native preflight must not acquire/start an execution endpoint"
+        )
+
+    monkeypatch.setattr(matched_batch, "_run_case", admitted_case)
+    monkeypatch.setattr(
+        matched_batch.DataControlPortPairAuthority, "acquire", reject_endpoint
+    )
+    monkeypatch.setattr(matched_batch, "ZMQExecutionClient", reject_endpoint)
+    output = tmp_path / "preflight"
+    assert (
+        matched_batch.main(
+            [
+                "--manifest",
+                "manifest.json",
+                "--all-cases",
+                "--well-count",
+                "1",
+                "--repeat-assignments",
+                "12",
+                "--candidate-only",
+                "--preflight-native-references",
+                "--native-reference-root",
+                str(reference),
+                "--production-source-root",
+                str(tmp_path),
+                "--output-dir",
+                str(output),
+                "--native-python",
+                "native-python",
+            ]
+        )
+        == 0
+    )
+    assert received == [case.name for case in cases]
+    suite = json.loads((output / "native_reference_preflight_suite.json").read_text())
+    assert suite["status"] == "PASS" and suite["processing_executed"] is False
+    assert list(suite["cases"]) == received
+    assert all(Path(receipt["path"]).is_file() for receipt in suite["cases"].values())
 
 
 def test_pilot_sampling_resolves_only_genuine_declared_wells() -> None:
