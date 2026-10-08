@@ -1,0 +1,17 @@
+{
+  "label": "neighbors-preselection-original",
+  "prepare": {
+    "cpu": 4.5842050620000006,
+    "wall": 4.599765758961439
+  },
+  "render": {
+    "cpu": 0.7665225790000001,
+    "wall": 0.7688767788931727
+  },
+  "csv_bytes_exact": true,
+  "hashes": {
+    "Image.csv": "d6e74fa4aaaa0c533b6efe83351c507d1cfa98b9ae30bca7c64831f230d7b8af",
+    "Cells.csv": "dd5694d23d7053b316f0f83630970e65205a86fc300ae44cfd0912264782034f"
+  },
+  "source_reference": "b0f28d7b7 prepare_spreadsheet_bundle actualAST, currentunchangedtable/relationshipowners"
+}

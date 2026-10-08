@@ -1,0 +1,108 @@
+{
+  "source": "e229a7f8ed8869841e11daf8a7b0824d40225d70",
+  "scope": "Bounded actual12assignment matched receiving 1worker/4workers on same owned endpoint; warm+3 actualOH and fullSCI; originalnative8 comparisonfacts untouched; no freshCP execution, no derivedCP metric model chosen",
+  "common_argv": [
+    "--manifest",
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/official30-manifest.json",
+    "--case",
+    "ExampleNeighbors",
+    "--well-count",
+    "1",
+    "--repeat-assignments",
+    "12",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--candidate-only",
+    "--production-source-root",
+    "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1",
+    "--native-measurement-cache-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261008/export-scaling-min3/preparation/neighbors-workers-pair/native-measurement-facts",
+    "--comparison-workers",
+    "2",
+    "--comparison-cpus",
+    "0",
+    "1"
+  ],
+  "server_port": 7778,
+  "affinity_by_job": [
+    {
+      "workers": 1,
+      "epoch_seconds": 1791423053.2455826,
+      "endpoint_pid": 3793554,
+      "endpoint_create_time": 1791423042.92,
+      "parent_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_cpu_affinity": [
+        5
+      ],
+      "server_thread_cpu_affinity": {
+        "3793554": [
+          5
+        ],
+        "3794432": [
+          5
+        ],
+        "3794433": [
+          5
+        ],
+        "3794434": [
+          5
+        ]
+      }
+    },
+    {
+      "workers": 4,
+      "epoch_seconds": 1791423198.5151231,
+      "endpoint_pid": 3793554,
+      "endpoint_create_time": 1791423042.92,
+      "parent_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_thread_cpu_affinity": {
+        "3793554": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3794432": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3794433": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3794434": [
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    }
+  ]
+}

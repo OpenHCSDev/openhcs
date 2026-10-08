@@ -1,0 +1,17 @@
+{
+  "actual_axes": 12,
+  "partition_invocations": 12,
+  "diagnostic_sequential_partition_seconds": 2.804287575185299,
+  "files": {
+    "Image.csv": {
+      "byte_equal": true,
+      "bytes": 15362,
+      "sha256": "d6e74fa4aaaa0c533b6efe83351c507d1cfa98b9ae30bca7c64831f230d7b8af"
+    },
+    "Cells.csv": {
+      "byte_equal": true,
+      "bytes": 21533622,
+      "sha256": "dd5694d23d7053b316f0f83630970e65205a86fc300ae44cfd0912264782034f"
+    }
+  }
+}
