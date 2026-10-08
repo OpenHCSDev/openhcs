@@ -42,11 +42,11 @@ def _sorted_weighted_otsu_threshold_numba(
     if step < 1:
         step = 1
 
-    variance = _running_variance_numba(sorted_values)
+    variance = running_variance_numba(sorted_values)
     reversed_values = np.empty(size, dtype=np.float64)
     for index in range(size):
         reversed_values[index] = sorted_values[size - 1 - index]
-    reversed_variance = _running_variance_numba(reversed_values)
+    reversed_variance = running_variance_numba(reversed_values)
 
     best_score = np.inf
     best_candidate = 0
@@ -264,18 +264,23 @@ def _sample_variance_numba(count: int, total: float, square_total: float) -> flo
 
 
 @njit(cache=True)
-def _running_variance_numba(values: np.ndarray) -> np.ndarray:
+def running_variance_numba(values: np.ndarray) -> np.ndarray:
+    """Accumulate prefix sample variance without full-size arithmetic temporaries.
+
+    Retain the input's cumulative-sum precision, as NumPy's floating-point
+    cumsum does, while means and variance accumulation use float64.
+    """
     size = values.size
     output = np.zeros(size, dtype=np.float64)
     if size < 2:
         return output
 
-    running_sum = float(values[0])
-    previous_mean = running_sum
+    running_sum = values[0]
+    previous_mean = float(running_sum)
     accumulator = 0.0
     for index in range(1, size):
         value = float(values[index])
-        running_sum += value
+        running_sum += values[index]
         mean = running_sum / float(index + 1)
         accumulator += (value - previous_mean) * (value - mean)
         output[index] = accumulator / float(index)

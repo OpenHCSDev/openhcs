@@ -48,6 +48,9 @@ import warnings
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
+from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_weighted import (
+    running_variance_numba,
+)
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.runtime_array_values import RuntimeArrayData
@@ -341,6 +344,10 @@ class NumpyCannyStrategy(EdgeEnhancementStrategyLeaf):
     method = EdgeMethod.CANNY
     direction = EdgeDirection.ALL
 
+    def prepare_backend(self) -> None:
+        """Warm the float32 prefix-variance kernel used by automatic Canny."""
+        _native_otsu3(np.linspace(0.0, 1.0, 32, dtype=np.float32))
+
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
         low_threshold = request.low_threshold
         high_threshold = request.manual_threshold
@@ -439,19 +446,13 @@ def _native_laplacian_of_gaussian(
     return output
 
 
-def _running_variance(values: np.ndarray) -> np.ndarray:
-    means = values.cumsum() / np.arange(1, len(values) + 1)
-    accumulated = ((values[1:] - means[:-1]) * (values[1:] - means[1:])).cumsum()
-    return np.hstack(([0], accumulated / np.arange(1, len(values))))
-
-
 def _native_otsu3(values: np.ndarray, bins: int = 128) -> tuple[float, float]:
     data = np.asarray(values).ravel()
     data = np.sort(data[~np.isnan(data)])
     if data.size == 0:
         return 0.0, 0.0
-    variance = _running_variance(data)
-    reverse_variance = np.flipud(_running_variance(np.flipud(data)))
+    variance = running_variance_numba(data)
+    reverse_variance = np.flipud(running_variance_numba(np.flipud(data)))
     bins = min(bins, len(data))
     bin_length = len(data) // bins
     thresholds = data[0 : len(data) : bin_length]

@@ -17,6 +17,9 @@ from typing import Annotated, ClassVar, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 import numpy as np
+from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_weighted import (
+    running_variance_numba,
+)
 
 from openhcs.constants.constants import MemoryType
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
@@ -686,6 +689,10 @@ class _RadialSpectrumGeometry:
     radii: np.ndarray
     labels: np.ndarray
 
+    @staticmethod
+    def labels_for_shape(shape: tuple[int, int]) -> np.ndarray:
+        return np.arange(2, int(np.floor(min(shape) / 8.0)), dtype=int)
+
 
 class ImageQualityMeasurementRecord(MeasurementFeatureRecord):
     """Producer-owned image-quality feature record."""
@@ -856,12 +863,6 @@ class OtsuImageQualityThresholdStrategy(ImageQualityThresholdStrategy):
         )
 
 
-def _running_variance(values: np.ndarray) -> np.ndarray:
-    means = values.cumsum() / np.arange(1, len(values) + 1)
-    accumulated = ((values[1:] - means[:-1]) * (values[1:] - means[1:])).cumsum()
-    return np.hstack(([0], accumulated / np.arange(1, len(values))))
-
-
 def _sorted_otsu_threshold(
     values: np.ndarray,
     *,
@@ -873,8 +874,8 @@ def _sorted_otsu_threshold(
         return float(data[0]) if data.size else 0.0
     bins = min(bins, len(data))
     step = len(data) // bins
-    variance = _running_variance(data)
-    reverse_variance = np.flipud(_running_variance(np.flipud(data)))
+    variance = running_variance_numba(data)
+    reverse_variance = np.flipud(running_variance_numba(np.flipud(data)))
     thresholds = data[1 : len(data) : step]
     if entropy:
         low_weight = np.arange(0, len(data) - 1, step)
@@ -937,12 +938,12 @@ def _sorted_three_class_thresholds(
     bins = min(bins, len(data))
     step = len(data) // bins
     thresholds = data[0 : len(data) : step]
-    variance = _running_variance(data)
-    reverse_variance = np.flipud(_running_variance(np.flipud(data)))
+    variance = running_variance_numba(data)
+    reverse_variance = np.flipud(running_variance_numba(np.flipud(data)))
     if entropy:
         low_score = _entropy_score(variance + 1.0 / 512.0, bins)
         high_score = np.flipud(
-            _entropy_score(_running_variance(np.flipud(data)) + 1.0 / 512.0, bins)
+            _entropy_score(np.flipud(reverse_variance) + 1.0 / 512.0, bins)
         )
     else:
         sample_indexes = np.arange(0, len(data), step)
@@ -1030,7 +1031,17 @@ class NumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
             raise NotImplementedError(
                 f"Image-quality radial power spectrum currently supports 2-D NumPy planes, got shape {image_array.shape!r}."
             )
-        return _radial_power_spectrum_numpy(image_array)
+        if np.ptp(image_array) > 0.0:
+            mean_value = float(np.mean(image_array))
+            mad_value = float(np.median(np.abs(image_array - mean_value)))
+            with np.errstate(divide="ignore", invalid="ignore"):
+                image_array = image_array / mad_value
+        return self._radial_power_spectrum(image_array - np.mean(image_array))
+
+    def _radial_power_spectrum(
+        self, centered: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        return _radial_power_spectrum_numpy(centered)
 
 
 class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
@@ -1046,6 +1057,24 @@ class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
     def prepare_backend(self) -> None:
         image = np.arange(25, dtype=np.float32).reshape((5, 5))
         self.haralick_h3(image, scale=1)
+        self.radial_power_spectrum(np.arange(1024).reshape((32, 32)))
+
+    def _radial_power_spectrum(
+        self, centered: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        from scipy.fft import rfft2
+
+        labels = _RadialSpectrumGeometry.labels_for_shape(centered.shape)
+        if labels.size == 0:
+            return (
+                np.array([2], dtype=int),
+                np.array([0], dtype=int),
+                np.array([0], dtype=int),
+            )
+        magnitude, power = _radial_real_spectrum_bins_numba(
+            rfft2(centered), centered.shape[1], int(labels[-1])
+        )
+        return labels, magnitude[labels], power[labels]
 
     def haralick_h3(self, image: np.ndarray, *, scale: int) -> float:
         image_array = np.asarray(image, dtype=np.float32)
@@ -1270,20 +1299,13 @@ def _haralick_h3_from_matrix(matrix: np.ndarray) -> float:
 
 
 def _radial_power_spectrum_numpy(
-    image: np.ndarray,
+    centered: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     from scipy.fftpack import fft2
 
-    working = image.astype(np.float64, copy=False)
-    if np.ptp(working) > 0.0:
-        mean_value = float(np.mean(working))
-        mad_value = float(np.median(np.abs(working - mean_value)))
-        with np.errstate(divide="ignore", invalid="ignore"):
-            working = working / mad_value
-    centered = working - np.mean(working)
     magnitude = np.abs(fft2(centered))
     power = magnitude**2
-    geometry = _radial_spectrum_geometry(image.shape)
+    geometry = _radial_spectrum_geometry(centered.shape)
     labels = geometry.labels
     if labels.size == 0:
         return (
@@ -1303,6 +1325,46 @@ def _radial_power_spectrum_numpy(
     )
 
 
+@njit(cache=True)
+def _radial_real_spectrum_bins_numba(
+    spectrum: np.ndarray, width: int, maximum_radius: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """Reduce real Fourier data directly over the declared radial bins.
+
+    Negative frequencies are conjugate reflections of the stored half-spectrum.
+    Preserve the original row-major bin accumulation and its pixel geometry,
+    including the native radius measured from the last row and column.
+    """
+    height = spectrum.shape[0]
+    magnitude = np.zeros(maximum_radius + 1, dtype=np.float64)
+    power = np.zeros(maximum_radius + 1, dtype=np.float64)
+    # Only these corner pixels can belong to the requested low-radius bins.
+    for row_position in range(2 * maximum_radius):
+        row = (
+            row_position
+            if row_position < maximum_radius
+            else height - 2 * maximum_radius + row_position
+        )
+        row_distance = min(row, height - 1 - row)
+        for column_position in range(2 * maximum_radius):
+            column = (
+                column_position
+                if column_position < maximum_radius
+                else width - 2 * maximum_radius + column_position
+            )
+            column_distance = min(column, width - 1 - column)
+            radius = int(np.sqrt(row_distance**2 + column_distance**2)) + 1
+            if radius < 2 or radius > maximum_radius:
+                continue
+            if column <= width // 2:
+                value = abs(spectrum[row, column])
+            else:
+                value = abs(spectrum[(height - row) % height, width - column])
+            magnitude[radius] += value
+            power[radius] += value * value
+    return magnitude, power
+
+
 def _radial_spectrum_geometry(shape: tuple[int, int]) -> _RadialSpectrumGeometry:
     key = (int(shape[0]), int(shape[1]))
     geometry = RadialSpectrumGeometryCache.process_cache().cached_value(key)
@@ -1314,10 +1376,9 @@ def _radial_spectrum_geometry(shape: tuple[int, int]) -> _RadialSpectrumGeometry
     radii2 = row2 + col2
     radii2 = np.minimum(radii2, np.flipud(radii2))
     radii2 = np.minimum(radii2, np.fliplr(radii2))
-    max_width = min(height, width) / 8.0
     geometry = _RadialSpectrumGeometry(
         radii=np.floor(np.sqrt(radii2)).astype(int) + 1,
-        labels=np.arange(2, int(np.floor(max_width)), dtype=int),
+        labels=_RadialSpectrumGeometry.labels_for_shape(key),
     )
     RadialSpectrumGeometryCache.process_cache().store_value(key, geometry)
     return geometry

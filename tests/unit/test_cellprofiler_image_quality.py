@@ -5,6 +5,11 @@ from types import SimpleNamespace
 from typing import get_type_hints
 
 import numpy as np
+import pytest
+from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_weighted import (
+    running_variance_numba,
+)
+
 
 from openhcs.constants.constants import AllComponents
 from openhcs.constants.input_source import InputSource
@@ -65,6 +70,8 @@ from openhcs.processing.backends.cellprofiler.image_quality import (
     ImageQualityThresholdMethod,
     ImageQualityThresholdMetrics,
     MeasureImageQualityModule,
+    NumbaNumpyImageQualityBackendStrategy,
+    NumpyImageQualityBackendStrategy,
     image_quality_intensity_metrics,
     image_quality_threshold,
     measure_image_quality,
@@ -74,6 +81,28 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdAssignment,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+
+
+@pytest.mark.parametrize("shape", [(32, 32), (33, 35), (64, 97), (97, 64)])
+def test_real_spectrum_matches_native_geometry_on_odd_and_even_images(shape) -> None:
+    rng = np.random.default_rng(1729)
+    image = rng.random((shape[0] * 2, shape[1] * 2))[::2, ::2]
+    native = NumpyImageQualityBackendStrategy()
+    accelerated = NumbaNumpyImageQualityBackendStrategy()
+    for pixels in (image, np.asfortranarray(image), np.ones(shape)):
+        expected = native.radial_power_spectrum(pixels)
+        actual = accelerated.radial_power_spectrum(pixels)
+        np.testing.assert_array_equal(actual[0], expected[0])
+        for observed, reference in zip(actual[1:], expected[1:], strict=True):
+            np.testing.assert_allclose(observed, reference, rtol=1e-12, atol=1e-12)
+
+
+def test_real_spectrum_preserves_empty_radius_domain() -> None:
+    image = np.arange(25, dtype=np.float32).reshape(5, 5)
+    expected = NumpyImageQualityBackendStrategy().radial_power_spectrum(image)
+    actual = NumbaNumpyImageQualityBackendStrategy().radial_power_spectrum(image)
+    for observed, reference in zip(actual, expected, strict=True):
+        np.testing.assert_array_equal(observed, reference)
 
 
 def _project_feature_rows(rows: ColumnarRows) -> ColumnarRows:
@@ -659,3 +688,22 @@ def test_image_quality_experiment_measurements_use_exact_columnar_schema() -> No
         tuple(experiment_row.values()),
         (0.3, 0.3, 0.1),
     )
+
+
+@pytest.mark.parametrize("dtype", (np.float32, np.float64))
+@pytest.mark.parametrize("reverse", (False, True))
+def test_running_variance_preserves_numpy_accumulation(dtype, reverse):
+    rng = np.random.default_rng(8108)
+    for values in (
+        np.sort(rng.random(131071).astype(dtype)),
+        np.full(1025, 0.123456789, dtype=dtype),
+        np.sort(rng.normal(size=1025).astype(dtype)),
+    ):
+        if reverse:
+            values = values[::-1]
+        means = values.cumsum() / np.arange(1, len(values) + 1)
+        accumulated = (
+            (values[1:] - means[:-1]) * (values[1:] - means[1:])
+        ).cumsum()
+        expected = np.hstack(([0], accumulated / np.arange(1, len(values))))
+        np.testing.assert_array_equal(running_variance_numba(values), expected)
