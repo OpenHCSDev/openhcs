@@ -40,6 +40,14 @@ An OpenHCS pipeline is an ordered sequence of functions and settings. Steps use 
 
 Source mappings select channels, planes or stacks and divide images into processing groups. Later steps inherit or replace these choices. Sample, site, channel, plane and time coordinates link results to images through stacking and processing. Microscope handlers interpret acquisition layouts and metadata. Bio-Formats reads image planes from microscopy containers; OME-Zarr supplies arrays, axes, channels and pixel scales; experimental OMERO support supplies managed images. Explicit mappings assign roles when acquisition metadata are insufficient. Reusable libraries supply discovery, settings, generated interfaces, array conversion, storage and process coordination (Supplementary Table 1).
 
+### Figure 1. Scientists can inspect and edit the agent's analysis
+
+![Full-width high-resolution native workspace with two example plates and a nine-step pipeline; boxes mark its existing controls.](figures/slas/submission_shared_workflow.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(I)** Native workspace with ExampleHuman and ExampleFly folders and the nine-step ExampleHuman recipe. Blue boxes mark the plate manager, pipeline editor and execution-server list.
+:::
+
 ### Execution and viewers
 
 Steps produce images, labels, measurements, object relationships and files. Function contracts specify inputs and outputs, and compilation connects later steps to their sources. Each result carries its source coordinates, processing group and producing step. Saving and viewer delivery can be configured independently.
@@ -54,11 +62,27 @@ MCP operations cover function discovery, pipeline editing and validation, execut
 
 Registered function descriptions let agents select functions and edit the shared workflow. Registering a custom function adds its signature and docstring to the existing controls and MCP catalogue (Figure 1II). Desktop operations edit the live workflow; headless operations use an isolated execution context. Local clients use standard input/output. Desktop connections are authenticated, workflow revisions are checked, and file access follows permitted roots. Hosted HTTP offers selected read-only operations.
 
+### Figure 1, continued. The laboratory's own Python joins the shared analysis
+
+![Real Python declaration and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**(II)** The Python declaration and docstring generate the function's graphical controls and MCP descriptions. Form and code views show gain 1.2 and offset 0.0. Capture records and the code/control check are in the supplementary Figure assembly and interface records section.
+:::
+
 ### CellProfiler import and output comparison
 
 CellProfiler `.cppipe` files supply modules and settings. Setup modules define image sources; processing and export modules become editable OpenHCS steps. Each module declaration specifies images, objects, measurements and relationships and whether it operates per image group or across the plate. The same function is available through GUI, Python and MCP. Named images and objects connect measurements to their inputs. Generated Python was reloaded for the advanced segmentation and 3D monolayer tutorials to check functions and parameters [@CellProfilerTutorials] (Supplementary Data 5).
 
 Numerical measurements and image pixels were compared with absolute and relative tolerances of `1e-6`. Identifiers and categorical values were compared exactly after documented CellProfiler-compatible normalization. Object-label images were compared exactly after singleton-axis normalization. Five workflows lacking exports received terminal image or label exports with their processing settings unchanged. Supplementary Data 1 lists output inventories and comparison definitions; Supplementary Data 2 lists the imported modules and settings. [TODO: fraction of declared outputs compared per workflow, from Supplementary Data 1.]
+
+### Figure 2. One editable workflow connects editing, execution and inspection
+
+![Shared editing, execution, workers, viewers and image storage.](figures/slas/shared_workflow.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+Forms, Python and MCP edit one workflow, including imported CellProfiler pipelines. The ZeroMQ execution server compiles the pipeline and coordinates workers. Workers read images, save outputs and stream results to napari or Fiji; progress returns to the editor. Supplementary Figure 1 shows runtime preparation.
+:::
 
 ### Autonomous trial design
 
@@ -109,30 +133,6 @@ CellProfiler execution time covered the pipeline call, including run/group prepa
 ### Scientists and agents revise the same analysis
 
 One workflow supplies the desktop controls, generated Python and MCP operations (Figure 1). In a code-to-control check, an MCP request changed the normalization step's high percentile from 99.8 to 99.6 and the form showed 99.6. A field-edit request restored 99.8, and generated Python contained the restored value (Supplementary material, Figure assembly and interface records). Scientists can open an agent-authored pipeline, inspect linked images and measurements in napari or Fiji, and revise the settings before rerunning it. Figure 2 shows how the editor, execution server and viewers share this workflow.
-
-### Figure 1. Scientists can inspect and edit the agent's analysis
-
-![Full-width high-resolution native workspace with two example plates and a nine-step pipeline; boxes mark its existing controls.](figures/slas/submission_shared_workflow.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-**(I)** Native workspace with ExampleHuman and ExampleFly folders and the nine-step ExampleHuman recipe. Blue boxes mark the plate manager, pipeline editor and execution-server list.
-:::
-
-### Figure 1, continued. The laboratory's own Python joins the shared analysis
-
-![Real Python declaration and docstring, generated controls, live editable Python and agent-facing parameter descriptions.](figures/slas/submission_custom_function.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-**(II)** The Python declaration and docstring generate the function's graphical controls and MCP descriptions. Form and code views show gain 1.2 and offset 0.0. Capture records and the code/control check are in the supplementary Figure assembly and interface records section.
-:::
-
-### Figure 2. One editable workflow connects editing, execution and inspection
-
-![Shared editing, execution, workers, viewers and image storage.](figures/slas/shared_workflow.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-Forms, Python and MCP edit one workflow, including imported CellProfiler pipelines. The ZeroMQ execution server compiles the pipeline and coordinates workers. Workers read images, save outputs and stream results to napari or Fiji; progress returns to the editor. Supplementary Figure 1 shows runtime preparation.
-:::
 
 ### Autonomous analysis
 
