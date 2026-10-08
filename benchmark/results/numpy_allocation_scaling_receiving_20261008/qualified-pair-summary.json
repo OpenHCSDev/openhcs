@@ -1,0 +1,33 @@
+{
+  "1": {
+    "samples_full": [
+      7.957803010940552,
+      7.597051382064819,
+      7.395318269729614
+    ],
+    "full": 7.597051382064819,
+    "steps_median": {
+      "ColorToGray": 0.128930926322937,
+      "Smooth": 0.11935365200042725,
+      "IdentifyPrimaryObjects": 0.32025158405303955,
+      "MeasureImageAreaOccupied": 0.05416262149810791,
+      "ExportToSpreadsheet": 0.02834320068359375
+    }
+  },
+  "4": {
+    "samples_full": [
+      2.9497220516204834,
+      2.985522985458374,
+      2.953678607940674
+    ],
+    "full": 2.953678607940674,
+    "steps_median": {
+      "ColorToGray": 0.2560722827911377,
+      "Smooth": 0.16524255275726318,
+      "IdentifyPrimaryObjects": 0.4174487590789795,
+      "MeasureImageAreaOccupied": 0.06993746757507324,
+      "ExportToSpreadsheet": 0.022921323776245117
+    }
+  },
+  "full_scaling": 2.572064327391916
+}

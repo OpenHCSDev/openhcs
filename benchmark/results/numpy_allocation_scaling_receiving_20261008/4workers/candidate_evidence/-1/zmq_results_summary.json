@@ -1,0 +1,21 @@
+{
+  "auto_add_output_plate_to_plate_manager": false,
+  "output_plate_root": "/home/ts/.local/state/openhcs-maintenance/20261008/numpy-policy-mainline-receiving-v1/mainline-policy-pair/4workers/ExampleWoundHealing/candidate/-1/source_workspace_matched_pilot",
+  "runtime_observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261008/numpy-policy-mainline-receiving-v1/mainline-policy-pair/4workers/ExampleWoundHealing/candidate_evidence/-1/observation.pkl",
+  "runtime_observation_export_scope": "outcomes",
+  "well_count": 12,
+  "wells": [
+    "W001",
+    "W005",
+    "W009",
+    "W002",
+    "W006",
+    "W010",
+    "W003",
+    "W007",
+    "W011",
+    "W004",
+    "W008",
+    "W012"
+  ]
+}

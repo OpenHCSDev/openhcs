@@ -174,7 +174,7 @@ def test_worker_profile_import_policy_is_derived_from_activation(directory):
     environment = {}
     if directory is not None:
         environment[OpenHCSProcessEnvironment.worker_profile_directory_key] = directory
-    OpenHCSProcessEnvironment.project_numba_worker_profiling_policy(environment)
+    OpenHCSProcessEnvironment.project_dependency_import_policy(environment)
     assert environment.get(OpenHCSProcessEnvironment.numba_sys_monitoring_key) == (
         "1" if directory else None
     )

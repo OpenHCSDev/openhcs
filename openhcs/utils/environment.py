@@ -24,6 +24,7 @@ class OpenHCSProcessEnvironment:
     numba_cache_key = "NUMBA_CACHE_DIR"
     worker_profile_directory_key = "OPENHCS_WORKER_PROFILE_DIR"
     numba_sys_monitoring_key = "NUMBA_ENABLE_SYS_MONITORING"
+    numpy_hugepage_advice_key = "NUMPY_MADVISE_HUGEPAGE"
     subprocess_no_gpu_key = "OPENHCS_SUBPROCESS_NO_GPU"
     polystore_subprocess_no_gpu_key = "POLYSTORE_SUBPROCESS_NO_GPU"
     jax_platforms_key = "JAX_PLATFORMS"
@@ -63,6 +64,7 @@ class OpenHCSProcessEnvironment:
             cls.use_threading_key,
             cls.worker_profile_directory_key,
             cls.numba_sys_monitoring_key,
+            cls.numpy_hugepage_advice_key,
             FijiArchiveDistribution.cache_root_environment_key,
             ImageJArchiveDownloadPolicy.allow_download_environment_key,
         )
@@ -107,14 +109,14 @@ class OpenHCSProcessEnvironment:
 
         values = os.environ if environment is None else environment
         values[cls.cpu_only_key] = "true"
-        cls.project_dependency_gpu_import_policy(values)
+        cls.project_dependency_import_policy(values)
 
     @classmethod
-    def project_dependency_gpu_import_policy(
+    def project_dependency_import_policy(
         cls,
         environment: MutableMapping[str, str] | None = None,
     ) -> None:
-        """Project OpenHCS GPU-import policy to import-time consumers."""
+        """Project process defaults before dependencies import their runtimes."""
 
         values = os.environ if environment is None else environment
         if cls.gpu_imports_disabled(values):
@@ -122,6 +124,11 @@ class OpenHCSProcessEnvironment:
             values[cls.polystore_subprocess_no_gpu_key] = "1"
         if cls.cpu_only_mode(values):
             values[cls.jax_platforms_key] = "cpu"
+        if cls.worker_profile_directory(values) is not None:
+            values[cls.numba_sys_monitoring_key] = "1"
+        # Transient image buffers otherwise repeatedly pay for huge-page setup
+        # in parallel workers. Preserve an explicit NumPy startup preference.
+        values.setdefault(cls.numpy_hugepage_advice_key, "0")
 
     @classmethod
     def worker_profile_directory(
@@ -132,16 +139,6 @@ class OpenHCSProcessEnvironment:
         values = os.environ if environment is None else environment
         profile_directory = values.get(cls.worker_profile_directory_key)
         return Path(profile_directory) if profile_directory else None
-
-    @classmethod
-    def project_numba_worker_profiling_policy(
-        cls,
-        environment: MutableMapping[str, str] | None = None,
-    ) -> None:
-        """Activate kernel profiling before Numba constructs its dispatchers."""
-        values = os.environ if environment is None else environment
-        if cls.worker_profile_directory(values) is not None:
-            values[cls.numba_sys_monitoring_key] = "1"
 
     @classmethod
     def headless_mode(
