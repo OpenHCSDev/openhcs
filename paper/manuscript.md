@@ -6,7 +6,7 @@ link-citations: true
 link-bibliography: true
 ---
 
-# OpenHCS: autonomous image analysis that domain experts can audit
+# OpenHCS: high-performance autonomous image analysis for the Python ecosystem
 
 **Authors:** Tristan Simas, Jathav Puvirajan, and Alyson Fournier
 
@@ -29,6 +29,8 @@ An investigator may know which cells, neurites or subcellular signals matter to 
 Autonomous laboratory analysis needs an editable workflow, efficient execution and access to the images behind each measurement. OpenHCS connects these requirements through a shared authoring interface and execution runtime. GUI controls, Python and MCP edit one pipeline (Figure 1). Function signatures and docstrings supply the controls and agent-facing descriptions, so laboratory Python functions and imported CellProfiler workflows enter the same analysis. Scientists can construct workflows directly or revise an agent-authored analysis as the experiment changes.
 
 The runtime compiles workflow inputs, function calls, array conversions and output destinations into a parallel execution plan. Images, labels and measurements retain their source coordinates and producing steps through processing, export and viewer delivery (Figure 2). These capabilities support both interactive analysis and autonomous construction, inspection and repair.
+
+Python integration concerns how workflows are authored and extended as well as their implementation language. CellProfiler's documentation recommends against running the full application as a Python package and describes CellProfiler Library as a route to using processing functions directly [@CellProfilerPythonPackage]. OpenHCS exposes editable Python, graphical controls and MCP operations through the same workflow model. Registering a laboratory function supplies its controls and agent-facing descriptions from its declaration, allowing scientists and agents to use that function through the existing runtime.
 
 Fiji/ImageJ, CellProfiler, Icy and BioImageIT provide desktop processing workflows, and napari supports multidimensional inspection [@Schneider2012; @Schindelin2012; @Carpenter2006; @McQuin2018; @deChaumont2012; @Prigent2022; @Napari]. MCMICRO combines interchangeable modules for multiplexed tissue imaging [@Schapiro2022]; OpenHCS connects processing, source images and viewers through one editable pipeline. BioImage.IO Chatbot connects community resources to analysis extensions, Omega generates and runs Python in napari, and Agentic-J generates scripts and coordinates Fiji tools with debugging and quality-assurance agents [@Lei2024; @Royer2024; @Johanns2026]. OpenHCS gives agents the same validated workflow that scientists edit, allowing submitted settings and intermediate images to be inspected directly. BIABench evaluates end-to-end analysis using output comparisons and expert-rubric process scores; it found stronger performance on routine 2D tasks and unreliable repeated runs on more complex data [@Pan2026BIABench].
 
@@ -250,6 +252,8 @@ Figure 6 shows workflow execution speedups across worker configurations and grad
 ## Discussion
 
 OpenHCS combines a shared authoring interface, a compiled parallel runtime and autonomous analysis through MCP. Scientists and agents edit the same workflow, including custom laboratory functions and imported CellProfiler steps. The runtime executes those workflows while retaining the source coordinates and producing steps needed to inspect images, measurements and exports. These engineering capabilities support direct scientific use as well as delegated analysis.
+
+The output comparison also provides evidence for reproducing established analyses on a newer scientific Python stack. The benchmarked CellProfiler 4.2.8.1 release pins SciPy to 1.9.0 and scikit-image to 0.18.3 [@CellProfiler4281Dependencies]. Retained OpenHCS comparisons ran with Python 3.12, NumPy 2 and newer SciPy while preserving the compared outputs under the declared equivalence policy (Supplementary Data 1). The reusable adapter-based parity suite checks measurement values, images and exports rather than successful completion alone. Its evidence applies to the tested workflows and outputs; dependency upgrades within CellProfiler require their own validation.
 
 All 30 imported workflows reproduced the compared native CellProfiler outputs, with faster one-core execution and compile-plus-run time under the measured protocol. The execution comparison includes output publication and plate exports, demonstrating performance with those platform responsibilities included. Blind agents built and repaired microscopy analyses from task briefs and reached pooled nuclear object F1 of 0.906 to 0.910 on 175 uninspected fields. Scientists can inspect the resulting images, masks and measurements and revise the same pipeline through GUI controls or Python.
 

@@ -2618,5 +2618,46 @@
         ]
       ]
     }
+  },
+  {
+    "id": "CellProfilerPythonPackage",
+    "type": "webpage",
+    "author": [
+      {
+        "literal": "CellProfiler contributors"
+      }
+    ],
+    "title": "CellProfiler as a Python package",
+    "URL": "https://github.com/CellProfiler/CellProfiler/wiki/CellProfiler-as-a-Python-package",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          8
+        ]
+      ]
+    }
+  },
+  {
+    "id": "CellProfiler4281Dependencies",
+    "type": "software",
+    "author": [
+      {
+        "literal": "CellProfiler contributors"
+      }
+    ],
+    "title": "CellProfiler 4.2.8.1 dependency declarations",
+    "version": "4.2.8.1",
+    "URL": "https://github.com/CellProfiler/CellProfiler/blob/v4.2.8.1/setup.py",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          8
+        ]
+      ]
+    }
   }
 ]

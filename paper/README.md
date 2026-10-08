@@ -1,7 +1,7 @@
 # OpenHCS manuscript
 
 Working author-review draft for **SLAS Technology**:
-*OpenHCS: autonomous image analysis that domain experts can audit*.
+*OpenHCS: high-performance autonomous image analysis for the Python ecosystem*.
 
 ## Versioned sources
 
