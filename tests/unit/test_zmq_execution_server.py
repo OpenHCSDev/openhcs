@@ -617,6 +617,8 @@ def test_zmq_server_stop_releases_process_resources_when_transport_stop_fails(
 ) -> None:
     server = object.__new__(ZMQExecutionServer)
     events: list[object] = []
+    server.active_executions = {}
+    server._prepared_worker_runner = None
     server._function_catalog_preparation = SimpleNamespace(
         cancel_and_join=lambda: events.append("catalog")
     )
