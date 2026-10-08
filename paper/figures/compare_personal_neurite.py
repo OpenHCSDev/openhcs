@@ -35,14 +35,12 @@ class SummaryEndpoint:
         return float(values[headers.index(self.reference_column)])
 
     def aggregate_values(self, values):
-        return mean(values)
+        return None if any(value is None for value in values) else mean(values)
 
-    def treatment_effect(self, control_points, points, *, allow_undefined=False):
+    def treatment_effect(self, control_points, points):
         """Summarize a curve's own controls; undefined ratios remain undefined."""
         baseline = self.aggregate_values(control_points)
         value = self.aggregate_values(points)
-        if not allow_undefined and (baseline is None or value is None or baseline <= 0):
-            raise ValueError("Invalid measurements or undefined endpoint ratio")
         delta = None if baseline is None or value is None else value - baseline
         fold = None if baseline is None or value is None else RatioEndpoint.ratio(value, baseline)
         result = {"control_mean": baseline,
@@ -51,18 +49,31 @@ class SummaryEndpoint:
                   "treatment_sd": None if value is None else stdev(points),
                   "delta": delta, "fold_change": fold,
                   "fractional_change": None if fold is None else fold - 1}
-        if allow_undefined:
-            result["direction"] = ("undefined" if delta is None else
-                                   "increase" if delta > 0 else
-                                   "decrease" if delta < 0 else "unchanged")
+        result["direction"] = ("undefined" if delta is None else
+                               "increase" if delta > 0 else
+                               "decrease" if delta < 0 else "unchanged")
         return result
 
 
-class CellMeanEndpoint(SummaryEndpoint):
+class PerCellEndpoint(SummaryEndpoint):
+    """An exported per-cell mean is undefined when the observed count is zero."""
+
+    def native_value(self, summary, cells):
+        return super().native_value(summary, cells) if cells else None
+
+    def reference_value(self, headers, values):
+        count = float(values[headers.index("Number of Cells (Neurite Outgrowth)")])
+        return None if RatioEndpoint.ratio(0, count) is None else super().reference_value(headers, values)
+
+
+class CellMeanEndpoint(PerCellEndpoint):
     """Mean of per-cell endpoints, not a pooled graph-segment statistic."""
 
     def native_value(self, summary, cells):
-        return mean(float(row[self.native_column]) for row in cells)
+        values = [float(row[self.native_column]) for row in cells]
+        if any(not math.isfinite(value) or value < 0 for value in values):
+            raise ValueError(f"Invalid cell endpoint: {self.native_column}")
+        return mean(values) if values else None
 
 
 @dataclass(frozen=True)
@@ -80,9 +91,6 @@ class RatioEndpoint(SummaryEndpoint):
             return None  # Undefined, not a zero ratio or a rejected zero-growth field.
         return numerator / denominator
 
-    def aggregate_values(self, values):
-        return None if any(value is None for value in values) else mean(values)
-
     def native_value(self, summary, cells):
         return self.ratio(super().native_value(summary, cells),
                           float(summary[self.native_denominator]))
@@ -94,17 +102,17 @@ class RatioEndpoint(SummaryEndpoint):
 
 @dataclass(frozen=True)
 class WellEndpoints:
-    mean_outgrowth: float = field(metadata={"endpoint": SummaryEndpoint(
+    mean_outgrowth: float | None = field(metadata={"endpoint": PerCellEndpoint(
         "Mean outgrowth per cell / control", "Mean Outgrowth Per Cell (Neurite Outgrowth)", "mean_outgrowth_per_cell", unit="micrometers/cell")})
     cell_count: float = field(metadata={"endpoint": SummaryEndpoint(
         "Detected cells / control", "Number of Cells (Neurite Outgrowth)", "number_of_cells")})
     total_outgrowth: float = field(metadata={"endpoint": SummaryEndpoint(
         "Total outgrowth / control", "Total Outgrowth (Neurite Outgrowth)", "total_outgrowth", unit="micrometers")})
-    branches_per_cell: float = field(metadata={"endpoint": SummaryEndpoint(
+    branches_per_cell: float | None = field(metadata={"endpoint": PerCellEndpoint(
         "Branches per cell / control", "Mean Branches Per Cell (Neurite Outgrowth)", "mean_branches_per_cell", unit="branches/cell")})
-    mean_process_length: float = field(metadata={"endpoint": CellMeanEndpoint(
+    mean_process_length: float | None = field(metadata={"endpoint": CellMeanEndpoint(
         "Mean cell process length / control", "Cell: Mean Process Length (Neurite Outgrowth)", "mean_process_length", unit="micrometers")})
-    median_process_length: float = field(metadata={"endpoint": CellMeanEndpoint(
+    median_process_length: float | None = field(metadata={"endpoint": CellMeanEndpoint(
         "Mean cell median process length / control", "Cell: Median Process Length (Neurite Outgrowth)", "median_process_length", unit="micrometers")})
     total_branches: float = field(metadata={"endpoint": SummaryEndpoint(
         "Total branches / control", "Total Branches (Neurite Outgrowth)", "total_branches")})
@@ -137,7 +145,10 @@ def endpoint_declarations():
 
 def read_rows(path):
     with path.open(newline="") as stream:
-        return list(csv.DictReader(stream))
+        reader = csv.DictReader(stream)
+        if reader.fieldnames is None:
+            raise ValueError(f"Missing CSV header: {path}")
+        return list(reader)
 
 
 def write_rows(path, rows):
@@ -173,9 +184,9 @@ class NativeSummary:
             raise ValueError(f"Expected calibrated micrometer measurements: {path}")
         count, length = int(row["number_of_cells"]), float(row["total_outgrowth"])
         measured_mean = float(row["mean_outgrowth_per_cell"])
-        if count <= 0 or not math.isfinite(length) or not math.isfinite(measured_mean):
-            raise ValueError(f"No valid per-cell length denominator: {path}")
-        if not math.isclose(length / count, measured_mean, rel_tol=1e-9):
+        if count < 0 or any(not math.isfinite(value) or value < 0 for value in (length, measured_mean)):
+            raise ValueError(f"Invalid cell count or length measurement: {path}")
+        if not math.isclose(length / count if count else 0, measured_mean, rel_tol=1e-9):
             raise ValueError(f"Inconsistent mean outgrowth: {path}")
         if (int(row["z_index"]), int(row["timepoint"])) != (1, 1):
             raise ValueError(f"Unexpected acquisition plane: {path}")
@@ -189,10 +200,14 @@ class NativeSummary:
         for cell_column, summary_column in (("total_outgrowth", "total_outgrowth"),
                                             ("branches", "total_branches"),
                                             ("processes", "total_processes")):
-            if not math.isclose(sum(float(cell[cell_column]) for cell in cells),
-                                float(row[summary_column]), rel_tol=1e-9, abs_tol=1e-9):
+            cell_values = [float(cell[cell_column]) for cell in cells]
+            if any(not math.isfinite(value) or value < 0 for value in cell_values):
+                raise ValueError(f"Invalid cell {cell_column}: {path}")
+            summary_value = float(row[summary_column])
+            if ((count == 0 and summary_value != 0) or
+                    not math.isclose(sum(cell_values), summary_value, rel_tol=1e-9, abs_tol=1e-9)):
                 raise ValueError(f"Cell {cell_column} does not reconcile to summary: {path}")
-        if not math.isclose(float(row["total_branches"]) / count,
+        if not math.isclose(float(row["total_branches"]) / count if count else 0,
                             float(row["mean_branches_per_cell"]), rel_tol=1e-9):
             raise ValueError(f"Inconsistent branch denominator: {path}")
         values = {name: declaration.native_value(row, cells)
@@ -270,7 +285,7 @@ class SiteMeanWellAggregation(WellAggregation):
         })
 
 
-def reference_rows(reference, workbook, metrics, *, allow_undefined=False):
+def reference_rows(reference, workbook, metrics):
     """Use the existing well metadata; decode original workbook endpoints once."""
     rows = read_rows(reference)
     if workbook is not None:
@@ -298,11 +313,11 @@ def reference_rows(reference, workbook, metrics, *, allow_undefined=False):
             book.close()
     for row in rows:
         for metric in metrics:
-            if (allow_undefined and metric in row and isinstance(endpoint_declarations()[metric], RatioEndpoint)
-                    and row.get(metric) in (None, "")):
-                row[metric] = None
+            # Only the workbook endpoint decoder can establish an observed
+            # zero denominator. Missing/blank CSV values are not observations.
+            if workbook is not None and row[metric] is None:
                 continue
-            if row.get(metric) is None or not math.isfinite(float(row[metric])) or float(row[metric]) < 0:
+            if row.get(metric) in (None, "") or not math.isfinite(float(row[metric])) or float(row[metric]) < 0:
                 raise ValueError(f"Missing or invalid reference endpoint {metric}: {row['plate']}/{row['well']}")
     return rows
 
@@ -347,12 +362,10 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
                          for well, endpoints in guided_measured.items()}
         inputs.extend([guided_pipeline, *paths])
     joined = []
-    for row in reference_rows(reference, workbook, metrics, allow_undefined=paired):
+    for row in reference_rows(reference, workbook, metrics):
         identity = (row["plate"], row["well"])
         if identity not in native:
             continue
-        if not paired and any(native[identity][metric] is None for metric in metrics):
-            raise ValueError(f"Selected native ratio is undefined: {identity}")
         joined.append({**row, **{f"openhcs_{metric}": native[identity][metric]
                                 for metric in metrics}})
         if paired:
@@ -385,9 +398,9 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
                     column = f"{prefix}{metric}"
                     control_points = [None if row[column] is None else float(row[column]) for row in control]
                     points = [None if row[column] is None else float(row[column]) for row in drug]
-                    effect = endpoint_declarations()[metric].treatment_effect(
-                        control_points, points, allow_undefined=paired)
-                    result.update({f"{method}_{name}": value for name, value in effect.items()})
+                    effect = endpoint_declarations()[metric].treatment_effect(control_points, points)
+                    result.update({f"{method}_{name}": value for name, value in effect.items()
+                                   if paired or name != "direction"})
                 native_change, reference_change = result["openhcs_fractional_change"], result["metaxpress_fractional_change"]
                 result["fractional_change_difference"] = (None if native_change is None or reference_change is None
                                                            else native_change - reference_change)

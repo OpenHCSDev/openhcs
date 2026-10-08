@@ -48,20 +48,23 @@ class GuidedComparisonTests(unittest.TestCase):
         evaluator.write_rows(self.reference, reference)
         self.key.write_text(json.dumps({"images": images}))
 
-    def write_plane(self, directory, well, site, length, branches, processes=2, unit="micrometers"):
+    def write_plane(self, directory, well, site, length, branches, processes=2, unit="micrometers", empty=False):
         path = directory / f"{well}_s{site}_neurite_outgrowth_summary_plane_details.csv"
         evaluator.write_rows(path, [{"well": well, "site": str(site), "z_index": 1,
                                     "timepoint": 1, "neurite_channel_index": 1,
                                     "cell_body_channel_index": 1, "nuclear_channel_index": 0,
-                                    "coordinate_unit": unit, "number_of_cells": 1,
-                                    "total_outgrowth": length, "mean_outgrowth_per_cell": length,
-                                    "total_branches": branches, "mean_branches_per_cell": branches,
+                                    "coordinate_unit": unit, "number_of_cells": 0 if empty else 1,
+                                    "total_outgrowth": length, "mean_outgrowth_per_cell": 0 if empty else length,
+                                    "total_branches": branches, "mean_branches_per_cell": 0 if empty else branches,
                                     "total_processes": processes}])
-        evaluator.write_rows(evaluator.NativeSummary.cells_path(path), [
-            {"well": well, "site": str(site), "cell": 1, "coordinate_unit": unit,
-             "total_outgrowth": length, "branches": branches, "processes": processes,
-             "mean_process_length": length / processes if processes else 0,
-             "median_process_length": length / processes if processes else 0}])
+        cell = {"well": well, "site": str(site), "cell": 1, "coordinate_unit": unit,
+                "total_outgrowth": length, "branches": branches, "processes": processes,
+                "mean_process_length": length / processes if processes else 0,
+                "median_process_length": length / processes if processes else 0}
+        with evaluator.NativeSummary.cells_path(path).open("w", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=tuple(cell))
+            writer.writeheader()
+            writer.writerows([] if empty else [cell])
 
     def compare(self, output, **options):
         return evaluator.compare(self.reference, self.key, self.blind, output,
@@ -149,11 +152,74 @@ class GuidedComparisonTests(unittest.TestCase):
         self.assertEqual(ratio["guided_openhcs_fold_change"], "")
         self.assertEqual(ratio["guided_openhcs_direction"], "undefined")
         branch_endpoint = evaluator.endpoint_declarations()["total_branches"]
-        effect = branch_endpoint.treatment_effect([0, 0], [1, 1], allow_undefined=True)
+        effect = branch_endpoint.treatment_effect([0, 0], [1, 1])
         self.assertIsNone(effect["fold_change"])
         self.assertEqual(effect["direction"], "increase")
-        with self.assertRaises(ValueError):
-            branch_endpoint.treatment_effect([0, 0], [1, 1])
+
+    def test_complete_empty_field_keeps_zero_totals_and_undefined_means(self):
+        self.write_plane(self.blind, "A01", 1, 0, 0, processes=0, empty=True)
+        planes, _ = evaluator.SiteMeanWellAggregation().load_planes(self.blind)
+        self.assertEqual(len(planes), 90)
+        empty = planes[("A01", "1")].endpoints
+        for metric in ("cell_count", "total_outgrowth", "total_branches", "total_processes"):
+            self.assertEqual(getattr(empty, metric), 0)
+        for metric in ("mean_outgrowth", "branches_per_cell", "mean_process_length",
+                       "median_process_length", "branches_per_process"):
+            self.assertIsNone(getattr(empty, metric))
+        wells = evaluator.SiteMeanWellAggregation().aggregate_planes(planes)
+        self.assertEqual(wells["A01"].cell_count, 8 / 9)
+        self.assertIsNone(wells["A01"].mean_outgrowth)
+        # Undefined endpoints must not depend on whether a guided run is present.
+        old, paired = self.root / "empty_legacy", self.root / "empty_paired"
+        self.compare(old)
+        self.compare(paired, **self.guided_options())
+        for output in (old, paired):
+            row = evaluator.read_rows(output / "joined_wells.csv")[0]
+            self.assertEqual(row["openhcs_mean_outgrowth"], "")
+            effects = evaluator.read_rows(output / "treatment_effects.csv")
+            effect = next(row for row in effects if row["metric"] == "mean_outgrowth")
+            self.assertEqual(effect["openhcs_fold_change"], "")
+        self.assertEqual(len(evaluator.read_rows(paired / "paired_sites.csv")), 90)
+        self.write_plane(self.blind, "A01", 1, 1, 0, processes=0, empty=True)
+        with self.assertRaisesRegex(ValueError, "reconcile"):
+            evaluator.NativeSummary.read(self.blind / "A01_s1_neurite_outgrowth_summary_plane_details.csv")
+        self.write_plane(self.blind, "A01", 1, 0, 0, processes=0, empty=True)
+        summary = self.blind / "A01_s1_neurite_outgrowth_summary_plane_details.csv"
+        evaluator.NativeSummary.cells_path(summary).write_text("")
+        with self.assertRaisesRegex(ValueError, "Missing CSV header"):
+            evaluator.NativeSummary.read(summary)
+
+    def test_missing_csv_ratio_is_not_known_undefined_but_workbook_zero_is(self):
+        rows = evaluator.read_rows(self.reference)
+        for missing in ("", None):
+            if missing is None:
+                rows[0].pop("branches_per_process", None)
+                # CSV with an absent column is a different missing-input case.
+                evaluator.write_rows(self.root / "missing.csv", [{k: v for k, v in row.items()
+                                                                   if k != "branches_per_process"} for row in rows])
+            else:
+                rows[0]["branches_per_process"] = missing
+                evaluator.write_rows(self.root / "missing.csv", rows)
+            with self.assertRaisesRegex(ValueError, "Missing or invalid reference"):
+                evaluator.reference_rows(self.root / "missing.csv", None, ("branches_per_process",))
+        from openpyxl import Workbook
+        book = Workbook()
+        sheet = book.active
+        sheet.title = "Synthetic"
+        sheet.append(["Well", "Number of Cells (Neurite Outgrowth)",
+                      "Total Branches (Neurite Outgrowth)", "Total Processes (Neurite Outgrowth)"])
+        sheet.append(["A01", 1, 4, 0])
+        sheet.append(["A02", 1, 6, 2])
+        workbook = self.root / "synthetic.xlsx"
+        book.save(workbook)
+        book.close()
+        metadata = self.root / "workbook_metadata.csv"
+        evaluator.write_rows(metadata, [{"plate": "physical", "well": well,
+                                         "excel_sheet": "Synthetic", "excel_row": row}
+                                        for well, row in (("A01", 2), ("A02", 3))])
+        decoded = evaluator.reference_rows(metadata, workbook, ("branches_per_process",))
+        self.assertIsNone(decoded[0]["branches_per_process"])
+        self.assertEqual(decoded[1]["branches_per_process"], 3)
 
 
 if __name__ == "__main__":
