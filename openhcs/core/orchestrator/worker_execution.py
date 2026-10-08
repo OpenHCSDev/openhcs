@@ -1006,15 +1006,21 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
         self.cancellation.raise_if_requested("before prepared worker checkout")
         lane_items = list(worker_lane_execution_plan.active_lane_items())
         self._processes.extend(self._runner.acquire(len(lane_items)))
-        payload = pickle.dumps(
-            execution_bundle.for_transport_serialization(),
-            protocol=pickle.HIGHEST_PROTOCOL,
-        )
         submitted: list[tuple[str, Any, Any]] = []
         for (worker_slot, lane_keys), (_, process, connection) in zip(
             lane_items, self._processes, strict=True
         ):
             self.cancellation.raise_if_requested("before prepared worker submission")
+            payload = pickle.dumps(
+                execution_bundle.for_transport_serialization(
+                    context_keys=[
+                        context_key
+                        for _axis_id, context_keys in lane_keys
+                        for context_key in context_keys
+                    ],
+                ),
+                protocol=pickle.HIGHEST_PROTOCOL,
+            )
             connection.send(
                 (
                     "execute",
