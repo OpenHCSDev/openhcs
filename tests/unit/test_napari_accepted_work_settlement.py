@@ -11,6 +11,7 @@ import os
 import pickle
 import time
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pytest
@@ -89,6 +90,7 @@ def wire_receiver(receiver):
 
 
 def wire_batch(item):
+    items = item if isinstance(item, list) else [item]
     config = NapariDisplayConfig(channel_mode=NapariDimensionMode.LAYER)
     producer = StreamProducerIdentity.pipeline_output(
         output_kind="artifact",
@@ -100,18 +102,15 @@ def wire_batch(item):
     return json.dumps(
         {
             "type": "batch",
-            "images": [{**item, "producer_identity": producer.to_payload()}],
+            "images": [{**row, "producer_identity": producer.to_payload()} for row in items],
             "display_config": ViewerBatchDisplayPayload(
                 component_modes=config.component_modes(),
                 component_order=config.COMPONENT_ORDER,
                 extra=config.display_payload_extra(),
             ).to_wire_mapping(),
             "component_value_domain": {
-                "well": ["A01"],
-                "site": [1],
-                "channel": [1],
-                "z_index": [1],
-                "timepoint": [1],
+                key: sorted({row["metadata"].get(key, value) for row in items})
+                for key, value in image_item()["metadata"].items()
             },
             "component_names_metadata": {},
         },
@@ -215,6 +214,11 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
     """Use actual transport, native layers and Qt service, without delayed mocks."""
     from qtpy.QtCore import QTimer
     from zmqruntime.transport import get_control_port
+    from polystore.filemanager import FileManager
+    from polystore.streaming.viewer_transport import ViewerTransportEndpoint
+    from openhcs.core.streaming_config_declarations import ViewerType
+    from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
+    from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
 
     archive = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_ROI")
     if archive:
@@ -227,6 +231,18 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         }
     else:
         item = image_item()
+    directory = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_ROI_DIRECTORY")
+    if directory:
+        items = []
+        for path in sorted(Path(directory).glob("*_rois.roi.zip")):
+            parts = path.name.split("_")
+            metadata = {**image_item()["metadata"], "well": parts[0],
+                        "site": int(parts[1][1:]), "channel": int(parts[2][1:])}
+            items.append({"path": str(path), "data_type": "shapes",
+                          "shapes": NapariROIConverter.rois_to_shapes(load_rois_from_zip(path)),
+                          "metadata": metadata})
+        assert items
+        item = items
     assert wire_receiver(item)["status"] == "success"
     assert not receiver.accepted_stream_batches.empty()
     assert not receiver.layer_route_state.layer_pending_updates
@@ -244,6 +260,36 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
     service = QTimer()
     service.timeout.connect(receiver.process_accepted_stream_messages)
     service.timeout.connect(receiver.process_messages)
+    client = NapariStreamVisualizer(
+        filemanager=FileManager({}),
+        runtime_config=StreamingViewerRuntimeConfig(
+            transport_endpoint=ViewerTransportEndpoint(
+                port=receiver.port, host="localhost", transport_mode=receiver.transport_mode,
+            ), persistent=False, viewer_type=ViewerType.NAPARI,
+        ),
+    )
+    client.lifecycle_state.mark_connected_external()
+    observations = []
+    client_worker = ThreadPoolExecutor(max_workers=1)
+    late_observer = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_LATE_OBSERVER") == "true"
+    client_started = []
+
+    def deliver():
+        if late_observer:
+            deadline = time.monotonic() + 90
+            while True:
+                progress = receiver.layer_route_state.existing_settlement_progress()
+                if (progress is not None and progress.active_route is not None
+                        and "channel_2" in progress.active_route
+                        and progress.active_route_work_unit_active):
+                    break
+                if time.monotonic() >= deadline:
+                    raise AssertionError("No real channel-2 native work was observed.")
+                time.sleep(0.001)
+        client_started.append(time.perf_counter())
+        return client.settle_viewer_state(
+            progress_callback=lambda progress: observations.append((time.perf_counter(), progress)),
+        )
 
     def observe():
         control.send(pickle.dumps({"type": "settle"}))
@@ -253,39 +299,57 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
 
     try:
         started = time.perf_counter()
-        first = observe()
+        first = (receiver.layer_route_state.existing_settlement_progress()
+                 if late_observer else observe())
         elapsed = time.perf_counter() - started
         assert first.phase is ViewerSettlePhase.RUNNING
         assert first.completed_update_count == first.total_update_count == 0
         cycle = receiver.layer_route_state.layer_settlement
         assert cycle.awaiting_updates
-        assert observe() == first
+        if not late_observer:
+            assert observe() == first
         assert receiver.layer_route_state.layer_settlement is cycle
         assert receiver.accepted_control_requests.empty()
-        with pytest.raises(RuntimeError, match="active.*settlement"):
-            receiver.layer_route_state.reset_settlement()
-        with pytest.raises(RuntimeError, match="active.*settlement"):
-            receiver.layer_route_state.require_retirement_boundary()
+        if not late_observer:
+            with pytest.raises(RuntimeError, match="active.*settlement"):
+                receiver.layer_route_state.reset_settlement()
+            with pytest.raises(RuntimeError, match="active.*settlement"):
+                receiver.layer_route_state.require_retirement_boundary()
 
         # New accepted input belongs to this admitted, not-yet-bound cycle.
         assert wire_receiver(image_item())["status"] == "success"
         assert receiver.layer_route_state.layer_settlement is cycle
         receiver.viewer.window.show()
+        started_delivery = time.perf_counter()
+        delivery = client_worker.submit(deliver)
         service.start(50)
-        qtbot.waitUntil(
-            lambda: observe().phase is ViewerSettlePhase.COMPLETE, timeout=20000,
-        )
+        qtbot.waitUntil(delivery.done, timeout=180000)
+        assert delivery.result()
         final = observe()
         assert final.completed_update_count == final.total_update_count
         assert final.total_update_count > 0
         assert receiver.accepted_stream_batches.empty()
         assert receiver.viewer.layers
+        assert final.processed_intake_item_count == (len(item) if isinstance(item, list) else 1) + 1
+        awaiting = [(t, p) for t, p in observations
+                    if p.phase is ViewerSettlePhase.RUNNING and p.total_update_count == 0]
+        awaiting_seconds = (awaiting[-1][0] - awaiting[0][0]) if awaiting else 0
         receiver.viewer.screenshot(path=str(tmp_path / "native-settlement.png"))
-        print(f"native first settlement {elapsed:.4f}s; pending intake admitted; "
+        first_reply_seconds = observations[0][0] - client_started[0] if late_observer else elapsed
+        print(f"native first settlement {first_reply_seconds:.4f}s; pending intake admitted; "
               f"terminal {final.completed_update_count}/{final.total_update_count}; "
-              f"native layers {len(receiver.viewer.layers)}; archive={archive}")
+              f"native layers {len(receiver.viewer.layers)}; archive={archive}; "
+              f"intake items={final.processed_intake_item_count}; "
+              f"client delivery={time.perf_counter() - started_delivery:.3f}s; "
+              f"unbound observations={len(awaiting)} over {awaiting_seconds:.3f}s; "
+              f"first={awaiting[0][1] if awaiting else None}; "
+              f"last={awaiting[-1][1] if awaiting else None}")
+        if late_observer:
+            assert observations[0][1].active_route_work_unit_active
+            assert awaiting_seconds > 30, f"Actual unbound work was only {awaiting_seconds:.3f}s"
     finally:
         service.stop()
+        client_worker.shutdown(wait=True)
         receiver.control_transport_pump.stop()
         control.close(linger=0)
         context.term()
@@ -374,7 +438,7 @@ def test_active_settlement_rejects_admission_without_retaining_copies(
         wire_batch(image_item())
     ).to_wire_mapping()
     assert response["status"] == "error"
-    assert "active Napari layer settlement" in response["message"]
+    assert "active settlement" in response["message"]
     assert receiver.accepted_stream_batches.empty()
     assert receiver.layer_route_state.layer_settlement is settlement
     assert receiver.layer_route_state.update_failure_message() is None

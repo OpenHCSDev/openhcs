@@ -488,7 +488,9 @@ class NapariAcceptedStreamBatch:
             )
 
         for item in self.items:
-            server._process_loaded_image(item)
+            settlement = server.layer_route_state.admit_settlement(requested=False)
+            with settlement.intake_item():
+                server._process_loaded_image(item)
 
 
 @dataclass(frozen=True, slots=True)
@@ -2585,17 +2587,19 @@ class NapariLayerDisplayPipeline:
         if self.server.layer_route_state.pending_update_for(layer_key) is not update:
             return
         try:
-            work = self._work_for_update(
-                layer_key=layer_key,
-                update=update,
-            )
-            if work.advance():
-                self._complete_scheduled_work(layer_key, update)
-                return
-            QTimer.singleShot(
-                NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
-                update.retained_callback(partial(self.execute_scheduled_layer_update, layer_key)),
-            )
+            settlement = self.server.layer_route_state.admit_settlement(requested=False)
+            with settlement.debounced_work_unit(layer_key):
+                work = self._work_for_update(
+                    layer_key=layer_key,
+                    update=update,
+                )
+                if work.advance():
+                    self._complete_scheduled_work(layer_key, update)
+                    return
+                QTimer.singleShot(
+                    NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
+                    update.retained_callback(partial(self.execute_scheduled_layer_update, layer_key)),
+                )
         except Exception as error:
             self.server.layer_route_state.record_update_error(layer_key, error)
             self._display_work_by_route.pop(layer_key, None)
@@ -2680,10 +2684,14 @@ class NapariLayerDisplayPipeline:
         """Begin or observe an incremental Qt-driven settlement cycle."""
 
         with self.server.layer_route_state.mutation_boundary():
+            settlement = self.server.layer_route_state.admit_settlement()
             # Stream acceptance uses the same boundary. No cycle can report an
             # empty completion while an accepted batch remains to be projected.
-            if not self.server.accepted_stream_batches.empty():
-                return self.server.layer_route_state.admit_settlement().progress()
+            if (
+                not self.server.accepted_stream_batches.empty()
+                or (settlement.awaiting_updates and settlement.progress().work_unit_active)
+            ):
+                return settlement.progress()
             settlement = self.server.layer_route_state.begin_settlement()
             if settlement.active_route is None:
                 self._schedule_next_settlement_update(settlement)
@@ -6807,6 +6815,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
             # prior terminal settlement before acknowledging this new work.
             with self.layer_route_state.mutation_boundary():
                 self.layer_route_state.reset_settlement(accepting_stream=True)
+                self.layer_route_state.admit_settlement(requested=False)
                 self.accepted_stream_batches.put(accepted_batch)
             return NapariStreamMessageReply.success(msg_type)
         except Exception as error:
@@ -6838,7 +6847,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
 
         # The transport only admits the cycle. This Qt service binds route
         # updates and stops their timers after the accepted intake barrier.
-        progress = self.layer_route_state.existing_settlement_progress()
+        progress = self.layer_route_state.existing_settlement_progress(requested_only=True)
         if progress is not None and progress.phase is ViewerSettlePhase.RUNNING:
             self.display_pipeline.settlement_progress()
         while True:

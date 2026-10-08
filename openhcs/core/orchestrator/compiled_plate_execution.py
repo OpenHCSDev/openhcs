@@ -1133,7 +1133,7 @@ class ViewerSettlementProgressObserver:
     def __call__(self, progress: "ViewerSettleProgress") -> None:
         observed_at = time.monotonic()
         if progress == self._last_progress and (
-            not progress.active_route_work_unit_active
+            not progress.work_unit_active
             or observed_at - self._last_emitted_at < self.heartbeat_interval_seconds
         ):
             return
@@ -1141,9 +1141,7 @@ class ViewerSettlementProgressObserver:
         self._last_progress = progress
         self._last_emitted_at = observed_at
         total = progress.total_update_count
-        percent = (
-            100.0 if total == 0 else (progress.completed_update_count / total) * 100.0
-        )
+        percent = progress.completion_percent
         _emit_execution_progress(
             progress_queue=self.progress_queue,
             progress_context=self.progress_context,

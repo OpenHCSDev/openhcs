@@ -314,6 +314,9 @@ class NapariLayerSettlementState:
     # None is an admitted cycle awaiting the Qt intake barrier. An empty tuple
     # is different: Qt has bound the cycle and found no pending route updates.
     updates: tuple[tuple[str, NapariPendingLayerUpdate], ...] | None
+    requested: bool = True
+    processed_intake_item_count: int = 0
+    intake_item_active: bool = False
     completed_update_count: int = 0
     active_route: str | None = None
     active_route_work_unit_count: int = 0
@@ -337,7 +340,45 @@ class NapariLayerSettlementState:
         with self._lock:
             if self.updates is not None:
                 raise RuntimeError("Napari settlement updates are already bound.")
+            if self.intake_item_active:
+                raise RuntimeError("Cannot bind settlement during active intake.")
+            if self.active_route is not None:
+                raise RuntimeError("Cannot bind settlement during native route work.")
             self.updates = updates
+
+    def request(self) -> None:
+        with self._lock:
+            self.requested = True
+
+    @contextmanager
+    def intake_item(self):
+        """Expose the actual Qt dispatch lifetime, not a polling heartbeat."""
+        with self._lock:
+            if self.updates is not None or self.intake_item_active:
+                raise RuntimeError("Cannot enter intake for a bound or active cycle.")
+            self.intake_item_active = True
+        try:
+            yield
+        finally:
+            with self._lock:
+                self.processed_intake_item_count += 1
+                self.intake_item_active = False
+
+    @contextmanager
+    def debounced_work_unit(self, route_key: str):
+        """Keep pre-settlement native work observable to a first late request."""
+        with self._lock:
+            if self.updates is not None or self.active_route is not None:
+                raise RuntimeError("Cannot enter debounced work for a bound or active cycle.")
+            self.active_route = route_key
+            self.begin_active_work_unit(route_key)
+        try:
+            yield
+        finally:
+            with self._lock:
+                self.complete_active_work_unit(route_key)
+                self.active_route = None
+                self.active_route_work_unit_count = 0
 
     @property
     def phase(self) -> ViewerSettlePhase:
@@ -447,18 +488,23 @@ class NapariLayerSettlementState:
                 )
             self.failed = True
 
-    def require_terminal(self) -> None:
-        """Failed is terminal too; an executing or claimed callback is not."""
+    def require_retirement_boundary(self) -> None:
+        """Requested settlement must finish; unrequested intake can be cancelled."""
         with self._lock:
-            if self.phase is ViewerSettlePhase.RUNNING or self.active_route is not None:
+            if (
+                (self.requested and self.phase is ViewerSettlePhase.RUNNING)
+                or self.active_route is not None
+            ):
                 raise RuntimeError("Cannot retire layers during active settlement.")
-            if self.active_route_work_unit_active:
+            if self.active_route_work_unit_active or self.intake_item_active:
                 raise RuntimeError("Cannot retire a native mutation in flight.")
 
     def purge_route(self, route_key: str) -> None:
         """Release only the retired payload references, including failed work."""
         with self._lock:
-            self.require_terminal()
+            self.require_retirement_boundary()
+            if self.updates is None:
+                return  # Unbound intake owns no route payloads to purge.
             self.completed_update_count = sum(
                 key != route_key
                 for key, _ in self.updates[:self.completed_update_count]
@@ -478,6 +524,8 @@ class NapariLayerSettlementState:
                 active_route=self.active_route,
                 active_route_work_unit_count=self.active_route_work_unit_count,
                 active_route_work_unit_active=self.active_route_work_unit_active,
+                processed_intake_item_count=self.processed_intake_item_count,
+                intake_item_active=self.intake_item_active,
             )
 
 
@@ -1811,19 +1859,25 @@ class NapariLayerRouteStateStore:
                 settlement.bind_updates(self.drain_pending_updates())
             return settlement
 
-    def admit_settlement(self) -> NapariLayerSettlementState:
-        """Admit one observable cycle without touching Qt updates or timers."""
+    def admit_settlement(
+        self, *, requested: bool = True
+    ) -> NapariLayerSettlementState:
+        """Track intake or request its settlement, without touching Qt timers."""
         with self._settlement_lock:
             if self.layer_settlement is None:
-                self.layer_settlement = NapariLayerSettlementState(None)
+                self.layer_settlement = NapariLayerSettlementState(None, requested=requested)
+            if requested:
+                self.layer_settlement.request()
             return self.layer_settlement
 
-    def existing_settlement_progress(self) -> ViewerSettleProgress | None:
+    def existing_settlement_progress(
+        self, *, requested_only: bool = False
+    ) -> ViewerSettleProgress | None:
         """Return a thread-safe snapshot without starting Qt display work."""
 
         with self._settlement_lock:
             settlement = self.layer_settlement
-        if settlement is None:
+        if settlement is None or (requested_only and not settlement.requested):
             return None
         return settlement.progress()
 
@@ -1842,12 +1896,8 @@ class NapariLayerRouteStateStore:
                 and self.layer_settlement.awaiting_updates
             ):
                 return  # Intake continues until Qt binds this admitted cycle.
-            if (
-                self.layer_settlement is not None
-                and self.layer_settlement.phase is ViewerSettlePhase.RUNNING
-            ):
-                raise RuntimeError("Cannot reset an active Napari layer settlement.")
             if self.layer_settlement is not None:
+                self.layer_settlement.require_retirement_boundary()
                 self.layer_update_errors.pop(None, None)
             self.layer_settlement = None
 
@@ -1863,7 +1913,7 @@ class NapariLayerRouteStateStore:
             if self.layer_pending_updates:
                 raise RuntimeError("Cannot retire layers with pending updates; settle first.")
             if self.layer_settlement is not None:
-                self.layer_settlement.require_terminal()
+                self.layer_settlement.require_retirement_boundary()
 
     def record_update_error(self, layer_key: str | None, error: Exception) -> None:
         """Retain a display failure, including intake without a resolved route."""
