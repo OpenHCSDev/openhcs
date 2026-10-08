@@ -26,6 +26,7 @@ class SummaryEndpoint:
     label: str
     reference_column: str
     native_column: str
+    unit: str = field(default="count", kw_only=True)
 
     def native_value(self, summary, cells):
         return float(summary[self.native_column])
@@ -35,6 +36,26 @@ class SummaryEndpoint:
 
     def aggregate_values(self, values):
         return mean(values)
+
+    def treatment_effect(self, control_points, points, *, allow_undefined=False):
+        """Summarize a curve's own controls; undefined ratios remain undefined."""
+        baseline = self.aggregate_values(control_points)
+        value = self.aggregate_values(points)
+        if not allow_undefined and (baseline is None or value is None or baseline <= 0):
+            raise ValueError("Invalid measurements or undefined endpoint ratio")
+        delta = None if baseline is None or value is None else value - baseline
+        fold = None if baseline is None or value is None else RatioEndpoint.ratio(value, baseline)
+        result = {"control_mean": baseline,
+                  "control_sd": None if baseline is None else stdev(control_points),
+                  "treatment_mean": value,
+                  "treatment_sd": None if value is None else stdev(points),
+                  "delta": delta, "fold_change": fold,
+                  "fractional_change": None if fold is None else fold - 1}
+        if allow_undefined:
+            result["direction"] = ("undefined" if delta is None else
+                                   "increase" if delta > 0 else
+                                   "decrease" if delta < 0 else "unchanged")
+        return result
 
 
 class CellMeanEndpoint(SummaryEndpoint):
@@ -74,24 +95,36 @@ class RatioEndpoint(SummaryEndpoint):
 @dataclass(frozen=True)
 class WellEndpoints:
     mean_outgrowth: float = field(metadata={"endpoint": SummaryEndpoint(
-        "Mean outgrowth per cell / control", "Mean Outgrowth Per Cell (Neurite Outgrowth)", "mean_outgrowth_per_cell")})
+        "Mean outgrowth per cell / control", "Mean Outgrowth Per Cell (Neurite Outgrowth)", "mean_outgrowth_per_cell", unit="micrometers/cell")})
     cell_count: float = field(metadata={"endpoint": SummaryEndpoint(
         "Detected cells / control", "Number of Cells (Neurite Outgrowth)", "number_of_cells")})
     total_outgrowth: float = field(metadata={"endpoint": SummaryEndpoint(
-        "Total outgrowth / control", "Total Outgrowth (Neurite Outgrowth)", "total_outgrowth")})
+        "Total outgrowth / control", "Total Outgrowth (Neurite Outgrowth)", "total_outgrowth", unit="micrometers")})
     branches_per_cell: float = field(metadata={"endpoint": SummaryEndpoint(
-        "Branches per cell / control", "Mean Branches Per Cell (Neurite Outgrowth)", "mean_branches_per_cell")})
+        "Branches per cell / control", "Mean Branches Per Cell (Neurite Outgrowth)", "mean_branches_per_cell", unit="branches/cell")})
     mean_process_length: float = field(metadata={"endpoint": CellMeanEndpoint(
-        "Mean cell process length / control", "Cell: Mean Process Length (Neurite Outgrowth)", "mean_process_length")})
+        "Mean cell process length / control", "Cell: Mean Process Length (Neurite Outgrowth)", "mean_process_length", unit="micrometers")})
     median_process_length: float = field(metadata={"endpoint": CellMeanEndpoint(
-        "Mean cell median process length / control", "Cell: Median Process Length (Neurite Outgrowth)", "median_process_length")})
+        "Mean cell median process length / control", "Cell: Median Process Length (Neurite Outgrowth)", "median_process_length", unit="micrometers")})
     total_branches: float = field(metadata={"endpoint": SummaryEndpoint(
         "Total branches / control", "Total Branches (Neurite Outgrowth)", "total_branches")})
     total_processes: float = field(metadata={"endpoint": SummaryEndpoint(
         "Total primary processes / control", "Total Processes (Neurite Outgrowth)", "total_processes")})
     branches_per_process: float | None = field(metadata={"endpoint": RatioEndpoint(
         "Branches per primary process / control", "Total Branches (Neurite Outgrowth)", "total_branches",
-        "Total Processes (Neurite Outgrowth)", "total_processes")})
+        "Total Processes (Neurite Outgrowth)", "total_processes", unit="branches/primary_process")})
+
+    def paired_values(self, guided, metrics):
+        """Absolute endpoints and guided-minus/over-blind, never accuracy scores."""
+        result = {}
+        for metric in metrics:
+            blind_value, guided_value = getattr(self, metric), getattr(guided, metric)
+            defined = blind_value is not None and guided_value is not None
+            result.update({f"openhcs_{metric}": blind_value,
+                           f"guided_openhcs_{metric}": guided_value,
+                           f"guided_minus_blind_{metric}": guided_value - blind_value if defined else None,
+                           f"guided_over_blind_{metric}": RatioEndpoint.ratio(guided_value, blind_value) if defined else None})
+        return result
 
 
 METRICS = tuple(field.name for field in fields(WellEndpoints))
@@ -183,14 +216,28 @@ class WellAggregation(ABC):
     def aggregate(self, rows):
         """Return well endpoints without silently changing sampled area."""
 
-    def load(self, summaries):
-        grouped, paths = {}, []
+    def load_planes(self, summaries):
+        """Decode once, retaining the native well/site identity for pairing."""
+        planes, paths = {}, []
         for path in sorted(summaries.glob("*_neurite_outgrowth_summary_*details.csv")):
             row = NativeSummary.read(path)
-            grouped.setdefault(row.well, []).append(row)
+            identity = (row.well, row.site)
+            if identity in planes:
+                raise ValueError(f"Duplicate native well/site: {identity}")
+            planes[identity] = row
             paths.append(path)
             paths.append(NativeSummary.cells_path(path))
-        return {well: self.aggregate(rows) for well, rows in grouped.items()}, paths
+        return planes, paths
+
+    def aggregate_planes(self, planes):
+        grouped = {}
+        for row in planes.values():
+            grouped.setdefault(row.well, []).append(row)
+        return {well: self.aggregate(rows) for well, rows in grouped.items()}
+
+    def load(self, summaries):
+        planes, paths = self.load_planes(summaries)
+        return self.aggregate_planes(planes), paths
 
 
 class MosaicWellAggregation(WellAggregation):
@@ -223,7 +270,7 @@ class SiteMeanWellAggregation(WellAggregation):
         })
 
 
-def reference_rows(reference, workbook, metrics):
+def reference_rows(reference, workbook, metrics, *, allow_undefined=False):
     """Use the existing well metadata; decode original workbook endpoints once."""
     rows = read_rows(reference)
     if workbook is not None:
@@ -251,13 +298,25 @@ def reference_rows(reference, workbook, metrics):
             book.close()
     for row in rows:
         for metric in metrics:
+            if (allow_undefined and metric in row and isinstance(endpoint_declarations()[metric], RatioEndpoint)
+                    and row.get(metric) in (None, "")):
+                row[metric] = None
+                continue
             if row.get(metric) is None or not math.isfinite(float(row[metric])) or float(row[metric]) < 0:
                 raise ValueError(f"Missing or invalid reference endpoint {metric}: {row['plate']}/{row['well']}")
     return rows
 
 
 def compare(reference, key, summaries, output, aggregation, coded_plate, pipeline,
-            *, metrics=DEFAULT_METRICS, workbook=None):
+            *, metrics=None, workbook=None,
+            guided_summaries=None, guided_pipeline=None, guided_label=None):
+    guided_options = (guided_summaries, guided_pipeline, guided_label)
+    if any(value is not None for value in guided_options) and not all(guided_options):
+        raise ValueError("Guided evaluation requires summaries, pipeline and an explicit label")
+    if guided_label is not None and not guided_label.strip():
+        raise ValueError("Guided evaluation requires an explicit label")
+    paired = guided_summaries is not None
+    metrics = tuple(metrics) if metrics is not None else METRICS if paired else DEFAULT_METRICS
     inputs = [reference, key, pipeline]
     if workbook is not None:
         inputs.append(workbook)
@@ -273,23 +332,42 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
         if coded in mapping and mapping[coded] != identity:
             raise ValueError(f"Inconsistent source identity: {coded}")
         mapping[coded] = identity
-    measured, paths = aggregation.load(summaries)
+    planes, paths = aggregation.load_planes(summaries)
+    measured = aggregation.aggregate_planes(planes)
     native = {mapping[(coded_plate, well)]: asdict(endpoints) for well, endpoints in measured.items()}
     if len(native) != len(measured):
         raise ValueError("Multiple coded wells map to the same physical well")
     inputs.extend(paths)
+    if paired:
+        guided_planes, paths = aggregation.load_planes(guided_summaries)
+        if not planes or planes.keys() != guided_planes.keys():
+            raise ValueError("Blind and guided native well/site coverage must match exactly")
+        guided_measured = aggregation.aggregate_planes(guided_planes)
+        guided_native = {mapping[(coded_plate, well)]: asdict(endpoints)
+                         for well, endpoints in guided_measured.items()}
+        inputs.extend([guided_pipeline, *paths])
     joined = []
-    for row in reference_rows(reference, workbook, metrics):
+    for row in reference_rows(reference, workbook, metrics, allow_undefined=paired):
         identity = (row["plate"], row["well"])
         if identity not in native:
             continue
-        if any(native[identity][metric] is None for metric in metrics):
+        if not paired and any(native[identity][metric] is None for metric in metrics):
             raise ValueError(f"Selected native ratio is undefined: {identity}")
         joined.append({**row, **{f"openhcs_{metric}": native[identity][metric]
                                 for metric in metrics}})
+        if paired:
+            joined[-1].update({"guided_label": guided_label,
+                              **WellEndpoints(**native[identity]).paired_values(
+                                  WellEndpoints(**guided_native[identity]), metrics)})
+    if paired and (len(joined) != len(native) or
+                   {(row["plate"], row["well"]) for row in joined} != native.keys()):
+        raise ValueError("Reference must cover every paired physical well exactly once")
+    methods = [("metaxpress", ""), ("openhcs", "openhcs_")]
+    if paired:
+        methods.append(("guided_openhcs", "guided_openhcs_"))
     effects = []
-    for condition in dict.fromkeys(row["condition"] for row in joined):
-        curve = [row for row in joined if row["condition"] == condition]
+    for plate, condition in dict.fromkeys((row["plate"], row["condition"]) for row in joined):
+        curve = [row for row in joined if (row["plate"], row["condition"]) == (plate, condition)]
         control = [row for row in curve if float(row["nominal_dose_uM"]) == 0]
         if len(control) != 2:
             raise ValueError(f"Missing curve-specific controls: {condition}")
@@ -303,27 +381,36 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
                           "baseline_wells": ";".join(row["well"] for row in control),
                           "treatment_wells": ";".join(row["well"] for row in drug),
                           "n_control": len(control), "n_treatment": len(drug)}
-                for method, column in (("metaxpress", metric), ("openhcs", f"openhcs_{metric}")):
-                    control_points = [float(row[column]) for row in control]
-                    baseline = mean(control_points)
-                    points = [float(row[column]) for row in drug]
-                    if baseline <= 0 or not all(math.isfinite(value) for value in (baseline, *points)):
-                        raise ValueError(f"Invalid measurements: {condition}/{dose}/{metric}")
-                    value = mean(points)
-                    result.update({f"{method}_control_mean": baseline,
-                                   f"{method}_control_sd": stdev(control_points),
-                                   f"{method}_treatment_mean": value,
-                                   f"{method}_treatment_sd": stdev(points),
-                                   f"{method}_delta": value - baseline,
-                                   f"{method}_fold_change": value / baseline,
-                                   f"{method}_fractional_change": value / baseline - 1})
-                result["fractional_change_difference"] = result["openhcs_fractional_change"] - result["metaxpress_fractional_change"]
+                for method, prefix in methods:
+                    column = f"{prefix}{metric}"
+                    control_points = [None if row[column] is None else float(row[column]) for row in control]
+                    points = [None if row[column] is None else float(row[column]) for row in drug]
+                    effect = endpoint_declarations()[metric].treatment_effect(
+                        control_points, points, allow_undefined=paired)
+                    result.update({f"{method}_{name}": value for name, value in effect.items()})
+                native_change, reference_change = result["openhcs_fractional_change"], result["metaxpress_fractional_change"]
+                result["fractional_change_difference"] = (None if native_change is None or reference_change is None
+                                                           else native_change - reference_change)
+                if paired:
+                    result["guided_label"] = guided_label
                 effects.append(result)
+    hashes = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in inputs}
     output.mkdir(parents=True, exist_ok=True)
     write_rows(output / "joined_wells.csv", joined)
     write_rows(output / "treatment_effects.csv", effects)
-    hashes = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in inputs}
-    (output / "source_evidence.json").write_text(json.dumps({
+    if paired:
+        paired_sites = []
+        for (well, site), plane in planes.items():
+            physical_plate, physical_well = mapping[(coded_plate, well)]
+            guided_plane = guided_planes[(well, site)]
+            result = {"plate": physical_plate, "well": physical_well,
+                      "coded_plate": coded_plate, "coded_well": well,
+                      "site": site, "coordinate_unit": NativeSummary.coordinate_unit,
+                      "guided_label": guided_label}
+            result.update(plane.endpoints.paired_values(guided_plane.endpoints, metrics))
+            paired_sites.append(result)
+        write_rows(output / "paired_sites.csv", paired_sites)
+    evidence = {
         "sources_sha256": hashes, "matched_wells": len(joined),
         "comparison": "fixed-run treatment evaluation; not a manual accuracy score",
         "aggregation_protocol": aggregation.name,
@@ -339,7 +426,14 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
         "protocol_figure_label": aggregation.figure_label,
         "generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "baseline": "each drug curve's own zero-dose DMSO wells",
-    }, indent=2) + "\n")
+    }
+    if paired:
+        evidence["endpoint_units"] = {metric: endpoint_declarations()[metric].unit for metric in metrics}
+        evidence["guided_openhcs"] = {"label": guided_label, "pipeline_source": str(guided_pipeline),
+                                     "summaries": str(guided_summaries), "matched_sites": len(planes),
+                                     "role": "scientist-guided comparator, not ground truth",
+                                     "aggregation_protocol": aggregation.name}
+    (output / "source_evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
     print(f"Compared {len(joined)} physical wells; wrote {len(effects)} endpoint/dose rows to {output}")
 
 
@@ -349,12 +443,19 @@ if __name__ == "__main__":
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--coded-plate", required=True,
                         help="Source plate identity in the evaluation key, not the output directory name")
-    parser.add_argument("--metrics", nargs="+", choices=METRICS, default=DEFAULT_METRICS)
+    parser.add_argument("--metrics", nargs="+", choices=METRICS,
+                        help="Defaults to mean outgrowth/count; guided comparisons default to all declared endpoints.")
     parser.add_argument("--reference-workbook", type=Path,
                         help="Original workbook supplies selected endpoints at the CSV's retained Excel row identities.")
+    parser.add_argument("--guided-summaries", type=Path,
+                        help="Optional scientist-guided native summaries; must match the blind well/site coverage and aggregation.")
+    parser.add_argument("--guided-pipeline", type=Path)
+    parser.add_argument("--guided-label", help="Explicit scientist-guided comparator label; never ground truth.")
     protocols = {protocol.name: protocol for protocol in WellAggregation.__subclasses__()}
     parser.add_argument("--aggregation", choices=protocols, required=True)
     args = parser.parse_args()
     compare(args.reference, args.key, args.summaries, args.output,
             protocols[args.aggregation](), args.coded_plate, args.pipeline,
-            metrics=tuple(args.metrics), workbook=args.reference_workbook)
+            metrics=args.metrics, workbook=args.reference_workbook,
+            guided_summaries=args.guided_summaries, guided_pipeline=args.guided_pipeline,
+            guided_label=args.guided_label)
