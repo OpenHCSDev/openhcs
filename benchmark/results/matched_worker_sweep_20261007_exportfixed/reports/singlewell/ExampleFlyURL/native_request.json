@@ -1,0 +1,15 @@
+{
+  "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/flyurl-selected-source-persisted-science-v1/cases/native_preparation/native_cellprofiler_headless/ExampleFlyURL.cppipe",
+  "input_dir": "/home/ts/.local/state/openhcs-maintenance/20261005/flyurl-selected-source-persisted-science-v1/cases/native_preparation/native_cellprofiler_empty_input",
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/flyurl-selected-source-persisted-science-v1/cases/native",
+  "expected_image_sets": null,
+  "repetitions": 3,
+  "file_list_path": null,
+  "first_image_set": 1,
+  "last_image_set": null,
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/flyurl-selected-source-persisted-science-v1/cases/native_report.json",
+  "start_barrier_root": null,
+  "start_barrier_job_count": 1,
+  "start_barrier_job_index": 0,
+  "assignment_output_subdirectories": []
+}

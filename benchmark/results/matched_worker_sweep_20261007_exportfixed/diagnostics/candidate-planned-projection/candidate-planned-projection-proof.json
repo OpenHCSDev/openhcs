@@ -1,0 +1,81 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY saved actualD06 Grid W001, changed qualification only; CPU0 shared with live qualifier, wall timings contended",
+  "full_original_result_exact": true,
+  "complete_fresh_semantic_payload_exact": true,
+  "payload_sha256": "433b2c02390897c65d6848f090a55c8e6679ba7697c1805391d50588478347dd",
+  "unordered_manifest_admission": "Only report compared_output_files frozenset array ordering normalized",
+  "original": {
+    "mode": "original",
+    "scope": "DIAGNOSTIC_ONLY saved Grid W001, CPU0 potentially shared with live qualifier; private warmed native facts, candidate projection fresh, no science jobs",
+    "full_qualification": {
+      "wall_seconds": 29.384485203772783,
+      "process_cpu_seconds": 19.897270106
+    },
+    "fresh_candidate_projection": {
+      "wall_seconds": 13.497117732651532,
+      "process_cpu_seconds": 13.442393103
+    },
+    "source_hashes": {
+      "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-original-overlay/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+      "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-original-overlay/openhcs/core/runtime_equivalence.py": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+    },
+    "runtime_authority_root": "/home/ts/code/projects/openhcs-cp-registry-control",
+    "numeric_fact_keys": 522,
+    "directed_relationship_groups": 0,
+    "native_report_sha256": "c7ea873f98bcde016b59901c2288d2736e33938e27c0f25a02cb3976282c72d2"
+  },
+  "optimized": {
+    "mode": "optimized",
+    "scope": "DIAGNOSTIC_ONLY saved Grid W001, CPU0 potentially shared with live qualifier; private warmed native facts, candidate projection fresh, no science jobs",
+    "full_qualification": {
+      "wall_seconds": 30.08344709035009,
+      "process_cpu_seconds": 15.486318395000001
+    },
+    "fresh_candidate_projection": {
+      "wall_seconds": 20.40746181923896,
+      "process_cpu_seconds": 10.947197023000005
+    },
+    "source_hashes": {
+      "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-overlay/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+      "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-overlay/openhcs/core/runtime_equivalence.py": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+    },
+    "runtime_authority_root": "/home/ts/code/projects/openhcs-cp-registry-control",
+    "numeric_fact_keys": 522,
+    "directed_relationship_groups": 0,
+    "native_report_sha256": "c7ea873f98bcde016b59901c2288d2736e33938e27c0f25a02cb3976282c72d2"
+  },
+  "whole_qualification_cpu_fraction_removed": 0.22168627593138424,
+  "potential_16axis_2comparison_core_wall_savings_seconds": 35.28761368799999,
+  "estimate_limit": "Linear CPU work model, not measured live gap or headline; first use of changed semantic producer causes safe native cache misses",
+  "patch_file": "candidate-planned-projection.patch",
+  "source_files": {
+    "openhcs/core/equivalence/cells.py": {
+      "preimage_sha256": "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be",
+      "patched_sha256": "b5a6e479b5ef072d3f6803b888e4b171853509a68aadf0f930ecd96e0fd3d8f2"
+    },
+    "openhcs/core/equivalence/measurement_facts.py": {
+      "preimage_sha256": "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947",
+      "patched_sha256": "262a5d223f3925e41970fb132253cee9eb7c47e0bc4b1ce8edc895f2c6ef8f71"
+    },
+    "openhcs/core/equivalence/measurement_rows.py": {
+      "preimage_sha256": "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2",
+      "patched_sha256": "6f5c39e10bd52dc0e82f059a3f9c702a475ae9e7858f1c5a5b4576be69b29659"
+    }
+  },
+  "consumer": "Existing RuntimeMeasurementFactProjectionContract consumes complete RuntimeRowProjectionRecord anchor metadata from all existing producers; existing cell presence no longer parses finite numbers; runtime cast uses unevaluated type string",
+  "formal_semantics": "None/empty absent; numeric NaN absent; only signed/unsigned case-insensitive exact nan text absent, all other text present; mappings retain recursive value presence and original cell presence; arrays retain original shape rules; declared anchors and producer ownership retained",
+  "limits": [
+    "Grid has no directed relationships; actual Advanced full report and all seven directed groups received exactly in candidate-planned-advanced-proof.json",
+    "No actual wall speedup inferred from contended diagnostic wall clocks",
+    "Rejected earlier row-recorder/marker-cache prototype excluded from this patch"
+  ],
+  "required_scalar_and_producer_controls": {
+    "scalar_presence_cases": 105,
+    "all_explicit_anchor_producers": 8,
+    "control_proofs": [
+      "candidate-presence-controls-proof.json",
+      "candidate-planned-anchor-producer-inventory.json"
+    ]
+  }
+}

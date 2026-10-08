@@ -1,0 +1,20 @@
+# Load the exact qualifier overlay, never edit tracked production or benchmarks.
+exec(open('/home/ts/.local/state/openhcs-maintenance/20261007/comparison-csv-reuse-v1/run_pair.py').read().split('case=Path(')[0].replace('mode=sys.argv[1]','mode="optimized"'))
+from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from openhcs.core.equivalence.relationships import ExportedRelationshipMeasurementSemantics
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from dataclasses import FrozenInstanceError
+import pytest
+bad_schema=RuntimeTableSnapshot(Path('Cells.csv'),('ImageNumber','ImageNumber','ObjectNumber'),(('1','1','1'),),('Image','Cells','Cells'))
+with pytest.raises(ValueError,match='duplicate columns'):bad_schema.measurement_subject_columns()
+# Non-comparable Experiment receipts still participate in default relationship
+# admission before the inventory's participation filter, preserving conflicts.
+conflict=RuntimeTableSnapshot(Path('Experiment.csv'),('ImageNumber','Value'),(('1','a'),('1','b')))
+assert not RuntimeTableSnapshot(Path('Experiment.csv'),('key','value'),(('x','y'),)).participates_in_comparison
+with pytest.raises(ValueError,match='conflicting observed values'):
+ ExportedRelationshipMeasurementSemantics.validated_output_tables((conflict,),RuntimeEquivalencePolicy())
+good=RuntimeTableSnapshot(Path('Cells.csv'),('ImageNumber','ObjectNumber','Area'),(('1','1','4'),))
+assert good.measurement_tables() is good.measurement_tables()
+with pytest.raises(FrozenInstanceError):good.rows=()
+print('Schema duplicate rejection, Experiment value conflict, immutable source and view reuse PASS')
+raise SystemExit(pytest.main(['-q',str(production/'tests/unit/test_runtime_equivalence.py'),'-k','contextual_duplicate_csv_header or equal_duplicate_csv_columns or conflicting_duplicate_csv_columns']))

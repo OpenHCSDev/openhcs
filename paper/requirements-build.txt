@@ -1,6 +1,6 @@
 # Build-only dependency, not an OpenHCS application/runtime dependency.
 # One imported implementation, pinned to the reviewed shared infrastructure.
-paper-build @ git+https://github.com/OpenHCSDev/papers.git@d66324a01987a6d6eb792d23ebd189b126818f9b
+paper-build @ git+https://github.com/OpenHCSDev/papers.git@0417d0f2c4d4e7b540f1ef45cfc35007858a34e4
 # Generated Python figure sources use the same formatter as the quality gate.
 -c ../scripts/requirements-quality.txt
 black

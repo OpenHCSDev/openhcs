@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY final guard receiving on savedD06 Grid12 W002; no science/livecache writes; retained exact original fullresult and previously certified batch payload reused, no repeated batch projection",
+  "parent_before_after_file_hashing": {
+    "cpu_seconds": 0.153694424,
+    "wall_seconds": 0.2230584593489766
+  },
+  "actual_all12_axis_source_hashing": {
+    "cpu_seconds": 12.122056256,
+    "wall_seconds": 12.21073956321925
+  },
+  "whole_saved_one_axis_prepared_with_guard": {
+    "cpu_seconds": 6.606510701000001,
+    "wall_seconds": 9.013623707927763
+  },
+  "entire_returned_payload_exact": true,
+  "different_actual_workflow_payload_and_mismatched_source_fallsback_ordinary_exact": true,
+  "source_hashes_at_import": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/benchmark/matched_cellprofiler_batch.py": "0628f68628976386ed8eb8a123e4e14a18728f2efca01e8840060f1809469b1e",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/runtime_equivalence.py": "c86aa57bcdd64a11984a7ef48090786d0a3966f42c1d59b4306791ad233165be",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/openhcs/core/equivalence/outputs.py": "8b03565e570d90fc5a5202318d220562cdf27b850ff112297ea677d7e9faebb5"
+  },
+  "candidate_source_inventory": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate/-1/source_workspace_matched_pilot/results/BF_cells_on_grid.csv": "c57af9f97da7c73a573f47fdb10dbc4abb3b07d16ebadac660a5e62bd21e4bd9"
+  },
+  "fallback_clock": "Not performance evidence; correctness receiving only"
+}

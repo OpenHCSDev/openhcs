@@ -1,0 +1,18 @@
+{
+  "scope": "DIAGNOSTIC_ONLY: fresh actual8 TrackObjects integration; not a full-cohort benchmark headline",
+  "pipeline_case": "ExampleTrackObjects",
+  "integration_source_revision": "079562c15d8ebac0d0a416853ce0736cbae79c86",
+  "published_main_revision": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "published_code_identical_to_passed_integration": true,
+  "warmup_and_measured_repetitions": [
+    -1,
+    0,
+    1,
+    2
+  ],
+  "assignment_count": 8,
+  "full_scientific_comparisons_passed": 32,
+  "native_reference_status": "unchanged measured actual8 serial CP source reused; no new native execution or projection",
+  "formal_behavior_checks": 52,
+  "all_output_difference_classes_empty": true
+}

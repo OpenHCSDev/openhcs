@@ -1,0 +1,21 @@
+{
+  "admit-batch-inputs.py.txt": "cfdede97d9ccd041bae327746a572351a6e299d7c7f3dc4c527ec8dc470942dc",
+  "batch-input-admission.json": "6273121643bce9b5ab94aedb140af3e52ada17f2643e3a7b5603313d477da712",
+  "cost-ledger.json": "8e90f304144f47580abbcc3accf34ad43ba02b4e14766619c39ace710d295df3",
+  "joint-batch-advanced-optimized-full-result.json": "cd4bfd477da55da44e06470a0cac424fc814aa8eb9e777e23e442818cb712441",
+  "joint-batch-advanced-original-full-result.json": "cd4bfd477da55da44e06470a0cac424fc814aa8eb9e777e23e442818cb712441",
+  "joint-batch-advanced-proof.json": "eac4d236e3a2fc2ea4e66f5f12014c9af8ea5c1e9eb77a492a2d6e577bd4a33e",
+  "joint-batch-grid-binding-proof.json": "7d03c788849a4a914a098d9563018aa2dd44e3a8949bbb4703ee1e18e284bdd8",
+  "joint-batch-grid-final-optimized-full-result.json": "e9e275dcdeb444abb0aaa4fcbdaabf33dd5ff2f1a54122b61e474f7f5dc82e75",
+  "joint-batch-grid-final-proof.json": "0464dac0a427975d9bebdf50a845e0ad7c41b53867712ce1f272b85da69d5f82",
+  "joint-batch-grid-original-full-result.json": "e9e275dcdeb444abb0aaa4fcbdaabf33dd5ff2f1a54122b61e474f7f5dc82e75",
+  "joint-batch-preimages.json": "a2c46218797ba051638d7df735c6440222e3ec241ffecc2590768b15d8049bab",
+  "joint-batch-projection.patch": "d99430b3bc270eec844715371c7c77778e0ffb25f0288efd4780553f3815e229",
+  "prepare-joint-batch.py.txt": "5dcb79e7d30dfe41c72f583e0c0e4f735600bb08af9655ef9cf085d9b5fb300a",
+  "receive-joint-batch-advanced.py.txt": "90ffcb80c3f7c5056f64276ce07949b134fc82b69b9e8b7d79ebcc4c8addb2b9",
+  "receive-joint-batch-grid-binding.py.txt": "585a6284d0fec97579cfb1a73c200cf7ab5c232f938ff499de141d018d5d73d8",
+  "receive-joint-batch-grid-final.py.txt": "60005c90b77125a6432c4119d5beaa3a51004264cad5cd1b731ad35c7c52a1a9",
+  "receive-joint-batch-grid.py.txt": "536cde55819d40fef37a9d268b723d80fef5e677eff3ea7807b9223b36f1f531",
+  "receive-sql-axis-layout.py.txt": "0d5fc0fc15e056896a37d664f8ee0d60059ce4614ef7620c57a938ea2732f11f",
+  "sql-axis-layout-proof.json": "6fe2ac7ae8cdbbc29a60b1ca7b27780a5d1ff9a26b178bec55c467d935f92a30"
+}

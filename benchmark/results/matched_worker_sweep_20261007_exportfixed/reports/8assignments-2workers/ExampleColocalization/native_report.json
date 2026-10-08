@@ -1,0 +1,229 @@
+{
+  "startup_seconds": 0.578243276104331,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native_preparation/native_cellprofiler_headless/ExampleColocalization.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native/-1",
+      "image_set_count": 16,
+      "invocation_seconds": 309.9870988987386,
+      "pre_pipeline_seconds": 0.001577890943735838,
+      "pipeline_execution_seconds": 309.9855210077949,
+      "invocation_started_monotonic_seconds": 4146704.237638066,
+      "pipeline_started_monotonic_seconds": 4146704.239215957,
+      "completed_monotonic_seconds": 4147014.224736965,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native/0",
+      "image_set_count": 16,
+      "invocation_seconds": 303.51481642900035,
+      "pre_pipeline_seconds": 0.000789375975728035,
+      "pipeline_execution_seconds": 303.5140270530246,
+      "invocation_started_monotonic_seconds": 4147014.224750691,
+      "pipeline_started_monotonic_seconds": 4147014.225540067,
+      "completed_monotonic_seconds": 4147317.73956712,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native/1",
+      "image_set_count": 16,
+      "invocation_seconds": 299.5510371886194,
+      "pre_pipeline_seconds": 0.0007361569441854954,
+      "pipeline_execution_seconds": 299.5503010316752,
+      "invocation_started_monotonic_seconds": 4147317.73957796,
+      "pipeline_started_monotonic_seconds": 4147317.740314117,
+      "completed_monotonic_seconds": 4147617.290615149,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleColocalization/native/2",
+      "image_set_count": 16,
+      "invocation_seconds": 295.5059307469055,
+      "pre_pipeline_seconds": 0.0007466059178113937,
+      "pipeline_execution_seconds": 295.5051841409877,
+      "invocation_started_monotonic_seconds": 4147617.29062628,
+      "pipeline_started_monotonic_seconds": 4147617.291372886,
+      "completed_monotonic_seconds": 4147912.796557027,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          2
+        ],
+        [
+          "W002",
+          2
+        ],
+        [
+          "W003",
+          2
+        ],
+        [
+          "W004",
+          2
+        ],
+        [
+          "W005",
+          2
+        ],
+        [
+          "W006",
+          2
+        ],
+        [
+          "W007",
+          2
+        ],
+        [
+          "W008",
+          2
+        ]
+      ]
+    }
+  ]
+}

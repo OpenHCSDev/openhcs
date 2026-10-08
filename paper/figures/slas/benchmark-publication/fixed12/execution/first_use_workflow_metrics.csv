@@ -1,0 +1,481 @@
+pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,speedup,peak_memory_mb
+ExampleYeastPatches,"CP first batch (1 worker / 12 assignments
+CP projected)",Yeast colony screening,Texture/patch measurement,1.0,51.94113292475231,1.0,
+ExampleYeastPatches,"1 worker / 12 assignments
+CP projected",Yeast colony screening,Texture/patch measurement,1.0,13.03943920135498,3.983387024754477,
+cp_tutorial_3d_monolayer,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,169.07462929259054,1.0,
+cp_tutorial_3d_monolayer,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,35.03141641616821,4.826371485640436,
+cp_tutorial_advanced_segmentation_final,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,398.1589026963338,1.0,
+cp_tutorial_advanced_segmentation_final,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,61.63849663734436,6.459581664344242,
+cp_tutorial_quality_control,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,35.525419258279726,1.0,
+cp_tutorial_quality_control,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,6.295537948608398,5.642952127090659,
+cp_tutorial_beginner_segmentation_final,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,173.50078548607416,1.0,
+cp_tutorial_beginner_segmentation_final,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,37.169827461242676,4.66778560290561,
+cp_tutorial_pixel_based_classification,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,31.536771091399714,1.0,
+cp_tutorial_pixel_based_classification,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,6.738504886627197,4.680084324637882,
+cp_tutorial_translocation_final,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,14.355072172591463,1.0,
+cp_tutorial_translocation_final,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,5.61316442489624,2.5573938488104804,
+cp4_supplement_combine_objects,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,1.889449293492362,1.0,
+cp4_supplement_combine_objects,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,0.5471816062927246,3.4530570321868006,
+cp_tutorial_translocation_start,"CP first batch (1 worker / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,4.597848533419892,1.0,
+cp_tutorial_translocation_start,"1 worker / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,1.5262360572814941,3.0125408920095245,
+ExampleUntangleWorms,"CP first batch (1 worker / 12 assignments
+CP projected)",Worm phenotyping,Worm model + shape measurement,1.0,32.68576166103594,1.0,
+ExampleUntangleWorms,"1 worker / 12 assignments
+CP projected",Worm phenotyping,Worm model + shape measurement,1.0,8.822354793548584,3.7048795277353457,
+ExampleUntangleWormsBrightField,"CP first batch (1 worker / 12 assignments
+CP projected)",Worm phenotyping,Worm model + brightfield segmentation,1.0,70.7467566805426,1.0,
+ExampleUntangleWormsBrightField,"1 worker / 12 assignments
+CP projected",Worm phenotyping,Worm model + brightfield segmentation,1.0,14.131319999694824,5.006379919361421,
+ExampleYeastColonies,"CP first batch (1 worker / 12 assignments
+CP projected)",Yeast colony screening,Colony segmentation + measurement,1.0,124.71728490525857,1.0,
+ExampleYeastColonies,"1 worker / 12 assignments
+CP projected",Yeast colony screening,Colony segmentation + measurement,1.0,19.089720010757446,6.533217084115316,
+ExampleWoundHealing,"CP first batch (1 worker / 12 assignments
+CP projected)",Migration/scratch assay,Segmentation + distance measurement,1.0,45.57096488378011,1.0,
+ExampleWoundHealing,"1 worker / 12 assignments
+CP projected",Migration/scratch assay,Segmentation + distance measurement,1.0,7.754486799240112,5.876722220772335,
+ExampleSpeckles,"CP first batch (1 worker / 12 assignments
+CP projected)",Spot detection,Small-object detection,1.0,17.700345046585426,1.0,
+ExampleSpeckles,"1 worker / 12 assignments
+CP projected",Spot detection,Small-object detection,1.0,4.783579587936401,3.7002300727312067,
+ExampleIlluminationCorrection_Example3,"CP first batch (1 worker / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,4.940004213247448,1.0,
+ExampleIlluminationCorrection_Example3,"1 worker / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,1.620934247970581,3.0476277612323646,
+ExampleVitra,"CP first batch (1 worker / 12 assignments
+CP projected)",Cell morphology,Segmentation + shape measurement,1.0,30.78224799898453,1.0,
+ExampleVitra,"1 worker / 12 assignments
+CP projected",Cell morphology,Segmentation + shape measurement,1.0,10.957802772521973,2.8091624423260084,
+ExampleFlyURL,"CP first batch (1 worker / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,36.17777503468096,1.0,
+ExampleFlyURL,"1 worker / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,8.126163482666016,4.452011716457842,
+ExampleColocalization,"CP first batch (1 worker / 12 assignments
+CP projected)",Colocalization microscopy,Colocalization + object measurement,1.0,459.7606715236325,1.0,
+ExampleColocalization,"1 worker / 12 assignments
+CP projected",Colocalization microscopy,Colocalization + object measurement,1.0,32.421120405197144,14.180900159450761,
+ExampleCometAssay,"CP first batch (1 worker / 12 assignments
+CP projected)",DNA damage assay,Segmentation + shape measurement,1.0,145.56623051175848,1.0,
+ExampleCometAssay,"1 worker / 12 assignments
+CP projected",DNA damage assay,Segmentation + shape measurement,1.0,20.627121925354004,7.057030594890434,
+ExampleFly,"CP first batch (1 worker / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,75.43163167894818,1.0,
+ExampleFly,"1 worker / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,20.252843379974365,3.7244958776274135,
+ExampleHuman,"CP first batch (1 worker / 12 assignments
+CP projected)",Cell morphology,Segmentation + intensity measurement,1.0,31.468940807972103,1.0,
+ExampleHuman,"1 worker / 12 assignments
+CP projected",Cell morphology,Segmentation + intensity measurement,1.0,8.375736951828003,3.757154861591494,
+ExampleIlluminationCorrection_Example1_AllMethod,"CP first batch (1 worker / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,11499.484993203077,1.0,
+ExampleIlluminationCorrection_Example1_AllMethod,"1 worker / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,23.45683479309082,490.2402687591182,
+ExampleIlluminationCorrection_Example1_EachMethod,"CP first batch (1 worker / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,35.215122625930235,1.0,
+ExampleIlluminationCorrection_Example1_EachMethod,"1 worker / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,0.8528225421905518,41.29243879444956,
+ExampleIlluminationCorrection_Example2,"CP first batch (1 worker / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,567.5564589824062,1.0,
+ExampleIlluminationCorrection_Example2,"1 worker / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,18.589736938476562,30.53063423440341,
+ExampleImagingFlowCytometryObjectsInGrid,"CP first batch (1 worker / 12 assignments
+CP projected)",Imaging flow cytometry,Grid layout + object measurement,1.0,811.258535685949,1.0,
+ExampleImagingFlowCytometryObjectsInGrid,"1 worker / 12 assignments
+CP projected",Imaging flow cytometry,Grid layout + object measurement,1.0,85.10841798782349,9.532059869824113,
+ExampleNeighbors,"CP first batch (1 worker / 12 assignments
+CP projected)",Spatial organization,Object relationship measurement,1.0,33.76631380361505,1.0,
+ExampleNeighbors,"1 worker / 12 assignments
+CP projected",Spatial organization,Object relationship measurement,1.0,12.24692964553833,2.757124828908969,
+ExamplePercentPositive,"CP first batch (1 worker / 12 assignments
+CP projected)",Positive-cell classification,Thresholding + classification,1.0,8.73582362360321,1.0,
+ExamplePercentPositive,"1 worker / 12 assignments
+CP projected",Positive-cell classification,Thresholding + classification,1.0,2.9669759273529053,2.944352713841258,
+ExampleTrackObjects,"CP first batch (1 worker / 12 assignments
+CP projected)",Time-lapse tracking,Tracking + object measurement,1.0,95.31015839311294,1.0,
+ExampleTrackObjects,"1 worker / 12 assignments
+CP projected",Time-lapse tracking,Tracking + object measurement,1.0,28.7265522480011,3.3178418896317425,
+ExampleTumor,"CP first batch (1 worker / 12 assignments
+CP projected)",Tumor morphology,Segmentation + intensity measurement,1.0,34.64529980253428,1.0,
+ExampleTumor,"1 worker / 12 assignments
+CP projected",Tumor morphology,Segmentation + intensity measurement,1.0,6.411426544189453,5.403680376550929,
+ExampleUntangleAndStraightenWorms,"CP first batch (1 worker / 12 assignments
+CP projected)",Worm phenotyping,Worm model + straightening,1.0,19.17302992939949,1.0,
+ExampleUntangleAndStraightenWorms,"1 worker / 12 assignments
+CP projected",Worm phenotyping,Worm model + straightening,1.0,5.132843017578125,3.7353626175082346,
+ExampleYeastPatches,"CP first batch (2 workers / 12 assignments
+CP projected)",Yeast colony screening,Texture/patch measurement,1.0,51.94113292475231,1.0,
+ExampleYeastPatches,"2 workers / 12 assignments
+CP projected",Yeast colony screening,Texture/patch measurement,1.0,7.16461968421936,7.249670633482019,
+cp_tutorial_3d_monolayer,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,169.07462929259054,1.0,
+cp_tutorial_3d_monolayer,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,19.380797147750854,8.723822245475166,
+cp_tutorial_advanced_segmentation_final,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,398.1589026963338,1.0,
+cp_tutorial_advanced_segmentation_final,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,37.83509564399719,10.523533664160423,
+cp_tutorial_quality_control,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,35.525419258279726,1.0,
+cp_tutorial_quality_control,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,3.6327269077301025,9.779270548161758,
+cp_tutorial_beginner_segmentation_final,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,173.50078548607416,1.0,
+cp_tutorial_beginner_segmentation_final,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,23.42972159385681,7.405157794600745,
+cp_tutorial_pixel_based_classification,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,31.536771091399714,1.0,
+cp_tutorial_pixel_based_classification,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,3.9846487045288086,7.91456748886198,
+cp_tutorial_translocation_final,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,14.355072172591463,1.0,
+cp_tutorial_translocation_final,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,3.8423335552215576,3.736029672146388,
+cp4_supplement_combine_objects,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,1.889449293492362,1.0,
+cp4_supplement_combine_objects,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,0.41392016410827637,4.56476745355683,
+cp_tutorial_translocation_start,"CP first batch (2 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,4.597848533419892,1.0,
+cp_tutorial_translocation_start,"2 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,1.0861766338348389,4.233057856517128,
+ExampleUntangleWorms,"CP first batch (2 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + shape measurement,1.0,32.68576166103594,1.0,
+ExampleUntangleWorms,"2 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + shape measurement,1.0,4.978785037994385,6.56500760960807,
+ExampleUntangleWormsBrightField,"CP first batch (2 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + brightfield segmentation,1.0,70.7467566805426,1.0,
+ExampleUntangleWormsBrightField,"2 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + brightfield segmentation,1.0,8.837328910827637,8.00544569455399,
+ExampleYeastColonies,"CP first batch (2 workers / 12 assignments
+CP projected)",Yeast colony screening,Colony segmentation + measurement,1.0,124.71728490525857,1.0,
+ExampleYeastColonies,"2 workers / 12 assignments
+CP projected",Yeast colony screening,Colony segmentation + measurement,1.0,10.354499101638794,12.044743418396715,
+ExampleWoundHealing,"CP first batch (2 workers / 12 assignments
+CP projected)",Migration/scratch assay,Segmentation + distance measurement,1.0,45.57096488378011,1.0,
+ExampleWoundHealing,"2 workers / 12 assignments
+CP projected",Migration/scratch assay,Segmentation + distance measurement,1.0,5.7004194259643555,7.994317870052297,
+ExampleSpeckles,"CP first batch (2 workers / 12 assignments
+CP projected)",Spot detection,Small-object detection,1.0,17.700345046585426,1.0,
+ExampleSpeckles,"2 workers / 12 assignments
+CP projected",Spot detection,Small-object detection,1.0,3.0069940090179443,5.886391856286468,
+ExampleIlluminationCorrection_Example3,"CP first batch (2 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,4.940004213247448,1.0,
+ExampleIlluminationCorrection_Example3,"2 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,0.9956986904144287,4.9613444918676395,
+ExampleVitra,"CP first batch (2 workers / 12 assignments
+CP projected)",Cell morphology,Segmentation + shape measurement,1.0,30.78224799898453,1.0,
+ExampleVitra,"2 workers / 12 assignments
+CP projected",Cell morphology,Segmentation + shape measurement,1.0,6.728497743606567,4.574906490566024,
+ExampleFlyURL,"CP first batch (2 workers / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,36.17777503468096,1.0,
+ExampleFlyURL,"2 workers / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,5.155621767044067,7.017150727762403,
+ExampleColocalization,"CP first batch (2 workers / 12 assignments
+CP projected)",Colocalization microscopy,Colocalization + object measurement,1.0,459.7606715236325,1.0,
+ExampleColocalization,"2 workers / 12 assignments
+CP projected",Colocalization microscopy,Colocalization + object measurement,1.0,25.161112785339355,18.272668440623246,
+ExampleCometAssay,"CP first batch (2 workers / 12 assignments
+CP projected)",DNA damage assay,Segmentation + shape measurement,1.0,145.56623051175848,1.0,
+ExampleCometAssay,"2 workers / 12 assignments
+CP projected",DNA damage assay,Segmentation + shape measurement,1.0,12.18462324142456,11.946715760309356,
+ExampleFly,"CP first batch (2 workers / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,75.43163167894818,1.0,
+ExampleFly,"2 workers / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,12.69037914276123,5.944001422682114,
+ExampleHuman,"CP first batch (2 workers / 12 assignments
+CP projected)",Cell morphology,Segmentation + intensity measurement,1.0,31.468940807972103,1.0,
+ExampleHuman,"2 workers / 12 assignments
+CP projected",Cell morphology,Segmentation + intensity measurement,1.0,5.288862705230713,5.9500392734432594,
+ExampleIlluminationCorrection_Example1_AllMethod,"CP first batch (2 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,11499.484993203077,1.0,
+ExampleIlluminationCorrection_Example1_AllMethod,"2 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,12.66946005821228,907.6539126660863,
+ExampleIlluminationCorrection_Example1_EachMethod,"CP first batch (2 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,35.215122625930235,1.0,
+ExampleIlluminationCorrection_Example1_EachMethod,"2 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,0.618793249130249,56.909351670250444,
+ExampleIlluminationCorrection_Example2,"CP first batch (2 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,567.5564589824062,1.0,
+ExampleIlluminationCorrection_Example2,"2 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,10.296152353286743,55.12316052716824,
+ExampleImagingFlowCytometryObjectsInGrid,"CP first batch (2 workers / 12 assignments
+CP projected)",Imaging flow cytometry,Grid layout + object measurement,1.0,811.258535685949,1.0,
+ExampleImagingFlowCytometryObjectsInGrid,"2 workers / 12 assignments
+CP projected",Imaging flow cytometry,Grid layout + object measurement,1.0,63.73310041427612,12.72899843899997,
+ExampleNeighbors,"CP first batch (2 workers / 12 assignments
+CP projected)",Spatial organization,Object relationship measurement,1.0,33.76631380361505,1.0,
+ExampleNeighbors,"2 workers / 12 assignments
+CP projected",Spatial organization,Object relationship measurement,1.0,12.644958257675171,2.6703380996232036,
+ExamplePercentPositive,"CP first batch (2 workers / 12 assignments
+CP projected)",Positive-cell classification,Thresholding + classification,1.0,8.73582362360321,1.0,
+ExamplePercentPositive,"2 workers / 12 assignments
+CP projected",Positive-cell classification,Thresholding + classification,1.0,2.1300272941589355,4.1012730905181405,
+ExampleTrackObjects,"CP first batch (2 workers / 12 assignments
+CP projected)",Time-lapse tracking,Tracking + object measurement,1.0,95.31015839311294,1.0,
+ExampleTrackObjects,"2 workers / 12 assignments
+CP projected",Time-lapse tracking,Tracking + object measurement,1.0,14.592639446258545,6.531385822566173,
+ExampleTumor,"CP first batch (2 workers / 12 assignments
+CP projected)",Tumor morphology,Segmentation + intensity measurement,1.0,34.64529980253428,1.0,
+ExampleTumor,"2 workers / 12 assignments
+CP projected",Tumor morphology,Segmentation + intensity measurement,1.0,4.264936685562134,8.123285843800964,
+ExampleUntangleAndStraightenWorms,"CP first batch (2 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + straightening,1.0,19.17302992939949,1.0,
+ExampleUntangleAndStraightenWorms,"2 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + straightening,1.0,3.202374219894409,5.98712973964413,
+ExampleYeastPatches,"CP first batch (3 workers / 12 assignments
+CP projected)",Yeast colony screening,Texture/patch measurement,1.0,51.94113292475231,1.0,
+ExampleYeastPatches,"3 workers / 12 assignments
+CP projected",Yeast colony screening,Texture/patch measurement,1.0,5.763179540634155,9.01258282143279,
+cp_tutorial_3d_monolayer,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,169.07462929259054,1.0,
+cp_tutorial_3d_monolayer,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,13.554733037948608,12.473475414029883,
+cp_tutorial_advanced_segmentation_final,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,398.1589026963338,1.0,
+cp_tutorial_advanced_segmentation_final,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,29.744319677352905,13.386048395636662,
+cp_tutorial_quality_control,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,35.525419258279726,1.0,
+cp_tutorial_quality_control,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,2.8418071269989014,12.500995905304963,
+cp_tutorial_beginner_segmentation_final,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,173.50078548607416,1.0,
+cp_tutorial_beginner_segmentation_final,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,18.278408765792847,9.49211650254657,
+cp_tutorial_pixel_based_classification,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,31.536771091399714,1.0,
+cp_tutorial_pixel_based_classification,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,3.2990410327911377,9.559375217809334,
+cp_tutorial_translocation_final,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,14.355072172591463,1.0,
+cp_tutorial_translocation_final,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,3.345489263534546,4.290873783114513,
+cp4_supplement_combine_objects,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,1.889449293492362,1.0,
+cp4_supplement_combine_objects,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,0.36736297607421875,5.143276314025272,
+cp_tutorial_translocation_start,"CP first batch (3 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,4.597848533419892,1.0,
+cp_tutorial_translocation_start,"3 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,0.7598066329956055,6.051340346019965,
+ExampleUntangleWorms,"CP first batch (3 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + shape measurement,1.0,32.68576166103594,1.0,
+ExampleUntangleWorms,"3 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + shape measurement,1.0,3.624877691268921,9.01706607639884,
+ExampleUntangleWormsBrightField,"CP first batch (3 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + brightfield segmentation,1.0,70.7467566805426,1.0,
+ExampleUntangleWormsBrightField,"3 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + brightfield segmentation,1.0,6.213308811187744,11.386325520012027,
+ExampleYeastColonies,"CP first batch (3 workers / 12 assignments
+CP projected)",Yeast colony screening,Colony segmentation + measurement,1.0,124.71728490525857,1.0,
+ExampleYeastColonies,"3 workers / 12 assignments
+CP projected",Yeast colony screening,Colony segmentation + measurement,1.0,7.606687068939209,16.39574282140819,
+ExampleWoundHealing,"CP first batch (3 workers / 12 assignments
+CP projected)",Migration/scratch assay,Segmentation + distance measurement,1.0,45.57096488378011,1.0,
+ExampleWoundHealing,"3 workers / 12 assignments
+CP projected",Migration/scratch assay,Segmentation + distance measurement,1.0,5.699754238128662,7.9952508441384875,
+ExampleSpeckles,"CP first batch (3 workers / 12 assignments
+CP projected)",Spot detection,Small-object detection,1.0,17.700345046585426,1.0,
+ExampleSpeckles,"3 workers / 12 assignments
+CP projected",Spot detection,Small-object detection,1.0,2.5299601554870605,6.996293996249837,
+ExampleIlluminationCorrection_Example3,"CP first batch (3 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,4.940004213247448,1.0,
+ExampleIlluminationCorrection_Example3,"3 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,0.7884995937347412,6.265068812336399,
+ExampleVitra,"CP first batch (3 workers / 12 assignments
+CP projected)",Cell morphology,Segmentation + shape measurement,1.0,30.78224799898453,1.0,
+ExampleVitra,"3 workers / 12 assignments
+CP projected",Cell morphology,Segmentation + shape measurement,1.0,5.181761741638184,5.940498528064879,
+ExampleFlyURL,"CP first batch (3 workers / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,36.17777503468096,1.0,
+ExampleFlyURL,"3 workers / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,4.1960344314575195,8.621896608725963,
+ExampleColocalization,"CP first batch (3 workers / 12 assignments
+CP projected)",Colocalization microscopy,Colocalization + object measurement,1.0,459.7606715236325,1.0,
+ExampleColocalization,"3 workers / 12 assignments
+CP projected",Colocalization microscopy,Colocalization + object measurement,1.0,22.975547552108765,20.010868967579153,
+ExampleCometAssay,"CP first batch (3 workers / 12 assignments
+CP projected)",DNA damage assay,Segmentation + shape measurement,1.0,145.56623051175848,1.0,
+ExampleCometAssay,"3 workers / 12 assignments
+CP projected",DNA damage assay,Segmentation + shape measurement,1.0,9.891551971435547,14.716217529071189,
+ExampleFly,"CP first batch (3 workers / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,75.43163167894818,1.0,
+ExampleFly,"3 workers / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,10.287548780441284,7.332323111056251,
+ExampleHuman,"CP first batch (3 workers / 12 assignments
+CP projected)",Cell morphology,Segmentation + intensity measurement,1.0,31.468940807972103,1.0,
+ExampleHuman,"3 workers / 12 assignments
+CP projected",Cell morphology,Segmentation + intensity measurement,1.0,4.310784101486206,7.300050308045519,
+ExampleIlluminationCorrection_Example1_AllMethod,"CP first batch (3 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,11499.484993203077,1.0,
+ExampleIlluminationCorrection_Example1_AllMethod,"3 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,11.54499077796936,996.0583957457013,
+ExampleIlluminationCorrection_Example1_EachMethod,"CP first batch (3 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,35.215122625930235,1.0,
+ExampleIlluminationCorrection_Example1_EachMethod,"3 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,0.5253758430480957,67.0284389583296,
+ExampleIlluminationCorrection_Example2,"CP first batch (3 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,567.5564589824062,1.0,
+ExampleIlluminationCorrection_Example2,"3 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,7.345041275024414,77.27069702280464,
+ExampleImagingFlowCytometryObjectsInGrid,"CP first batch (3 workers / 12 assignments
+CP projected)",Imaging flow cytometry,Grid layout + object measurement,1.0,811.258535685949,1.0,
+ExampleImagingFlowCytometryObjectsInGrid,"3 workers / 12 assignments
+CP projected",Imaging flow cytometry,Grid layout + object measurement,1.0,54.16737723350525,14.97688418969905,
+ExampleNeighbors,"CP first batch (3 workers / 12 assignments
+CP projected)",Spatial organization,Object relationship measurement,1.0,33.76631380361505,1.0,
+ExampleNeighbors,"3 workers / 12 assignments
+CP projected",Spatial organization,Object relationship measurement,1.0,11.666071891784668,2.894403027585792,
+ExamplePercentPositive,"CP first batch (3 workers / 12 assignments
+CP projected)",Positive-cell classification,Thresholding + classification,1.0,8.73582362360321,1.0,
+ExamplePercentPositive,"3 workers / 12 assignments
+CP projected",Positive-cell classification,Thresholding + classification,1.0,1.8800983428955078,4.646471636238621,
+ExampleTrackObjects,"CP first batch (3 workers / 12 assignments
+CP projected)",Time-lapse tracking,Tracking + object measurement,1.0,95.31015839311294,1.0,
+ExampleTrackObjects,"3 workers / 12 assignments
+CP projected",Time-lapse tracking,Tracking + object measurement,1.0,11.489671230316162,8.29529030749214,
+ExampleTumor,"CP first batch (3 workers / 12 assignments
+CP projected)",Tumor morphology,Segmentation + intensity measurement,1.0,34.64529980253428,1.0,
+ExampleTumor,"3 workers / 12 assignments
+CP projected",Tumor morphology,Segmentation + intensity measurement,1.0,3.2509379386901855,10.657016669008758,
+ExampleUntangleAndStraightenWorms,"CP first batch (3 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + straightening,1.0,19.17302992939949,1.0,
+ExampleUntangleAndStraightenWorms,"3 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + straightening,1.0,2.517186403274536,7.616849473069552,
+ExampleYeastPatches,"CP first batch (4 workers / 12 assignments
+CP projected)",Yeast colony screening,Texture/patch measurement,1.0,51.94113292475231,1.0,
+ExampleYeastPatches,"4 workers / 12 assignments
+CP projected",Yeast colony screening,Texture/patch measurement,1.0,4.740832805633545,10.956119959141043,
+cp_tutorial_3d_monolayer,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,169.07462929259054,1.0,
+cp_tutorial_3d_monolayer,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,11.819775342941284,14.30438602993932,
+cp_tutorial_advanced_segmentation_final,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,398.1589026963338,1.0,
+cp_tutorial_advanced_segmentation_final,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,26.267521619796753,15.157840486795594,
+cp_tutorial_quality_control,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,35.525419258279726,1.0,
+cp_tutorial_quality_control,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,2.4499144554138184,14.50067743376741,
+cp_tutorial_beginner_segmentation_final,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,173.50078548607416,1.0,
+cp_tutorial_beginner_segmentation_final,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,16.079717874526978,10.790039156155164,
+cp_tutorial_pixel_based_classification,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,31.536771091399714,1.0,
+cp_tutorial_pixel_based_classification,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,2.8672945499420166,10.99879016337455,
+cp_tutorial_translocation_final,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,14.355072172591463,1.0,
+cp_tutorial_translocation_final,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,3.0589253902435303,4.692848089194033,
+cp4_supplement_combine_objects,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,1.889449293492362,1.0,
+cp4_supplement_combine_objects,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,0.3561999797821045,5.3044621020141,
+cp_tutorial_translocation_start,"CP first batch (4 workers / 12 assignments
+CP projected)",Uncategorized assay,Mixed modules,1.0,4.597848533419892,1.0,
+cp_tutorial_translocation_start,"4 workers / 12 assignments
+CP projected",Uncategorized assay,Mixed modules,1.0,0.781806468963623,5.881057161774172,
+ExampleUntangleWorms,"CP first batch (4 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + shape measurement,1.0,32.68576166103594,1.0,
+ExampleUntangleWorms,"4 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + shape measurement,1.0,3.034247875213623,10.772278009335256,
+ExampleUntangleWormsBrightField,"CP first batch (4 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + brightfield segmentation,1.0,70.7467566805426,1.0,
+ExampleUntangleWormsBrightField,"4 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + brightfield segmentation,1.0,5.602331876754761,12.628090987270069,
+ExampleYeastColonies,"CP first batch (4 workers / 12 assignments
+CP projected)",Yeast colony screening,Colony segmentation + measurement,1.0,124.71728490525857,1.0,
+ExampleYeastColonies,"4 workers / 12 assignments
+CP projected",Yeast colony screening,Colony segmentation + measurement,1.0,6.4839465618133545,19.234779885412735,
+ExampleWoundHealing,"CP first batch (4 workers / 12 assignments
+CP projected)",Migration/scratch assay,Segmentation + distance measurement,1.0,45.57096488378011,1.0,
+ExampleWoundHealing,"4 workers / 12 assignments
+CP projected",Migration/scratch assay,Segmentation + distance measurement,1.0,5.207406044006348,8.751183314431886,
+ExampleSpeckles,"CP first batch (4 workers / 12 assignments
+CP projected)",Spot detection,Small-object detection,1.0,17.700345046585426,1.0,
+ExampleSpeckles,"4 workers / 12 assignments
+CP projected",Spot detection,Small-object detection,1.0,2.5962677001953125,6.817611698999245,
+ExampleIlluminationCorrection_Example3,"CP first batch (4 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,4.940004213247448,1.0,
+ExampleIlluminationCorrection_Example3,"4 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,0.7331287860870361,6.738248868406836,
+ExampleVitra,"CP first batch (4 workers / 12 assignments
+CP projected)",Cell morphology,Segmentation + shape measurement,1.0,30.78224799898453,1.0,
+ExampleVitra,"4 workers / 12 assignments
+CP projected",Cell morphology,Segmentation + shape measurement,1.0,4.483032703399658,6.866389347470331,
+ExampleFlyURL,"CP first batch (4 workers / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,36.17777503468096,1.0,
+ExampleFlyURL,"4 workers / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,3.749534845352173,9.648603500651822,
+ExampleColocalization,"CP first batch (4 workers / 12 assignments
+CP projected)",Colocalization microscopy,Colocalization + object measurement,1.0,459.7606715236325,1.0,
+ExampleColocalization,"4 workers / 12 assignments
+CP projected",Colocalization microscopy,Colocalization + object measurement,1.0,21.183645248413086,21.703567357373217,
+ExampleCometAssay,"CP first batch (4 workers / 12 assignments
+CP projected)",DNA damage assay,Segmentation + shape measurement,1.0,145.56623051175848,1.0,
+ExampleCometAssay,"4 workers / 12 assignments
+CP projected",DNA damage assay,Segmentation + shape measurement,1.0,8.146045684814453,17.86955734647026,
+ExampleFly,"CP first batch (4 workers / 12 assignments
+CP projected)",Tissue/object morphology,Segmentation + object measurement,1.0,75.43163167894818,1.0,
+ExampleFly,"4 workers / 12 assignments
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,9.061285495758057,8.324606008083586,
+ExampleHuman,"CP first batch (4 workers / 12 assignments
+CP projected)",Cell morphology,Segmentation + intensity measurement,1.0,31.468940807972103,1.0,
+ExampleHuman,"4 workers / 12 assignments
+CP projected",Cell morphology,Segmentation + intensity measurement,1.0,4.035118579864502,7.798764815736548,
+ExampleIlluminationCorrection_Example1_AllMethod,"CP first batch (4 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,11499.484993203077,1.0,
+ExampleIlluminationCorrection_Example1_AllMethod,"4 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,8.38573169708252,1371.3156357248902,
+ExampleIlluminationCorrection_Example1_EachMethod,"CP first batch (4 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,35.215122625930235,1.0,
+ExampleIlluminationCorrection_Example1_EachMethod,"4 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,0.5182919502258301,67.94456794203789,
+ExampleIlluminationCorrection_Example2,"CP first batch (4 workers / 12 assignments
+CP projected)",Illumination correction,Image correction,1.0,567.5564589824062,1.0,
+ExampleIlluminationCorrection_Example2,"4 workers / 12 assignments
+CP projected",Illumination correction,Image correction,1.0,6.008866310119629,94.45316798387995,
+ExampleImagingFlowCytometryObjectsInGrid,"CP first batch (4 workers / 12 assignments
+CP projected)",Imaging flow cytometry,Grid layout + object measurement,1.0,811.258535685949,1.0,
+ExampleImagingFlowCytometryObjectsInGrid,"4 workers / 12 assignments
+CP projected",Imaging flow cytometry,Grid layout + object measurement,1.0,49.04616403579712,16.54071325728632,
+ExampleNeighbors,"CP first batch (4 workers / 12 assignments
+CP projected)",Spatial organization,Object relationship measurement,1.0,33.76631380361505,1.0,
+ExampleNeighbors,"4 workers / 12 assignments
+CP projected",Spatial organization,Object relationship measurement,1.0,11.280830144882202,2.9932472495327733,
+ExamplePercentPositive,"CP first batch (4 workers / 12 assignments
+CP projected)",Positive-cell classification,Thresholding + classification,1.0,8.73582362360321,1.0,
+ExamplePercentPositive,"4 workers / 12 assignments
+CP projected",Positive-cell classification,Thresholding + classification,1.0,1.815253734588623,4.8124531888556845,
+ExampleTrackObjects,"CP first batch (4 workers / 12 assignments
+CP projected)",Time-lapse tracking,Tracking + object measurement,1.0,95.31015839311294,1.0,
+ExampleTrackObjects,"4 workers / 12 assignments
+CP projected",Time-lapse tracking,Tracking + object measurement,1.0,10.67641568183899,8.927168183910199,
+ExampleTumor,"CP first batch (4 workers / 12 assignments
+CP projected)",Tumor morphology,Segmentation + intensity measurement,1.0,34.64529980253428,1.0,
+ExampleTumor,"4 workers / 12 assignments
+CP projected",Tumor morphology,Segmentation + intensity measurement,1.0,3.0774006843566895,11.25797494575415,
+ExampleUntangleAndStraightenWorms,"CP first batch (4 workers / 12 assignments
+CP projected)",Worm phenotyping,Worm model + straightening,1.0,19.17302992939949,1.0,
+ExampleUntangleAndStraightenWorms,"4 workers / 12 assignments
+CP projected",Worm phenotyping,Worm model + straightening,1.0,2.228426933288574,8.603840513229269,

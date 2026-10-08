@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "black_version": "26.5.1",
+  "files": {
+    "benchmark/cellprofiler_export_equivalence.py": {
+      "received_source_sha256": "192db2562215e1cf3c12925b00f396e067752b24ac2a4b21e5622c0a18606b23",
+      "formatted_source_sha256": "ad306628b6cbff25e81310596455297fd9567de91f7305c22e1e24e61d0c3eb5",
+      "AST_identical": true
+    },
+    "benchmark/matched_cellprofiler_batch.py": {
+      "received_source_sha256": "0628f68628976386ed8eb8a123e4e14a18728f2efca01e8840060f1809469b1e",
+      "formatted_source_sha256": "4e2184c7488104e75e6da17b692ae3ce5f6eccdd1cf15a7447549e4ba12a35e9",
+      "AST_identical": true
+    },
+    "openhcs/core/equivalence/outputs.py": {
+      "received_source_sha256": "8b03565e570d90fc5a5202318d220562cdf27b850ff112297ea677d7e9faebb5",
+      "formatted_source_sha256": "3fb74ebea43fbe447886bda54f0d44629f672d294316049660cffe6fd9d8753a",
+      "AST_identical": true
+    },
+    "openhcs/core/equivalence/tables.py": {
+      "received_source_sha256": "135e7b6803c758c2e51504acaf18919fe79d27befab9f1a941b4a8bc7e3e9d2f",
+      "formatted_source_sha256": "a65ce01587d170672340aa6b2f11ec2e6da23e6b272b4d19234d77d5edfa0825",
+      "AST_identical": true
+    },
+    "openhcs/core/runtime_equivalence.py": {
+      "received_source_sha256": "c86aa57bcdd64a11984a7ef48090786d0a3966f42c1d59b4306791ad233165be",
+      "formatted_source_sha256": "bc27c2c73b72bd744ed63bdb83cc364e3016fafdb750288b27c0c1b640c95d5c",
+      "AST_identical": true
+    },
+    "tests/unit/test_cellprofiler_export_measurement_outputs.py": {
+      "received_source_sha256": "4df4a7730aacfb4aff5032154cccc50a951c14dd7f88f8ae0fb832dd0cf29c9f",
+      "formatted_source_sha256": "e5f2459bdf839c3e70dabcdc1f34ee27ee4da4bd97dfca4bae58d383bb89956a",
+      "AST_identical": true
+    }
+  }
+}

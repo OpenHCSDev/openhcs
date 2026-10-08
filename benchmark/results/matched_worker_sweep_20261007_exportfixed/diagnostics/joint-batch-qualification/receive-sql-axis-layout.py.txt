@@ -1,0 +1,25 @@
+import hashlib,inspect,json,os,sys,time
+from pathlib import Path
+assert os.sched_getaffinity(0)=={0}
+r=Path(__file__).parent;prod=Path('/home/ts/code/projects/openhcs-cp-registry-control');art=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');overlay=r/'joint-batch-overlay';sys.path.insert(0,str(prod))
+import openhcs.core,benchmark
+openhcs.core.__path__[:0]=[str(overlay/'openhcs/core'),str(art/'openhcs/core')];benchmark.__path__[:0]=[str(overlay/'benchmark'),str(art/'benchmark')]
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from benchmark.cellprofiler_export_equivalence import cellprofiler_database_measurement_payloads,_declared_sqlite_table_subjects,_sqlite_tables,_candidate_sqlite_tables
+from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot
+from openhcs.core.equivalence.policy import normalize_runtime_identifier
+from benchmark.file_digest import sha256_file
+policy=_strict_cellprofiler_runtime_equivalence_policy();native=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1');paths=[];mapping={};databases={};expected={}
+for axis in ('W001','W002'):
+ directory=native/axis;database=next(directory.glob('*.db'));properties=tuple(directory.glob('*.properties'));subjects=_declared_sqlite_table_subjects(properties)[database.name];tables=_sqlite_tables(database,subjects,policy);image_table=next(t for name,(_,t) in tables.items() if name in subjects and subjects[name].scope.value=='image');index=next(i for i,name in enumerate(image_table.header) if normalize_runtime_identifier(name)=='image_number');numbers=tuple(sorted({int(row[index]) for row in image_table.rows}));owned=(database,*properties);paths.extend(owned)
+ for path in owned:mapping[path]={axis:numbers}
+ databases[axis]=database
+ tables=_candidate_sqlite_tables(database,subjects,policy,candidate_image_numbers=numbers,candidate_image_number_domain=numbers);expected[axis]=RuntimeMeasurementSnapshot.from_output_snapshot(RuntimeOutputSnapshot(tables=tuple(t for name,(_,t) in tables.items() if name in subjects)),policy=policy).to_cache_payload()
+outputs=StepExecutionObservation({},runtime_export_paths=tuple(paths),image_numbers_by_export_path=mapping);observation=RuntimeExportObservation.from_output_paths(tuple(paths),outputs=outputs);axes=('W001','W002','WMissing');start=time.process_time();prepared=cellprofiler_database_measurement_payloads(observation,axes,policy=policy);cpu=time.process_time()-start
+assert set(prepared[0])=={databases['W001']} and set(prepared[1])=={databases['W002']} and prepared[2]=={}
+assert prepared[0][databases['W001']]==expected['W001'] and prepared[1][databases['W002']]==expected['W002']
+proof={'status':'PASS','scope':'DIAGNOSTIC_ONLY genuine actual retainednative8 Advanced two distinct physical assignment DB/CPA outputs, existing typed export owner binds their actual image identities; missingthird axis has no prepared payload; no source mutation or science','participating_axes':{str(p):tuple(m) for p,m in mapping.items()},'expected_payloads_exact':True,'empty_axis_has_no_prepared_fact':True,'preparation_cpu_seconds':cpu,'sources':{str(p):sha256_file(p) for p in paths},'SQL_owner_source_path':inspect.getsourcefile(cellprofiler_database_measurement_payloads),'SQL_owner_source_sha256':sha256_file(Path(inspect.getsourcefile(cellprofiler_database_measurement_payloads)))}
+(r/'sql-axis-layout-proof.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof),flush=True)

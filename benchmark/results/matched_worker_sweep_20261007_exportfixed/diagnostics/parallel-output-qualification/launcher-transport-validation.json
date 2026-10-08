@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "scope": "Launcher transport and saved-output receiving; no new science/server/native execution",
+  "entrypoint": "runpy.run_module(benchmark.matched_cellprofiler_batch, run_name=__main__, alter_sys=True)",
+  "driver_sha256": "1b0d0687f3af7eebfdb5a0cfeaef0fc6401a3292a87bc48cd56e557d7e0a1153",
+  "production_source": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "actual_registered_main_pickle_and_two_fork_execution_succeeded": true,
+  "entire_result_equal_after_only_compared_output_files_set_order_normalization": true,
+  "normalization": "Only compared_output_files lists sorted; identical file sets asserted. Every other field and axis order identical. Different interpreter hash seeds reorder existing set iteration.",
+  "elapsed_seconds": null,
+  "receiving_scratch_failure_disclosure": "The script saved full successful fork results then its cross-interpreter exact JSON comparison rejected unordered compared_output_files iteration order. Root validated retained full payloads without rerunning. Earlier same-process serial-versus-fork exact tuple equality remains separately proven.",
+  "files": [
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receive-runpy-main.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/receive-runpy-main.py.txt",
+      "sha256": "e9032e352d8697c4059aaf88537828ae6945b04180c5ed5dde550a912b7ceec0"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/runpy-main-receiving-results.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/runpy-main-receiving-results.json",
+      "sha256": "486dbae2cb17175945f6f7359d19df5fcaec21bbaca0f6c6b3038781e19feda8"
+    }
+  ]
+}

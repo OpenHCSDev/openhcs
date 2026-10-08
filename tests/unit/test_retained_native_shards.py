@@ -1,7 +1,7 @@
 """Native reuse preserves original partitions, clocks and physical custody."""
 
 import json
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
@@ -11,8 +11,10 @@ from benchmark.matched_cellprofiler_batch import (
     _native_reference_inventory,
     _native_shard_requests,
     _require_native_reference_unchanged,
+    _reuse_native_projection_source,
     _validate_native_shard_reports,
 )
+from benchmark.native_execution_projection import RepeatedSourceNativeBatchReport
 from benchmark.native_batch_contracts import (
     NativeBatchEnvironment,
     NativeBatchObservation,
@@ -186,3 +188,125 @@ def test_shard_custody_is_rechecked_after_candidate_execution(native_runs, chang
         (Path(reports[0]["request"]["start_barrier_root"]) / "unexpected.ready").touch()
     with pytest.raises(RuntimeError, match="reference files changed"):
         _require_native_reference_unchanged(provenance)
+
+
+def test_projection_view_preserves_genuine_clocks_and_maps_every_target(native_runs):
+    whole, _ = native_runs
+    payload = asdict(whole)
+    view = RepeatedSourceNativeBatchReport.from_payload(payload)
+    assert asdict(view) == payload
+    assert view.comparison_directories(5) == ("W001", "W002", "W001", "W002", "W001")
+    declaration = view.projection_inputs(
+        5,
+        source_report_path=Path(whole.request.report_path),
+        source_report_sha256="sha",
+    )
+    assert declaration["status"] == "model_pending"
+    assert declaration["source_assignment_count"] == 2
+    assert declaration["target_assignment_count"] == 5
+    assert tuple(
+        row["repetition"] for row in declaration["observed_reference_inputs"]
+    ) == (-1, 0)
+    assert whole.observations == view.observations
+    assert "projected_execution_seconds" not in declaration
+
+
+def test_projection_validation_derives_actual_source_cardinality_only(native_runs):
+    whole, _ = native_runs
+    view = RepeatedSourceNativeBatchReport.from_payload(asdict(whole))
+    target = replace(
+        whole.request,
+        expected_image_sets=6,
+        assignment_output_subdirectories=("W001", "W002", "W003"),
+        output_root="new-candidate-reference",
+    )
+    admitted = view.validation_request(target, 3)
+    assert admitted == replace(
+        target,
+        expected_image_sets=4,
+        assignment_output_subdirectories=whole.request.assignment_output_subdirectories,
+    )
+    with pytest.raises(RuntimeError, match="equal assignments"):
+        view.validation_request(replace(target, expected_image_sets=5), 3)
+
+
+@pytest.mark.parametrize(
+    "change", ("missing-observation", "unequal-domain", "bad-clock")
+)
+def test_projection_cannot_admit_incomplete_or_changed_native_evidence(
+    native_runs, change
+):
+    whole, _ = native_runs
+    payload = json.loads(json.dumps(asdict(whole)))
+    if change == "missing-observation":
+        payload["observations"].pop()
+    elif change == "unequal-domain":
+        payload["observations"][0]["assignment_image_set_counts"][0][1] = 2
+        payload["observations"][0]["image_set_count"] = 3
+    else:
+        payload["observations"][0]["pipeline_execution_seconds"] += 1
+    view = RepeatedSourceNativeBatchReport.from_payload(payload)
+    with pytest.raises(RuntimeError):
+        view.comparison_directories(3)
+
+
+def test_fresh_projection_counts_actual_first_execution_and_preparation_once(
+    native_runs,
+):
+    whole, _ = native_runs
+    view = RepeatedSourceNativeBatchReport.from_payload(asdict(whole))
+    declaration = view.projected_fresh_batch(
+        5,
+        source_report_path=Path(whole.request.report_path),
+        source_report_sha256="sha",
+    )
+    first, warm = whole.observations
+    expected = (
+        first.pipeline_execution_seconds + 3 * warm.pipeline_execution_seconds / 2
+    )
+    assert declaration["projected_fresh_batch_execution_seconds"] == expected
+    assert (
+        declaration["projected_fresh_batch_prepared_invocation_seconds"]
+        == expected + first.pre_pipeline_seconds
+    )
+    assert declaration["source_fresh_observation_count"] == 1
+    assert declaration["source_warm_repetitions"] == (0,)
+    assert declaration["target_native_observation_count"] == 0
+    assert declaration["status"] == "projected"
+    assert asdict(view) == asdict(whole)
+
+
+def test_projection_reuse_preserves_strict_guard_fields(native_runs, monkeypatch):
+    whole, _ = native_runs
+    target = replace(
+        whole.request,
+        assignment_output_subdirectories=("W001", "W002", "W003"),
+    )
+    provenance = {
+        "selected_source_wells": ("source-1",),
+        "assignment_scope": "independent repeated source assignments",
+        "native_job_count": 1,
+        "wells": ("W001", "W002", "W003"),
+        "thread_environment": {"OMP_NUM_THREADS": "unexpected-value"},
+        "native_input_inventory": ("unchanged-input-authority",),
+    }
+
+    def reject_changed_environment(reference_case, **kwargs):
+        planned = NativeBatchRequest(**kwargs["native_payload"])
+        assert planned.assignment_output_subdirectories == ("W001", "W002")
+        assert kwargs["provenance"] == {**provenance, "wells": ("W001", "W002")}
+        raise RuntimeError("Retained native reference differs in thread_environment.")
+
+    monkeypatch.setattr(
+        "benchmark.matched_cellprofiler_batch._reuse_native_report",
+        reject_changed_environment,
+    )
+    with pytest.raises(RuntimeError, match="thread_environment"):
+        _reuse_native_projection_source(
+            Path(whole.request.report_path).parent,
+            native_payload=asdict(target),
+            native_python=Path("native-python"),
+            native_worker=Path("native-worker"),
+            provenance=provenance,
+        )
+    assert provenance["wells"] == ("W001", "W002", "W003")

@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "scope": "Combined semantic patches received against actual D06 saved outputs; final custody-only helper separately imported and checked; no pipeline clocks claimed.",
+  "files": [
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/receive-combined-overlay.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/combined-receiving/receive-combined-overlay.py.txt",
+      "sha256": "675b602b143f50cd7781a63e5d88c11e755561d2d80743e31ec7077371aaf784"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/combined-actual-D06-receiving/proof.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/combined-receiving/combined-actual-D06-receiving/proof.json",
+      "sha256": "fb2134131a7810aaa7a2a65d09046aa69941bba6f235235dad798a40ce3e841f"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/combined-actual-D06-receiving/cache_hit-full-results.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/combined-receiving/combined-actual-D06-receiving/cache_hit-full-results.json",
+      "sha256": "971c09ad004c130606cf4c3f474233e70100858df983a48eb56fd7e7ea6f69d6"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/combined-actual-D06-receiving/cache_miss-full-results.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/combined-receiving/combined-actual-D06-receiving/cache_miss-full-results.json",
+      "sha256": "971c09ad004c130606cf4c3f474233e70100858df983a48eb56fd7e7ea6f69d6"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-optimization-boundary.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/qualification-optimization-boundary.json",
+      "sha256": "09e0db1fcf92e1ac15cf4e3f8b8127181d44450d28fbb7c71a64180fbb4c94d7"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/v5-source-overlay-import-admission.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/v5-source-overlay-import-admission.json",
+      "sha256": "ed4b54b23d14be7323d556af63cffa14832a38693ad470443b16eb0805e07351"
+    }
+  ]
+}

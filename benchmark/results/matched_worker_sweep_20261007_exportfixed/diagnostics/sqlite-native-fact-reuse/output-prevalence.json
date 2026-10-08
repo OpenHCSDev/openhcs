@@ -1,0 +1,193 @@
+{
+  "scope": "Existing actual singlewell rep0 export inventory; no science execution",
+  "cases": [
+    {
+      "case": "ExampleColocalization",
+      "sqlite_outputs": [],
+      "csv_count": 1,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleCometAssay",
+      "sqlite_outputs": [],
+      "csv_count": 4,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleFly",
+      "sqlite_outputs": [],
+      "csv_count": 4,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleFlyURL",
+      "sqlite_outputs": [],
+      "csv_count": 4,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleHuman",
+      "sqlite_outputs": [],
+      "csv_count": 6,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example1_AllMethod",
+      "sqlite_outputs": [],
+      "csv_count": 0,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example1_EachMethod",
+      "sqlite_outputs": [],
+      "csv_count": 0,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example2",
+      "sqlite_outputs": [],
+      "csv_count": 0,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "sqlite_outputs": [],
+      "csv_count": 0,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleImagingFlowCytometryObjectsInGrid",
+      "sqlite_outputs": [],
+      "csv_count": 1,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleNeighbors",
+      "sqlite_outputs": [],
+      "csv_count": 2,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExamplePercentPositive",
+      "sqlite_outputs": [],
+      "csv_count": 5,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleSpeckles",
+      "sqlite_outputs": [],
+      "csv_count": 3,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleTrackObjects",
+      "sqlite_outputs": [],
+      "csv_count": 2,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleTumor",
+      "sqlite_outputs": [],
+      "csv_count": 2,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleUntangleAndStraightenWorms",
+      "sqlite_outputs": [],
+      "csv_count": 1,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleUntangleWorms",
+      "sqlite_outputs": [],
+      "csv_count": 2,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleUntangleWormsBrightField",
+      "sqlite_outputs": [],
+      "csv_count": 1,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleVitra",
+      "sqlite_outputs": [],
+      "csv_count": 4,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "sqlite_outputs": [],
+      "csv_count": 1,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleYeastColonies",
+      "sqlite_outputs": [],
+      "csv_count": 2,
+      "database_bytes": 0
+    },
+    {
+      "case": "ExampleYeastPatches",
+      "sqlite_outputs": [],
+      "csv_count": 5,
+      "database_bytes": 0
+    },
+    {
+      "case": "cp4_supplement_combine_objects",
+      "sqlite_outputs": [],
+      "csv_count": 0,
+      "database_bytes": 0
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "sqlite_outputs": [],
+      "csv_count": 6,
+      "database_bytes": 0
+    },
+    {
+      "case": "cp_tutorial_advanced_segmentation_final",
+      "sqlite_outputs": [
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/1assignment-1worker/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022.db"
+      ],
+      "csv_count": 0,
+      "database_bytes": 4755456
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "sqlite_outputs": [],
+      "csv_count": 7,
+      "database_bytes": 0
+    },
+    {
+      "case": "cp_tutorial_pixel_based_classification",
+      "sqlite_outputs": [],
+      "csv_count": 2,
+      "database_bytes": 0
+    },
+    {
+      "case": "cp_tutorial_quality_control",
+      "sqlite_outputs": [
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/1assignment-1worker/capture/cases/cp_tutorial_quality_control/candidate/0/source_workspace_matched_pilot/results/BBBC022QC.db"
+      ],
+      "csv_count": 0,
+      "database_bytes": 57344
+    },
+    {
+      "case": "cp_tutorial_translocation_final",
+      "sqlite_outputs": [
+        "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/1assignment-1worker/capture/cases/cp_tutorial_translocation_final/candidate/0/source_workspace_matched_pilot/results/DefaultDB.db"
+      ],
+      "csv_count": 0,
+      "database_bytes": 290816
+    },
+    {
+      "case": "cp_tutorial_translocation_start",
+      "sqlite_outputs": [],
+      "csv_count": 0,
+      "database_bytes": 0
+    }
+  ],
+  "case_count": 30,
+  "sqlite_case_count": 3
+}

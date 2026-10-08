@@ -1,0 +1,28 @@
+{
+  "status": "READY_FOR_REVIEW_SAFE_MODE_BOUNDARY_NOT_DEPLOYED",
+  "production_source": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "comparer_sha256": "77bada3feccbef0456c0d63bfa22cafa665de5cbe88f645a0c6de14748b16e1b",
+  "scope": "Saved actual D06 advanced SQLite and Grid wideCSV independent per-axis comparison; no native/science/server execution",
+  "exact_ordered_entire_results_equal": true,
+  "advanced_comparison_saved_fraction": 0.47520769658152306,
+  "grid_comparison_saved_fraction": 0.3428756563300549,
+  "grid_parallel_tree_peak_pss_bytes": 1745656832,
+  "grid_parallel_tree_peak_uss_bytes": 1612783616,
+  "grid_extra_peak_pss_above_prefork_parent_bytes": 1234159616,
+  "host_minimum_available_bytes": 9513164800,
+  "diagnostic_process_swap_bytes": 0,
+  "diagnostic_self_major_faults": 0,
+  "diagnostic_children_major_faults": 0,
+  "host_swapout_delta": 0,
+  "host_swapin_delta": 148,
+  "host_deltas_attribution": "Global host includes concurrent official capture; no causal attribution to diagnostic. No new host swapouts, no diagnostic swap/majorfaults.",
+  "conditional_8_to_12_hour_sweep_saving_hours": [
+    2.331554463044373,
+    3.49733169456656
+  ],
+  "payoff_assumption": "85% qualification share and representative Grid34.3% reduction transfers. Not observed whole-suite improvement; actual SQLite47.5% and Grid34.3% differ. Both diagnostic scopes used fresh native facts equally, not warmed current cache.",
+  "minimal_patch": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/parallel-comparison.patch",
+  "patch_sha256": "a94c82d64f2931d4955381ad538edd82f13b86539410016c343ecf73263b5ac5",
+  "architecture": "Existing function, functools.partial tasks and ProcessPoolExecutor.map(operator.call); fork workers explicit CPUs0/1; all existing report merge/order/metadata/numerical/parity logic retained. No new comparison owner/registry.",
+  "deployment_scope": "Defaultserial preserved. Benchmark-only qualifier revision must be hash-sealed and archived at a safe mode boundary; no active authoritative source edits made."
+}

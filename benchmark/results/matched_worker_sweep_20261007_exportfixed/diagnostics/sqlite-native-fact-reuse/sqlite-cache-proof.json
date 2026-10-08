@@ -1,0 +1,70 @@
+{
+  "scope": "DIAGNOSTIC_ONLY CPU0 saved advanced8 rep0 W001 full SQLite+CPA comparison; no science runs and no authoritative modules mutated",
+  "case": "cp_tutorial_advanced_segmentation_final",
+  "results": {
+    "fresh": {
+      "seconds": 20.710061687976122,
+      "full_report_equal": true,
+      "difference_count": 0,
+      "compared_output_file_count": 16
+    },
+    "cache_miss": {
+      "seconds": 16.211307833902538,
+      "full_report_equal": true,
+      "difference_count": 0,
+      "compared_output_file_count": 16
+    },
+    "cache_hit": {
+      "seconds": 10.931361358147115,
+      "full_report_equal": true,
+      "difference_count": 0,
+      "compared_output_file_count": 16
+    }
+  },
+  "directed_relationship_counts": [
+    {
+      "native_directed_relationship_count": 7,
+      "candidate_directed_relationship_count": 7
+    },
+    {
+      "native_directed_relationship_count": 7,
+      "candidate_directed_relationship_count": 7
+    }
+  ],
+  "source_database_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022.db",
+  "source_database_sha256": "578402efde6527d4c2d899db5efbf84f7a39cd9951a479096f71bbab05928d02",
+  "native_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native_report.json",
+  "native_report_sha256": "b09bfc05ef1ee6629c62f65a817d32b00216c05d216707ff9a5ce745bdae31d4",
+  "sql_producer_path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/cellprofiler_export_equivalence.py",
+  "sql_producer_sha256": "8cfc16945a9a0c5aad971199005799214a01ff2565c7ff8ee18631ea2ecba77c",
+  "producer_identity_scope": "Existing SQL producer module SHA is an explicit diagnostic cache directory namespace. Production integration must bind it inside existing helper semantic identity.",
+  "limitations": "This proves one genuine advanced axis, not full30 new qualification or a headline pipeline speedup. Candidate semantic projection, DB schema/row coverage, relationship correlations, CPA and workspace checks all remain fresh.",
+  "benchmark_source_head": "8b8086c81a2172e010d5547910a8906ece6aeeb5",
+  "comparator_core_source_head": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "retained_native_capture_source_head": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "saved_candidate_capture_source_head": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "comparator_code_sources": [
+    {
+      "path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/cellprofiler_export_equivalence.py",
+      "sha256": "8cfc16945a9a0c5aad971199005799214a01ff2565c7ff8ee18631ea2ecba77c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/equivalence/outputs.py",
+      "sha256": "735b07e177e474d964c20af4e1d3e2df0bba7c51ae4d13e41d0e0aa39474fa53"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/runtime_equivalence.py",
+      "sha256": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/equivalence/tables.py",
+      "sha256": "eea161f63116deb9cdddcdd188d1805957430a4048fa92d9b6d27e72527389c3"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/equivalence/measurement_rows.py",
+      "sha256": "8e6e96d39f51f4c8698a181c05750faa396019f07c7a3b410582445de6adf5ae"
+    }
+  ],
+  "prototype_scope": "Original unmodified SQL functions cloned into an isolated globals dictionary; only that isolated cohort comparator binding was replaced. No imported module globals or authoritative files were monkeypatched. Native facts cache used original helper and a diagnostic SQL module SHA directory salt. Final patch instead derives callable+nominal subject declaration identity inside helper through _policy_identity.",
+  "pending_validation": "Text patch is AST syntax-qualified; not executed. Actual three-file patch receiving against D06 core remains pending after capture. Prior isolated proof used core67 against genuine saved D06 candidate outputs and native67 references."
+}

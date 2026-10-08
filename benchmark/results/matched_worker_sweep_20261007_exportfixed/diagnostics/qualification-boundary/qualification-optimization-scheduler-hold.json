@@ -1,0 +1,8 @@
+{
+  "status": "SCHEDULER_HELD_CURRENT_CAPTURE_CONTINUES",
+  "utc": "2026-10-07T21:03:26.578547+00:00",
+  "scheduler_pid": 1717305,
+  "scheduler_command": "/home/ts/code/projects/openhcs/.venv/bin/python -B /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/run-revised-sweep.py --plan /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v4/protocol-manifest.json ",
+  "current_capture_pid": 2166792,
+  "reason": "User-requested qualification-gap optimization: prevent launching next mode before receiving patch at a completed-mode boundary; no pipeline process stopped."
+}

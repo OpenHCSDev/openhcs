@@ -1,0 +1,77 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY genuine actual retainednative8 Advanced two distinct physical assignment DB/CPA outputs, existing typed export owner binds their actual image identities; missingthird axis has no prepared payload; no source mutation or science",
+  "participating_axes": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022.db": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Cells.properties": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_MitochondriaChildObjects.properties": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Mitochondria.properties": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Nucleoli.properties": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Cytoplasm.properties": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Nuclei.properties": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_NucleoliChildObjects.properties": [
+      "W001"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022.db": [
+      "W002"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Cells.properties": [
+      "W002"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_MitochondriaChildObjects.properties": [
+      "W002"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Mitochondria.properties": [
+      "W002"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Nucleoli.properties": [
+      "W002"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Cytoplasm.properties": [
+      "W002"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Nuclei.properties": [
+      "W002"
+    ],
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_NucleoliChildObjects.properties": [
+      "W002"
+    ]
+  },
+  "expected_payloads_exact": true,
+  "empty_axis_has_no_prepared_fact": true,
+  "preparation_cpu_seconds": 5.418311011,
+  "sources": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022.db": "d82301a86be61577cd2abae60f5db9688a2bf3da36419c18e2366bd179738167",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Cells.properties": "70be23decb0574c423264ea7eaa8301ba77fb657023d8c488266116f160f5a49",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_MitochondriaChildObjects.properties": "51157b13768189c109af9c218085f33473b13f8c7aa096a93b17a6fbae10b60c",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Mitochondria.properties": "418a7120869a14de6f989968b8240941b963dfa6611c9a1c8c91119685909b15",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Nucleoli.properties": "ca07b26dbf0126ca3c7e897695928b882952a5459d98ceb9ce1f747394efb287",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Cytoplasm.properties": "17082b4735b9deafb61b97c808ae80ed65b18b7f3ea6359f46b7407614929958",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_Nuclei.properties": "073408c513fee2ab56c32ee1d927d827b07e1e0ba8f4e4f4f22fb26dd7d71de4",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022_NucleoliChildObjects.properties": "1fa4b2a0fde97c2a89067ff9b8a028f4549c73cdb037f11a5339f4a2c8f4c3d8",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022.db": "de9b49f95c807e4e33728ebc46bd60d587090994e8d8c170edd15d43d90c1c50",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Cells.properties": "a6d1812b526a4d961be308cc75acbaaf8e94717a79dd347cb763a1032989c1e2",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_MitochondriaChildObjects.properties": "2ed274c3a3f5d9e9031a84addf5caf8515a1ee632cdd1942e92373eb4d816f24",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Mitochondria.properties": "99234f8eaf7607ced8b04ca20babdac0fece759b8a8a13a6d1a07d8e610dfd89",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Nucleoli.properties": "4bbdd882dc3523ce627af43261d06262de2ecabba97fffb7071338e03436eafe",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Cytoplasm.properties": "e0060c9667543ed4c2f94d97c9efd145c83d82ea1df575761f47469de16bd656",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_Nuclei.properties": "7e242f20c99c861ca4d77c43800557ed074250c6bfc5833e74565d5ec91e1d88",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022_NucleoliChildObjects.properties": "72ea9dc4b039aa73e4b9a9ecb76394b72dd3ddaa0183ebc9b9ae04f89b32857b"
+  },
+  "SQL_owner_source_path": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/joint-batch-overlay/benchmark/cellprofiler_export_equivalence.py",
+  "SQL_owner_source_sha256": "192db2562215e1cf3c12925b00f396e067752b24ac2a4b21e5622c0a18606b23"
+}

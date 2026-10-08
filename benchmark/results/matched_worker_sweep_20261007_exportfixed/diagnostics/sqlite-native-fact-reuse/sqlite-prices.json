@@ -1,0 +1,1667 @@
+{
+  "scope": "DIAGNOSTIC_ONLY CPU0 saved actual advanced8 rep0 W001; no science execution",
+  "timings": {
+    "native_read_normalize_seconds": 0.45908246794715524,
+    "native_semantic_projection_seconds": 10.457889875862747,
+    "candidate_read_normalize_seconds": 3.04362572170794,
+    "candidate_axis_filter_seconds": 0.7418355830013752,
+    "candidate_semantic_projection_seconds": 6.063704491592944,
+    "equality_seconds": 0.24562555784359574
+  },
+  "dimensions": {
+    "native": [
+      {
+        "table": "Per_Cells.csv",
+        "rows": 136,
+        "columns": 503
+      },
+      {
+        "table": "Per_Cytoplasm.csv",
+        "rows": 136,
+        "columns": 326
+      },
+      {
+        "table": "Per_Image.csv",
+        "rows": 2,
+        "columns": 51
+      },
+      {
+        "table": "Per_Mitochondria.csv",
+        "rows": 1330,
+        "columns": 171
+      },
+      {
+        "table": "Per_MitochondriaChildObjects.csv",
+        "rows": 1330,
+        "columns": 6
+      },
+      {
+        "table": "Per_Nuclei.csv",
+        "rows": 136,
+        "columns": 496
+      },
+      {
+        "table": "Per_Nucleoli.csv",
+        "rows": 194,
+        "columns": 164
+      },
+      {
+        "table": "Per_NucleoliChildObjects.csv",
+        "rows": 194,
+        "columns": 6
+      }
+    ],
+    "candidate": [
+      {
+        "table": "Per_Cells.csv",
+        "rows": 136,
+        "columns": 503
+      },
+      {
+        "table": "Per_Cytoplasm.csv",
+        "rows": 136,
+        "columns": 326
+      },
+      {
+        "table": "Per_Image.csv",
+        "rows": 2,
+        "columns": 51
+      },
+      {
+        "table": "Per_Mitochondria.csv",
+        "rows": 1330,
+        "columns": 171
+      },
+      {
+        "table": "Per_MitochondriaChildObjects.csv",
+        "rows": 1330,
+        "columns": 6
+      },
+      {
+        "table": "Per_Nuclei.csv",
+        "rows": 136,
+        "columns": 496
+      },
+      {
+        "table": "Per_Nucleoli.csv",
+        "rows": 194,
+        "columns": 164
+      },
+      {
+        "table": "Per_NucleoliChildObjects.csv",
+        "rows": 194,
+        "columns": 6
+      }
+    ]
+  },
+  "differences": [],
+  "source_database_paths": [
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022.db",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/candidate/0/source_workspace_matched_pilot/results/BBBC022.db"
+  ],
+  "native_relationship_feature_count": 7,
+  "candidate_relationship_feature_count": 7,
+  "cpu_affinity": [
+    0
+  ],
+  "owner_inventory": [
+    {
+      "path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/cellprofiler_export_equivalence.py",
+      "sha256": "8cfc16945a9a0c5aad971199005799214a01ff2565c7ff8ee18631ea2ecba77c",
+      "definitions": [
+        {
+          "name": "cellprofiler_database_export_equivalence",
+          "line": 49
+        },
+        {
+          "name": "cellprofiler_native_shard_equivalence",
+          "line": 92
+        },
+        {
+          "name": "_native_sqlite_shard_differences",
+          "line": 217
+        },
+        {
+          "name": "_outputs_with_suffix",
+          "line": 290
+        },
+        {
+          "name": "_declared_sqlite_paths",
+          "line": 297
+        },
+        {
+          "name": "_sqlite_export_equivalence",
+          "line": 311
+        },
+        {
+          "name": "_sqlite_database_differences",
+          "line": 361
+        },
+        {
+          "name": "_sqlite_table_value_differences",
+          "line": 458
+        },
+        {
+          "name": "_sqlite_measurement_cohort_differences",
+          "line": 492
+        },
+        {
+          "name": "_sqlite_tables",
+          "line": 508
+        },
+        {
+          "name": "_declared_sqlite_table_subjects",
+          "line": 596
+        },
+        {
+          "name": "_declared_sqlite_partition_tables",
+          "line": 635
+        },
+        {
+          "name": "_quote_sqlite_identifier",
+          "line": 664
+        },
+        {
+          "name": "_sqlite_cell_text",
+          "line": 668
+        },
+        {
+          "name": "_normalized_sqlite_row",
+          "line": 676
+        },
+        {
+          "name": "_properties_export_equivalence",
+          "line": 703
+        },
+        {
+          "name": "_read_cpa_properties",
+          "line": 745
+        },
+        {
+          "name": "_normalized_cpa_property_value",
+          "line": 756
+        },
+        {
+          "name": "_named_output_differences",
+          "line": 764
+        },
+        {
+          "name": "_unique_paths_by_name",
+          "line": 791
+        },
+        {
+          "name": "_workspace_export_equivalence",
+          "line": 806
+        }
+      ]
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/equivalence/outputs.py",
+      "sha256": "735b07e177e474d964c20af4e1d3e2df0bba7c51ae4d13e41d0e0aa39474fa53",
+      "definitions": [
+        {
+          "name": "RuntimeOutputSnapshot",
+          "line": 38
+        },
+        {
+          "name": "table_paths",
+          "line": 202
+        },
+        {
+          "name": "RuntimeTableNamespaceAdapter",
+          "line": 212
+        },
+        {
+          "name": "CommonStemRuntimeTableNamespaceAdapter",
+          "line": 251
+        },
+        {
+          "name": "_common_table_namespace_prefix",
+          "line": 277
+        },
+        {
+          "name": "_table_has_object_identity",
+          "line": 295
+        },
+        {
+          "name": "_normalize_table_header_field",
+          "line": 302
+        },
+        {
+          "name": "image_paths",
+          "line": 306
+        },
+        {
+          "name": "_is_image_path",
+          "line": 316
+        },
+        {
+          "name": "from_export_observation",
+          "line": 45
+        },
+        {
+          "name": "image_snapshots",
+          "line": 101
+        },
+        {
+          "name": "require_image_file_coverage",
+          "line": 156
+        },
+        {
+          "name": "from_artifact_execution_observation",
+          "line": 169
+        },
+        {
+          "name": "from_output_root",
+          "line": 185
+        },
+        {
+          "name": "normalize",
+          "line": 220
+        },
+        {
+          "name": "supports",
+          "line": 240
+        },
+        {
+          "name": "normalize_tables",
+          "line": 244
+        },
+        {
+          "name": "supports",
+          "line": 256
+        },
+        {
+          "name": "normalize_tables",
+          "line": 259
+        }
+      ]
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/runtime_equivalence.py",
+      "sha256": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f",
+      "definitions": [
+        {
+          "name": "runtime_measurement_projection_cache_identity",
+          "line": 184
+        },
+        {
+          "name": "_module_source_digest",
+          "line": 192
+        },
+        {
+          "name": "RuntimeAggregateMeanAccumulator",
+          "line": 238
+        },
+        {
+          "name": "SparseNumericCounterToleranceProfile",
+          "line": 259
+        },
+        {
+          "name": "ObjectBoundarySparseNumericTolerance",
+          "line": 338
+        },
+        {
+          "name": "ShapeDescriptorSparseNumericTolerance",
+          "line": 358
+        },
+        {
+          "name": "BinarySparseNumericTolerance",
+          "line": 378
+        },
+        {
+          "name": "AggregateMeanKeyProjection",
+          "line": 399
+        },
+        {
+          "name": "RuntimeObjectMeasurementFactRowDomain",
+          "line": 448
+        },
+        {
+          "name": "RuntimeMeasurementStatisticDependencyStrategy",
+          "line": 551
+        },
+        {
+          "name": "ValueMeasurementStatisticDependencyStrategy",
+          "line": 572
+        },
+        {
+          "name": "MeanMeasurementStatisticDependencyStrategy",
+          "line": 586
+        },
+        {
+          "name": "CountMeasurementStatisticDependencyStrategy",
+          "line": 607
+        },
+        {
+          "name": "RuntimeMeasurementObservationAxis",
+          "line": 622
+        },
+        {
+          "name": "_remove_authoritative_object_label_location_facts",
+          "line": 789
+        },
+        {
+          "name": "_object_location_subjects_matching_statistic",
+          "line": 814
+        },
+        {
+          "name": "RuntimeMeasurementProjectionState",
+          "line": 838
+        },
+        {
+          "name": "RuntimeMeasurementRowProjectionRecorder",
+          "line": 1139
+        },
+        {
+          "name": "RuntimeTableRowProjectionRecorder",
+          "line": 1266
+        },
+        {
+          "name": "RuntimeMeasurementObservationRecordHandler",
+          "line": 1342
+        },
+        {
+          "name": "MeasurementTableObservationRecordHandler",
+          "line": 1368
+        },
+        {
+          "name": "ObjectLabelsObservationRecordHandler",
+          "line": 1386
+        },
+        {
+          "name": "RelationshipObservationRecordHandler",
+          "line": 1401
+        },
+        {
+          "name": "_finite_numeric_runtime_cell_value",
+          "line": 1416
+        },
+        {
+          "name": "TieSensitiveLocationValueFeatureContext",
+          "line": 1424
+        },
+        {
+          "name": "AggregateTieSensitiveLocationFeature",
+          "line": 1494
+        },
+        {
+          "name": "TieSensitiveLocationValueFeatureStrategy",
+          "line": 1547
+        },
+        {
+          "name": "DirectTieSensitiveLocationValueFeatureStrategy",
+          "line": 1578
+        },
+        {
+          "name": "AggregateTieSensitiveLocationValueFeatureStrategy",
+          "line": 1601
+        },
+        {
+          "name": "TieSensitiveLocationFeatureContract",
+          "line": 1630
+        },
+        {
+          "name": "RuntimeMeasurementObservationProjector",
+          "line": 1647
+        },
+        {
+          "name": "RuntimeMeasurementSnapshot",
+          "line": 1714
+        },
+        {
+          "name": "RuntimeMeasurementSnapshotAccumulator",
+          "line": 1889
+        },
+        {
+          "name": "runtime_output_equivalence",
+          "line": 1911
+        },
+        {
+          "name": "runtime_output_root_equivalence",
+          "line": 1926
+        },
+        {
+          "name": "runtime_measurement_equivalence",
+          "line": 1940
+        },
+        {
+          "name": "runtime_artifact_measurement_source_names",
+          "line": 1961
+        },
+        {
+          "name": "runtime_reference_artifact_equivalence",
+          "line": 1968
+        },
+        {
+          "name": "runtime_artifact_execution_equivalence",
+          "line": 2029
+        },
+        {
+          "name": "_runtime_artifact_count_differences",
+          "line": 2048
+        },
+        {
+          "name": "_artifact_type_counts_repr",
+          "line": 2066
+        },
+        {
+          "name": "_total_record_counts",
+          "line": 2080
+        },
+        {
+          "name": "_measurement_differences",
+          "line": 2089
+        },
+        {
+          "name": "_measurement_feature_values_equivalent",
+          "line": 2141
+        },
+        {
+          "name": "_duplicate_object_location_values_equivalent",
+          "line": 2200
+        },
+        {
+          "name": "_duplicate_object_values_equivalent",
+          "line": 2257
+        },
+        {
+          "name": "_relationship_object_projection_values_equivalent",
+          "line": 2286
+        },
+        {
+          "name": "_candidate_counter_matches_reference_without_zero_padding",
+          "line": 2319
+        },
+        {
+          "name": "_runtime_cell_signature_is_zero",
+          "line": 2335
+        },
+        {
+          "name": "_reference_counter_is_object_projection",
+          "line": 2340
+        },
+        {
+          "name": "_candidate_counter_without_duplicate_projection",
+          "line": 2352
+        },
+        {
+          "name": "_candidate_counter_without_uniform_duplicate_projection",
+          "line": 2364
+        },
+        {
+          "name": "_candidate_counter_is_duplicate_projection",
+          "line": 2384
+        },
+        {
+          "name": "_aggregate_mean_values_equivalent",
+          "line": 2402
+        },
+        {
+          "name": "_feature_numeric_tolerance_values_equivalent",
+          "line": 2441
+        },
+        {
+          "name": "_tie_sensitive_location_values_equivalent",
+          "line": 2477
+        },
+        {
+          "name": "_threshold_entropy_values_equivalent",
+          "line": 2509
+        },
+        {
+          "name": "RuntimeThresholdSensitivePairToleranceContract",
+          "line": 2534
+        },
+        {
+          "name": "RuntimeMeasurementFeatureSemantics",
+          "line": 2660
+        },
+        {
+          "name": "SparseObjectBoundaryEquivalence",
+          "line": 2742
+        },
+        {
+          "name": "SparseObjectBoundaryStatisticEquivalence",
+          "line": 2809
+        },
+        {
+          "name": "SparseObjectBoundaryCountEquivalence",
+          "line": 2830
+        },
+        {
+          "name": "SparseObjectBoundaryValueEquivalence",
+          "line": 2850
+        },
+        {
+          "name": "SparseObjectBoundaryMeanEquivalence",
+          "line": 2903
+        },
+        {
+          "name": "MeasurementFeatureStabilityPolicy",
+          "line": 2948
+        },
+        {
+          "name": "_object_count_counters_sparse_equivalent",
+          "line": 3087
+        },
+        {
+          "name": "_numeric_counters_are_binary",
+          "line": 3115
+        },
+        {
+          "name": "_indexed_descriptor_values_equivalent",
+          "line": 3129
+        },
+        {
+          "name": "_primary_row_object_count_measurement_facts",
+          "line": 3154
+        },
+        {
+          "name": "_measurement_source_names_from_artifact_execution",
+          "line": 3187
+        },
+        {
+          "name": "_source_name_aliases",
+          "line": 3208
+        },
+        {
+          "name": "add",
+          "line": 244
+        },
+        {
+          "name": "has_values",
+          "line": 249
+        },
+        {
+          "name": "mean",
+          "line": 253
+        },
+        {
+          "name": "profile_type",
+          "line": 269
+        },
+        {
+          "name": "profile_type_for_descriptor",
+          "line": 283
+        },
+        {
+          "name": "matches_descriptor",
+          "line": 302
+        },
+        {
+          "name": "equivalent",
+          "line": 308
+        },
+        {
+          "name": "tolerance",
+          "line": 329
+        },
+        {
+          "name": "tolerance",
+          "line": 343
+        },
+        {
+          "name": "tolerance",
+          "line": 363
+        },
+        {
+          "name": "tolerance",
+          "line": 383
+        },
+        {
+          "name": "key",
+          "line": 407
+        },
+        {
+          "name": "record_subject_row_identity",
+          "line": 456
+        },
+        {
+          "name": "record_object_row_projection_facts",
+          "line": 465
+        },
+        {
+          "name": "record_object_row_values",
+          "line": 526
+        },
+        {
+          "name": "primary_row_keys",
+          "line": 542
+        },
+        {
+          "name": "required_input_keys",
+          "line": 565
+        },
+        {
+          "name": "required_input_keys",
+          "line": 579
+        },
+        {
+          "name": "required_input_keys",
+          "line": 593
+        },
+        {
+          "name": "required_input_keys",
+          "line": 614
+        },
+        {
+          "name": "accept_measurement_table",
+          "line": 635
+        },
+        {
+          "name": "accept_object_label_record",
+          "line": 649
+        },
+        {
+          "name": "accept_relationship_record",
+          "line": 653
+        },
+        {
+          "name": "record_relationship_facts",
+          "line": 667
+        },
+        {
+          "name": "measurement_fact_counter_for_projected_key",
+          "line": 867
+        },
+        {
+          "name": "project_recorded_row_fact_counts",
+          "line": 880
+        },
+        {
+          "name": "record_measurement_tables",
+          "line": 891
+        },
+        {
+          "name": "record_measurement_table",
+          "line": 900
+        },
+        {
+          "name": "project_measurement_fact_counts",
+          "line": 1021
+        },
+        {
+          "name": "record_relationship_facts",
+          "line": 1126
+        },
+        {
+          "name": "object_row_identity",
+          "line": 1148
+        },
+        {
+          "name": "record_projected_row_records",
+          "line": 1155
+        },
+        {
+          "name": "object_row_identity_for_subject",
+          "line": 1242
+        },
+        {
+          "name": "accept_projected_measurement_fact",
+          "line": 1255
+        },
+        {
+          "name": "object_row_identity_for_subject",
+          "line": 1276
+        },
+        {
+          "name": "object_row_identity",
+          "line": 1291
+        },
+        {
+          "name": "accept_projected_measurement_fact",
+          "line": 1312
+        },
+        {
+          "name": "for_artifact_type",
+          "line": 1352
+        },
+        {
+          "name": "record",
+          "line": 1359
+        },
+        {
+          "name": "record",
+          "line": 1375
+        },
+        {
+          "name": "record",
+          "line": 1391
+        },
+        {
+          "name": "record",
+          "line": 1406
+        },
+        {
+          "name": "feature_parts",
+          "line": 1431
+        },
+        {
+          "name": "location_feature_family",
+          "line": 1440
+        },
+        {
+          "name": "value_key_from_location_family",
+          "line": 1462
+        },
+        {
+          "name": "from_context",
+          "line": 1503
+        },
+        {
+          "name": "feature_name",
+          "line": 1523
+        },
+        {
+          "name": "value_key_from_location_family",
+          "line": 1526
+        },
+        {
+          "name": "value_feature_key",
+          "line": 1558
+        },
+        {
+          "name": "resolve",
+          "line": 1571
+        },
+        {
+          "name": "matches",
+          "line": 1585
+        },
+        {
+          "name": "resolve",
+          "line": 1591
+        },
+        {
+          "name": "matches",
+          "line": 1608
+        },
+        {
+          "name": "resolve",
+          "line": 1614
+        },
+        {
+          "name": "value_feature_key",
+          "line": 1636
+        },
+        {
+          "name": "record_artifacts",
+          "line": 1652
+        },
+        {
+          "name": "_record_axis",
+          "line": 1656
+        },
+        {
+          "name": "project_measurement_fact_counts",
+          "line": 1680
+        },
+        {
+          "name": "from_output_snapshot",
+          "line": 1723
+        },
+        {
+          "name": "from_artifact_execution_observation",
+          "line": 1753
+        },
+        {
+          "name": "__post_init__",
+          "line": 1774
+        },
+        {
+          "name": "is_empty",
+          "line": 1788
+        },
+        {
+          "name": "required_relationship_correlations",
+          "line": 1791
+        },
+        {
+          "name": "relationship_differences",
+          "line": 1801
+        },
+        {
+          "name": "to_cache_payload",
+          "line": 1819
+        },
+        {
+          "name": "from_cache_payload",
+          "line": 1859
+        },
+        {
+          "name": "add",
+          "line": 1896
+        },
+        {
+          "name": "snapshot",
+          "line": 1904
+        },
+        {
+          "name": "values_equivalent",
+          "line": 2539
+        },
+        {
+          "name": "owns_key",
+          "line": 2575
+        },
+        {
+          "name": "companion_features",
+          "line": 2582
+        },
+        {
+          "name": "is_companion_feature",
+          "line": 2614
+        },
+        {
+          "name": "label",
+          "line": 2667
+        },
+        {
+          "name": "matches_numeric_tolerance",
+          "line": 2681
+        },
+        {
+          "name": "_feature_name_matches_numeric_tolerance",
+          "line": 2715
+        },
+        {
+          "name": "values_equivalent",
+          "line": 2750
+        },
+        {
+          "name": "boundary_numeric_counters_equivalent",
+          "line": 2762
+        },
+        {
+          "name": "shape_descriptor_values_equivalent",
+          "line": 2769
+        },
+        {
+          "name": "identifier_counters_equivalent",
+          "line": 2781
+        },
+        {
+          "name": "values_equivalent",
+          "line": 2823
+        },
+        {
+          "name": "values_equivalent",
+          "line": 2835
+        },
+        {
+          "name": "values_equivalent",
+          "line": 2855
+        },
+        {
+          "name": "values_equivalent",
+          "line": 2908
+        },
+        {
+          "name": "object_count_values_stable",
+          "line": 2956
+        },
+        {
+          "name": "shape_descriptor_geometry_is_stable",
+          "line": 2978
+        },
+        {
+          "name": "object_measurement_marker_stable_features",
+          "line": 2986
+        },
+        {
+          "name": "object_measurement_marker_exactly_stable_features",
+          "line": 3011
+        },
+        {
+          "name": "_feature_values_stable",
+          "line": 3038
+        },
+        {
+          "name": "_candidate_key_matches_marker",
+          "line": 3069
+        },
+        {
+          "name": "record_row_mapping",
+          "line": 940
+        }
+      ]
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/equivalence/tables.py",
+      "sha256": "eea161f63116deb9cdddcdd188d1805957430a4048fa92d9b6d27e72527389c3",
+      "definitions": [
+        {
+          "name": "measurement_table_padding_group",
+          "line": 70
+        },
+        {
+          "name": "RuntimeTableSnapshot",
+          "line": 79
+        },
+        {
+          "name": "is_wide_measurement_table",
+          "line": 527
+        },
+        {
+          "name": "read_semantic_csv_table",
+          "line": 539
+        },
+        {
+          "name": "duplicate_values",
+          "line": 570
+        },
+        {
+          "name": "_semantic_csv_column_context",
+          "line": 576
+        },
+        {
+          "name": "_is_semantic_csv_header",
+          "line": 582
+        },
+        {
+          "name": "_is_contextual_semantic_csv_header",
+          "line": 590
+        },
+        {
+          "name": "_is_contextual_semantic_csv_table_header",
+          "line": 601
+        },
+        {
+          "name": "for_image_numbers",
+          "line": 87
+        },
+        {
+          "name": "required_rows",
+          "line": 170
+        },
+        {
+          "name": "participates_in_comparison",
+          "line": 177
+        },
+        {
+          "name": "from_csv",
+          "line": 187
+        },
+        {
+          "name": "__post_init__",
+          "line": 198
+        },
+        {
+          "name": "schema_key",
+          "line": 256
+        },
+        {
+          "name": "content_key",
+          "line": 269
+        },
+        {
+          "name": "row_signatures",
+          "line": 281
+        },
+        {
+          "name": "measurement_tables",
+          "line": 308
+        },
+        {
+          "name": "_subject_for_columns",
+          "line": 372
+        },
+        {
+          "name": "_object_subject",
+          "line": 393
+        },
+        {
+          "name": "_columnar_rows",
+          "line": 418
+        }
+      ]
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/core/equivalence/measurement_rows.py",
+      "sha256": "8e6e96d39f51f4c8698a181c05750faa396019f07c7a3b410582445de6adf5ae",
+      "definitions": [
+        {
+          "name": "_measurement_qualifier_value_renderers",
+          "line": 94
+        },
+        {
+          "name": "_two_digit_integer_measurement_qualifier_value",
+          "line": 116
+        },
+        {
+          "name": "_fraction_of_count_measurement_qualifier_value",
+          "line": 122
+        },
+        {
+          "name": "_identifier_measurement_qualifier_value",
+          "line": 133
+        },
+        {
+          "name": "measurement_row_image_identity_key",
+          "line": 148
+        },
+        {
+          "name": "axis_scoped_measurement_row_identity",
+          "line": 174
+        },
+        {
+          "name": "RuntimeImageNumberOffset",
+          "line": 190
+        },
+        {
+          "name": "measurement_row_qualifiers",
+          "line": 302
+        },
+        {
+          "name": "measurement_row_qualifiers_from_values",
+          "line": 314
+        },
+        {
+          "name": "measurement_qualifier_cache_value",
+          "line": 329
+        },
+        {
+          "name": "measurement_row_qualifiers_from_indexed_values_cached",
+          "line": 344
+        },
+        {
+          "name": "row_qualifier_columns",
+          "line": 373
+        },
+        {
+          "name": "row_qualifier_values",
+          "line": 385
+        },
+        {
+          "name": "row_qualifier_applies_to_field",
+          "line": 394
+        },
+        {
+          "name": "measurement_qualifier_field_names",
+          "line": 406
+        },
+        {
+          "name": "_measurement_row_qualifiers_for_field",
+          "line": 424
+        },
+        {
+          "name": "_render_measurement_row_qualifier",
+          "line": 443
+        },
+        {
+          "name": "_render_measurement_row_qualifier_from_values",
+          "line": 453
+        },
+        {
+          "name": "_render_measurement_row_qualifier_value_tuple",
+          "line": 461
+        },
+        {
+          "name": "_measurement_qualifier_identifier",
+          "line": 470
+        },
+        {
+          "name": "_is_missing_measurement_qualifier_value",
+          "line": 477
+        },
+        {
+          "name": "_measurement_qualifier_integer",
+          "line": 489
+        },
+        {
+          "name": "_optional_measurement_qualifier_integer",
+          "line": 496
+        },
+        {
+          "name": "_first_row_value",
+          "line": 506
+        },
+        {
+          "name": "object_label_signature_from_row_identity",
+          "line": 535
+        },
+        {
+          "name": "RuntimeMeasurementRowSchema",
+          "line": 553
+        },
+        {
+          "name": "RuntimeMeasurementRowHeaderProjection",
+          "line": 572
+        },
+        {
+          "name": "RuntimeWideProjectionColumn",
+          "line": 612
+        },
+        {
+          "name": "runtime_measurement_row_value_is_present_without_formatting",
+          "line": 656
+        },
+        {
+          "name": "runtime_measurement_field_indexes",
+          "line": 665
+        },
+        {
+          "name": "normalized_runtime_measurement_identity_field_matches_qualifier_names",
+          "line": 677
+        },
+        {
+          "name": "runtime_measurement_row_schema_for_header",
+          "line": 693
+        },
+        {
+          "name": "runtime_measurement_row_header_projection",
+          "line": 777
+        },
+        {
+          "name": "runtime_measurement_feature_key_cache_key",
+          "line": 790
+        },
+        {
+          "name": "runtime_measurement_projected_feature_cache_key",
+          "line": 806
+        },
+        {
+          "name": "runtime_measurement_projected_feature_identity",
+          "line": 818
+        },
+        {
+          "name": "RuntimeMeasurementRequiredKeyIndex",
+          "line": 835
+        },
+        {
+          "name": "RuntimeIndexedRowValues",
+          "line": 929
+        },
+        {
+          "name": "RuntimeMeasurementRowMapping",
+          "line": 993
+        },
+        {
+          "name": "RuntimeObjectMeasurementRowIdentity",
+          "line": 1192
+        },
+        {
+          "name": "runtime_metadata_map_row_matches",
+          "line": 1304
+        },
+        {
+          "name": "runtime_measurement_identity_field_matches",
+          "line": 1314
+        },
+        {
+          "name": "normalized_runtime_measurement_identity_field_matches",
+          "line": 1325
+        },
+        {
+          "name": "RuntimeRowProjection",
+          "line": 1350
+        },
+        {
+          "name": "runtime_row_projection",
+          "line": 1356
+        },
+        {
+          "name": "RuntimeRowProjectionContext",
+          "line": 1371
+        },
+        {
+          "name": "RuntimeRowValueProjection",
+          "line": 2090
+        },
+        {
+          "name": "RuntimeMeasurementCellValue",
+          "line": 2112
+        },
+        {
+          "name": "RuntimeMeasurementCellFactProjection",
+          "line": 2157
+        },
+        {
+          "name": "RuntimeMeasurementCellNumericProjection",
+          "line": 2221
+        },
+        {
+          "name": "RuntimeRowLongFormProjection",
+          "line": 2277
+        },
+        {
+          "name": "RuntimeRowLongFormFactProjection",
+          "line": 2292
+        },
+        {
+          "name": "RuntimeRowLongFormNumericProjection",
+          "line": 2302
+        },
+        {
+          "name": "RuntimeLongFormMeasurementContext",
+          "line": 2312
+        },
+        {
+          "name": "CachedRuntimeLongFormMeasurementContext",
+          "line": 2324
+        },
+        {
+          "name": "aggregate_image_number_reference_measurement_field",
+          "line": 2362
+        },
+        {
+          "name": "image_number_reference_measurement_field",
+          "line": 2373
+        },
+        {
+          "name": "image_number_reference_feature",
+          "line": 2381
+        },
+        {
+          "name": "parts_contain_adjacent_image_number",
+          "line": 2388
+        },
+        {
+          "name": "RuntimeLongFormMeasurementSource",
+          "line": 2396
+        },
+        {
+          "name": "RuntimeLongFormMeasurementFact",
+          "line": 2454
+        },
+        {
+          "name": "RuntimeSnapshotLongFormMeasurementFactProjector",
+          "line": 2468
+        },
+        {
+          "name": "RuntimeMeasurementLongFormFactProjector",
+          "line": 2508
+        },
+        {
+          "name": "numeric_long_form_measurement_values",
+          "line": 2580
+        },
+        {
+          "name": "dedupe_numeric_measurement_values",
+          "line": 2590
+        },
+        {
+          "name": "RuntimeMeasurementRowSubjectProjection",
+          "line": 2600
+        },
+        {
+          "name": "__post_init__",
+          "line": 195
+        },
+        {
+          "name": "from_table_rows",
+          "line": 199
+        },
+        {
+          "name": "from_runtime_rows",
+          "line": 219
+        },
+        {
+          "name": "from_measurement_table",
+          "line": 234
+        },
+        {
+          "name": "_offset_from_values",
+          "line": 239
+        },
+        {
+          "name": "normalized_reference_value",
+          "line": 252
+        },
+        {
+          "name": "normalized_image_number",
+          "line": 269
+        },
+        {
+          "name": "object_instance_key",
+          "line": 281
+        },
+        {
+          "name": "has_measurement_features",
+          "line": 563
+        },
+        {
+          "name": "canonical_qualifiers_for_index",
+          "line": 744
+        },
+        {
+          "name": "from_required_keys",
+          "line": 843
+        },
+        {
+          "name": "nested_bases_for_key",
+          "line": 863
+        },
+        {
+          "name": "nested_base_for_key",
+          "line": 878
+        },
+        {
+          "name": "requires_key",
+          "line": 888
+        },
+        {
+          "name": "requires_value",
+          "line": 901
+        },
+        {
+          "name": "may_require_value",
+          "line": 914
+        },
+        {
+          "name": "from_row",
+          "line": 942
+        },
+        {
+          "name": "at",
+          "line": 948
+        },
+        {
+          "name": "values_at",
+          "line": 964
+        },
+        {
+          "name": "first_at",
+          "line": 967
+        },
+        {
+          "name": "text_at",
+          "line": 972
+        },
+        {
+          "name": "has_text_at",
+          "line": 979
+        },
+        {
+          "name": "has_text_at_any",
+          "line": 982
+        },
+        {
+          "name": "has_present_at_any",
+          "line": 985
+        },
+        {
+          "name": "__post_init__",
+          "line": 1021
+        },
+        {
+          "name": "header",
+          "line": 1038
+        },
+        {
+          "name": "values",
+          "line": 1042
+        },
+        {
+          "name": "normalized_fields",
+          "line": 1052
+        },
+        {
+          "name": "normalized_field_names",
+          "line": 1056
+        },
+        {
+          "name": "first_value",
+          "line": 1059
+        },
+        {
+          "name": "has_field",
+          "line": 1067
+        },
+        {
+          "name": "has_identity_value",
+          "line": 1070
+        },
+        {
+          "name": "has_image_identity",
+          "line": 1083
+        },
+        {
+          "name": "has_object_identity",
+          "line": 1086
+        },
+        {
+          "name": "has_long_form_measurement_fields",
+          "line": 1089
+        },
+        {
+          "name": "declared_value",
+          "line": 1092
+        },
+        {
+          "name": "source_name",
+          "line": 1104
+        },
+        {
+          "name": "object_name",
+          "line": 1107
+        },
+        {
+          "name": "object_label",
+          "line": 1110
+        },
+        {
+          "name": "object_identity_value",
+          "line": 1120
+        },
+        {
+          "name": "identity_role",
+          "line": 1136
+        },
+        {
+          "name": "image_identity_key",
+          "line": 1146
+        },
+        {
+          "name": "axis_scoped_identity",
+          "line": 1177
+        },
+        {
+          "name": "without_occurrence_scope",
+          "line": 1198
+        },
+        {
+          "name": "from_row",
+          "line": 1205
+        },
+        {
+          "name": "from_object_instance",
+          "line": 1240
+        },
+        {
+          "name": "image_identity",
+          "line": 1280
+        },
+        {
+          "name": "has_image_identity",
+          "line": 1288
+        },
+        {
+          "name": "object_label_signature",
+          "line": 1300
+        },
+        {
+          "name": "from_row",
+          "line": 1392
+        },
+        {
+          "name": "subject_for_field_index",
+          "line": 1435
+        },
+        {
+          "name": "padding_indexes",
+          "line": 1442
+        },
+        {
+          "name": "supports_static_wide_projection",
+          "line": 1450
+        },
+        {
+          "name": "project",
+          "line": 1454
+        },
+        {
+          "name": "fact_projection",
+          "line": 1475
+        },
+        {
+          "name": "numeric_values",
+          "line": 1555
+        },
+        {
+          "name": "row_schema",
+          "line": 1592
+        },
+        {
+          "name": "_long_form_projection",
+          "line": 1607
+        },
+        {
+          "name": "_wide_projection",
+          "line": 1648
+        },
+        {
+          "name": "static_wide_projection_columns",
+          "line": 1733
+        },
+        {
+          "name": "wide_feature_indexes",
+          "line": 1787
+        },
+        {
+          "name": "wide_feature_index_may_emit_required_key",
+          "line": 1813
+        },
+        {
+          "name": "_wide_projection_records_for_index",
+          "line": 1833
+        },
+        {
+          "name": "_wide_projection_records_for_static_column",
+          "line": 1896
+        },
+        {
+          "name": "_producer_owns_feature",
+          "line": 1999
+        },
+        {
+          "name": "_measured_object_anchor",
+          "line": 2009
+        },
+        {
+          "name": "_qualifiers_for_index",
+          "line": 2020
+        },
+        {
+          "name": "_feature_key",
+          "line": 2042
+        },
+        {
+          "name": "_padding_group",
+          "line": 2069
+        },
+        {
+          "name": "project",
+          "line": 2097
+        },
+        {
+          "name": "is_mapping",
+          "line": 2122
+        },
+        {
+          "name": "iter_key_values",
+          "line": 2127
+        },
+        {
+          "name": "requires_key",
+          "line": 2141
+        },
+        {
+          "name": "nested_key",
+          "line": 2147
+        },
+        {
+          "name": "project",
+          "line": 2162
+        },
+        {
+          "name": "project_cell",
+          "line": 2200
+        },
+        {
+          "name": "project",
+          "line": 2226
+        },
+        {
+          "name": "project_cell",
+          "line": 2260
+        },
+        {
+          "name": "project",
+          "line": 2284
+        },
+        {
+          "name": "project",
+          "line": 2297
+        },
+        {
+          "name": "project",
+          "line": 2307
+        },
+        {
+          "name": "from_runtime_row_projection",
+          "line": 2338
+        },
+        {
+          "name": "from_row",
+          "line": 2403
+        },
+        {
+          "name": "from_indexed_values",
+          "line": 2414
+        },
+        {
+          "name": "from_feature_value",
+          "line": 2426
+        },
+        {
+          "name": "cell_signature",
+          "line": 2438
+        },
+        {
+          "name": "as_tuple",
+          "line": 2461
+        },
+        {
+          "name": "fact",
+          "line": 2473
+        },
+        {
+          "name": "resolved_fact",
+          "line": 2476
+        },
+        {
+          "name": "fact",
+          "line": 2513
+        },
+        {
+          "name": "resolved_fact",
+          "line": 2516
+        },
+        {
+          "name": "_feature_key",
+          "line": 2562
+        },
+        {
+          "name": "source_name",
+          "line": 2608
+        },
+        {
+          "name": "subject",
+          "line": 2614
+        }
+      ]
+    }
+  ]
+}

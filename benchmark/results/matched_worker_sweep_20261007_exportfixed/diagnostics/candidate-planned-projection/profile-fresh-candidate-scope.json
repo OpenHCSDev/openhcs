@@ -1,0 +1,12 @@
+{
+  "scope": "DIAGNOSTIC_ONLY unchanged current qualifier owners, saved actual D06 Grid W001, CPU0 threads1; cProfile overhead, not headline or controlled timing",
+  "candidate_decode": {
+    "wall_seconds": 3.216171688400209,
+    "process_cpu_seconds": 1.600373596
+  },
+  "profiled_projection": {
+    "wall_seconds": 68.18526808731258,
+    "process_cpu_seconds": 43.873557169
+  },
+  "numeric_fact_keys": 522
+}

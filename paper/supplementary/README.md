@@ -161,50 +161,29 @@ separated without spatial ground truth. Both methods recovered concordant
 positive outgrowth responses with different measured magnitudes. This is an
 assisted-development evaluation, separate from autonomous authoring.
 
-## Supplementary Figure 6. Total speedup by workflow and assigned sample count
+## Supplementary Figure 6. Execution speedup at the May worker configurations
 
-![Total speedups for each workflow, revision and worker configuration on linear and logarithmic axes.](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.png){width=4.8in}
-
-::: {custom-style="ImageCaption"}
-(A1–A2) Illumination correction Example 3; (B1–B2) Vitra; (C1–C2) 3D monolayer.
-Columns use linear and logarithmic axes. Points are CellProfiler/OpenHCS median
-total-time ratios over three repetitions. Colour identifies revision; shape
-identifies worker count. Lines join matched configurations. Supplementary Data 3
-gives the protocol and numerical tables.
-:::
-
-## Supplementary Figure 6 (continued). Matched worker comparisons
-
-![Matched one- versus two-, three- and four-worker comparisons, retaining separate capture revisions.](../figures/slas/supp_worker_comparisons.png){width=5in}
+![Execution speedup for all thirty workflows at the May worker/assignment configurations.](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points_log.png){width=5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** Eight assignments of three workflows on revision `d8678dbd4`: one versus
-two OpenHCS workers. (B) Nine assignments of the same three workflows on
-revision `71aded26c`: one versus three OpenHCS workers. Within each row,
-execution and compile-plus-run total are separate groups. Each dot is one
-workflow's ratio against one stock CellProfiler process on the same assignments.
-Bars give arithmetic means, black lines medians, and annotations the minimum,
-median, mean and maximum. Each row uses its own revision and cohort. (C)
-Sixteen assignments of 3D monolayer on revision `2cda84a369`: one versus
-four OpenHCS workers. There is one workflow, so minimum, median, mean and
-maximum coincide and are marked “all”. Supplementary Data 3 gives the protocol
-and source tables.
+One worker/one assignment, two/eight, three/twelve and four/sixteen. Bars show arithmetic means, points every workflow and black lines medians. CP1 and CP8 are actual complete serial first-use-inclusive batches; CP12 and CP16 are explicitly projected from the measured CP8 first batch plus its warmed per-assignment rate, with zero actual native target observations. OpenHCS uses three measured repetitions after warmup. This changing-workload schedule is distinct from fixed-workload scaling.
 :::
 
-## Supplementary Figure 6 (continued). Individual workflow runtimes
+## Supplementary Figure 6 (continued). Compilation-plus-execution total speedup
 
-![Paired execution and total runtime for all thirty workflows.](../figures/slas/benchmark-publication/measured_benchmark_workflow_runtimes.png){width=6in}
+![Total speedup at the same worker/assignment configurations.](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points_log.png){width=5in}
 
 ::: {custom-style="ImageCaption"}
-**(A)** Execution; **(B)** compile-plus-run total. Paired bars show median CellProfiler
-and OpenHCS durations for each of the thirty workflows in main Figure 6, with
-one worker and one numerical thread. Both panels use the same logarithmic
-seconds scale. Row annotations give CellProfiler/OpenHCS ratios of engine medians from three measured
-repetitions. All thirty workflows passed their declared-output comparisons.
+The same thirty workflows and native reference policy as the execution panel. OpenHCS total includes disjoint compilation, client coordination and full server execution, including saving, exports, publication and finalization. Native prepared-invocation total adds the first anchor preparation once. External process/JVM/ZMQ/server startup and scientific qualification are excluded. Native initialization within its pipeline call remains included.
 :::
 
-The [linear-scale aggregate view](../figures/slas/benchmark-publication/measured_benchmark_publication.png)
-shows the same aggregate measurements on linear axes.
+## Supplementary Figure 6 (continued). Measured scaling at twelve fixed assignments
+
+![Actual OpenHCS execution scaling with twelve assignments held fixed.](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png){width=5in}
+
+::: {custom-style="ImageCaption"}
+Actual one-worker time divided by actual one-, two-, three- and four-worker medians, with twelve assignments held fixed for every workflow. No CellProfiler projection enters this panel. Repeated assignments reuse each selected source sample; they are computational replicates, not independent biological wells. All seven modes use frozen production `d06b7226c82fc6de8ab6b644f3bec417f4b7b922` and pass complete declared-output comparisons in warmup and every measured repetition. Multi-assignment modes allow CPUs2–5; the single-assignment mode uses CPU5, with one numerical thread per worker. Process-tree peak RAM is unavailable; historical May RAM is not substituted. Supplementary Data 3 links linear views, paired clocks, total scaling, efficiency tables, native calibration and projection validation.
+:::
 
 ## Supplementary Table 1. Reusable libraries and their roles
 
@@ -361,9 +340,30 @@ current-version compatibility matrix.
 
 ## Supplementary Data 3. Worker measurements
 
-### Measured panels and numerical tables
+### Current matched thirty-workflow sweep
 
-- [Current aggregate speedups, logarithmic view](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), using the same thirty workflows as main Figure 6 and the paired-runtime continuation of Supplementary Figure 6.
+- [Qualified full record and clock policy](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/README.md), with the [seven-configuration protocol](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json).
+- [Single-sample execution and total, linear](../figures/slas/benchmark-publication/measured_benchmark_publication.png) and [logarithmic](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), with [manuscript numerical claims](../figures/slas/benchmark-publication/benchmark_claims.json).
+- May execution speedups: [linear](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv).
+- May total speedups: [linear](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
+- Actual fixed-twelve execution scaling: [linear](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/execution/efficiency/derived_workflow_metrics.csv).
+- Actual fixed-twelve total scaling: [linear](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/total/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/total/efficiency/derived_workflow_metrics.csv).
+- [Actual one/eight-assignment native calibration](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/native-full30-calibration/README.md), [calibration table](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [projection validation](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/calibration/cold_first/cold-first-model-validation.json).
+
+All thirty workflows pass output parity. CP1/CP8 references remain actual
+first-batch observations; CP12/CP16 remain explicitly projected and retain zero
+actual target native observations. Native calibration differs in allowed CPU
+counts between the one- and eight-assignment captures; the projection check
+covers three workflows and is not full-cohort measured validation. The record
+preserves signed within-session and cross-session errors. All OpenHCS scaling
+ratios use actual, same-workload medians. No historical RAM values fill the
+unavailable process-tree RAM field.
+
+### Retained historical panels and numerical tables
+
+
+- [Prior thirty-workflow matched record](../../benchmark/results/matched_min3_integrated_main_20261007/README.md), retaining its original engine-median timing policy separately from the current first-use sweep.
+- [Prior paired runtime panel](../figures/slas/benchmark-publication/measured_benchmark_workflow_runtimes.png), a historical snapshot rather than the timing source for current main Figure 6.
 - [Every plotted assignment-count observation](../figures/slas/benchmark-publication/assignments/assignment_total_speedups.csv), including exact source revision, worker count, native and OpenHCS total clocks and their ratio.
 - [Eight-assignment measured source record](../../benchmark/results/official30_matched_20261006/README.md), including the matched one-process baseline used for the two-worker comparison.
 - [Retained nine- and sixteen-assignment paired clock panels](../figures/slas/supp_matched_scaling.png), with the original separate capture heads.

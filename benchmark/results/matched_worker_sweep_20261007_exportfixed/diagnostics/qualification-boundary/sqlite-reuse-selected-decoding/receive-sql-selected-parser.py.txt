@@ -1,0 +1,46 @@
+"""Saved D06 SQLite parser admission; process-CPU diagnostic, no scientific jobs."""
+import gzip,hashlib,inspect,json,os,pickle,sys,time
+from collections import Counter
+from pathlib import Path
+root=Path(__file__).parent
+production=Path('/home/ts/code/projects/openhcs-cp-registry-control')
+artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002')
+sys.path.insert(0,str(production))
+import openhcs,benchmark
+benchmark.__path__[:0]=[str(root/'sqlite-select-overlay/benchmark'),str(artifact/'benchmark')]
+from benchmark.cellprofiler_export_equivalence import _sqlite_tables,_declared_sqlite_table_subjects,CellProfilerRelationshipProjectionName
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
+case=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final')
+with gzip.open(case/'candidate_evidence/0/observation.pkl','rb') as stream: observation=pickle.load(stream)
+exports=observation.exports
+paths=tuple(p for p in exports.output_files if p.suffix=='.db')
+assert len(paths)==1
+path=paths[0]
+subjects=_declared_sqlite_table_subjects(tuple(p for p in exports.output_files if p.suffix=='.properties'))[path.name]
+policy=_strict_cellprofiler_runtime_equivalence_policy()
+axis_numbers=exports.outputs.image_numbers_by_export_path[path]
+domain=tuple(n for numbers in axis_numbers.values() for n in numbers)
+def price(call):
+ wall=time.perf_counter();cpu=time.process_time();value=call()
+ return value,{'wall_seconds':time.perf_counter()-wall,'process_cpu_seconds':time.process_time()-cpu}
+def scoped(tables,numbers):
+ offset=RuntimeImageNumberOffset.from_table_rows(('image_number',),tuple((str(n),) for n in numbers))
+ return {name:(schema,table.for_image_numbers(numbers,dialect=policy.measurement_dialect,image_identity_fields=CellProfilerRelationshipProjectionName.image_identity_fields(name),image_number_domain=domain,image_number_offset=offset if name not in subjects else None)) for name,(schema,table) in tables.items()}
+full,full_price=price(lambda:_sqlite_tables(path,subjects,policy))
+results={}
+for axis in ('W001','W002'):
+ numbers=axis_numbers[axis]
+ old,old_price=price(lambda:scoped(full,numbers))
+ selected,selected_price=price(lambda:scoped(_sqlite_tables(path,subjects,policy,image_numbers=numbers,image_number_domain=domain),numbers))
+ assert old.keys()==selected.keys()
+ inventory={}
+ for name in old:
+  oldschema,oldt=old[name];newschema,newt=selected[name]
+  assert oldschema==newschema and oldt.header==newt.header and oldt.column_context==newt.column_context
+  assert Counter(oldt.rows)==Counter(newt.rows)
+  inventory[name]={'row_count':len(oldt.rows),'column_count':len(oldt.header),'ordered_rows_equal':oldt.rows==newt.rows}
+ results[axis]={'numbers':numbers,'legacy_axis_filter':old_price,'select_with_whole_domain_guard_and_filter':selected_price,'tables':inventory,'full_raw_rows_exact':True}
+proof={'status':'PASS','scope':'DIAGNOSTIC_ONLY CPU0 during active science suite, process CPU isolates contention; no pipeline headline','production_root':str(production),'production_module':openhcs.__file__,'comparer_path':inspect.getsourcefile(_sqlite_tables),'comparer_sha256':hashlib.sha256(Path(inspect.getsourcefile(_sqlite_tables)).read_bytes()).hexdigest(),'candidate_database_path':str(path),'candidate_database_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'unfiltered_whole_database':full_price,'results':results,'semantic_guard':'Full DISTINCT image-ID tuples pass existing RuntimeTableSnapshot.for_image_numbers before selected wide query; caller retains original offset/scoping. Every table raw row multiplicity, schema, header, column context matches legacy scoped parse.'}
+(root/'sqlite-select-parser-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+print(json.dumps({'status':'PASS','whole_database':full_price,'selected':{k:v['select_with_whole_domain_guard_and_filter'] for k,v in results.items()}}))

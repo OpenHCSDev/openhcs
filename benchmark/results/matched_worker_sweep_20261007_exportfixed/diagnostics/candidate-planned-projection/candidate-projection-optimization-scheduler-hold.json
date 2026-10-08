@@ -1,0 +1,10 @@
+{
+  "utc": "2026-10-07T22:35:05.932974+00:00",
+  "scheduler_pid": 2546893,
+  "scheduler_command": "/home/ts/code/projects/openhcs/.venv/bin/python -B /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/run-revised-sweep.py --plan /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v5/protocol-manifest.json ",
+  "signal": "SIGSTOP",
+  "capture_driver_pid": 2547405,
+  "capture_continues": true,
+  "reason": "Hold only scheduler before next configuration for source-sealed candidate-projection optimization boundary. Current capture source and execution remain untouched.",
+  "process_state": "    PID STAT     ELAPSED     TIME\n2546893 Ts         56:00 00:00:00\n2547405 Sl         55:55 00:03:37\n"
+}

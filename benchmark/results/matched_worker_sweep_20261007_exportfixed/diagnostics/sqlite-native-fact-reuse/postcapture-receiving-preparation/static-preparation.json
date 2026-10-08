@@ -1,0 +1,221 @@
+{
+  "status": "STATIC_PREPARATION_ONLY_NOT_EXECUTED",
+  "production_head": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "artifact_head": "1d0a35977af843fd5e0e8dbd60ebc5a3ac5d8d83",
+  "current_preimage_sha256": {
+    "benchmark/native_measurement_facts.py": "f84ad9886ae7fafd3cf5679ce71d12e065db990a8fff9fddb164a15c22f2e39b",
+    "benchmark/cellprofiler_export_equivalence.py": "8cfc16945a9a0c5aad971199005799214a01ff2565c7ff8ee18631ea2ecba77c",
+    "benchmark/matched_cellprofiler_batch.py": "1b0d0687f3af7eebfdb5a0cfeaef0fc6401a3292a87bc48cd56e557d7e0a1153"
+  },
+  "patch_path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/sqlite-native-fact-reuse/sqlite-fact-reuse.patch",
+  "patch_sha256": "4a800f17ca5a0784f03316df89539d1b51243d436d2deaef27f6b4cd99442353",
+  "patch_applies_current_driver": true,
+  "script_sha256": "f09bd3bd9b8b30babd8a81da72a518aae37b0b9a1cb602dd4551dc7e14e6468d",
+  "script_ast_syntax": "PASS",
+  "existing_owners_ast_inventory": {
+    "benchmark/native_measurement_facts.py": [
+      {
+        "name": "_policy_identity",
+        "line": 23
+      },
+      {
+        "name": "retained_native_measurement_snapshot",
+        "line": 84
+      }
+    ],
+    "benchmark/cellprofiler_export_equivalence.py": [
+      {
+        "name": "cellprofiler_database_export_equivalence",
+        "line": 49
+      },
+      {
+        "name": "cellprofiler_native_shard_equivalence",
+        "line": 92
+      },
+      {
+        "name": "_native_sqlite_shard_differences",
+        "line": 217
+      },
+      {
+        "name": "_outputs_with_suffix",
+        "line": 290
+      },
+      {
+        "name": "_declared_sqlite_paths",
+        "line": 297
+      },
+      {
+        "name": "_sqlite_export_equivalence",
+        "line": 311
+      },
+      {
+        "name": "_sqlite_database_differences",
+        "line": 361
+      },
+      {
+        "name": "_sqlite_table_value_differences",
+        "line": 458
+      },
+      {
+        "name": "_sqlite_measurement_cohort_differences",
+        "line": 492
+      },
+      {
+        "name": "_sqlite_tables",
+        "line": 508
+      },
+      {
+        "name": "_declared_sqlite_table_subjects",
+        "line": 596
+      },
+      {
+        "name": "_declared_sqlite_partition_tables",
+        "line": 635
+      },
+      {
+        "name": "_quote_sqlite_identifier",
+        "line": 664
+      },
+      {
+        "name": "_sqlite_cell_text",
+        "line": 668
+      },
+      {
+        "name": "_normalized_sqlite_row",
+        "line": 676
+      },
+      {
+        "name": "_properties_export_equivalence",
+        "line": 703
+      },
+      {
+        "name": "_read_cpa_properties",
+        "line": 745
+      },
+      {
+        "name": "_normalized_cpa_property_value",
+        "line": 756
+      },
+      {
+        "name": "_named_output_differences",
+        "line": 764
+      },
+      {
+        "name": "_unique_paths_by_name",
+        "line": 791
+      },
+      {
+        "name": "_workspace_export_equivalence",
+        "line": 806
+      }
+    ],
+    "benchmark/matched_cellprofiler_batch.py": [
+      {
+        "name": "_parser",
+        "line": 121
+      },
+      {
+        "name": "_select_genuine_wells",
+        "line": 185
+      },
+      {
+        "name": "_output_inventory",
+        "line": 215
+      },
+      {
+        "name": "_source_input_inventory",
+        "line": 225
+      },
+      {
+        "name": "_require_compared_output_inventory",
+        "line": 246
+      },
+      {
+        "name": "_saved_output_equivalence",
+        "line": 352
+      },
+      {
+        "name": "_native_python_executable",
+        "line": 434
+      },
+      {
+        "name": "_invoke_native_worker",
+        "line": 447
+      },
+      {
+        "name": "_probe_native_environment",
+        "line": 494
+      },
+      {
+        "name": "_native_reference_inventory",
+        "line": 512
+      },
+      {
+        "name": "_native_shard_requests",
+        "line": 518
+      },
+      {
+        "name": "_validate_native_shard_reports",
+        "line": 563
+      },
+      {
+        "name": "_concurrent_timing",
+        "line": 619
+      },
+      {
+        "name": "_native_shard_equivalence",
+        "line": 653
+      },
+      {
+        "name": "_reuse_native_report",
+        "line": 725
+      },
+      {
+        "name": "_reuse_native_projection_source",
+        "line": 839
+      },
+      {
+        "name": "_reuse_native_shard_reports",
+        "line": 881
+      },
+      {
+        "name": "_require_native_reference_unchanged",
+        "line": 926
+      },
+      {
+        "name": "_worker_axis_evidence",
+        "line": 963
+      },
+      {
+        "name": "_global_config",
+        "line": 1023
+      },
+      {
+        "name": "_candidate_pipeline_config",
+        "line": 1046
+      },
+      {
+        "name": "main",
+        "line": 1072
+      },
+      {
+        "name": "_run_case",
+        "line": 1137
+      },
+      {
+        "name": "capture_progress_event",
+        "line": 1494
+      }
+    ]
+  },
+  "static_semantic_obligations": [
+    "Native cache source identity must include actual SQL producer plus CPA-derived nominal subjects; patch binds tuple(_sqlite_tables,reference_subjects) through existing _policy_identity.",
+    "SQL parser, schema/raw/cardinality/CPA/workspace/relationship checks remain unchanged and fresh. Native semantic projection alone restored; candidate facts remain fresh.",
+    "New helper identity field invalidates historical CSV cache keys; expected one-time cache warm cost, deploy only after complete captured protocol.",
+    "NativeBatchReport is actual retained67; receiving comparator source must be actual D06, expressly distinct. Existing strict report/source/output inventory admission is unchanged in driver.",
+    "Current API signatures have no conflict with twofork comparison_tasks/CLI; optional cache fields defaultNone preserve direct callers/native-shard comparator.",
+    "Baseline raw JSON compared_output_files is authoritative unordered frozenset display; normalize only this declared set, every other full field exact."
+  ],
+  "production_consumer_plan": "After all7 official captures finish: root applies existing3-file patch to same artifact checkout, runs future-command.txt on CPU0/private cache, admits exact full results+native numeric/correlated equality, then commits ownedfiles+proof with issue1100 on existingPR before merge. No source/env/dependency changes now.",
+  "payoff_scope": "Earlier~42min futurefive-mode extrapolation is benchmark qualification/collection overhead only, not scientific pipeline headline speedup. Historical SQL proof used core67; final real D06 receiving remains pending."
+}

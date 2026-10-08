@@ -1,0 +1,2459 @@
+{
+  "scope": "DIAGNOSTIC_ONLY read-only envelope identities, no numerical payload unpickle or pipeline/science replay",
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/qualification-reuse-main-12assignments-3workers/capture/cases/cp_tutorial_advanced_segmentation_final/report.json",
+  "report_sha256": "83330cca3ab12831481aa70b01be6223cf15145be4b809dc68ae6cd1f76ace4c",
+  "native_report_sha256": "b09bfc05ef1ee6629c62f65a817d32b00216c05d216707ff9a5ce745bdae31d4",
+  "scanned_header_count": 1633,
+  "current_driver_sha256": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+  "current_SQL_identity_count": 32,
+  "native_physical_DB_count": 32,
+  "native_DB_distinct_SHA_count": 32,
+  "physical_repetitions": [
+    -1,
+    0,
+    1,
+    2
+  ],
+  "reference_assignments": 8,
+  "candidate_assignments": 12,
+  "new_mode_expected_per_repetition": {
+    "first_time_reference_misses": 8,
+    "cycled_reference_hits": 4
+  },
+  "subsequent_modes_expected": "All32 existing source-native facts admissible if source/policy/comparison hashes unchanged; fresh candidate facts remain mandatory",
+  "entries": [
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/71f1d7e32d56a3f6ae86a181c61980d5b021dff44cb0409a53ed6a0463c27e8c.pkl",
+      "cache_identity_sha256": "71f1d7e32d56a3f6ae86a181c61980d5b021dff44cb0409a53ed6a0463c27e8c",
+      "file_mtime": 1791409427.4015794,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W005/BBBC022.db",
+      "reference_database_sha256": "c0513d4f3d83f92aa119006a6ebac2ab050c75dfda9d52664f1f89f6e5c1981c",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/068e1dbf897a48e2de527842295cefea81ecf6d0c4edf8c873d02cff1af96fcf.pkl",
+      "cache_identity_sha256": "068e1dbf897a48e2de527842295cefea81ecf6d0c4edf8c873d02cff1af96fcf",
+      "file_mtime": 1791409758.6026883,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W001/BBBC022.db",
+      "reference_database_sha256": "7e2f5dc95771bda22bf490a56197318917a00341a0ba147f0723cdb328111ff6",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/8cf171ff833c89b3e4c27ea0b7dd391386817acfb88260df85b0b5c456501938.pkl",
+      "cache_identity_sha256": "8cf171ff833c89b3e4c27ea0b7dd391386817acfb88260df85b0b5c456501938",
+      "file_mtime": 1791409514.832399,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022.db",
+      "reference_database_sha256": "578402efde6527d4c2d899db5efbf84f7a39cd9951a479096f71bbab05928d02",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/8a113800d4273e3e4e88a6414de856c0b6273ad7055e1263ce5b7a207597243c.pkl",
+      "cache_identity_sha256": "8a113800d4273e3e4e88a6414de856c0b6273ad7055e1263ce5b7a207597243c",
+      "file_mtime": 1791409774.4231584,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W003/BBBC022.db",
+      "reference_database_sha256": "2b449147970c3fedfae9042e67adb85d2ca22ddea4c9adbf6186c9b8edda5709",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/1e695ef51ef957455a804974971367a50f01af5d1ce314fdca0591580790988f.pkl",
+      "cache_identity_sha256": "1e695ef51ef957455a804974971367a50f01af5d1ce314fdca0591580790988f",
+      "file_mtime": 1791409807.4206872,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W008/BBBC022.db",
+      "reference_database_sha256": "6295c20dff3e2f031a63e0b9347094e83a6050d56094386613c0cba341be1b86",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/6483ed9be1402a5ad0000b626b5e61adfdca6a6c733856ec7fcdb583e3ee8123.pkl",
+      "cache_identity_sha256": "6483ed9be1402a5ad0000b626b5e61adfdca6a6c733856ec7fcdb583e3ee8123",
+      "file_mtime": 1791409411.049101,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W003/BBBC022.db",
+      "reference_database_sha256": "ffd1d889e3447acee53c9982426cf949644b393c23e9a92e6edee5a0e78109f8",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/08e569b14b45cdc40ccab4720a7edc6c6917a5dc4c1873ca2254a3b949e5172f.pkl",
+      "cache_identity_sha256": "08e569b14b45cdc40ccab4720a7edc6c6917a5dc4c1873ca2254a3b949e5172f",
+      "file_mtime": 1791409636.0841987,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W001/BBBC022.db",
+      "reference_database_sha256": "92fceca9f63de9345a87c0c0394c2bb4e2cd7ecf719c46ee66bdb17c84b256db",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/e3638571b8cd593902670aa015e3a19a10a8c61b9660c875dd960b6f52fc3e23.pkl",
+      "cache_identity_sha256": "e3638571b8cd593902670aa015e3a19a10a8c61b9660c875dd960b6f52fc3e23",
+      "file_mtime": 1791409530.1484792,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W003/BBBC022.db",
+      "reference_database_sha256": "235a3523666414235124f8c078eef17a0aa91bd32a3a527adb43e153dfe4a4b2",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/caf372bb430ba00686dada6b241c3328b948e73c76b30ba4b1b852d1261bf9ab.pkl",
+      "cache_identity_sha256": "caf372bb430ba00686dada6b241c3328b948e73c76b30ba4b1b852d1261bf9ab",
+      "file_mtime": 1791409774.738401,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W004/BBBC022.db",
+      "reference_database_sha256": "34b2ca1ec969cb16be7642bffaf10b7c8608d2187db4c4887635494ad4249106",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/a1df0edc2607fe2787b1cd66a753e623b1ade69482da3bf5a71fea55a67abe06.pkl",
+      "cache_identity_sha256": "a1df0edc2607fe2787b1cd66a753e623b1ade69482da3bf5a71fea55a67abe06",
+      "file_mtime": 1791409562.5891988,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W007/BBBC022.db",
+      "reference_database_sha256": "eca32d9eedd19b7e43e2289743753cc44154d632b84d333241300e1ee08abe53",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/a6f9bfc6d5241dfe50b3441fbd2ebac66cda30656c1586d52fbb6519fa8c3553.pkl",
+      "cache_identity_sha256": "a6f9bfc6d5241dfe50b3441fbd2ebac66cda30656c1586d52fbb6519fa8c3553",
+      "file_mtime": 1791409651.9524243,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W003/BBBC022.db",
+      "reference_database_sha256": "6b77ce534e22477e9b262d56d1afd6d43de880b1b76803049cdcbc2013238e9a",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/e6d253023d74396843b665adf3ecfde2b8441fe69b0a5f5384fbd6fc57819cf6.pkl",
+      "cache_identity_sha256": "e6d253023d74396843b665adf3ecfde2b8441fe69b0a5f5384fbd6fc57819cf6",
+      "file_mtime": 1791409684.7006938,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W007/BBBC022.db",
+      "reference_database_sha256": "a8e0af0c2ce3eab252e7fdf97367246e8111596d42c08dae74df538497fa0799",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/6b2d94cd408bf835abd4f804912a839fd00bf2b7798c9469456b9395decdd8d6.pkl",
+      "cache_identity_sha256": "6b2d94cd408bf835abd4f804912a839fd00bf2b7798c9469456b9395decdd8d6",
+      "file_mtime": 1791409395.6189096,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W002/BBBC022.db",
+      "reference_database_sha256": "de9b49f95c807e4e33728ebc46bd60d587090994e8d8c170edd15d43d90c1c50",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/6f886f8e2ee210c4a715a8db397b398ffc67c88c7c57df36d8a42ed3fa906341.pkl",
+      "cache_identity_sha256": "6f886f8e2ee210c4a715a8db397b398ffc67c88c7c57df36d8a42ed3fa906341",
+      "file_mtime": 1791409565.3527753,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W008/BBBC022.db",
+      "reference_database_sha256": "42ee5e69442028f598d8ed6471b56d609f980fa34d13a0552d941e2bcec27dc9",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/f422e8398206c9d2eedde72c245a306cd711af2c18639df95084d67aa67828f1.pkl",
+      "cache_identity_sha256": "f422e8398206c9d2eedde72c245a306cd711af2c18639df95084d67aa67828f1",
+      "file_mtime": 1791409791.0414023,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W006/BBBC022.db",
+      "reference_database_sha256": "8e07451149334f8018fa30a900cf09bfa0991adb79bc98b4bdaac8e871d635c3",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/36863f0a12db599c4c829ab00a1a36c92351a47c286f4845b0e94856a3d142e4.pkl",
+      "cache_identity_sha256": "36863f0a12db599c4c829ab00a1a36c92351a47c286f4845b0e94856a3d142e4",
+      "file_mtime": 1791409668.2750657,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W005/BBBC022.db",
+      "reference_database_sha256": "d1cd7bb549a5f1bc3d3feb986e551fd77c4c27edb62586b45d2acd3cdb951455",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/8c43a91091977c848685a48555de8c9d373b1beaf01288e25c22cc13a2ca310c.pkl",
+      "cache_identity_sha256": "8c43a91091977c848685a48555de8c9d373b1beaf01288e25c22cc13a2ca310c",
+      "file_mtime": 1791409395.4467945,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W001/BBBC022.db",
+      "reference_database_sha256": "d82301a86be61577cd2abae60f5db9688a2bf3da36419c18e2366bd179738167",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/89598c42fb4089c7cdee5cfeef4b5bdb1396d61477b1127226c06eafa6ba0cd5.pkl",
+      "cache_identity_sha256": "89598c42fb4089c7cdee5cfeef4b5bdb1396d61477b1127226c06eafa6ba0cd5",
+      "file_mtime": 1791409548.8194072,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W006/BBBC022.db",
+      "reference_database_sha256": "0d847785cf55a9080c93999c603100f131bc75c018a707e1ba385c84abd8729a",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/8b9a6bffbdf123efe6d11c138fd88a178394272beaab2e2e54347fb7601bfe0d.pkl",
+      "cache_identity_sha256": "8b9a6bffbdf123efe6d11c138fd88a178394272beaab2e2e54347fb7601bfe0d",
+      "file_mtime": 1791409411.6948328,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W004/BBBC022.db",
+      "reference_database_sha256": "81df4b69e8bafdf27cd13f4a5e4c9b08cd1574e86dd5cc37ee498f9d10bdba99",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/3d1847fdfbe9590251f7be861b38c53c57f9b4fce18e114e4ef7d2ff46345b11.pkl",
+      "cache_identity_sha256": "3d1847fdfbe9590251f7be861b38c53c57f9b4fce18e114e4ef7d2ff46345b11",
+      "file_mtime": 1791409790.5909686,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W005/BBBC022.db",
+      "reference_database_sha256": "ac898337d656dcc7f81d3fe8f0546e583659ec026631189e60d3842e5ed8d03b",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/bdc9a9871dbb53596656976c43e27b8152438b9f3913f2e718a9689ed41de926.pkl",
+      "cache_identity_sha256": "bdc9a9871dbb53596656976c43e27b8152438b9f3913f2e718a9689ed41de926",
+      "file_mtime": 1791409686.9637008,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W008/BBBC022.db",
+      "reference_database_sha256": "f250253f0a55bd00afe8168be0ae5ac3f17fba5314fd227ed2d9b07ee3d4566b",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/521a63a5dd12c8cd68ff62f951dbbe4f30a4ae1bff0e043bd73785f0ae6e1029.pkl",
+      "cache_identity_sha256": "521a63a5dd12c8cd68ff62f951dbbe4f30a4ae1bff0e043bd73785f0ae6e1029",
+      "file_mtime": 1791409443.9355006,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W007/BBBC022.db",
+      "reference_database_sha256": "6bc7926807b1ea002aeb40b33fc5d3e14bb1a1f38bc4980c86e6bd6faee54c63",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/50b20cde491413d35ce5cc21e497e2a46bb3db9cbe3590b11b8bd89abf12d80f.pkl",
+      "cache_identity_sha256": "50b20cde491413d35ce5cc21e497e2a46bb3db9cbe3590b11b8bd89abf12d80f",
+      "file_mtime": 1791409531.7727153,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W004/BBBC022.db",
+      "reference_database_sha256": "10ec2464febdbd5b2630c7ec2f037e199396bd898e63129542f82ceb11cd2334",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/678d67a3b980688b0f37bcadbe6c17a3eb5e9a63a96247eb471be4a4ecf810a0.pkl",
+      "cache_identity_sha256": "678d67a3b980688b0f37bcadbe6c17a3eb5e9a63a96247eb471be4a4ecf810a0",
+      "file_mtime": 1791409758.0935206,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W002/BBBC022.db",
+      "reference_database_sha256": "ec3849615ef6dd96ee2cbfb9689e1f8684c76a3f3d4ae5f79b98e348db173fc2",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/a7b891fd04bf86ec45bb39eaba6a3502733ddf69ebff695e42bdc66188740d7f.pkl",
+      "cache_identity_sha256": "a7b891fd04bf86ec45bb39eaba6a3502733ddf69ebff695e42bdc66188740d7f",
+      "file_mtime": 1791409515.2721605,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W002/BBBC022.db",
+      "reference_database_sha256": "fc7fb5004c404b80992a56ed0faded07eac3f1170da3a27ad60bffd9f8d35eb0",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/29f5df008d4adb11fe121e4f8e7418b49273eff1e0ec47668a6641ac836b590d.pkl",
+      "cache_identity_sha256": "29f5df008d4adb11fe121e4f8e7418b49273eff1e0ec47668a6641ac836b590d",
+      "file_mtime": 1791409636.3724694,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W002/BBBC022.db",
+      "reference_database_sha256": "bc71fa744a93d82a4596aea9923b848a2ec6ab614e054639992d6e15b382b936",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/eca6ec0433e9619e39b7be57a2f87a66254c592febfb4d6e55c635356cbe7bfe.pkl",
+      "cache_identity_sha256": "eca6ec0433e9619e39b7be57a2f87a66254c592febfb4d6e55c635356cbe7bfe",
+      "file_mtime": 1791409670.3107576,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W006/BBBC022.db",
+      "reference_database_sha256": "1fc235331f70c924809cea55d641448b86c0a9e3ac77f4297399ecdbb0f1d30d",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/f6b810a84a557bd97d51b49aa21b80a478004b4d04e203ff6afc8d90b9a915c1.pkl",
+      "cache_identity_sha256": "f6b810a84a557bd97d51b49aa21b80a478004b4d04e203ff6afc8d90b9a915c1",
+      "file_mtime": 1791409807.0221136,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/2/W007/BBBC022.db",
+      "reference_database_sha256": "64d838eb940ae11e23cf8cdcd5c16a6bbde44ae5c1e1eed9d629695de75dd69c",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/53cac2a7505634c25d1887e4a8e1253303c5d0e8f21e99d1272cb431fc4560b3.pkl",
+      "cache_identity_sha256": "53cac2a7505634c25d1887e4a8e1253303c5d0e8f21e99d1272cb431fc4560b3",
+      "file_mtime": 1791409653.616006,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/1/W004/BBBC022.db",
+      "reference_database_sha256": "d936cce7631cf67e5217cb9917da737b37d77a3633a5607a9926b3e80bb20e85",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/035f39ef47fed4db5fd75f9b7978161029edbe600c877a65ab37004c2fefad6c.pkl",
+      "cache_identity_sha256": "035f39ef47fed4db5fd75f9b7978161029edbe600c877a65ab37004c2fefad6c",
+      "file_mtime": 1791409546.4378922,
+      "file_size": 6313775,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W005/BBBC022.db",
+      "reference_database_sha256": "0d0e5fb8ff75257746167edce2f5b7b60bcba2004ba89a5d78c64472283496b4",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/642d76c2f7cf0f37bc6b496a40fe4715c4572cd4fa276fe2980bb8fcb288dc91.pkl",
+      "cache_identity_sha256": "642d76c2f7cf0f37bc6b496a40fe4715c4572cd4fa276fe2980bb8fcb288dc91",
+      "file_mtime": 1791409444.4448714,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W008/BBBC022.db",
+      "reference_database_sha256": "19099dde5e69b49ae0892eaa5768f4e52a59955f9fc694f8213eafebef540695",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    },
+    {
+      "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/native-measurement-facts/575e78991cea93df8ff8f0d76af383d29f2b308598c51ec811afff53a41cfabc.pkl",
+      "cache_identity_sha256": "575e78991cea93df8ff8f0d76af383d29f2b308598c51ec811afff53a41cfabc",
+      "file_mtime": 1791409428.1976569,
+      "file_size": 6313776,
+      "reference_database": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/-1/W006/BBBC022.db",
+      "reference_database_sha256": "eeb753a7c896c82cf78261af45a7fb864d669ee3512b2bd397b2f51627ebe080",
+      "comparison_sources": {
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61"
+      },
+      "production_source_commit": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+      "projection_sources": [
+        [
+          "openhcs.core.runtime_equivalence",
+          "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+        ],
+        [
+          "openhcs.core.equivalence.cells",
+          "70785cb4ce8a75f695d97f6c685a1816f715a1b3225382d1f8b4a9a9c707c5be"
+        ],
+        [
+          "openhcs.core.equivalence.keys",
+          "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_rows",
+          "1ff3f8bc56d537d797db93c130ad21e6fe201aa318c80eaaddb155233849f4f2"
+        ],
+        [
+          "openhcs.core.equivalence.policy",
+          "97981b468aab38f715bfc7f909e4c4e4eb69a13a6f0142a195de130b3b906e62"
+        ],
+        [
+          "openhcs.core.equivalence.tables",
+          "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_facts",
+          "bdf1eaa4d7c62c3eee24cfb63475bc45e1d3813a213b5004793613545adb1947"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_features",
+          "b0e1c3d3073d0af931f7acdede06102b7e493bf1e6825ee9cff41924dd59b021"
+        ],
+        [
+          "openhcs.core.equivalence.measurement_requirements",
+          "c8ae5999e47d7fdc81de1bcf92ab614e517580260188b9e6817f8eeb27d2a8bc"
+        ],
+        [
+          "openhcs.core.equivalence.object_label_measurements",
+          "fd42ae997e6893ed3f00b604b7c049cb2d2bc33ad3d9259c5c7cc9a6e7cae8ee"
+        ],
+        [
+          "openhcs.core.measurement_feature_queries",
+          "c4cefdadef775ec8c562352fd79d757e215bd1ae08684c1adb205f4293111f19"
+        ],
+        [
+          "openhcs.core.measurement_row_materialization",
+          "995d274b2d3d47694310b663248f238e93b5680e17ae8e1976af971ef1d05995"
+        ],
+        [
+          "openhcs.core.equivalence.relationships",
+          "dc84659edff1ba93a80fa3a71056bda0ab6f3e7a5f41b972d770aa61d467c88a"
+        ],
+        [
+          "openhcs.core.runtime_artifact_queries",
+          "5a81634ae04225af6a828d0305377291645445909b3efca349f87e0495df560c"
+        ],
+        [
+          "openhcs.core.runtime_measurements",
+          "cc0e0bf476da95899c038e60b8226839f0d5ac9b32a1936a697922fac04c82c7"
+        ]
+      ]
+    }
+  ],
+  "live_interval_correlation": [
+    {
+      "prior_repetition": -1,
+      "between_server_jobs_seconds": 89.66715931892395,
+      "prior_server_completed": 1791409384.91514,
+      "next_server_started": 1791409474.5822992,
+      "new_native_cache_entries": 8,
+      "cache_first_created_after_prior_completion_seconds": 10.531654596328735,
+      "cache_last_created_after_prior_completion_seconds": 59.5297315120697,
+      "all_eight_created_during_this_qualification_gap": true
+    },
+    {
+      "prior_repetition": 0,
+      "between_server_jobs_seconds": 91.50842046737671,
+      "prior_server_completed": 1791409504.326619,
+      "next_server_started": 1791409595.8350394,
+      "new_native_cache_entries": 8,
+      "cache_first_created_after_prior_completion_seconds": 10.50577998161316,
+      "cache_last_created_after_prior_completion_seconds": 61.026156425476074,
+      "all_eight_created_during_this_qualification_gap": true
+    },
+    {
+      "prior_repetition": 1,
+      "between_server_jobs_seconds": 91.90528154373169,
+      "prior_server_completed": 1791409625.5336022,
+      "next_server_started": 1791409717.4388838,
+      "new_native_cache_entries": 8,
+      "cache_first_created_after_prior_completion_seconds": 10.550596475601196,
+      "cache_last_created_after_prior_completion_seconds": 61.43009853363037,
+      "all_eight_created_during_this_qualification_gap": true
+    }
+  ],
+  "causal_limit": "Cache misses established from source identities and creation times, not clock instrumentation. CPU contention may contribute residual noise; no attribution claim for residual seconds."
+}

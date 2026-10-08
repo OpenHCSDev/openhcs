@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "scope": "Exact existing vs staged presence function bodies via AST receiving only; no science, no timing",
+  "value_cases": 105,
+  "covered": "None, empty/whitespace, all signed case variants of nan, nonnumeric text and invalid numeric spellings, bool/int, zero, infinity, mappings with missing children, empty/list/array shapes",
+  "functions": [
+    "runtime_measurement_cell_is_present",
+    "runtime_measurement_value_is_present"
+  ],
+  "nominal_metadata": "All RuntimeRowProjectionRecord constructors require explicit measured_object_anchor; the previously implicit directional-derived producer now computes it in its existing row context; no runtime fallback classifier"
+}

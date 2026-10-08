@@ -1,0 +1,27 @@
+{
+  "openhcs/core/equivalence/tables.py": {
+    "path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/tables.py",
+    "sha256": "29b297594f70a392b3fdccf04e35bb979e1e30e10ae2b9a5a9895ac92243b0bc",
+    "overlay_sha256": "135e7b6803c758c2e51504acaf18919fe79d27befab9f1a941b4a8bc7e3e9d2f"
+  },
+  "openhcs/core/runtime_equivalence.py": {
+    "path": "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/core/runtime_equivalence.py",
+    "sha256": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f",
+    "overlay_sha256": "c86aa57bcdd64a11984a7ef48090786d0a3966f42c1d59b4306791ad233165be"
+  },
+  "openhcs/core/equivalence/outputs.py": {
+    "path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/openhcs/core/equivalence/outputs.py",
+    "sha256": "735b07e177e474d964c20af4e1d3e2df0bba7c51ae4d13e41d0e0aa39474fa53",
+    "overlay_sha256": "8b03565e570d90fc5a5202318d220562cdf27b850ff112297ea677d7e9faebb5"
+  },
+  "benchmark/matched_cellprofiler_batch.py": {
+    "path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py",
+    "sha256": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+    "overlay_sha256": "0628f68628976386ed8eb8a123e4e14a18728f2efca01e8840060f1809469b1e"
+  },
+  "benchmark/cellprofiler_export_equivalence.py": {
+    "path": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/cellprofiler_export_equivalence.py",
+    "sha256": "3a8f5e0c01ab0f12c4a58e7cf8aad7e266c3846871da13216541fcb84720a8db",
+    "overlay_sha256": "192db2562215e1cf3c12925b00f396e067752b24ac2a4b21e5622c0a18606b23"
+  }
+}

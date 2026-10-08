@@ -5,31 +5,39 @@ This projection does not run benchmarks, change records, warm kernels or
 compile a function catalog. A qualified dated checkpoint is not automatically
 the final publication freeze.
 
-## Regenerate Figure 2 and the claim include
+## Regenerate Figure 6 and the claim include
 
-Use the existing figure script and installed numerical environment:
+The current benchmark owner is the frozen seven-mode protocol in
+`benchmark/results/matched_worker_sweep_20261007_exportfixed`. Its controller
+qualifies and archives all 30 workflows in each requested mode before rendering.
+All seven modes are qualified and archived for all thirty workflows; their figures and numerical include are generated from the complete admitted sweep.
+
+Use its existing renderer to produce the
+manuscript assets directly at the consumer path:
 
 ```sh
-python paper/figures/build_slas_benchmark.py \
-  --publication-record benchmark/results/matched_min3_integrated_main_20261007 \
-  --output-dir paper/figures/slas/benchmark-publication --frozen
+python benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/render_sweep.py \
+  --record benchmark/results/matched_worker_sweep_20261007_exportfixed \
+  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json \
+  --output-dir paper/figures/slas/benchmark-publication
 ```
 
-Without `--frozen`, the four numeric claims are `PENDING`. Add `--frozen` only
-after the benchmark owner explicitly identifies that exact record as final.
-The same command renders execution and total figures from the record's saved
-single-well summaries. It derives record name and production revision from the
-selected record and qualified custody, not the current figure-generator HEAD.
-It does not use the separately hand-written statistics JSON as input.
+The renderer validates qualified custody, source identities, all 30 workflow
+ratios, actual native references and the explicit twelve/sixteen-assignment
+projection before producing plots and the include. It uses the existing May
+figure style and summary authority. The older `build_slas_benchmark.py
+--publication-record` path selects older measured-median records and must not
+be used to reinterpret this first-batch sweep.
 
 The one include is `figures/slas/benchmark-publication/benchmark_claims.json`,
-relative to `paper/`. Its original figure receipt records both summary CSVs,
-custody and generator/summary-owner source hashes. The paired build observes
-and packages this include; changed active inputs require regeneration.
+relative to `paper/`. Numerical values, record name and source revision derive
+from the same qualified distributions as the figure. The renderer retains
+input/output hashes and source custody for the existing paper-build receipt
+consumer. No numerical values should be pasted into manuscript prose.
 
 ## Manuscript contract for the prose owner
 
-Use ordinary Pandoc spans in abstract, methods, results and Figure 2 caption:
+Use ordinary Pandoc spans in abstract, methods, results and the benchmark caption:
 
 ```markdown
 Execution speedup had minimum [pending]{.benchmark-claim key=execution_min}×
@@ -41,18 +49,20 @@ production source [pending]{.benchmark-claim key=source_revision},
 publication status [pending]{.benchmark-claim key=status}.
 ```
 
-`case_count` is also derived from the matched execution/total cohort.
-Final Figure 2 is one composite (A execution time, B compile-plus-run total),
-using the existing measured renderer. Paired bars show per-workflow median
-seconds; row annotations show the measured CellProfiler/OpenHCS ratios. The
-figure header retains the complete declared-output comparison count:
+`case_count` derives from the same thirty-workflow cohort. The main benchmark
+composite shows execution and compilation-plus-execution speedup distributions:
+arithmetic means, all workflow points and medians, in linear and logarithmic views.
+Its stable paths are
+`figures/slas/benchmark-publication/measured_benchmark_publication.png` and
+`figures/slas/benchmark-publication/measured_benchmark_publication_log.png`.
 
-* `figures/slas/benchmark-publication/measured_benchmark_publication.png`
-
-Separate clock panels are also retained at stable generated paths:
-
-* `figures/slas/benchmark-publication/execution/measured_execution_speedup_cumulative_distribution_log.png`
-* `figures/slas/benchmark-publication/total/measured_total_speedup_cumulative_distribution_log.png`
+CP1/CP8 use one genuine complete first batch each; OpenHCS uses the median of
+three measured repetitions after warmup. CP12/CP16 are explicitly projected from
+actual CP8 first and warm measurements, with zero native target observations.
+The fixed-twelve OpenHCS scaling controls are all measured. Server startup is
+excluded, and process-tree memory is unavailable. The separate native calibration
+retains the different CPU affinities and does not establish full30 projection
+accuracy at twelve/sixteen assignments.
 
 The manuscript remains the parent's sole prose source. Do not paste numerical
 claim values into it. `SlasDocumentBuilder` uses the shared paper-build/Pandoc

@@ -189,9 +189,10 @@ def _export_context() -> ProcessingContext:
     )
     context.plate_path = Path("/")
     context.microscope_handler = SimpleNamespace(
+        source_admission_config=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_metadata_document=lambda _plate_path: None
-        )
+        ),
     )
     return context
 
@@ -379,7 +380,11 @@ def test_save_images_file_measurement_output_and_rows_are_conditional() -> None:
         source_path="/input/DNA.png",
         source_image_names=("DNA",),
     ).payload_with(image, None)
-    contextualized = (ImageArtifactType if measurement_plan is None else measurement_plan.artifact_type).contextualize_output(source, rows, measurement_plan, None)
+    contextualized = (
+        ImageArtifactType
+        if measurement_plan is None
+        else measurement_plan.artifact_type
+    ).contextualize_output(source, rows, measurement_plan, None)
 
     assert isinstance(contextualized, MeasurementTable)
     assert contextualized.name == measurement.name

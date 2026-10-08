@@ -1,0 +1,23 @@
+{
+  "receive-candidate-planned.py.txt": "b54f90a0576dc5b83924988534bdaeaa78fe7bd9f2134ef90c5dd349186aa649",
+  "candidate-planned-grid-native-cold-price.json": "2d627d25b7e6b28ddabe95177f05e035a9485d6663269166f9020dd2ad1be0d0",
+  "measurement_facts.py.txt": "262a5d223f3925e41970fb132253cee9eb7c47e0bc4b1ce8edc895f2c6ef8f71",
+  "candidate-advanced-optimized-receipt.json": "e6b3caa268d6cfe01b156a2104cd9f8fc230ecc70f4097b096a81a06001d2a48",
+  "candidate-planned-projection.patch": "74a9fdf956236ceb0d1a15b0890dd4242c87b46ed793632f783879aa4119d7ef",
+  "prepare-candidate-planned.py.txt": "29cc414d8670f346c92eb67dbcc0f4cce07dba1af893ff6cb4093adfb5c0e0c5",
+  "price-planned-native-grid.py.txt": "cbcc68b7eda0c5dafb100da18d87fcde38b0b4f4a0dd0612c8c5a3a54b0f40cd",
+  "measurement_rows.py.txt": "6f5c39e10bd52dc0e82f059a3f9c702a475ae9e7858f1c5a5b4576be69b29659",
+  "candidate-presence-controls-proof.json": "cf3ef9d2fc4d1b2853e59c4e9c34900c94f493ee10e753c879a06a6b6639d105",
+  "candidate-planned-projection-proof.json": "fe133a0e21cf918e2dfa6ed8af22e6919d29a6a4d1130721969b955b121423ce",
+  "profile-fresh-candidate-scope.json": "078df1b8e73affc00aa5335db7d196d71846e02ed10ddea1d9c8aed6a4e015d6",
+  "candidate-planned-anchor-producer-inventory.json": "daab6ba739fed89c6b1ba6189506943541e2640d16d144925513481f64883e6c",
+  "candidate-original-receipt.json": "5f2e81ebc6d625dd2f12c41fdcd1c9a488f30ae8f5f1c82314ac27ca69b3ba02",
+  "cells.py.txt": "b5a6e479b5ef072d3f6803b888e4b171853509a68aadf0f930ecd96e0fd3d8f2",
+  "receive-candidate-presence-controls.py.txt": "e542591345259d415098caacfb39122bf698bee8090b87c7c51aebacafae8b5c",
+  "candidate-advanced-original-receipt.json": "cb13fce0458b821103cf08a47dc17f4f946b4146b6bd4e3bc773e6d50c0b29e0",
+  "candidate-planned-net-payoff.json": "1b217e45bd4ad1f0039f8ee7e186d8d1e0090bc843adac1531cff8e802d7d683",
+  "candidate-planned-advanced-proof.json": "e502ffde5f6a52c991184bc310173289b0eaf07d87227f295c984628dc9117c4",
+  "README.txt": "37fcfb239d90514a4a02b957c1fb0a4c1933aa85586e36be2723c82a84919cc0",
+  "receive-candidate-advanced.py.txt": "79746f7bfe42360fca1aadb726be39384860d243eecc344425824ddca229215f",
+  "candidate-planned-optimized-receipt.json": "cd8d6efc34ade2b7d622e7b39280e2c7212026df82b1327e09c808c8ce4ca9d6"
+}

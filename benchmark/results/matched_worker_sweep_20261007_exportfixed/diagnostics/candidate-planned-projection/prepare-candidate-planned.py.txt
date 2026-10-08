@@ -1,0 +1,51 @@
+"""Existing declarations become load bearing; only private copies change."""
+from pathlib import Path
+import shutil,ast
+root=Path(__file__).parent;old=root/'candidate-original-overlay';new=root/'candidate-planned-overlay';shutil.copytree(old,new,dirs_exist_ok=True,ignore=shutil.ignore_patterns('__pycache__'))
+p=new/'openhcs/core/equivalence/cells.py';s=p.read_text();start=s.index('def runtime_measurement_cell_is_present(');end=s.index('\n\ndef runtime_measurement_value_is_present',start);part=s[start:end]
+part=part.replace('''    if isinstance(value, (str, bool, int, float)):
+        text = str(value).strip()
+        if not text:
+            return False
+        numeric = runtime_numeric_text_value(text)
+        if numeric is None:
+            return True
+        return not math.isnan(numeric)
+''','''    if isinstance(value, str):
+        text = value.strip()
+        return bool(text) and text.lower() not in ("nan", "+nan", "-nan")
+    if isinstance(value, (bool, int)):
+        return True
+    if isinstance(value, float):
+        return not math.isnan(value)
+''',1)
+part=part.replace('''    numeric = runtime_numeric_text_value(text)
+    if numeric is None:
+        return True
+    return not math.isnan(numeric)
+''','''    return text.lower() not in ("nan", "+nan", "-nan")
+''',1)
+s=s[:start]+part+s[end:];ast.parse(s);p.write_text(s)
+p=new/'openhcs/core/equivalence/measurement_facts.py';s=p.read_text();s=s.replace('    measured_object_anchor: bool = False\n','    measured_object_anchor: bool\n',1);start=s.index('    def observed_padding_groups(');end=s.index('\n    @classmethod\n    def padding_group',start);part=s[start:end];part=part.replace('        policy: RuntimeEquivalencePolicy,\n','',1);part=part.replace('        anchor_key_cache: dict[RuntimeMeasurementFeatureKey, bool] = {}\n','');a=part.index('            is_anchor = anchor_key_cache.get(record.key)');b=part.index('            has_anchor.add(record.padding_group)',a);part=part[:a]+'''            if not record.measured_object_anchor:
+                continue
+'''+part[b:];s=s[:start]+part+s[end:]
+# Observation metadata is complete, so policy no longer flows through padding consumers.
+for name in ('observed_records','dedupe_observed_alias_records','dedupe_observed_records'):
+ a=s.index('    def '+name+'(');b=s.find('\n    @classmethod',a+10);b=len(s) if b<0 else b;part=s[a:b];part=part.replace('        policy: RuntimeEquivalencePolicy,\n','',1);part=part.replace('            materialized,\n            policy,\n','            materialized,\n');part=part.replace('cls.observed_records(records, policy)','cls.observed_records(records)');s=s[:a]+part+s[b:]
+s=s.replace('from openhcs.core.equivalence.measurement_features import (\n    object_measurement_feature_matches_marker,\n)\n','');s=s.replace('    MeasuredObjectAnchorFeatureMarker,\n','');ast.parse(s);p.write_text(s)
+p=new/'openhcs/core/equivalence/measurement_rows.py';s=p.read_text();s=s.replace('''                records,
+                self.policy,
+                declared_anchor_groups''','''                records,
+                declared_anchor_groups''',1)
+# The one derived producer previously omitted metadata; derive it at its existing context.
+a=s.index('        derived_facts = RuntimeDirectionalPairMeasurementDerivationContract(');b=s.index('\n    def numeric_values',a);part=s[a:b];part=part.replace('''                        key,
+                        value,
+                    )''','''                        key,
+                        value,
+                        self._measured_object_anchor(key),
+                    )''',1);s=s[:a]+part+s[b:]
+# Runtime cast does not need to construct a generic typing object per cell.
+s=s.replace('''                    RuntimeRowProjectionRecords[RuntimeRowProjectionValueT],''','''                    "RuntimeRowProjectionRecords[RuntimeRowProjectionValueT]",''');ast.parse(s);p.write_text(s)
+script=(root/'receive-candidate-recorder.py').read_text().replace("'candidate-recorder-overlay'","'candidate-planned-overlay'").replace("f'candidate-{mode}-", "f'candidate-planned-{mode}-")
+(root/'receive-candidate-planned.py').write_text(script)
+print(new)

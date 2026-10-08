@@ -1,0 +1,22 @@
+{
+  "status": "PREPARED_NOT_EXECUTED",
+  "production_consumer": "Existing CLI native-measurement cache for SQLite comparison, after complete frozen scientific capture",
+  "live_harness_unchanged": true,
+  "files": [
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/sqlite-native-fact-receiving-preparation-v2/receive-sqlite-after-capture.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/sqlite-native-fact-reuse/postcapture-receiving-preparation/receive-sqlite-after-capture.py.txt",
+      "sha256": "f09bd3bd9b8b30babd8a81da72a518aae37b0b9a1cb602dd4551dc7e14e6468d"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/sqlite-native-fact-receiving-preparation-v2/future-command.txt",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/sqlite-native-fact-reuse/postcapture-receiving-preparation/future-command.txt",
+      "sha256": "74231d9c86655f15db0249970112aa4f2a86480ee2853aada8883d70bc03fd86"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/sqlite-native-fact-receiving-preparation-v2/static-preparation.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/sqlite-native-fact-reuse/postcapture-receiving-preparation/static-preparation.json",
+      "sha256": "367bab21b6250b53b8221fe0229905e3484299a0c3bcf1f2f3c68bd9bae16b76"
+    }
+  ]
+}

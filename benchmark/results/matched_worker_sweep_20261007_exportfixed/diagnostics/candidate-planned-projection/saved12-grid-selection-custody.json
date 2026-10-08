@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "scope": "Read-only counterevidence; no further optimization promoted",
+  "files": [
+    {
+      "path": "saved12-grid-selection-proof.json",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/saved12-grid-selection-proof.json",
+      "sha256": "d6a5b554129e14b95ee59f4a06d5669d4d58f205dfc56d7ba34d5608ca7def2e"
+    },
+    {
+      "path": "count-saved12-grid-selection.py.txt",
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/count-saved12-grid-selection.py",
+      "sha256": "5ae242eeeb3528d66ad80baacfce8ec0404f85d060c81a3776ae6b446ca0cdb2"
+    }
+  ]
+}

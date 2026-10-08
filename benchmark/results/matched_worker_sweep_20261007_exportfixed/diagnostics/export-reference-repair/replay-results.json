@@ -1,0 +1,127 @@
+{
+  "saved_csv_rows": [
+    {
+      "axis": "W001",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    },
+    {
+      "axis": "W002",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    },
+    {
+      "axis": "W003",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    },
+    {
+      "axis": "W004",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    },
+    {
+      "axis": "W005",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    },
+    {
+      "axis": "W006",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    },
+    {
+      "axis": "W007",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    },
+    {
+      "axis": "W008",
+      "rows": 65,
+      "positive_references": 61,
+      "zero_references": 4,
+      "matches_native_local": true,
+      "projected_correct": true
+    }
+  ],
+  "controls": "PASS",
+  "raw_measurement_payload_retained": false,
+  "source_root": "/home/ts/code/projects/openhcs-cp-registry-control",
+  "genuine_reference_means": [
+    {
+      "axis": "W001",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    },
+    {
+      "axis": "W002",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    },
+    {
+      "axis": "W003",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    },
+    {
+      "axis": "W004",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    },
+    {
+      "axis": "W005",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    },
+    {
+      "axis": "W006",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    },
+    {
+      "axis": "W007",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    },
+    {
+      "axis": "W008",
+      "image_rows": 21,
+      "global_means_exact": true,
+      "zero_mixed_rows": 0
+    }
+  ],
+  "genuine_concatenated_carrier": {
+    "axis": "W008",
+    "rows": 65,
+    "exact_reference_projection": true,
+    "nominal_domain_preserved": true
+  }
+}

@@ -1,0 +1,7 @@
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 taskset -c 0 /home/ts/code/projects/openhcs/.venv/bin/python /home/ts/.local/state/openhcs-maintenance/20261007/sqlite-native-fact-receiving-preparation-v2/receive-sqlite-after-capture.py \
+  --production-root /home/ts/code/projects/openhcs-cp-registry-control \
+  --benchmark-root /home/ts/code/projects/openhcs-cohort-qualification-main429-20261002 \
+  --candidate-case-root /home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final \
+  --native-case-root /home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final \
+  --baseline-results /home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-cp_tutorial_advanced_segmentation_final-results.json \
+  --output-dir /home/ts/.local/state/openhcs-maintenance/20261007/sqlite-native-fact-actual-D06-receiving-v1

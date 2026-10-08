@@ -1701,7 +1701,11 @@ RuntimeMeasurementFactCachePayload = tuple[
 
 
 RuntimeRelationshipCorrelationCachePayload = tuple[
-    tuple[RuntimeMeasurementFeatureCachePayload, tuple[tuple[tuple[int, int | None], tuple[int, int | None]], ...], int | None],
+    tuple[
+        RuntimeMeasurementFeatureCachePayload,
+        tuple[tuple[tuple[int, int | None], tuple[int, int | None]], ...],
+        int | None,
+    ],
     ...,
 ]
 RuntimeMeasurementSnapshotCachePayload = tuple[
@@ -1728,14 +1732,90 @@ class RuntimeMeasurementSnapshot:
         known_source_names: tuple[str, ...] = (),
     ) -> "RuntimeMeasurementSnapshot":
         """Project exported tables into semantic measurement facts."""
-        state = RuntimeMeasurementProjectionState(
-            policy=policy,
-            known_source_names=known_source_names,
-        )
         tables, image_offset = (
             ExportedRelationshipMeasurementSemantics.validated_output_tables(
                 snapshot.tables, policy
             )
+        )
+        return cls._from_scoped_output_tables(
+            tables,
+            image_offset,
+            policy=policy,
+            known_source_names=known_source_names,
+        )
+
+    @classmethod
+    def from_output_snapshots(
+        cls,
+        snapshots: tuple[RuntimeOutputSnapshot, ...],
+        *,
+        policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+        known_source_names: tuple[str, ...] = (),
+    ) -> tuple[RuntimeMeasurementSnapshot, ...]:
+        """Derive facts once per exact admitted joint input in one actual batch.
+
+        Every axis retains exact joint-input admission. Heterogeneous inputs
+        derive independent facts. No state survives this call or changes tolerances.
+        """
+        admitted = []
+        results = []
+        for snapshot in snapshots:
+            image_offset = RuntimeImageNumberOffset(
+                RuntimeImageNumberOffset._offset_from_values(
+                    value
+                    for table in snapshot.tables
+                    if not ExportedRelationshipMeasurementSemantics.supports_table(
+                        table
+                    )
+                    for value in table.measurement_image_number_values(
+                        policy.measurement_dialect
+                    )
+                )
+            )
+            identity = tuple(
+                table.measurement_input_key(policy, image_offset)
+                for table in snapshot.tables
+            )
+            facts = next(
+                (facts for previous, facts in admitted if previous == identity), None
+            )
+            if facts is None:
+                tables, validated_offset = (
+                    ExportedRelationshipMeasurementSemantics.validated_output_tables(
+                        snapshot.tables, policy
+                    )
+                )
+                if validated_offset != image_offset:
+                    return tuple(
+                        cls.from_output_snapshot(
+                            item,
+                            policy=policy,
+                            known_source_names=known_source_names,
+                        )
+                        for item in snapshots
+                    )
+                facts = cls._from_scoped_output_tables(
+                    tables,
+                    image_offset,
+                    policy=policy,
+                    known_source_names=known_source_names,
+                )
+                admitted.append((identity, facts))
+            results.append(facts)
+        return tuple(results)
+
+    @classmethod
+    def _from_scoped_output_tables(
+        cls,
+        tables: tuple[RuntimeScopedMeasurementTable, ...],
+        image_offset: RuntimeImageNumberOffset,
+        *,
+        policy: RuntimeEquivalencePolicy,
+        known_source_names: tuple[str, ...],
+    ) -> RuntimeMeasurementSnapshot:
+        state = RuntimeMeasurementProjectionState(
+            policy=policy,
+            known_source_names=known_source_names,
         )
         correlations = (
             ExportedRelationshipMeasurementSemantics.correlated_object_relationships(

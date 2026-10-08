@@ -1,0 +1,415 @@
+{
+  "startup_seconds": 0.6083121211268008,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/outputs",
+    "expected_image_sets": null,
+    "repetitions": 1,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012",
+      "W013",
+      "W014",
+      "W015",
+      "W016"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/outputs/-1",
+      "image_set_count": 16,
+      "invocation_seconds": 7.206681238021702,
+      "pre_pipeline_seconds": 0.001612657681107521,
+      "pipeline_execution_seconds": 7.205068580340594,
+      "invocation_started_monotonic_seconds": 4178292.059183216,
+      "pipeline_started_monotonic_seconds": 4178292.060795874,
+      "completed_monotonic_seconds": 4178299.265864454,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ],
+        [
+          "W010",
+          1
+        ],
+        [
+          "W011",
+          1
+        ],
+        [
+          "W012",
+          1
+        ],
+        [
+          "W013",
+          1
+        ],
+        [
+          "W014",
+          1
+        ],
+        [
+          "W015",
+          1
+        ],
+        [
+          "W016",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/ExampleIlluminationCorrection_Example3/0/outputs/0",
+      "image_set_count": 16,
+      "invocation_seconds": 6.735562860034406,
+      "pre_pipeline_seconds": 0.0007262080907821655,
+      "pipeline_execution_seconds": 6.734836651943624,
+      "invocation_started_monotonic_seconds": 4178299.265875284,
+      "pipeline_started_monotonic_seconds": 4178299.266601492,
+      "completed_monotonic_seconds": 4178306.001438144,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ],
+        [
+          "W010",
+          1
+        ],
+        [
+          "W011",
+          1
+        ],
+        [
+          "W012",
+          1
+        ],
+        [
+          "W013",
+          1
+        ],
+        [
+          "W014",
+          1
+        ],
+        [
+          "W015",
+          1
+        ],
+        [
+          "W016",
+          1
+        ]
+      ]
+    }
+  ],
+  "diagnostic_assignment_timings": [
+    {
+      "repetition": -1,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4178292.060795874,
+          "completed_monotonic_seconds": 4178293.048620402,
+          "seconds": 0.9878245280124247
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4178293.048620402,
+          "completed_monotonic_seconds": 4178293.473207391,
+          "seconds": 0.4245869889855385
+        },
+        {
+          "assignment": "W003",
+          "started_monotonic_seconds": 4178293.473207391,
+          "completed_monotonic_seconds": 4178293.890886206,
+          "seconds": 0.4176788153126836
+        },
+        {
+          "assignment": "W004",
+          "started_monotonic_seconds": 4178293.890886206,
+          "completed_monotonic_seconds": 4178294.440074359,
+          "seconds": 0.5491881528869271
+        },
+        {
+          "assignment": "W005",
+          "started_monotonic_seconds": 4178294.440074359,
+          "completed_monotonic_seconds": 4178294.868627469,
+          "seconds": 0.4285531099885702
+        },
+        {
+          "assignment": "W006",
+          "started_monotonic_seconds": 4178294.868627469,
+          "completed_monotonic_seconds": 4178295.249812197,
+          "seconds": 0.38118472788482904
+        },
+        {
+          "assignment": "W007",
+          "started_monotonic_seconds": 4178295.249812197,
+          "completed_monotonic_seconds": 4178295.633230362,
+          "seconds": 0.38341816514730453
+        },
+        {
+          "assignment": "W008",
+          "started_monotonic_seconds": 4178295.633230362,
+          "completed_monotonic_seconds": 4178296.050675737,
+          "seconds": 0.4174453751184046
+        },
+        {
+          "assignment": "W009",
+          "started_monotonic_seconds": 4178296.050675737,
+          "completed_monotonic_seconds": 4178296.432089306,
+          "seconds": 0.38141356874257326
+        },
+        {
+          "assignment": "W010",
+          "started_monotonic_seconds": 4178296.432089306,
+          "completed_monotonic_seconds": 4178296.804865563,
+          "seconds": 0.3727762568742037
+        },
+        {
+          "assignment": "W011",
+          "started_monotonic_seconds": 4178296.804865563,
+          "completed_monotonic_seconds": 4178297.251843041,
+          "seconds": 0.44697747798636556
+        },
+        {
+          "assignment": "W012",
+          "started_monotonic_seconds": 4178297.251843041,
+          "completed_monotonic_seconds": 4178297.653155275,
+          "seconds": 0.4013122343458235
+        },
+        {
+          "assignment": "W013",
+          "started_monotonic_seconds": 4178297.653155275,
+          "completed_monotonic_seconds": 4178298.025812909,
+          "seconds": 0.3726576338522136
+        },
+        {
+          "assignment": "W014",
+          "started_monotonic_seconds": 4178298.025812909,
+          "completed_monotonic_seconds": 4178298.413665688,
+          "seconds": 0.3878527791239321
+        },
+        {
+          "assignment": "W015",
+          "started_monotonic_seconds": 4178298.413665688,
+          "completed_monotonic_seconds": 4178298.825491046,
+          "seconds": 0.4118253579363227
+        },
+        {
+          "assignment": "W016",
+          "started_monotonic_seconds": 4178298.825491046,
+          "completed_monotonic_seconds": 4178299.265860977,
+          "seconds": 0.44036993104964495
+        }
+      ]
+    },
+    {
+      "repetition": 0,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4178299.266601492,
+          "completed_monotonic_seconds": 4178299.658314553,
+          "seconds": 0.39171306090429425
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4178299.658314553,
+          "completed_monotonic_seconds": 4178300.070043479,
+          "seconds": 0.4117289260029793
+        },
+        {
+          "assignment": "W003",
+          "started_monotonic_seconds": 4178300.070043479,
+          "completed_monotonic_seconds": 4178300.541703394,
+          "seconds": 0.4716599150560796
+        },
+        {
+          "assignment": "W004",
+          "started_monotonic_seconds": 4178300.541703394,
+          "completed_monotonic_seconds": 4178300.976732935,
+          "seconds": 0.4350295406766236
+        },
+        {
+          "assignment": "W005",
+          "started_monotonic_seconds": 4178300.976732935,
+          "completed_monotonic_seconds": 4178301.433753191,
+          "seconds": 0.45702025620266795
+        },
+        {
+          "assignment": "W006",
+          "started_monotonic_seconds": 4178301.433753191,
+          "completed_monotonic_seconds": 4178301.909419143,
+          "seconds": 0.4756659520789981
+        },
+        {
+          "assignment": "W007",
+          "started_monotonic_seconds": 4178301.909419143,
+          "completed_monotonic_seconds": 4178302.310679599,
+          "seconds": 0.4012604560703039
+        },
+        {
+          "assignment": "W008",
+          "started_monotonic_seconds": 4178302.310679599,
+          "completed_monotonic_seconds": 4178302.69409072,
+          "seconds": 0.38341112062335014
+        },
+        {
+          "assignment": "W009",
+          "started_monotonic_seconds": 4178302.69409072,
+          "completed_monotonic_seconds": 4178303.089825928,
+          "seconds": 0.3957352084107697
+        },
+        {
+          "assignment": "W010",
+          "started_monotonic_seconds": 4178303.089825928,
+          "completed_monotonic_seconds": 4178303.498481144,
+          "seconds": 0.408655215986073
+        },
+        {
+          "assignment": "W011",
+          "started_monotonic_seconds": 4178303.498481144,
+          "completed_monotonic_seconds": 4178303.918425928,
+          "seconds": 0.4199447836726904
+        },
+        {
+          "assignment": "W012",
+          "started_monotonic_seconds": 4178303.918425928,
+          "completed_monotonic_seconds": 4178304.326416322,
+          "seconds": 0.4079903941601515
+        },
+        {
+          "assignment": "W013",
+          "started_monotonic_seconds": 4178304.326416322,
+          "completed_monotonic_seconds": 4178304.751407893,
+          "seconds": 0.4249915708787739
+        },
+        {
+          "assignment": "W014",
+          "started_monotonic_seconds": 4178304.751407893,
+          "completed_monotonic_seconds": 4178305.168608367,
+          "seconds": 0.41720047406852245
+        },
+        {
+          "assignment": "W015",
+          "started_monotonic_seconds": 4178305.168608367,
+          "completed_monotonic_seconds": 4178305.583349918,
+          "seconds": 0.4147415510378778
+        },
+        {
+          "assignment": "W016",
+          "started_monotonic_seconds": 4178305.583349918,
+          "completed_monotonic_seconds": 4178306.001435159,
+          "seconds": 0.4180852407589555
+        }
+      ]
+    }
+  ]
+}

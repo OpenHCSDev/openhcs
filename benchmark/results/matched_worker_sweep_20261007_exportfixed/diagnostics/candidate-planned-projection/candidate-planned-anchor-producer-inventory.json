@@ -1,0 +1,104 @@
+{
+  "scope": "AST all tracked Python files including tests in actualD06 and artifact checkout; no live edits",
+  "original_producer_calls": [
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1639,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1889,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1992,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1952,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1972,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1504,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1541,
+      "explicit_anchor": false
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cp-registry-control",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1941,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1639,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1889,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1992,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1952,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1972,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1504,
+      "explicit_anchor": true
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1541,
+      "explicit_anchor": false
+    },
+    {
+      "repository": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002",
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 1941,
+      "explicit_anchor": true
+    }
+  ],
+  "staged_producer_count": 8,
+  "all_staged_producers_have_explicit_anchor": true,
+  "migration": "Only directional-derived producer omitted anchor; staged existing row context now computes it. Constructor makes anchor required, consumer has no fallback classifier."
+}

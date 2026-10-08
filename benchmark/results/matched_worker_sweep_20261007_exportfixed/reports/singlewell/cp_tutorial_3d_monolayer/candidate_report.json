@@ -1,0 +1,554 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "7ccba3ba-a26c-4fd2-bd1d-46eba0c467ea",
+    "compile_artifact_id": "b2c5ed78-e0e1-4145-abfd-120fb6a12d5b",
+    "endpoint_pid": 1130214,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      1130214
+    ],
+    "worker_interval_overlap_seconds": 3.92935848236084,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791393276.438478,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791393280.3678365,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791393276.4097805,
+    "first_axis_started_at_epoch_seconds": 1791393276.438478,
+    "server_job_completed_at_epoch_seconds": 1791393280.4292014,
+    "server_job_seconds": 4.019420862197876,
+    "execution_seconds": 3.92935848236084,
+    "compile_seconds": 0.4796745777130127,
+    "total_seconds": 4.660825808998197,
+    "first_axis_through_server_completion_seconds": 3.9907233715057373,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "3d_monolayer_Cells.csv",
+        "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+      },
+      {
+        "path": "3d_monolayer_Experiment.csv",
+        "sha256": "1fa66799b6910a728ebacde979a9440c1e6bad9b3842f49f0f8541a7e86f2e72"
+      },
+      {
+        "path": "3d_monolayer_Image.csv",
+        "sha256": "884d1302e5fd891c0de94cb87fb05e0e57674c572a87a22d136437c92c87aecd"
+      },
+      {
+        "path": "3d_monolayer_Nuclei.csv",
+        "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+      },
+      {
+        "path": "3d_monolayer_downsizedNuclei.csv",
+        "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+      },
+      {
+        "path": "3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+      },
+      {
+        "path": "3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch0_CellsLabels.tiff",
+        "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+        "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w0_z001_t001_CellsLabels.tiff",
+        "sha256": "64e6fc421b929e67b440b8a7a14a0c36ed42a8d1831fd1a2685103ee18023471"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_NucleiLabels.tiff",
+        "sha256": "ca1a92ddcb7bf58230bb912458caac5c8277f16e84dd67354ac1ef421ef26f67"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a875f802721c8dc7fcbac39791a2e40d9d15541cd2a3d0ad3d4f1724ce303d04"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Cells.csv",
+        "sha256": "2a820ea3866ccceaacc016e6b73a8349c3b6c1116ffe444ed87a1919b59f9686"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Image.csv",
+        "sha256": "dc86dca5c55ca10e3e53ce63171ae8ecffd4f44d49a150269b4410075b0a243b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Nuclei.csv",
+        "sha256": "94f333f1744e88562643a10cc9aa23a2afa428233e027770895659aabf0ace9c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_downsizedNuclei.csv",
+        "sha256": "33e265fb508548fbdd3daa0969c978a98633dd7e2b35fb1ac7a52fa11d0dfc8b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "7ac4eeb0be50e943744ab8c72766e842d509c82b221bb3029854eadb4dd44d97"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "24d8d4f79ad05e8b3de30c6563cb7a013b5be1129f21b0d9be7e749d0c8088e8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/1assignment-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "a9388b70-278c-4eba-9cf4-825972cbe754",
+    "compile_artifact_id": "1d2a9ade-8485-4c45-9bac-4670d6354358",
+    "endpoint_pid": 1130214,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      1130214
+    ],
+    "worker_interval_overlap_seconds": 3.2280161380767822,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791393282.055292,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791393285.283308,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791393282.0256495,
+    "first_axis_started_at_epoch_seconds": 1791393282.055292,
+    "server_job_completed_at_epoch_seconds": 1791393285.3366597,
+    "server_job_seconds": 3.3110101222991943,
+    "execution_seconds": 3.2280161380767822,
+    "compile_seconds": 0.4698305130004883,
+    "total_seconds": 3.9420106220059097,
+    "first_axis_through_server_completion_seconds": 3.281367778778076,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "3d_monolayer_Cells.csv",
+        "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+      },
+      {
+        "path": "3d_monolayer_Experiment.csv",
+        "sha256": "8d9e0cf7663cd375b332f87a778f3fbe7a414fbb72f76908bfe3c1db97e77545"
+      },
+      {
+        "path": "3d_monolayer_Image.csv",
+        "sha256": "435a6374850d10618bee5a91d3049f0ea4fad5e6f7f0176bce39dca113a35329"
+      },
+      {
+        "path": "3d_monolayer_Nuclei.csv",
+        "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+      },
+      {
+        "path": "3d_monolayer_downsizedNuclei.csv",
+        "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+      },
+      {
+        "path": "3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+      },
+      {
+        "path": "3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch0_CellsLabels.tiff",
+        "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+        "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w0_z001_t001_CellsLabels.tiff",
+        "sha256": "64e6fc421b929e67b440b8a7a14a0c36ed42a8d1831fd1a2685103ee18023471"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_NucleiLabels.tiff",
+        "sha256": "ca1a92ddcb7bf58230bb912458caac5c8277f16e84dd67354ac1ef421ef26f67"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a875f802721c8dc7fcbac39791a2e40d9d15541cd2a3d0ad3d4f1724ce303d04"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Cells.csv",
+        "sha256": "2a820ea3866ccceaacc016e6b73a8349c3b6c1116ffe444ed87a1919b59f9686"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Image.csv",
+        "sha256": "dc86dca5c55ca10e3e53ce63171ae8ecffd4f44d49a150269b4410075b0a243b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Nuclei.csv",
+        "sha256": "94f333f1744e88562643a10cc9aa23a2afa428233e027770895659aabf0ace9c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_downsizedNuclei.csv",
+        "sha256": "33e265fb508548fbdd3daa0969c978a98633dd7e2b35fb1ac7a52fa11d0dfc8b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "7ac4eeb0be50e943744ab8c72766e842d509c82b221bb3029854eadb4dd44d97"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "24d8d4f79ad05e8b3de30c6563cb7a013b5be1129f21b0d9be7e749d0c8088e8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/1assignment-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "b268e99a-1867-4ea9-bff5-04ab9466fb24",
+    "compile_artifact_id": "92094a40-13f6-4dae-81ff-6068241a864c",
+    "endpoint_pid": 1130214,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      1130214
+    ],
+    "worker_interval_overlap_seconds": 3.269083023071289,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791393286.5690222,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791393289.8381052,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791393286.5388503,
+    "first_axis_started_at_epoch_seconds": 1791393286.5690222,
+    "server_job_completed_at_epoch_seconds": 1791393289.892009,
+    "server_job_seconds": 3.353158712387085,
+    "execution_seconds": 3.269083023071289,
+    "compile_seconds": 0.4690380096435547,
+    "total_seconds": 3.9865556261502206,
+    "first_axis_through_server_completion_seconds": 3.3229868412017822,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "3d_monolayer_Cells.csv",
+        "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+      },
+      {
+        "path": "3d_monolayer_Experiment.csv",
+        "sha256": "f93576b380a1c464a6a962d6d0e69d7e1942d709efb206ad2450789656603d61"
+      },
+      {
+        "path": "3d_monolayer_Image.csv",
+        "sha256": "b313735858d9d3c3251c62755984aac4d15d99505ec6adb49b1967fc5ae07863"
+      },
+      {
+        "path": "3d_monolayer_Nuclei.csv",
+        "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+      },
+      {
+        "path": "3d_monolayer_downsizedNuclei.csv",
+        "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+      },
+      {
+        "path": "3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+      },
+      {
+        "path": "3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch0_CellsLabels.tiff",
+        "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+        "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w0_z001_t001_CellsLabels.tiff",
+        "sha256": "64e6fc421b929e67b440b8a7a14a0c36ed42a8d1831fd1a2685103ee18023471"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_NucleiLabels.tiff",
+        "sha256": "ca1a92ddcb7bf58230bb912458caac5c8277f16e84dd67354ac1ef421ef26f67"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a875f802721c8dc7fcbac39791a2e40d9d15541cd2a3d0ad3d4f1724ce303d04"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Cells.csv",
+        "sha256": "2a820ea3866ccceaacc016e6b73a8349c3b6c1116ffe444ed87a1919b59f9686"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Image.csv",
+        "sha256": "dc86dca5c55ca10e3e53ce63171ae8ecffd4f44d49a150269b4410075b0a243b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Nuclei.csv",
+        "sha256": "94f333f1744e88562643a10cc9aa23a2afa428233e027770895659aabf0ace9c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_downsizedNuclei.csv",
+        "sha256": "33e265fb508548fbdd3daa0969c978a98633dd7e2b35fb1ac7a52fa11d0dfc8b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "7ac4eeb0be50e943744ab8c72766e842d509c82b221bb3029854eadb4dd44d97"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "24d8d4f79ad05e8b3de30c6563cb7a013b5be1129f21b0d9be7e749d0c8088e8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/1assignment-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "945a3d8d-b2ed-400d-96ea-916cf0314db7",
+    "compile_artifact_id": "c3f94d90-8ccd-4064-a315-cb44ad649afb",
+    "endpoint_pid": 1130214,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      1130214
+    ],
+    "worker_interval_overlap_seconds": 3.055934429168701,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791393290.9730248,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791393294.0289593,
+        "pid": 1130214,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791393290.943545,
+    "first_axis_started_at_epoch_seconds": 1791393290.9730248,
+    "server_job_completed_at_epoch_seconds": 1791393294.0829222,
+    "server_job_seconds": 3.1393771171569824,
+    "execution_seconds": 3.055934429168701,
+    "compile_seconds": 0.4725196361541748,
+    "total_seconds": 3.774798981845379,
+    "first_axis_through_server_completion_seconds": 3.1098973751068115,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 9,
+    "candidate_output_file_count": 10,
+    "declared_output_file_count": 8,
+    "native_output_inventory": [
+      {
+        "path": "3d_monolayer_Cells.csv",
+        "sha256": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f"
+      },
+      {
+        "path": "3d_monolayer_Experiment.csv",
+        "sha256": "01ce337d37af739da42de6c6b7c889b431339fc93922e4ccd59ccb7292067a59"
+      },
+      {
+        "path": "3d_monolayer_Image.csv",
+        "sha256": "bef50b98d0f50580d8f3a43bee6182eb8e7214189c0fa9a2f51bcea463150686"
+      },
+      {
+        "path": "3d_monolayer_Nuclei.csv",
+        "sha256": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561"
+      },
+      {
+        "path": "3d_monolayer_downsizedNuclei.csv",
+        "sha256": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd"
+      },
+      {
+        "path": "3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116"
+      },
+      {
+        "path": "3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch0_CellsLabels.tiff",
+        "sha256": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81"
+      },
+      {
+        "path": "3d_monolayer_xy1_ch2_NucleiLabels.tiff",
+        "sha256": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w0_z001_t001_CellsLabels.tiff",
+        "sha256": "64e6fc421b929e67b440b8a7a14a0c36ed42a8d1831fd1a2685103ee18023471"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w2_z001_t001_NucleiLabels.tiff",
+        "sha256": "ca1a92ddcb7bf58230bb912458caac5c8277f16e84dd67354ac1ef421ef26f67"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a875f802721c8dc7fcbac39791a2e40d9d15541cd2a3d0ad3d4f1724ce303d04"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Cells.csv",
+        "sha256": "2a820ea3866ccceaacc016e6b73a8349c3b6c1116ffe444ed87a1919b59f9686"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Image.csv",
+        "sha256": "dc86dca5c55ca10e3e53ce63171ae8ecffd4f44d49a150269b4410075b0a243b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_Nuclei.csv",
+        "sha256": "94f333f1744e88562643a10cc9aa23a2afa428233e027770895659aabf0ace9c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_downsizedNuclei.csv",
+        "sha256": "33e265fb508548fbdd3daa0969c978a98633dd7e2b35fb1ac7a52fa11d0dfc8b"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedDownsizedNuclei.csv",
+        "sha256": "7ac4eeb0be50e943744ab8c72766e842d509c82b221bb3029854eadb4dd44d97"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/3d_monolayer_erodedResizedNuclei.csv",
+        "sha256": "24d8d4f79ad05e8b3de30c6563cb7a013b5be1129f21b0d9be7e749d0c8088e8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/1assignment-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

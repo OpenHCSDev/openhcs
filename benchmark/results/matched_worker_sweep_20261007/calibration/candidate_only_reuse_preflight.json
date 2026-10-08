@@ -1,0 +1,593 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY, retained-source reuse admission only; no pipeline/server execution or new timing evidence",
+  "source_head": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "openhcs_file": "/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source/openhcs/__init__.py",
+  "producer_file": "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/matched_cellprofiler_batch.py",
+  "guard_module_sha256": "96c1ef37cab0522c2c7e511808f5159fea860150a486538921b81ada2c0c914f",
+  "benchmark_code_unchanged": true,
+  "rows": [
+    {
+      "case": "cp4_supplement_combine_objects",
+      "target_assignment_count": 12,
+      "status": "PASS",
+      "native_report_sha256": "d23479e1dbe1b5bcb6579625826c23e3bd257da86b3608470d0f08428fdad4a4",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 36,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "cp4_supplement_combine_objects",
+      "target_assignment_count": 16,
+      "status": "PASS",
+      "native_report_sha256": "d23479e1dbe1b5bcb6579625826c23e3bd257da86b3608470d0f08428fdad4a4",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 36,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleHuman",
+      "target_assignment_count": 12,
+      "status": "PASS",
+      "native_report_sha256": "d6a814f6d5c89dae45e4b807db1c9f50023f5e4d368002bc029555ce031e0e24",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 229,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleHuman",
+      "target_assignment_count": 16,
+      "status": "PASS",
+      "native_report_sha256": "d6a814f6d5c89dae45e4b807db1c9f50023f5e4d368002bc029555ce031e0e24",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 229,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "target_assignment_count": 12,
+      "status": "PASS",
+      "native_report_sha256": "1262229a7dceb982838000203ac81de5dd53425dd298dc53bf8b3d3693a44a7e",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 69,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "target_assignment_count": 16,
+      "status": "PASS",
+      "native_report_sha256": "1262229a7dceb982838000203ac81de5dd53425dd298dc53bf8b3d3693a44a7e",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 69,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "target_assignment_count": 12,
+      "status": "PASS",
+      "native_report_sha256": "aac7574136e315465afaf097329077ab8474d8a06a0b1e1ac340288f19d3caea",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 37,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "target_assignment_count": 16,
+      "status": "PASS",
+      "native_report_sha256": "aac7574136e315465afaf097329077ab8474d8a06a0b1e1ac340288f19d3caea",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 37,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleUntangleWormsBrightField",
+      "target_assignment_count": 12,
+      "status": "PASS",
+      "native_report_sha256": "aaf946c3ca3eda5901910e7b349db7f817a13175efbb38448176d04054ad21c9",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 37,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    },
+    {
+      "case": "ExampleUntangleWormsBrightField",
+      "target_assignment_count": 16,
+      "status": "PASS",
+      "native_report_sha256": "aaf946c3ca3eda5901910e7b349db7f817a13175efbb38448176d04054ad21c9",
+      "actual_source_assignment_count": 8,
+      "original_observation_repetitions": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "native_reference_file_count": 37,
+      "current_cpu_affinity": [
+        0
+      ],
+      "original_native_clocks_unchanged": true
+    }
+  ],
+  "probes": [
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/cp4_supplement_combine_objects-12/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/cp4_supplement_combine_objects-16/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleHuman-12/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleHuman-16/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleIlluminationCorrection_Example3-12/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleIlluminationCorrection_Example3-16/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleWoundHealing-12/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleWoundHealing-16/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleUntangleWormsBrightField-12/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    },
+    {
+      "argv": [
+        "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002/benchmark/native_cellprofiler_batch_worker.py",
+        "--environment"
+      ],
+      "affinity_before": [
+        0
+      ],
+      "probe_allowed_cpus": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "affinity_after": [
+        0
+      ],
+      "observed_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/candidate-only-reuse-preflight-v1/ExampleUntangleWormsBrightField-16/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "science_execution": false
+    }
+  ]
+}

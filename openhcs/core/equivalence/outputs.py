@@ -52,9 +52,41 @@ class RuntimeOutputSnapshot:
         measurement_dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
     ) -> "RuntimeOutputSnapshot":
         """Build a semantic output snapshot from observed runtime exports."""
-        tables = tuple(
-            RuntimeTableSnapshot.from_csv(path) for path in observation.table_outputs
+        return cls(
+            tables=cls.exported_table_snapshots(
+                observation,
+                execution_axis_id=execution_axis_id,
+                measurement_dialect=measurement_dialect,
+            ),
+            images=cls.image_snapshots(
+                observation.image_outputs,
+                source_workspaces=source_workspaces,
+                image_set_policy=image_set_policy,
+            ),
         )
+
+    @classmethod
+    def exported_table_snapshots(
+        cls,
+        observation: RuntimeExportObservation,
+        *,
+        execution_axis_id: str | None = None,
+        measurement_dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        source_tables: tuple[RuntimeTableSnapshot, ...] | None = None,
+    ) -> tuple[RuntimeTableSnapshot, ...]:
+        """Derive each actual axis from admitted physical export tables."""
+        tables = (
+            tuple(
+                RuntimeTableSnapshot.from_csv(path)
+                for path in observation.table_outputs
+            )
+            if source_tables is None
+            else source_tables
+        )
+        if tuple(table.path for table in tables) != observation.table_outputs:
+            raise ValueError(
+                "Prepared table sources differ from actual export observation."
+            )
         if execution_axis_id is not None:
             for path in observation.table_outputs:
                 if path not in observation.outputs.image_numbers_by_export_path:
@@ -88,14 +120,7 @@ class RuntimeOutputSnapshot:
                 )
                 for table in tables
             )
-        return cls(
-            tables=RuntimeTableNamespaceAdapter.normalize(tables),
-            images=cls.image_snapshots(
-                observation.image_outputs,
-                source_workspaces=source_workspaces,
-                image_set_policy=image_set_policy,
-            ),
-        )
+        return RuntimeTableNamespaceAdapter.normalize(tables)
 
     @classmethod
     def image_snapshots(

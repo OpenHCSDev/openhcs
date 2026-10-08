@@ -1,0 +1,247 @@
+{
+  "startup_seconds": 0.6191690480336547,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleHuman/native_preparation/native_cellprofiler_headless/ExampleHuman.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/outputs",
+    "expected_image_sets": null,
+    "repetitions": 1,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleHuman/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/outputs/-1",
+      "image_set_count": 8,
+      "invocation_seconds": 22.218595218844712,
+      "pre_pipeline_seconds": 0.0017018457874655724,
+      "pipeline_execution_seconds": 22.216893373057246,
+      "invocation_started_monotonic_seconds": 4178157.719492466,
+      "pipeline_started_monotonic_seconds": 4178157.721194312,
+      "completed_monotonic_seconds": 4178179.938087685,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/outputs/0",
+      "image_set_count": 8,
+      "invocation_seconds": 21.038665008265525,
+      "pre_pipeline_seconds": 0.0008872412145137787,
+      "pipeline_execution_seconds": 21.03777776705101,
+      "invocation_started_monotonic_seconds": 4178179.938102313,
+      "pipeline_started_monotonic_seconds": 4178179.938989554,
+      "completed_monotonic_seconds": 4178200.976767321,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ]
+      ]
+    }
+  ],
+  "diagnostic_assignment_timings": [
+    {
+      "repetition": -1,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4178157.721194312,
+          "completed_monotonic_seconds": 4178161.020200298,
+          "seconds": 3.2990059861913323
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4178161.020200298,
+          "completed_monotonic_seconds": 4178163.761234961,
+          "seconds": 2.7410346628166735
+        },
+        {
+          "assignment": "W003",
+          "started_monotonic_seconds": 4178163.761234961,
+          "completed_monotonic_seconds": 4178166.51187617,
+          "seconds": 2.7506412090733647
+        },
+        {
+          "assignment": "W004",
+          "started_monotonic_seconds": 4178166.51187617,
+          "completed_monotonic_seconds": 4178169.251403673,
+          "seconds": 2.739527503028512
+        },
+        {
+          "assignment": "W005",
+          "started_monotonic_seconds": 4178169.251403673,
+          "completed_monotonic_seconds": 4178171.929330421,
+          "seconds": 2.67792674805969
+        },
+        {
+          "assignment": "W006",
+          "started_monotonic_seconds": 4178171.929330421,
+          "completed_monotonic_seconds": 4178174.640556679,
+          "seconds": 2.7112262579612434
+        },
+        {
+          "assignment": "W007",
+          "started_monotonic_seconds": 4178174.640556679,
+          "completed_monotonic_seconds": 4178177.279233998,
+          "seconds": 2.63867731904611
+        },
+        {
+          "assignment": "W008",
+          "started_monotonic_seconds": 4178177.279233998,
+          "completed_monotonic_seconds": 4178179.938083397,
+          "seconds": 2.658849399071187
+        }
+      ]
+    },
+    {
+      "repetition": 0,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4178179.938989554,
+          "completed_monotonic_seconds": 4178182.601082272,
+          "seconds": 2.6620927178300917
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4178182.601082272,
+          "completed_monotonic_seconds": 4178185.252917567,
+          "seconds": 2.65183529490605
+        },
+        {
+          "assignment": "W003",
+          "started_monotonic_seconds": 4178185.252917567,
+          "completed_monotonic_seconds": 4178187.894905651,
+          "seconds": 2.6419880841858685
+        },
+        {
+          "assignment": "W004",
+          "started_monotonic_seconds": 4178187.894905651,
+          "completed_monotonic_seconds": 4178190.530628543,
+          "seconds": 2.635722891893238
+        },
+        {
+          "assignment": "W005",
+          "started_monotonic_seconds": 4178190.530628543,
+          "completed_monotonic_seconds": 4178193.149773925,
+          "seconds": 2.619145382195711
+        },
+        {
+          "assignment": "W006",
+          "started_monotonic_seconds": 4178193.149773925,
+          "completed_monotonic_seconds": 4178195.762296671,
+          "seconds": 2.6125227459706366
+        },
+        {
+          "assignment": "W007",
+          "started_monotonic_seconds": 4178195.762296671,
+          "completed_monotonic_seconds": 4178198.369568405,
+          "seconds": 2.60727173415944
+        },
+        {
+          "assignment": "W008",
+          "started_monotonic_seconds": 4178198.369568405,
+          "completed_monotonic_seconds": 4178200.976764035,
+          "seconds": 2.6071956297382712
+        }
+      ]
+    }
+  ]
+}

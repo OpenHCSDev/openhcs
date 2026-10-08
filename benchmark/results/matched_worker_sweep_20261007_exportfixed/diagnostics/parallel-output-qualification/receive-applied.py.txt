@@ -1,0 +1,51 @@
+"""Receive actual applied driver AST against saved genuine declarations."""
+import ast,gzip,hashlib,json,os,pickle,subprocess,sys,time
+from pathlib import Path
+from types import SimpleNamespace
+production=Path('/home/ts/code/projects/openhcs-cp-registry-control');artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002');sys.path.insert(0,str(production))
+import openhcs,benchmark
+benchmark.__path__.insert(0,str(artifact/'benchmark'))
+import benchmark.matched_cellprofiler_batch as driver
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.serialization.json import to_jsonable
+source=Path(driver.__file__);tree=ast.parse(source.read_text());pair=None
+for node in ast.walk(tree):
+ for field in ('body','orelse'):
+  statements=getattr(node,field,None)
+  if not isinstance(statements,list):continue
+  for index,statement in enumerate(statements):
+   if isinstance(statement,ast.Assign) and any(isinstance(target,ast.Name) and target.id=='comparison_tasks' for target in statement.targets):
+    pair=statements[index:index+2]
+assert pair and isinstance(pair[1],ast.If)
+code=compile(ast.Module(body=pair,type_ignores=[]),str(source),'exec')
+manifest=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/official30-manifest.json')
+args=driver._parser().parse_args(['--manifest',str(manifest),'--case','cp_tutorial_advanced_segmentation_final','--well-count','1','--repeat-assignments','8','--output-dir','/tmp/not-launched','--native-python','/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python','--comparison-workers','2','--comparison-cpus','0','1'])
+assert args.comparison_workers==2 and args.comparison_cpus==[0,1]
+root=Path('/home/ts/.local/state/openhcs-maintenance/20261007');results=[]
+for name,repetition in [('cp_tutorial_advanced_segmentation_final',0),('ExampleImagingFlowCytometryObjectsInGrid',-1)]:
+ case=root/'issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases'/name
+ reference=root/'issue1100-matched-sweep-v1/retained-native8-complete-v1'/name
+ with gzip.open(case/f'candidate_evidence/{repetition}/observation.pkl','rb') as stream:observation=pickle.load(stream)
+ policy=_strict_cellprofiler_runtime_equivalence_policy();axes=('W001','W002')
+ namespace=dict(vars(driver));namespace.update({'args':args,'native_root':reference/'native'/str(repetition),'assignment_exports':tuple(observation.exports.for_execution_axis(axis) for axis in axes),'wells':axes,'native_comparison_directories':axes,'policy':policy,'provenance':{},'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=production,text=True).strip(),'image_set_policy':SourceImageSetIdentityPolicy(),'completed':SimpleNamespace(output_roots=(case/f'candidate/{repetition}/source_workspace_matched_pilot',))})
+ samples={};serial=None
+ for workers in (1,2):
+  args.comparison_workers=workers
+  start=time.perf_counter();exec(code,namespace);samples[str(workers)]=time.perf_counter()-start
+  comparisons=namespace['comparisons']
+  assert len(comparisons)==2
+  assert all(not row[0].differences and not row[1].differences and not row[2] for row in comparisons)
+  if serial is None:serial=comparisons
+  else:assert comparisons==serial
+  print(name,workers,samples[str(workers)],flush=True)
+ # These are only comparator declarations, counts and reports, no decoded
+ # output arrays or cached measurement facts. Existing serializer owns shape.
+ payload=to_jsonable(serial)
+ canonical=json.dumps(payload,sort_keys=True,separators=(',',':'))
+ destination=Path(__file__).parent/f'receiving-{name}-results.json'
+ destination.write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+ results.append({'case':name,'saved_repetition':repetition,'serial_vs_two_fork_entire_results_equal':True,'all_differences_empty':True,'ordered_axes':axes,'native_image_counts':[row[4] for row in serial],'candidate_image_counts':[row[5] for row in serial],'seconds':samples,'results_json_path':str(destination),'canonical_results_sha256':hashlib.sha256(canonical.encode()).hexdigest()})
+proof={'scope':'DIAGNOSTIC_ONLY actual applied comparison task/serial/executor AST receiving, no science/server/native execution','driver_path':str(source),'driver_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'production_module_path':openhcs.__file__,'production_source_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=production,text=True).strip(),'artifact_source_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=artifact,text=True).strip(),'actual_ast_line_range':[pair[0].lineno,pair[-1].end_lineno],'parser_explicit_flags_accepted':True,'numerical_threads':1,'parallel_affinity':[0,1],'native_measurement_cache':None,'results':results,'memory_admission_receipt':str(Path(__file__).parent/'grid-memory-proof.json'),'memory_scope':'Prior operational diagnostic PSS/USS/headroom, not pipeline headline RAM.'}
+(Path(__file__).parent/'receiving-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+print(json.dumps(proof),flush=True)

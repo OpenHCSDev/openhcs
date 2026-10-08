@@ -1,0 +1,25 @@
+{
+  "mode": "optimized",
+  "scope": "DIAGNOSTIC_ONLY saved actual D06 Advanced rep0 W001; actual comparer receiving trace; private native facts, CPU0 threads1, no science jobs",
+  "full_qualification": {
+    "wall_seconds": 18.011682046577334,
+    "process_cpu_seconds": 17.83217559
+  },
+  "untraced_native_cold_projection_and_cache_write": {
+    "wall_seconds": 9.68683869112283,
+    "process_cpu_seconds": 9.417296252
+  },
+  "fresh_candidate_projection": {
+    "scope": "actual SQL candidate facts captured from real existing owner return; receiving trace, not performance clock"
+  },
+  "source_hashes": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-overlay/benchmark/matched_cellprofiler_batch.py": "17e6f5c106d7a2df7db285981a205783713d969e704b1fa96e93b9370a72a1d9",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/candidate-planned-overlay/openhcs/core/runtime_equivalence.py": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+  },
+  "runtime_authority_root": "/home/ts/code/projects/openhcs-cp-registry-control",
+  "numeric_fact_keys": 1667,
+  "directed_relationship_groups": 7,
+  "native_report_sha256": "b09bfc05ef1ee6629c62f65a817d32b00216c05d216707ff9a5ce745bdae31d4",
+  "actual_case": "cp_tutorial_advanced_segmentation_final",
+  "actual_repetition": 0
+}

@@ -1,0 +1,27 @@
+{
+  "status": "PRESERVED_FAILED_ATTEMPT",
+  "completed_workflows": 0,
+  "production_source_clean_before_after": true,
+  "files": [
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/parallel2-12assignments-1worker/capture/terminal.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/failed-launch-context/terminal.json",
+      "sha256": "751925200c5ffbb4f1d52edb219a71f219c2b125efe9cdcb42121cb3b62b5c97"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/parallel2-12assignments-1worker/capture/command.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/failed-launch-context/command.json",
+      "sha256": "c50e22e8e23431ab2c0276dffc4267a601431a56733f59a54d0f669c33c56a77"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/parallel2-12assignments-1worker/capture/child.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/failed-launch-context/child.json",
+      "sha256": "8f7da5f09de7e28b03c1634ddb2e2202c1a13ec737400a9179e8d0a147ef5cf8"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/parallel2-12assignments-1worker/capture/suite.log",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/parallel-output-qualification/failed-launch-context/suite.log",
+      "sha256": "64ccdcf097011eb159b2703607d6d4f174e940a1f8023f294ca4d9aaafe6b6e8"
+    }
+  ]
+}

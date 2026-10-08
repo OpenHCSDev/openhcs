@@ -1,0 +1,49 @@
+"""Isolated benchmark-boundary prototype, using the existing native facts owner."""
+import ast,gzip,hashlib,json,pickle,sys,time
+from pathlib import Path
+production=Path('/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source')
+artifact=Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002')
+sys.path.insert(0,str(production))
+import benchmark
+benchmark.__path__.insert(0,str(artifact/'benchmark'))
+import benchmark.cellprofiler_export_equivalence as owner
+from benchmark.native_measurement_facts import retained_native_measurement_snapshot
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
+from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot,runtime_measurement_equivalence
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+root=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-exportfixed-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final')
+reference=Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final')
+with gzip.open(root/'candidate_evidence/0/observation.pkl','rb') as stream:observation=pickle.load(stream)
+exports=observation.exports.for_execution_axis('W001')
+native_root=reference/'native/0/W001'
+source_database=next(native_root.rglob('*.db'))
+source_report=reference/'native_report.json'
+policy=_strict_cellprofiler_runtime_equivalence_policy()
+sha=lambda path:hashlib.sha256(path.read_bytes()).hexdigest()
+producer_sha=sha(Path(owner.__file__))
+cache=Path(__file__).parent/'sqlite-native-fact-cache'/producer_sha
+# Clone only the existing orchestration function definitions into an isolated
+# namespace. Imported authoritative modules/globals are never modified.
+namespace=dict(vars(owner))
+selected={'cellprofiler_database_export_equivalence','_sqlite_export_equivalence','_sqlite_database_differences'}
+tree=ast.parse(Path(owner.__file__).read_text())
+module=ast.Module(body=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name in selected],type_ignores=[])
+exec(compile(module,'<isolated-existing-sqlite-orchestration>','exec'),namespace)
+checks=[]
+def cached_cohort(reference_tables,candidate_tables,policy):
+ reference_snapshot=retained_native_measurement_snapshot(RuntimeOutputSnapshot(tables=reference_tables),policy=policy,source_table_paths=(source_database,),cache_root=cache,reference_report_sha256=sha(source_report),source_commit='67cdcc3dea60c611f3bb964d1b343c931a589e46')
+ candidate_snapshot=RuntimeMeasurementSnapshot.from_output_snapshot(RuntimeOutputSnapshot(tables=candidate_tables),policy=policy)
+ for snapshot in (reference_snapshot,candidate_snapshot):snapshot.required_relationship_correlations()
+ checks.append({'native_directed_relationship_count':len(reference_snapshot.correlated_relationships),'candidate_directed_relationship_count':len(candidate_snapshot.correlated_relationships)})
+ return runtime_measurement_equivalence(reference_snapshot,candidate_snapshot,policy=policy).differences
+namespace['_sqlite_measurement_cohort_differences']=cached_cohort
+results={};baseline=None
+for mode,operation in [('fresh',owner.cellprofiler_database_export_equivalence),('cache_miss',namespace['cellprofiler_database_export_equivalence']),('cache_hit',namespace['cellprofiler_database_export_equivalence'])]:
+ start=time.perf_counter();report=operation(native_root,exports,policy=policy,execution_axis_id='W001');seconds=time.perf_counter()-start
+ if baseline is None:baseline=report
+ assert report==baseline
+ assert not report.differences
+ results[mode]={'seconds':seconds,'full_report_equal':True,'difference_count':len(report.differences),'compared_output_file_count':len(report.compared_output_files)}
+ print(mode,results[mode],flush=True)
+proof={'scope':'DIAGNOSTIC_ONLY CPU0 saved advanced8 rep0 W001 full SQLite+CPA comparison; no science runs and no authoritative modules mutated','case':'cp_tutorial_advanced_segmentation_final','results':results,'directed_relationship_counts':checks,'source_database_path':str(source_database),'source_database_sha256':sha(source_database),'native_report_path':str(source_report),'native_report_sha256':sha(source_report),'sql_producer_path':owner.__file__,'sql_producer_sha256':producer_sha,'producer_identity_scope':'Existing SQL producer module SHA is an explicit diagnostic cache directory namespace. Production integration must bind it inside existing helper semantic identity.','comparator_core_source':'67cdcc3de original immutable source; saved candidate captureD06, retained native67','limitations':'This proves one genuine advanced axis, not full30 new qualification or a headline pipeline speedup. Candidate semantic projection, DB schema/row coverage, relationship correlations, CPA and workspace checks all remain fresh.'}
+(Path(__file__).parent/'sqlite-cache-proof.json').write_text(json.dumps(proof,indent=2)+'\n')

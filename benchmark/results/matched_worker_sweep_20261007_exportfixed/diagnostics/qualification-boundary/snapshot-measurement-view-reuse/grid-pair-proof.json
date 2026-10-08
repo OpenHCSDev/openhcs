@@ -1,0 +1,19 @@
+{
+  "case": "ExampleImagingFlowCytometryObjectsInGrid",
+  "genuine_completed_source_outputs": "D06 8-assignment warmup axis W001",
+  "original_full_comparison_seconds": 45.6090211737901,
+  "optimized_full_comparison_seconds": 32.075215437449515,
+  "seconds_saved": 13.533805736340582,
+  "speedup": 1.4219396674897824,
+  "fraction_saved": 0.2967352814867683,
+  "entire_returned_results_exact": true,
+  "unordered_manifest_exception_used": false,
+  "checks_unchanged": "CSV values/features/relationships/image coverage/inventory/CPA comparisons and strict tolerances",
+  "changed_qualifier_core_paths": [
+    "equivalence/measurement_rows.py",
+    "equivalence/tables.py"
+  ],
+  "timed_production_source_untouched": true,
+  "scope": "One sequential paired saved-output diagnostic; CPU0, numerical threads1; no pipeline execution timing claim",
+  "patch_sha256": "db826910d238e374645fe928b7c5309a18a425d84bda5083acd3343e6bbb700f"
+}

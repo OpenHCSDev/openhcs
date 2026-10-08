@@ -1,0 +1,51 @@
+{
+  "status": "SAVED_OUTPUT_RECEIVING_PASS_NOT_APPLIED",
+  "scope": "Actual D06 comparer receiving only; pipeline revision and live capture unchanged. Final three-file patch awaits completed-mode boundary.",
+  "files": [
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-native-reuse-and-selected-parser.patch",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/sqlite-native-reuse-and-selected-parser.patch",
+      "sha256": "032cd258c00e905f8a796cdf94126a9a2db4ad7eb75c33e0398fb055fe467655"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-native-reuse-and-selected-parser-preimages.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/sqlite-native-reuse-and-selected-parser-preimages.json",
+      "sha256": "4f6ff2ae7b6ad516a69879b03a2c154a2fa2bead0800e7c6ae9d60a171ee387c"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-native-reuse-and-selected-parser-findings.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/sqlite-native-reuse-and-selected-parser-findings.json",
+      "sha256": "bd7c8d4b889a54be17972bb121a9dde0f987c524f53da8a0d63a900201cc8074"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-parser-proof.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/sqlite-select-parser-proof.json",
+      "sha256": "5e198564b7c558b5a1d0e5105c738d110f5836b64a686ac01ab82b06187ffca3"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/receive-sqlite-overlay.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/receive-sqlite-overlay.py.txt",
+      "sha256": "d3206fceaa281b332f5665a416ab072eadeff3ed7b18b2624756ec470e812ac6"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/receive-sql-selected-parser.py",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/receive-sql-selected-parser.py.txt",
+      "sha256": "4c810b7e32d74a70cc97a2a1b01529f508dddbcbffb6e3de5c31b59950bc7a36"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-actual-D06-receiving/proof.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/sqlite-select-actual-D06-receiving/proof.json",
+      "sha256": "ae9a67a76468a7c6e190a2c8382a6391ff53a0abfa0ca33581363009a2fe8b18"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-actual-D06-receiving/cache_hit-full-results.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/sqlite-select-actual-D06-receiving/cache_hit-full-results.json",
+      "sha256": "d0beb42aee6a1cae56ed9268d252198b1efc0e06003319061c385c89c28be2ac"
+    },
+    {
+      "source": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-actual-D06-receiving/cache_miss-full-results.json",
+      "archive": "benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/qualification-boundary/sqlite-reuse-selected-decoding/sqlite-select-actual-D06-receiving/cache_miss-full-results.json",
+      "sha256": "d0beb42aee6a1cae56ed9268d252198b1efc0e06003319061c385c89c28be2ac"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "status": "DIAGNOSTIC_CONFIRMED_EXPORT_REFERENCE_DOMAIN_MISMATCH",
+  "capture_terminal": {
+    "returncode": 1,
+    "source_head_before": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+    "source_head_after": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+    "source_status_after": ""
+  },
+  "completed_matched_cases": 27,
+  "completed_native_cases": 28,
+  "case": "ExampleTrackObjects",
+  "axis": "W002",
+  "rows_compared": 65,
+  "global_candidate_row_image_offset": 21,
+  "native_and_candidate_parent_reference_values_equal_before_axis_normalization": true,
+  "candidate_export_parent_references_remain_local_while_row_ids_are_global": true,
+  "sources": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleTrackObjects/native/-1/W002/Sequence1/Embryos.csv",
+      "sha256": "0d6927a942947e220e91385cd90082c0349391fdeeaa70ee2a95fd4aae8038b8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleTrackObjects/candidate/-1/source_workspace_matched_pilot/results/Sequence1/Embryos.csv",
+      "sha256": "018dc0a809a682149950024a11d393a6acea186fd369e66d3ffc30ba3546fe8a"
+    }
+  ],
+  "resolution": "Fix source-numbering export authority to map declared image references with row image numbers; retain original failed evidence unchanged."
+}

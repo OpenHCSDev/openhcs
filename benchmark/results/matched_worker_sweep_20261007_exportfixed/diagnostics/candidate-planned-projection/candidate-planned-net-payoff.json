@@ -1,0 +1,24 @@
+{
+  "scope": "Point estimate for representative Grid only; does not estimate all30 or certify live wall timing",
+  "remaining_mode_assignment_counts": [
+    12,
+    16
+  ],
+  "warmup_plus_measured_repetitions_per_mode": 4,
+  "remaining_axis_comparisons": 112,
+  "warmed_axis_qualification_CPU_seconds_saved": 4.410951710999999,
+  "gross_CPU_seconds_saved": 494.0265916319999,
+  "distinct_native_reference_entries_rebuilt_once": 32,
+  "measured_actual_retained8_reference_cold_CPU_seconds": 9.177434888,
+  "estimated_cache_rebuild_CPU_seconds": 293.677916416,
+  "net_CPU_seconds_saved": 200.3486752159999,
+  "ideal_two_core_net_wall_seconds": 100.17433760799995,
+  "cold_CPU_break_even_seconds_per_reference": 15.438330988499997,
+  "identity_policy": "Source/policy/report/file identities unchanged by reuse; new source byte identities recold cache. No migrated keys, spoofing, or synthetic observations.",
+  "limits": [
+    "One representative native reference price, source report lists8 assignments/four actual repetitions; no claim all32 have identical runtime",
+    "New native-fact identities remain cold for each source once; subsequent modes reuse them",
+    "Paired CPU comparison controls work consumed; contended wall timings are not a speedup claim",
+    "Whole-suite net depends workflow width; this evidence justifies materially positive net for representative dominant Grid, not extrapolated whole30 outcome"
+  ]
+}

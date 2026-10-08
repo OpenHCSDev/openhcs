@@ -1,0 +1,109 @@
+{
+  "status": "PASS",
+  "scope": "DIAGNOSTIC_ONLY isolated scratch overlay receiving during active frozen capture, saved D06 Advanced rep0 W001; no science/native/server jobs; diagnostic cache clocks not pipeline speedup",
+  "production_root": "/home/ts/code/projects/openhcs-cp-registry-control",
+  "production_head": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "native_report_source_head": "67cdcc3dea60c611f3bb964d1b343c931a589e46",
+  "native_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/cp_tutorial_advanced_segmentation_final/native_report.json",
+  "native_report_sha256": "b09bfc05ef1ee6629c62f65a817d32b00216c05d216707ff9a5ce745bdae31d4",
+  "actual_owner_file_sha256": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-overlay/benchmark/matched_cellprofiler_batch.py": "74402cdd3089b7d616ca2a9da3690479150eccfc1b7c8fd2ba62219309a336e9",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-overlay/benchmark/cellprofiler_export_equivalence.py": "3a8f5e0c01ab0f12c4a58e7cf8aad7e266c3846871da13216541fcb84720a8db",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-overlay/benchmark/native_measurement_facts.py": "2179fc38a4054a77377cf703e74e3d1415f91085a17ca6f01202e91f44f2bf61",
+    "/home/ts/code/projects/openhcs-cp-registry-control/openhcs/core/runtime_equivalence.py": "4fbb5a626e5573cbbe60139f160f26d3ade7a9879ad5b623bf6e7022e356ba8f"
+  },
+  "used_native_files_sha256": {
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022.db": "578402efde6527d4c2d899db5efbf84f7a39cd9951a479096f71bbab05928d02",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Cells.properties": "6d438e89fb1bf22dd635eef1dde6bc7c5848a18fa26d17413e3f142507dd68a9",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Cytoplasm.properties": "3b741b06de735fff01b1b37666cb995bea303742755ba8cd2da2b35023d45306",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Mitochondria.properties": "beef12a1d0efc5750ed6de1a3ec7c0aa4a070eaabde2009003a8e382de299d84",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_MitochondriaChildObjects.properties": "6ad6e413c70b2063e2fbb132a8c79f4716ad038f15d8de16217a7cec75ce5408",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Nuclei.properties": "29c900dc5450d18ff2c37a788e090506dbb6f1a0f4ac3fa44cd5f43f9c871213",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_Nucleoli.properties": "806fd9a714a1d646fa0d3da7bcf6bf0ea147900e914a49979ec515280a377e74",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/cp_tutorial_advanced_segmentation_final/native/0/W001/BBBC022_NucleoliChildObjects.properties": "a78739bf5db01b74fc30bb07037712157fe95bcc6b459be6885f0481aeedd90d"
+  },
+  "producer_identity": [
+    {
+      "declaration": {
+        "kind": "callable",
+        "name": "_sqlite_tables",
+        "module": "benchmark.cellprofiler_export_equivalence",
+        "qualname": "_sqlite_tables",
+        "import_path": "benchmark.cellprofiler_export_equivalence._sqlite_tables"
+      },
+      "module_sha256": "3a8f5e0c01ab0f12c4a58e7cf8aad7e266c3846871da13216541fcb84720a8db",
+      "state": {
+        "defaults": null,
+        "kwdefaults": {
+          "\"image_numbers\"": null,
+          "\"image_number_domain\"": null
+        },
+        "attributes": {},
+        "closure": []
+      }
+    },
+    {
+      "\"Per_Image\"": {
+        "scope": "image",
+        "name": "Image",
+        "id_field": null
+      },
+      "\"Per_Cells\"": {
+        "scope": "object",
+        "name": "Cells",
+        "id_field": "Number_Object_Number"
+      },
+      "\"Per_Cytoplasm\"": {
+        "scope": "object",
+        "name": "Cytoplasm",
+        "id_field": "Number_Object_Number"
+      },
+      "\"Per_Mitochondria\"": {
+        "scope": "object",
+        "name": "Mitochondria",
+        "id_field": "Number_Object_Number"
+      },
+      "\"Per_MitochondriaChildObjects\"": {
+        "scope": "object",
+        "name": "MitochondriaChildObjects",
+        "id_field": "Number_Object_Number"
+      },
+      "\"Per_Nuclei\"": {
+        "scope": "object",
+        "name": "Nuclei",
+        "id_field": "Number_Object_Number"
+      },
+      "\"Per_Nucleoli\"": {
+        "scope": "object",
+        "name": "Nucleoli",
+        "id_field": "Number_Object_Number"
+      },
+      "\"Per_NucleoliChildObjects\"": {
+        "scope": "object",
+        "name": "NucleoliChildObjects",
+        "id_field": "Number_Object_Number"
+      }
+    }
+  ],
+  "producer_identity_authority": "Existing _policy_identity of actual _sqlite_tables callable/module/state and CPA-derived nominal reference_subject declarations; no manual module roster or alternate cache owner.",
+  "results": {
+    "cache_miss": {
+      "seconds": 34.4280988574028,
+      "full_results_equal_retained_D06_baseline": true,
+      "result_sha256": "4cd34436c83e4e4686706768b470b858f0cd281bc323cf9eb0bfb388e79b89f7"
+    },
+    "cache_hit": {
+      "seconds": 14.936897057108581,
+      "full_results_equal_retained_D06_baseline": true,
+      "result_sha256": "4cd34436c83e4e4686706768b470b858f0cd281bc323cf9eb0bfb388e79b89f7"
+    }
+  },
+  "exact_numeric_facts_equal": true,
+  "exact_directed_relationships_equal": true,
+  "directed_relationship_feature_count": 7,
+  "baseline_results_path": "/home/ts/.local/state/openhcs-maintenance/20261007/parallel-comparison-diagnostic-v1/receiving-cp_tutorial_advanced_segmentation_final-results.json",
+  "baseline_results_sha256": "c74731b7c86e85e2763b24dd72f7ac0b4f676622c4321ac04264e50446854061",
+  "cache_path": "/home/ts/.local/state/openhcs-maintenance/20261007/batch-qualification-structural-v1/sqlite-select-actual-D06-receiving/native-facts",
+  "archive_scope": "Archive JSON proof/source only, never cache PKLs or decoded outputs.",
+  "timing_limitation": "CPU0 may be shared with live qualification forks; miss/hit wall clocks are not controlled comparative performance evidence."
+}
