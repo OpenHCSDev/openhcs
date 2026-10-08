@@ -2553,7 +2553,9 @@ class MaterializationContext:
                 frozenset(
                     ComponentSet.collect(
                         policy.plane_member_components,
-                        plan.require_variable_components(),
+                        ComponentSet.from_enum_values(
+                            plan.require_variable_components()
+                        ),
                     )
                 )
             )

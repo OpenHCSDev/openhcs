@@ -20,7 +20,7 @@ from openhcs.core.artifacts import (
     SpatialGraphArtifactType,
 )
 from openhcs.core.config import NapariStreamingConfig
-from openhcs.constants.constants import AllComponents
+from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -240,9 +240,29 @@ def test_independent_graph_capability_and_new_feature_need_no_consumers(tmp_path
     )
 
 
-def test_original_source_scope_separates_sites_and_links_label_and_graph_zip(tmp_path):
+@pytest.mark.parametrize("compiled_stack", [False, True])
+def test_original_source_scope_separates_sites_and_links_label_and_graph_zip(
+    tmp_path, compiled_stack
+):
     """Artifact filenames do not own either grouping or field identity."""
     manager = FileManager({"disk": DiskStorageBackend()})
+    context = (
+        SimpleNamespace(
+            microscope_handler=None,
+            step_plans={
+                4: CompiledStepPlan(
+                    step_index=4,
+                    step_name="neurite",
+                    step_type="FunctionStep",
+                    axis_id="A01",
+                    variable_components=(VariableComponents.CHANNEL,),
+                    group_by=GroupBy.SITE,
+                )
+            }
+        )
+        if compiled_stack
+        else None
+    )
     subject_tokens = []
     for site in (1, 2):
         original, graph_plan = graph_and_plan(plane=1)
@@ -276,6 +296,8 @@ def test_original_source_scope_separates_sites_and_links_label_and_graph_zip(tmp
                 str(tmp_path / str(site) / filename),
                 manager,
                 ["disk"],
+                context=context,
+                pipeline_position=4,
                 output_plan=plan,
             )
             archives.append(load_rois_from_zip(Path(path)))
@@ -316,8 +338,10 @@ def test_compiled_source_plane_members_share_subject_without_merging_site_groups
                         (AllComponents.CHANNEL,) if named_planes else ()
                     ),
                 ),
-                variable_components=() if named_planes else (AllComponents.CHANNEL,),
-                group_by=AllComponents.SITE,
+                variable_components=(
+                    () if named_planes else (VariableComponents.CHANNEL,)
+                ),
+                group_by=GroupBy.SITE,
             )
         }
     )
