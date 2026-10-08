@@ -553,6 +553,17 @@ thousands of independently treated samples. Keep controls and exclusions
 visible. A statistical report must separate effect, variability and independent
 sample size from image-level counts.
 
+For neurite endpoints, retrieve the registered callable's contract and the
+source-owned measurement definitions before choosing denominators or comparing
+algorithms. Where exposed, use `openhcs_list_architecture_topics`, then
+`openhcs_explain_architecture` with topic `neurite_measurements` and
+`openhcs_describe_internal_symbol` for `analysis.NeuriteOutgrowthCellResult`
+and `analysis.neurite_classify_owned_endpoints`. Explicit symbol retrieval
+returns the owning declarations' full documentation; topic discovery is a
+summary. A generic callable return annotation does not identify every dynamically
+exported row type. If this lookup is unavailable, retain that definition gap
+rather than inferring measurement meaning from a column name or an ROI count.
+
 When measurements request several sources or slices, reconcile their intended
 coverage with the compiled source bindings, invocation/grouping and typed
 artifact inputs through `openhcs_inspect_pipeline_source_artifact_plan`, then
