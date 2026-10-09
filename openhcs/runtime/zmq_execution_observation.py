@@ -29,13 +29,11 @@ ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 4
 
 
 def _axis_membership_failures(
-    expected_axis_ids: tuple[str, ...] | None,
+    expected_axis_ids: tuple[str, ...],
     observed_axis_ids: Mapping[str, object],
 ) -> tuple[str, ...]:
     """Compare execution coverage with compiler-owned axis membership."""
 
-    if expected_axis_ids is None:
-        return ()  # Archived exports did not retain compiled membership.
     expected = frozenset(expected_axis_ids)
     observed = frozenset(observed_axis_ids)
     failures = []
@@ -48,18 +46,6 @@ def _axis_membership_failures(
     if unexpected:
         failures.append(f"execution outcomes have no compiled axis: {unexpected!r}")
     return tuple(failures)
-
-
-def _restore_legacy_axis_expectation(
-    expectation: RuntimeArtifactExecutionExpectation,
-) -> RuntimeArtifactExecutionExpectation:
-    """Rebuild archived expectations before compiled axis ownership existed."""
-
-    return RuntimeArtifactExecutionExpectation(
-        artifact_kinds=expectation.artifact_kinds,
-        exports=expectation.exports,
-        artifact_viewer=getattr(expectation, "artifact_viewer", ()),
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,9 +72,9 @@ class ZMQRuntimeExecutionOutcomeExport:
     schema_version: int
     outcomes_by_axis: Mapping[str, ZMQExecutionAxisOutcome]
     output_roots: tuple[Path, ...]
+    compiled_axis_ids: tuple[str, ...]
     server_environment: RuntimeEnvironmentSnapshot | None = None
     execution_id: str | None = None
-    compiled_axis_ids: tuple[str, ...] | None = None
     exports: RuntimeExportObservation | None = None
 
     @classmethod
@@ -123,37 +109,6 @@ class ZMQRuntimeExecutionOutcomeExport:
             raise TypeError(
                 "ZMQ runtime outcome export must contain "
                 f"{cls.__name__}, got {type(payload).__name__}."
-            )
-        if payload.schema_version == 1:
-            # Older slotted pickles have no execution identity slot.
-            return cls(
-                schema_version=payload.schema_version,
-                outcomes_by_axis=payload.outcomes_by_axis,
-                output_roots=payload.output_roots,
-                server_environment=payload.server_environment,
-                execution_id=None,
-                compiled_axis_ids=None,
-                exports=None,
-            )
-        if payload.schema_version == 2:
-            return cls(
-                schema_version=payload.schema_version,
-                outcomes_by_axis=payload.outcomes_by_axis,
-                output_roots=payload.output_roots,
-                server_environment=payload.server_environment,
-                execution_id=payload.execution_id,
-                compiled_axis_ids=None,
-                exports=None,
-            )
-        if payload.schema_version == 3:
-            return cls(
-                schema_version=payload.schema_version,
-                outcomes_by_axis=payload.outcomes_by_axis,
-                output_roots=payload.output_roots,
-                server_environment=payload.server_environment,
-                execution_id=payload.execution_id,
-                compiled_axis_ids=payload.compiled_axis_ids,
-                exports=None,
             )
         if payload.schema_version != ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION:
             raise ValueError(
@@ -254,53 +209,6 @@ class ZMQRuntimeExecutionObservationExport:
                 "ZMQ runtime observation export must contain "
                 f"{cls.__name__}, got {type(payload).__name__}."
             )
-        if payload.schema_version == 5:
-            # Slotted v5 pickles deserialize without the newly declared slot.
-            # Rebuild explicitly so archived ordinary observations stay readable.
-            return cls(
-                schema_version=payload.schema_version,
-                expectation=_restore_legacy_axis_expectation(payload.expectation),
-                records_by_axis=payload.records_by_axis,
-                exports=payload.exports,
-                output_roots=payload.output_roots,
-                execution_success_by_axis=payload.execution_success_by_axis,
-                source_image_set_identity_policy=(
-                    payload.source_image_set_identity_policy
-                ),
-                server_environment=None,
-                execution_id=None,
-            )
-        if payload.schema_version == 6:
-            # Version 6 predates the execution identity slot.
-            return cls(
-                schema_version=payload.schema_version,
-                expectation=_restore_legacy_axis_expectation(payload.expectation),
-                records_by_axis=payload.records_by_axis,
-                exports=payload.exports,
-                output_roots=payload.output_roots,
-                execution_success_by_axis=payload.execution_success_by_axis,
-                source_image_set_identity_policy=(
-                    payload.source_image_set_identity_policy
-                ),
-                server_environment=payload.server_environment,
-                execution_id=None,
-            )
-        if payload.schema_version == 7:
-            # Version 7 predates compiled axis ownership expectations. Keep its
-            # all-axes validation semantics for archived observations.
-            return cls(
-                schema_version=payload.schema_version,
-                expectation=_restore_legacy_axis_expectation(payload.expectation),
-                records_by_axis=payload.records_by_axis,
-                exports=payload.exports,
-                output_roots=payload.output_roots,
-                execution_success_by_axis=payload.execution_success_by_axis,
-                source_image_set_identity_policy=(
-                    payload.source_image_set_identity_policy
-                ),
-                server_environment=payload.server_environment,
-                execution_id=payload.execution_id,
-            )
         if payload.schema_version != ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION:
             raise ValueError(
                 "Unsupported ZMQ runtime observation export schema version "
@@ -329,13 +237,8 @@ class ZMQRuntimeExecutionObservationExport:
         return len(self.execution_success_by_axis)
 
     def execution_failures(self) -> tuple[str, ...]:
-        expected_axis_ids = (
-            tuple(item.axis_id for item in self.expectation.axis_expectations)
-            if self.expectation.axis_expectations is not None
-            else None
-        )
         membership_failures = _axis_membership_failures(
-            expected_axis_ids,
+            tuple(item.axis_id for item in self.expectation.axis_expectations),
             self.execution_success_by_axis,
         )
         failed = tuple(

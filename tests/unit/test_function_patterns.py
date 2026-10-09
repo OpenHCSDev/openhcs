@@ -46,11 +46,9 @@ from openhcs.core.pipeline.function_contracts import (
     execution_scope,
     runtime_bound_parameters,
     special_inputs,
-    validate_artifact_input_parameter_bindings,
 )
 from openhcs.core.pipeline.artifact_planning import (
     extract_artifact_declarations,
-    normalize_pattern,
 )
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
@@ -138,20 +136,6 @@ def test_invocation_positions_are_renumbered_per_dict_group():
         FunctionInvocationKey("first", "DAPI", 0),
         FunctionInvocationKey("second", "DAPI", 1),
         FunctionInvocationKey("third", "GFP", 0),
-    ]
-
-
-def test_artifact_planning_normalize_pattern_returns_tuple_api():
-    pattern = [first, (skipped, {"enabled": False}), second]
-
-    normalized = [
-        (func.__name__, group_key, position)
-        for func, group_key, position in normalize_pattern(pattern)
-    ]
-
-    assert normalized == [
-        ("first", "default", 0),
-        ("second", "default", 1),
     ]
 
 
@@ -957,7 +941,6 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
     plan = CompiledStepPlan(
         step_index=0,
         step_name="consume",
-        step_type="FunctionStep",
         axis_id="A01",
         compiled_function_pattern=compiled,
     )
@@ -981,6 +964,7 @@ def test_special_input_edges_use_nominal_artifact_payload_types() -> None:
     )
     mask = ArtifactSpec.input("Mask", ImageArtifactType, parameter_name="mask")
 
+    @artifact_inputs(measurements, labels, mask)
     @special_inputs("labels", "mask")
     def consume(
         image: np.ndarray,
@@ -990,11 +974,7 @@ def test_special_input_edges_use_nominal_artifact_payload_types() -> None:
         del labels, mask
         return image
 
-    validate_artifact_input_parameter_bindings(
-        consume,
-        (measurements, labels, mask),
-        adapter_manages_inputs=True,
-    )
+    CallableContract.from_callable(consume).validate_artifact_input_parameter_bindings()
     assert tuple(spec.parameter_name for spec in (measurements, labels, mask)) == (
         None,
         "labels",
@@ -1015,6 +995,7 @@ def test_sequence_special_input_claims_all_compatible_artifacts() -> None:
         parameter_name="topology_inputs",
     )
 
+    @artifact_inputs(measurements, labels, mask)
     @special_inputs("topology_inputs")
     def consume(
         image: np.ndarray,
@@ -1023,11 +1004,7 @@ def test_sequence_special_input_claims_all_compatible_artifacts() -> None:
         del topology_inputs
         return image
 
-    validate_artifact_input_parameter_bindings(
-        consume,
-        (measurements, labels, mask),
-        adapter_manages_inputs=True,
-    )
+    CallableContract.from_callable(consume).validate_artifact_input_parameter_bindings()
     assert tuple(spec.parameter_name for spec in (measurements, labels, mask)) == (
         None,
         "topology_inputs",

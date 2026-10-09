@@ -312,7 +312,6 @@ class DebugRuntimeFixture:
             step_index=3,
             step_scope_id="plate::functionstep_3",
             step_name="debuggable",
-            step_type="FunctionStep",
             axis_id=DebugRuntimeFixture.AXIS_ID,
             input_memory_type=MEMORY_TYPE_NUMPY,
             source_binding_plan=CompiledSourceBindingPlan.empty(),

@@ -161,7 +161,6 @@ def _compiled_semantic_step_plan(
     return CompiledStepPlan(
         step_index=0,
         step_name="enriched-contract-step",
-        step_type="FunctionStep",
         axis_id="A01",
         variable_components=variable_components,
         group_by=group_by,
@@ -480,7 +479,6 @@ def test_compiled_step_rejects_stack_consumer_after_prior_axis_collapse():
     step_plan = CompiledStepPlan(
         step_index=0,
         step_name="ordered_chain",
-        step_type="FunctionStep",
         axis_id="A01",
         input_memory_type="numpy",
         output_memory_type="numpy",
@@ -657,7 +655,6 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
     step_plan = CompiledStepPlan(
         step_index=0,
         step_name="combine",
-        step_type="FunctionStep",
         axis_id="A01",
         variable_components=(),
         group_by=GroupBy.CHANNEL,
@@ -702,7 +699,6 @@ def test_compiled_dict_branches_accept_their_exact_input_scopes():
     step_plan = CompiledStepPlan(
         step_index=0,
         step_name="branch",
-        step_type="FunctionStep",
         axis_id="A01",
         variable_components=(),
         group_by=GroupBy.CHANNEL,

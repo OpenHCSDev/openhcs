@@ -1116,13 +1116,6 @@ class ObjectMeasurementValueRow:
     result_value: float
 
 
-@dataclass(frozen=True, slots=True)
-class ObjectMeasurementSliceValueRow(ObjectMeasurementValueRow):
-    """Long-form object measurement row scoped to a runtime slice."""
-
-    slice_index: int
-
-
 class MeasurementRowAxisField(str, Enum):
     """Canonical row-axis fields for long/tall measurement tables."""
 

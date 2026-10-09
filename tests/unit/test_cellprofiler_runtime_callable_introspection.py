@@ -61,7 +61,6 @@ def _compilation_session_for_steps(
                 index: CompiledStepPlan(
                     step_index=index,
                     step_name=step.name,
-                    step_type=step.__class__.__name__,
                     axis_id="A01",
                 )
                 for index, step in enumerate(steps)

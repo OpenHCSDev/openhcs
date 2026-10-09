@@ -1386,19 +1386,6 @@ def normalize_measurement_token(value: object) -> str:
     return normalize_runtime_identifier(value)
 
 
-def measurement_feature_candidates(
-    feature_name: str,
-    *,
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
-    ),
-) -> frozenset[str]:
-    """Return normalized feature aliases accepted for row/field lookup."""
-    return frozenset(
-        ordered_measurement_feature_candidates(feature_name, dialect=dialect)
-    )
-
-
 def ordered_measurement_feature_candidates(
     feature_name: str,
     *,
@@ -1412,43 +1399,6 @@ def ordered_measurement_feature_candidates(
         .feature_lookup(feature_name)
         .field_aliases
     )
-
-
-def specific_measurement_feature_candidates(
-    feature_name: str,
-    *,
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
-    ),
-) -> frozenset[str]:
-    """Return non-lossy aliases suitable for schema discovery."""
-    return frozenset(
-        ordered_measurement_feature_candidates(feature_name, dialect=dialect)
-    )
-
-
-def ordered_measurement_source_candidates(
-    feature_name: str,
-    *,
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
-    ),
-) -> tuple[str, ...]:
-    """Return source-image aliases encoded by a source-qualified feature name."""
-    return (
-        resolve_runtime_measurement_lookup_dialect(dialect)
-        .feature_lookup(feature_name)
-        .source_aliases
-    )
-
-
-def matching_measurement_field(
-    row: Mapping[str, object],
-    candidates: Sequence[str],
-) -> str | None:
-    """Return the first row field matching the ordered feature alias set."""
-    fields = matching_measurement_fields(row, candidates)
-    return fields[0] if fields else None
 
 
 def matching_measurement_fields(
@@ -1524,20 +1474,3 @@ def measurement_values_for_feature(
         else tuple(int(object_id) for object_id in object_ids)
     )
     return query.values_for_domain(measurement_tables, resolved_object_ids)
-
-
-def measurement_value_indexes_for_object_feature_batch(
-    measurement_tables_by_object: MeasurementTablesByObject,
-    feature_name: str,
-    *,
-    object_names: Sequence[str],
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
-    ),
-) -> MeasurementValueIndexesByObject:
-    """Return object-keyed feature indexes for one feature across object domains."""
-    return MeasurementObjectFeatureVectorBatchQuery(
-        feature_name,
-        tuple(object_names),
-        dialect=dialect,
-    ).value_indexes(measurement_tables_by_object)

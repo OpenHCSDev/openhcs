@@ -44,6 +44,7 @@ from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
 from openhcs.core.runtime_execution_validation import (
+    RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
     RuntimeArtifactExecutionObservation,
     _runtime_artifact_viewer_output_payloads,
@@ -133,41 +134,16 @@ def test_runtime_execution_validation_detects_missing_artifact_kind() -> None:
         RuntimeArtifactExecutionExpectation(
             artifact_kinds=frozenset((MeasurementsArtifactType,)),
             exports=RuntimeExportExpectation.from_output_specs(()),
+            axis_expectations=(
+                RuntimeArtifactAxisExpectation(
+                    "A01", frozenset((MeasurementsArtifactType,))
+                ),
+            ),
         ),
         observation,
     )
 
     assert failures == (
-        "axis 'A01' produced no runtime records for declared artifact kind "
-        "'measurements'",
-    )
-
-
-def test_v7_observation_preserves_legacy_all_axis_expectation(tmp_path: Path) -> None:
-    expectation = RuntimeArtifactExecutionExpectation(
-        artifact_kinds=frozenset((MeasurementsArtifactType,)),
-        exports=RuntimeExportExpectation.from_output_specs(()),
-    )
-    del expectation.axis_expectations
-    archived = ZMQRuntimeExecutionObservationExport(
-        schema_version=7,
-        expectation=expectation,
-        records_by_axis={"A01": ()},
-        exports=RuntimeExportObservation.from_output_paths(()),
-        output_roots=(),
-        execution_success_by_axis={"A01": True},
-    )
-    path = tmp_path / "legacy_observation.pkl.gz"
-    with gzip.open(path, "wb") as handle:
-        pickle.dump(archived, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    restored = ZMQRuntimeExecutionObservationExport.read(path)
-
-    assert restored.schema_version == 7
-    assert restored.expectation.axis_expectations is None
-    assert runtime_artifact_execution_failures(
-        restored.expectation, restored.observation()
-    ) == (
         "axis 'A01' produced no runtime records for declared artifact kind "
         "'measurements'",
     )
@@ -241,7 +217,6 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
             0: CompiledStepPlan(
                 step_index=0,
                 step_name="Measure",
-                step_type="FunctionStep",
                 axis_id="A01",
                 artifact_outputs=OrderedDict(((output.ref(), output),)),
                 compiled_function_pattern=_compiled_pattern(),
@@ -308,7 +283,6 @@ def test_compiled_artifact_viewer_expectations_preserve_full_producers() -> None
             0: CompiledStepPlan(
                 step_index=0,
                 step_name="First",
-                step_type="FunctionStep",
                 axis_id="A01",
                 step_scope_id="scope-first",
                 pipeline_position=1,
@@ -321,7 +295,6 @@ def test_compiled_artifact_viewer_expectations_preserve_full_producers() -> None
             1: CompiledStepPlan(
                 step_index=1,
                 step_name="Second",
-                step_type="FunctionStep",
                 axis_id="A01",
                 step_scope_id="scope-second",
                 pipeline_position=2,
@@ -465,7 +438,6 @@ def test_empty_roi_materialization_does_not_invent_viewer_layer() -> None:
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Segment",
-        step_type="FunctionStep",
         axis_id="A01",
         step_scope_id="scope-empty-labels",
         pipeline_position=0,
@@ -522,7 +494,6 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name="Export",
-                    step_type="FunctionStep",
                     axis_id=axis_id,
                     artifact_outputs=OrderedDict(((output.ref(), output),)),
                     compiled_function_pattern=pattern,
@@ -553,7 +524,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
     assert expectation.artifact_kinds == frozenset((MeasurementsArtifactType,))
     assert tuple(
         (item.axis_id, item.artifact_kinds)
-        for item in expectation.axis_expectations or ()
+        for item in expectation.axis_expectations
     ) == (
         ("A01", frozenset((MeasurementsArtifactType,))),
         ("A02", frozenset()),

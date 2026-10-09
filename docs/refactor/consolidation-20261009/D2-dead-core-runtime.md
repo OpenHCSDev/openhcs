@@ -25,6 +25,15 @@
 - `runtime/zmq_execution_observation._restore_legacy_axis_expectation` is a `getattr` default kept for archived payloads (TIME-2).
 - `pyqt_gui` `image_browser.py:285` reads the orchestrator's `_metadata_cache_service` beside `orchestrator.metadata_cache`. Keep one.
 
+### Corrections found while executing (re-verified against `0be261732`)
+
+- `WellPatternConstants` is not dead: `WellFilterProcessor` reads it. Its four constants moved onto `WellFilterProcessor`, and the class was deleted.
+- The `core/function_contracts.py` helpers are in `core/pipeline/function_contracts.py`. `special_input_names_from_callable`, `image_payload_consumption_from_callable` and `runtime_bound_parameter_names_from_callable` had about 15 test callers that assert real module declarations; those tests now read `CallableContract.from_callable(...)` directly instead of being deleted.
+- `special_outputs` also had one integration test and one unit test caller besides the 3 benchmark pipelines. All were migrated to `artifact_outputs`.
+- `_restore_legacy_axis_expectation` was one part of a larger archived-payload reader: `ZMQRuntimeExecutionOutcomeExport.read` accepted schema versions 1-3 and `ZMQRuntimeExecutionObservationExport.read` accepted 5-7. Both readers now accept only the current version. Only those readers produced `compiled_axis_ids=None` and `axis_expectations=None`, so both fields are now required. `RuntimeArtifactExecutionExpectation.from_output_specs`, which was test-only and built the `None` mode, was deleted, along with the benchmark's "Legacy … export" checks.
+- The measurement and equivalence set is 21 symbols: the 7 examples plus `specific_measurement_feature_candidates`, `ordered_measurement_source_candidates`, `ProjectedMeasurementRows`, `measurement_row_identity_role`, `measurement_row_field_value`, `_label_planes_are_empty`, `ObjectMeasurementSliceValueRow`, `_cached_runtime_cell_signature`, `RuntimeMeasurementRowIdentityOrMissing`, `RuntimeMeasurementIndexedQualifierCache`, `runtime_measurement_identity_field_matches`, `RuntimeSnapshotLongFormMeasurementFactProjector` and `is_wide_measurement_table`, and the test-only `measurement_feature_candidates`, `matching_measurement_field`, `runtime_measurement_tables_for_object`, `runtime_relationship` and `carries_measurement_row_semantics`. Strategy subclasses with no name references (`*MissingStrategy`, `*FeatureSemanticProfile`, `*QualifierSuffixMatchStrategy`, `*PlaneAlignmentStrategy`, `*RowsAxisProjection`, `*FeatureArrayDomainStrategy`) are registered families, not dead code, and stay.
+- The orchestrator exposed `metadata_cache` as an `AliasProperty` over `_metadata_cache_service`. The private attribute was removed, and `metadata_cache` is now the only attribute.
+
 ## Target
 
 Delete every item. Leave `core/function_patterns.py` alone; K5 owns it. `core/components/` belongs to D3.

@@ -135,7 +135,7 @@ def test_runtime_binding_consumes_captured_selection(func, parameter):
         main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
         context=context,
         execution_plan=CompiledStepPlan(
-            step_index=0, step_name="Context", step_type="FunctionStep", axis_id="A01"
+            step_index=0, step_name="Context", axis_id="A01"
         ),
         compiled_group=pattern.default_group,
         artifact_inputs=artifacts[0],

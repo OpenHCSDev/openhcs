@@ -64,7 +64,6 @@ def _compiled_plan(**overrides):
         step_index=2,
         step_scope_id="plate::functionstep_2",
         step_name="measure",
-        step_type="FunctionStep",
         axis_id="A01",
         input_dir=Path("/tmp/input"),
         output_dir=Path("/tmp/output"),

@@ -39,7 +39,6 @@ from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 def test_artifact_output_kind_is_owned_by_original_compiled_plan() -> None:
     plan = CompiledStepPlan(
         step_index=3,
-        step_type="FunctionStep",
         step_name="IdentifyCells",
         step_scope_id="identify-cells",
         pipeline_position=3,
@@ -60,7 +59,7 @@ def test_artifact_output_kind_is_owned_by_original_compiled_plan() -> None:
 
 def test_producer_identity_reads_current_plan_and_original_surface() -> None:
     plan = CompiledStepPlan(
-        step_index=1, step_type="FunctionStep", step_name="Original",
+        step_index=1, step_name="Original",
         step_scope_id="original", pipeline_position=1, axis_id="A01",
     )
     surface = AlignedImageSliceContext.main_flow("corrected")
@@ -87,7 +86,7 @@ def test_produced_occurrence_owns_memory_path_and_current_source_projection(
     saved_path: str,
 ) -> None:
     plan = CompiledStepPlan(
-        step_index=1, step_type="FunctionStep", step_name="Producer", axis_id="A01",
+        step_index=1, step_name="Producer", axis_id="A01",
         step_scope_id="producer", pipeline_position=1, output_dir=Path("/memory"),
     )
     components = {"well": "A01", "channel": 2}
@@ -126,7 +125,7 @@ def test_produced_occurrence_owns_memory_path_and_current_source_projection(
 
 def test_published_slots_stay_fixed_with_live_source_metadata_and_filename_aliases():
     plan = CompiledStepPlan(
-        step_index=1, step_type="FunctionStep", step_name="Producer", axis_id="A01",
+        step_index=1, step_name="Producer", axis_id="A01",
         step_scope_id="producer", pipeline_position=1, output_dir=Path("/memory"),
     )
     coordinates = [{"channel": 1}, {"channel": 2}]
@@ -245,7 +244,6 @@ def test_foreign_artifact_inputs_do_not_filter_lifecycle_producer(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id=dependency_scope,
         step_name="LifecycleProducer",
         pipeline_position=1,
@@ -306,7 +304,6 @@ def test_compiled_main_flow_edge_selects_exact_producer_identity(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="align",
         step_name="Align",
         pipeline_position=1,
@@ -389,7 +386,6 @@ def test_storage_backed_primary_input_selects_exact_lifecycle_output(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="color_to_gray",
         step_name="ColorToGray",
         pipeline_position=1,
@@ -488,7 +484,6 @@ def test_storage_backed_input_does_not_reclassify_lifecycle_output(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="artifact_producer",
         step_name="ArtifactProducer",
         pipeline_position=1,
@@ -565,7 +560,6 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="artifact_producer",
         step_name="ArtifactProducer",
         pipeline_position=1,
@@ -633,7 +627,7 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
 
     parser = SourceSchemaFilenameParser()
     plan = CompiledStepPlan(
-        step_index=2, step_type="FunctionStep", step_name="Align", axis_id="A01",
+        step_index=2, step_name="Align", axis_id="A01",
         step_scope_id="align", pipeline_position=2, output_dir=Path("/memory"),
     )
     records = []

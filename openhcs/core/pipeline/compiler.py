@@ -269,7 +269,6 @@ class PipelineCompiler:
                 session.plans[step_index] = CompiledStepPlan(
                     step_index=step_index,
                     step_name=step.name,
-                    step_type=type(step).__name__,
                     axis_id=session.axis_id,
                 )
 
@@ -337,7 +336,6 @@ class PipelineCompiler:
                 session.plans[step_index] = CompiledStepPlan(
                     step_index=step_index,
                     step_name=step.name,
-                    step_type=type(step).__name__,
                     axis_id=session.axis_id,
                     error="Missing from path planning phase by PipelinePathPlanner",
                     create_openhcs_metadata=session.metadata_writer,
@@ -347,7 +345,6 @@ class PipelineCompiler:
             current_plan = session.plans[step_index]
             current_plan.step_scope_id = session.pipeline.step_scope_ids[step_index]
             current_plan.step_name = step.name
-            current_plan.step_type = type(step).__name__
             current_plan.axis_id = session.axis_id
             current_plan.create_openhcs_metadata = session.metadata_writer
             current_plan.variable_components = (

@@ -139,7 +139,6 @@ def _compiled_fixture() -> tuple[
     step_plan = CompiledStepPlan(
         step_index=1,
         step_name="Transform",
-        step_type="FunctionStep",
         axis_id="A01",
         artifact_inputs=OrderedDict(((input_plan.ref(), input_plan),)),
         artifact_outputs=OrderedDict(((output_plan.ref(), output_plan),)),

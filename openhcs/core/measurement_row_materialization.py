@@ -142,7 +142,6 @@ if TYPE_CHECKING:
     from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 
 
-ProjectedMeasurementRows: TypeAlias = Sequence[Mapping[str, Any]] | ColumnarRows
 MeasurementFeatureNameProjection: TypeAlias = Callable[
     [str, tuple[tuple[str, object], ...]],
     str,
@@ -1844,28 +1843,6 @@ def measurement_row_has_long_form_measurement_fields(
     ) and bool(normalized_fields & MeasurementRowValueField.normalized_field_names())
 
 
-def measurement_row_identity_role(
-    row: Mapping[str, object],
-) -> MeasurementObjectRowIdentity | None:
-    """Return the explicit OpenHCS row-identity role encoded on a measurement row."""
-    return cast(
-        MeasurementObjectRowIdentity | None,
-        MeasurementRowObjectIdentityRole.value_from_row(row),
-    )
-
-
-def measurement_row_field_value(
-    row: Mapping[str, object],
-    field_name: str,
-) -> object | None:
-    """Return a row value by normalized measurement field name."""
-    if field_name in row:
-        return row[field_name]
-    normalized_target = normalize_runtime_identifier(field_name)
-    field = normalized_measurement_row_fields_for_row(row).get(normalized_target)
-    return None if field is None else row[field]
-
-
 def measurement_row_declared_field_value(
     row: Mapping[str, object],
     field_name: str,
@@ -2538,20 +2515,6 @@ def measurement_row_semantic_field_names() -> frozenset[str]:
         frozenset(field.value for field in MeasurementRowAxisField)
         | MeasurementRowValueField.field_names()
     )
-
-
-def carries_measurement_row_semantics(row: object) -> bool:
-    """Return whether a row-like object declares measurement-row fields."""
-    semantic_fields = measurement_row_semantic_field_names()
-    if isinstance(row, Mapping):
-        field_names = frozenset((str(field_name) for field_name in row.keys()))
-    elif is_dataclass(row):
-        field_names = frozenset((field.name for field in dataclass_fields(row)))
-    elif type(row).__dictoffset__ != 0:
-        field_names = frozenset((str(field_name) for field_name in vars(row).keys()))
-    else:
-        return False
-    return bool(field_names & semantic_fields)
 
 
 def measurement_table_row_layout_from_fields(

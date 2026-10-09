@@ -282,7 +282,7 @@ class ImageBrowserMetadataDisplayResolver:
             if metadata_key not in ALL_COMPONENT_VALUES:
                 return value_str
             component = AllComponents(metadata_key)
-            metadata_name = orchestrator._metadata_cache_service.get_component_metadata(
+            metadata_name = orchestrator.metadata_cache.get_component_metadata(
                 component,
                 value_str,
             )

@@ -21,7 +21,7 @@ try:
     from cupyx.scipy import ndimage as cp_ndimage
 
     from openhcs.core.memory.decorators import cupy as cupy_func
-    from openhcs.core.pipeline.function_contracts import special_outputs
+    from openhcs.core.pipeline.function_contracts import artifact_outputs
     from openhcs.processing.materialization import csv_materializer
     from openhcs.processing.backends.analysis.cell_counting_cpu import (
         materialize_segmentation_masks,
@@ -38,7 +38,7 @@ try:
         mean_intensity: float
 
     @cupy_func
-    @special_outputs(
+    @artifact_outputs(
         (
             "nuclei_measurements",
             csv_materializer(

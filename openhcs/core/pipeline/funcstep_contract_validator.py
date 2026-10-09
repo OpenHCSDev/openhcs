@@ -273,49 +273,20 @@ class ImportStatementExtractor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _resolve_relative_import(
-        self, module: Optional[str], level: Optional[int] = None
+        self, module: Optional[str], level: int
     ) -> Optional[str]:
-        """
-        Resolve an ImportFrom-relative import (module + level) to an absolute module name.
-
-        This method supports two calling conventions for backward compatibility:
-        1. New interface: _resolve_relative_import(module, level) - AST-based
-        2. Old interface: _resolve_relative_import(relative_module) - string-based
+        """Resolve an ImportFrom module and level to an absolute module name.
 
         Args:
-            module: The ImportFrom module (e.g., 'percentile_utils' for `from .percentile_utils import ...`)
-                    OR the relative module string (e.g., '.percentile_utils') for old interface
-            level: The ImportFrom level (1='.', 2='..', ...) for new interface, or None for old interface
+            module: The ImportFrom module (e.g. 'percentile_utils' for
+                `from .percentile_utils import ...`).
+            level: The ImportFrom level (1='.', 2='..', ...).
 
         Returns:
             Absolute module name if resolution succeeds, None otherwise
         """
         if self.module_name is None:
             return None
-
-        # Handle old interface (string-based) for backward compatibility
-        if level is None:
-            # Old interface: module is the relative module string (e.g., '.percentile_utils')
-            relative_module = module
-            if relative_module is None:
-                return None
-
-            # Count the number of dots in the relative import
-            # e.g., '.' -> 1 (current package), '..' -> 2 (parent package), '...' -> 3 (grandparent package)
-            level = 0
-            for char in relative_module:
-                if char == ".":
-                    level += 1
-                else:
-                    break
-
-            # Get the package part of the relative import (after the dots)
-            # e.g., '.percentile_utils' -> 'percentile_utils'
-            # e.g., '..utils' -> 'utils'
-            package_part = relative_module[level:]
-        else:
-            # New interface: module is the module name (without dots), level is provided separately
-            package_part = module
 
         # Split the current module name into parts
         # e.g., 'openhcs.processing.backends.processors.numpy_processor'
@@ -343,9 +314,9 @@ class ImportStatementExtractor(ast.NodeVisitor):
         )
 
         # Add the module path parts (may be nested like "utils.foo")
-        if package_part:
-            package_parts = package_part.split(".")
-            module_parts.extend(package_parts)
+        if module:
+            modules = module.split(".")
+            module_parts.extend(modules)
 
         # Join to get the absolute module name
         absolute_module = ".".join(module_parts)

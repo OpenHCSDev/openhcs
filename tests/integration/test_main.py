@@ -75,7 +75,6 @@ from tests.integration.helpers.fixture_utils import (
     microscope_config,
     plate_dir,
     test_params,
-    print_thread_activity_report,
     zmq_execution_mode,
 )
 
@@ -883,7 +882,6 @@ def test_main(
         print(f"OMERO Plate URL: {plate_url}")
         print(f"{'=' * 80}\n")
 
-    print_thread_activity_report()
     print(f"{CONSTANTS.SUCCESS_INDICATOR} ({len(results)} wells processed)")
 
 
@@ -1061,7 +1059,6 @@ def _test_main_with_code_serialization(
 
     validate_separate_materialization(test_config.plate_dir)
 
-    print_thread_activity_report()
     print(
         f"\n{CONSTANTS.SUCCESS_INDICATOR} [CODE SERIALIZATION TEST] ({len(results)} wells processed)"
     )

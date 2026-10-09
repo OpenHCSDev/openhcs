@@ -40,7 +40,6 @@ def _fixture():
     pattern = compile_function_pattern(_identity, {}, {})
     plan = CompiledStepPlan(
         step_index=0,
-        step_type="FunctionStep",
         step_name="Loaded",
         axis_id="A01",
         step_scope_id="loaded-cohort",

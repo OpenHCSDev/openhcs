@@ -283,7 +283,6 @@ def _context() -> SimpleNamespace:
             0: CompiledStepPlan(
                 step_index=0,
                 step_name="step",
-                step_type="FunctionStep",
                 axis_id="A01",
             )
         },

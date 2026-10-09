@@ -343,7 +343,6 @@ def _export_context() -> ProcessingContext:
             0: CompiledStepPlan(
                 step_index=0,
                 step_name="ExportToDatabase",
-                step_type="FunctionStep",
                 axis_id=AXIS_ID,
                 source_binding_plan=CompiledSourceBindingPlan.empty(),
                 compiled_function_pattern=compile_function_pattern(
@@ -1708,7 +1707,6 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step(
     context.step_plans[1] = CompiledStepPlan(
         step_index=1,
         step_name="SiblingPlateExport",
-        step_type="FunctionStep",
         axis_id=AXIS_ID,
         source_binding_plan=CompiledSourceBindingPlan(
             metadata_fields=(FieldSpec("SiblingOnly", str, required=False),),

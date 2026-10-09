@@ -109,14 +109,3 @@ class MetadataCache:
                 return False
         return True
 
-
-# Global cache instance
-_global_metadata_cache: Optional[MetadataCache] = None
-
-
-def get_metadata_cache() -> MetadataCache:
-    """Get global metadata cache instance."""
-    global _global_metadata_cache
-    if _global_metadata_cache is None:
-        _global_metadata_cache = MetadataCache()
-    return _global_metadata_cache

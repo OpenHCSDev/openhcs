@@ -63,8 +63,7 @@ main-flow publication, and the active output subset are then represented by
 compiled source, edge, and artifact plans; do not copy them into declaration
 partitions.
 
-Callable names such as ``special_inputs`` and ``special_outputs`` describe ABI
-positions only. They are not a substitute for artifact types, producer edges,
+``special_inputs`` describes ABI parameters only. They are not a substitute for artifact types, producer edges,
 or materialization declarations.
 
 ``special_inputs("labels")`` alone does not bind a required ``labels`` parameter.

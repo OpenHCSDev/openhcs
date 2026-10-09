@@ -89,7 +89,6 @@ def plan_for(plate):
     return CompiledStepPlan(
         step_index=0,
         step_name="synthetic saved result",
-        step_type="FunctionStep",
         axis_id="A01",
         write_backend=Backend.MEMORY.value,
         create_openhcs_metadata=True,

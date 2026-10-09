@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
@@ -121,20 +121,8 @@ class RuntimeArtifactExecutionExpectation:
 
     artifact_kinds: frozenset[type[ArtifactType]]
     exports: RuntimeExportExpectation
+    axis_expectations: tuple[RuntimeArtifactAxisExpectation, ...]
     artifact_viewer: tuple[RuntimeArtifactViewerExpectation, ...] = ()
-    axis_expectations: tuple[RuntimeArtifactAxisExpectation, ...] | None = None
-
-    @classmethod
-    def from_output_specs(
-        cls,
-        output_specs: Iterable[ArtifactSpec],
-        *,
-        exports: RuntimeExportExpectation,
-    ) -> "RuntimeArtifactExecutionExpectation":
-        return cls(
-            artifact_kinds=frozenset(spec.artifact_type for spec in output_specs),
-            exports=exports,
-        )
 
     @classmethod
     def from_compiled_contexts(
@@ -178,25 +166,24 @@ class RuntimeArtifactExecutionExpectation:
         self.artifact_kinds = frozenset(
             ArtifactType.coerce(kind) for kind in self.artifact_kinds
         )
-        if self.axis_expectations is not None:
-            self.axis_expectations = tuple(self.axis_expectations)
-            if any(
-                not isinstance(item, RuntimeArtifactAxisExpectation)
-                for item in self.axis_expectations
-            ):
-                raise TypeError(
-                    "axis_expectations must contain RuntimeArtifactAxisExpectation values."
-                )
-            axis_ids = tuple(item.axis_id for item in self.axis_expectations)
-            if len(axis_ids) != len(set(axis_ids)):
-                raise ValueError("axis_expectations contain duplicate axis IDs.")
-            owned_kinds = frozenset(
-                kind for item in self.axis_expectations for kind in item.artifact_kinds
+        self.axis_expectations = tuple(self.axis_expectations)
+        if any(
+            not isinstance(item, RuntimeArtifactAxisExpectation)
+            for item in self.axis_expectations
+        ):
+            raise TypeError(
+                "axis_expectations must contain RuntimeArtifactAxisExpectation values."
             )
-            if owned_kinds != self.artifact_kinds:
-                raise ValueError(
-                    "Compiled artifact kinds have no exact owning axis expectation."
-                )
+        axis_ids = tuple(item.axis_id for item in self.axis_expectations)
+        if len(axis_ids) != len(set(axis_ids)):
+            raise ValueError("axis_expectations contain duplicate axis IDs.")
+        owned_kinds = frozenset(
+            kind for item in self.axis_expectations for kind in item.artifact_kinds
+        )
+        if owned_kinds != self.artifact_kinds:
+            raise ValueError(
+                "Compiled artifact kinds have no exact owning axis expectation."
+            )
         if not isinstance(self.exports, RuntimeExportExpectation):
             raise TypeError(
                 "RuntimeArtifactExecutionExpectation.exports must be "
@@ -429,12 +416,8 @@ def _runtime_artifact_failures(
 ) -> tuple[str, ...]:
     failures: list[str] = []
     record_counts = observation.record_counts_by_axis
-    expected_axes = (
-        ((item.axis_id, item.artifact_kinds) for item in expectation.axis_expectations)
-        if expectation.axis_expectations is not None
-        else ((axis_id, expectation.artifact_kinds) for axis_id in record_counts)
-    )
-    for axis_id, kinds in expected_axes:
+    for item in expectation.axis_expectations:
+        axis_id, kinds = item.axis_id, item.artifact_kinds
         counts = record_counts.get(axis_id, {})
         for kind in sorted(
             kinds,

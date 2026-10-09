@@ -413,7 +413,6 @@ def _plan(
     return CompiledStepPlan(
         step_index=6,
         step_name="measure",
-        step_type="FunctionStep",
         axis_id="A01",
         artifact_outputs={plan.ref(): plan for plan in (output_plan,)},
         streaming_configs={} if streaming_configs is None else streaming_configs,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -27,10 +28,7 @@ from openhcs.processing.backends.cellprofiler.color import (
     gray_to_color,
     unmix_colors,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ImagePayloadConsumption,
-    image_payload_consumption_from_callable,
-)
+from openhcs.core.pipeline.function_contracts import ImagePayloadConsumption
 from openhcs.processing.backends.cellprofiler.image_quality import (
     MeasureImageQualityModule,
     measure_image_quality,
@@ -153,7 +151,7 @@ def test_gray_to_color_plain_rgb_uses_three_current_image_inputs() -> None:
     first_input = contracts[0].artifact_inputs.of_artifact_type(ImageArtifactType)[0]
     assert output.relations == (GroupLineageSourceRelation(source=first_input.ref()),)
     assert (
-        image_payload_consumption_from_callable(gray_to_color)
+        CallableContract.from_callable(gray_to_color).metadata.image_payload_consumption
         is ImagePayloadConsumption.COMPOSED
     )
 

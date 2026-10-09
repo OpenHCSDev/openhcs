@@ -313,27 +313,6 @@ def runtime_numeric_text_value(text: str) -> float | None:
     return float(stripped)
 
 
-@lru_cache(maxsize=131072)
-def _cached_runtime_cell_signature(
-    text: str,
-    numeric_decimal_places: int,
-) -> RuntimeCellSignature:
-    stripped = text.strip()
-    if not stripped:
-        return RuntimeCellSignature(RuntimeCellValueKind.EMPTY, "")
-    numeric = runtime_numeric_text_value(stripped)
-    if numeric is None:
-        return RuntimeCellSignature(RuntimeCellValueKind.TEXT, stripped)
-    if math.isnan(numeric):
-        canonical = "nan"
-    elif math.isinf(numeric):
-        canonical = "inf" if numeric > 0 else "-inf"
-    else:
-        rounded = round(numeric, numeric_decimal_places)
-        canonical = repr(0.0 if rounded == 0 else rounded)
-    return RuntimeCellSignature(RuntimeCellValueKind.NUMBER, canonical)
-
-
 def _runtime_numeric_cell_signature(
     numeric: float,
     numeric_decimal_places: int,
@@ -473,26 +452,6 @@ def runtime_measurement_value_is_present(value: object) -> bool:
             runtime_measurement_value_is_present(nested) for nested in value.values()
         )
     return runtime_measurement_cell_is_present(value)
-
-
-@dataclass(frozen=True, slots=True)
-class RuntimeMeasurementCellPresence:
-    """Presence semantics for runtime measurement cell payloads."""
-
-    value: object
-
-    def is_present(self) -> bool:
-        return runtime_measurement_cell_is_present(self.value)
-
-
-@dataclass(frozen=True, slots=True)
-class RuntimeMeasurementValuePresence:
-    """Presence semantics for scalar or nested runtime measurement values."""
-
-    value: object
-
-    def is_present(self) -> bool:
-        return runtime_measurement_value_is_present(self.value)
 
 
 def measurement_numeric_runtime_value(

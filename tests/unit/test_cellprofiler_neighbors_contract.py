@@ -110,7 +110,6 @@ def test_relationship_module_number_is_derived_after_public_transport() -> None:
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name=restored_step.name,
-                    step_type=type(restored_step).__name__,
                     axis_id="A01",
                 )
             },
@@ -147,7 +146,6 @@ def _compiled_neighbor_invocation():
             0: CompiledStepPlan(
                 step_index=0,
                 step_name=step.name,
-                step_type=type(step).__name__,
                 axis_id="A01",
             )
         },
@@ -371,7 +369,6 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
                 index: CompiledStepPlan(
                     step_index=index,
                     step_name=step.name,
-                    step_type=type(step).__name__,
                     axis_id="A01",
                 )
                 for index, step in enumerate(steps)
@@ -516,7 +513,6 @@ def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() 
                 index: CompiledStepPlan(
                     step_index=index,
                     step_name=step.name,
-                    step_type=type(step).__name__,
                     axis_id="A01",
                 )
                 for index, step in enumerate(steps)

@@ -52,7 +52,6 @@ from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     artifact_outputs,
     composed_image_payload,
-    special_outputs,
 )
 from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
@@ -120,10 +119,8 @@ def passthrough(image):
     return image
 
 
-def test_special_outputs_is_the_artifact_outputs_public_spelling() -> None:
-    assert special_outputs is artifact_outputs
-
-    @special_outputs(" measurements ", (" labels ", None))
+def test_artifact_outputs_normalizes_declared_names() -> None:
+    @artifact_outputs(" measurements ", (" labels ", None))
     def analyze(image):
         return image
 
@@ -228,7 +225,6 @@ def _execute_function_core(request: CoreExecutionRequest):
         step_index=0,
         step_scope_id="test::function_step",
         step_name="test",
-        step_type="FunctionStep",
         axis_id=request.context.axis_id,
         input_memory_type=MEMORY_TYPE_NUMPY,
         source_binding_plan=CompiledSourceBindingPlan.empty(),
@@ -1756,7 +1752,6 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="RGB output",
-            step_type="FunctionStep",
             axis_id="A01",
             output_memory_type=MEMORY_TYPE_NUMPY,
             artifact_inputs={},
@@ -1805,7 +1800,6 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="DeclaredOutput",
-            step_type="FunctionStep",
             axis_id="A01",
             output_memory_type=MEMORY_TYPE_NUMPY,
             artifact_inputs={},
@@ -1853,7 +1847,6 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="DeclaredObjectLabels",
-            step_type="FunctionStep",
             axis_id="A01",
             output_memory_type=MEMORY_TYPE_NUMPY,
             artifact_inputs={},

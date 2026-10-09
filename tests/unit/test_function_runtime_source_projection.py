@@ -156,7 +156,6 @@ def _anchor_executor(
 def _source_manifest(plan, paths_and_components):
     producer = CompiledStepPlan(
         step_index=plan.main_input_dependency.source_step_index,
-        step_type="FunctionStep",
         step_scope_id=plan.main_input_dependency.source_step_scope_id,
         step_name="producer",
         pipeline_position=plan.main_input_dependency.source_step_index,
@@ -587,7 +586,6 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
-            step_type="FunctionStep",
             axis_id="A01",
             source_binding_plan=source_binding_plan,
         ),
@@ -639,7 +637,6 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Physical source",
-        step_type="FunctionStep",
         axis_id="A01",
         input_dir=tmp_path,
         output_dir=tmp_path / "outputs",
@@ -946,7 +943,6 @@ def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> Non
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="enhance",
         step_name="Enhance",
         pipeline_position=1,
@@ -1035,7 +1031,6 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=4,
-        step_type="FunctionStep",
         step_scope_id="mask_image",
         step_name="MaskImage",
         pipeline_position=4,
@@ -1106,7 +1101,6 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
     output_dir = tmp_path / "images"
     cells_producer = CompiledStepPlan(
         step_index=6,
-        step_type="FunctionStep",
         step_scope_id="identify_cells",
         step_name="IdentifySecondaryObjects",
         pipeline_position=6,
@@ -1115,7 +1109,6 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
     )
     nuclei_producer = CompiledStepPlan(
         step_index=5,
-        step_type="FunctionStep",
         step_scope_id="identify_nuclei",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=5,
@@ -1208,7 +1201,6 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
     output_dir = tmp_path / "images"
     requested_producer = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="crop_blue",
         step_name="CropBlue",
         pipeline_position=2,
@@ -1217,7 +1209,6 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
     )
     previous_producer = CompiledStepPlan(
         step_index=3,
-        step_type="FunctionStep",
         step_scope_id="crop_red",
         step_name="CropRed",
         pipeline_position=3,
@@ -1314,7 +1305,6 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="image_set",
         step_name="ImageSet",
         pipeline_position=2,
@@ -1637,7 +1627,6 @@ def test_artifact_managed_missing_output_context_is_an_error(
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
-            step_type="FunctionStep",
             axis_id="A01",
         ),
         compiled_group=SimpleNamespace(
@@ -2411,7 +2400,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
     execution_plan = CompiledStepPlan(
         step_index=0,
         step_name="consume channel source",
-        step_type="FunctionStep",
         axis_id="A01",
         execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         source_binding_plan=source_binding_plan,
@@ -2534,7 +2522,6 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     execution_plan = CompiledStepPlan(
         step_index=0,
         step_name="consume channel source",
-        step_type="FunctionStep",
         axis_id="A01",
         execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         source_binding_plan=source_binding_plan,
@@ -2657,7 +2644,6 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="Stored",
-            step_type="FunctionStep",
             axis_id="A01",
             source_binding_plan=bindings,
         ),
@@ -2758,7 +2744,6 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         step_index=0,
         step_scope_id="pipeline::step_0",
         step_name="record labels",
-        step_type="FunctionStep",
         execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         input_memory_type="numpy",
@@ -3808,7 +3793,6 @@ def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="MetaXpress",
-            step_type="FunctionStep",
             axis_id="A01",
             main_input_dependency=StepInputDependency.pipeline_start(),
             source_binding_plan=selected_plan,
@@ -3891,7 +3875,6 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
-            step_type="FunctionStep",
             axis_id="A01",
             source_binding_plan=CompiledSourceBindingPlan(
                 bindings=(NamedSourceBinding(alias="FilenamePrefix"),),
@@ -4109,7 +4092,6 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     plan = CompiledStepPlan(
         step_index=0,
         step_name="PipelineStart",
-        step_type="FunctionStep",
         axis_id="A01",
         input_dir=tmp_path,
         read_backend="memory",
@@ -4217,7 +4199,6 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
     plan = CompiledStepPlan(
         step_index=1,
         step_name="Resize",
-        step_type="FunctionStep",
         axis_id="A01",
         input_dir=tmp_path,
         input_memory_type="numpy",
@@ -4231,7 +4212,6 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
     producer = CompiledStepPlan(
         step_index=0,
         step_name="producer",
-        step_type="FunctionStep",
         step_scope_id="producer",
         axis_id="A01",
         output_dir=tmp_path,
@@ -4296,7 +4276,6 @@ def test_artifact_managed_group_uses_compiler_group_without_filtering_anchor_fil
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
-            step_type="FunctionStep",
             axis_id="A01",
             main_input_dependency=StepInputDependency.pipeline_start(),
         ),
@@ -4321,7 +4300,6 @@ def test_step_output_group_does_not_reinterpret_producer_path_component() -> Non
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="source fixture",
-            step_type="FunctionStep",
             axis_id="A01",
             main_input_dependency=StepInputDependency.step_output(
                 source_step_index=4,
@@ -4365,7 +4343,6 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="correct_illumination",
         step_name="CorrectIlluminationApply",
         pipeline_position=1,
@@ -4454,7 +4431,6 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="align",
         step_name="Align",
         pipeline_position=2,
@@ -4550,7 +4526,6 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
@@ -4559,7 +4534,6 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
     )
     update = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="update",
         step_name="Update",
         pipeline_position=2,
@@ -4647,7 +4621,6 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
@@ -4656,7 +4629,6 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
     )
     collapse = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="collapse",
         step_name="Collapse",
         pipeline_position=2,
@@ -4720,7 +4692,6 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
@@ -4729,7 +4700,6 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
     )
     replacement = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="replacement",
         step_name="Replacement",
         pipeline_position=2,
@@ -4806,7 +4776,6 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=1,
-        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
@@ -4815,7 +4784,6 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
     )
     subset = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="subset",
         step_name="Subset",
         pipeline_position=2,
@@ -4881,7 +4849,6 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=2,
-        step_type="FunctionStep",
         step_scope_id="identify_primary",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=2,
@@ -4943,7 +4910,6 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
     output_dir = tmp_path / "images"
     producer = CompiledStepPlan(
         step_index=4,
-        step_type="FunctionStep",
         step_scope_id="correct_illumination_apply",
         step_name="CorrectIlluminationApply",
         pipeline_position=4,
@@ -5587,7 +5553,6 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         compiled_group=compile_function_pattern(func, {}, output_plans).default_group,
         execution_plan=CompiledStepPlan(
             step_index=0,
-            step_type="FunctionStep",
             axis_id="A01",
             output_dir=tmp_path,
             output_memory_type="numpy",
@@ -5654,7 +5619,6 @@ def qualified_producer_manifest(tmp_path):
     parser = SourceSchemaFilenameParser()
     producer = CompiledStepPlan(
         step_index=0,
-        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=0,
@@ -5854,7 +5818,6 @@ def test_producer_loader_validates_ambiguity_before_cache(
     producer = CompiledStepPlan(
         step_index=0,
         step_name="producer",
-        step_type="FunctionStep",
         step_scope_id="producer",
         axis_id="A01",
         output_dir=Path("/memory"),
@@ -5862,7 +5825,6 @@ def test_producer_loader_validates_ambiguity_before_cache(
     plan = CompiledStepPlan(
         step_index=1,
         step_name="consumer",
-        step_type="FunctionStep",
         axis_id="A01",
         input_dir=Path("/memory"),
         input_memory_type="numpy",
@@ -5949,7 +5911,6 @@ def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Volume",
-        step_type="FunctionStep",
         axis_id="A01",
         step_scope_id="volume",
         input_memory_type="numpy",

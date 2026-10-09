@@ -688,7 +688,6 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name=step.name,
-                    step_type=step.__class__.__name__,
                     axis_id="A01",
                 )
             },
@@ -764,7 +763,6 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
         index: CompiledStepPlan(
             step_index=index,
             step_name=step.name,
-            step_type=step.__class__.__name__,
             axis_id="A01",
         )
         for index, step in enumerate(steps)
@@ -822,7 +820,6 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name=step.name,
-                    step_type=step.__class__.__name__,
                     axis_id="A01",
                 )
             },
@@ -1151,7 +1148,6 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name=step.name,
-                    step_type=step.__class__.__name__,
                     axis_id="A01",
                 )
             },
@@ -1299,7 +1295,6 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
                 index: CompiledStepPlan(
                     step_index=index,
                     step_name=current_step.name,
-                    step_type=current_step.__class__.__name__,
                     axis_id="A01",
                 )
                 for index, current_step in enumerate((measurement_step, step))
@@ -1392,7 +1387,6 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
                         index: CompiledStepPlan(
                             step_index=index,
                             step_name=step.name,
-                            step_type=step.__class__.__name__,
                             axis_id="A01",
                         )
                         for index, step in enumerate(steps)

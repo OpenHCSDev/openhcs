@@ -126,7 +126,6 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         step_index=3,
         step_scope_id="plate::functionstep_3",
         step_name="metadata-consumer",
-        step_type="FunctionStep",
         axis_id="A01",
         input_memory_type=MEMORY_TYPE_NUMPY,
         source_binding_plan=CompiledSourceBindingPlan.empty(),
@@ -267,14 +266,12 @@ def _artifact_planner_stub() -> PathPlanner:
             step_index=2,
             step_scope_id="plate::functionstep_2",
             step_name="identify",
-            step_type="FunctionStep",
             axis_id="A01",
         ),
         3: CompiledStepPlan(
             step_index=3,
             step_scope_id="plate::functionstep_3",
             step_name="filter",
-            step_type="FunctionStep",
             axis_id="A01",
         ),
     }
@@ -803,7 +800,6 @@ def test_materialization_collision_updates_results_dir_and_config():
         3: CompiledStepPlan(
             step_index=3,
             step_name="materialize",
-            step_type="FunctionStep",
             axis_id="A01",
             materialized_output=MaterializedOutputPlan(
                 output_dir=Path("/data/plate1_processed/images"),
@@ -1213,7 +1209,6 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
                 index: CompiledStepPlan(
                     step_index=index,
                     step_name=step.name,
-                    step_type=step.__class__.__name__,
                     axis_id="A01",
                 )
                 for index, step in enumerate(steps)
@@ -1247,7 +1242,6 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     planner.plans[0] = CompiledStepPlan(
         step_index=0,
         step_name="percentile_normalize",
-        step_type="FunctionStep",
         axis_id="A01",
         execution_group_scope=channel_scope,
     )
@@ -5073,7 +5067,6 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
         step_index=4,
         step_scope_id="plate::functionstep_4",
         step_name="consume",
-        step_type="FunctionStep",
         axis_id="A01",
     )
     planner.session.realized_source_metadata = (
@@ -5424,7 +5417,6 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
         step_index=2,
         step_scope_id="plate::functionstep_2",
         step_name="CorrectIlluminationApply",
-        step_type="FunctionStep",
         axis_id="A01",
         artifact_inputs=storage,
         execution_group_scope=execution_scope,
@@ -5740,7 +5732,6 @@ def test_main_input_dependency_uses_scope_identity_for_step_output_edges():
             step_index=0,
             step_scope_id="plate::functionstep_0",
             step_name="load",
-            step_type="FunctionStep",
             axis_id="A01",
             output_dir=Path("/data/plate1_processed/images"),
         ),
@@ -5748,7 +5739,6 @@ def test_main_input_dependency_uses_scope_identity_for_step_output_edges():
             step_index=1,
             step_scope_id="plate::functionstep_1",
             step_name="measure",
-            step_type="FunctionStep",
             axis_id="A01",
         ),
     }
@@ -5784,7 +5774,6 @@ def test_main_input_dependency_uses_declared_artifact_producer_not_previous_step
             step_index=index,
             step_scope_id=f"plate::functionstep_{index}",
             step_name=name,
-            step_type="FunctionStep",
             axis_id="A01",
         )
         for index, name in enumerate(("CropBlue", "CropRed", "Identify"))
@@ -5878,14 +5867,12 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
             step_index=0,
             step_scope_id="plate::functionstep_0",
             step_name="load",
-            step_type="FunctionStep",
             axis_id="A01",
         ),
         1: CompiledStepPlan(
             step_index=1,
             step_scope_id="plate::functionstep_1",
             step_name="measure",
-            step_type="FunctionStep",
             axis_id="A01",
             main_input_dependency=source_dependency,
             compiled_function_pattern=preserving_pattern,
@@ -5894,7 +5881,6 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
             step_index=2,
             step_scope_id="plate::functionstep_2",
             step_name="consume",
-            step_type="FunctionStep",
             axis_id="A01",
         ),
     }
@@ -5920,7 +5906,6 @@ def test_main_input_dependency_preserves_pipeline_start_edges():
             step_index=1,
             step_scope_id="plate::functionstep_1",
             step_name="qc",
-            step_type="FunctionStep",
             axis_id="A01",
         )
     }

@@ -7,6 +7,7 @@ import inspect
 import numpy as np
 import pytest
 
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -29,8 +30,6 @@ from openhcs.core.invocation_artifacts import (
 )
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
-    runtime_bound_parameter_names_from_callable,
-    special_input_names_from_callable,
     special_inputs,
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
@@ -100,8 +99,8 @@ def test_registered_module_artifact_parameters_are_exact_special_inputs() -> Non
                 for parameter_name in signature.parameters
                 if parameter_name in bound_parameters
             )
-            special_parameters = special_input_names_from_callable(func)
-            runtime_parameters = runtime_bound_parameter_names_from_callable(func)
+            special_parameters = CallableContract.from_callable(func).artifact_input_parameter_names
+            runtime_parameters = CallableContract.from_callable(func).runtime_bound_parameters
             bound_without_special = tuple(
                 parameter_name
                 for parameter_name in artifact_parameters

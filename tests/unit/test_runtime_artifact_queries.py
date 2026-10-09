@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 import weakref
 
@@ -8,12 +7,9 @@ import pytest
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ObjectLabelsArtifactType,
     ArtifactOutputPlan,
     ArtifactType,
     MeasurementsArtifactType,
-    RelationshipsArtifactType,
 )
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
@@ -31,19 +27,15 @@ from openhcs.core.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
     measurement_table_axis_values,
     measurement_row_mapping,
-    runtime_measurement_tables_for_object,
-    runtime_relationship,
 )
 from openhcs.core.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
-    MeasurementAxisValueProjection,
     MeasurementFeatureQuery,
     RuntimeObjectLabelMeasurementQuery,
     RuntimeObjectLabelMeasurementQueryCache,
     MeasurementFeatureValueIndex,
     MeasurementObjectFeatureVectorBatchQuery,
-    matching_measurement_field,
-    measurement_feature_candidates,
+    matching_measurement_fields,
     ordered_measurement_feature_candidates,
     measurement_values_for_feature,
 )
@@ -59,10 +51,6 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
-)
-from openhcs.core.runtime_relationships import (
-    DirectedObjectRelationshipPayload,
-    ObjectRelationshipDeclaration,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -215,65 +203,6 @@ def object_labels(
 class MeasurementRow:
     object_name: str
     object_label: int
-
-
-def test_runtime_measurement_query_matches_schema_and_row_object_subjects() -> None:
-    store = RuntimeValueStore()
-    _record_native(
-        store,
-        MeasurementTable(
-            name="NucleiMeasurements",
-            rows=MeasurementSparseColumnarRows.from_rows(
-                ({"object_label": 1, "area": 42.0},),
-                fields=(
-                    FieldSpec("object_label", int),
-                    FieldSpec("area", float),
-                ),
-            ),
-            subject=MeasurementSubject(MeasurementScope.OBJECT, "Nuclei"),
-        ),
-        MeasurementsArtifactType,
-    )
-    _record_native(
-        store,
-        MeasurementTable(
-            name="MixedMeasurements",
-            rows=MeasurementSparseColumnarRows.from_rows(
-                (
-                    {"object_name": "Nuclei", "object_label": 1, "mean": 3.0},
-                    {"object_name": "Cells", "object_label": 1, "mean": 9.0},
-                ),
-                fields=(
-                    FieldSpec("object_name", str),
-                    FieldSpec("object_label", int),
-                    FieldSpec("mean", float),
-                ),
-            ),
-            subject=MeasurementSubject(MeasurementScope.ARTIFACT, "MixedMeasurements"),
-        ),
-        MeasurementsArtifactType,
-    )
-    _record_native(
-        store,
-        MeasurementTable(
-            name="ImageMeasurements",
-            rows=MeasurementSparseColumnarRows.from_rows(
-                ({"area": 100.0},), fields=(FieldSpec("area", float),)
-            ),
-            subject=MeasurementSubject(MeasurementScope.ARTIFACT, "ImageMeasurements"),
-        ),
-        MeasurementsArtifactType,
-    )
-
-    tables = runtime_measurement_tables_for_object(
-        RuntimeArtifactQueryContext(store, AXIS_ID),
-        "Nuclei",
-    )
-
-    assert [table.name for table in tables] == [
-        "NucleiMeasurements",
-        "MixedMeasurements",
-    ]
 
 
 def test_measurement_row_mapping_accepts_slotted_dataclasses() -> None:
@@ -747,7 +676,7 @@ def test_measurement_table_semantics_observes_current_row_and_subject_declaratio
 def test_measurement_feature_candidates_match_cellprofiler_compact_metric_names() -> (
     None
 ):
-    candidates = measurement_feature_candidates("Intensity_MADIntensity_typeI")
+    candidates = ordered_measurement_feature_candidates("Intensity_MADIntensity_typeI")
 
     assert "madintensity" in candidates
     assert "mad_intensity".replace("_", "") in candidates
@@ -760,10 +689,10 @@ def test_matching_measurement_field_prefers_specific_feature_suffix() -> None:
         "FormFactor": 0.95,
     }
 
-    field = matching_measurement_field(
+    field = matching_measurement_fields(
         row,
         ordered_measurement_feature_candidates("AreaShape_FormFactor"),
-    )
+    )[0]
 
     assert field == "FormFactor"
 
@@ -1776,40 +1705,6 @@ def test_axis_specific_measurement_table_query_projects_runtime_slice_axis() -> 
         .tables((runtime_table,))[0]
         .rows.row_mappings()
     ) == ({"slice_index": 1, "area": 20.0},)
-
-
-def test_runtime_relationship_query_reconstructs_typed_relationship() -> None:
-    store = RuntimeValueStore()
-    declaration = ObjectRelationshipDeclaration.parent_child(
-        source=ArtifactSpec.output("Cells", ObjectLabelsArtifactType).ref(),
-        target=ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType).ref(),
-        producer_module_number=1,
-    )
-    _record_native(
-        store,
-        ObjectRelationship(
-            name="ParentChild",
-            declaration=declaration,
-            payload=DirectedObjectRelationshipPayload(
-                source_ids=(10, 11),
-                target_ids=(1, 2),
-                slice_indices=(),
-                slice_count=None,
-            ),
-        ),
-        RelationshipsArtifactType,
-    )
-
-    relationship = runtime_relationship(
-        RuntimeArtifactQueryContext(store, AXIS_ID),
-        "ParentChild",
-    )
-
-    assert relationship.declaration.source.name == "Cells"
-    assert relationship.declaration.target.name == "Nuclei"
-    assert relationship.payload.source_ids == (10, 11)
-    assert relationship.payload.target_ids == (1, 2)
-    assert relationship.declaration.relationship_type == "parent_child"
 
 
 def test_runtime_artifact_ambiguity_reports_locations_without_payload_repr() -> None:

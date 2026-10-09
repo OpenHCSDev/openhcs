@@ -158,7 +158,6 @@ def _export_context() -> ProcessingContext:
             0: CompiledStepPlan(
                 step_index=0,
                 step_name="ExportToDatabase",
-                step_type="FunctionStep",
                 axis_id="A01",
                 source_binding_plan=CompiledSourceBindingPlan.empty(),
             )

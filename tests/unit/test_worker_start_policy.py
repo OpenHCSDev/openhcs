@@ -67,7 +67,6 @@ def test_execution_facts_use_compiled_step_plan_semantics() -> None:
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name="cpu",
-                    step_type="function",
                     axis_id="A01",
                     input_memory_type="numpy",
                     output_memory_type="numpy",
@@ -75,7 +74,6 @@ def test_execution_facts_use_compiled_step_plan_semantics() -> None:
                 1: CompiledStepPlan(
                     step_index=1,
                     step_name="gpu",
-                    step_type="function",
                     axis_id="A01",
                     output_memory_type="cupy",
                 ),
@@ -95,7 +93,6 @@ def test_execution_facts_treat_numpy_contexts_as_cpu() -> None:
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name="cpu",
-                    step_type="function",
                     axis_id="A01",
                     input_memory_type="numpy",
                     output_memory_type="numpy",

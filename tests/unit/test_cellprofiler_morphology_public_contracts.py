@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 from dataclasses import dataclass
@@ -30,10 +31,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.pipeline.function_contracts import (
-    artifact_outputs,
-    special_input_names_from_callable,
-)
+from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceProjectionRole,
@@ -197,7 +195,6 @@ def _compiled_contract(case: MorphologyPublicContractCase):
                 index: CompiledStepPlan(
                     step_index=index,
                     step_name=current_step.name,
-                    step_type=type(current_step).__name__,
                     axis_id="A01",
                 )
                 for index, current_step in enumerate(steps)
@@ -267,7 +264,7 @@ def test_registry_morphology_owners_compile_exact_public_function_step_abi(
     assert tuple(spec.artifact_type for spec in contract.artifact_outputs) == (
         case.output_types
     )
-    assert special_input_names_from_callable(case.function) == case.special_inputs
+    assert CallableContract.from_callable(case.function).artifact_input_parameter_names == case.special_inputs
 
 
 def test_fill_objects_returns_its_declared_object_label_artifact() -> None:

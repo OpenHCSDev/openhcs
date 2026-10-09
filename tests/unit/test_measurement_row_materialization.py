@@ -17,7 +17,6 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementRowsAxisProjection,
     MeasurementSparseColumnarRows,
     QualifiedMeasurementColumnarRows,
-    carries_measurement_row_semantics,
     is_structural_missing_measurement_cell,
     measurement_rows_with_source_provenance,
 )
@@ -182,19 +181,6 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
             "channel": "2",
         },
     )
-
-
-def test_biological_coordinates_are_axes_not_measurement_evidence() -> None:
-    assert not carries_measurement_row_semantics(
-        {
-            "well": "A01",
-            "site": "1",
-            "channel": "2",
-            "z_index": "3",
-            "timepoint": "4",
-        }
-    )
-    assert carries_measurement_row_semantics({"slice_index": 0, "cell_count": 2})
 
 
 def test_zero_row_dataclass_carrier_uses_nominal_annotations() -> None:

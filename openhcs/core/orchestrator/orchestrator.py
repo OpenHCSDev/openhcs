@@ -88,11 +88,7 @@ class PipelineOrchestrator:
     __objectstate_delegate__ = "pipeline_config"
     _plate_path: Optional[Path] = None
     _plate_path_frozen: bool = False
-    _metadata_cache_service: Optional["MetadataCache"] = None
     state: AliasProperty[OrchestratorState] = AliasProperty("_state")
-    metadata_cache: AliasProperty[MetadataCache] = AliasProperty(
-        "_metadata_cache_service"
-    )
 
     def __init__(
         self,
@@ -240,10 +236,7 @@ class PipelineOrchestrator:
         # Component keys cache for fast access - uses AllComponents (includes multiprocessing axis)
         self._component_keys_cache: Dict["AllComponents", List[str]] = {}
 
-        # Metadata cache service - per-orchestrator instance (not global singleton)
-        from openhcs.core.metadata_cache import MetadataCache
-
-        self._metadata_cache_service = MetadataCache()
+        self.metadata_cache = MetadataCache()
 
         # Viewer management - shared between pipeline execution and image browser
         self._visualizers = {}  # Dict[(backend_name, port)] -> visualizer instance
@@ -493,7 +486,7 @@ class PipelineOrchestrator:
             # Auto-cache component keys and metadata for instant access
             logger.info("Caching component keys and metadata...")
             self.cache_component_keys()
-            self._metadata_cache_service.cache_metadata(
+            self.metadata_cache.cache_metadata(
                 self.microscope_handler, self.plate_path, self._component_keys_cache
             )
 
@@ -685,7 +678,7 @@ class PipelineOrchestrator:
         # Extract cached metadata from service and convert to dict format expected by OpenHCSMetadataGenerator
         metadata_dict = {}
         for component in AllComponents:
-            cached_metadata = self._metadata_cache_service.get_cached_metadata(
+            cached_metadata = self.metadata_cache.get_cached_metadata(
                 component
             )
             if cached_metadata:
@@ -877,7 +870,7 @@ class PipelineOrchestrator:
         component_name = component.value
 
         # Try metadata cache first (preferred source)
-        cached_metadata = self._metadata_cache_service.get_cached_metadata(component)
+        cached_metadata = self.metadata_cache.get_cached_metadata(component)
         if source_bindings.source_filter_declarations:
             all_components = list(
                 self.source_workspace_projection(
@@ -1127,7 +1120,7 @@ class PipelineOrchestrator:
         self._initialized = False
         self._state = OrchestratorState.CREATED
         self._component_keys_cache.clear()
-        self._metadata_cache_service.clear_cache()
+        self.metadata_cache.clear_cache()
 
     def get_effective_config(
         self, *, for_serialization: bool = False
@@ -1164,8 +1157,7 @@ class PipelineOrchestrator:
         # No need to modify thread-local storage when clearing orchestrator config
         self.pipeline_config = None
         # Clear metadata cache for this orchestrator
-        if self._metadata_cache_service is not None:
-            self._metadata_cache_service.clear_cache()
+        self.metadata_cache.clear_cache()
         logger.info(f"Cleared per-orchestrator config for plate: {self.plate_path}")
 
     def cleanup_pipeline_config(self) -> None:

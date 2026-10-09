@@ -311,15 +311,6 @@ def metadata_from_rules(
     )
 
 
-def metadata_source_text(
-    file_path: str,
-    source: MetadataSource,
-) -> str:
-    """Return the path text inspected by one metadata extraction rule."""
-
-    return metadata_source_texts(file_path, source)[0]
-
-
 def metadata_source_texts(
     file_path: str,
     source: MetadataSource,

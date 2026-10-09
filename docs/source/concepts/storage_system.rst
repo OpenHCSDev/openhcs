@@ -50,8 +50,7 @@ Callable and module contracts declare typed artifact inputs and outputs. The
 artifact graph resolves producers and dependencies. Path planning then adds
 backend addresses and materialization targets to typed plans.
 
-A Python output-slot name or ``special_outputs`` compatibility annotation does
-not make a value persistent. Materialization is an explicit configuration and
+A Python output-slot name or ``@artifact_outputs`` declaration does not make a value persistent. Materialization is an explicit configuration and
 artifact-plan decision.
 
 Runtime storage

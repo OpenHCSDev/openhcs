@@ -42,7 +42,6 @@ def _runtime():
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="WholeImage",
-            step_type="FunctionStep",
             axis_id="A01",
             output_memory_type=MEMORY_TYPE_NUMPY,
             input_memory_type=MEMORY_TYPE_NUMPY,

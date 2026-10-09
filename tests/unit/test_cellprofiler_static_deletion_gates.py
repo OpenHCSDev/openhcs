@@ -978,7 +978,6 @@ def test_cellprofiler_import_and_provider_do_not_rebuild_owned_semantics() -> No
     assert "for_artifact_refs" in importer_attributes
     assert "declared_setting_bindings" in importer_attributes
     assert "_sparse_kwargs_for_contract" not in importer_names
-    assert "special_input_names_from_callable" not in importer_names
     assert "CompiledSourceBindingPlan" not in provider_names
     assert "partition_bound_public_kwargs" not in module_methods
 

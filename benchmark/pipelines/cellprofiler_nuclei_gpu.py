@@ -17,7 +17,7 @@ import numpy as np
 import pyclesperanto as cle
 
 from openhcs.core.memory.decorators import pyclesperanto as pyclesperanto_func
-from openhcs.core.pipeline.function_contracts import special_outputs
+from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.processing.materialization import csv_materializer
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     materialize_segmentation_masks,
@@ -36,7 +36,7 @@ class NucleiMeasurement:
 
 
 @pyclesperanto_func
-@special_outputs(
+@artifact_outputs(
     (
         "nuclei_measurements",
         csv_materializer(

@@ -265,7 +265,6 @@ class CompiledStepPlan:
 
     step_index: int
     step_name: str
-    step_type: str
     axis_id: str
     step_scope_id: str | None = None
     input_dir: Path | None = None

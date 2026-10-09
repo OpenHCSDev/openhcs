@@ -38,7 +38,7 @@ def _gray_creator_session(tmp_path):
         compiled_function_pattern=_compiled_pattern(gray_to_color),
     )
     consumer = CompiledStepPlan(
-        step_index=1, step_name="SplitComposedRoles", step_type="FunctionStep", axis_id="A01",
+        step_index=1, step_name="SplitComposedRoles", axis_id="A01",
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0, source_step_scope_id="step-0",
         ),

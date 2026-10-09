@@ -410,7 +410,6 @@ def function_step_plan(
     return CompiledStepPlan(
         step_index=pipeline_position,
         step_name=step_name,
-        step_type="FunctionStep",
         axis_id="A01",
         streaming_configs={"napari_stream": StreamingConfigStub()},
         artifact_outputs={},

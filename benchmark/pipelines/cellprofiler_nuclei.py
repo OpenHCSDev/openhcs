@@ -25,7 +25,7 @@ from skimage.measure import label, regionprops
 from skimage.feature import peak_local_max
 
 from openhcs.core.memory.decorators import numpy as numpy_func
-from openhcs.core.pipeline.function_contracts import special_outputs
+from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.processing.materialization import csv_materializer
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     materialize_segmentation_masks,
@@ -87,7 +87,7 @@ def declump_shape(binary: np.ndarray, min_distance: int = 7) -> np.ndarray:
 
 
 @numpy_func
-@special_outputs(
+@artifact_outputs(
     (
         "nuclei_measurements",
         csv_materializer(

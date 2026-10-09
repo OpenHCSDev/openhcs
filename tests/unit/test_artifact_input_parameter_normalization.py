@@ -14,7 +14,6 @@ from openhcs.core.invocation_artifacts import (
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
-    special_input_names_from_callable,
     special_inputs,
 )
 
@@ -100,7 +99,6 @@ def test_artifact_spec_only_parameter_declaration_compiles() -> None:
     contract = compiled.default_group.invocations[0].contract
 
     assert contract.artifact_input_parameter_names == ("labels",)
-    assert special_input_names_from_callable(consume) == ("labels",)
 
 
 def test_matching_legacy_and_artifact_spec_declarations_compile() -> None:
