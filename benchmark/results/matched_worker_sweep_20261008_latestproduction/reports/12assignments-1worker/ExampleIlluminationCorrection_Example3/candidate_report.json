@@ -1,0 +1,3106 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "c6bf65a4-288f-4b7b-bab8-6ef44fa2b8fd",
+    "compile_artifact_id": "4302fc15-3591-4e16-8ad3-64590d256ad8",
+    "endpoint_pid": 1781053,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1781053
+    ],
+    "worker_interval_overlap_seconds": 1.6454105377197266,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791467667.455719,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791467667.7002196,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791467667.7002585,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791467667.8274603,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791467667.8274999,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791467667.9562092,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791467667.9562497,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.0836544,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791467668.083708,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.2111447,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791467668.211184,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.3390963,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791467668.3391364,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.466164,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791467668.4662032,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.5932894,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791467668.5933287,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.719598,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791467668.7196374,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.8458626,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791467668.8459024,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791467668.9747229,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791467668.9747617,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791467669.1011295,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791467667.445168,
+    "first_axis_started_at_epoch_seconds": 1791467667.455719,
+    "server_job_completed_at_epoch_seconds": 1791467669.119402,
+    "server_job_seconds": 1.6742339134216309,
+    "execution_seconds": 1.6454105377197266,
+    "compile_seconds": 0.3281550407409668,
+    "total_seconds": 2.0827941801398993,
+    "first_axis_through_server_completion_seconds": 1.6636829376220703,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 16,
+    "candidate_output_file_count": 26,
+    "declared_output_file_count": 24,
+    "native_output_inventory": [
+      {
+        "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0b67e3faec955306763b8379d1a9ed521e93e5bdf6d7d1f407244b9b77d25b59"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-physical-facts-main3b173-v1/receiving-1workers/1workers/ExampleIlluminationCorrection_Example3/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "78b71b0a-8de4-4985-8b98-5b0fd5abe656",
+    "compile_artifact_id": "c6cb3885-f78a-4c40-9fc4-bf3dbf86de20",
+    "endpoint_pid": 1781053,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1781053
+    ],
+    "worker_interval_overlap_seconds": 1.521885871887207,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791467669.9158056,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.0460994,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791467670.046138,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.172321,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791467670.1723607,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.299254,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791467670.2993088,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.4251535,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791467670.4251926,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.5506163,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791467670.5506551,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.677062,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791467670.6771014,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.8034167,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791467670.803457,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791467670.9286473,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791467670.9286861,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791467671.0574791,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791467671.057518,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791467671.1847746,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791467671.1848135,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791467671.3108048,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791467671.3108437,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791467671.4376915,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791467669.90514,
+    "first_axis_started_at_epoch_seconds": 1791467669.9158056,
+    "server_job_completed_at_epoch_seconds": 1791467671.45562,
+    "server_job_seconds": 1.5504801273345947,
+    "execution_seconds": 1.521885871887207,
+    "compile_seconds": 0.3319590091705322,
+    "total_seconds": 1.9769581658765674,
+    "first_axis_through_server_completion_seconds": 1.5398144721984863,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 16,
+    "candidate_output_file_count": 26,
+    "declared_output_file_count": 24,
+    "native_output_inventory": [
+      {
+        "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0b67e3faec955306763b8379d1a9ed521e93e5bdf6d7d1f407244b9b77d25b59"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-physical-facts-main3b173-v1/receiving-1workers/1workers/ExampleIlluminationCorrection_Example3/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "b8078eaf-a636-474d-b400-58283eec0e65",
+    "compile_artifact_id": "e80eb330-ce4a-48a2-835d-3f58ce846558",
+    "endpoint_pid": 1781053,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1781053
+    ],
+    "worker_interval_overlap_seconds": 1.5274722576141357,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791467672.2385514,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791467672.3669488,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791467672.3669863,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791467672.493844,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791467672.4938834,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791467672.6211436,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791467672.6211817,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791467672.748172,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791467672.74821,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791467672.8739583,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791467672.873997,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791467673.0053988,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791467673.0054376,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791467673.1328144,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791467673.1328564,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791467673.2589583,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791467673.2589977,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791467673.3856905,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791467673.3857298,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791467673.5118775,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791467673.5119166,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791467673.6369987,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791467673.6370378,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791467673.7660236,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791467672.2281551,
+    "first_axis_started_at_epoch_seconds": 1791467672.2385514,
+    "server_job_completed_at_epoch_seconds": 1791467673.8791163,
+    "server_job_seconds": 1.65096116065979,
+    "execution_seconds": 1.5274722576141357,
+    "compile_seconds": 0.3304147720336914,
+    "total_seconds": 2.058511024340987,
+    "first_axis_through_server_completion_seconds": 1.6405649185180664,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 16,
+    "candidate_output_file_count": 26,
+    "declared_output_file_count": 24,
+    "native_output_inventory": [
+      {
+        "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0b67e3faec955306763b8379d1a9ed521e93e5bdf6d7d1f407244b9b77d25b59"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-physical-facts-main3b173-v1/receiving-1workers/1workers/ExampleIlluminationCorrection_Example3/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "96445d36-21e0-4957-98d1-8d7342a52582",
+    "compile_artifact_id": "4582e70c-fbff-46f9-83f2-9875c223550d",
+    "endpoint_pid": 1781053,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      1781053
+    ],
+    "worker_interval_overlap_seconds": 1.5273334980010986,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791467674.678832,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791467674.8069017,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791467674.8069398,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791467674.93376,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791467674.9338005,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.062451,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791467675.0624905,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.190989,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791467675.1910295,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.3176394,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791467675.3176785,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.4440634,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791467675.444102,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.570585,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791467675.570625,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.6966224,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791467675.6966612,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.8229284,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791467675.8229673,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791467675.95267,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791467675.9527125,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791467676.079632,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791467676.0796711,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791467676.2061656,
+        "pid": 1781053,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009",
+          "W010",
+          "W011",
+          "W012"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791467674.668487,
+    "first_axis_started_at_epoch_seconds": 1791467674.678832,
+    "server_job_completed_at_epoch_seconds": 1791467676.2247577,
+    "server_job_seconds": 1.5562705993652344,
+    "execution_seconds": 1.5273334980010986,
+    "compile_seconds": 0.33872103691101074,
+    "total_seconds": 1.9807575950399041,
+    "first_axis_through_server_completion_seconds": 1.5459256172180176,
+    "native_image_count": 24,
+    "candidate_image_count": 24,
+    "native_physical_image_count": 16,
+    "candidate_physical_image_count": 24,
+    "native_output_file_count": 16,
+    "candidate_output_file_count": 26,
+    "declared_output_file_count": 24,
+    "native_output_inventory": [
+      {
+        "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      },
+      {
+        "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "0b67e3faec955306763b8379d1a9ed521e93e5bdf6d7d1f407244b9b77d25b59"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__ConvexHullCorrWorm.npy",
+        "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/reference_image__PolynomialCorrected.npy",
+        "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/full30-physical-facts-main3b173-v1/receiving-1workers/1workers/ExampleIlluminationCorrection_Example3/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

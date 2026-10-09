@@ -1,0 +1,490 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "78cabf55-5190-4ac5-8b75-436f7c3486b6",
+    "compile_artifact_id": "35af039c-d830-4ea3-a0ab-94fffe9e4f3b",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 1.9090616703033447,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504567.7270622,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504569.636124,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504567.7161503,
+    "first_axis_started_at_epoch_seconds": 1791504567.7270622,
+    "server_job_completed_at_epoch_seconds": 1791504569.6658146,
+    "server_job_seconds": 1.9496643543243408,
+    "execution_seconds": 1.9090616703033447,
+    "compile_seconds": 0.18590855598449707,
+    "total_seconds": 2.224581243470311,
+    "first_axis_through_server_completion_seconds": 1.9387524127960205,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 8,
+    "declared_output_file_count": 6,
+    "native_output_inventory": [
+      {
+        "path": "Comet.csv",
+        "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+      },
+      {
+        "path": "CometHead.csv",
+        "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+      },
+      {
+        "path": "CometTail.csv",
+        "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+      },
+      {
+        "path": "CometTails_CometHeadOutline.png",
+        "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+      },
+      {
+        "path": "Experiment.csv",
+        "sha256": "a6d74aec89bc2c2d3dc7b0e0f89f203f8e78b7eeb9645c530a5bd5a45651abd1"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "31c6099a6b8dabf0af8afa3c0145866050458c58ad98e0fa3ceeb77146da8067"
+      },
+      {
+        "path": "NoTails_CometHeadOutline.png",
+        "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "86e021203a655d250529755f52b23288feb2884793ae43200cd28dd0249cac75"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "99855750f0df6168e6c24f9abd58981aa871f96a7c998c66ae5c753c4948b581"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "bfc6d0d1e987084cd783a8533359d9622c43d4c8aabccd91b90642e1ef9564c0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Comet.csv",
+        "sha256": "10a185f23a88433445db75494b52d934fe4f097e961889a3eab98ce23c1126d4"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometHead.csv",
+        "sha256": "a55caf10541935dc671353063dccfd9bdb49c5fb1328b310f02dcd0f41fcb858"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometTail.csv",
+        "sha256": "1184c9300ebb81e02c0b7ade6a5d33900f20d2dab4c8557d9a9cdefcfda5661c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "6d662ebae85955f1d5d8a87bd01a9c311bcb026bdf5c24c39576e7caf39d1a68"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleCometAssay/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "31d4a140-24ed-42cf-b494-c38b2472ecf6",
+    "compile_artifact_id": "5c706c1f-f125-4641-bf90-3c919d69438a",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 1.7636895179748535,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504570.7868068,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504572.5504963,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504570.7756076,
+    "first_axis_started_at_epoch_seconds": 1791504570.7868068,
+    "server_job_completed_at_epoch_seconds": 1791504572.5781915,
+    "server_job_seconds": 1.802583932876587,
+    "execution_seconds": 1.7636895179748535,
+    "compile_seconds": 0.18321561813354492,
+    "total_seconds": 2.0767934788018465,
+    "first_axis_through_server_completion_seconds": 1.7913846969604492,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 8,
+    "declared_output_file_count": 6,
+    "native_output_inventory": [
+      {
+        "path": "Comet.csv",
+        "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+      },
+      {
+        "path": "CometHead.csv",
+        "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+      },
+      {
+        "path": "CometTail.csv",
+        "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+      },
+      {
+        "path": "CometTails_CometHeadOutline.png",
+        "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+      },
+      {
+        "path": "Experiment.csv",
+        "sha256": "1ba723d9132a4ca943e1a459947cb7ef4558f244e4a0223d420f8eb7f727c4b2"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "278fa9e4855da7976d852ba0d051eb160b0277f1ff0f2266c204785e611432ee"
+      },
+      {
+        "path": "NoTails_CometHeadOutline.png",
+        "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "86e021203a655d250529755f52b23288feb2884793ae43200cd28dd0249cac75"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "99855750f0df6168e6c24f9abd58981aa871f96a7c998c66ae5c753c4948b581"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "bfc6d0d1e987084cd783a8533359d9622c43d4c8aabccd91b90642e1ef9564c0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Comet.csv",
+        "sha256": "10a185f23a88433445db75494b52d934fe4f097e961889a3eab98ce23c1126d4"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometHead.csv",
+        "sha256": "a55caf10541935dc671353063dccfd9bdb49c5fb1328b310f02dcd0f41fcb858"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometTail.csv",
+        "sha256": "1184c9300ebb81e02c0b7ade6a5d33900f20d2dab4c8557d9a9cdefcfda5661c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "6d662ebae85955f1d5d8a87bd01a9c311bcb026bdf5c24c39576e7caf39d1a68"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleCometAssay/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "2b3bdf55-a7fb-4afb-ae39-86651d86f7e8",
+    "compile_artifact_id": "f8376821-3130-4b2e-9bd0-5e3d89818e66",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 1.7614829540252686,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504573.072994,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504574.834477,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504573.0623121,
+    "first_axis_started_at_epoch_seconds": 1791504573.072994,
+    "server_job_completed_at_epoch_seconds": 1791504574.8617544,
+    "server_job_seconds": 1.7994422912597656,
+    "execution_seconds": 1.7614829540252686,
+    "compile_seconds": 0.18419933319091797,
+    "total_seconds": 2.073060544207692,
+    "first_axis_through_server_completion_seconds": 1.7887604236602783,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 8,
+    "declared_output_file_count": 6,
+    "native_output_inventory": [
+      {
+        "path": "Comet.csv",
+        "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+      },
+      {
+        "path": "CometHead.csv",
+        "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+      },
+      {
+        "path": "CometTail.csv",
+        "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+      },
+      {
+        "path": "CometTails_CometHeadOutline.png",
+        "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+      },
+      {
+        "path": "Experiment.csv",
+        "sha256": "e566df1b4706252be7347102f0460075d2d71e1b43418240c859ad2adc32e613"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "bafee9522ba2ae499e28e9942320721ccca936268a48c7098e229dfcc3ff36f9"
+      },
+      {
+        "path": "NoTails_CometHeadOutline.png",
+        "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "86e021203a655d250529755f52b23288feb2884793ae43200cd28dd0249cac75"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "99855750f0df6168e6c24f9abd58981aa871f96a7c998c66ae5c753c4948b581"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "bfc6d0d1e987084cd783a8533359d9622c43d4c8aabccd91b90642e1ef9564c0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Comet.csv",
+        "sha256": "10a185f23a88433445db75494b52d934fe4f097e961889a3eab98ce23c1126d4"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometHead.csv",
+        "sha256": "a55caf10541935dc671353063dccfd9bdb49c5fb1328b310f02dcd0f41fcb858"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometTail.csv",
+        "sha256": "1184c9300ebb81e02c0b7ade6a5d33900f20d2dab4c8557d9a9cdefcfda5661c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "6d662ebae85955f1d5d8a87bd01a9c311bcb026bdf5c24c39576e7caf39d1a68"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleCometAssay/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "1da9ed88-3908-4b28-9bc2-a1bb235b6e0e",
+    "compile_artifact_id": "647258e4-8713-44e6-97ee-7b4d437379c0",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 1.7661569118499756,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504575.347419,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504577.113576,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504575.3369987,
+    "first_axis_started_at_epoch_seconds": 1791504575.347419,
+    "server_job_completed_at_epoch_seconds": 1791504577.1414356,
+    "server_job_seconds": 1.8044369220733643,
+    "execution_seconds": 1.7661569118499756,
+    "compile_seconds": 0.1827528476715088,
+    "total_seconds": 2.071712991222739,
+    "first_axis_through_server_completion_seconds": 1.7940165996551514,
+    "native_image_count": 2,
+    "candidate_image_count": 2,
+    "native_physical_image_count": 2,
+    "candidate_physical_image_count": 2,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 8,
+    "declared_output_file_count": 6,
+    "native_output_inventory": [
+      {
+        "path": "Comet.csv",
+        "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+      },
+      {
+        "path": "CometHead.csv",
+        "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+      },
+      {
+        "path": "CometTail.csv",
+        "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+      },
+      {
+        "path": "CometTails_CometHeadOutline.png",
+        "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+      },
+      {
+        "path": "Experiment.csv",
+        "sha256": "922b93e9d94d9c329c2dbe729e0c8a9de81eb38fad6bca76b15d90bcdd377790"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "4c754ffed92c894d0c7b4fafc2eed6c1be3c235cf588bb06ef520ea0bb1f9dfc"
+      },
+      {
+        "path": "NoTails_CometHeadOutline.png",
+        "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "86e021203a655d250529755f52b23288feb2884793ae43200cd28dd0249cac75"
+      },
+      {
+        "path": "source_workspace_matched_pilot/images/A01_s002_w1_z001_t001_CometHeadOutline.png",
+        "sha256": "99855750f0df6168e6c24f9abd58981aa871f96a7c998c66ae5c753c4948b581"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "bfc6d0d1e987084cd783a8533359d9622c43d4c8aabccd91b90642e1ef9564c0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Comet.csv",
+        "sha256": "10a185f23a88433445db75494b52d934fe4f097e961889a3eab98ce23c1126d4"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometHead.csv",
+        "sha256": "a55caf10541935dc671353063dccfd9bdb49c5fb1328b310f02dcd0f41fcb858"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CometTail.csv",
+        "sha256": "1184c9300ebb81e02c0b7ade6a5d33900f20d2dab4c8557d9a9cdefcfda5661c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "6d662ebae85955f1d5d8a87bd01a9c311bcb026bdf5c24c39576e7caf39d1a68"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleCometAssay/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

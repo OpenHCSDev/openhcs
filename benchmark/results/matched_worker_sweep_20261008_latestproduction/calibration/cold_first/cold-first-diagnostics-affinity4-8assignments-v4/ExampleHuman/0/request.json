@@ -1,0 +1,24 @@
+{
+  "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleHuman/native_preparation/native_cellprofiler_headless/ExampleHuman.cppipe",
+  "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/images",
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/outputs",
+  "expected_image_sets": null,
+  "repetitions": 1,
+  "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleHuman/native_preparation/native_cellprofiler_file_list.txt",
+  "first_image_set": 1,
+  "last_image_set": null,
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-8assignments-v4/ExampleHuman/0/report.json",
+  "start_barrier_root": null,
+  "start_barrier_job_count": 1,
+  "start_barrier_job_index": 0,
+  "assignment_output_subdirectories": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008"
+  ]
+}

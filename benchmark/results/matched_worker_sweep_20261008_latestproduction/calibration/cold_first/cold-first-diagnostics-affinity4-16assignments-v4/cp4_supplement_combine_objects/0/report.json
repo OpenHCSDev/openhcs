@@ -1,0 +1,415 @@
+{
+  "startup_seconds": 0.6165778418071568,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp4_supplement_combine_objects/native_preparation/native_cellprofiler_headless/cp4_supplement_combine_objects.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/mnpbgacjfefomjkm/input",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/outputs",
+    "expected_image_sets": null,
+    "repetitions": 1,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012",
+      "W013",
+      "W014",
+      "W015",
+      "W016"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/outputs/-1",
+      "image_set_count": 16,
+      "invocation_seconds": 2.6569619779475033,
+      "pre_pipeline_seconds": 0.0016460507176816463,
+      "pipeline_execution_seconds": 2.6553159272298217,
+      "invocation_started_monotonic_seconds": 4178285.827574992,
+      "pipeline_started_monotonic_seconds": 4178285.829221043,
+      "completed_monotonic_seconds": 4178288.48453697,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ],
+        [
+          "W010",
+          1
+        ],
+        [
+          "W011",
+          1
+        ],
+        [
+          "W012",
+          1
+        ],
+        [
+          "W013",
+          1
+        ],
+        [
+          "W014",
+          1
+        ],
+        [
+          "W015",
+          1
+        ],
+        [
+          "W016",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-affinity4-16assignments-v4/cp4_supplement_combine_objects/0/outputs/0",
+      "image_set_count": 16,
+      "invocation_seconds": 2.0472296508960426,
+      "pre_pipeline_seconds": 0.000726649072021246,
+      "pipeline_execution_seconds": 2.0465030018240213,
+      "invocation_started_monotonic_seconds": 4178288.484549514,
+      "pipeline_started_monotonic_seconds": 4178288.485276163,
+      "completed_monotonic_seconds": 4178290.531779165,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ],
+        [
+          "W010",
+          1
+        ],
+        [
+          "W011",
+          1
+        ],
+        [
+          "W012",
+          1
+        ],
+        [
+          "W013",
+          1
+        ],
+        [
+          "W014",
+          1
+        ],
+        [
+          "W015",
+          1
+        ],
+        [
+          "W016",
+          1
+        ]
+      ]
+    }
+  ],
+  "diagnostic_assignment_timings": [
+    {
+      "repetition": -1,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4178285.829221043,
+          "completed_monotonic_seconds": 4178286.326497375,
+          "seconds": 0.49727633222937584
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4178286.326497375,
+          "completed_monotonic_seconds": 4178286.491199812,
+          "seconds": 0.1647024368867278
+        },
+        {
+          "assignment": "W003",
+          "started_monotonic_seconds": 4178286.491199812,
+          "completed_monotonic_seconds": 4178286.643367386,
+          "seconds": 0.15216757403686643
+        },
+        {
+          "assignment": "W004",
+          "started_monotonic_seconds": 4178286.643367386,
+          "completed_monotonic_seconds": 4178286.794857684,
+          "seconds": 0.15149029809981585
+        },
+        {
+          "assignment": "W005",
+          "started_monotonic_seconds": 4178286.794857684,
+          "completed_monotonic_seconds": 4178286.933618984,
+          "seconds": 0.1387613001279533
+        },
+        {
+          "assignment": "W006",
+          "started_monotonic_seconds": 4178286.933618984,
+          "completed_monotonic_seconds": 4178287.064103621,
+          "seconds": 0.13048463687300682
+        },
+        {
+          "assignment": "W007",
+          "started_monotonic_seconds": 4178287.064103621,
+          "completed_monotonic_seconds": 4178287.215025188,
+          "seconds": 0.15092156687751412
+        },
+        {
+          "assignment": "W008",
+          "started_monotonic_seconds": 4178287.215025188,
+          "completed_monotonic_seconds": 4178287.383356792,
+          "seconds": 0.1683316039852798
+        },
+        {
+          "assignment": "W009",
+          "started_monotonic_seconds": 4178287.383356792,
+          "completed_monotonic_seconds": 4178287.52243581,
+          "seconds": 0.13907901803031564
+        },
+        {
+          "assignment": "W010",
+          "started_monotonic_seconds": 4178287.52243581,
+          "completed_monotonic_seconds": 4178287.68824962,
+          "seconds": 0.16581381019204855
+        },
+        {
+          "assignment": "W011",
+          "started_monotonic_seconds": 4178287.68824962,
+          "completed_monotonic_seconds": 4178287.83225564,
+          "seconds": 0.144006019923836
+        },
+        {
+          "assignment": "W012",
+          "started_monotonic_seconds": 4178287.83225564,
+          "completed_monotonic_seconds": 4178287.973617398,
+          "seconds": 0.1413617581129074
+        },
+        {
+          "assignment": "W013",
+          "started_monotonic_seconds": 4178287.973617398,
+          "completed_monotonic_seconds": 4178288.10225214,
+          "seconds": 0.12863474199548364
+        },
+        {
+          "assignment": "W014",
+          "started_monotonic_seconds": 4178288.10225214,
+          "completed_monotonic_seconds": 4178288.232468523,
+          "seconds": 0.13021638290956616
+        },
+        {
+          "assignment": "W015",
+          "started_monotonic_seconds": 4178288.232468523,
+          "completed_monotonic_seconds": 4178288.357779143,
+          "seconds": 0.12531061982735991
+        },
+        {
+          "assignment": "W016",
+          "started_monotonic_seconds": 4178288.357779143,
+          "completed_monotonic_seconds": 4178288.484533504,
+          "seconds": 0.126754361204803
+        }
+      ]
+    },
+    {
+      "repetition": 0,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4178288.485276163,
+          "completed_monotonic_seconds": 4178288.612376695,
+          "seconds": 0.12710053194314241
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4178288.612376695,
+          "completed_monotonic_seconds": 4178288.734855952,
+          "seconds": 0.12247925717383623
+        },
+        {
+          "assignment": "W003",
+          "started_monotonic_seconds": 4178288.734855952,
+          "completed_monotonic_seconds": 4178288.858898895,
+          "seconds": 0.12404294265434146
+        },
+        {
+          "assignment": "W004",
+          "started_monotonic_seconds": 4178288.858898895,
+          "completed_monotonic_seconds": 4178288.98208278,
+          "seconds": 0.1231838851235807
+        },
+        {
+          "assignment": "W005",
+          "started_monotonic_seconds": 4178288.98208278,
+          "completed_monotonic_seconds": 4178289.109688524,
+          "seconds": 0.12760574417188764
+        },
+        {
+          "assignment": "W006",
+          "started_monotonic_seconds": 4178289.109688524,
+          "completed_monotonic_seconds": 4178289.242224225,
+          "seconds": 0.13253570068627596
+        },
+        {
+          "assignment": "W007",
+          "started_monotonic_seconds": 4178289.242224225,
+          "completed_monotonic_seconds": 4178289.369355796,
+          "seconds": 0.1271315710619092
+        },
+        {
+          "assignment": "W008",
+          "started_monotonic_seconds": 4178289.369355796,
+          "completed_monotonic_seconds": 4178289.505822503,
+          "seconds": 0.1364667071029544
+        },
+        {
+          "assignment": "W009",
+          "started_monotonic_seconds": 4178289.505822503,
+          "completed_monotonic_seconds": 4178289.634210962,
+          "seconds": 0.12838845886290073
+        },
+        {
+          "assignment": "W010",
+          "started_monotonic_seconds": 4178289.634210962,
+          "completed_monotonic_seconds": 4178289.764338657,
+          "seconds": 0.13012769492343068
+        },
+        {
+          "assignment": "W011",
+          "started_monotonic_seconds": 4178289.764338657,
+          "completed_monotonic_seconds": 4178289.893513036,
+          "seconds": 0.12917437916621566
+        },
+        {
+          "assignment": "W012",
+          "started_monotonic_seconds": 4178289.893513036,
+          "completed_monotonic_seconds": 4178290.023180925,
+          "seconds": 0.12966788886114955
+        },
+        {
+          "assignment": "W013",
+          "started_monotonic_seconds": 4178290.023180925,
+          "completed_monotonic_seconds": 4178290.151507618,
+          "seconds": 0.12832669308409095
+        },
+        {
+          "assignment": "W014",
+          "started_monotonic_seconds": 4178290.151507618,
+          "completed_monotonic_seconds": 4178290.278243513,
+          "seconds": 0.12673589494079351
+        },
+        {
+          "assignment": "W015",
+          "started_monotonic_seconds": 4178290.278243513,
+          "completed_monotonic_seconds": 4178290.405062856,
+          "seconds": 0.1268193433061242
+        },
+        {
+          "assignment": "W016",
+          "started_monotonic_seconds": 4178290.405062856,
+          "completed_monotonic_seconds": 4178290.531775588,
+          "seconds": 0.12671273201704025
+        }
+      ]
+    }
+  ]
+}

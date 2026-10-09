@@ -1,0 +1,15 @@
+{
+  "status": "DIAGNOSTIC_NOT_HEADLINE",
+  "original_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "instrumented_worker_sha256": "6450ad9a32b870b688b1fc4931fcde8f0441b414f3cec982e70d0b55adf0f798",
+  "cpu_affinity": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "numeric_threads": 1,
+  "assignments": 8,
+  "fresh_trials": 1,
+  "scope": "Fresh CP process and loaded pipeline; serial assignments, followed by one additional batch. JVM/process startup excluded from assignment clocks."
+}

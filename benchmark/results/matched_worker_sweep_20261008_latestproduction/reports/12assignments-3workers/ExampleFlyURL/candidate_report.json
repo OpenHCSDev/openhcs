@@ -1,0 +1,3242 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "bea4ca33-3e16-4c0b-965d-470b2fd224b2",
+    "compile_artifact_id": "9b8dfdda-8ca6-4db9-b714-708cbc87b5dd",
+    "endpoint_pid": 3831580,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      3832460,
+      3832461,
+      3832462
+    ],
+    "worker_interval_overlap_seconds": 2.6795713901519775,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791500809.7552829,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791500809.7627742,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791500809.7716463,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791500810.4383686,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791500810.4384296,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791500810.4515553,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791500810.451618,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791500810.4693813,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791500810.469443,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791500811.1235318,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791500811.123594,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791500811.1333523,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791500811.1334114,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791500811.1415942,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791500811.1416526,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791500811.7887063,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791500811.788768,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791500811.8014922,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791500811.8015523,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791500811.8176067,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791500811.8176723,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791500812.4512177,
+        "pid": 3832461,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791500812.4683323,
+        "pid": 3832462,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791500812.4884248,
+        "pid": 3832460,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791500809.7240856,
+    "first_axis_started_at_epoch_seconds": 1791500809.7552829,
+    "server_job_completed_at_epoch_seconds": 1791500813.4861603,
+    "server_job_seconds": 3.7620747089385986,
+    "execution_seconds": 2.7331418991088867,
+    "compile_seconds": 0.4718790054321289,
+    "total_seconds": 4.330164794810116,
+    "first_axis_through_server_completion_seconds": 3.73087739944458,
+    "native_image_count": 36,
+    "candidate_image_count": 36,
+    "native_physical_image_count": 24,
+    "candidate_physical_image_count": 36,
+    "native_output_file_count": 56,
+    "candidate_output_file_count": 42,
+    "declared_output_file_count": 40,
+    "native_output_inventory": [
+      {
+        "path": "W001/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W001/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W001/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W001/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W001/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "215b42ac4b8ef05c71ffeca51d9c97852944c54d869e65046a0bd8b6e7660958"
+      },
+      {
+        "path": "W001/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W002/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W002/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W002/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W002/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W002/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "d7ab62a485209e23d0a6c6658ad3e53b51587f349aae2b70540d52bde2ee4081"
+      },
+      {
+        "path": "W002/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W003/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W003/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W003/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W003/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W003/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "9403bcea1a9462ccec4ac9d317aa9cdab51c588c8520f3f9f741ea526e9abeae"
+      },
+      {
+        "path": "W003/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W004/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W004/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W004/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W004/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W004/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "e82ef9bc6831c5e9b690b4fea7c2d2bdd1ce9069f70b09ce3813481358266f9a"
+      },
+      {
+        "path": "W004/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W005/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W005/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W005/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W005/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W005/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "b70218cbf670203c4b3a364e96a6bfa3e168ead23ae7176c947d3e58d955f935"
+      },
+      {
+        "path": "W005/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W006/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W006/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W006/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W006/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W006/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "76f48f83e13fe1eb9d0711a2503ba96a29e77484a6864fe9853ff1fa20d609fc"
+      },
+      {
+        "path": "W006/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W007/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W007/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W007/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W007/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W007/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "e7cac4801a940ae43f456bab35c6683016acef11c26780f6647c70e4eec17a82"
+      },
+      {
+        "path": "W007/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W008/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W008/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W008/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W008/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W008/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "df28e287e3c387e5f8c19d52b5f650a39f0794dd1f94e3c12c4b0bed81c69f6e"
+      },
+      {
+        "path": "W008/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a960f2e8ba2b9d998d7466107f293a7047438e0354117fa7498f7935b6bca3cf"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "d67c4acb6f04e415e373e406b121ff3547117e2f760085d26fdab7d0fe2101aa"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "ea53630aab30cad6bf61c7eb763029204c145e2cd3e3c22458ec70a1d547fe4f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "705edfdb73e7c59c23ef1c1e1ce497597274f85fbb503c9c95ef78ba7cbb089c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "0c38501b76982ae1dc6cc442d557febb45c8b90ed51f817a0836022cafdd3bce"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/12assignments-3workers/cases/ExampleFlyURL/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "adecba56-0487-4b00-a8ea-c49f8334f088",
+    "compile_artifact_id": "58c67979-4a4a-447f-8558-d4789400b0f1",
+    "endpoint_pid": 3831580,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      3832460,
+      3832461,
+      3832463
+    ],
+    "worker_interval_overlap_seconds": 2.4343783855438232,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791500818.101417,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791500818.22896,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791500818.2410347,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791500818.7546904,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791500818.7547913,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791500818.896531,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791500818.8965936,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791500818.9328382,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791500818.9329119,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791500819.3949952,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791500819.3950515,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791500819.5736294,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791500819.5736942,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791500819.6166427,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791500819.6167796,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791500820.0361845,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791500820.0362399,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791500820.2364807,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791500820.2365365,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791500820.3151512,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791500820.31523,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791500820.6754131,
+        "pid": 3832463,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791500820.8682282,
+        "pid": 3832461,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791500820.9584036,
+        "pid": 3832460,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791500818.0709782,
+    "first_axis_started_at_epoch_seconds": 1791500818.101417,
+    "server_job_completed_at_epoch_seconds": 1791500821.8753467,
+    "server_job_seconds": 3.804368495941162,
+    "execution_seconds": 2.8569865226745605,
+    "compile_seconds": 0.47499680519104004,
+    "total_seconds": 4.378233425319195,
+    "first_axis_through_server_completion_seconds": 3.7739295959472656,
+    "native_image_count": 36,
+    "candidate_image_count": 36,
+    "native_physical_image_count": 24,
+    "candidate_physical_image_count": 36,
+    "native_output_file_count": 56,
+    "candidate_output_file_count": 42,
+    "declared_output_file_count": 40,
+    "native_output_inventory": [
+      {
+        "path": "W001/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W001/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W001/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W001/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W001/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "6a53959e1a6db2adf4991f22ee417348b932d73602a2d830e951212d1b4b1cbc"
+      },
+      {
+        "path": "W001/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W002/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W002/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W002/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W002/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W002/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "5ec2410bc26c3ed1ef876dfcd92afecf05be646e1dae24e5bcd12139a465ba0e"
+      },
+      {
+        "path": "W002/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W003/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W003/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W003/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W003/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W003/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "404bebaad7c8462c937b132d35f215e5541483b1e2ca175da5ed8914089c2547"
+      },
+      {
+        "path": "W003/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W004/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W004/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W004/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W004/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W004/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "83446fdc743824d47c0c634ea229630b62501134083ffe45bd1440220d4bb0d2"
+      },
+      {
+        "path": "W004/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W005/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W005/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W005/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W005/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W005/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "a283e646c4164c920f9d93d06c31d2384186e70e6a4ee4d81ce6a8cb08919fb8"
+      },
+      {
+        "path": "W005/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W006/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W006/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W006/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W006/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W006/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "cb423e2abe8fe556682f2c750d2bc474ce719702a75f14e252a5a0a4a9c144e9"
+      },
+      {
+        "path": "W006/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W007/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W007/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W007/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W007/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W007/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "f1141faa20d8efebe3be589e30d7a2b70275f88d9500a939b5a6ccf2110d60dc"
+      },
+      {
+        "path": "W007/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W008/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W008/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W008/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W008/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W008/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "6bd44e46b40d1b6dfffee2b0e1576e3190fd6a239b049c4f0d0699bd3862adaa"
+      },
+      {
+        "path": "W008/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a960f2e8ba2b9d998d7466107f293a7047438e0354117fa7498f7935b6bca3cf"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "d67c4acb6f04e415e373e406b121ff3547117e2f760085d26fdab7d0fe2101aa"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "ea53630aab30cad6bf61c7eb763029204c145e2cd3e3c22458ec70a1d547fe4f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "705edfdb73e7c59c23ef1c1e1ce497597274f85fbb503c9c95ef78ba7cbb089c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "0c38501b76982ae1dc6cc442d557febb45c8b90ed51f817a0836022cafdd3bce"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/12assignments-3workers/cases/ExampleFlyURL/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "0e292222-290f-4956-99e4-7616cb350acc",
+    "compile_artifact_id": "bcacf5f1-6dfe-4535-a19a-7fec5953c722",
+    "endpoint_pid": 3831580,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      3832460,
+      3832462,
+      3832463
+    ],
+    "worker_interval_overlap_seconds": 2.575244665145874,
+    "axis_events": [
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791500826.1081336,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791500826.1972256,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791500826.2047198,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791500826.77735,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791500826.7774105,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791500826.8463411,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791500826.8463988,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791500826.861197,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791500826.861262,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791500827.4300032,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791500827.430062,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791500827.491826,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791500827.4918876,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791500827.503679,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791500827.5037334,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791500828.077861,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791500828.0779185,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791500828.136019,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791500828.1360748,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791500828.1456442,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791500828.1456997,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791500828.7799644,
+        "pid": 3832462,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791500828.7905257,
+        "pid": 3832463,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791500828.8492374,
+        "pid": 3832460,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791500826.0605352,
+    "first_axis_started_at_epoch_seconds": 1791500826.1081336,
+    "server_job_completed_at_epoch_seconds": 1791500829.7869773,
+    "server_job_seconds": 3.7264420986175537,
+    "execution_seconds": 2.7411038875579834,
+    "compile_seconds": 0.4664726257324219,
+    "total_seconds": 4.297147150151432,
+    "first_axis_through_server_completion_seconds": 3.6788437366485596,
+    "native_image_count": 36,
+    "candidate_image_count": 36,
+    "native_physical_image_count": 24,
+    "candidate_physical_image_count": 36,
+    "native_output_file_count": 56,
+    "candidate_output_file_count": 42,
+    "declared_output_file_count": 40,
+    "native_output_inventory": [
+      {
+        "path": "W001/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W001/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W001/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W001/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W001/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "f0e4ad9d011caa28662f884574d458c55f4fa952fe4d80a209c24d2fab42cbd8"
+      },
+      {
+        "path": "W001/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W002/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W002/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W002/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W002/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W002/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "ace2eba1e9dae43140557d1fd743850a19c0d771277a366cfb701ae87a3b7586"
+      },
+      {
+        "path": "W002/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W003/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W003/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W003/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W003/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W003/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "e5a3c2b2fb070327ff1a5982a15f0744051652427ce04a6792dc15eb11f8691d"
+      },
+      {
+        "path": "W003/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W004/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W004/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W004/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W004/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W004/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "ed7875c99ee45fca62d9b6dcc2978cde9f2f4681d9388ca697aaa73c79ffe0ee"
+      },
+      {
+        "path": "W004/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W005/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W005/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W005/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W005/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W005/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "f0ba7dc084f87507e1fe90c30561eb6b4ae6d9f050fb0a78ee272ba088c6ba7a"
+      },
+      {
+        "path": "W005/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W006/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W006/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W006/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W006/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W006/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "2955b835641cfb7562cf3137e4871fda85ca5c6c80eb453d8bcc627f92bb2b1e"
+      },
+      {
+        "path": "W006/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W007/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W007/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W007/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W007/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W007/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "88a07c7e880f8fc2e35d9ef5ed5b86c614ea95629be7a2221a81f02497769201"
+      },
+      {
+        "path": "W007/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W008/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W008/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W008/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W008/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W008/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "a543f7fdeca36f51f958addc28ce5099b1717577dfe108fbdda351c507a885f3"
+      },
+      {
+        "path": "W008/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a960f2e8ba2b9d998d7466107f293a7047438e0354117fa7498f7935b6bca3cf"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "d67c4acb6f04e415e373e406b121ff3547117e2f760085d26fdab7d0fe2101aa"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "ea53630aab30cad6bf61c7eb763029204c145e2cd3e3c22458ec70a1d547fe4f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "705edfdb73e7c59c23ef1c1e1ce497597274f85fbb503c9c95ef78ba7cbb089c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "0c38501b76982ae1dc6cc442d557febb45c8b90ed51f817a0836022cafdd3bce"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/12assignments-3workers/cases/ExampleFlyURL/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "cafaf55f-adcd-49ee-b110-15db6fa1bea4",
+    "compile_artifact_id": "f5ed69e0-46f0-4f20-9b2b-987c6b65afae",
+    "endpoint_pid": 3831580,
+    "axis_count": 12,
+    "observation_scope": "outcomes",
+    "assignment_scope": "independent repeated source assignments",
+    "compared_assignments": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "native_assignment_correspondence": [
+      {
+        "candidate_assignment": "W001",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W002",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W003",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W004",
+        "observed_reference_directory": "W004"
+      },
+      {
+        "candidate_assignment": "W005",
+        "observed_reference_directory": "W005"
+      },
+      {
+        "candidate_assignment": "W006",
+        "observed_reference_directory": "W006"
+      },
+      {
+        "candidate_assignment": "W007",
+        "observed_reference_directory": "W007"
+      },
+      {
+        "candidate_assignment": "W008",
+        "observed_reference_directory": "W008"
+      },
+      {
+        "candidate_assignment": "W009",
+        "observed_reference_directory": "W001"
+      },
+      {
+        "candidate_assignment": "W010",
+        "observed_reference_directory": "W002"
+      },
+      {
+        "candidate_assignment": "W011",
+        "observed_reference_directory": "W003"
+      },
+      {
+        "candidate_assignment": "W012",
+        "observed_reference_directory": "W004"
+      }
+    ],
+    "worker_process_ids": [
+      3832461,
+      3832462,
+      3832463
+    ],
+    "worker_interval_overlap_seconds": 2.7846128940582275,
+    "axis_events": [
+      {
+        "axis_id": "W001",
+        "phase": "axis_started",
+        "timestamp": 1791500835.4086378,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_started",
+        "timestamp": 1791500835.41596,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_started",
+        "timestamp": 1791500835.4242165,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W001",
+        "phase": "axis_completed",
+        "timestamp": 1791500836.087347,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_started",
+        "timestamp": 1791500836.0874338,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W003",
+        "phase": "axis_completed",
+        "timestamp": 1791500836.1031885,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_started",
+        "timestamp": 1791500836.1032455,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W002",
+        "phase": "axis_completed",
+        "timestamp": 1791500836.1066248,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_started",
+        "timestamp": 1791500836.1066806,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W006",
+        "phase": "axis_completed",
+        "timestamp": 1791500836.7780957,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_started",
+        "timestamp": 1791500836.77815,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W004",
+        "phase": "axis_completed",
+        "timestamp": 1791500836.7792032,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_started",
+        "timestamp": 1791500836.7793274,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W005",
+        "phase": "axis_completed",
+        "timestamp": 1791500836.788102,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_started",
+        "timestamp": 1791500836.7881553,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W009",
+        "phase": "axis_completed",
+        "timestamp": 1791500837.440032,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_started",
+        "timestamp": 1791500837.4400861,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W007",
+        "phase": "axis_completed",
+        "timestamp": 1791500837.4465559,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_started",
+        "timestamp": 1791500837.4466095,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W008",
+        "phase": "axis_completed",
+        "timestamp": 1791500837.4550204,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_started",
+        "timestamp": 1791500837.4550743,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      },
+      {
+        "axis_id": "W012",
+        "phase": "axis_completed",
+        "timestamp": 1791500838.2088294,
+        "pid": 3832463,
+        "worker_slot": "worker_2",
+        "owned_wells": [
+          "W003",
+          "W006",
+          "W009",
+          "W012"
+        ]
+      },
+      {
+        "axis_id": "W010",
+        "phase": "axis_completed",
+        "timestamp": 1791500838.2218816,
+        "pid": 3832461,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "W001",
+          "W004",
+          "W007",
+          "W010"
+        ]
+      },
+      {
+        "axis_id": "W011",
+        "phase": "axis_completed",
+        "timestamp": 1791500838.226641,
+        "pid": 3832462,
+        "worker_slot": "worker_1",
+        "owned_wells": [
+          "W002",
+          "W005",
+          "W008",
+          "W011"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791500835.3785574,
+    "first_axis_started_at_epoch_seconds": 1791500835.4086378,
+    "server_job_completed_at_epoch_seconds": 1791500839.2165473,
+    "server_job_seconds": 3.8379898071289062,
+    "execution_seconds": 2.8180031776428223,
+    "compile_seconds": 0.46979427337646484,
+    "total_seconds": 4.409389232285321,
+    "first_axis_through_server_completion_seconds": 3.8079094886779785,
+    "native_image_count": 36,
+    "candidate_image_count": 36,
+    "native_physical_image_count": 24,
+    "candidate_physical_image_count": 36,
+    "native_output_file_count": 56,
+    "candidate_output_file_count": 42,
+    "declared_output_file_count": 40,
+    "native_output_inventory": [
+      {
+        "path": "W001/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W001/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W001/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W001/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W001/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W001/Image.csv",
+        "sha256": "399848e98fba6188c91be6ecf734dbc2606b364057f09ef55b37174f8b0c83db"
+      },
+      {
+        "path": "W001/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W002/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W002/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W002/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W002/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W002/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W002/Image.csv",
+        "sha256": "4829e726e0325af91a168b11bf97f0e5f67ed53004314e429d2174d81459860c"
+      },
+      {
+        "path": "W002/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W003/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W003/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W003/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W003/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W003/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W003/Image.csv",
+        "sha256": "58a8a3299b149cc7b08e3b55083111bfc41b20f7029731e392f20fb155d4cd91"
+      },
+      {
+        "path": "W003/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W004/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W004/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W004/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W004/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W004/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W004/Image.csv",
+        "sha256": "cd78fefc90d4c29f2c42d580e382b080e5b978d068c84d3700475be0b2d2c9cb"
+      },
+      {
+        "path": "W004/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W005/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W005/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W005/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W005/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W005/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W005/Image.csv",
+        "sha256": "6f799fcae388a209758d1cbe5c9f653b953996596ff7273ae7f149a963e54a60"
+      },
+      {
+        "path": "W005/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W006/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W006/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W006/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W006/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W006/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W006/Image.csv",
+        "sha256": "5134774a5d0b339dc3e6b49fff4939cef98947c2c80226405fca62cb1e6445f3"
+      },
+      {
+        "path": "W006/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W007/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W007/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W007/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W007/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W007/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W007/Image.csv",
+        "sha256": "02e90f567dcc675888d7435bf61b9a6486ba821b30521bf7f1f43cda45dd4003"
+      },
+      {
+        "path": "W007/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      },
+      {
+        "path": "W008/Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "W008/CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "W008/CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "W008/CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "W008/Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "W008/Image.csv",
+        "sha256": "cf082b37973f8b339ba8f049791cdd4fe1ffbf0f6b373a63c3b2490270ba48c0"
+      },
+      {
+        "path": "W008/Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "a960f2e8ba2b9d998d7466107f293a7047438e0354117fa7498f7935b6bca3cf"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "d67c4acb6f04e415e373e406b121ff3547117e2f760085d26fdab7d0fe2101aa"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "ea53630aab30cad6bf61c7eb763029204c145e2cd3e3c22458ec70a1d547fe4f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "705edfdb73e7c59c23ef1c1e1ce497597274f85fbb503c9c95ef78ba7cbb089c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "0c38501b76982ae1dc6cc442d557febb45c8b90ed51f817a0836022cafdd3bce"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W001/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W002/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W003/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W004/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W005/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W006/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W007/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W008/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W009/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W010/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W011/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/W012/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/12assignments-3workers/cases/ExampleFlyURL/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

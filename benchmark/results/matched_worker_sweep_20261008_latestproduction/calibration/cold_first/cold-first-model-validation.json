@@ -1,0 +1,116 @@
+{
+  "status": "DIAGNOSTIC_VALIDATION_NOT_FULL_COHORT_CAPTURE",
+  "coverage": "three short workflows, including largest historical affine-model outlier; all native serial, numeric thread limits1, affinity2,3,4,5",
+  "two_sample_model": "C median first assignment and W median second assignment across three fresh two-sample trials; predict C+(N-1)*W",
+  "eight_anchor_model": "observed first eight-assignment execution +(N-8)*warmed eight-assignment execution /8",
+  "rows": [
+    {
+      "case": "cp4_supplement_combine_objects",
+      "assignments": 8,
+      "actual_fresh_batch_seconds": 1.5019706613384187,
+      "two_sample_model_seconds": 1.4972233562730253,
+      "two_sample_model_relative_error": -0.003160717574312022,
+      "same_campaign_eight_anchor_model_seconds": 1.5019706613384187,
+      "same_campaign_eight_anchor_relative_error": 0.0,
+      "original_eight_anchor_model_seconds": 1.3996993899345398,
+      "original_eight_anchor_relative_error": -0.06809139088825089,
+      "actual_report_sha256": "6179ddbccaf2113e20409bb805a52448dd3992e60ddc835a10a0a82203f08297"
+    },
+    {
+      "case": "cp4_supplement_combine_objects",
+      "assignments": 12,
+      "actual_fresh_batch_seconds": 2.1979027492925525,
+      "two_sample_model_seconds": 2.0834074257873,
+      "two_sample_model_relative_error": -0.05209298889229996,
+      "same_campaign_eight_anchor_model_seconds": 2.0427815776783973,
+      "same_campaign_eight_anchor_relative_error": -0.0705769041255736,
+      "original_eight_anchor_model_seconds": 1.889449293492362,
+      "original_eight_anchor_relative_error": -0.14033990170833255,
+      "actual_report_sha256": "4ac3bfaeb05ac3b6e484c6610f7ce11376fa9611e2c816e84e889d957435a9c2"
+    },
+    {
+      "case": "cp4_supplement_combine_objects",
+      "assignments": 16,
+      "actual_fresh_batch_seconds": 2.6553159272298217,
+      "two_sample_model_seconds": 2.6695914953015745,
+      "two_sample_model_relative_error": 0.005376222062828395,
+      "same_campaign_eight_anchor_model_seconds": 2.583592494018376,
+      "same_campaign_eight_anchor_relative_error": -0.027011261626510796,
+      "original_eight_anchor_model_seconds": 2.379199197050184,
+      "original_eight_anchor_relative_error": -0.10398639474425875,
+      "actual_report_sha256": "c388b9b1e3e5fbc071c2c3dbf887d96794ecfaa8c7e4c6a97ef9c62a1de513bb"
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "assignments": 8,
+      "actual_fresh_batch_seconds": 4.028656092006713,
+      "two_sample_model_seconds": 3.9633747790940106,
+      "two_sample_model_relative_error": -0.01620424067525339,
+      "same_campaign_eight_anchor_model_seconds": 4.028656092006713,
+      "same_campaign_eight_anchor_relative_error": 0.0,
+      "original_eight_anchor_model_seconds": 3.4667139747180045,
+      "original_eight_anchor_relative_error": -0.13948624664281029,
+      "actual_report_sha256": "5beceac801edba178e43941d0954e51d81f0613cb3a9e96e5cce6656df66f1cb"
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "assignments": 12,
+      "actual_fresh_batch_seconds": 5.641760417725891,
+      "two_sample_model_seconds": 5.766253920737654,
+      "two_sample_model_relative_error": 0.022066428524794457,
+      "same_campaign_eight_anchor_model_seconds": 5.649372642626986,
+      "same_campaign_eight_anchor_relative_error": 0.0013492641192593968,
+      "original_eight_anchor_model_seconds": 4.940004213247448,
+      "original_eight_anchor_relative_error": -0.1243860342373968,
+      "actual_report_sha256": "1d72a93d1f98ad49bc2dbc0ef88397111a02701f4afb3a76b7bd889b0271d056"
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "assignments": 16,
+      "actual_fresh_batch_seconds": 7.205068580340594,
+      "two_sample_model_seconds": 7.569133062381297,
+      "two_sample_model_relative_error": 0.05052894056193602,
+      "same_campaign_eight_anchor_model_seconds": 7.270089193247259,
+      "same_campaign_eight_anchor_relative_error": 0.009024287858144353,
+      "original_eight_anchor_model_seconds": 6.413294451776892,
+      "original_eight_anchor_relative_error": -0.10989126886648926,
+      "actual_report_sha256": "4323c41231c49e8b2a5c2a6624dea9b0109b8e8b6e7a53d7f80e8a23bd8e9172"
+    },
+    {
+      "case": "ExampleHuman",
+      "assignments": 8,
+      "actual_fresh_batch_seconds": 22.216893373057246,
+      "two_sample_model_seconds": 21.48544569220394,
+      "two_sample_model_relative_error": -0.032923040524664215,
+      "same_campaign_eight_anchor_model_seconds": 22.216893373057246,
+      "same_campaign_eight_anchor_relative_error": 0.0,
+      "original_eight_anchor_model_seconds": 21.186768372077495,
+      "original_eight_anchor_relative_error": -0.046366743706345526,
+      "actual_report_sha256": "2f80e3d58a32f13422a3f42e71de0d3bcc076ac694e46ec698b74259ea924cd4"
+    },
+    {
+      "case": "ExampleHuman",
+      "assignments": 12,
+      "actual_fresh_batch_seconds": 32.4837956498377,
+      "two_sample_model_seconds": 31.97150873299688,
+      "two_sample_model_relative_error": -0.015770537481612945,
+      "same_campaign_eight_anchor_model_seconds": 32.73578225658275,
+      "same_campaign_eight_anchor_relative_error": 0.00775730180861145,
+      "original_eight_anchor_model_seconds": 31.468940807972103,
+      "original_eight_anchor_relative_error": -0.031241879883906698,
+      "actual_report_sha256": "2e1dec7e22d255868648a1f00287048a6b2108c580a448d81cdf603043334f5b"
+    },
+    {
+      "case": "ExampleHuman",
+      "assignments": 16,
+      "actual_fresh_batch_seconds": 43.23948565777391,
+      "two_sample_model_seconds": 42.45757177378982,
+      "two_sample_model_relative_error": -0.018083329902965906,
+      "same_campaign_eight_anchor_model_seconds": 43.25467114010826,
+      "same_campaign_eight_anchor_relative_error": 0.00035119479575995705,
+      "original_eight_anchor_model_seconds": 41.75111324386671,
+      "original_eight_anchor_relative_error": -0.034421603108028886,
+      "actual_report_sha256": "cb58ead59a6886c6a7ae53dd9980c139b1cf633cfee483681729a6750bf377f5"
+    }
+  ]
+}
