@@ -304,6 +304,22 @@ def test_projection_view_preserves_genuine_clocks_and_maps_every_target(native_r
     assert "projected_execution_seconds" not in declaration
 
 
+def test_retired_outputs_keep_timing_evidence_but_cannot_be_reused(native_runs):
+    whole, _ = native_runs
+    whole.require_reusable(whole.request.repetitions)
+    for observation in whole.observations:
+        for directory, _ in observation.assignment_image_set_counts:
+            (Path(observation.output_root) / directory / "output.txt").unlink()
+    whole.require_complete(whole.request.repetitions)
+    view = RepeatedSourceNativeBatchReport.from_payload(asdict(whole))
+    assert view.comparison_directories(3) == ("W001", "W002", "W001")
+    assert asdict(view) == asdict(whole)
+    with pytest.raises(RuntimeError, match="no physical outputs"):
+        whole.require_reusable(whole.request.repetitions)
+    with pytest.raises(RuntimeError, match="no physical outputs"):
+        _native_shard_requests(whole, 2)
+
+
 def test_projection_validation_derives_actual_source_cardinality_only(native_runs):
     whole, _ = native_runs
     view = RepeatedSourceNativeBatchReport.from_payload(asdict(whole))

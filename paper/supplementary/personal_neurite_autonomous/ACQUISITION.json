@@ -13,4 +13,3 @@
   "overlap": "Fields within a well can overlap. Per-field sums are not automatically deduplicated whole-well measurements.",
   "blinding": "Coded acquisition identifiers only. Treatment identities, reference measurements, previous analyses and expected responses are not released."
 }
-

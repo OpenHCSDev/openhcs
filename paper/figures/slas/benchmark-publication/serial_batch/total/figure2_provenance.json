@@ -251,12 +251,21 @@
   },
   "generator_sha256": "4f510fe6d23b3d8a5213c030b6270c9d9b00fa9f9b9d816deda1250979a23840",
   "output_sha256": {
-    "benchmark_claims.json": "e7f0d1c770565c645edc0e3b2d670c5df2c489aac5c2cca3cb94aabe559d6202",
-    "measured_benchmark_publication_caption.md": "1f1ad4adf291b7afddedaa3c69718a6bb32b68aab3c5dce475be135a5e18b587",
-    "measured_benchmark_publication.png": "fabe08b366ccc2ea7875bbc48342bcf5555d8f4ceca83b326aaece8d86e5461a",
-    "measured_benchmark_publication.svg": "e45c7950e88cf4485e95b5d010cea8859b962e272d7be0a5323ccd556ec5180d",
-    "measured_benchmark_publication_log.png": "1828d55619f8d7291074994c4aab4d3ebb438131c60be49dbaf6b8f1bc780c89",
-    "measured_benchmark_publication_log.svg": "020e000bca06e222c7726e148d8b7425a301138c891c2e381b48745230d64a23"
+    "serial_seconds_per_sample.png": "86df45e39569cae059e2a0ea84bd544186f907c9afbf25e111a5a54fde633023",
+    "serial_seconds_per_sample.svg": "f3938370a275722e5cabd2de7d31a45caaa48cd21f3b4d7b4174e85905ab5a1b",
+    "serial_seconds_per_sample_log.png": "50c0a7b4f506ec3e871f3dc9d1d864a37faf45f028d32ed8f877af6ad148a106",
+    "serial_seconds_per_sample_log.svg": "b039e54edb9499de9f30d78081047b45c943371ac7fd2736d9543d40c1a92559",
+    "serial_seconds_per_sample_workflow_metrics.csv": "6a213239c746a2f29b6f8c24ef9be69f20cd7f0d18edbc93514f008aa8310e2a",
+    "serial_cp_relative_speedup.png": "5357bee4d7927a5221b323719aa8740d07a45c364425da77a5e3ddc31e912d45",
+    "serial_cp_relative_speedup.svg": "6fe1c52cd86af4ab63665620a442fb1cf77d985d83916ba9f734eade917fec77",
+    "serial_cp_relative_speedup_log.png": "98371c8b9a2d776e6f47c993fa6bb30e05cd7c5054cb5a25a7fc48e85f2f175d",
+    "serial_cp_relative_speedup_log.svg": "45b12cbec0d019871db6fc66b17fe687d098a863081b89447af1f1f7e2f0ec3d",
+    "serial_cp_relative_speedup_workflow_metrics.csv": "267268fa8f74e75e246bddb3a7c21515e641380954108a218a9ce21209da9bae",
+    "serial_amortization_factor.png": "f3d9202f88091ec8817d96a5a9786df10047a74b88d4ac221d4e9ca8dd9792cf",
+    "serial_amortization_factor.svg": "4b781344b179c651f90dfb403e7a3ebc29080e2e23033c62931b6b2a166e4343",
+    "serial_amortization_factor_log.png": "f0c36d926eced5514626ef6a8f90b942d2861b20d7775947d03720b571e1a0f6",
+    "serial_amortization_factor_log.svg": "0d9a2d59f0a07eeadf6e69153bec8472d76e81f124c21cef6967631df7e74e48",
+    "serial_amortization_factor_workflow_metrics.csv": "3c9fddde6c84fe8f9108f3d94722f10c2df390c68214081fa0a3316f6f332346"
   },
   "source_revision": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
   "native_reference_kinds": {
@@ -312,5 +321,5 @@
   "calibration_scope": "CP1 versus CP8 uses different CPU affinity (one versus four slots), so not a batching-only effect. Matched-affinity cold-first validation covers three workflows, not the full thirty; cross-campaign anchor variation remains visible.",
   "native_policy": "Measured CP first batch n=1 at 1/8 assignments; explicitly projected first-use CP reference at 12/16; OH median n=3. No target native observations fabricated.",
   "memory": "Unavailable; no historical substitution",
-  "interpretation": "Manuscript-compatible singlewell claims and Figure2 composite derive from the same admitted first-use thirty-workflow distributions; per-mode stats retain measured/projected kinds and observation counts."
+  "interpretation": "One processing worker at one/twelve assignments. CP1 measured; CP12 projected from actual serial CP8 first/warm batches. Thirty matched workflow points; OH median n=3. Per-sample and batching-reduction ratios derive from complete admitted durations. Single-sample processes pinned CPU5; multi-assignment prepared workers and native anchors allow CPUs2-5. Affinity and first-use effects are not isolated causally."
 }

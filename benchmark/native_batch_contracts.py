@@ -194,7 +194,11 @@ class NativeBatchReport:
         )
 
     def require_complete(self, repetitions: int) -> None:
-        """Require whole original runs with actual additive monotonic clocks."""
+        """Validate recorded runs, clocks and coverage independently of retention.
+
+        Archived observations remain complete after disposable runtime outputs
+        are retired. Reusing those outputs requires ``require_reusable``.
+        """
         if repetitions < 1 or self.request.repetitions != repetitions:
             raise RuntimeError("Retained native request repetition count differs.")
         if tuple(row.repetition for row in self.observations) != tuple(
@@ -232,10 +236,6 @@ class NativeBatchReport:
                 raise RuntimeError(
                     "Retained native output root differs from its request."
                 )
-            if not any(path.is_file() for path in run_root.rglob("*")):
-                raise RuntimeError(
-                    "Retained native observation has no physical outputs."
-                )
             assignments = row.assignment_image_set_counts
             if (
                 row.image_set_count < 1
@@ -246,3 +246,12 @@ class NativeBatchReport:
             ):
                 raise RuntimeError("Retained native assignment coverage is invalid.")
             previous_completed = completed
+
+    def require_reusable(self, repetitions: int) -> None:
+        """Require complete observations and still-present physical outputs."""
+        self.require_complete(repetitions)
+        for row in self.observations:
+            if not any(path.is_file() for path in Path(row.output_root).rglob("*")):
+                raise RuntimeError(
+                    "Retained native observation has no physical outputs."
+                )
