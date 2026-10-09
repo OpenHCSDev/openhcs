@@ -31,8 +31,8 @@ Estimates are net production lines. "Out" means moved out of `openhcs/` into non
 | ID | Surface | Evidence | Target | Est. |
 |---|---|---|---|---|
 | [D1](D1-dead-processing.md) | Dead processing and interop code | `analysis/focus_analyzer.py` 346, `test_simple_implementation.py` 207, `cell_counting_pyclesperanto_simple.py` 328, `pos_gen/mist_processor_cupy.py` 130 (no importer, no decorator, so never registered); write-only `MaterializationFormat` roster; `func_registry` facades with 0-1 callers | deleted | −1.2k |
-| [D2](D2-dead-core-runtime.md) | Dead core and runtime code | `core/utils.py` except `WellFilterProcessor` (~330); `MultiprocessingCoordinator` (140, only re-exported); test-only `function_contracts` helpers; unreachable validator branch; `CompiledStepPlan.step_type` never read; `ExecutionStatus.PENDING` never built; ~15 measurement/equivalence symbols | deleted | −1.0k |
-| [D3](D3-product-boundary.md) | Research tools and vestigial packages | `agent/blind_recipe_audit.py`, `mcp/recorded_evidence.py`, `mcp/memory_diagnostic*.py` used only by tests and scripts; `validation/` (628) no product importer; `introspection/` re-export shim; `components/framework.py` "moved" split; `utils/pipeline_migration.py` (508) legacy pickle migration | deleted or moved to `scripts/` | −2.1k |
+| [D2](D2-dead-core-runtime.md) | Dead core and runtime code | `core/utils.py` except `WellFilterProcessor` (~330); test-only `function_contracts` helpers; unreachable validator branch; `CompiledStepPlan.step_type` never read; `ExecutionStatus.PENDING` never built; ~15 measurement/equivalence symbols | deleted | −1.0k |
+| [D3](D3-product-boundary.md) | Research tools and vestigial packages | `agent/blind_recipe_audit.py`, `mcp/recorded_evidence.py`, `mcp/memory_diagnostic*.py` used only by tests and scripts; `validation/` (628) no product importer; `introspection/` re-export shim; `components/framework.py` "moved" split; `MultiprocessingCoordinator` (140, only re-exported); `utils/pipeline_migration.py` (508) legacy pickle migration | deleted or moved to `scripts/` | −2.1k |
 | [D4](D4-equivalence-tooling.md) | Equivalence tooling out of core | `core/runtime_equivalence.py` (3,300) and `core/equivalence/` (11.2k) mix two roles: 18 production modules on the CellProfiler measurement path import `policy`, `keys`, `cells`, `relationships`, `measurement_features`, while comparison and report code serves only `benchmark/` and tests | modules production cannot reach move to `benchmark/equivalence/`; the rest stays for K3 | ≤ −6k out |
 | [D5](D5-validation-logs.md) | Committed validation logs | `docs/validation` is 160 MB, 1,137 files | delete files nothing in `paper/` or `docs/` links to | non-code |
 | C1 | Capability invocation family | 7 nullable `*_invocation` slots (`agent/capabilities.py:1313`); 11 near-copy `generated_*_capability_declarations` (`mcp/server.py:591…`); 21-field `to_spec` copy | one `invocation` field; each invocation class owns execute, MCP binding, CLI arguments | −1.0k |
@@ -74,6 +74,7 @@ Total: about −16k production lines removed from `openhcs/`, plus up to −6k o
 | `mcp/server.py` vs `mcp/dev_client_renderers/` | C1 owns server.py and dev_client_commanding.py; C2 owns renderers and dev_client_rendering.py; C1 merges first |
 | `core/equivalence/` modules reachable from production | K3 owns them; D4 moves only what production cannot reach |
 | `config.py` source-binding rebinding | K4 |
+| `core/components/` | D3 |
 
 ## Decisions
 

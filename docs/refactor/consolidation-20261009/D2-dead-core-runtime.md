@@ -8,7 +8,6 @@
 **Unused functions, fields, enum members and unreachable branches are spread through core and runtime (TIME-6, TIME-3).** Each item below was checked against `openhcs/`, `tests/`, `scripts/` and `benchmark/`, including uses by name in strings.
 
 - `core/utils.py`: everything except `WellFilterProcessor`, about 330 lines. That covers the thread helpers (:22-275), `natural_sort` (:277-353) and `WellPatternConstants`.
-- `core/components/multiprocessing.py` (`Task`, `MultiprocessingCoordinator`, 140 lines). The only reference is the re-export in `core/components/__init__.py:14,21`.
 - `core/metadata_cache.get_metadata_cache` (:117).
 - `core/source_bindings.py`: `SourceRuntimePathLookup` and its two helpers (:2519-2564).
 - `core/source_matching.metadata_source_text` (:314).
@@ -28,7 +27,7 @@
 
 ## Target
 
-Delete every item. Leave `core/function_patterns.py` alone; K5 owns it.
+Delete every item. Leave `core/function_patterns.py` alone; K5 owns it. `core/components/` belongs to D3.
 
 ## Guards
 

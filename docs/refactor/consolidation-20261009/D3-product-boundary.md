@@ -15,6 +15,7 @@
 | `validation/` | 628 | No product importer (only `tests/.../test_ast_validator_registry.py`) |
 | `introspection/__init__.py` | 55 | Re-exports `python_introspect` with a side-effect `register_namespace_provider` that runs only if a GUI importer happens to load it. Its docstring names lazy dataclass utilities that no longer exist (IDEN-4). Referenced by 3 workflows and the guardrail test. |
 | `components/framework.py` | 210 | `core/components/__init__.py:9` says it was "moved to openhcs/components/". Four importers. |
+| `core/components/multiprocessing.py` | 140 | `Task` and `MultiprocessingCoordinator`; the only reference is the re-export in `core/components/__init__.py:14,21` |
 | `utils/pipeline_migration.py` | 508 | Legacy GroupBy pickle migration, still wired into `pyqt_gui/widgets/pipeline_editor.py:130` and `widgets/shared/services/pipeline_editor_workflows.py:41` (decision Q3: delete) |
 
 ## Target
@@ -22,7 +23,7 @@
 - Move `memory_diagnostic*` into `scripts/`, beside its only consumer.
 - Delete `blind_recipe_audit.py`, `recorded_evidence.py`, `validation/` and their tests. Their work is over: the paper's evidence is archived in `paper/supplementary/`.
 - Fold the namespace-provider registration into application bootstrap. Import `python_introspect` directly everywhere and delete `openhcs/introspection/`. Update the three workflows and the guardrail test.
-- Merge `components/framework.py` back into `core/components` and delete `openhcs/components/`.
+- Merge `components/framework.py` back into `core/components` and delete `openhcs/components/`. Delete `core/components/multiprocessing.py` and its re-export. D3 owns `core/components/`.
 - Delete `pipeline_migration.py` and its two call sites. Loading a pre-GroupBy pickle then fails with the current loader's error.
 
 ## Guards
