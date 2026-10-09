@@ -7,7 +7,34 @@
   "execution_median": "6.965",
   "total_min": "2.844",
   "total_median": "4.740",
+  "amortized_execution_min": "2.764",
+  "amortized_execution_median": "4.484",
+  "amortized_execution_max": "433.428",
+  "amortized_total_min": "2.517",
+  "amortized_total_median": "4.224",
+  "amortized_total_max": "426.781",
   "native_policy": "Measured CP first batch n=1 at 1/8 assignments; explicitly projected first-use CP reference at 12/16; OH median n=3. No target native observations fabricated.",
+  "amortized_policy": "Per-sample ratio of one measured serial CP8 first batch (CPUs2-5 affinity, one numerical thread) to the median of three measured OH one-worker twelve-assignment runs. OH preparation is spread over twelve samples, CP initialization over eight.",
+  "amortized_statistics": {
+    "execution": {
+      "label": "CP8 measured / OH 12 one worker, per sample",
+      "sample_count": 30,
+      "minimum": 2.7644509334565615,
+      "maximum": 433.4277037351974,
+      "median": 4.484125090487236,
+      "mean": 21.583540885617925,
+      "standard_deviation": 78.26837440071607
+    },
+    "total": {
+      "label": "CP8 measured / OH 12 one worker, per sample",
+      "sample_count": 30,
+      "minimum": 2.5168815993629576,
+      "maximum": 426.7811651689571,
+      "median": 4.223537777248422,
+      "mean": 20.813333976485104,
+      "standard_deviation": 77.05660411358524
+    }
+  },
   "mode_statistics": {
     "singlewell": {
       "assignment_count": 1,

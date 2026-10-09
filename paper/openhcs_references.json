@@ -2680,5 +2680,47 @@
         ]
       ]
     }
+  },
+  {
+    "id": "Zhang1999",
+    "type": "article-journal",
+    "title": "A simple statistical parameter for use in evaluation and validation of high throughput screening assays",
+    "author": [
+      {"given": "Ji-Hu", "family": "Zhang"},
+      {"given": "Thomas D Y", "family": "Chung"},
+      {"given": "Kevin R", "family": "Oldenburg"}
+    ],
+    "container-title": "Journal of Biomolecular Screening",
+    "issued": {"date-parts": [[1999, 4]]},
+    "DOI": "10.1177/108705719900400206",
+    "URL": "https://doi.org/10.1177/108705719900400206",
+    "volume": "4",
+    "issue": "2",
+    "page": "67-73"
+    },
+  {
+    "id": "Caicedo2019",
+    "type": "article-journal",
+    "title": "Evaluation of deep learning strategies for nucleus segmentation in fluorescence images",
+    "author": [
+      {"given": "Juan C", "family": "Caicedo"},
+      {"given": "Jonathan", "family": "Roth"},
+      {"given": "Allen", "family": "Goodman"},
+      {"given": "Tim", "family": "Becker"},
+      {"given": "Kyle W", "family": "Karhohs"},
+      {"given": "Matthieu", "family": "Broisin"},
+      {"given": "Csaba", "family": "Molnar"},
+      {"given": "Claire", "family": "McQuin"},
+      {"given": "Shantanu", "family": "Singh"},
+      {"given": "Fabian J", "family": "Theis"},
+      {"given": "Anne E", "family": "Carpenter"}
+    ],
+    "container-title": "Cytometry Part A",
+    "issued": {"date-parts": [[2019, 9]]},
+    "DOI": "10.1002/cyto.a.23863",
+    "URL": "https://doi.org/10.1002/cyto.a.23863",
+    "volume": "95",
+    "issue": "9",
+    "page": "952-965"
   }
 ]

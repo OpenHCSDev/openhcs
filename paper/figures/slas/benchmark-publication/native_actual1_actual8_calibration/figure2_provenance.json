@@ -1,12 +1,12 @@
 {
   "source_sha256": {
-    "benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/render_sweep.py": "9b0eca8348a85d86d13c0672950c000db793d9f0a363440f9decd7c77e7efe91",
+    "benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/render_sweep.py": "88de7196e09ad97797eeb9fb53c3416c1fdcea788b0adf43bc31e3d2976e7465",
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/current/protocol-manifest.json": "df9e40b0b4f64c073e59c849f3405047dfac039b4ca80ac2346795469fa389c0",
     "benchmark/reports/cppipe_figures.py": "e6698773fa549655bb29bef2e8c051ee1b41ec1f4712c8e435c5162fa526d790",
     "paper/figures/build_slas_benchmark.py": "4f510fe6d23b3d8a5213c030b6270c9d9b00fa9f9b9d816deda1250979a23840",
     "paper/figures/build_slas_agent.py": "88aa622cc09a96b702dc138dc64571df0239cae4a7c11f43fa274629628f5edc",
     "benchmark/native_execution_projection.py": "38d698c6c89e49113843900100c1095024527c88a1080a3f4397437f05f49219",
-    "benchmark/native_batch_contracts.py": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+    "benchmark/native_batch_contracts.py": "90e7f849fd0727870bafe7c0e7a21fd41377d3c2a4919b15973be45173d69767",
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/v2/convert_matched_reports.py": "529c445f5236a5feb7d5b9d248a4ecb99d8a7c195a5e11da2b6b6c2c471f079a",
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json": "3fc1d12731272138e54487d3cc06cafe04e89154e10e850c61769f0fe2d780a8",
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/archive_custody.json": "ea4e55741e664181125bc705389f34ef284e8ca58c69be69f3a280b2782aa006",
@@ -253,9 +253,9 @@
   "output_sha256": {
     "actual_native_batch_calibration.csv": "b467f94f7c4040f7907f444b6d94cdc63817f93d90350dbb5c096db703241ef5",
     "actual_native_first_batch_calibration.png": "00bd17112e171126d0dccf1295e016e1515aebd469e759ee20c06ccb998ac221",
-    "actual_native_first_batch_calibration.svg": "09b421634eb2ae4635b12e9f5616dd4e8c18b665f996cce154aa6fd2763b160d",
+    "actual_native_first_batch_calibration.svg": "ca883b9f9b7f2bca0790363d14bde49e1b6d5774f70557c084542c4b7c8fd870",
     "actual_native_first_batch_calibration_log.png": "b2a423de57253e3f09d7cc1ee51a059d1da1a1f065147f5fecadcfef4f402375",
-    "actual_native_first_batch_calibration_log.svg": "d5b4ecd57a3ccc3f6ef7de72b6f5d51bc409de999402ef46d1be6eb0c35d46eb"
+    "actual_native_first_batch_calibration_log.svg": "cd0d42424f394292e2a42dd100781443a94b2d6a627cb705e87258fc510de38b"
   },
   "source_revision": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
   "native_reference_kinds": {
