@@ -177,8 +177,10 @@ class NativeSummary:
         if len(rows) != 1:
             raise ValueError(f"Expected one native plane summary: {path}")
         row = rows[0]
-        if (int(row["neurite_channel_index"]), int(row["cell_body_channel_index"]),
-                int(row["nuclear_channel_index"])) != (1, 1, 0):
+        # The native summary records -1 when optional nuclear detection is off;
+        # 0 identifies DAPI when it is on. Both retain FITC geometry on channel 1.
+        if ((int(row["neurite_channel_index"]), int(row["cell_body_channel_index"])) != (1, 1)
+                or int(row["nuclear_channel_index"]) not in (-1, 0)):
             raise ValueError(f"Unexpected channel assignment: {path}")
         if row["coordinate_unit"] != cls.coordinate_unit:
             raise ValueError(f"Expected calibrated micrometer measurements: {path}")

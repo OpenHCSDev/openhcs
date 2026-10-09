@@ -48,11 +48,12 @@ class GuidedComparisonTests(unittest.TestCase):
         evaluator.write_rows(self.reference, reference)
         self.key.write_text(json.dumps({"images": images}))
 
-    def write_plane(self, directory, well, site, length, branches, processes=2, unit="micrometers", empty=False):
+    def write_plane(self, directory, well, site, length, branches, processes=2, unit="micrometers", empty=False,
+                    nuclear_channel_index=0):
         path = directory / f"{well}_s{site}_neurite_outgrowth_summary_plane_details.csv"
         evaluator.write_rows(path, [{"well": well, "site": str(site), "z_index": 1,
                                     "timepoint": 1, "neurite_channel_index": 1,
-                                    "cell_body_channel_index": 1, "nuclear_channel_index": 0,
+                                    "cell_body_channel_index": 1, "nuclear_channel_index": nuclear_channel_index,
                                     "coordinate_unit": unit, "number_of_cells": 0 if empty else 1,
                                     "total_outgrowth": length, "mean_outgrowth_per_cell": 0 if empty else length,
                                     "total_branches": branches, "mean_branches_per_cell": 0 if empty else branches,
@@ -120,6 +121,24 @@ class GuidedComparisonTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "explicit label"):
             self.compare(self.root / "bad", guided_summaries=self.guided)
         self.assertFalse((self.root / "bad").exists())
+
+    def test_optional_nuclear_detection_preserves_comparison_and_rejects_wrong_channels(self):
+        for path in self.blind.glob("*_summary_*details.csv"):
+            rows = evaluator.read_rows(path)
+            rows[0]["nuclear_channel_index"] = -1
+            evaluator.write_rows(path, rows)
+        output = self.root / "fitc_only"
+        self.compare(output, **self.guided_options())
+        self.assertEqual(len(evaluator.read_rows(output / "paired_sites.csv")), 90)
+        self.assertEqual(float(evaluator.read_rows(output / "joined_wells.csv")[0]["openhcs_cell_count"]), 1)
+        path = self.blind / "A01_s1_neurite_outgrowth_summary_plane_details.csv"
+        rows = evaluator.read_rows(path)
+        for column, value in (("nuclear_channel_index", -2), ("nuclear_channel_index", 1),
+                              ("neurite_channel_index", 0), ("cell_body_channel_index", 0)):
+            changed = dict(rows[0], **{column: value})
+            evaluator.write_rows(path, [changed])
+            with self.assertRaisesRegex(ValueError, "Unexpected channel assignment"):
+                evaluator.NativeSummary.read(path)
 
     def test_multiple_directories_cli_and_duplicate_identity_rejection(self):
         directories = []
