@@ -435,6 +435,13 @@ class CellProfilerNeuriteEngineProfile:
         )
         pre_topology_owner_skeleton = owner_skeleton.copy()
         pre_topology_owner_skeleton[cell_body_labels > 0] = 0
+        pre_topology_owner_skeleton = _prune_terminal_spurs(
+            pre_topology_owner_skeleton,
+            cell_body_labels,
+            coordinate_scale,
+            minimum_length=outgrowth.minimum_terminal_branch_length,
+            anchor_radius=_TopologyResult.soma_attachment_radius(outgrowth_width_px),
+        )
         topology = _analyze_owned_topology(
             pre_topology_owner_skeleton,
             cell_body_labels,
@@ -519,6 +526,7 @@ class CellProfilerNeuriteEngineProfile:
             outgrowth.minimum_cell_growth_to_log_as_significant,
             coordinate_spacing,
             slice_index=body_channel_index,
+            minimum_process_length=outgrowth.minimum_process_length,
         )
         summary = _build_summary(
             cell_results,
@@ -905,6 +913,21 @@ class MetaXpressOutgrowthSettings:
     candidate_hysteresis_seed_correction_factor: float | None = None
     """Optional stricter seed threshold retaining connected dim candidates."""
 
+    minimum_terminal_branch_length: float = 0.0
+    """Optional spur-pruning length in micrometers; 0 keeps every traced path.
+
+    Before final rooted topology, one pass removes each skeleton path running
+    from a free tip to a junction when it is shorter than this length. Tips in
+    the soma attachment neighbourhood anchor a root and are never pruned.
+    """
+
+    minimum_process_length: float = 0.0
+    """Optional minimum soma-rooted process length in micrometers; 0 counts all.
+
+    A rooted partition shorter than this is not reported as a process; its
+    length leaves the per-cell process statistics and total outgrowth together.
+    """
+
     def maximum_width_px(self, coordinate_scale: float) -> float:
         """Project this declaration's outgrowth width into image pixels."""
         return self.maximum_width / coordinate_scale
@@ -943,6 +966,10 @@ class MetaXpressOutgrowthSettings:
                     "outgrowth.candidate_hysteresis_seed_correction_factor must "
                     "be >= outgrowth.candidate_threshold_correction_factor"
                 )
+        for name in ("minimum_terminal_branch_length", "minimum_process_length"):
+            length = getattr(self, name)
+            if not np.isfinite(length) or length < 0:
+                raise ValueError(f"outgrowth.{name} must be >= 0")
 
 
 @dataclass(frozen=True)
@@ -974,6 +1001,14 @@ class PixelOutgrowthSettings(MetaXpressOutgrowthSettings):
         MetaXpressOutgrowthSettings().minimum_cell_growth_to_log_as_significant
     )
     """Scoring-only length in pixels; does not admit or remove detected paths."""
+
+    minimum_terminal_branch_length: float = (
+        MetaXpressOutgrowthSettings().minimum_terminal_branch_length
+    )
+    """Optional free-tip spur-pruning length in pixels; 0 keeps every path."""
+
+    minimum_process_length: float = MetaXpressOutgrowthSettings().minimum_process_length
+    """Optional minimum soma-rooted process length in pixels; 0 counts all."""
 
 
 @dataclass(frozen=True)
@@ -3538,6 +3573,58 @@ def _build_neurite_morphology_graph(
     return graph
 
 
+def _prune_terminal_spurs(
+    owner_skeleton: np.ndarray,
+    cell_body_labels: np.ndarray,
+    coordinate_scale: float,
+    *,
+    minimum_length: float,
+    anchor_radius: int,
+) -> np.ndarray:
+    """Remove short free-tip paths ending at a junction, once, per owner.
+
+    A tip within ``anchor_radius`` of any soma is a root attachment, not a
+    spur. Junction pixels are kept, so surviving paths remain connected.
+    A non-positive length returns the input unchanged.
+    """
+
+    owned = np.asarray(owner_skeleton, dtype=np.int32)
+    if minimum_length <= 0 or not np.any(owned > 0):
+        return owned
+    anchored = ndi.distance_transform_edt(cell_body_labels == 0) <= anchor_radius
+    connectivity = ndi.generate_binary_structure(2, 2)
+    neighborhood = connectivity.copy()
+    neighborhood[1, 1] = False
+    pruned = owned.copy()
+    for region in regionprops(owned):
+        window = region.slice
+        origin = np.asarray([axis.start for axis in window])
+        mask = owned[window] == region.label
+        mask &= ndi.binary_dilation(mask, structure=neighborhood)
+        mask = _remove_three_pixel_cycles(mask, connectivity)
+        if not mask.any():
+            continue
+        graph = Skeleton(mask, spacing=coordinate_scale)
+        if graph.n_paths == 0:
+            continue
+        table = summarize(graph, separator="_").reset_index(drop=True)
+        for path_index, row in table.iterrows():
+            if row["branch_distance"] >= minimum_length:
+                continue
+            ends = (int(row["node_id_src"]), int(row["node_id_dst"]))
+            end_degrees = tuple(int(graph.degrees[node]) for node in ends)
+            if min(end_degrees) != 1 or max(end_degrees) < 3:
+                continue
+            coordinates = np.asarray(graph.path_coordinates(path_index), dtype=int)
+            tip_first = end_degrees[0] == 1
+            tip = coordinates[0 if tip_first else -1] + origin
+            if anchored[tuple(tip)]:
+                continue
+            spur = coordinates[:-1] if tip_first else coordinates[1:]
+            pruned[tuple((spur + origin).T)] = 0
+    return pruned
+
+
 def _in_body_soma_coordinate(
     cell_body_labels: np.ndarray,
     owner: int,
@@ -3721,6 +3808,7 @@ def _build_cell_results(
     coordinate_spacing: SourceVoxelSpacing,
     *,
     slice_index: int,
+    minimum_process_length: float = 0.0,
 ) -> list[NeuriteOutgrowthCellResult]:
     coordinate_scale = coordinate_spacing.isotropic_xy_spacing
     cell_count = int(cell_body_labels.max())
@@ -3743,7 +3831,10 @@ def _build_cell_results(
     for cell in range(1, cell_count + 1):
         path_indexes = np.flatnonzero(topology.path_owners == cell)
         roots = topology.root_paths_by_cell.get(cell, ())
-        process_lengths = _measure_process_lengths(cell, roots, topology)
+        process_lengths = [
+            length for length in _measure_process_lengths(cell, roots, topology)
+            if length >= minimum_process_length
+        ]
         total_outgrowth = float(np.sum(process_lengths))
         process_count = len(process_lengths)
         curve_length = float(np.sum(topology.path_lengths[path_indexes]))
