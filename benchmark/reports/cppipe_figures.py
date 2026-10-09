@@ -653,6 +653,7 @@ class BenchmarkFigureStyle:
         target_line: float | None = None,
         log_variant: bool,
         font_scale: float = 1.0,
+        annotation_precision: int = 1,
     ) -> tuple[Path, ...]:
         """Plot mean bars with all per-pipeline points for each method."""
         import matplotlib.pyplot as plt
@@ -682,7 +683,7 @@ class BenchmarkFigureStyle:
         )
         if not values:
             return ()
-        value_suffix = " MB" if value_key == "peak_memory_mb" else "x"
+        value_suffix = {PEAK_MEMORY_MB_FIELD: " MB", RAW_SECONDS_FIELD: " s", SPEEDUP_METRIC_KEY: "x"}[value_key]
         outputs: list[Path] = []
         for log_y in (False, True) if log_variant else (False,):
             broken_range = (
@@ -918,11 +919,11 @@ class BenchmarkFigureStyle:
                         (
                             method_index,
                             color,
-                            ((f"all {mean:.1f}{value_suffix}", mean, "bold"),) if len(values_) == 1 else (
-                                (f"min {minimum:.1f}{value_suffix}", minimum, "normal"),
-                                (f"med {median:.1f}{value_suffix}", median, "normal"),
-                                (f"mean {mean:.1f}{value_suffix}", mean, "bold"),
-                                (f"max {maximum:.1f}{value_suffix}", maximum, "normal"),
+                            ((f"all {mean:.{annotation_precision}f}{value_suffix}", mean, "bold"),) if len(values_) == 1 else (
+                                (f"min {minimum:.{annotation_precision}f}{value_suffix}", minimum, "normal"),
+                                (f"med {median:.{annotation_precision}f}{value_suffix}", median, "normal"),
+                                (f"mean {mean:.{annotation_precision}f}{value_suffix}", mean, "bold"),
+                                (f"max {maximum:.{annotation_precision}f}{value_suffix}", maximum, "normal"),
                             ),
                         )
                     )

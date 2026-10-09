@@ -23,6 +23,7 @@ from zmqruntime.messages import (
 )
 from zmqruntime.startup import EndpointStartupStatusCallback
 
+from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
@@ -587,33 +588,37 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 request_context.compile_artifact_id,
             )
             self._ensure_request_global_config_context(request_context)
-            resolved_config, _ = ObjectState.resolve_saved_object(
-                request_context.pipeline_config,
-                ancestor_objects_with_scopes=(
-                    ObjectStateRegistry.get_ancestor_objects_with_scopes(
-                        None, use_saved=True
-                    )
-                ),
+            execution_bundle = (
+                self._compiled_artifacts[
+                    request_context.compile_artifact_id
+                ].compilation.execution_bundle
+                if request_context.compile_artifact_id is not None
+                else None
             )
+            resolved_config = None
+            if execution_bundle is None:
+                resolved_config, _ = ObjectState.resolve_saved_object(
+                    request_context.pipeline_config,
+                    ancestor_objects_with_scopes=(
+                        ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                            None, use_saved=True
+                        )
+                    ),
+                )
             orchestrator = self._initialize_orchestrator(
                 request_context.execution_id,
                 plate_path_str,
                 request_context.pipeline_config,
                 resolved_config=resolved_config,
                 selected_pipeline_path=request_context.request_payload.selected_pipeline_path,
-                execution_bundle=(
-                    self._compiled_artifacts[
-                        request_context.compile_artifact_id
-                    ].compilation.execution_bundle
-                    if request_context.compile_artifact_id is not None
-                    else None
-                ),
+                execution_bundle=execution_bundle,
             )
             self._raise_if_cancelled(request_context.execution_id, "initialization")
             wells = self._wells_for_execution(
                 auxiliary_params.axis_filter,
                 orchestrator,
                 debug_execution_policy,
+                execution_bundle=execution_bundle,
             )
             self._emit_planned_init_started(
                 progress_emitter,
@@ -680,27 +685,36 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         plate_path_str: str,
         pipeline_config,
         *,
-        resolved_config: GlobalPipelineConfig,
+        resolved_config: GlobalPipelineConfig | None,
         selected_pipeline_path: str | None = None,
-        execution_bundle=None,
+        execution_bundle: CompiledExecutionBundle | None = None,
     ):
         from pathlib import Path
 
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
-        orchestrator = PipelineOrchestrator(
-            plate_path=Path(plate_path_str),
-            pipeline_config=pipeline_config,
-            resolved_config=resolved_config,
-            selected_pipeline_path=selected_pipeline_path,
-            progress_callback=None,
-            transport_config=self.config,
-        )
-        orchestrator.execution_id = execution_id
         if execution_bundle is None:
+            if resolved_config is None:
+                raise ValueError("Fresh initialization requires resolved configuration.")
+            orchestrator = PipelineOrchestrator(
+                plate_path=Path(plate_path_str),
+                pipeline_config=pipeline_config,
+                resolved_config=resolved_config,
+                selected_pipeline_path=selected_pipeline_path,
+                progress_callback=None,
+                transport_config=self.config,
+            )
+            orchestrator.execution_id = execution_id
             orchestrator.initialize(resolved_config=resolved_config)
         else:
-            orchestrator.adopt_compiled_execution(execution_bundle)
+            orchestrator = PipelineOrchestrator.from_compiled_execution(
+                execution_bundle,
+                plate_path=Path(plate_path_str),
+                pipeline_config=pipeline_config,
+                selected_pipeline_path=selected_pipeline_path,
+                transport_config=self.config,
+            )
+        orchestrator.execution_id = execution_id
         self.active_executions[execution_id].set_extra("orchestrator", orchestrator)
         return orchestrator
 
@@ -721,13 +735,17 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         axis_filter: tuple[str, ...] | None,
         orchestrator,
         debug_execution_policy,
+        *,
+        execution_bundle: CompiledExecutionBundle | None = None,
     ) -> list[str]:
         from openhcs.constants import MULTIPROCESSING_AXIS
 
         if axis_filter is not None:
             return list(axis_filter)
-        available_axis_ids = tuple(
-            orchestrator.get_component_keys(MULTIPROCESSING_AXIS)
+        available_axis_ids = (
+            execution_bundle.axis_ids
+            if execution_bundle is not None
+            else tuple(orchestrator.get_component_keys(MULTIPROCESSING_AXIS))
         )
         return debug_execution_policy.axis_filter_for_available(available_axis_ids)
 
@@ -753,7 +771,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         debug_execution_config,
         debug_execution_policy,
         progress_emitter: ZMQProgressEmitter,
-        resolved_config: GlobalPipelineConfig,
+        resolved_config: GlobalPipelineConfig | None,
     ):
         if request_context.compile_artifact_id is not None:
             self._cleanup_compiled_artifacts()

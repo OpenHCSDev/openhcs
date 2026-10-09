@@ -1,0 +1,136 @@
+{
+  "numpy_hugepage_advice": "0 (production startup default; inherited by owned server and fork workers)",
+  "source": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
+  "scope": "Full30 8assignment/2worker capture; warmup+3 actualOH with fresh parity; matching retained CP1/CP8 untouched; CP12/16 projection only in reporting",
+  "common_argv": [
+    "--manifest",
+    "/home/ts/code/projects/openhcs-materialization-plumbing/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/official30-manifest.json",
+    "--well-count",
+    "1",
+    "--repeat-assignments",
+    "8",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--production-source-root",
+    "/home/ts/code/projects/openhcs-materialization-plumbing",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1",
+    "--native-measurement-cache-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/native-measurement-facts",
+    "--comparison-workers",
+    "2",
+    "--comparison-cpus",
+    "0",
+    "1"
+  ],
+  "cases": [
+    "ExampleYeastPatches",
+    "cp_tutorial_3d_monolayer",
+    "cp_tutorial_advanced_segmentation_final",
+    "cp_tutorial_quality_control",
+    "cp_tutorial_beginner_segmentation_final",
+    "cp_tutorial_pixel_based_classification",
+    "cp_tutorial_translocation_final",
+    "cp4_supplement_combine_objects",
+    "cp_tutorial_translocation_start",
+    "ExampleUntangleWorms",
+    "ExampleUntangleWormsBrightField",
+    "ExampleYeastColonies",
+    "ExampleWoundHealing",
+    "ExampleSpeckles",
+    "ExampleIlluminationCorrection_Example3",
+    "ExampleVitra",
+    "ExampleFlyURL",
+    "ExampleColocalization",
+    "ExampleCometAssay",
+    "ExampleFly",
+    "ExampleHuman",
+    "ExampleIlluminationCorrection_Example1_AllMethod",
+    "ExampleIlluminationCorrection_Example1_EachMethod",
+    "ExampleIlluminationCorrection_Example2",
+    "ExampleImagingFlowCytometryObjectsInGrid",
+    "ExampleNeighbors",
+    "ExamplePercentPositive",
+    "ExampleTrackObjects",
+    "ExampleTumor",
+    "ExampleUntangleAndStraightenWorms"
+  ],
+  "prepared_worker_startup": "Latest merged production main3b173; readiness before pipeline clocks; endpoint per mode; parent pre-READY affinity2-5",
+  "server_port": 7778,
+  "affinity_by_job": [
+    {
+      "workers": 2,
+      "epoch_seconds": 1791496126.5661633,
+      "endpoint_pid": 3488621,
+      "endpoint_create_time": 1791496116.98,
+      "parent_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_thread_cpu_affinity": {
+        "3488621": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3489454": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3489455": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "3489456": [
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    }
+  ],
+  "prepared_children_affinity": {
+    "3489450": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "3489451": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "3489452": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "3489453": [
+      2,
+      3,
+      4,
+      5
+    ]
+  }
+}

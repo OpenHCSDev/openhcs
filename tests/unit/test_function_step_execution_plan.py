@@ -70,7 +70,6 @@ def _compiled_plan(**overrides):
         output_dir=Path("/tmp/output"),
         variable_components=(VariableComponents.SITE,),
         group_by=None,
-        func=noop,
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=1,
             source_step_scope_id="plate::functionstep_1",

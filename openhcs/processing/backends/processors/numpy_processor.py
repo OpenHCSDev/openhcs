@@ -19,6 +19,7 @@ from typing import Annotated, Any, List, Optional, Tuple
 
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
+from numba import njit
 from skimage import exposure, filters
 from skimage import morphology as morph
 from skimage import transform as trans
@@ -30,6 +31,7 @@ from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
+from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation
 from openhcs.processing.backends.processors.method_axes import (
     OrthogonalProjectionPlane,
     SpatialBinMethod,
@@ -397,6 +399,97 @@ def stack_percentile_normalize(
     )
 
 
+@njit(cache=True)
+def _weighted_projection_numba(values, indices, weights, output, cast):
+    for coordinate in np.ndindex(output.shape):
+        total = cast(0)
+        for index in range(len(indices)):
+            product = cast(values[(indices[index],) + coordinate]) * weights[index]
+            total = cast(total + product)
+        output[coordinate] = total
+
+
+def _indexed_weighted_projection(
+    values: np.ndarray,
+    indices: np.ndarray,
+    weights: np.ndarray,
+    *,
+    axis: int,
+    preserve_numpy_sum_order: bool = False,
+) -> np.ndarray:
+    """Reduce selected channels without materializing their weighted image cube.
+
+    Weights declare arithmetic precision. Float32 rounds each source value
+    before multiplication, as create_composite historically does. Float64
+    matches ColorToGray's explicit multiply/add recipe. The original NumPy
+    reduction remains authoritative for its fast-axis pairwise ordering and
+    numeric domains unsupported by the real-valued kernel.
+    """
+    members = np.moveaxis(values, axis, 0)
+    if len(indices) != len(weights):
+        raise ValueError("Selected channels and weights must have equal lengths")
+    count = members.shape[0]
+    if np.any(indices < -count) or np.any(indices >= count):
+        raise IndexError("Selected channel index is outside the image domain")
+    selected = np.where(indices < 0, indices + count, indices).astype(np.int64)
+    dtype = weights.dtype
+    # Registry preparation covers this entire accelerated signature domain.
+    # Other numeric domains retain the original recipe without cold JIT work.
+    supported = values.dtype in (np.dtype(np.float32), np.dtype(np.float64))
+    supported = supported and values.ndim in (3, 4)
+    output_size = int(np.prod(members.shape[1:], dtype=np.int64))
+    # Composite's historical cast/multiply uses NumPy's K-order allocation;
+    # only its ordinary C-order, non-fast-axis reduction is a sequential sum.
+    pairwise = output_size == 1 or (
+        preserve_numpy_sum_order and not values.flags.c_contiguous
+    )
+    if (
+        not supported or pairwise
+        or dtype not in (np.dtype(np.float32), np.dtype(np.float64))
+    ):
+        if preserve_numpy_sum_order:
+            converted = members.astype(dtype)
+            factors = weights.reshape((len(weights),) + (1,) * (members.ndim - 1))
+            selected_members = (
+                converted if np.array_equal(selected, np.arange(count))
+                else converted[selected]
+            )
+            return np.sum(selected_members * factors, axis=0)
+        if output_size == 1:
+            factors = weights.reshape((len(weights),) + (1,) * (members.ndim - 1))
+            return np.sum(members[selected] * factors, axis=0)
+        result = np.zeros(members.shape[1:], dtype=np.result_type(values.dtype, dtype))
+        product = np.empty_like(result)
+        for channel, weight in zip(selected, weights, strict=True):
+            np.multiply(members[channel], weight, dtype=result.dtype, out=product)
+            np.add(result, product, out=result)
+        return result
+    result = np.empty(members.shape[1:], dtype=dtype)
+    _weighted_projection_numba(members, selected, weights, result, dtype.type)
+    return result
+
+
+class NumpyWeightedProjectionKernelPreparation(
+    RegisteredNumbaKernelPreparation, metaclass=AutoRegisterMeta
+):
+    """Prepare shared numerical projection signatures during registry warmup."""
+
+    def execute(self) -> None:
+        indices = np.arange(3, dtype=np.int64)
+        for dtype in (np.float32, np.float64):
+            weights = np.full(3, 1 / 3, dtype=dtype)
+            for source_dtype in (np.float32, np.float64):
+                for shape in ((3, 2, 2), (3, 2, 2, 2)):
+                    values = np.ones(shape, dtype=source_dtype)
+                    strided = np.moveaxis(
+                        np.moveaxis(values, 0, -1).copy(), -1, 0,
+                    )
+                    for members in (values, np.asfortranarray(values), strided):
+                        for writable in (True, False):
+                            members.flags.writeable = writable
+                            _indexed_weighted_projection(members, indices, weights, axis=0)
+
+
 @numpy_func(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
 def create_composite(
     stack: np.ndarray, weights: Optional[List[float]] = None
@@ -443,19 +536,15 @@ def create_composite(
     # CRITICAL: Use float32 for weights to preserve fractional values, not stack.dtype
     weights_array = np.array(normalized_weights, dtype=np.float32)
 
-    # Reshape weights for broadcasting: (N, 1, 1) to multiply with (N, Y, X)
-    weights_array = weights_array.reshape(n_slices, 1, 1)
-
-    # Create composite by weighted sum along the first axis
-    # Convert stack to float32 for computation to avoid precision loss
-    stack_float = stack.astype(np.float32)
-    weighted_stack = stack_float * weights_array
-    composite_slice = np.sum(weighted_stack, axis=0, keepdims=True)  # Keep as (1, Y, X)
+    composite_slice = _indexed_weighted_projection(
+        stack, np.arange(n_slices, dtype=np.int64), weights_array,
+        axis=0, preserve_numpy_sum_order=True,
+    )
 
     # Convert back to original dtype
     composite_slice = composite_slice.astype(stack.dtype)
 
-    return composite_slice[0]
+    return composite_slice
 
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))

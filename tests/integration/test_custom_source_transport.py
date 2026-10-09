@@ -460,7 +460,7 @@ def _compiled_custom_contexts(payload, runtime):
         prepared = invocation.contract.resolve_runtime_callable()
         plan = CompiledStepPlan(
             step_index=0, step_name="Synthetic custom", step_type="FunctionStep",
-            axis_id=axis_id, func=captured, compiled_function_pattern=pattern,
+            axis_id=axis_id, compiled_function_pattern=pattern,
         )
         context = ProcessingContext(
             axis_id=axis_id, step_plans={0: plan},

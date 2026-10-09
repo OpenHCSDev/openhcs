@@ -1,0 +1,38 @@
+{
+  "source_head": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
+  "source_matches_main_production": true,
+  "missing_modes": [
+    [
+      1,
+      1
+    ],
+    [
+      8,
+      2
+    ],
+    [
+      12,
+      2
+    ],
+    [
+      12,
+      3
+    ],
+    [
+      16,
+      4
+    ]
+  ],
+  "reuse_modes": {
+    "12assignments-1worker": "benchmark/results/matched_fixed12_physical_facts_20261008",
+    "12assignments-4workers": "benchmark/results/matched_fixed12_physical_facts_20261008"
+  },
+  "adapted_from": "benchmark/results/matched_fixed12_physical_facts_20261008/protocol/capture/receive.py",
+  "original_receive_sha256": "9b49fbea99d0fea759a788b6c985e42dc1def6bfb0f6c65e21f2a235a923643d",
+  "capture_location": "home after duplicate-output cleanup",
+  "singlewell_affinity_followup": {
+    "reason": "Prepared workers retained CPUs2\u20135 while manuscript claimed one physical core",
+    "policy": "After readiness pin client, server and all prepared-worker threads to CPU5; preserve initial wider-affinity results and rerun only single-sample mode after multicore captures finish",
+    "native_reference": "Unchanged qualified CP1 baseline, pinned CPU5"
+  }
+}

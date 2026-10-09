@@ -179,6 +179,44 @@ Each configuration contains thirty workflow points; bars show arithmetic means a
 Execution scaling for thirty workflows: measured one-worker time divided by measured time at each worker count, with twelve assignments held fixed. Each time is the median of three repetitions after warmup. Points are workflows, bars means and black lines medians. These ratios use only measured OpenHCS times. The corresponding total-time and efficiency plots are linked in Supplementary Data 3.
 :::
 
+## Supplementary Figure 6, continued. One-worker batch comparisons
+
+![Cp relative speedup, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Seconds per sample, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Amortization factor, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Cp relative speedup, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_cp_relative_speedup_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Seconds per sample, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_seconds_per_sample_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Amortization factor, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_amortization_factor.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |
@@ -195,6 +233,10 @@ Execution scaling for thirty workflows: measured one-worker time divided by meas
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 
+
+### Continuous integration
+
+The [versioned integration workflow](../../.github/workflows/integration-tests.yml) defines the operating-system, Python-version, backend, microscope, numerical-parity and installed-desktop matrices described in Methods. The [Official30 comparator](../../tests/integration/test_cellprofiler_official30_zmq.py) runs the manifest-owned workflows through ZeroMQ and compares their declared outputs against retained native CellProfiler values. These CI checks are separate from the timed performance captures.
 
 ### Import, export and comparison methods
 
@@ -334,20 +376,34 @@ current-version compatibility matrix.
 
 ## Supplementary Data 3. Worker measurements
 
+### Serial batching and preparation amortization
+
+The one-worker controls compare one and twelve samples. Both systems amortize preparation across a batch: CellProfiler initialization remains inside its first execution, while OpenHCS library readiness precedes pipeline timing and compilation is included in total time. The twelve-sample CellProfiler reference is projected from actual serial CP8 first/warm batches, with zero measured CP12 target observations. Each panel retains all thirty workflows. Different CPU affinities between the single-sample and batch captures are retained in the record; these plots show the observed comparison rather than isolating initialization alone.
+
+- One-worker CP-relative speedups: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png) and [compile-plus-run total](../figures/slas/benchmark-publication/serial_batch/total/serial_cp_relative_speedup_log.png).
+- Time per sample: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png) and [total](../figures/slas/benchmark-publication/serial_batch/total/serial_seconds_per_sample_log.png).
+- Batching reduction in time per sample, relative to one sample: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png) and [total](../figures/slas/benchmark-publication/serial_batch/total/serial_amortization_factor.png).
+
 ### Current matched thirty-workflow sweep
 
-- [Qualified full record and clock policy](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/README.md), with the [seven-configuration protocol](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json).
+- [Qualified full record and clock policy](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/README.md), with the [seven-configuration protocol](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/current/protocol-manifest.json).
 - [Single-sample execution and total, linear](../figures/slas/benchmark-publication/measured_benchmark_publication.png) and [logarithmic](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), with [manuscript numerical claims](../figures/slas/benchmark-publication/benchmark_claims.json).
 - Rebuilt reference chart forms: [per-workflow speedups](../figures/slas/benchmark-publication/reference-layout/reference_pipeline_speedup_log.svg), [worker summary](../figures/slas/benchmark-publication/reference-layout/reference_core_summary_log.svg), [assignment summary](../figures/slas/benchmark-publication/reference-layout/reference_assignments_summary_log.svg), [output agreement](../figures/slas/benchmark-publication/reference-layout/reference_parity.svg), and [graded module coverage](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.svg), with the [per-module behavior and test attribution](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv).
 - May execution speedups: [linear](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv).
 - May total speedups: [linear](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
 - Actual fixed-twelve execution scaling: [linear](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/execution/efficiency/derived_workflow_metrics.csv).
 - Actual fixed-twelve total scaling: [linear](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/total/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/total/efficiency/derived_workflow_metrics.csv).
-- [Actual one/eight-assignment native calibration](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/native-full30-calibration/README.md), [calibration table](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [projection validation](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/calibration/cold_first/cold-first-model-validation.json).
+- [Actual one/eight-assignment native calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/diagnostics/native-full30-calibration/README.md), [calibration table](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [projection validation](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json).
 
 All thirty workflows pass output parity. CP1/CP8 references remain actual
 first-batch observations; CP12/CP16 remain explicitly projected and retain zero
-actual target native observations. Native calibration differs in allowed CPU
+actual target native observations. Every workflow has execution and total
+speedup above one in every tested configuration, including the one-worker
+twelve-assignment comparison after both systems amortize preparation. On the
+fixed twelve-assignment workload, every workflow also has execution and total
+scaling above one at two, three and four workers relative to one worker.
+These scaling results use measured OpenHCS times throughout.
+Native calibration differs in allowed CPU
 counts between the one- and eight-assignment captures; the projection check
 covers three workflows and is not full-cohort measured validation. The record
 preserves signed within-session and cross-session errors. All OpenHCS scaling
@@ -488,6 +544,44 @@ link the plotted values to the original evaluations.
 
 ## Supplementary Data 8. Autonomous analysis evidence
 
+### Evaluation endpoints and reference types
+
+| Assay | Endpoint | Reference |
+|---|---|---|
+| H001 bright objects | One-to-one object F1 | Computational notebook labels |
+| BBBC039 nuclei | One-to-one object F1 and foreground Dice | Independent instance annotations |
+| BBBC007 DNA/actin | Directed boundary fraction | Manual-outline union |
+| BBBC013 translocation | Well-level GFP ratio and control Z′ | Treatment groups |
+| H002 3D centres | Matched-centre voxel distance | Manual centre annotations |
+| Retinal somata | Counts and distributed image review | Matched raw/result views; [TODO: annotated soma centres] |
+| Public and laboratory neurites | Shaft and path recovery | Matched raw/path views; [TODO: crossing ownership labels] |
+
+### Trial-level autonomous results
+
+Labels identify authors in the linked records in Supplementary Data 7–8; multiple endpoints from one author are listed as separate comparisons. [TODO: additional repetitions and models, from new trial outputs.]
+
+| Assay | Model | Data partition | Endpoint | Result |
+|---|---|---|---|---|
+| BBBC039, earlier trial | gpt-5.6-sol | 50 held-out fields | Object F1; foreground Dice | 0.746; 0.935 |
+| BBBC039, fresh612 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.910; 0.906 |
+| BBBC039, fresh10 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.898 |
+| BBBC039, fresh13 | gpt-6.1-sol | 175 uninspected; all 200 fields | Pooled object F1, respectively | 0.906; 0.904 |
+| BBBC039, fresh612 repair | gpt-6.1-sol | Same three development fields | Object F1, first to final | 0.908 to 0.934 |
+| BBBC007, earlier trial | gpt-5.6-sol | 12 held-out fields | Directed boundary fraction | 0.671 |
+| BBBC007, fresh19 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.743 |
+| BBBC007, fresh26 | gpt-6.1-sol | 16 fields including development | Directed boundary fraction | 0.740 |
+| BBBC007/H003, fresh26 | gpt-6.1-sol | One development field | Nuclei; actin-supported cells | 56; 54 |
+| BBBC013, earlier trial | gpt-5.6-sol | 92 held-out wells | Control Z′, Wortmannin; LY294002 | 0.751; 0.554 |
+| BBBC013, fresh23 | gpt-6.1-sol | 96 wells including four development wells | Control Z′, LY294002; Wortmannin | 0.849; 0.726 |
+| H001, fresh586 | gpt-6.1-sol | One development image | Computational-reference F1, first to final | 0.929 to 0.944 |
+| H001, fresh25 rotation | gpt-6.1-sol | One development image | Final labels; matched image review | 62; no reference score |
+| H002, fresh15 | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.80 voxels |
+| H002, fresh23 rotation | gpt-6.1-sol | One development volume | Centres within 30 voxels; mean matched error | 15 of 15; 4.86 voxels |
+| Retina, fresh09 | gpt-6.1-sol | One development field | Detected objects; image review | 102 |
+| Retina, fresh26 | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
+| Public neurites, fresh20 | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
+| Laboratory neurites, fresh13 | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
+
 ### Source artwork and assisted mosaic review
 
 Main Figure 5 shows public shafts, autonomous laboratory-field analysis and
@@ -581,7 +675,7 @@ accuracy percentage.
 - [Trial wall times, usage and dated model/software identities](task_only_analysis/trial_resources.rst),
   with the [complete resource catalogue](task_only_analysis/trial_resources.csv).
 
-Two additional final-pipeline repeats appear in main Table 2. H001 fresh25
+Two additional final-pipeline repeats appear in the trial-level inventory above. H001 fresh25
 rotation selected 62 labels after matched image review; no computational-reference
 score was reported for that repeat. H002 fresh23 rotation matched all 15 annotated
 centres within 30 voxels, with mean error 4.8580507660 voxels and eleven unmatched

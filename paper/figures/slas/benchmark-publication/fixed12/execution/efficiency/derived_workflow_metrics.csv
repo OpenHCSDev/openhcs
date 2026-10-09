@@ -1,121 +1,121 @@
 pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,peak_memory_mb,efficiency_unit_fraction
-ExampleYeastPatches,OH 1 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,13.03943920135498,,1.0
-cp_tutorial_3d_monolayer,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,35.03141641616821,,1.0
-cp_tutorial_advanced_segmentation_final,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,61.63849663734436,,1.0
-cp_tutorial_quality_control,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,6.295537948608398,,1.0
-cp_tutorial_beginner_segmentation_final,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,37.169827461242676,,1.0
-cp_tutorial_pixel_based_classification,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,6.738504886627197,,1.0
-cp_tutorial_translocation_final,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,5.61316442489624,,1.0
-cp4_supplement_combine_objects,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.5471816062927246,,1.0
-cp_tutorial_translocation_start,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,1.5262360572814941,,1.0
-ExampleUntangleWorms,OH 1 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,8.822354793548584,,1.0
-ExampleUntangleWormsBrightField,OH 1 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,14.131319999694824,,1.0
-ExampleYeastColonies,OH 1 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,19.089720010757446,,1.0
-ExampleWoundHealing,OH 1 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,7.754486799240112,,1.0
-ExampleSpeckles,OH 1 workers / 12 assignments,Spot detection,Small-object detection,1.0,4.783579587936401,,1.0
-ExampleIlluminationCorrection_Example3,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,1.620934247970581,,1.0
-ExampleVitra,OH 1 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,10.957802772521973,,1.0
-ExampleFlyURL,OH 1 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,8.126163482666016,,1.0
-ExampleColocalization,OH 1 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,32.421120405197144,,1.0
-ExampleCometAssay,OH 1 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,20.627121925354004,,1.0
-ExampleFly,OH 1 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,20.252843379974365,,1.0
-ExampleHuman,OH 1 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,8.375736951828003,,1.0
-ExampleIlluminationCorrection_Example1_AllMethod,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,23.45683479309082,,1.0
-ExampleIlluminationCorrection_Example1_EachMethod,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,0.8528225421905518,,1.0
-ExampleIlluminationCorrection_Example2,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,18.589736938476562,,1.0
-ExampleImagingFlowCytometryObjectsInGrid,OH 1 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,85.10841798782349,,1.0
-ExampleNeighbors,OH 1 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,12.24692964553833,,1.0
-ExamplePercentPositive,OH 1 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,2.9669759273529053,,1.0
-ExampleTrackObjects,OH 1 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,28.7265522480011,,1.0
-ExampleTumor,OH 1 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,6.411426544189453,,1.0
-ExampleUntangleAndStraightenWorms,OH 1 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,5.132843017578125,,1.0
-ExampleYeastPatches,OH 2 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,7.16461968421936,,0.909988232178979
-cp_tutorial_3d_monolayer,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,19.380797147750854,,0.903766138954548
-cp_tutorial_advanced_segmentation_final,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,37.83509564399719,,0.8145677391346009
-cp_tutorial_quality_control,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.6327269077301025,,0.8665030579661911
-cp_tutorial_beginner_segmentation_final,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,23.42972159385681,,0.7932195718234328
-cp_tutorial_pixel_based_classification,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.9846487045288086,,0.8455582143249485
-cp_tutorial_translocation_final,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.8423335552215576,,0.7304369004180029
-cp4_supplement_combine_objects,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.41392016410827637,,0.6609748131883576
-cp_tutorial_translocation_start,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,1.0861766338348389,,0.7025726800497393
-ExampleUntangleWorms,OH 2 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,4.978785037994385,,0.8859947483394978
-ExampleUntangleWormsBrightField,OH 2 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,8.837328910827637,,0.7995243892292446
-ExampleYeastColonies,OH 2 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,10.354499101638794,,0.9218079901004647
-ExampleWoundHealing,OH 2 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,5.7004194259643555,,0.6801680911337734
-ExampleSpeckles,OH 2 workers / 12 assignments,Spot detection,Small-object detection,1.0,3.0069940090179443,,0.7954088989852482
-ExampleIlluminationCorrection_Example3,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,0.9956986904144287,,0.8139682534361461
-ExampleVitra,OH 2 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,6.728497743606567,,0.8142830086354789
-ExampleFlyURL,OH 2 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,5.155621767044067,,0.788087630342701
-ExampleColocalization,OH 2 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,25.161112785339355,,0.644270400156705
-ExampleCometAssay,OH 2 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,12.18462324142456,,0.8464406948270315
-ExampleFly,OH 2 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,12.69037914276123,,0.7979605318382812
-ExampleHuman,OH 2 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,5.288862705230713,,0.7918277915915982
-ExampleIlluminationCorrection_Example1_AllMethod,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,12.66946005821228,,0.925723538545205
-ExampleIlluminationCorrection_Example1_EachMethod,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,0.618793249130249,,0.6891013625223327
-ExampleIlluminationCorrection_Example2,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,10.296152353286743,,0.9027516445277899
-ExampleImagingFlowCytometryObjectsInGrid,OH 2 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,63.73310041427612,,0.66769400385831
-ExampleNeighbors,OH 2 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,12.644958257675171,,0.48426137105295514
-ExamplePercentPositive,OH 2 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,2.1300272941589355,,0.6964642977789747
-ExampleTrackObjects,OH 2 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,14.592639446258545,,0.9842822593470708
-ExampleTumor,OH 2 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,4.264936685562134,,0.7516438128957129
-ExampleUntangleAndStraightenWorms,OH 2 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,3.202374219894409,,0.8014121188103007
-ExampleYeastPatches,OH 3 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,5.763179540634155,,0.7541808654648864
-cp_tutorial_3d_monolayer,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,13.554733037948608,,0.8614805450389481
-cp_tutorial_advanced_segmentation_final,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,29.744319677352905,,0.69075930357974
-cp_tutorial_quality_control,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.8418071269989014,,0.7384430243695931
-cp_tutorial_beginner_segmentation_final,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,18.278408765792847,,0.6778457931342506
-cp_tutorial_pixel_based_classification,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.2990410327911377,,0.6808549130539426
-cp_tutorial_translocation_final,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.345489263534546,,0.5592768832627958
-cp4_supplement_combine_objects,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.36736297607421875,,0.49649496722117226
-cp_tutorial_translocation_start,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.7598066329956055,,0.6695721389288097
-ExampleUntangleWorms,OH 3 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,3.624877691268921,,0.8112783883070586
-ExampleUntangleWormsBrightField,OH 3 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,6.213308811187744,,0.7581210178088381
-ExampleYeastColonies,OH 3 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,7.606687068939209,,0.8365323755159028
-ExampleWoundHealing,OH 3 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,5.699754238128662,,0.45349831327616785
-ExampleSpeckles,OH 3 workers / 12 assignments,Spot detection,Small-object detection,1.0,2.5299601554870605,,0.6302575658568663
-ExampleIlluminationCorrection_Example3,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,0.7884995937347412,,0.6852399421425188
-ExampleVitra,OH 3 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,5.181761741638184,,0.7048955753452382
-ExampleFlyURL,OH 3 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,4.1960344314575195,,0.6455431205667633
-ExampleColocalization,OH 3 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,22.975547552108765,,0.47037138551563323
-ExampleCometAssay,OH 3 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,9.891551971435547,,0.6951090514720789
-ExampleFly,OH 3 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,10.287548780441284,,0.6562251064276564
-ExampleHuman,OH 3 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,4.310784101486206,,0.6476576538160305
-ExampleIlluminationCorrection_Example1_AllMethod,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,11.54499077796936,,0.6772586554118964
-ExampleIlluminationCorrection_Example1_EachMethod,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,0.5253758430480957,,0.541087270173859
-ExampleIlluminationCorrection_Example2,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,7.345041275024414,,0.8436411379419498
-ExampleImagingFlowCytometryObjectsInGrid,OH 3 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,54.16737723350525,,0.5237372402269439
-ExampleNeighbors,OH 3 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,11.666071891784668,,0.3499301152704967
-ExamplePercentPositive,OH 3 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,1.8800983428955078,,0.5260320448244064
-ExampleTrackObjects,OH 3 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,11.489671230316162,,0.8334022117825973
-ExampleTumor,OH 3 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,3.2509379386901855,,0.6573924884759709
-ExampleUntangleAndStraightenWorms,OH 3 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,2.517186403274536,,0.6797063857886402
-ExampleYeastPatches,OH 4 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,4.740832805633545,,0.687613323225625
-cp_tutorial_3d_monolayer,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,11.819775342941284,,0.7409492862545991
-cp_tutorial_advanced_segmentation_final,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,26.267521619796753,,0.5866417236608454
-cp_tutorial_quality_control,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.4499144554138184,,0.6424242624774638
-cp_tutorial_beginner_segmentation_final,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,16.079717874526978,,0.5778992478488388
-cp_tutorial_pixel_based_classification,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.8672945499420166,,0.5875316233872332
-cp_tutorial_translocation_final,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.0589253902435303,,0.45875296949048494
-cp4_supplement_combine_objects,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.3561999797821045,,0.38404101442358857
-cp_tutorial_translocation_start,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.781806468963623,,0.488047911430274
-ExampleUntangleWorms,OH 4 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,3.034247875213623,,0.7268979955145767
-ExampleUntangleWormsBrightField,OH 4 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,5.602331876754761,,0.6305999140433204
-ExampleYeastColonies,OH 4 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,6.4839465618133545,,0.7360378370167604
-ExampleWoundHealing,OH 4 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,5.207406044006348,,0.3722816472207607
-ExampleSpeckles,OH 4 workers / 12 assignments,Spot detection,Small-object detection,1.0,2.5962677001953125,,0.46062079688243834
-ExampleIlluminationCorrection_Example3,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,0.7331287860870361,,0.5527453971020808
-ExampleVitra,OH 4 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,4.483032703399658,,0.6110708697380371
-ExampleFlyURL,OH 4 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,3.749534845352173,,0.5418114391401776
-ExampleColocalization,OH 4 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,21.183645248413086,,0.3826197052609003
-ExampleCometAssay,OH 4 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,8.146045684814453,,0.633040947824731
-ExampleFly,OH 4 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,9.061285495758057,,0.5587740114097364
-ExampleHuman,OH 4 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,4.035118579864502,,0.5189275597514942
-ExampleIlluminationCorrection_Example1_AllMethod,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,8.38573169708252,,0.6993079328203312
-ExampleIlluminationCorrection_Example1_EachMethod,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,0.5182919502258301,,0.4113620430622934
-ExampleIlluminationCorrection_Example2,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,6.008866310119629,,0.7734294615262652
-ExampleImagingFlowCytometryObjectsInGrid,OH 4 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,49.04616403579712,,0.4338179124758144
-ExampleNeighbors,OH 4 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,11.280830144882202,,0.2714102040419078
-ExamplePercentPositive,OH 4 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,1.815253734588623,,0.40861724601069177
-ExampleTrackObjects,OH 4 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,10.67641568183899,,0.672663773687318
-ExampleTumor,OH 4 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,3.0774006843566895,,0.5208475594988795
-ExampleUntangleAndStraightenWorms,OH 4 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,2.228426933288574,,0.5758370333914644
+ExampleYeastPatches,OH 1 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,12.859508275985718,,1.0
+cp_tutorial_3d_monolayer,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,34.82670855522156,,1.0
+cp_tutorial_advanced_segmentation_final,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,58.59657669067383,,1.0
+cp_tutorial_quality_control,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,5.687939643859863,,1.0
+cp_tutorial_beginner_segmentation_final,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,36.137977600097656,,1.0
+cp_tutorial_pixel_based_classification,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,7.417778730392456,,1.0
+cp_tutorial_translocation_final,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,5.312003135681152,,1.0
+cp4_supplement_combine_objects,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.5229165554046631,,1.0
+cp_tutorial_translocation_start,OH 1 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,1.525566577911377,,1.0
+ExampleUntangleWorms,OH 1 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,8.785892248153687,,1.0
+ExampleUntangleWormsBrightField,OH 1 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,14.36001706123352,,1.0
+ExampleYeastColonies,OH 1 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,18.196360111236572,,1.0
+ExampleWoundHealing,OH 1 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,8.78669786453247,,1.0
+ExampleSpeckles,OH 1 workers / 12 assignments,Spot detection,Small-object detection,1.0,4.6624603271484375,,1.0
+ExampleIlluminationCorrection_Example3,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,1.5562705993652344,,1.0
+ExampleVitra,OH 1 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,10.981559038162231,,1.0
+ExampleFlyURL,OH 1 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,7.895908355712891,,1.0
+ExampleColocalization,OH 1 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,26.475515365600586,,1.0
+ExampleCometAssay,OH 1 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,21.47953152656555,,1.0
+ExampleFly,OH 1 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,17.496073722839355,,1.0
+ExampleHuman,OH 1 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,7.849296808242798,,1.0
+ExampleIlluminationCorrection_Example1_AllMethod,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,26.528046369552612,,1.0
+ExampleIlluminationCorrection_Example1_EachMethod,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,0.816969633102417,,1.0
+ExampleIlluminationCorrection_Example2,OH 1 workers / 12 assignments,Illumination correction,Image correction,1.0,18.773664712905884,,1.0
+ExampleImagingFlowCytometryObjectsInGrid,OH 1 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,81.90917682647705,,1.0
+ExampleNeighbors,OH 1 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,8.294230222702026,,1.0
+ExamplePercentPositive,OH 1 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,2.8116159439086914,,1.0
+ExampleTrackObjects,OH 1 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,25.800256729125977,,1.0
+ExampleTumor,OH 1 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,6.219524621963501,,1.0
+ExampleUntangleAndStraightenWorms,OH 1 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,5.0160627365112305,,1.0
+ExampleYeastPatches,OH 2 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,7.260931015014648,,0.8855275066925956
+cp_tutorial_3d_monolayer,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,18.753012895584106,,0.9285630194234663
+cp_tutorial_advanced_segmentation_final,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,32.3576226234436,,0.9054524396396738
+cp_tutorial_quality_control,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.1531410217285156,,0.9019481851055619
+cp_tutorial_beginner_segmentation_final,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,19.52077341079712,,0.9256287350815058
+cp_tutorial_pixel_based_classification,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.619401693344116,,1.0247244377480054
+cp_tutorial_translocation_final,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,3.451152801513672,,0.769598369181352
+cp4_supplement_combine_objects,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.28350377082824707,,0.9222391537808815
+cp_tutorial_translocation_start,OH 2 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.883974552154541,,0.8629018641956728
+ExampleUntangleWorms,OH 2 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,4.6496922969818115,,0.9447821153516704
+ExampleUntangleWormsBrightField,OH 2 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,7.6608569622039795,,0.9372330753648633
+ExampleYeastColonies,OH 2 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,9.50532841682434,,0.9571663025881982
+ExampleWoundHealing,OH 2 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,4.26320219039917,,1.0305279308966764
+ExampleSpeckles,OH 2 workers / 12 assignments,Spot detection,Small-object detection,1.0,2.7063674926757812,,0.8613871434249808
+ExampleIlluminationCorrection_Example3,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,0.8393299579620361,,0.9270910591252995
+ExampleVitra,OH 2 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,5.917006969451904,,0.9279657008059481
+ExampleFlyURL,OH 2 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,4.781503677368164,,0.8256720990392459
+ExampleColocalization,OH 2 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,16.327533960342407,,0.8107628325840996
+ExampleCometAssay,OH 2 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,11.337224006652832,,0.947301187396539
+ExampleFly,OH 2 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,10.09710144996643,,0.8663909048322737
+ExampleHuman,OH 2 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,4.44322657585144,,0.8832879298686972
+ExampleIlluminationCorrection_Example1_AllMethod,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,13.547559261322021,,0.9790710584042098
+ExampleIlluminationCorrection_Example1_EachMethod,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,0.47104668617248535,,0.8671854161004154
+ExampleIlluminationCorrection_Example2,OH 2 workers / 12 assignments,Illumination correction,Image correction,1.0,9.92296290397644,,0.9459707193595721
+ExampleImagingFlowCytometryObjectsInGrid,OH 2 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,46.79813838005066,,0.8751328542311599
+ExampleNeighbors,OH 2 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,4.532654047012329,,0.9149419012211087
+ExamplePercentPositive,OH 2 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,1.7022976875305176,,0.8258296902192928
+ExampleTrackObjects,OH 2 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,14.132592678070068,,0.9127927662261484
+ExampleTumor,OH 2 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,4.022723436355591,,0.7730489953341305
+ExampleUntangleAndStraightenWorms,OH 2 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,2.699672222137451,,0.9290132882390791
+ExampleYeastPatches,OH 3 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,5.273908376693726,,0.8127753560537138
+cp_tutorial_3d_monolayer,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,13.284802675247192,,0.8738483465298826
+cp_tutorial_advanced_segmentation_final,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,23.73222017288208,,0.8230242298418972
+cp_tutorial_quality_control,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.4000697135925293,,0.7899686707219163
+cp_tutorial_beginner_segmentation_final,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,13.769800662994385,,0.8748124121897317
+cp_tutorial_pixel_based_classification,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.7861483097076416,,0.8874591856850129
+cp_tutorial_translocation_final,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.9190969467163086,,0.6065806460746502
+cp4_supplement_combine_objects,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.2139725685119629,,0.814616189731236
+cp_tutorial_translocation_start,OH 3 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.6604523658752441,,0.7699604375907145
+ExampleUntangleWorms,OH 3 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,3.3948986530303955,,0.8626563113365321
+ExampleUntangleWormsBrightField,OH 3 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,5.56136417388916,,0.8607011165026983
+ExampleYeastColonies,OH 3 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,6.883532285690308,,0.8811541979720552
+ExampleWoundHealing,OH 3 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,3.116576671600342,,0.9397809188738871
+ExampleSpeckles,OH 3 workers / 12 assignments,Spot detection,Small-object detection,1.0,2.1156649589538574,,0.7345933654595772
+ExampleIlluminationCorrection_Example3,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,0.6265287399291992,,0.8279857465336709
+ExampleVitra,OH 3 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,4.381980657577515,,0.8353573339164512
+ExampleFlyURL,OH 3 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,3.804368495941162,,0.6918282113607858
+ExampleColocalization,OH 3 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,12.579437255859375,,0.7015553723933757
+ExampleCometAssay,OH 3 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,8.284822463989258,,0.8642121027106419
+ExampleFly,OH 3 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,7.795913934707642,,0.7480873471826617
+ExampleHuman,OH 3 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,3.062826156616211,,0.85425425264909
+ExampleIlluminationCorrection_Example1_AllMethod,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,9.407683610916138,,0.9399425500368297
+ExampleIlluminationCorrection_Example1_EachMethod,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,0.31892991065979004,,0.8538653852527256
+ExampleIlluminationCorrection_Example2,OH 3 workers / 12 assignments,Illumination correction,Image correction,1.0,6.86223840713501,,0.9119310444138254
+ExampleImagingFlowCytometryObjectsInGrid,OH 3 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,34.35392165184021,,0.7947581419921091
+ExampleNeighbors,OH 3 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,3.0296435356140137,,0.9125639287484741
+ExamplePercentPositive,OH 3 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,1.2917249202728271,,0.7255455863143694
+ExampleTrackObjects,OH 3 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,10.21121335029602,,0.8422197520851928
+ExampleTumor,OH 3 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,3.6994760036468506,,0.5603968972752221
+ExampleUntangleAndStraightenWorms,OH 3 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,2.1962287425994873,,0.761314556967041
+ExampleYeastPatches,OH 4 workers / 12 assignments,Yeast colony screening,Texture/patch measurement,1.0,4.469875812530518,,0.7192318542685419
+cp_tutorial_3d_monolayer,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,10.865609645843506,,0.8013059020702086
+cp_tutorial_advanced_segmentation_final,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,19.395071983337402,,0.7553023873927232
+cp_tutorial_quality_control,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,1.9175336360931396,,0.7415697353096633
+cp_tutorial_beginner_segmentation_final,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,11.076327323913574,,0.8156579465215981
+cp_tutorial_pixel_based_classification,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.2342443466186523,,0.8300097907396143
+cp_tutorial_translocation_final,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,2.6168882846832275,,0.507473242817869
+cp4_supplement_combine_objects,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.17595982551574707,,0.7429487865652976
+cp_tutorial_translocation_start,OH 4 workers / 12 assignments,Uncategorized assay,Mixed modules,1.0,0.46981263160705566,,0.8117952111531019
+ExampleUntangleWorms,OH 4 workers / 12 assignments,Worm phenotyping,Worm model + shape measurement,1.0,2.7395706176757812,,0.801758147012791
+ExampleUntangleWormsBrightField,OH 4 workers / 12 assignments,Worm phenotyping,Worm model + brightfield segmentation,1.0,4.618394374847412,,0.7773273510075654
+ExampleYeastColonies,OH 4 workers / 12 assignments,Yeast colony screening,Colony segmentation + measurement,1.0,5.5398170948028564,,0.8211624950716951
+ExampleWoundHealing,OH 4 workers / 12 assignments,Migration/scratch assay,Segmentation + distance measurement,1.0,2.679077625274658,,0.819936848939909
+ExampleSpeckles,OH 4 workers / 12 assignments,Spot detection,Small-object detection,1.0,1.7483344078063965,,0.6667003043482885
+ExampleIlluminationCorrection_Example3,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,0.5288493633270264,,0.7356870912988497
+ExampleVitra,OH 4 workers / 12 assignments,Cell morphology,Segmentation + shape measurement,1.0,3.658339023590088,,0.7504470585797122
+ExampleFlyURL,OH 4 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,3.463916778564453,,0.5698685087192815
+ExampleColocalization,OH 4 workers / 12 assignments,Colocalization microscopy,Colocalization + object measurement,1.0,11.110208988189697,,0.5957474650959406
+ExampleCometAssay,OH 4 workers / 12 assignments,DNA damage assay,Segmentation + shape measurement,1.0,7.0795738697052,,0.7585036868702091
+ExampleFly,OH 4 workers / 12 assignments,Tissue/object morphology,Segmentation + object measurement,1.0,6.949863910675049,,0.6293674936557118
+ExampleHuman,OH 4 workers / 12 assignments,Cell morphology,Segmentation + intensity measurement,1.0,2.5637216567993164,,0.7654201449117403
+ExampleIlluminationCorrection_Example1_AllMethod,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,7.43433952331543,,0.8920781155594211
+ExampleIlluminationCorrection_Example1_EachMethod,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,0.25193190574645996,,0.8107048119627626
+ExampleIlluminationCorrection_Example2,OH 4 workers / 12 assignments,Illumination correction,Image correction,1.0,5.49006462097168,,0.8548927020454249
+ExampleImagingFlowCytometryObjectsInGrid,OH 4 workers / 12 assignments,Imaging flow cytometry,Grid layout + object measurement,1.0,29.15547823905945,,0.7023480815068893
+ExampleNeighbors,OH 4 workers / 12 assignments,Spatial organization,Object relationship measurement,1.0,2.5856988430023193,,0.8019331258499722
+ExamplePercentPositive,OH 4 workers / 12 assignments,Positive-cell classification,Thresholding + classification,1.0,1.109062910079956,,0.6337818888258541
+ExampleTrackObjects,OH 4 workers / 12 assignments,Time-lapse tracking,Tracking + object measurement,1.0,8.610236167907715,,0.7491158263837562
+ExampleTumor,OH 4 workers / 12 assignments,Tumor morphology,Segmentation + intensity measurement,1.0,2.79360032081604,,0.5565868330931026
+ExampleUntangleAndStraightenWorms,OH 4 workers / 12 assignments,Worm phenotyping,Worm model + straightening,1.0,1.812638282775879,,0.6918179407572728

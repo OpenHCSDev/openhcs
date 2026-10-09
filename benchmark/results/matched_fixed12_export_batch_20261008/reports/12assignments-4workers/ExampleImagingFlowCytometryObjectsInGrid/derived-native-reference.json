@@ -1,0 +1,73 @@
+{
+  "derivation": {
+    "status": "projected",
+    "source_assignment_count": 8,
+    "target_assignment_count": 12,
+    "source_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+    "source_report_sha256": "c7ea873f98bcde016b59901c2288d2736e33938e27c0f25a02cb3976282c72d2",
+    "comparison_source_assignment_directories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W001",
+      "W002",
+      "W003",
+      "W004"
+    ],
+    "observed_reference_inputs": [
+      {
+        "repetition": -1,
+        "observed_reference_execution_seconds": 550.4999364679679,
+        "observed_reference_pre_pipeline_seconds": 0.0018123430199921131
+      },
+      {
+        "repetition": 0,
+        "observed_reference_execution_seconds": 535.3215993698686,
+        "observed_reference_pre_pipeline_seconds": 0.0008975598029792309
+      },
+      {
+        "repetition": 1,
+        "observed_reference_execution_seconds": 521.2865356169641,
+        "observed_reference_pre_pipeline_seconds": 0.0009697168134152889
+      },
+      {
+        "repetition": 2,
+        "observed_reference_execution_seconds": 521.5171984359622,
+        "observed_reference_pre_pipeline_seconds": 0.0009396402165293694
+      }
+    ],
+    "model_identity": "retained-first-batch-plus-warm-assignments-v1",
+    "model_formula": "T(N) = T(S, first) + (N - S) * median(T(S, warm)) / S",
+    "source_fresh_repetition": -1,
+    "source_fresh_observation_count": 1,
+    "source_warm_repetitions": [
+      0,
+      1,
+      2
+    ],
+    "source_warm_observation_count": 3,
+    "target_native_observation_count": 0,
+    "observed_source_fresh_execution_seconds": 550.4999364679679,
+    "observed_source_fresh_pre_pipeline_seconds": 0.0018123430199921131,
+    "observed_source_warm_batch_execution_median_seconds": 521.5171984359622,
+    "derived_warm_assignment_execution_seconds": 65.18964980449528,
+    "projected_fresh_batch_execution_seconds": 811.258535685949,
+    "projected_fresh_batch_prepared_invocation_seconds": 811.260348028969
+  },
+  "original_report": {
+    "kind": "projected_first_batch",
+    "execution_seconds": 811.258535685949,
+    "prepared_invocation_seconds": 811.260348028969,
+    "source_report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+    "source_report_sha256": "c7ea873f98bcde016b59901c2288d2736e33938e27c0f25a02cb3976282c72d2",
+    "source_fresh_repetition": -1,
+    "source_fresh_observation_count": 1,
+    "target_native_observation_count": 0
+  },
+  "raw_case_report_sha256": "b8867120281ccf13ab32d940341bca39853d8f67669ebfc2483cad8a5b55b2fa"
+}

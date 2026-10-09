@@ -8,7 +8,7 @@ the final publication freeze.
 ## Regenerate Figure 6 and the claim include
 
 The current benchmark owner is the frozen seven-mode protocol in
-`benchmark/results/matched_worker_sweep_20261007_exportfixed`. Its controller
+`benchmark/results/matched_worker_sweep_20261008_latestproduction`. Its controller
 qualifies and archives all 30 workflows in each requested mode before rendering.
 All seven modes are qualified and archived for all thirty workflows; their figures and numerical include are generated from the complete admitted sweep.
 
@@ -16,9 +16,9 @@ Use its existing renderer to produce the
 manuscript assets directly at the consumer path:
 
 ```sh
-python benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/render_sweep.py \
-  --record benchmark/results/matched_worker_sweep_20261007_exportfixed \
-  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json \
+python benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/render_sweep.py \
+  --record benchmark/results/matched_worker_sweep_20261008_latestproduction \
+  --protocol-manifest benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/current/protocol-manifest.json \
   --output-dir paper/figures/slas/benchmark-publication
 ```
 
@@ -71,3 +71,26 @@ the original Markdown unchanged. Unknown keys, missing include or stale active
 claim sources fail instead of retaining a silent old number. The existing
 paired `paper/build_paper.py build --candidate` path remains the acceptance
 entrypoint. No new parser, results store or alternate book build is introduced.
+
+## Supported-result framing audit
+
+The October 9 audit strengthens the existing manuscript from retained evidence;
+it does not introduce another measurement or numerical claim owner.
+
+| Demonstrated result | Evidence | Reader-facing treatment |
+| --- | --- | --- |
+| Every workflow is faster on one physical core, including per-job compilation. | The generated include's singlewell execution and total minima both exceed one across the complete thirty-workflow cohort. | Abstract states the execution minimum and median and the total minimum; Results states the all-workflow finding. |
+| Gains cover complete server jobs. | The archived clock policy includes loading, coordination, saving, exports, publication and finalization. | Results and Discussion identify the included work. External server startup and library readiness remain excluded as stated in Methods. |
+| The measured serial CP8 comparison favours OpenHCS for every workflow. | The generated include's eight-assignment execution and total distributions, with actual native target observations. | Results separates this measured batch comparison from projected CP12/CP16 comparisons. |
+| Every workflow benefits from parallel workers on the fixed workload. | Fixed-twelve scaling tables contain thirty measured ratios above one for each of two, three and four workers, for both execution and total. | Results states the all-workflow finding and that these ratios do not depend on CellProfiler projection. |
+| Established analyses retain their compared outputs across the runtime migration. | Complete declared output inventories, exact label comparisons, numerical tolerances and advanced-segmentation/3D workflow records. | Results describes the span from preprocessing through terminal exports rather than describing import alone. |
+| Custom functions, imported workflows and three authoring interfaces share one model. | Main Figures 1–2, the recorded code/control check and Supplementary Table 1's eight reusable libraries. | Introduction and Discussion state the engineering contribution and how function declarations remove separately authored parameter interfaces and backend conversion wiring. |
+| Autonomous authoring yields reference-scored results beyond the inspected images. | Three independent BBBC039 authors on the commonly uninspected subset and the complete BBBC013 plate response. | Discussion connects these endpoints to the analysis role in a self-driving laboratory. Retrospective subset selection and development-well inclusion remain explicit. |
+
+Large workflow-specific outliers do not replace cohort minima or medians.
+Projected native batches remain identified as projections. Historical memory
+plots do not supply current memory claims. Declared backend support does not
+establish GPU speedup or cross-backend numerical equivalence. The manuscript
+does not infer general superiority over unbenchmarked platforms, prospective
+validation from the retrospective nuclear subset, or a complete autonomous
+instrument-control loop from autonomous image analysis.

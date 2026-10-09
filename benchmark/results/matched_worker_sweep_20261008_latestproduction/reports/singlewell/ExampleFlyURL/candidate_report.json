@@ -1,0 +1,506 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "d56854e8-ae9b-4f26-8c78-d2b14c5ce359",
+    "compile_artifact_id": "9e15564a-8c10-477b-b922-4df0b305f1a7",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 0.5952398777008057,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504544.4628735,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504545.0581133,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504544.452249,
+    "first_axis_started_at_epoch_seconds": 1791504544.4628735,
+    "server_job_completed_at_epoch_seconds": 1791504545.1323278,
+    "server_job_seconds": 0.6800787448883057,
+    "execution_seconds": 0.5952398777008057,
+    "compile_seconds": 0.27440500259399414,
+    "total_seconds": 1.0584204196929932,
+    "first_axis_through_server_completion_seconds": 0.6694543361663818,
+    "native_image_count": 3,
+    "candidate_image_count": 3,
+    "native_physical_image_count": 3,
+    "candidate_physical_image_count": 3,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 9,
+    "declared_output_file_count": 7,
+    "native_output_inventory": [
+      {
+        "path": "Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "5de68466388a97f40a23856da676b5c76e40ca7535d275d89af0dee102491581"
+      },
+      {
+        "path": "Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "3863ae2a8f9b2da80e3ce58ecda33efd6328c3ef53a7ae7c91c74e9b0f9084e0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "9603e1c6e9b6051af4c973b1990ec484cb8e540e04d4bd7ece5248f886b986e8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "e0b80b051c485dd18fd6db9024ff48be6455c827909e7874893e0ddf38a3e753"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "93f78a2900f872433a4e414c2e7d02ceedab9530c0bdb15be3db304edadcacc5"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "d1bf0113333251df5ac07a6c5b6ac68da5bd70de97dd298ca2173ce15cbbf88a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleFlyURL/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "008feaf0-693b-4744-a7bb-ae893e54e60c",
+    "compile_artifact_id": "574021c0-8193-4db2-8aa9-4cad0a6d321c",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 0.5793657302856445,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504547.3141253,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504547.893491,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504547.3032975,
+    "first_axis_started_at_epoch_seconds": 1791504547.3141253,
+    "server_job_completed_at_epoch_seconds": 1791504547.966592,
+    "server_job_seconds": 0.6632945537567139,
+    "execution_seconds": 0.5793657302856445,
+    "compile_seconds": 0.18769621849060059,
+    "total_seconds": 0.9590779505670071,
+    "first_axis_through_server_completion_seconds": 0.6524667739868164,
+    "native_image_count": 3,
+    "candidate_image_count": 3,
+    "native_physical_image_count": 3,
+    "candidate_physical_image_count": 3,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 9,
+    "declared_output_file_count": 7,
+    "native_output_inventory": [
+      {
+        "path": "Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "c90bcbb1dde6cae699307f6f90aafc3840d4805c3edde1c3742c037f8009d714"
+      },
+      {
+        "path": "Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "3863ae2a8f9b2da80e3ce58ecda33efd6328c3ef53a7ae7c91c74e9b0f9084e0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "9603e1c6e9b6051af4c973b1990ec484cb8e540e04d4bd7ece5248f886b986e8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "e0b80b051c485dd18fd6db9024ff48be6455c827909e7874893e0ddf38a3e753"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "93f78a2900f872433a4e414c2e7d02ceedab9530c0bdb15be3db304edadcacc5"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "d1bf0113333251df5ac07a6c5b6ac68da5bd70de97dd298ca2173ce15cbbf88a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleFlyURL/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "847c8307-659b-4342-aab8-fcd7978aeb53",
+    "compile_artifact_id": "c8a062cb-7180-47b2-9224-3eeb036c37c2",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 0.588249683380127,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504549.0329027,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504549.6211524,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504549.0219793,
+    "first_axis_started_at_epoch_seconds": 1791504549.0329027,
+    "server_job_completed_at_epoch_seconds": 1791504549.6926117,
+    "server_job_seconds": 0.6706323623657227,
+    "execution_seconds": 0.588249683380127,
+    "compile_seconds": 0.1867845058441162,
+    "total_seconds": 0.959850144572556,
+    "first_axis_through_server_completion_seconds": 0.6597089767456055,
+    "native_image_count": 3,
+    "candidate_image_count": 3,
+    "native_physical_image_count": 3,
+    "candidate_physical_image_count": 3,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 9,
+    "declared_output_file_count": 7,
+    "native_output_inventory": [
+      {
+        "path": "Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "69ebd4bed573a97047e8f1fa897c3c3201fa561c8895d438465580c59c6b909e"
+      },
+      {
+        "path": "Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "3863ae2a8f9b2da80e3ce58ecda33efd6328c3ef53a7ae7c91c74e9b0f9084e0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "9603e1c6e9b6051af4c973b1990ec484cb8e540e04d4bd7ece5248f886b986e8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "e0b80b051c485dd18fd6db9024ff48be6455c827909e7874893e0ddf38a3e753"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "93f78a2900f872433a4e414c2e7d02ceedab9530c0bdb15be3db304edadcacc5"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "d1bf0113333251df5ac07a6c5b6ac68da5bd70de97dd298ca2173ce15cbbf88a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleFlyURL/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "87891700-9549-4712-a029-1e511bfc16a7",
+    "compile_artifact_id": "a935fe32-4706-423c-93be-2fc254adbc69",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 0.5853049755096436,
+    "axis_events": [
+      {
+        "axis_id": "A01",
+        "phase": "axis_started",
+        "timestamp": 1791504550.9981487,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      },
+      {
+        "axis_id": "A01",
+        "phase": "axis_completed",
+        "timestamp": 1791504551.5834537,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "A01"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504550.9872391,
+    "first_axis_started_at_epoch_seconds": 1791504550.9981487,
+    "server_job_completed_at_epoch_seconds": 1791504551.655718,
+    "server_job_seconds": 0.6684789657592773,
+    "execution_seconds": 0.5853049755096436,
+    "compile_seconds": 0.1876075267791748,
+    "total_seconds": 0.9616667293012142,
+    "first_axis_through_server_completion_seconds": 0.657569408416748,
+    "native_image_count": 3,
+    "candidate_image_count": 3,
+    "native_physical_image_count": 3,
+    "candidate_physical_image_count": 3,
+    "native_output_file_count": 7,
+    "candidate_output_file_count": 9,
+    "declared_output_file_count": 7,
+    "native_output_inventory": [
+      {
+        "path": "Cells.csv",
+        "sha256": "17807e7bd065a66116c99ed9503ec2106c8efdb79ade8a343c6eeb1d4e2419f7"
+      },
+      {
+        "path": "CroppedFlyImage0001.tiff",
+        "sha256": "0f3ae4de1252127bc433873df236cab6dba2b1e39cd24621feb27a61b1d1f257"
+      },
+      {
+        "path": "CroppedFlyImage0002.tiff",
+        "sha256": "0bc3a70d3ec2911d5f6f2517f30856a82c48830c03c2362d5f16df13333c277e"
+      },
+      {
+        "path": "CroppedFlyImage0003.tiff",
+        "sha256": "a52eaa99f86447e92b5c3351fe00af600888c82d137962430d55e741047a1e42"
+      },
+      {
+        "path": "Cytoplasm.csv",
+        "sha256": "421ec8602ceb55446d3360bd61aa272af8954327f0b660cca15512a747018d80"
+      },
+      {
+        "path": "Image.csv",
+        "sha256": "fe902fbe32d871c84071401379a6d80422d6e47c2f4c4b37c4ec493ff3fbe8eb"
+      },
+      {
+        "path": "Nuclei.csv",
+        "sha256": "da0c217235d10ff3a28314041a70349c2ab56606f3b34fff276ff67d76d7598f"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "3863ae2a8f9b2da80e3ce58ecda33efd6328c3ef53a7ae7c91c74e9b0f9084e0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cells.csv",
+        "sha256": "9603e1c6e9b6051af4c973b1990ec484cb8e540e04d4bd7ece5248f886b986e8"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0001RGB.tiff",
+        "sha256": "d9b702ca738915d8659f71be39f37165cf55c85611d52a2370b80cabb7f598a3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0002RGB.tiff",
+        "sha256": "a86744f0667c620171fcfa86c09916d003e6de0d3974323f670115faa630b37f"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/CroppedFlyImage0003RGB.tiff",
+        "sha256": "3cd6923cba12c146e51c89bda668efab14ffa4c7e799eaac4406257c649e46e1"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Cytoplasm.csv",
+        "sha256": "e0b80b051c485dd18fd6db9024ff48be6455c827909e7874893e0ddf38a3e753"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Image.csv",
+        "sha256": "93f78a2900f872433a4e414c2e7d02ceedab9530c0bdb15be3db304edadcacc5"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Nuclei.csv",
+        "sha256": "d1bf0113333251df5ac07a6c5b6ac68da5bd70de97dd298ca2173ce15cbbf88a"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleFlyURL/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

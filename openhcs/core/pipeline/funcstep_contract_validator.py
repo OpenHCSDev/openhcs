@@ -35,6 +35,7 @@ from openhcs.constants.constants import (
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.function_patterns import (
+    CompiledFunctionPattern,
     FunctionPatternSyntax,
     NormalizedFunctionItem,
     NormalizedFunctionPattern,
@@ -565,7 +566,7 @@ class FuncStepContractValidator:
         group_by,
         variable_components,
         step_name: str,
-        pattern: NormalizedFunctionPattern,
+        pattern: NormalizedFunctionPattern | CompiledFunctionPattern,
     ):
         """Return pattern-aware grouping semantics for compiled execution."""
         variable_components = () if variable_components is None else variable_components
@@ -680,7 +681,6 @@ class FuncStepContractValidator:
     @staticmethod
     def validate_compiled_step_plan(step_plan) -> None:
         """Validate FunctionStep structure from the compiled plan SSOT."""
-        func_pattern = step_plan.func
         step_name = step_plan.step_name
         compiled_pattern = step_plan.compiled_function_pattern
         invocations = tuple(compiled_pattern.iter_invocations())
@@ -724,13 +724,13 @@ class FuncStepContractValidator:
             group_by,
             variable_components,
             step_name,
-            normalize_function_pattern(func_pattern),
+            compiled_pattern,
         )
 
         validation_result = validator.validate_step(
             variable_components,
             group_by,
-            func_pattern,
+            compiled_pattern.is_grouped,
             step_name,
         )
         if not validation_result.is_valid:
@@ -835,7 +835,7 @@ class FuncStepContractValidator:
 
         # Validate step configuration after auto-resolution
         validation_result = validator.validate_step(
-            variable_components, group_by, func_pattern, step_name
+            variable_components, group_by, normalized.is_grouped, step_name
         )
         if not validation_result.is_valid:
             raise ValueError(validation_result.error_message)

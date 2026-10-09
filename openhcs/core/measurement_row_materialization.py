@@ -2089,42 +2089,31 @@ class ConcatenatedColumnarRowColumns(Mapping[str, Sequence[object]]):
         cached = self._column_cache.get(column_name)
         if cached is not None:
             return cached
-        physical_batches = tuple(
-            (row_batch, batch_columns.get(column_name))
+        column_batches = tuple(
+            (row_batch, batch_columns.get(column_name), row_count)
             for row_batch, batch_columns, row_count in zip(
                 self.row_batches,
                 self._batch_columns,
                 self._batch_row_counts,
                 strict=True,
             )
-            if row_count
         )
-        if not physical_batches:
-            physical_batches = tuple(
-                (row_batch, batch_columns.get(column_name))
-                for row_batch, batch_columns in zip(
-                    self.row_batches, self._batch_columns, strict=True
-                )
-            )
         dense_columns = None
-        if physical_batches and all(
-            column_key is not None for _row_batch, column_key in physical_batches
+        if all(
+            column_key is not None or not row_count
+            for _row_batch, column_key, row_count in column_batches
         ):
             dense_columns = tuple(
                 ColumnarRows.column_array(columnar_row_values(row_batch, column_key))
-                for row_batch, column_key in physical_batches
+                for row_batch, column_key, _row_count in column_batches
+                if column_key is not None
             )
-            if len(physical_batches) != len(self.row_batches):
-                common_dtype = np.result_type(
-                    *(column.dtype for column in dense_columns)
-                )
-                if common_dtype.kind not in "biuO" and any(
-                    column.dtype.kind in "biu" for column in dense_columns
-                ):
-                    # An empty schema batch previously kept these cells in an
-                    # object column. Preserve integer values and Boolean cells
-                    # instead of promoting them to floats or textual values.
-                    dense_columns = None
+            # Preserve the sparse join's object representation at a physical
+            # dtype boundary, including declarations carried by empty batches.
+            if not dense_columns or any(
+                column.dtype != dense_columns[0].dtype for column in dense_columns[1:]
+            ):
+                dense_columns = None
         if dense_columns is not None:
             values = np.concatenate(dense_columns)
         else:

@@ -1,0 +1,1018 @@
+[
+  {
+    "repetition": -1,
+    "execution_id": "d597de55-caf9-45f6-99af-994b89059472",
+    "compile_artifact_id": "dd6b4439-aa1e-4bbc-be22-7c90c37da3b6",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 2.43204402923584,
+    "axis_events": [
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_started",
+        "timestamp": 1791504751.5724142,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      },
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_completed",
+        "timestamp": 1791504754.0044582,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504751.5614703,
+    "first_axis_started_at_epoch_seconds": 1791504751.5724142,
+    "server_job_completed_at_epoch_seconds": 1791504754.092182,
+    "server_job_seconds": 2.5307116508483887,
+    "execution_seconds": 2.43204402923584,
+    "compile_seconds": 0.15931963920593262,
+    "total_seconds": 2.7825987339019775,
+    "first_axis_through_server_completion_seconds": 2.5197677612304688,
+    "native_image_count": 21,
+    "candidate_image_count": 21,
+    "native_physical_image_count": 21,
+    "candidate_physical_image_count": 21,
+    "native_output_file_count": 23,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "ccb27d92a6837e0f2f6f59f0bd67dd6dc776c3779f636a89b82d89fa861de91e"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "df0fbeb62e76d4959516178835bc88a3f6632d32f440fb954d3d7c219e9edcfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "2b4575e3eac35bd306845582f82714f9390f2c5331462bb9e37a62d99e5119d8"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "42c4b6f5a3f339051c5bce755e9ba61d577013cb21d0d4f9e0428f06e61d8d41"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "09a253d116ff74f9b8a223031a1e01f25367b78aa4bfb7ee8aeee8a865543603"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "fef7b5d3a9064f5a6cdeee821f46a83c1d1cfd02f4dcedf237ef69156965e0c3"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "e0f9c89fdf96d28aa0b4c53d98eac408f4d4f4b02c5e29e847e24b935bf8d636"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "a068c00d5245cae6cabd119892586ccbe32341a31e71857b76d6107a6f9d05c9"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "3f4a3c0d670e75260df0e15bfce911954b285dd3df6c70a9bae62182bd8c106e"
+      },
+      {
+        "path": "Sequence1/Embryos.csv",
+        "sha256": "0d6927a942947e220e91385cd90082c0349391fdeeaa70ee2a95fd4aae8038b8"
+      },
+      {
+        "path": "Sequence1/Image.csv",
+        "sha256": "15ee7c54b9a49c521e372fe1711292587b5770afd9e9e666a63f03ed5f6ed487"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "c3d2f39a350d35c25a36f12c39031228f6041b47d08432a7cfd54ff0bb07fc37"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "d537411acd65409786277bdd47b31881a714304b2043a711da716018a9c62e14"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "acfe3510c76f4d6731edf60025c91a00f6b36b62bf1281a22871332216b9216e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "1a29d5384e2536a72a1d9166bbf214e6f6a9ae6f20db90971fb0bde5daf0f28c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "01398f92e24473940b53172e9a1a06b06c2c757a7f361b96c02f3b426a2700c7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "5e3a5c135dc2890cd1248e596fbaab2e109938d278450ccb2d06a170a292a2ec"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "2faeefbe158b71af5f38e5f1bc15cfd2e4f7cd69c1447b490d553305dc8ce439"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "194903670b4623420012be1dcc36ca5041bbc8e2783f92c4c4a47e5624720fb7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "b60edd153f91c7847a5858ab7af2412f610f547e4592f263ed803094ef088618"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "014cd87d78828be5fe03afcb3efc1873beabc9eefbc70e8161a80b0022f0986a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Embryos.csv",
+        "sha256": "e8ae63a5387c21769f9b27e49542a3dfd10aea16997eae68d122a4e847d5859d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Image.csv",
+        "sha256": "483b6a81626bc2e70e5ecc22648be90c6c216c1c2d4795a74e3285a59b4af1b8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleTrackObjects/candidate_evidence/-1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 0,
+    "execution_id": "d392d7f8-50e6-4041-b8fc-99a0dab159ef",
+    "compile_artifact_id": "be7f9e96-bcaa-4458-b5a3-a3c4a22c2faa",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 2.223764419555664,
+    "axis_events": [
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_started",
+        "timestamp": 1791504755.116576,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      },
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_completed",
+        "timestamp": 1791504757.3403404,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504755.1050258,
+    "first_axis_started_at_epoch_seconds": 1791504755.116576,
+    "server_job_completed_at_epoch_seconds": 1791504757.3972287,
+    "server_job_seconds": 2.292202949523926,
+    "execution_seconds": 2.223764419555664,
+    "compile_seconds": 0.15738153457641602,
+    "total_seconds": 2.5330141177400947,
+    "first_axis_through_server_completion_seconds": 2.2806527614593506,
+    "native_image_count": 21,
+    "candidate_image_count": 21,
+    "native_physical_image_count": 21,
+    "candidate_physical_image_count": 21,
+    "native_output_file_count": 23,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "ccb27d92a6837e0f2f6f59f0bd67dd6dc776c3779f636a89b82d89fa861de91e"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "df0fbeb62e76d4959516178835bc88a3f6632d32f440fb954d3d7c219e9edcfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "2b4575e3eac35bd306845582f82714f9390f2c5331462bb9e37a62d99e5119d8"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "42c4b6f5a3f339051c5bce755e9ba61d577013cb21d0d4f9e0428f06e61d8d41"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "09a253d116ff74f9b8a223031a1e01f25367b78aa4bfb7ee8aeee8a865543603"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "fef7b5d3a9064f5a6cdeee821f46a83c1d1cfd02f4dcedf237ef69156965e0c3"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "e0f9c89fdf96d28aa0b4c53d98eac408f4d4f4b02c5e29e847e24b935bf8d636"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "a068c00d5245cae6cabd119892586ccbe32341a31e71857b76d6107a6f9d05c9"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "3f4a3c0d670e75260df0e15bfce911954b285dd3df6c70a9bae62182bd8c106e"
+      },
+      {
+        "path": "Sequence1/Embryos.csv",
+        "sha256": "0d6927a942947e220e91385cd90082c0349391fdeeaa70ee2a95fd4aae8038b8"
+      },
+      {
+        "path": "Sequence1/Image.csv",
+        "sha256": "79522a1f3cbc8ffa6dff37b95c2cef4b8f8c40ecf40d9dbf2a54445eb4b86821"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "c3d2f39a350d35c25a36f12c39031228f6041b47d08432a7cfd54ff0bb07fc37"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "d537411acd65409786277bdd47b31881a714304b2043a711da716018a9c62e14"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "acfe3510c76f4d6731edf60025c91a00f6b36b62bf1281a22871332216b9216e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "1a29d5384e2536a72a1d9166bbf214e6f6a9ae6f20db90971fb0bde5daf0f28c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "01398f92e24473940b53172e9a1a06b06c2c757a7f361b96c02f3b426a2700c7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "5e3a5c135dc2890cd1248e596fbaab2e109938d278450ccb2d06a170a292a2ec"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "2faeefbe158b71af5f38e5f1bc15cfd2e4f7cd69c1447b490d553305dc8ce439"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "194903670b4623420012be1dcc36ca5041bbc8e2783f92c4c4a47e5624720fb7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "b60edd153f91c7847a5858ab7af2412f610f547e4592f263ed803094ef088618"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "014cd87d78828be5fe03afcb3efc1873beabc9eefbc70e8161a80b0022f0986a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Embryos.csv",
+        "sha256": "e8ae63a5387c21769f9b27e49542a3dfd10aea16997eae68d122a4e847d5859d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Image.csv",
+        "sha256": "483b6a81626bc2e70e5ecc22648be90c6c216c1c2d4795a74e3285a59b4af1b8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleTrackObjects/candidate_evidence/0/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 1,
+    "execution_id": "1a837eef-5e7a-4532-bd5a-159ec49eb33c",
+    "compile_artifact_id": "121fafe5-2b66-446c-90b4-7dff372b80e9",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 2.170975685119629,
+    "axis_events": [
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_started",
+        "timestamp": 1791504758.176829,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      },
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_completed",
+        "timestamp": 1791504760.3478048,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504758.1652784,
+    "first_axis_started_at_epoch_seconds": 1791504758.176829,
+    "server_job_completed_at_epoch_seconds": 1791504760.4057043,
+    "server_job_seconds": 2.2404258251190186,
+    "execution_seconds": 2.170975685119629,
+    "compile_seconds": 0.15546870231628418,
+    "total_seconds": 2.4875213112682104,
+    "first_axis_through_server_completion_seconds": 2.228875160217285,
+    "native_image_count": 21,
+    "candidate_image_count": 21,
+    "native_physical_image_count": 21,
+    "candidate_physical_image_count": 21,
+    "native_output_file_count": 23,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "ccb27d92a6837e0f2f6f59f0bd67dd6dc776c3779f636a89b82d89fa861de91e"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "df0fbeb62e76d4959516178835bc88a3f6632d32f440fb954d3d7c219e9edcfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "2b4575e3eac35bd306845582f82714f9390f2c5331462bb9e37a62d99e5119d8"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "42c4b6f5a3f339051c5bce755e9ba61d577013cb21d0d4f9e0428f06e61d8d41"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "09a253d116ff74f9b8a223031a1e01f25367b78aa4bfb7ee8aeee8a865543603"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "fef7b5d3a9064f5a6cdeee821f46a83c1d1cfd02f4dcedf237ef69156965e0c3"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "e0f9c89fdf96d28aa0b4c53d98eac408f4d4f4b02c5e29e847e24b935bf8d636"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "a068c00d5245cae6cabd119892586ccbe32341a31e71857b76d6107a6f9d05c9"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "3f4a3c0d670e75260df0e15bfce911954b285dd3df6c70a9bae62182bd8c106e"
+      },
+      {
+        "path": "Sequence1/Embryos.csv",
+        "sha256": "0d6927a942947e220e91385cd90082c0349391fdeeaa70ee2a95fd4aae8038b8"
+      },
+      {
+        "path": "Sequence1/Image.csv",
+        "sha256": "09f39aaa9dacf90ce933fc24e71e764ef202d1999b62b35f1edf3fd1d06d82e6"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "c3d2f39a350d35c25a36f12c39031228f6041b47d08432a7cfd54ff0bb07fc37"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "d537411acd65409786277bdd47b31881a714304b2043a711da716018a9c62e14"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "acfe3510c76f4d6731edf60025c91a00f6b36b62bf1281a22871332216b9216e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "1a29d5384e2536a72a1d9166bbf214e6f6a9ae6f20db90971fb0bde5daf0f28c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "01398f92e24473940b53172e9a1a06b06c2c757a7f361b96c02f3b426a2700c7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "5e3a5c135dc2890cd1248e596fbaab2e109938d278450ccb2d06a170a292a2ec"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "2faeefbe158b71af5f38e5f1bc15cfd2e4f7cd69c1447b490d553305dc8ce439"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "194903670b4623420012be1dcc36ca5041bbc8e2783f92c4c4a47e5624720fb7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "b60edd153f91c7847a5858ab7af2412f610f547e4592f263ed803094ef088618"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "014cd87d78828be5fe03afcb3efc1873beabc9eefbc70e8161a80b0022f0986a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Embryos.csv",
+        "sha256": "e8ae63a5387c21769f9b27e49542a3dfd10aea16997eae68d122a4e847d5859d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Image.csv",
+        "sha256": "483b6a81626bc2e70e5ecc22648be90c6c216c1c2d4795a74e3285a59b4af1b8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleTrackObjects/candidate_evidence/1/measured_pipeline_receipt.json"
+  },
+  {
+    "repetition": 2,
+    "execution_id": "a1c9c61e-5ef4-43f5-a433-ebbcdb5538b2",
+    "compile_artifact_id": "e162a731-a598-465b-9149-1fa948b6225c",
+    "endpoint_pid": 32501,
+    "axis_count": 1,
+    "observation_scope": "outcomes",
+    "assignment_scope": "genuine source wells",
+    "compared_assignments": [],
+    "native_assignment_correspondence": [],
+    "worker_process_ids": [
+      32501
+    ],
+    "worker_interval_overlap_seconds": 2.2668166160583496,
+    "axis_events": [
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_started",
+        "timestamp": 1791504761.4053276,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      },
+      {
+        "axis_id": "Sequence1",
+        "phase": "axis_completed",
+        "timestamp": 1791504763.6721442,
+        "pid": 32501,
+        "worker_slot": "worker_0",
+        "owned_wells": [
+          "Sequence1"
+        ]
+      }
+    ],
+    "server_job_started_at_epoch_seconds": 1791504761.3938706,
+    "first_axis_started_at_epoch_seconds": 1791504761.4053276,
+    "server_job_completed_at_epoch_seconds": 1791504763.7280755,
+    "server_job_seconds": 2.334204912185669,
+    "execution_seconds": 2.2668166160583496,
+    "compile_seconds": 0.15622377395629883,
+    "total_seconds": 2.5786380292847753,
+    "first_axis_through_server_completion_seconds": 2.3227479457855225,
+    "native_image_count": 21,
+    "candidate_image_count": 21,
+    "native_physical_image_count": 21,
+    "candidate_physical_image_count": 21,
+    "native_output_file_count": 23,
+    "candidate_output_file_count": 25,
+    "declared_output_file_count": 23,
+    "native_output_inventory": [
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "ccb27d92a6837e0f2f6f59f0bd67dd6dc776c3779f636a89b82d89fa861de91e"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "df0fbeb62e76d4959516178835bc88a3f6632d32f440fb954d3d7c219e9edcfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "e3172e0b3f6c97693e4992c349e499c0392d6c5f15c6fbab1641a5abc0eec34b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "2b4575e3eac35bd306845582f82714f9390f2c5331462bb9e37a62d99e5119d8"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "4392bfaacdf926e1d961bc3945cf7dba716ec338b4ab8579a4082a715e10379a"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "42c4b6f5a3f339051c5bce755e9ba61d577013cb21d0d4f9e0428f06e61d8d41"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "a6e057f7ddd09cf602ea442c754190509cbafdcd422ceb735634949928a39cfc"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "09a253d116ff74f9b8a223031a1e01f25367b78aa4bfb7ee8aeee8a865543603"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "1246ed67396f5107d4532bc0d67f5bbebadce77034d451ba7003b39ec458834b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "fef7b5d3a9064f5a6cdeee821f46a83c1d1cfd02f4dcedf237ef69156965e0c3"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "00c51409c195bd9a22033bb65df6a590088b5b13b54d2cfc7b2f5c249b65020b"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "e0f9c89fdf96d28aa0b4c53d98eac408f4d4f4b02c5e29e847e24b935bf8d636"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "936196086157848b06d961d30d9ff0fcba09731885e9209f13194cf1039bf25d"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "a068c00d5245cae6cabd119892586ccbe32341a31e71857b76d6107a6f9d05c9"
+      },
+      {
+        "path": "Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "3f4a3c0d670e75260df0e15bfce911954b285dd3df6c70a9bae62182bd8c106e"
+      },
+      {
+        "path": "Sequence1/Embryos.csv",
+        "sha256": "0d6927a942947e220e91385cd90082c0349391fdeeaa70ee2a95fd4aae8038b8"
+      },
+      {
+        "path": "Sequence1/Image.csv",
+        "sha256": "693a7c179f7aa3a0b4f4e335a7a8efba4b83de7deeab17693c4c965919436d60"
+      }
+    ],
+    "candidate_output_inventory": [
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+        "sha256": "c3d2f39a350d35c25a36f12c39031228f6041b47d08432a7cfd54ff0bb07fc37"
+      },
+      {
+        "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0000.png",
+        "sha256": "d537411acd65409786277bdd47b31881a714304b2043a711da716018a9c62e14"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0001.png",
+        "sha256": "acfe3510c76f4d6731edf60025c91a00f6b36b62bf1281a22871332216b9216e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0002.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0003.png",
+        "sha256": "47c87eadb7102cf384f5241810201bf66cccb6b3e7be8a73f550733fa8116b62"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0004.png",
+        "sha256": "1a29d5384e2536a72a1d9166bbf214e6f6a9ae6f20db90971fb0bde5daf0f28c"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0005.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0006.png",
+        "sha256": "3535d57562d59bfd04242676d35f4e7b7c26029c4e336999c026916d59b01af0"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0007.png",
+        "sha256": "01398f92e24473940b53172e9a1a06b06c2c757a7f361b96c02f3b426a2700c7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0008.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0009.png",
+        "sha256": "108fdb743b0dbc538f412622e03d8e2fc8998d1fa7bb1539542ef4f2f707e479"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0010.png",
+        "sha256": "5e3a5c135dc2890cd1248e596fbaab2e109938d278450ccb2d06a170a292a2ec"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0011.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0012.png",
+        "sha256": "dccc325e3722425ffd30c657fc8893c986a0294e07b40da6111bc51e667bd9b3"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0013.png",
+        "sha256": "2faeefbe158b71af5f38e5f1bc15cfd2e4f7cd69c1447b490d553305dc8ce439"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0014.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0015.png",
+        "sha256": "37b34c7b2438fb851a908bb865ce9e157f2231fe5bbdae045412fed6bede113e"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0016.png",
+        "sha256": "194903670b4623420012be1dcc36ca5041bbc8e2783f92c4c4a47e5624720fb7"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0017.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0018.png",
+        "sha256": "66d53b27f5a046144ef25472726c481d2081a2bb3a87ddb2fa5a6070a7a6af8a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0019.png",
+        "sha256": "b60edd153f91c7847a5858ab7af2412f610f547e4592f263ed803094ef088618"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/DrosophilaEmbryo-0020.png",
+        "sha256": "014cd87d78828be5fe03afcb3efc1873beabc9eefbc70e8161a80b0022f0986a"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Embryos.csv",
+        "sha256": "e8ae63a5387c21769f9b27e49542a3dfd10aea16997eae68d122a4e847d5859d"
+      },
+      {
+        "path": "source_workspace_matched_pilot/results/Sequence1/Image.csv",
+        "sha256": "483b6a81626bc2e70e5ecc22648be90c6c216c1c2d4795a74e3285a59b4af1b8"
+      }
+    ],
+    "unexpected_output_files": [],
+    "missing_declared_output_files": [],
+    "database_differences": [],
+    "csv_differences": [],
+    "image_differences": [],
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/singlewell-strict-one-core/cases/ExampleTrackObjects/candidate_evidence/2/measured_pipeline_receipt.json"
+  }
+]

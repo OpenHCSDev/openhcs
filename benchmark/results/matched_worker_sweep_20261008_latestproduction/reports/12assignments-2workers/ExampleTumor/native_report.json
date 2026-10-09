@@ -1,0 +1,229 @@
+{
+  "startup_seconds": 0.7098094099201262,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native_preparation/native_cellprofiler_headless/ExampleTumor.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native/-1",
+      "image_set_count": 8,
+      "invocation_seconds": 23.104385708924383,
+      "pre_pipeline_seconds": 0.0021305629052221775,
+      "pipeline_execution_seconds": 23.10225514601916,
+      "invocation_started_monotonic_seconds": 4185764.746714368,
+      "pipeline_started_monotonic_seconds": 4185764.748844931,
+      "completed_monotonic_seconds": 4185787.851100077,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native/0",
+      "image_set_count": 8,
+      "invocation_seconds": 24.738476620055735,
+      "pre_pipeline_seconds": 0.000759350135922432,
+      "pipeline_execution_seconds": 24.737717269919813,
+      "invocation_started_monotonic_seconds": 4185787.8511121,
+      "pipeline_started_monotonic_seconds": 4185787.85187145,
+      "completed_monotonic_seconds": 4185812.58958872,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native/1",
+      "image_set_count": 8,
+      "invocation_seconds": 23.08687674580142,
+      "pre_pipeline_seconds": 0.0007874327711760998,
+      "pipeline_execution_seconds": 23.086089313030243,
+      "invocation_started_monotonic_seconds": 4185812.589600182,
+      "pipeline_started_monotonic_seconds": 4185812.590387615,
+      "completed_monotonic_seconds": 4185835.676476928,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/native-tail-recovery-v1/ExampleTumor/capture/cases/ExampleTumor/native/2",
+      "image_set_count": 8,
+      "invocation_seconds": 22.254428800661117,
+      "pre_pipeline_seconds": 0.0007326998747885227,
+      "pipeline_execution_seconds": 22.25369610078633,
+      "invocation_started_monotonic_seconds": 4185835.676488079,
+      "pipeline_started_monotonic_seconds": 4185835.677220779,
+      "completed_monotonic_seconds": 4185857.93091688,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ]
+      ]
+    }
+  ]
+}

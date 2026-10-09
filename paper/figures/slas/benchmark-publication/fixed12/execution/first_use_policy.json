@@ -1,5 +1,5 @@
 {
-  "source_revision": "d06b7226c82fc6de8ab6b644f3bec417f4b7b922",
+  "source_revision": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
   "native_reference_kinds": {
     "singlewell": "measured_first_batch",
     "8assignments-2workers": "measured_first_batch",

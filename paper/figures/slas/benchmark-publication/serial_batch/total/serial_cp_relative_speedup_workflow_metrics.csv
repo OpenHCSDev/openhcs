@@ -1,0 +1,121 @@
+pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,speedup,peak_memory_mb
+ExampleYeastPatches,"1 sample
+CP measured",Yeast colony screening,Texture/patch measurement,1.0,1.4504881734028459,3.5692316974345246,
+cp_tutorial_3d_monolayer,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,3.3102432312443852,4.469825399034206,
+cp_tutorial_advanced_segmentation_final,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,6.768913224339485,5.553752351971186,
+cp_tutorial_quality_control,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,1.1297114538028836,4.104356086963581,
+cp_tutorial_beginner_segmentation_final,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,3.3720292150974274,4.819517331066951,
+cp_tutorial_pixel_based_classification,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,0.7681884402409196,4.943351133715048,
+cp_tutorial_translocation_final,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,0.7341805808246136,3.449348193700674,
+cp4_supplement_combine_objects,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,0.18257096409797668,4.428686762016074,
+cp_tutorial_translocation_start,"1 sample
+CP measured",Uncategorized assay,Mixed modules,1.0,0.28677530959248543,5.664446671872563,
+ExampleUntangleWorms,"1 sample
+CP measured",Worm phenotyping,Worm model + shape measurement,1.0,1.0646988498046994,3.8639582165397477,
+ExampleUntangleWormsBrightField,"1 sample
+CP measured",Worm phenotyping,Worm model + brightfield segmentation,1.0,1.5573152974247932,4.234060280963213,
+ExampleYeastColonies,"1 sample
+CP measured",Yeast colony screening,Colony segmentation + measurement,1.0,1.9120175130665302,5.963102672436239,
+ExampleWoundHealing,"1 sample
+CP measured",Migration/scratch assay,Segmentation + distance measurement,1.0,0.8827431937679648,4.891657176220399,
+ExampleSpeckles,"1 sample
+CP measured",Spot detection,Small-object detection,1.0,0.624688402749598,3.736099477086285,
+ExampleIlluminationCorrection_Example3,"1 sample
+CP measured",Illumination correction,Image correction,1.0,0.39260808285325766,2.843821906997713,
+ExampleVitra,"1 sample
+CP measured",Cell morphology,Segmentation + shape measurement,1.0,1.153432035818696,2.9852923025546296,
+ExampleFlyURL,"1 sample
+CP measured",Tissue/object morphology,Segmentation + object measurement,1.0,0.959850144572556,5.014209164112815,
+ExampleColocalization,"1 sample
+CP measured",Colocalization microscopy,Colocalization + object measurement,1.0,2.580726840533316,17.012940507779955,
+ExampleCometAssay,"1 sample
+CP measured",DNA damage assay,Segmentation + shape measurement,1.0,2.073060544207692,6.203227508797765,
+ExampleFly,"1 sample
+CP measured",Tissue/object morphology,Segmentation + object measurement,1.0,1.8804121697321534,4.660015579453876,
+ExampleHuman,"1 sample
+CP measured",Cell morphology,Segmentation + intensity measurement,1.0,0.9252412589266896,4.038859378532142,
+ExampleIlluminationCorrection_Example1_AllMethod,"1 sample
+CP measured",Illumination correction,Image correction,1.0,2.269830932840705,420.032289867845,
+ExampleIlluminationCorrection_Example1_EachMethod,"1 sample
+CP measured",Illumination correction,Image correction,1.0,0.20040796790271997,17.612070252092167,
+ExampleIlluminationCorrection_Example2,"1 sample
+CP measured",Illumination correction,Image correction,1.0,1.878341211937368,25.530899174339098,
+ExampleImagingFlowCytometryObjectsInGrid,"1 sample
+CP measured",Imaging flow cytometry,Grid layout + object measurement,1.0,7.478058457374573,10.203579663194862,
+ExampleNeighbors,"1 sample
+CP measured",Spatial organization,Object relationship measurement,1.0,0.9426015233621001,5.080647571647646,
+ExamplePercentPositive,"1 sample
+CP measured",Positive-cell classification,Thresholding + classification,1.0,0.5164313912391663,3.403022571924895,
+ExampleTrackObjects,"1 sample
+CP measured",Time-lapse tracking,Tracking + object measurement,1.0,2.5330141177400947,4.198583766170502,
+ExampleTumor,"1 sample
+CP measured",Tumor morphology,Segmentation + intensity measurement,1.0,0.7720676632598042,6.559428161407522,
+ExampleUntangleAndStraightenWorms,"1 sample
+CP measured",Worm phenotyping,Worm model + straightening,1.0,0.7700261939316988,4.041923001763902,
+ExampleYeastPatches,"12 samples
+CP projected",Yeast colony screening,Texture/patch measurement,1.0,13.554214999079704,3.832411246931976,
+cp_tutorial_3d_monolayer,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,36.78223738167435,4.596687519530538,
+cp_tutorial_advanced_segmentation_final,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,59.880487360060215,6.649258310544407,
+cp_tutorial_quality_control,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,5.9595164228230715,5.961389046501893,
+cp_tutorial_beginner_segmentation_final,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,37.03307817224413,4.685064265417976,
+cp_tutorial_pixel_based_classification,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,7.774730676785111,4.056549089780402,
+cp_tutorial_translocation_final,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,5.835563944652677,2.460231773127939,
+cp4_supplement_combine_objects,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,0.6904510864987969,2.738803134808104,
+cp_tutorial_translocation_start,"12 samples
+CP projected",Uncategorized assay,Mixed modules,1.0,1.7634554244577885,2.608166172848489,
+ExampleUntangleWorms,"12 samples
+CP projected",Worm phenotyping,Worm model + shape measurement,1.0,9.350137423723936,3.4959199373868546,
+ExampleUntangleWormsBrightField,"12 samples
+CP projected",Worm phenotyping,Worm model + brightfield segmentation,1.0,15.089947964064777,4.688439848817346,
+ExampleYeastColonies,"12 samples
+CP projected",Yeast colony screening,Colony segmentation + measurement,1.0,18.96748104225844,6.575406397965321,
+ExampleWoundHealing,"12 samples
+CP projected",Migration/scratch assay,Segmentation + distance measurement,1.0,9.029950778000057,5.046819188538696,
+ExampleSpeckles,"12 samples
+CP projected",Spot detection,Small-object detection,1.0,5.061602714471519,3.4973025419233617,
+ExampleIlluminationCorrection_Example3,"12 samples
+CP projected",Illumination correction,Image correction,1.0,1.9807575950399041,2.4947682142315046,
+ExampleVitra,"12 samples
+CP projected",Cell morphology,Segmentation + shape measurement,1.0,11.472102950327098,2.6833603898270955,
+ExampleFlyURL,"12 samples
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,8.459431108087301,4.27689228902476,
+ExampleColocalization,"12 samples
+CP projected",Colocalization microscopy,Colocalization + object measurement,1.0,27.368160081095994,16.799165455486637,
+ExampleCometAssay,"12 samples
+CP projected",DNA damage assay,Segmentation + shape measurement,1.0,21.98995913565159,6.619738316596646,
+ExampleFly,"12 samples
+CP projected",Tissue/object morphology,Segmentation + object measurement,1.0,18.401412839069963,4.099315868835049,
+ExampleHuman,"12 samples
+CP projected",Cell morphology,Segmentation + intensity measurement,1.0,8.529682918451726,3.6895297576373447,
+ExampleIlluminationCorrection_Example1_AllMethod,"12 samples
+CP projected",Illumination correction,Image correction,1.0,26.941190301440656,426.83661862887703,
+ExampleIlluminationCorrection_Example1_EachMethod,"12 samples
+CP projected",Illumination correction,Image correction,1.0,0.9823984196409583,35.84794601936274,
+ExampleIlluminationCorrection_Example2,"12 samples
+CP projected",Illumination correction,Image correction,1.0,19.324612469412386,29.369698946293873,
+ExampleImagingFlowCytometryObjectsInGrid,"12 samples
+CP projected",Imaging flow cytometry,Grid layout + object measurement,1.0,83.0626980708912,9.76684320242747,
+ExampleNeighbors,"12 samples
+CP projected",Spatial organization,Object relationship measurement,1.0,8.860869626514614,3.8111953432158194,
+ExamplePercentPositive,"12 samples
+CP projected",Positive-cell classification,Thresholding + classification,1.0,3.473051737062633,2.5157584992215516,
+ExampleTrackObjects,"12 samples
+CP projected",Time-lapse tracking,Tracking + object measurement,1.0,26.2754776654765,3.6274022798652457,
+ExampleTumor,"12 samples
+CP projected",Tumor morphology,Segmentation + intensity measurement,1.0,6.548547877930105,5.290856997809875,
+ExampleUntangleAndStraightenWorms,"12 samples
+CP projected",Worm phenotyping,Worm model + straightening,1.0,5.63085753750056,3.4053128222450297,

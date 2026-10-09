@@ -106,42 +106,92 @@ class PipelineOrchestrator:
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
         transport_config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
-        # Lock removed - was orphaned code never used
+        self._initialize_runtime_identity(
+            plate_path,
+            workspace_path,
+            pipeline_config=pipeline_config,
+            selected_pipeline_path=selected_pipeline_path,
+            transport_config=transport_config,
+        )
+        if storage_registry:
+            self.registry = storage_registry
+            logger.info("PipelineOrchestrator using provided StorageRegistry instance.")
+        else:
+            # FileManager snapshots the mapping while preserving physical backend
+            # identities, including the memory backend cleared between executions.
+            from polystore.base import (
+                storage_registry as global_storage_registry,
+                ensure_storage_registry,
+            )
 
-        # Track executor for cancellation support
+            # Ensure registry is initialized
+            ensure_storage_registry()
+            self.registry = global_storage_registry
+            logger.info("PipelineOrchestrator using global StorageRegistry instance.")
+
+        # Override zarr backend with orchestrator's resolved config.
+        effective_config = (
+            self.get_effective_config() if resolved_config is None else resolved_config
+        )
+        zarr_backend_with_config = ZarrStorageBackend(effective_config.zarr_config)
+        self.registry[Backend.ZARR.value] = zarr_backend_with_config
+        logger.info(
+            f"Orchestrator zarr backend configured with {effective_config.zarr_config.compressor.value} compression"
+        )
+
+        self.filemanager = FileManager(self.registry)
+        self._initialize_runtime_services(progress_callback)
+
+    @classmethod
+    def from_compiled_execution(
+        cls,
+        execution_bundle: CompiledExecutionBundle,
+        *,
+        plate_path: Union[str, Path],
+        pipeline_config: "PipelineConfig",
+        selected_pipeline_path: Union[str, Path, None] = None,
+        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        transport_config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
+    ) -> "PipelineOrchestrator":
+        """Create fresh runtime services around an admitted compiled domain."""
+        contexts = tuple(execution_bundle.runtime_contexts.values())
+        if not contexts:
+            raise ValueError("Compile artifact missing compiled_contexts")
+        source = contexts[0]
+        if source.filemanager is None:
+            raise ValueError("Compiled execution lacks its admitted source workspace.")
+        orchestrator = cls.__new__(cls)
+        orchestrator._initialize_runtime_identity(
+            plate_path,
+            source.workspace_path,
+            pipeline_config=pipeline_config,
+            selected_pipeline_path=selected_pipeline_path,
+            transport_config=transport_config,
+        )
+        orchestrator.registry = source.filemanager.registry
+        orchestrator._initialize_runtime_services(progress_callback)
+        return orchestrator.adopt_compiled_execution(execution_bundle)
+
+    def _initialize_runtime_identity(
+        self,
+        plate_path: Union[str, Path],
+        workspace_path: Optional[Union[str, Path]],
+        *,
+        pipeline_config: Optional["PipelineConfig"],
+        selected_pipeline_path: Union[str, Path, None],
+        transport_config: OpenHCSZMQConfig,
+    ) -> None:
         self._executor_resources = None
         self._execution_cancellation = ExecutionCancellationAuthority()
         self.execution_id = f"local::{plate_path}"
         self.transport_config = transport_config
-
-        # Hold the authored declaration before the plate identity is assigned.
         self._pipeline_config = None
 
-        # Context management now handled by contextvars-based system
-
-        # Initialize per-orchestrator configuration
-        # DUAL-AXIS FIX: Always create a PipelineConfig instance to make orchestrator detectable as context provider
-        # This ensures the orchestrator has a dataclass attribute for stack introspection
-        # PipelineConfig is already the lazy version of GlobalPipelineConfig
         from openhcs.core.config import PipelineConfig
 
-        if pipeline_config is None:
-            # CRITICAL FIX: Create pipeline config that inherits from global config
-            # This ensures the orchestrator's pipeline_config has the global values for resolution
-            pipeline_config = PipelineConfig()
-
-        # CRITICAL FIX: Do NOT apply global config inheritance during initialization
-        # PipelineConfig should always have None values that resolve through lazy resolution
-        # Copying concrete values breaks the placeholder system and makes all fields appear "explicitly set"
-
-        self.pipeline_config = pipeline_config
-        logger.info(
-            "PipelineOrchestrator initialized with PipelineConfig for context discovery."
+        self.pipeline_config = (
+            PipelineConfig() if pipeline_config is None else pipeline_config
         )
-
-        # REMOVED: Unnecessary thread-local modification
-        # The orchestrator should not modify thread-local storage during initialization
-        # Global config is already available through the dual-axis resolver fallback
 
         # Convert to the immutable execution identity. Source availability is a
         # runtime initialization precondition so declarations can be loaded and
@@ -172,34 +222,9 @@ class PipelineOrchestrator:
         self._plate_path_frozen = True
         logger.info(f"🔒 PLATE_PATH FROZEN: {self.plate_path} is now immutable")
 
-        if storage_registry:
-            self.registry = storage_registry
-            logger.info("PipelineOrchestrator using provided StorageRegistry instance.")
-        else:
-            # Use the global registry directly (don't copy) so that reset_memory_backend() works correctly
-            # The global registry is a singleton, and VFS clearing needs to clear the same instance
-            from polystore.base import (
-                storage_registry as global_storage_registry,
-                ensure_storage_registry,
-            )
-
-            # Ensure registry is initialized
-            ensure_storage_registry()
-            self.registry = global_storage_registry
-            logger.info("PipelineOrchestrator using global StorageRegistry instance.")
-
-        # Override zarr backend with orchestrator's resolved config.
-        effective_config = (
-            self.get_effective_config() if resolved_config is None else resolved_config
-        )
-        zarr_backend_with_config = ZarrStorageBackend(effective_config.zarr_config)
-        self.registry[Backend.ZARR.value] = zarr_backend_with_config
-        logger.info(
-            f"Orchestrator zarr backend configured with {effective_config.zarr_config.compressor.value} compression"
-        )
-
-        # Orchestrator always creates its own FileManager, using the determined registry
-        self.filemanager = FileManager(self.registry)
+    def _initialize_runtime_services(
+        self, progress_callback: Optional[Callable[[Dict[str, Any]], None]]
+    ) -> None:
         self.input_dir: Optional[Path] = None
         self.microscope_handler: Optional[MicroscopeHandler] = None
         self._microscope_handler_rebuild_type: type[MicroscopeHandler] | None = None
@@ -530,9 +555,6 @@ class PipelineOrchestrator:
             self.plate_path
         )
         self.registry = dict(source_registry)
-        self.registry[Backend.ZARR.value] = self.filemanager.registry[
-            Backend.ZARR.value
-        ]
         self.filemanager = FileManager(self.registry)
         self.microscope_handler = source.microscope_handler
         self.input_dir = source.input_dir

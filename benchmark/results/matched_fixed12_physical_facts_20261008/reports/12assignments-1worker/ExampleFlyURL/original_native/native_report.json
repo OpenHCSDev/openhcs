@@ -1,0 +1,229 @@
+{
+  "startup_seconds": 0.599005782045424,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native_preparation/native_cellprofiler_headless/ExampleFlyURL.cppipe",
+    "input_dir": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native_preparation/native_cellprofiler_empty_input",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native/-1",
+      "image_set_count": 24,
+      "invocation_seconds": 24.32749771513045,
+      "pre_pipeline_seconds": 0.002300641033798456,
+      "pipeline_execution_seconds": 24.32519707409665,
+      "invocation_started_monotonic_seconds": 4146527.095769302,
+      "pipeline_started_monotonic_seconds": 4146527.098069943,
+      "completed_monotonic_seconds": 4146551.423267017,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          3
+        ],
+        [
+          "W002",
+          3
+        ],
+        [
+          "W003",
+          3
+        ],
+        [
+          "W004",
+          3
+        ],
+        [
+          "W005",
+          3
+        ],
+        [
+          "W006",
+          3
+        ],
+        [
+          "W007",
+          3
+        ],
+        [
+          "W008",
+          3
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native/0",
+      "image_set_count": 24,
+      "invocation_seconds": 23.605437329038978,
+      "pre_pipeline_seconds": 0.0008205240592360497,
+      "pipeline_execution_seconds": 23.60461680497974,
+      "invocation_started_monotonic_seconds": 4146551.423280573,
+      "pipeline_started_monotonic_seconds": 4146551.424101097,
+      "completed_monotonic_seconds": 4146575.028717902,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          3
+        ],
+        [
+          "W002",
+          3
+        ],
+        [
+          "W003",
+          3
+        ],
+        [
+          "W004",
+          3
+        ],
+        [
+          "W005",
+          3
+        ],
+        [
+          "W006",
+          3
+        ],
+        [
+          "W007",
+          3
+        ],
+        [
+          "W008",
+          3
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native/1",
+      "image_set_count": 24,
+      "invocation_seconds": 23.70604336215183,
+      "pre_pipeline_seconds": 0.0008874409832060337,
+      "pipeline_execution_seconds": 23.705155921168625,
+      "invocation_started_monotonic_seconds": 4146575.028731598,
+      "pipeline_started_monotonic_seconds": 4146575.029619039,
+      "completed_monotonic_seconds": 4146598.73477496,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          3
+        ],
+        [
+          "W002",
+          3
+        ],
+        [
+          "W003",
+          3
+        ],
+        [
+          "W004",
+          3
+        ],
+        [
+          "W005",
+          3
+        ],
+        [
+          "W006",
+          3
+        ],
+        [
+          "W007",
+          3
+        ],
+        [
+          "W008",
+          3
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/8assignments-2workers/capture/cases/ExampleFlyURL/native/2",
+      "image_set_count": 24,
+      "invocation_seconds": 23.957405435852706,
+      "pre_pipeline_seconds": 0.0008294121362268925,
+      "pipeline_execution_seconds": 23.95657602371648,
+      "invocation_started_monotonic_seconds": 4146598.734788435,
+      "pipeline_started_monotonic_seconds": 4146598.735617847,
+      "completed_monotonic_seconds": 4146622.692193871,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          3
+        ],
+        [
+          "W002",
+          3
+        ],
+        [
+          "W003",
+          3
+        ],
+        [
+          "W004",
+          3
+        ],
+        [
+          "W005",
+          3
+        ],
+        [
+          "W006",
+          3
+        ],
+        [
+          "W007",
+          3
+        ],
+        [
+          "W008",
+          3
+        ]
+      ]
+    }
+  ]
+}
