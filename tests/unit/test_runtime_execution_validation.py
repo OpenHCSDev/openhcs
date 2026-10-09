@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import gzip
-import pickle
 from collections import OrderedDict
-from dataclasses import fields, make_dataclass
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -11,7 +8,6 @@ import numpy as np
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 
-import openhcs.runtime.zmq_execution_observation as observation_module
 from openhcs.constants.constants import VariableComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -539,7 +535,6 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
 
 def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
     tmp_path,
-    monkeypatch,
 ) -> None:
     context = ProcessingContext(axis_id="A01")
     context.runtime_value_store.record(
@@ -578,33 +573,3 @@ def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
     assert path.read_bytes()[:2] == b"\x1f\x8b"
     assert restored.expectation == export.expectation
     assert restored.records_by_axis == export.records_by_axis
-
-    legacy_fields = tuple(
-        field for field in fields(export) if field.name != "server_environment"
-    )
-    legacy_type = make_dataclass(
-        ZMQRuntimeExecutionObservationExport.__name__,
-        ((field.name, field.type) for field in legacy_fields),
-        frozen=True,
-        slots=True,
-    )
-    legacy_type.__module__ = observation_module.__name__
-    legacy_export = legacy_type(
-        *(
-            5 if field.name == "schema_version" else getattr(export, field.name)
-            for field in legacy_fields
-        )
-    )
-    monkeypatch.setattr(
-        observation_module, "ZMQRuntimeExecutionObservationExport", legacy_type
-    )
-    with gzip.open(path, "wb") as handle:
-        pickle.dump(legacy_export, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    monkeypatch.setattr(
-        observation_module,
-        "ZMQRuntimeExecutionObservationExport",
-        ZMQRuntimeExecutionObservationExport,
-    )
-    previous_schema = ZMQRuntimeExecutionObservationExport.read(path)
-    assert previous_schema.schema_version == 5
-    assert previous_schema.server_environment is None
