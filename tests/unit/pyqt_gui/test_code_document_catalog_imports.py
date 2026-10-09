@@ -90,7 +90,6 @@ def test_catalog_import_preserves_selected_registry_wrapper(
         assert UiCodeDocumentSourcePolicy(catalog).validate(source()) == ()
     operations = Mock()
     operations.patch_lazy_constructors.side_effect = nullcontext
-    operations.migrate_code_namespace.return_value = None
     executor = UiCodeDocumentExecutionService(UiCodeDocumentSourcePolicy(catalog))
     result = executor.validate_source(
         source(f"from skimage.filters.edges import sobel as {alias}", alias), operations

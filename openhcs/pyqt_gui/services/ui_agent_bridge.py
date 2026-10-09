@@ -553,18 +553,8 @@ class UiCodeDocumentExecutionService:
             identity: reference.resolve()
             for identity, reference in projection.bindings.items()
         }
-        try:
-            with operations.patch_lazy_constructors():
-                exec(executable, namespace)
-        except TypeError as exc:
-            migrated_namespace = operations.migrate_code_namespace(
-                source,
-                exc,
-                namespace,
-            )
-            if migrated_namespace is None:
-                raise
-            namespace = PlateManagerCodeNamespace.from_mapping(migrated_namespace)
+        with operations.patch_lazy_constructors():
+            exec(executable, namespace)
 
         try:
             payload = PlateManagerCodeDocumentAuthority.from_namespace(namespace)

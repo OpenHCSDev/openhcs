@@ -65,7 +65,7 @@ class Microscope(Enum):
 
 def get_openhcs_config():
     """Get the OpenHCS configuration, initializing it if needed."""
-    from openhcs.components.framework import ComponentConfigurationFactory
+    from openhcs.core.components.framework import ComponentConfigurationFactory
 
     return ComponentConfigurationFactory.create_openhcs_default_configuration()
 

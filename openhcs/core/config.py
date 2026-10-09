@@ -1269,6 +1269,17 @@ from objectstate import set_base_config_type
 
 set_base_config_type(GlobalPipelineConfig)
 
+# Forward references in OpenHCS signatures resolve against this module and the
+# lazy dataclasses ObjectState generates for it.
+import sys as _sys
+
+import objectstate.lazy_factory as _lazy_factory
+from python_introspect import register_namespace_provider
+
+register_namespace_provider(
+    lambda: {**vars(_lazy_factory), **vars(_sys.modules[__name__])}
+)
+
 from objectstate import config_context
 from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
 

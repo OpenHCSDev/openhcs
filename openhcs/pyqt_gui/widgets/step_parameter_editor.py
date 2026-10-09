@@ -23,7 +23,7 @@ from PyQt6.QtCore import pyqtSignal, QTimer
 
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.introspection import SignatureAnalyzer
+from python_introspect import SignatureAnalyzer
 from openhcs.core.config import PipelineConfig
 from openhcs.core.path_cache import PathCacheKey
 from openhcs.core.source_binding_context import SourceBindingContext

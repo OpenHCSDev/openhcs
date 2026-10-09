@@ -428,10 +428,6 @@ class FakeOperations:
     def patch_lazy_constructors(self):
         yield
 
-    def migrate_code_namespace(self, code, error, namespace):
-        del code, error, namespace
-        return None
-
     def apply_code_namespace(self, namespace: dict) -> bool:
         self.applied_namespaces.append(namespace)
         if self.state is not None:
