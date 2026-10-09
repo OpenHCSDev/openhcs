@@ -825,12 +825,13 @@ def submission_neurite_results():
     ):
         sheet.text(x, 48, title, size=10.5, weight="bold")
         laboratory_view.draw((x, 27, 30, 19.5), raw=name != "result", result=name != "raw")
-    sheet.panel("III", "Assisted repair: treatment responses", 3, 24)
+    sheet.panel("III", "Three blind authors: treatment responses", 3, 24)
     NeuriteEffectFigure.draw_panels(
-        sheet, ROOT / "paper/supplementary/personal_neurite_repaired_morphometry",
-        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 26), start_letter="G",
+        sheet, NeuriteEffectFigure.cohort_tables(
+            sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
+        metrics=("mean_outgrowth",), bounds=(3, 4, 94, 24), start_letter="G",
     )
-    sheet.text(3, 1, "Twenty matched wells; two technical wells per dose. Concordant outgrowth responses; branching fold changes differ.",
+    sheet.text(3, 1, "Each author: twenty matched wells, two technical wells per dose. All recover increased outgrowth; magnitudes vary.",
                size=9.5, color=MUTED)
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)

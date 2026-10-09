@@ -1,0 +1,16 @@
+{
+  "coded_wells": ["A52", "A49", "A30", "A37", "A31", "A17", "A34", "A02", "A32", "A24", "A59", "A27", "A47", "A25", "A54", "A08", "A29", "A28", "A60", "A11"],
+  "sites": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "channels": {"1": "DAPI nuclear stain", "2": "FITC neuronal signal"},
+  "image_shape_yx": [1024, 1024],
+  "xy_spacing_um": [1.3556, 1.3556],
+  "z_positions": 1,
+  "timepoints": 1,
+  "filename_pattern": "WELL_sSITE_wCHANNEL_z001_t001.tif",
+  "input_directory": "images",
+  "image_file_count": 360,
+  "paired_field_count": 180,
+  "overlap": "Fields within a well can overlap. Per-field sums are not automatically deduplicated whole-well measurements.",
+  "blinding": "Coded acquisition identifiers only. Treatment identities, reference measurements, previous analyses and expected responses are not released."
+}
+
