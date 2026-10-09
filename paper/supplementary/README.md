@@ -397,7 +397,13 @@ The one-worker controls compare one and twelve samples. Both systems amortize pr
 
 All thirty workflows pass output parity. CP1/CP8 references remain actual
 first-batch observations; CP12/CP16 remain explicitly projected and retain zero
-actual target native observations. Native calibration differs in allowed CPU
+actual target native observations. Every workflow has execution and total
+speedup above one in every tested configuration, including the one-worker
+twelve-assignment comparison after both systems amortize preparation. On the
+fixed twelve-assignment workload, every workflow also has execution and total
+scaling above one at two, three and four workers relative to one worker.
+These scaling results use measured OpenHCS times throughout.
+Native calibration differs in allowed CPU
 counts between the one- and eight-assignment captures; the projection check
 covers three workflows and is not full-cohort measured validation. The record
 preserves signed within-session and cross-session errors. All OpenHCS scaling
