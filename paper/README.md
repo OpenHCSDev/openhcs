@@ -44,7 +44,8 @@ The current main layout has six figures and Table 1: native editing and custom
 function authoring; process architecture with integration logos; an intended
 autonomous loop alongside a recorded repair trajectory; task-specific results
 with matched nuclear, retinal and volume repair evidence; public/laboratory
-neurite analysis with treatment responses; and matched CellProfiler execution
+neurite analysis with treatment responses from three independent blind authors;
+and matched CellProfiler execution
 and total time. Table 1 summarizes the later autonomous assay results; full
 trial results and reference types are retained in Supplementary Data 8.
 Six supplementary figures group wider views by assay and retain

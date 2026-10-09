@@ -1,0 +1,58 @@
+{
+  "frozen_utc": "2026-10-09T05:21:00.340263+00:00",
+  "heldout_pixels_accessed": false,
+  "chosen_scientific_candidate": "C17",
+  "bulk_variant": "same engine/parameters; compact declared artifact persistence; streaming disabled",
+  "files": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/pipelines/final-analysis.py",
+      "bytes": 3452,
+      "sha256": "213d86c250f1e41e84b22a4e0fd8971208ace9adceae807e2144d1dfc8914edf"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/author-history/final-method-criteria.rst",
+      "bytes": 3090,
+      "sha256": "e57bbbda0c69b2a0e529c09b3f8a0d25e3626ac3d60fe491e37e2b299f2cb296"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/author-history/development-split.json",
+      "bytes": 729,
+      "sha256": "2a9b3eeb039936ec6fb35cbc95203b47969b89b621287c19a997500b45886366"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/author-history/candidate17-review.rst",
+      "bytes": 4568,
+      "sha256": "7122e0978ed4febc3729f9f773235f4ed0c5f09b1eb0af468b7e2bf7f35a528d"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/pipelines/selected_channel_gaussian_v1.py",
+      "bytes": 1433,
+      "sha256": "e8067a30bdb9021e66b5fea0b958d3f57f4b5e57d287c3b6275cb8bf3b7a0111"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/pipelines/independent_soma_shaft_v1.py",
+      "bytes": 3321,
+      "sha256": "c6d4b49ca0cd8fd81ad22c245840faed55843ea9b7c155b49da2ee1cdff890d7"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/pipelines/rooted_arbor_compact_v1.py",
+      "bytes": 3758,
+      "sha256": "52d552487801cf18c16c92c746737cc3cd8da780b5c8775d43d62af28ff1cf2e"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/pipelines/coded_well_summary_v1.py",
+      "bytes": 5546,
+      "sha256": "c6113508f1d7403438730752c8a073fb4446afbaeca57b47c86b276518abe087"
+    }
+  ],
+  "configuration": {
+    "workers": 2,
+    "library_threads": 1,
+    "tiff_compression": "deflate",
+    "tiff_compression_level": 1,
+    "image_dtype": "native",
+    "xy_um": 1.3556
+  },
+  "expected_paired_fields": 180,
+  "evaluation": "No reference, treatment or external correction access. Heldout acceptance criteria sealed in named file."
+}

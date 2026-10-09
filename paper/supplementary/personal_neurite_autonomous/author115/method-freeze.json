@@ -1,0 +1,45 @@
+{
+  "frozen_at_utc": "2026-10-09T03:06:50.876833+00:00",
+  "heldout_pixels_not_inspected": true,
+  "selected_candidate": "attempt-06",
+  "scientific_claim": "descriptive operational sampled-field measurements; abstain verified cell census/complete anatomical arbors",
+  "acceptance_criteria": "output/heldout-review-plan.json",
+  "scientific_interval_minutes": null,
+  "files": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/sources/final-attempt.py",
+      "sha256": "2eee3b73889a8a5357361af28bed696c780918d173f18d6f63afc50eea8e3d3e",
+      "bytes": 4625
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/method-and-inclusion.md",
+      "sha256": "d99c2a308b8007aa2e80b9b50e32307c8ddbe9211c84ae0168fa7aac8df81454",
+      "bytes": 4124
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/heldout-review-plan.json",
+      "sha256": "cb7a1db68ba3c4f6ef4d4da7c61f3afa9f44545dfe33e8daf4cc670ec4d1a2b3",
+      "bytes": 1287
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/analysis-plan.json",
+      "sha256": "731aec5d3fae28a99c78078f66a3e287537db4cda485853774a657a91753788b",
+      "bytes": 572
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/source-inventory.json",
+      "sha256": "08d89a249bcdf42c45c579308e40287bf97d363ba8bae32a416dc3410ba5ddcb",
+      "bytes": 211682
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/attempt-06-freeze.json",
+      "sha256": "5e07f61de86c1c930ce8a7e2e9bf66a077426419cd99557a3e32f265c316d1ba",
+      "bytes": 47669
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/recorded-evidence-index-12.json",
+      "sha256": "5d1a78f47d1fc874a71c6e8ef8d60827ceb062d64a92e2f23143dcfaf8082d26",
+      "bytes": 109393
+    }
+  ]
+}

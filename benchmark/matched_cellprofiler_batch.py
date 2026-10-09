@@ -566,7 +566,7 @@ def _native_shard_requests(
     report: NativeBatchReport, job_count: int
 ) -> tuple[NativeBatchRequest, ...]:
     """Derive each exact partition from the original whole-batch request."""
-    report.require_complete(report.request.repetitions)
+    report.require_reusable(report.request.repetitions)
     image_counts = {row.image_set_count for row in report.observations}
     if len(image_counts) != 1:
         raise RuntimeError("Native whole-batch image-set domain changed.")
@@ -619,7 +619,7 @@ def _validate_native_shard_reports(
     files = set()
     for request, payload in zip(requests, reports, strict=True):
         report = NativeBatchReport.from_payload(payload)
-        report.require_complete(whole.request.repetitions)
+        report.require_reusable(whole.request.repetitions)
         report_path = Path(request.report_path)
         request_path = report_path.with_name(
             f"request_{request.start_barrier_job_index}.json"
@@ -852,7 +852,7 @@ def _reuse_native_report(
     typed_report.environment.require_equivalent(
         _probe_native_environment(native_python, native_worker, planned_request)
     )
-    typed_report.require_complete(int(native_payload["repetitions"]))
+    typed_report.require_reusable(int(native_payload["repetitions"]))
     if any(
         row["image_set_count"] != origin["native_image_set_count"]
         for row in report["observations"]

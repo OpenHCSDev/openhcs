@@ -6,7 +6,7 @@
     "paper/figures/build_slas_benchmark.py": "4f510fe6d23b3d8a5213c030b6270c9d9b00fa9f9b9d816deda1250979a23840",
     "paper/figures/build_slas_agent.py": "88aa622cc09a96b702dc138dc64571df0239cae4a7c11f43fa274629628f5edc",
     "benchmark/native_execution_projection.py": "38d698c6c89e49113843900100c1095024527c88a1080a3f4397437f05f49219",
-    "benchmark/native_batch_contracts.py": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+    "benchmark/native_batch_contracts.py": "90e7f849fd0727870bafe7c0e7a21fd41377d3c2a4919b15973be45173d69767",
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/v2/convert_matched_reports.py": "529c445f5236a5feb7d5b9d248a4ecb99d8a7c195a5e11da2b6b6c2c471f079a",
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json": "3fc1d12731272138e54487d3cc06cafe04e89154e10e850c61769f0fe2d780a8",
     "benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/archive_custody.json": "ea4e55741e664181125bc705389f34ef284e8ca58c69be69f3a280b2782aa006",
@@ -254,9 +254,9 @@
     "benchmark_claims.json": "e7f0d1c770565c645edc0e3b2d670c5df2c489aac5c2cca3cb94aabe559d6202",
     "measured_benchmark_publication_caption.md": "1f1ad4adf291b7afddedaa3c69718a6bb32b68aab3c5dce475be135a5e18b587",
     "measured_benchmark_publication.png": "fabe08b366ccc2ea7875bbc48342bcf5555d8f4ceca83b326aaece8d86e5461a",
-    "measured_benchmark_publication.svg": "044df4953d4485192dc53a0285b12a730db5c82b78496736b4342d7c096ba255",
+    "measured_benchmark_publication.svg": "e45c7950e88cf4485e95b5d010cea8859b962e272d7be0a5323ccd556ec5180d",
     "measured_benchmark_publication_log.png": "1828d55619f8d7291074994c4aab4d3ebb438131c60be49dbaf6b8f1bc780c89",
-    "measured_benchmark_publication_log.svg": "cfc873a212b00377c063189c455b7b1eb9d9c93499bfcee2852d9a43bc920fd0"
+    "measured_benchmark_publication_log.svg": "020e000bca06e222c7726e148d8b7425a301138c891c2e381b48745230d64a23"
   },
   "source_revision": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
   "native_reference_kinds": {

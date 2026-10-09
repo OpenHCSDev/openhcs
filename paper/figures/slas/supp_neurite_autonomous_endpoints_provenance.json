@@ -1,0 +1,26 @@
+{
+  "generator_sha256": "0006e7c2dd07e4101b0fc05a8af5e0ae0c688436da714c0b7e9cd6b3b8bb7ab6",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "75283123e522d6b21a0731aafe9a1bb3e239994d0349fa78409ff5ed091f34bc",
+    "paper/supplementary/personal_neurite_autonomous/cohort.json": "fcfb4cc955c1217a123a111f3005036b02ca520fd50e66445a7ef1e358ac3d34",
+    "paper/figures/build_slas_neurite_effects.py": "29a910d33c8e536053d561cebac4b02d6cdf8a7d1dcaf027601473bdc76d1add",
+    "paper/figures/compare_personal_neurite.py": "5a3c7cc0749f0e0293f2982ab4dc5c8589f25624d962b3dc82df2ecb26a5494f",
+    "paper/supplementary/personal_neurite_autonomous/author114/joined_wells.csv": "a84158436f767e6e2f7340b60ab9dba20f62dca6bc526c6d76a2fa0c4fe26dd9",
+    "paper/supplementary/personal_neurite_autonomous/author114/treatment_effects.csv": "dce5a0b6189a4de72862365368b46645d6242b05ed5e3bfae90919e9745c48c5",
+    "paper/supplementary/personal_neurite_autonomous/author114/source_evidence.json": "35158137d37543d1db57037eff350f5795343e7c2b3780a5ef6acdede1231f2e",
+    "paper/supplementary/personal_neurite_autonomous/author115/joined_wells.csv": "3a1bc4f37f2edc6ca417e2c048b71849985d6620d111c48a266548515536a903",
+    "paper/supplementary/personal_neurite_autonomous/author115/treatment_effects.csv": "d1874cd978e63f922c9cf2eb282671113f0911bcd5b2564ca59195f769d52dd2",
+    "paper/supplementary/personal_neurite_autonomous/author115/source_evidence.json": "975fbf9dac40efd9ebc875c29b56741f69b00f109607654eb463d978e640081f",
+    "paper/supplementary/personal_neurite_autonomous/author116/joined_wells.csv": "7b579c4b25b5582e8524a427bab30935058f5ef44ef0b1421bf2c872b1342c55",
+    "paper/supplementary/personal_neurite_autonomous/author116/treatment_effects.csv": "685eda6d313cac2a672992a83df4383a65ba76b40b6abb3d58527504926be46f",
+    "paper/supplementary/personal_neurite_autonomous/author116/source_evidence.json": "fa1b6de8a5216e72a6e78069c4c13cff0b5932f5ec96689b223ca4820a814789"
+  },
+  "ui_crops": [],
+  "display_transforms": [],
+  "output_sha256": {
+    "supp_neurite_autonomous_endpoints.png": "fb2bfe826133b486d054194e523ccccee1bb4f9fe023c031b77e1c36161d6167",
+    "supp_neurite_autonomous_endpoints.pdf": "71a1919518ca2a5535d22531a96fd1ffb86a7ffe6bf844978e15684536ac1d19",
+    "supp_neurite_autonomous_endpoints.svg": "18f60add44b4dd6f30ce68795b471c4709131ae7eba449b8f2e7624facdfa83b"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

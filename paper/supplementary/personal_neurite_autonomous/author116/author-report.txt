@@ -1,0 +1,68 @@
+# Released neuronal morphology: frozen rejected attempt
+
+The final attempted pipeline completed all 180 paired fields from twenty coded wells. **It is rejected for the complete biological specification.** Held-out native review found small graph spurs that can inflate branch counts, soma contours extending into proximal shafts, and a plausible missed connecting-shaft segment. The retained counts, lengths and process summaries are qualified exploratory algorithm measurements. They do not certify exact anatomical branches, complete arbor recovery or a biological cell census.
+
+The method and criteria were sealed at 2026-10-09 05:21 UTC before held-out pixels. Eight prospectively selected fields supported development; twelve different fields supported held-out review. Twenty distributed fields were personally reviewed across the collection, rather than every measured field. No treatment identities, reference scores, expected responses, other authors, or external corrections were accessed. No scientific settings changed after held-out access.
+
+The exact final source is [final-analysis.py](pipelines/final-analysis.py), SHA256 `213d86c250f1e41e84b22a4e0fd8971208ace9adceae807e2144d1dfc8914edf`. The full execution is job-21, session-20, execution `105de713-a57a-4f4d-b38f-6c52f5b1bc3d`: 2026-10-09 05:24:16.712627 through 06:17:06.775843 UTC, 3170.063216 seconds, terminal complete, no native error. Two workers and one library thread were used. The configured scientific interval was null; no imposed deadline was substituted. First MCP startup was epoch1791510338 (2026-10-09 01:45:38 UTC).
+
+## Source and frozen method
+
+Only the released 360 TIFFs were used: twenty coded wells, sites1–9, w1 DAPI and w2 FITC, one Z/timepoint, 1024×1024 planes. XY spacing is the acquisition declaration1.3556µm/pixel, not an independently verified physical calibration. Original and staged byte hashes match and were rechecked unchanged after execution. Declared filename bindings retain coded well/site/channel/Z/time identity. Source and compiled receipts preserve the exact settings.
+
+A selective Gaussian sigma0.7pixels smooths FITC alone; DAPI values remain unchanged. Nuclear admission uses width5–30µm and local contrast400. Nuclear-seeded FITC body admission uses maximum width60µm, minimum area50µm², local contrast2000 and minimum inscribed diameter5pixels. An independent24µm terminal-shaft separation scale affects the existing body separation method only. Outgrowth width/root/topology scale remains4µm, with local contrast75 on consumed smoothed FITC, enhancement off and hysteresis absent. The retained correction factor0.85 is inactive in that admission mode. Significant growth is scored at length>10µm. Compact persistence returns the same engine main image, summary, cell rows, four label families and spatial graph as selected C17; it omits fourteen diagnostic planes from bulk persistence. Earlier diagnostics remain retained. Native image dtype and lossless DEFLATE level1 were verified in all twenty compiled axes.
+
+A detected cell is an admitted nuclear-seeded FITC body instance, including instances without measured growth. DAPI alone is insufficient; nuclear contour members are not a cell census. Body contour members can repeat a soma ID, so unique IDs, rather than primitives, reconcile with CSV counts. All twelve held-out count checks reconcile. Dim bodies below the admission threshold may be missed, and shared cytoplasm does not establish individually separable biological cells. No edge-censor exclusion or overlap deduplication is applied.
+
+A process is an owned graph partition reached from one own-soma-adjacent root, including its assigned daughter paths. Roots compete by graph distance and paths are assigned once within the cell. Its length is the sum of the partition geometry, not the longest unbranched axon distance. Per-cell process count, mean, median and maximum refer to these partitions. Zero-process mean/median/maximum zeros are absence sentinels, excluded from population process-length means. Arbor length sums the process partitions in declared physical units.
+
+A reported branch is the engine’s own-root-connected distinct-corridor graph junction, clustered at the4µm scale and including the soma-directed corridor. Crossing cores and redundant corridors are suppressed by the model, but this does not prove lineage at2D overlaps. Crossings are not independently accepted as biological bifurcations. Short nuisance spurs, loops and residual crossing ambiguity invalidate accurate anatomical branch claims. Same-owner continuous-support repairs do not justify joining through unsupported background.
+
+## Independent review and disposition
+
+Whole raw DAPI/FITC, matched raw-only/result-only/combined native views, and nuclear/body views were personally inspected. Supported positives include long curved shafts, thin lower-intensity paths and substantial daughters in A11, A17, A25, A29, A30 and A59. No distributed empty-background network was observed in the reviewed crops; this is not an exhaustive absence claim. A25’s close beaded-shaft view shows repeated very short graph spurs along otherwise supported shafts. A27, A32 and A54 show plausible proximal shaft absorption by elongated/star-shaped soma contours. A34 has an apparent connecting-shaft segment left untraced. Crowded contacts and punctate weak paths remain ambiguous. These failures are retained without tuning or replacement of the sealed method.
+
+Eight development fields reproduce C17’s complete summary and per-cell rows, with exact discrete values and numerical agreement within1e-6µm. Export completeness, identities and units pass for180 fields and20 native well rows, each with nine paired fields. Successful execution and accounting do not repair the biological failures. Completely negative development fields were unavailable. Native graph ROI readback lacks per-shape source-domain metadata; visible registration and correct spacing/components support review, but no certified empty out-of-bounds test is asserted for those graphs. Body/nuclear contours carry source-domain metadata.
+
+Mean fluorescence columns remain processed-FITC photometry and are not reported as calibrated original fluorescence. No uncertainty intervals, treatment effects, pooled process medians or biological ground-truth labels are manufactured.
+
+## Measurements and aggregation
+
+All per-cell process statistics and per-field summaries, labels, ROIs, graph/SWC and processed images remain at their canonical paths. The native PLATE operation checks summary/cell units and reconciles counts, branch/process totals and lengths before producing the coded well table. Counts, lengths, branches, processes and soma areas sum over fields. Equal-field means divide by nine; cell ratios divide by detected field-instance counts. Pooled mean process length divides total arbor length by total process count. Mean cell mean/maximum process lengths use process-bearing cells only, with explicit with/without-process denominators. Undefined ratios are NaN. Averaged cell medians are not pooled process medians.
+
+**Fields can overlap: every sum below may count the same biological object more than once. These are not deduplicated whole-well censuses. Branch and process figures are biased graph statistics under the rejected biological attempt.**
+
+[Native coded well table](/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/final-analysis/final-input_openhcs/results/A02_coded_well_summary_step1_details.csv) · [Per-cell and per-field exports](/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/final-analysis/final-input_openhcs/results)
+
+| Well | Fields | Detected instance sum | Arbor µm field sum | Graph branches | Root partitions |
+|---|---:|---:|---:|---:|---:|
+| A02 | 9 | 1944 | 401937.18837181304 | 9302 | 10958 |
+| A08 | 9 | 1515 | 334338.8651363155 | 7478 | 9114 |
+| A11 | 9 | 1565 | 249823.7282185482 | 5576 | 9312 |
+| A17 | 9 | 1758 | 399598.4957132994 | 9367 | 10311 |
+| A24 | 9 | 1575 | 263342.0720660383 | 5953 | 9036 |
+| A25 | 9 | 1396 | 345877.7132561247 | 7659 | 8533 |
+| A27 | 9 | 1483 | 392071.2276263094 | 9208 | 8844 |
+| A28 | 9 | 1473 | 307618.32125991257 | 7002 | 8586 |
+| A29 | 9 | 1861 | 355001.49610755814 | 8188 | 10365 |
+| A30 | 9 | 1680 | 410923.63906946406 | 9567 | 10099 |
+| A31 | 9 | 1580 | 339726.85284542665 | 7747 | 9442 |
+| A32 | 9 | 1579 | 243097.35526356724 | 5476 | 9103 |
+| A34 | 9 | 1674 | 342213.6553675736 | 7890 | 9484 |
+| A37 | 9 | 1660 | 413030.03274773876 | 9662 | 10052 |
+| A47 | 9 | 1628 | 412524.5644255991 | 9417 | 9118 |
+| A49 | 9 | 1329 | 364493.74170166906 | 8416 | 8890 |
+| A52 | 9 | 1579 | 422321.797130397 | 9930 | 10257 |
+| A54 | 9 | 1580 | 351769.49209687486 | 8186 | 8870 |
+| A59 | 9 | 1649 | 453536.5385020835 | 10527 | 9102 |
+| A60 | 9 | 1753 | 296378.10702745593 | 6959 | 9940 |
+
+## Retained evidence and custody
+
+[Method freeze](final-method-freeze.json), [compiled freeze](final-compiled-freeze.json), [export audit](author-history/final-export-audit.json), [development reproduction](author-history/final-development-reproduction-check02.json), [native execution/count checks](author-history/final-native-execution-and-counts.json), and [source integrity](author-history/final-input-and-method-integrity.json) retain the verification. Actual execution bundle SHA256 is `ed5855a8c7cec7099da5b25c219cafec60feac67895e1c5332251a30a1690ce6`; the separately preserved preflight bundle is `70fbaff27152136c2c54580971d80949025f4e7f30ae8138259be1fd3aa60a25`.
+
+[All seventeen development attempts](author-history/development-attempt-catalog.json) preserve sources, rejected candidates and hashes. The first completed C01 prediction remains243 files/61,921,121bytes at its original canonical path. Selected C17 retains308 files/169,443,457bytes. Useful diagnostic stages and failed/UNKNOWN receipts remain; no independent replay, second client, installation or additional author occurred. Scientific output hashes, QA hashes and original journal evidence are linked by [the final freeze receipt](final-freeze.json). Scientific payloads stay on the declared HDD; only small sources, receipts and history stay in HOME. No entire payload-tree copy was made.
+
+The original recorded journal remains uncapped and readable. While its writer is active, only an exact indexed byte-prefix is sealed. The cleanup addendum records exact owned viewer/native closure and the actual CLI/child exit status, followed by a verified whole-journal hash after writer exit. Inherited display/helper owners remain untouched.
+
+One procedural deviation occurred before first A11 held-out raw readback: a resource check was still running when the status/raw stream was dispatched. Its subsequent exit0/PASS does not repair the required pre-dispatch ordering. It is documented in [the ordering-error receipt](author-history/heldout-resource-ordering-error.rst), separately from this unassisted scientific outcome. Subsequent allocations used fully read fresh observations. No external correction or treatment/reference access followed from the error.
