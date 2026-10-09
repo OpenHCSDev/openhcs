@@ -8,7 +8,7 @@ the final publication freeze.
 ## Regenerate Figure 6 and the claim include
 
 The current benchmark owner is the frozen seven-mode protocol in
-`benchmark/results/matched_worker_sweep_20261007_exportfixed`. Its controller
+`benchmark/results/matched_worker_sweep_20261008_latestproduction`. Its controller
 qualifies and archives all 30 workflows in each requested mode before rendering.
 All seven modes are qualified and archived for all thirty workflows; their figures and numerical include are generated from the complete admitted sweep.
 
@@ -16,9 +16,9 @@ Use its existing renderer to produce the
 manuscript assets directly at the consumer path:
 
 ```sh
-python benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/render_sweep.py \
-  --record benchmark/results/matched_worker_sweep_20261007_exportfixed \
-  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json \
+python benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/render_sweep.py \
+  --record benchmark/results/matched_worker_sweep_20261008_latestproduction \
+  --protocol-manifest benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/current/protocol-manifest.json \
   --output-dir paper/figures/slas/benchmark-publication
 ```
 

@@ -1,0 +1,33 @@
+{
+  "source_freeze_head": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
+  "argv": [
+    "--manifest",
+    "/home/ts/code/projects/openhcs-materialization-plumbing/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/official30-manifest.json",
+    "--well-count",
+    "1",
+    "--repeat-assignments",
+    "8",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--production-source-root",
+    "/home/ts/code/projects/openhcs-materialization-plumbing",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1",
+    "--native-measurement-cache-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/native-measurement-facts",
+    "--comparison-workers",
+    "2",
+    "--comparison-cpus",
+    "0",
+    "1",
+    "--openhcs-workers",
+    "2",
+    "--all-cases",
+    "--output-dir",
+    "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/8assignments-2workers/cases"
+  ]
+}

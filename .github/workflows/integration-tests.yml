@@ -19,7 +19,7 @@
 #   - Excludes the optional Centrosome parity oracle, which has no cp314 wheel
 #
 # Group 1: Python boundary tests (6 jobs)
-#   - Python 3.11 (oldest) and 3.13 (newest CellProfiler-parity runtime) on Linux + Windows + macOS
+#   - Python 3.11 and 3.13 integration boundaries on Linux + Windows + macOS
 #   - 2 Python versions × 3 OSes = 6 jobs
 #   - Python 3.14 is covered by the dedicated core candidate above
 #
@@ -411,7 +411,7 @@ jobs:
           retention-days: 14
 
   # Group 1: Python version boundary testing (6 jobs)
-  # Test oldest (3.11) and newest CellProfiler-parity runtime (3.13) on all 3 OSes.
+  # Test Python 3.11 and 3.13 integration boundaries on all 3 OSes.
   # The dedicated Python 3.14 job validates the core package without Centrosome.
   python-boundary-tests:
     runs-on: ${{ matrix.os }}

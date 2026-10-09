@@ -88,8 +88,8 @@ are tracked separately.
 
 ## Build a reading copy
 
-Read [current manuscript PDF](current/openhcs_manuscript.pdf) and
-[current supplement PDF](current/openhcs_supplement.pdf). Editable DOCX files, input/tool
+A successful paired build writes `current/openhcs_manuscript.pdf` and
+`current/openhcs_supplement.pdf`. Editable DOCX files, input/tool
 provenance (`build.json`) and complete command output (`build.log`) are beside them.
 `current` switches only when both documents build and validate successfully.
 PDF and DOCX filenames use the paper's declared `openhcs` prefix so they can be
@@ -169,14 +169,13 @@ workflow heatmap and plotted-row CSVs. It retains the original one-observation
 tables, historical timing scopes and unresolved wound-healing exclusion.
 
 The current publication sweep is
-`benchmark/results/matched_worker_sweep_20261007_exportfixed`. Once all seven
-modes pass qualification, regenerate its main-text figure, numerical include,
+`benchmark/results/matched_worker_sweep_20261008_latestproduction`. All seven modes have passed qualification. Regenerate its main-text figure, numerical include,
 May-style worker panels and fixed-workload scaling through the existing owner:
 
 ```sh
-python benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/render_sweep.py \
-  --record benchmark/results/matched_worker_sweep_20261007_exportfixed \
-  --protocol-manifest benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json \
+python benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/render_sweep.py \
+  --record benchmark/results/matched_worker_sweep_20261008_latestproduction \
+  --protocol-manifest benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/current/protocol-manifest.json \
   --output-dir paper/figures/slas/benchmark-publication
 ```
 
@@ -281,7 +280,7 @@ provenance/results receipts and intentionally selected main artifacts. Generated
 newly track raw microscopy images, bulk data, archives, intermediate renders or
 old output variants. Existing tracked historical assets are unchanged.
 
-The generated [history index](review/INDEX.md) exposes successful runs, frozen
+The generated `review/INDEX.md` history index exposes successful runs, frozen
 snapshots and labelled legacy folders. `history` refreshes it without rebuilding.
 `cleanup` reports exact older owned candidates and byte footprint without changes;
 current, previous successful, newer candidates, frozen snapshots and unmanaged

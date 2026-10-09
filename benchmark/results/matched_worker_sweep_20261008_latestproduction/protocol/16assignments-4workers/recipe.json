@@ -1,0 +1,139 @@
+{
+  "numpy_hugepage_advice": "0 (production startup default; inherited by owned server and fork workers)",
+  "source": "3b173fd8c07bf0cbacd00c0b7f4c2759a3fc3ad9",
+  "scope": "Full30 16assignment/4worker capture; warmup+3 actualOH with fresh parity; matching retained CP1/CP8 untouched; CP12/16 projection only in reporting",
+  "common_argv": [
+    "--manifest",
+    "/home/ts/code/projects/openhcs-materialization-plumbing/benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v2/official30-manifest.json",
+    "--well-count",
+    "1",
+    "--repeat-assignments",
+    "16",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--candidate-only",
+    "--production-source-root",
+    "/home/ts/code/projects/openhcs-materialization-plumbing",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/retained-native8-complete-v1",
+    "--native-measurement-cache-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261008/missing-worker-sweep-main3b173-v1/native-measurement-facts",
+    "--comparison-workers",
+    "2",
+    "--comparison-cpus",
+    "0",
+    "1",
+    "--native-execution-model",
+    "retained-first-batch-plus-warm-assignments-v1"
+  ],
+  "cases": [
+    "ExampleYeastPatches",
+    "cp_tutorial_3d_monolayer",
+    "cp_tutorial_advanced_segmentation_final",
+    "cp_tutorial_quality_control",
+    "cp_tutorial_beginner_segmentation_final",
+    "cp_tutorial_pixel_based_classification",
+    "cp_tutorial_translocation_final",
+    "cp4_supplement_combine_objects",
+    "cp_tutorial_translocation_start",
+    "ExampleUntangleWorms",
+    "ExampleUntangleWormsBrightField",
+    "ExampleYeastColonies",
+    "ExampleWoundHealing",
+    "ExampleSpeckles",
+    "ExampleIlluminationCorrection_Example3",
+    "ExampleVitra",
+    "ExampleFlyURL",
+    "ExampleColocalization",
+    "ExampleCometAssay",
+    "ExampleFly",
+    "ExampleHuman",
+    "ExampleIlluminationCorrection_Example1_AllMethod",
+    "ExampleIlluminationCorrection_Example1_EachMethod",
+    "ExampleIlluminationCorrection_Example2",
+    "ExampleImagingFlowCytometryObjectsInGrid",
+    "ExampleNeighbors",
+    "ExamplePercentPositive",
+    "ExampleTrackObjects",
+    "ExampleTumor",
+    "ExampleUntangleAndStraightenWorms"
+  ],
+  "prepared_worker_startup": "Latest merged production main3b173; readiness before pipeline clocks; endpoint per mode; parent pre-READY affinity2-5",
+  "server_port": 7778,
+  "affinity_by_job": [
+    {
+      "workers": 4,
+      "epoch_seconds": 1791501861.7973676,
+      "endpoint_pid": 4005901,
+      "endpoint_create_time": 1791501851.3,
+      "parent_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_cpu_affinity": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "server_thread_cpu_affinity": {
+        "4005901": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "4006785": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "4006786": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "4006787": [
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    }
+  ],
+  "prepared_children_affinity": {
+    "4006781": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "4006782": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "4006783": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "4006784": [
+      2,
+      3,
+      4,
+      5
+    ]
+  }
+}

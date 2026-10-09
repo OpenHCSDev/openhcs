@@ -1,0 +1,118 @@
+{
+  "startup_seconds": 0.7844284470193088,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      0
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/outputs",
+    "expected_image_sets": null,
+    "repetitions": 1,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/outputs/-1",
+      "image_set_count": 2,
+      "invocation_seconds": 1.6226313961669803,
+      "pre_pipeline_seconds": 0.0014906693249940872,
+      "pipeline_execution_seconds": 1.6211407268419862,
+      "invocation_started_monotonic_seconds": 4177904.924498921,
+      "pipeline_started_monotonic_seconds": 4177904.92598959,
+      "completed_monotonic_seconds": 4177906.547130317,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1/cold-first-diagnostics-java-v2/ExampleIlluminationCorrection_Example3/0/outputs/0",
+      "image_set_count": 2,
+      "invocation_seconds": 1.2213503108359873,
+      "pre_pipeline_seconds": 0.0007029939442873001,
+      "pipeline_execution_seconds": 1.2206473168917,
+      "invocation_started_monotonic_seconds": 4177906.5471425,
+      "pipeline_started_monotonic_seconds": 4177906.547845494,
+      "completed_monotonic_seconds": 4177907.768492811,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ]
+      ]
+    }
+  ],
+  "diagnostic_assignment_timings": [
+    {
+      "repetition": -1,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4177904.92598959,
+          "completed_monotonic_seconds": 4177906.051574025,
+          "seconds": 1.1255844347178936
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4177906.051574025,
+          "completed_monotonic_seconds": 4177906.54712692,
+          "seconds": 0.49555289512500167
+        }
+      ]
+    },
+    {
+      "repetition": 0,
+      "assignments": [
+        {
+          "assignment": "W001",
+          "started_monotonic_seconds": 4177906.547845494,
+          "completed_monotonic_seconds": 4177907.172950753,
+          "seconds": 0.6251052590087056
+        },
+        {
+          "assignment": "W002",
+          "started_monotonic_seconds": 4177907.172950753,
+          "completed_monotonic_seconds": 4177907.768490266,
+          "seconds": 0.5955395130440593
+        }
+      ]
+    }
+  ]
+}
