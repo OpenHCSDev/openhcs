@@ -179,6 +179,44 @@ Each configuration contains thirty workflow points; bars show arithmetic means a
 Execution scaling for thirty workflows: measured one-worker time divided by measured time at each worker count, with twelve assignments held fixed. Each time is the median of three repetitions after warmup. Points are workflows, bars means and black lines medians. These ratios use only measured OpenHCS times. The corresponding total-time and efficiency plots are linked in Supplementary Data 3.
 :::
 
+## Supplementary Figure 6, continued. One-worker batch comparisons
+
+![Cp relative speedup, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Seconds per sample, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Amortization factor, execution, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Cp relative speedup, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_cp_relative_speedup_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Seconds per sample, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_seconds_per_sample_log.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
+![Amortization factor, total, at one processing worker.](../figures/slas/benchmark-publication/serial_batch/total/serial_amortization_factor.png){width=6in}
+
+::: {custom-style="ImageCaption"}
+All thirty workflows are retained. CellProfiler’s one-sample first batch is measured; its twelve-sample reference is projected from measured serial CP8 first/warm batches. OpenHCS uses measured medians of three repetitions. Points are workflows, bars means and black lines medians. Seconds per sample divide each complete batch duration by its assignment count. The amortization factor divides single-sample time by twelve-sample time per sample, so values above one indicate lower time per sample. Total includes OpenHCS compilation. CPU affinities and the projection calibration scope are given in Supplementary Data 3.
+:::
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |
@@ -195,6 +233,10 @@ Execution scaling for thirty workflows: measured one-worker time divided by meas
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 
+
+### Continuous integration
+
+The [versioned integration workflow](../../.github/workflows/integration-tests.yml) defines the operating-system, Python-version, backend, microscope, numerical-parity and installed-desktop matrices described in Methods. The [Official30 comparator](../../tests/integration/test_cellprofiler_official30_zmq.py) runs the manifest-owned workflows through ZeroMQ and compares their declared outputs against retained native CellProfiler values. These CI checks are separate from the timed performance captures.
 
 ### Import, export and comparison methods
 
@@ -334,16 +376,24 @@ current-version compatibility matrix.
 
 ## Supplementary Data 3. Worker measurements
 
+### Serial batching and preparation amortization
+
+The one-worker controls compare one and twelve samples. Both systems amortize preparation across a batch: CellProfiler initialization remains inside its first execution, while OpenHCS library readiness precedes pipeline timing and compilation is included in total time. The twelve-sample CellProfiler reference is projected from actual serial CP8 first/warm batches, with zero measured CP12 target observations. Each panel retains all thirty workflows. Different CPU affinities between the single-sample and batch captures are retained in the record; these plots show the observed comparison rather than isolating initialization alone.
+
+- One-worker CP-relative speedups: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_cp_relative_speedup_log.png) and [compile-plus-run total](../figures/slas/benchmark-publication/serial_batch/total/serial_cp_relative_speedup_log.png).
+- Time per sample: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_seconds_per_sample_log.png) and [total](../figures/slas/benchmark-publication/serial_batch/total/serial_seconds_per_sample_log.png).
+- Batching reduction in time per sample, relative to one sample: [execution](../figures/slas/benchmark-publication/serial_batch/execution/serial_amortization_factor.png) and [total](../figures/slas/benchmark-publication/serial_batch/total/serial_amortization_factor.png).
+
 ### Current matched thirty-workflow sweep
 
-- [Qualified full record and clock policy](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/README.md), with the [seven-configuration protocol](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/protocol/v6/protocol-manifest.json).
+- [Qualified full record and clock policy](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/README.md), with the [seven-configuration protocol](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/protocol/current/protocol-manifest.json).
 - [Single-sample execution and total, linear](../figures/slas/benchmark-publication/measured_benchmark_publication.png) and [logarithmic](../figures/slas/benchmark-publication/measured_benchmark_publication_log.png), with [manuscript numerical claims](../figures/slas/benchmark-publication/benchmark_claims.json).
 - Rebuilt reference chart forms: [per-workflow speedups](../figures/slas/benchmark-publication/reference-layout/reference_pipeline_speedup_log.svg), [worker summary](../figures/slas/benchmark-publication/reference-layout/reference_core_summary_log.svg), [assignment summary](../figures/slas/benchmark-publication/reference-layout/reference_assignments_summary_log.svg), [output agreement](../figures/slas/benchmark-publication/reference-layout/reference_parity.svg), and [graded module coverage](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.svg), with the [per-module behavior and test attribution](../figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv).
 - May execution speedups: [linear](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/execution/may_execution_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/execution/first_use_workflow_metrics.csv).
 - May total speedups: [linear](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points.png), [logarithmic](../figures/slas/benchmark-publication/may/total/may_total_mean_workflow_points_log.png), and [all paired clocks and ratios](../figures/slas/benchmark-publication/may/total/first_use_workflow_metrics.csv).
 - Actual fixed-twelve execution scaling: [linear](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/execution/scaling/fixed12_execution_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/execution/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/execution/efficiency/derived_workflow_metrics.csv).
 - Actual fixed-twelve total scaling: [linear](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling.png), [logarithmic](../figures/slas/benchmark-publication/fixed12/total/scaling/fixed12_total_scaling_log.png), [scaling table](../figures/slas/benchmark-publication/fixed12/total/scaling/derived_workflow_metrics.csv), and [parallel efficiency](../figures/slas/benchmark-publication/fixed12/total/efficiency/derived_workflow_metrics.csv).
-- [Actual one/eight-assignment native calibration](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/diagnostics/native-full30-calibration/README.md), [calibration table](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [projection validation](../../benchmark/results/matched_worker_sweep_20261007_exportfixed/calibration/cold_first/cold-first-model-validation.json).
+- [Actual one/eight-assignment native calibration](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/diagnostics/native-full30-calibration/README.md), [calibration table](../figures/slas/benchmark-publication/native_actual1_actual8_calibration/actual_native_batch_calibration.csv), and [projection validation](../../benchmark/results/matched_worker_sweep_20261008_latestproduction/calibration/cold_first/cold-first-model-validation.json).
 
 All thirty workflows pass output parity. CP1/CP8 references remain actual
 first-batch observations; CP12/CP16 remain explicitly projected and retain zero

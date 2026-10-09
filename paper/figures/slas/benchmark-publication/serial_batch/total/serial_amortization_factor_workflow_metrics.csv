@@ -1,0 +1,121 @@
+pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,speedup,peak_memory_mb
+ExampleColocalization,"CP
+12-sample reference projected",Colocalization microscopy,Colocalization + object measurement,1.0,43.90575220482424,1.145959737078812,
+ExampleColocalization,"OpenHCS
+1 worker, measured",Colocalization microscopy,Colocalization + object measurement,1.0,2.580726840533316,1.1315602508402023,
+ExampleCometAssay,"CP
+12-sample reference projected",DNA damage assay,Segmentation + shape measurement,1.0,12.859666195232421,1.0600972245943505,
+ExampleCometAssay,"OpenHCS
+1 worker, measured",DNA damage assay,Segmentation + shape measurement,1.0,2.073060544207692,1.1312766147964548,
+ExampleFly,"CP
+12-sample reference projected",Tissue/object morphology,Segmentation + object measurement,1.0,8.7627500067465,1.3939882568776583,
+ExampleFly,"OpenHCS
+1 worker, measured",Tissue/object morphology,Segmentation + object measurement,1.0,1.8804121697321534,1.2262616047000394,
+ExampleFlyURL,"CP
+12-sample reference projected",Tissue/object morphology,Segmentation + object measurement,1.0,4.812889391090721,1.59631155033364,
+ExampleFlyURL,"OpenHCS
+1 worker, measured",Tissue/object morphology,Segmentation + object measurement,1.0,0.959850144572556,1.361581126165701,
+ExampleHuman,"CP
+12-sample reference projected",Cell morphology,Segmentation + intensity measurement,1.0,3.7369193360209465,1.4249219119107162,
+ExampleHuman,"OpenHCS
+1 worker, measured",Cell morphology,Segmentation + intensity measurement,1.0,0.9252412589266896,1.301677355802064,
+ExampleIlluminationCorrection_Example1_AllMethod,"CP
+12-sample reference projected",Illumination correction,Image correction,1.0,953.402284333948,0.9948989759030504,
+ExampleIlluminationCorrection_Example1_AllMethod,"OpenHCS
+1 worker, measured",Illumination correction,Image correction,1.0,2.269830932840705,1.011015879006353,
+ExampleIlluminationCorrection_Example1_EachMethod,"CP
+12-sample reference projected",Illumination correction,Image correction,1.0,3.529599209781736,1.2026927901320743,
+ExampleIlluminationCorrection_Example1_EachMethod,"OpenHCS
+1 worker, measured",Illumination correction,Image correction,1.0,0.20040796790271997,2.4479840019608012,
+ExampleIlluminationCorrection_Example2,"CP
+12-sample reference projected",Illumination correction,Image correction,1.0,47.95574009697884,1.0139383639728328,
+ExampleIlluminationCorrection_Example2,"OpenHCS
+1 worker, measured",Illumination correction,Image correction,1.0,1.878341211937368,1.166393094760663,
+ExampleIlluminationCorrection_Example3,"CP
+12-sample reference projected",Illumination correction,Image correction,1.0,1.1165074668824673,2.7113235479939752,
+ExampleIlluminationCorrection_Example3,"OpenHCS
+1 worker, measured",Illumination correction,Image correction,1.0,0.39260808285325766,2.3785328432095088,
+ExampleImagingFlowCytometryObjectsInGrid,"CP
+12-sample reference projected",Imaging flow cytometry,Grid layout + object measurement,1.0,76.30296519584954,1.1286581238375752,
+ExampleImagingFlowCytometryObjectsInGrid,"OpenHCS
+1 worker, measured",Imaging flow cytometry,Grid layout + object measurement,1.0,7.478058457374573,1.0803489842324607,
+ExampleNeighbors,"CP
+12-sample reference projected",Spatial organization,Object relationship measurement,1.0,4.789026140701026,1.701730951038708,
+ExampleNeighbors,"OpenHCS
+1 worker, measured",Spatial organization,Object relationship measurement,1.0,0.9426015233621001,1.2765359109334309,
+ExamplePercentPositive,"CP
+12-sample reference projected",Positive-cell classification,Thresholding + classification,1.0,1.7574276812374592,2.4136734163291735,
+ExamplePercentPositive,"OpenHCS
+1 worker, measured",Positive-cell classification,Thresholding + classification,1.0,0.5164313912391663,1.784360603885307,
+ExampleSpeckles,"CP
+12-sample reference projected",Spot detection,Small-object detection,1.0,2.3338980148546398,1.5821288967003524,
+ExampleSpeckles,"OpenHCS
+1 worker, measured",Spot detection,Small-object detection,1.0,0.624688402749598,1.4810053763332272,
+ExampleTrackObjects,"CP
+12-sample reference projected",Time-lapse tracking,Tracking + object measurement,1.0,10.635071954224259,1.338983844694891,
+ExampleTrackObjects,"OpenHCS
+1 worker, measured",Time-lapse tracking,Tracking + object measurement,1.0,2.5330141177400947,1.1568265209054158,
+ExampleTumor,"CP
+12-sample reference projected",Tumor morphology,Segmentation + intensity measurement,1.0,5.064322372898459,1.754007954812167,
+ExampleTumor,"OpenHCS
+1 worker, measured",Tumor morphology,Segmentation + intensity measurement,1.0,0.7720676632598042,1.4147887641383659,
+ExampleUntangleAndStraightenWorms,"CP
+12-sample reference projected",Worm phenotyping,Worm model + straightening,1.0,3.112386585213244,1.947794913897471,
+ExampleUntangleAndStraightenWorms,"OpenHCS
+1 worker, measured",Worm phenotyping,Worm model + straightening,1.0,0.7700261939316988,1.6410136938541693,
+ExampleUntangleWorms,"CP
+12-sample reference projected",Worm phenotyping,Worm model + shape measurement,1.0,4.113951868843287,1.510292203488583,
+ExampleUntangleWorms,"OpenHCS
+1 worker, measured",Worm phenotyping,Worm model + shape measurement,1.0,1.0646988498046994,1.366438333327497,
+ExampleUntangleWormsBrightField,"CP
+12-sample reference projected",Worm phenotyping,Worm model + brightfield segmentation,1.0,6.59376684576273,1.1184040777941342,
+ExampleUntangleWormsBrightField,"OpenHCS
+1 worker, measured",Worm phenotyping,Worm model + brightfield segmentation,1.0,1.5573152974247932,1.238425978247283,
+ExampleVitra,"CP
+12-sample reference projected",Cell morphology,Segmentation + shape measurement,1.0,3.443331778049469,1.3422644138356474,
+ExampleVitra,"OpenHCS
+1 worker, measured",Cell morphology,Segmentation + shape measurement,1.0,1.153432035818696,1.206508038652992,
+ExampleWoundHealing,"CP
+12-sample reference projected",Migration/scratch assay,Segmentation + distance measurement,1.0,4.318077078554779,1.1370210572283086,
+ExampleWoundHealing,"OpenHCS
+1 worker, measured",Migration/scratch assay,Segmentation + distance measurement,1.0,0.8827431937679648,1.173087050598706,
+ExampleYeastColonies,"CP
+12-sample reference projected",Yeast colony screening,Colony segmentation + measurement,1.0,11.401556741911918,1.097016451180967,
+ExampleYeastColonies,"OpenHCS
+1 worker, measured",Yeast colony screening,Colony segmentation + measurement,1.0,1.9120175130665302,1.2096603711204457,
+ExampleYeastPatches,"CP
+12-sample reference projected",Yeast colony screening,Texture/patch measurement,1.0,5.177128365263343,1.1959794106637216,
+ExampleYeastPatches,"OpenHCS
+1 worker, measured",Yeast colony screening,Texture/patch measurement,1.0,1.4504881734028459,1.2841657065360084,
+cp4_supplement_combine_objects,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,0.8085496118292212,5.130907501083128,
+cp4_supplement_combine_objects,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,0.18257096409797668,3.1730728099586205,
+cp_tutorial_3d_monolayer,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,14.796209271997213,1.0501433503918494,
+cp_tutorial_3d_monolayer,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,3.3102432312443852,1.0799484099551644,
+cp_tutorial_advanced_segmentation_final,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,37.59286773996428,1.1329954654208343,
+cp_tutorial_advanced_segmentation_final,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,6.768913224339485,1.3564845957858975,
+cp_tutorial_beginner_segmentation_final,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,16.251553243026137,1.1240115052411128,
+cp_tutorial_beginner_segmentation_final,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,3.3720292150974274,1.0926542587944172,
+cp_tutorial_pixel_based_classification,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,3.7974251969717443,1.4448687037806243,
+cp_tutorial_pixel_based_classification,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,0.7681884402409196,1.1856695319898631,
+cp_tutorial_quality_control,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,4.636738081928343,1.5661571020491767,
+cp_tutorial_quality_control,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,1.1297114538028836,2.274771388114199,
+cp_tutorial_translocation_final,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,2.5324444603174925,2.1167146727312356,
+cp_tutorial_translocation_final,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,0.7341805808246136,1.5097370285811735,
+cp_tutorial_translocation_start,"CP
+12-sample reference projected",Uncategorized assay,Mixed modules,1.0,1.624423447996378,4.23819321180671,
+cp_tutorial_translocation_start,"OpenHCS
+1 worker, measured",Uncategorized assay,Mixed modules,1.0,0.28677530959248543,1.9514548921291426,

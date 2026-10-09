@@ -1,0 +1,144 @@
+"""Data-only replay of the existing renderer calibration calculation."""
+import csv
+import hashlib
+import json
+import os
+import statistics
+import sys
+from pathlib import Path
+
+artifact = Path('/home/ts/code/projects/openhcs-cohort-qualification-main429-20261002')
+production = Path('/home/ts/.local/state/openhcs-maintenance/20261004/intensity-batch-maxima-source')
+sys.path.insert(0, str(production))
+import benchmark
+benchmark.__path__.insert(0, str(artifact / 'benchmark'))
+from benchmark.native_batch_contracts import NativeBatchReport
+from benchmark.adapters.cellprofiler import NativeCellProfilerSourcePlacement, NativeCellProfilerSelectedSourceUniverse
+from benchmark.matched_cellprofiler_batch import _source_input_inventory
+
+root = Path('/home/ts/.local/state/openhcs-maintenance/20261007/issue1100-matched-sweep-v1')
+destination = Path(__file__).parent
+roots = {1: root / '1assignment-1worker/capture/cases', 8: root / 'retained-native8-complete-v1'}
+def digest(path):
+    hasher = hashlib.sha256()
+    with path.open('rb') as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+manifest = root / 'official30-manifest.json'
+manifest_sha = digest(manifest)
+case_names = [case['name'] for case in json.loads(manifest.read_text())['cases']]
+assert len(case_names) == 30 and len(set(case_names)) == 30
+collection_path = roots[8] / 'source-collection.json'
+collection = json.loads(collection_path.read_text())
+collection_cases = {case['case']: case for case in collection['cases']}
+assert set(collection_cases) == set(case_names)
+assert collection['source_manifest_sha256'] == manifest_sha
+rows, custody = [], []
+verified_inputs = {}
+for name in case_names:
+    values = {'case_name': name}
+    evidence = {'case_name': name, 'sources': {}}
+    invariants = []
+    for count, source_root in roots.items():
+        source = source_root / name
+        report_path = source / 'native_report.json'
+        report_sha = digest(report_path)
+        report = NativeBatchReport.from_payload(json.loads(report_path.read_text()))
+        report.require_complete(3)
+        provenance_path = source / 'pilot_provenance.json'
+        provenance = json.loads(provenance_path.read_text())
+        assert provenance['native_job_count'] == 1
+        assert report.request.start_barrier_job_count == 1
+        assert provenance['source_dirty'] is False
+        assert provenance['manifest_sha256'] == manifest_sha
+        assert len(provenance['wells']) == count
+        directories = report.request.assignment_output_subdirectories or ('',)
+        assert len(directories) == count
+        if 'native_input_inventory_after' in provenance:
+            assert provenance['native_input_inventory'] == provenance['native_input_inventory_after']
+        else:
+            assert count == 8 and name == 'ExampleTrackObjects'
+        inventory = provenance['native_input_inventory']
+        assert inventory
+        universe = NativeCellProfilerSelectedSourceUniverse(
+            source_paths=tuple(Path(item['source_path']) for item in inventory),
+            placements=tuple(NativeCellProfilerSourcePlacement(Path(item['source_path']), Path(item['path'])) for item in inventory),
+        )
+        assert tuple(inventory) == _source_input_inventory(universe)
+        for item in inventory:
+            path = Path(item['source_path'])
+            expected = (item['size_bytes'], item['sha256'])
+            if str(path) not in verified_inputs:
+                assert path.stat().st_size == expected[0]
+                assert digest(path) == expected[1]
+                verified_inputs[str(path)] = expected
+            assert verified_inputs[str(path)] == expected
+        invariant = {key: provenance[key] for key in ('cppipe_sha256', 'native_worker_sha256', 'native_contract_sha256', 'thread_environment', 'selected_source_wells', 'native_input_inventory')}
+        invariants.append(invariant)
+        for observation in report.observations:
+            assert len(observation.assignment_image_set_counts) == count
+            assert len({item[1] for item in observation.assignment_image_set_counts}) == 1
+            assert observation.image_set_count == provenance['native_image_set_count']
+        if count == 8:
+            assert collection_cases[name]['native_report_sha256'] == report_sha
+            assert collection_cases[name]['assignments'] == count
+        if count == 1:
+            original_report_path = Path(provenance['native_reference_report_path'])
+            assert digest(original_report_path) == provenance['native_reference_report_sha256'] == report_sha
+        fresh = report.observations[0]
+        warm = report.observations[1:]
+        affinity = tuple(report.environment.cpu_affinity)
+        assert affinity == ((5,) if count == 1 else (2, 3, 4, 5))
+        values[f'actual_cp{count}_cpu_affinity_slot_count'] = len(affinity)
+        values[f'actual_cp{count}_first_execution_seconds'] = fresh.pipeline_execution_seconds
+        values[f'actual_cp{count}_first_prepared_invocation_seconds'] = fresh.invocation_seconds
+        values[f'actual_cp{count}_warm_execution_median_seconds'] = statistics.median(row.pipeline_execution_seconds for row in warm)
+        evidence['sources'][str(count)] = {
+            'report_path': str(report_path), 'report_sha256': report_sha,
+            'provenance_path': str(provenance_path), 'provenance_sha256': digest(provenance_path),
+            'capture_source_commit': provenance['source_commit'],
+            'actual_native_reference_source_commit': provenance.get('native_reference_source_commit', provenance['source_commit']),
+            'actual_native_reference_report_path': provenance.get('native_reference_report_path', str(report_path)),
+            'cpu_affinity': affinity, 'native_job_count': 1, 'assignment_count': count,
+            'actual_image_set_count': fresh.image_set_count,
+            'image_sets_per_assignment': fresh.assignment_image_set_counts[0][1],
+            'repetitions': [row.repetition for row in report.observations],
+            'original_output_root': report.request.output_root,
+            'physical_input_file_count': len(inventory),
+            'original_after_inventory_recorded': 'native_input_inventory_after' in provenance,
+            'current_physical_input_hashes_equal_original_before': True,
+            'physical_input_inventory_sha256': hashlib.sha256(json.dumps(inventory, sort_keys=True).encode()).hexdigest(),
+        }
+    assert invariants[0] == invariants[1], name
+    assert evidence['sources']['1']['image_sets_per_assignment'] == evidence['sources']['8']['image_sets_per_assignment']
+    for key in ('python_executable', 'python_version', 'cellprofiler_version', 'cellprofiler_core_version', 'numpy_version', 'scipy_version', 'host_machine_id', 'cpu_info_sha256'):
+        payloads = [json.loads((source_root / name / 'native_report.json').read_text()) for source_root in roots.values()]
+        assert payloads[0]['environment'][key] == payloads[1]['environment'][key], (name,key)
+    values['actual_cp8_first_over_8cp1_first_ratio'] = values['actual_cp8_first_execution_seconds'] / (8 * values['actual_cp1_first_execution_seconds'])
+    rows.append(values)
+    custody.append(evidence)
+    print(name, flush=True)
+with (destination / 'actual_native_batch_calibration.csv').open('w', newline='') as stream:
+    writer = csv.DictWriter(stream, fieldnames=tuple(rows[0]))
+    writer.writeheader()
+    writer.writerows(rows)
+ratios = [(row['actual_cp8_first_over_8cp1_first_ratio'], row['case_name']) for row in rows]
+summary = {
+    'status': 'PASS', 'scope': 'DIAGNOSTIC_ONLY actual full30 native1/native8 calibration; no new science execution',
+    'case_count': len(rows), 'native_reports': 60, 'real_fresh_observations': 60, 'real_warm_observations': 180,
+    'calculation_owner': str(artifact / 'benchmark/results/matched_worker_sweep_20261007/protocol/render_sweep.py'),
+    'calculation_owner_sha256': digest(artifact / 'benchmark/results/matched_worker_sweep_20261007/protocol/render_sweep.py'),
+    'manifest_path': str(manifest), 'manifest_sha256': manifest_sha,
+    'source_collection_sha256': digest(collection_path),
+    'cpu_affinity': {'native1': [5], 'native8': [2,3,4,5], 'diagnostic': sorted(os.sched_getaffinity(0))},
+    'ratio': {'minimum': min(ratios)[0], 'minimum_case': min(ratios)[1], 'median': statistics.median(value for value, name in ratios), 'maximum': max(ratios)[0], 'maximum_case': max(ratios)[1]},
+    'physical_input_files_verified': len(verified_inputs),
+    'checks': ['Existing NativeBatchReport.require_complete(3), original monotonic clocks and physical outputs', 'Native jobs1 and actual source assignment count1/8', 'All report/provenance SHA recorded; actual8 collection hashes and actual1 retained original report SHA verified', 'Existing _source_input_inventory owner regenerates every physical input inventory exactly; current size/SHA also independently verified, available before/after inventories unchanged and both modes identical', 'Per-assignment image sets, selected source, CPPipe, native worker/contracts/thread declarations identical', 'Scientific package/host environment identical except CPU affinity and temporary paths'],
+    'support_limits': ['Different native1/native8 affinity (one versus four allowed CPUs) confounds batch warm amortization; this is not an isolated batching speedup.', 'Fresh is one genuine CP repetition -1, including internal initialization; warm median uses genuine repetitions0/1/2.', 'Does not validate projected native12/native16 timings across full30.', 'Actual8 TrackObjects lacks original after-input inventory because matched capture failed; its current physical hashes match original before inventory. Other59 report provenance after inventories are present.', 'Original actual8 matched cohort failed parity; complete native report collection is valid native timing evidence, not a successful matched OH suite.'],
+    'production_consumer': 'Existing protocol/render_sweep.py will publish the same calibration calculation after qualified candidate sweep archive; this diagnostic introduces no model or plotting owner.',
+    'cases': custody,
+}
+(destination / 'summary.json').write_text(json.dumps(summary, indent=2)+'\n')
+print(json.dumps(summary['ratio']))

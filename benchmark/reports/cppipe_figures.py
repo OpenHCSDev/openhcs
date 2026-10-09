@@ -683,7 +683,7 @@ class BenchmarkFigureStyle:
         )
         if not values:
             return ()
-        value_suffix = " MB" if value_key == "peak_memory_mb" else "x"
+        value_suffix = {PEAK_MEMORY_MB_FIELD: " MB", RAW_SECONDS_FIELD: " s", SPEEDUP_METRIC_KEY: "x"}[value_key]
         outputs: list[Path] = []
         for log_y in (False, True) if log_variant else (False,):
             broken_range = (
