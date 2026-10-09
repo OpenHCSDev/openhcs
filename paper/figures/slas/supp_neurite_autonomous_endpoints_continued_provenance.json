@@ -2,7 +2,7 @@
   "generator_sha256": "0006e7c2dd07e4101b0fc05a8af5e0ae0c688436da714c0b7e9cd6b3b8bb7ab6",
   "source_sha256": {
     "paper/figures/build_slas_supplement.py": "75283123e522d6b21a0731aafe9a1bb3e239994d0349fa78409ff5ed091f34bc",
-    "paper/supplementary/personal_neurite_autonomous/cohort.json": "3167789e2b1d5fc15708881f9ec30b85796effa51caeec7cfad0a6fb46cb029a",
+    "paper/supplementary/personal_neurite_autonomous/cohort.json": "fcfb4cc955c1217a123a111f3005036b02ca520fd50e66445a7ef1e358ac3d34",
     "paper/figures/build_slas_neurite_effects.py": "29a910d33c8e536053d561cebac4b02d6cdf8a7d1dcaf027601473bdc76d1add",
     "paper/figures/compare_personal_neurite.py": "5a3c7cc0749f0e0293f2982ab4dc5c8589f25624d962b3dc82df2ecb26a5494f",
     "paper/supplementary/personal_neurite_autonomous/author114/joined_wells.csv": "a84158436f767e6e2f7340b60ab9dba20f62dca6bc526c6d76a2fa0c4fe26dd9",
@@ -19,8 +19,8 @@
   "display_transforms": [],
   "output_sha256": {
     "supp_neurite_autonomous_endpoints_continued.png": "31c26fa7e3a92ba39f561cc85a0873a83b5af27cc7c82baca94c471ce58116bb",
-    "supp_neurite_autonomous_endpoints_continued.pdf": "eae0123297bfe79a5f363b5fe38dbf14e86e0c010af7fe34b490309a1775ed24",
-    "supp_neurite_autonomous_endpoints_continued.svg": "4a30caef4acd4c8ccd5babb4e6731f889078286807dc709d68e7363221c56a33"
+    "supp_neurite_autonomous_endpoints_continued.pdf": "53de45d3a994a3dc4c149110737054e0280020fd816d61e7b31e8d367b3a46fb",
+    "supp_neurite_autonomous_endpoints_continued.svg": "e8f89cb3ab35c7847c815ce9d7b2c139e9705806ce8fe62e1a914340d5c93dc2"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

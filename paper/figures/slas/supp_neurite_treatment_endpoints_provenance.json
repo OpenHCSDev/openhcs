@@ -12,8 +12,8 @@
   "display_transforms": [],
   "output_sha256": {
     "supp_neurite_treatment_endpoints.png": "e404aca286c5373ec9e0a089d70b7ce9e454aadac487a46a08c4a1175b516835",
-    "supp_neurite_treatment_endpoints.pdf": "2eba998218e47abf104d8bd5713f83052601a87e49b5e9f799c76d7f928dc650",
-    "supp_neurite_treatment_endpoints.svg": "ba011bfbd4a41149321413d00d5caa838b23b725d6eed137b393c37731e7f4d3"
+    "supp_neurite_treatment_endpoints.pdf": "18511b8ab07ea525fd146584c65be9b44ff9629d2461c5ba95ac5bc584d56020",
+    "supp_neurite_treatment_endpoints.svg": "05187afefd0347bd0897905cf033f4948d063f6430f1a055afb41a7f68290347"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
