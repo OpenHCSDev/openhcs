@@ -120,7 +120,9 @@ PYTHONPATH=$(jq -er --arg root "$FLEET_INSTALL" '
 export PYTHONPATH
 while IFS= read -r source_root; do test -d "$source_root"; done \
   < <(tr ':' '\n' <<< "$PYTHONPATH")
-software_paths=$("$FLEET_PYTHON" -B - "$qualification" <<'PY'
+# Discovery must consume only the qualified source roots, not the operator's
+# current checkout implicitly prepended by Python's stdin entrypoint.
+software_paths=$("$FLEET_PYTHON" -P -B - "$qualification" <<'PY'
 import json
 import sys
 from pathlib import Path
