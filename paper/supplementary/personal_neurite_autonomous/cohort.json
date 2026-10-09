@@ -1,0 +1,323 @@
+{
+  "evaluation": "Three independently authored frozen analyses; treatment-effect comparison, not manual tracing accuracy",
+  "evaluation_date": "2026-10-09",
+  "evaluation_started_after_all_final_scientific_freezes": true,
+  "qualification": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-viewer-qualified-20261008/QUALIFICATION.json",
+  "qualification_sha256": "53f851c41424bf4b64d37e59d932fe0b09a54ce6bcdef4360c6fe24bc9b04c79",
+  "frozen_software_commit": "2b404bdfa627a3c87f29324d6c068fcf0f5b9775",
+  "packaged_skill": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-viewer-qualified-20261008/software/packaging/codex/openhcs/skills/use-openhcs/SKILL.md",
+  "packaged_skill_sha256": "6e5cfce7a3d6aa8d894b4aa2356326236a3c2d1cbb6df8542f8503350fa59743",
+  "input_contract": "20 coded wells; 9 sites per well; DAPI w1/FITC w2; Z/time 1; 1024x1024 uint16; XY 1.3556 micrometers",
+  "aggregation_protocol": "site-mean",
+  "scientific_interval_minutes": null,
+  "authors": [
+    {
+      "label": "Blind 1",
+      "original_author": "P001_GRAPHICAL_114",
+      "tables": "author114",
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "software_version": "0.8.7",
+      "method_freeze_utc": "2026-10-09T02:26:41.369674+00:00",
+      "final_scientific_freeze_utc": "2026-10-09T03:19:44.135777+00:00",
+      "original_final_freeze": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/final-freeze.json",
+      "original_final_freeze_sha256": "8ed17b17b182b86a32714c28d2d2488dc002888906f66525fcb46035ab641b28",
+      "pipeline": "pipeline.py",
+      "pipeline_sha256": "a4ab6b8b5504a7d7dd0c3f3cd8461b4a8b9a443132997dab0439e5047a8e83a4",
+      "original_pipeline": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/sources/candidate03.py",
+      "original_report": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/REPORT.md",
+      "original_report_sha256": "03915a75f1cdeee807e98a847ae12ab6169c42e39a6afd600267241679a6aca1",
+      "author_disposition": "Conditional acceptance for descriptive detected-soma, owned-arbor and qualified branch estimates; abstention from exhaustive census, complete biological arbors and unique crossing ownership.",
+      "evaluation_access_before_freeze": false,
+      "development_fields": [
+        [
+          "A02",
+          9
+        ],
+        [
+          "A08",
+          7
+        ],
+        [
+          "A11",
+          5
+        ],
+        [
+          "A30",
+          5
+        ],
+        [
+          "A52",
+          1
+        ],
+        [
+          "A59",
+          3
+        ]
+      ],
+      "heldout_review_fields": [
+        [
+          "A02",
+          2
+        ],
+        [
+          "A08",
+          2
+        ],
+        [
+          "A11",
+          2
+        ],
+        [
+          "A17",
+          2
+        ],
+        [
+          "A24",
+          2
+        ],
+        [
+          "A25",
+          2
+        ],
+        [
+          "A27",
+          2
+        ],
+        [
+          "A28",
+          2
+        ],
+        [
+          "A29",
+          2
+        ],
+        [
+          "A30",
+          2
+        ],
+        [
+          "A31",
+          2
+        ],
+        [
+          "A32",
+          2
+        ],
+        [
+          "A34",
+          2
+        ],
+        [
+          "A37",
+          2
+        ],
+        [
+          "A47",
+          2
+        ],
+        [
+          "A49",
+          2
+        ],
+        [
+          "A52",
+          2
+        ],
+        [
+          "A54",
+          2
+        ],
+        [
+          "A59",
+          2
+        ],
+        [
+          "A60",
+          2
+        ]
+      ],
+      "procedural_deviation": null
+    },
+    {
+      "label": "Blind 2",
+      "original_author": "P001_GRAPHICAL_115",
+      "tables": "author115",
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "software_version": "0.8.7",
+      "method_freeze_utc": "2026-10-09T03:06:50.876833+00:00",
+      "final_scientific_freeze_utc": "2026-10-09T03:59:24.845215+00:00",
+      "original_final_freeze": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/final-freeze-corrected.json",
+      "original_final_freeze_sha256": "9efe2488aae3a042f88b38e273e55954269acef70314239bc2fe950074f29c51",
+      "pipeline": "pipeline.py",
+      "pipeline_sha256": "2eee3b73889a8a5357361af28bed696c780918d173f18d6f63afc50eea8e3d3e",
+      "original_pipeline": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/sources/final-attempt.py",
+      "original_report": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_115/author-workspace/output/REPORT-final.md",
+      "original_report_sha256": "1ce5d53521762bafbd4a1ddd8b593b22534db18a3080fc1bcc0656139daf5431",
+      "author_disposition": "Full released execution and operational measurements retained; abstention from validated neuronal census, complete anatomical arbors and verified biological branch counts.",
+      "evaluation_access_before_freeze": false,
+      "development_fields": [
+        [
+          "A52",
+          1
+        ],
+        [
+          "A17",
+          5
+        ],
+        [
+          "A47",
+          9
+        ],
+        [
+          "A11",
+          1
+        ]
+      ],
+      "heldout_review_fields": [
+        [
+          "A49",
+          3
+        ],
+        [
+          "A30",
+          7
+        ],
+        [
+          "A34",
+          2
+        ],
+        [
+          "A02",
+          8
+        ],
+        [
+          "A59",
+          4
+        ],
+        [
+          "A27",
+          6
+        ],
+        [
+          "A25",
+          9
+        ],
+        [
+          "A60",
+          5
+        ]
+      ],
+      "procedural_deviation": null
+    },
+    {
+      "label": "Blind 3",
+      "original_author": "P001_GRAPHICAL_116",
+      "tables": "author116",
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "software_version": "0.8.7",
+      "method_freeze_utc": "2026-10-09T05:21:00.340263+00:00",
+      "final_scientific_freeze_utc": "2026-10-09T06:27:19.346652+00:00",
+      "original_final_freeze": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/final-freeze.json",
+      "original_final_freeze_sha256": "05f87a8f9860dbe61194048a86ab842a9982d913746edb063c142bc0b439b466",
+      "pipeline": "pipeline.py",
+      "pipeline_sha256": "213d86c250f1e41e84b22a4e0fd8971208ace9adceae807e2144d1dfc8914edf",
+      "original_pipeline": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/pipelines/final-analysis.py",
+      "original_report": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_116/author-workspace/output/final-report.md",
+      "original_report_sha256": "2bd0e0ad0c5e6ae32ac82eaa79acc43a6b926e5f004b8bd60b53136af70b7fb1",
+      "author_disposition": "rejected for complete biological specification; qualified exploratory coded algorithm measurements retained",
+      "evaluation_access_before_freeze": false,
+      "development_fields": [
+        [
+          "A52",
+          1
+        ],
+        [
+          "A49",
+          5
+        ],
+        [
+          "A31",
+          9
+        ],
+        [
+          "A02",
+          1
+        ],
+        [
+          "A24",
+          5
+        ],
+        [
+          "A47",
+          9
+        ],
+        [
+          "A08",
+          5
+        ],
+        [
+          "A60",
+          1
+        ]
+      ],
+      "heldout_review_fields": [
+        [
+          "A30",
+          3
+        ],
+        [
+          "A37",
+          7
+        ],
+        [
+          "A17",
+          4
+        ],
+        [
+          "A34",
+          8
+        ],
+        [
+          "A32",
+          2
+        ],
+        [
+          "A59",
+          6
+        ],
+        [
+          "A27",
+          3
+        ],
+        [
+          "A25",
+          7
+        ],
+        [
+          "A54",
+          4
+        ],
+        [
+          "A29",
+          8
+        ],
+        [
+          "A28",
+          2
+        ],
+        [
+          "A11",
+          6
+        ]
+      ],
+      "procedural_deviation": "A11 first heldout raw readback dispatched before the running resource check was read to completion; subsequent PASS does not repair ordering"
+    }
+  ]
+}
+

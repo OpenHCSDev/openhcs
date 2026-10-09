@@ -1,0 +1,60 @@
+# Released neuronal morphology analysis
+
+Completed the released scope autonomously with the frozen OpenHCS runtime: 180 paired fields, 360 scalar TIFFs, twenty coded wells and nine fields per well. Candidate03 is the final attempted and retained method. Its scientific settings were frozen before site 2 validation and remained unchanged during expansion. Treatment identities, reference results and evaluator feedback were not accessed.
+
+The final tables contain 33,489 detected cell observations, including 3,063 zero-process observations. These are repeated field observations, not a deduplicated population. Automatic measurements are accepted only as conditional image detections. Exhaustive biological cell/arbor counts and uniquely correct ownership at crossings are not established.
+
+## Coded well summaries
+
+Each row summarizes nine fields. Length is micrometres; counts are observations. Fields can overlap. Mean field values describe the sampled fields; they cannot be interpreted as complete or deduplicated whole-well totals. No treatment contrasts or response ranking is inferred.
+
+| Well | Fields | Mean detected cells/field | Mean owned arbor length/field (µm) | Mean qualified branch events/field | Mean processes/cell observation |
+|---|---:|---:|---:|---:|---:|
+| A02 | 9 | 222.6 | 34608.6 | 657.9 | 4.25 |
+| A08 | 9 | 175.0 | 28057.6 | 477.8 | 4.29 |
+| A11 | 9 | 177.6 | 20492.0 | 369.2 | 3.87 |
+| A17 | 9 | 203.3 | 34667.9 | 682.6 | 4.44 |
+| A24 | 9 | 182.2 | 22116.6 | 399.1 | 4.11 |
+| A25 | 9 | 163.2 | 28444.9 | 460.8 | 4.37 |
+| A27 | 9 | 170.9 | 33395.0 | 609.1 | 4.55 |
+| A28 | 9 | 170.2 | 25501.9 | 450.4 | 4.07 |
+| A29 | 9 | 214.0 | 30423.3 | 556.0 | 3.86 |
+| A30 | 9 | 192.2 | 34829.0 | 619.4 | 4.76 |
+| A31 | 9 | 180.7 | 29447.5 | 538.8 | 4.33 |
+| A32 | 9 | 180.6 | 19875.4 | 349.9 | 3.71 |
+| A34 | 9 | 196.3 | 29498.5 | 536.1 | 4.11 |
+| A37 | 9 | 192.9 | 36239.9 | 686.8 | 4.68 |
+| A47 | 9 | 189.7 | 35332.8 | 613.6 | 4.33 |
+| A49 | 9 | 152.7 | 30597.8 | 537.7 | 5.20 |
+| A52 | 9 | 179.9 | 36161.6 | 685.7 | 4.99 |
+| A54 | 9 | 184.3 | 31004.7 | 586.1 | 4.25 |
+| A59 | 9 | 190.7 | 40254.0 | 759.9 | 4.42 |
+| A60 | 9 | 202.1 | 25254.7 | 484.6 | 3.93 |
+
+## Method and measurement definitions
+
+Paired raw uint16 DAPI(w1) and FITC(w2) planes enter the registered neurite_outgrowth_metaxpress operation. Named source bindings join well/site/Z/time identities. FITC is the neuronal and body channel; DAPI supplies nuclear support. Declared XY spacing is 1.3556 µm/pixel, preserved in artifacts and native viewer transforms; it was not independently recalibrated. No external preprocessing or display rescaling enters detection. The operation embeds background responses, enhancement, adaptive thresholding, body/nuclear admission and owned rooted tracing.
+
+Body controls: approximate maximum width 35 µm, minimum area 40 µm², local background intensity excess 1000, minimum inscribed diameter 5 pixels. Nuclear controls: approximate width 4–25 µm, local background excess 1000. Outgrowth controls: maximum width 4 µm, local background excess 100, enhanced candidate threshold correction 0.025, no separate hysteresis seed correction. These widths control native operations; they are not a manual geometric truth label. The complete source and pinned contract hashes govern other native defaults. Two workers, streaming disabled, lossless DEFLATE level 1 storage.
+
+A detected cell is an admitted nuclear-supported FITC soma label. All such rows are retained, including zero-process cells and boundary cells; no manual count or independent neuronal phenotype is asserted. A process is one soma-adjacent rooted partition including admitted daughter arms, not each graph edge. Arbor length sums owned paths outside soma interiors in physical units. A branch event is a qualified junction with three distinct image corridors including the proximal soma arm, clustered at shaft-width scale. Native qualification excludes crossing cores, shared corridors and foreground-disc skeleton stars. Same-plane fluorescence cannot establish every biological overlap or owner; graph colours are operational assignments.
+
+Per-cell exports retain processes, total arbor length, mean/median/maximum process length, qualified branches, body area, source identities and other native fields. Per-field exports retain detector channels, all counts, trace/ownership diagnostics and original raw paths/hashes. Per-well exports give field means/medians, pooled cell-weighted summaries and explicitly marked observation sums. Absent-process length sentinels are excluded from eligible-cell process statistics; zero total length is retained. Missing fields are never replaced by zero. Field-edge truncation shortens recoverable paths, while nuisance spurs and ownership errors can bias measurements in either direction.
+
+## Independent review and disposition
+
+Bounded development used A52s1, A30s5, A02s9, A59s3, A08s7 and A11s5. The first completed prediction and all rejected candidates remain retained. Candidate01 lost many visible shafts at its enhanced threshold; candidate02 improved but retained dim gaps. Candidate03 changed only that threshold gate. Its method and prospective criteria were frozen before any site 2 decoded pixel access. Unchanged validation completed site 2 in all twenty wells, with cell/field arithmetic agreement.
+
+Personally opened distributed native raw-only, result-only and combined captures. Development covered six whole fields, five object-scale fields, both stains and an edge. Validation covered A02/A08/A11/A17 site 2 in matched whole and detail sets, soma contours, both raw stains and A17's edge; an additional A28/A49/A60 site 2 review covered matched whole and detail sets and both stains. Captured paths include visible thin shafts and daughter corridors, with no obvious large unsupported dark-background bridge in the selected witnesses. Soma contours generally enclose FITC body regions at nuclear-supported positions. Counts, layer listings and execution success alone were not used as biological acceptance.
+
+Observed limits include the omitted dim central-right extension in A02s2, A11s2's distal lower-left shaft, gaps in A17s2's central vertical shaft, short punctate/body-margin spurs, crowded-body split/merge ambiguity, and loops/crossings with uncertain ownership. No selected witness establishes complete arbor recovery or independent branch-count accuracy. The final disposition is conditional acceptance for descriptive detected-soma and owned-arbor measurements, with abstention from exhaustive census, complete biological arbor length and uniquely correct crossing ownership. Automatic qualified branch counts remain conditional estimates. No manual invented joins, labels or treatment effects were added.
+
+## Retained evidence and reproducibility
+
+Canonical payload root: `/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114`. No second copy of the complete payload tree was made. Native outputs remain under candidate01/candidate02/candidate03; final candidate03 outputs comprise disjoint development 6, validation 20 and remaining 154 field partitions. Native source filenames, labels, graphs/SWC, typed measurements and diagnostic stages are retained. Final combined tables are in `exports/final/per-cell.csv`, `per-field.csv`, `per-well.csv` and `aggregation-rules.json`.
+
+Reviewable files: [final pipeline](/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/sources/candidate03.py), [per-cell measurements](/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/exports/final/per-cell.csv), [per-field measurements](/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/exports/final/per-field.csv), [per-well measurements](/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/exports/final/per-well.csv), [aggregation rules](/run/media/ts/hdd/openhcs-science/personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/exports/final/aggregation-rules.json), and [final freeze](/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/final-freeze.json).
+
+HOME handoff contains sources/candidate03.py, method-freeze.json, final-coverage-verification.json, author-history decisions and QA ledgers. final-freeze.json identifies payload-manifest.json and its SHA256. The manifest hashes canonical scientific outputs, QA, staged raw bytes and small author records. final-science-index.json references an exact hashed recorded-journal byte prefix and native capture hashes using the official recorded evidence reader. Intervening applied/rejected controls remain in the original journals; nearest preceding viewer state alone is not proof of capture visibility. Failed black RGB detail presentation captures were retained and explicitly repaired by selecting channel0 on the single-plane RGB route; scientific detection settings were unchanged.
+
+The recorded scientific interval was undeclared; no historical cutoff was imposed. Expansion was sized against observed RAM/pressure and destination headroom. Existing assigned CPU/workers, one recorded MCP client and exact owned native/viewer processes were used; no installation, additional agent, provider/model change, external correction or independent runtime replay occurred. Exact owned cleanup receipts and closed-journal hashes accompany the freeze after the writer exits.

@@ -1,0 +1,40 @@
+{
+  "frozen_at_utc": "2026-10-09T02:26:41.369674+00:00",
+  "selected_candidate": "candidate03",
+  "scientific_scope": "conditional nuclear-supported soma and owned rooted arbor measurements; unchanged prospective site2 validation pending",
+  "global_config_id": "config-1",
+  "storage": {
+    "compression": "deflate",
+    "compression_level": 1,
+    "num_workers": 2
+  },
+  "files": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/sources/candidate03.py",
+      "sha256": "a4ab6b8b5504a7d7dd0c3f3cd8461b4a8b9a443132997dab0439e5047a8e83a4"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/author-history/measurement-contract.md",
+      "sha256": "01d7c3d7ff3f229cb663277f30c592f9abff89cf2904511e5117bc253529ef08"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/author-history/validation-plan.md",
+      "sha256": "a731e42c208de976e903fb82637482738197cd1f34ddced5d7fb6ce90190ff54"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/author-history/development-decision.md",
+      "sha256": "f230a09d5a58fce049e13a8bb315d85d64a5f2a27e7c6aa9512e332748f3514e"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/source-inventory.json",
+      "sha256": "36dbce1cf0d48c24897649bf08b45a2fe6a7ec588d479bccaa49beabdd8783ec"
+    }
+  ],
+  "journal_prefix": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-personal-neurite-graphical-three-20261008/P001_GRAPHICAL_114/author-workspace/output/runtime/mcp.stdout",
+    "prefix_bytes": 3752916,
+    "sha256": "f8dfbe84f659c84df9d66568500ceb88d2154a0e821cd199dbd70db8c426da51"
+  },
+  "evaluator_access": false,
+  "site2_pixel_access_before_freeze": false
+}

@@ -44,6 +44,38 @@ Development history and full instructions are kept in the [archived supplementar
 
 ## Supplementary Figure 5. Laboratory treatment responses compared with MetaXpress
 
+![Additional endpoint responses from all three independent blind authors.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=5.7in}
+
+::: {custom-style="ImageCaption"}
+(A–B) Detected cells; (C–D) total outgrowth; (E–F) branches per cell; (G–H) mean cell process length. Each blind author completed the same 180 fields in 20 wells. Curves use each drug's own DMSO mean; dots are two technical wells per dose per author or method, with sample SD whiskers. Author curves are not pooled. Paired drug panels share vertical limits. Main Figure 5III shows mean outgrowth per cell.
+:::
+
+## Supplementary Figure 5, continued. Process length and branching definitions
+
+![Median process length, branch and primary-process responses from all three blind authors.](../figures/slas/supp_neurite_autonomous_endpoints_continued.png){width=5.7in}
+
+::: {custom-style="ImageCaption"}
+(A–B) Mean cell median process length; (C–D) total branches; (E–F) total primary processes; (G–H) branches per primary process. Normalization, technical wells and whiskers are as above. Total quantities are mean field totals, not deduplicated whole-well measurements. OpenHCS branch/process values are means of field ratios; MetaXpress values are ratios of exported well totals. These remain distinct algorithm-defined endpoints.
+:::
+
+### Independent frozen laboratory analyses
+
+Three fresh gpt-6.1-sol agents (high reasoning effort, OpenAI provider) received the identical [task brief](personal_neurite_autonomous/TASK.rst), [acquisition information](personal_neurite_autonomous/ACQUISITION.json), MCP and frozen packaged skill. The [cohort record](personal_neurite_autonomous/cohort.json) identifies the qualified software revision, skill hash, prospective partitions, method and scientific-output freezes, and original immutable evidence. Blind 1, 2 and 3 correspond to original authors 114, 115 and 116. Each completed all 20 wells with nine sites per well. Reference and assisted measurements were opened only after all three scientific-output freezes. No author received score feedback or treatment identities.
+
+The original methods, author judgments and failed candidates are retained, not rewritten after evaluation:
+
+- Blind 1: [pipeline](personal_neurite_autonomous/author114/pipeline.py), [method freeze](personal_neurite_autonomous/author114/method-freeze.json), [author report](personal_neurite_autonomous/author114/author-report.txt), [matched wells](personal_neurite_autonomous/author114/joined_wells.csv) and [effects](personal_neurite_autonomous/author114/treatment_effects.csv).
+- Blind 2: [pipeline](personal_neurite_autonomous/author115/pipeline.py), [method freeze](personal_neurite_autonomous/author115/method-freeze.json), [author report](personal_neurite_autonomous/author115/author-report.txt), [matched wells](personal_neurite_autonomous/author115/joined_wells.csv) and [effects](personal_neurite_autonomous/author115/treatment_effects.csv).
+- Blind 3: [pipeline](personal_neurite_autonomous/author116/pipeline.py), [method freeze](personal_neurite_autonomous/author116/method-freeze.json), [author report](personal_neurite_autonomous/author116/author-report.txt), [matched wells](personal_neurite_autonomous/author116/joined_wells.csv) and [effects](personal_neurite_autonomous/author116/treatment_effects.csv). Its registered custom sources for [channel-selective smoothing](personal_neurite_autonomous/author116/selected_channel_gaussian_v1.py), [compact native output](personal_neurite_autonomous/author116/rooted_arbor_compact_v1.py) and [coded-well summaries](personal_neurite_autonomous/author116/coded_well_summary_v1.py) are included.
+
+All three recovered increased mean and total outgrowth at every nonzero dose of both drugs and the same cell-count response directions as MetaXpress. Two were close to the assisted response magnitudes; Blind 2 gave weaker increases. At 40 µM, mean-outgrowth-per-cell fold changes for Blind 1/2/3 were 1.646/1.323/1.601 for FC-A and 1.694/1.487/1.660 for Y27632. The assisted values were 1.766/1.765, and MetaXpress's were 1.977/2.053. These are three independent analyses of the same two technical wells per dose, not additional biological replicates.
+
+Matched review supports substantial shafts and daughters, but not exhaustive tracing or anatomically correct branch counts. Blind 3 independently rejected complete-arbor and anatomical-branch claims after held-out review, while retaining its operational measurements. That judgment remains unchanged; treatment-effect recovery was evaluated separately after freeze. Its first held-out dispatch also preceded completion of an ongoing resource check; the later successful check does not erase that procedural deviation. Source, execution, image review and effect recovery are reported at their own scopes.
+
+Each [author's source-evidence record](personal_neurite_autonomous/author114/source_evidence.json) hashes the private identity key, workbook, pipeline and native CSVs. The records for [Blind 2](personal_neurite_autonomous/author115/source_evidence.json) and [Blind 3](personal_neurite_autonomous/author116/source_evidence.json) use the same declared sampling and aggregation. Paired-site tables and guided-minus/over-blind columns retain direct comparisons with the unchanged assisted run; that run used a distinct software generation. Undefined endpoints remain undefined, not zero. Process-length means in these comparison tables include all detected cells, including zero-process sentinels, unlike the authors' separate process-bearing-cell summaries.
+
+## Supplementary Figure 5, continued. Retained assisted analysis
+
 ![Five additional well-level morphology responses to FC-A and Y27632 after assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=5in}
 
 ::: {custom-style="ImageCaption"}
@@ -141,7 +173,7 @@ identifies the same completed assisted evaluation, not an additional autonomous 
 
 Following externally informed repairs, analysis of all 180 fields in 20 matched
 wells recovered increasing outgrowth-per-cell responses to FC-A and Y27632
-(Figure 5; Supplementary Figure 5). At 40 µM, OpenHCS fold changes were
+(Supplementary Figure 5, retained assisted comparison). At 40 µM, OpenHCS fold changes were
 1.77 and 1.76, respectively, versus MetaXpress's 1.98 and 2.05. Total-outgrowth
 estimated fold changes were also smaller. Branches-per-cell fold changes were 1.65 versus
 3.00 for FC-A and 1.82 versus 3.26 for Y27632. OpenHCS control branch counts
@@ -581,11 +613,13 @@ Labels identify authors in the linked records in Supplementary Data 7–8; multi
 | Retina, fresh26 | gpt-6.1-sol | One development field | Candidates; border candidates | 136; 10 |
 | Public neurites, fresh20 | gpt-6.1-sol | One development field | Principal-shaft recovery | Matched image review |
 | Laboratory neurites, fresh13 | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
+| Laboratory treatment, blind 1/2/3 | gpt-6.1-sol | 180 fields each; six/four/eight development fields | Control-normalized outgrowth response | Both drug responses recovered by all three; magnitudes varied |
 
 ### Source artwork and assisted mosaic review
 
 Main Figure 5 shows public shafts, autonomous laboratory-field analysis and
-assisted treatment responses.
+three independently authored treatment responses. The earlier assisted response
+comparison remains in Supplementary Figure 5.
 The separate [assisted nine-field mosaic artwork](../figures/slas/p001_stitched_dev13_native.png)
 and [overlap/core layout](../figures/slas/supp_neurite_morphology.png)
 show stitching at the acquisition coordinates.
@@ -655,7 +689,7 @@ The current skill describes inspection and repair practice, including additions 
 
 Supplementary Figures 2–5 group additional evidence by assay. Main Figure 4 shows
 translocation and volume localisation; main Figure 5 shows public and laboratory
-field-by-field neurite analysis and assisted treatment responses. The assisted
+field-by-field neurite analysis and three blind treatment analyses. The assisted
 mosaic is linked below as a development example. Reference evaluation follows
 pipeline selection; examples lacking exhaustive annotations do not receive an
 accuracy percentage.
