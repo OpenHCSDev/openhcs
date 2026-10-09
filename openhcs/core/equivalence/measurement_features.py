@@ -891,19 +891,14 @@ class MeasurementFeatureStabilityPolicy:
             feature_name=ObjectCoreMeasurementFeature.OBJECT_COUNT.value,
             statistic=MeasurementStatistic.COUNT.value,
         )
-        reference_counts = self.reference.get(count_feature)
-        candidate_counts = self.candidate.get(count_feature)
-        if reference_counts is None or candidate_counts is None:
-            reference_values = self.reference.get(self.feature)
-            candidate_values = self.candidate.get(self.feature)
-            return (
-                reference_values is not None
-                and candidate_values is not None
-                and sum(reference_values.values()) == sum(candidate_values.values())
-            )
+        shared_keys = self.reference.keys() & self.candidate.keys()
+        if count_feature not in shared_keys:
+            return self.feature in shared_keys and sum(
+                self.reference[self.feature].values()
+            ) == sum(self.candidate[self.feature].values())
         return runtime_cell_signature_counters_equivalent(
-            reference_counts,
-            candidate_counts,
+            self.reference[count_feature],
+            self.candidate[count_feature],
             self.policy,
         )
 
@@ -920,14 +915,12 @@ class MeasurementFeatureStabilityPolicy:
         marker_type: type[RuntimeMeasurementFeatureSemanticMarker],
     ) -> frozenset[RuntimeMeasurementFeatureKey]:
         stable_features: set[RuntimeMeasurementFeatureKey] = set()
-        candidate_keys = self.reference.keys() | self.candidate.keys()
+        candidate_keys = self.reference.keys() & self.candidate.keys()
         for candidate_key in candidate_keys:
             if not self._candidate_key_matches_marker(candidate_key, marker_type):
                 continue
-            reference_values = self.reference.get(candidate_key)
-            candidate_values = self.candidate.get(candidate_key)
-            if reference_values is None or candidate_values is None:
-                continue
+            reference_values = self.reference[candidate_key]
+            candidate_values = self.candidate[candidate_key]
             if not self._feature_values_stable(
                 candidate_key,
                 reference_values,
@@ -942,16 +935,14 @@ class MeasurementFeatureStabilityPolicy:
         marker_type: type[RuntimeMeasurementFeatureSemanticMarker],
     ) -> frozenset[RuntimeMeasurementFeatureKey]:
         stable_features: set[RuntimeMeasurementFeatureKey] = set()
-        candidate_keys = self.reference.keys() | self.candidate.keys()
+        candidate_keys = self.reference.keys() & self.candidate.keys()
         for candidate_key in candidate_keys:
             if candidate_key == self.feature:
                 continue
             if not self._candidate_key_matches_marker(candidate_key, marker_type):
                 continue
-            reference_values = self.reference.get(candidate_key)
-            candidate_values = self.candidate.get(candidate_key)
-            if reference_values is None or candidate_values is None:
-                continue
+            reference_values = self.reference[candidate_key]
+            candidate_values = self.candidate[candidate_key]
             if not runtime_cell_signature_counters_equivalent(
                 reference_values,
                 candidate_values,
