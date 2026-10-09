@@ -271,6 +271,25 @@ def main() -> None:
         }
     single_name = next(mode["archive_mode"] for mode in modes if mode["assignments"] == 1)
     single_stats = mode_statistics[single_name]["scope_statistics"]
+    # Amortized one-process comparison: measured CP8 first batch per sample
+    # against measured OH one-worker twelve-assignment median per sample.
+    cp8_name = anchor_modes[8]
+    oh_serial_name = next(mode["archive_mode"] for mode in serial_modes if mode["assignments"] == 12)
+    if kinds[cp8_name] != "measured_first_batch" or kinds[oh_serial_name] != "projected_first_batch":
+        raise ValueError("Amortized comparison requires measured CP8 and the OH one-worker twelve-assignment mode")
+    amortized_stats = {}
+    for scope in ("execution", "total"):
+        source = sources[oh_serial_name, scope]
+        ratios = []
+        for case_name, row in tables[oh_serial_name, scope].items():
+            reference = cases[cp8_name][case_name]["native_headline_reference"]
+            native = reference["execution_seconds" if scope == "execution" else "prepared_invocation_seconds"] / 8
+            ratios.append(native / (source.metric_rows(case_name, row, category_row=row)[1].raw_seconds / 12))
+        summary = figures.SpeedupSummaryStatistics.from_series(
+            figures.SpeedupDistributionSeries("CP8 measured / OH 12 one worker, per sample", tuple(ratios)))
+        if summary is None or summary.sample_count != 30:
+            raise ValueError("Amortized include must retain all thirty finite positive workflow ratios")
+        amortized_stats[scope] = asdict(summary)
     claims = {
         "record_name": record.name,
         "source_revision": declaration["source_revision"],
@@ -279,7 +298,14 @@ def main() -> None:
         **{f"{scope}_{claim}": f"{single_stats[scope][field]:.3f}"
            for scope in ("execution", "total")
            for claim, field in (("min", "minimum"), ("median", "median"))},
+        **{f"amortized_{scope}_{claim}": f"{amortized_stats[scope][field]:.3f}"
+           for scope in ("execution", "total")
+           for claim, field in (("min", "minimum"), ("median", "median"), ("max", "maximum"))},
         "native_policy": interpretation["native_policy"],
+        "amortized_policy": ("Per-sample ratio of one measured serial CP8 first batch (CPUs2-5 affinity, one "
+                             "numerical thread) to the median of three measured OH one-worker twelve-assignment "
+                             "runs. OH preparation is spread over twelve samples, CP initialization over eight."),
+        "amortized_statistics": amortized_stats,
         "mode_statistics": mode_statistics,
     }
     include = args.output_dir / "benchmark_claims.json"
