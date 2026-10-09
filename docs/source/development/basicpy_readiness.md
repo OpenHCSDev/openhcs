@@ -2,7 +2,7 @@
 
 Current parent checkpoint: real BaSiCPy Python3.14 fits and paired OpenHCS
 Python3.12 CPU fits, dtype behavior and field provenance checks passed. See the
-canonical [2026-09-30 receipt](../../../validation/basicpy_parent_numeric_20260930/checkpoint.rst).
+canonical [2026-09-30 receipt](../../validation/basicpy_parent_numeric_20260930/checkpoint.rst).
 No install, compiled/MCP execution or biological acceptance is claimed.
 
 The current packaging change declares `openhcs-basicpy>=1.3.1,<1.4` in the

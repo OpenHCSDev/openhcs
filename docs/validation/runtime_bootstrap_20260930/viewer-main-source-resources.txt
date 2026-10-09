@@ -1,1 +1,0 @@
-wall=6.41 rss_kib=265012 exit=0

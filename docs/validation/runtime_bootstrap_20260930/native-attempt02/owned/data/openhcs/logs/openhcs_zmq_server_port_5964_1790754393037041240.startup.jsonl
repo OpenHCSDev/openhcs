@@ -1,6 +1,0 @@
-{"phase":"starting_process","message":"Execution server process started","sequence":1,"timestamp":1790754393.240205}
-{"phase":"loading_config","message":"Loading execution server configuration","sequence":2,"timestamp":1790754393.2404459}
-{"phase":"importing_runtime","message":"Importing execution runtime","sequence":3,"timestamp":1790754393.2498991}
-{"phase":"creating_server","message":"Creating execution server","sequence":4,"timestamp":1790754395.255718}
-{"phase":"binding_endpoint","message":"Binding execution server endpoint","sequence":5,"timestamp":1790754395.7113276}
-{"phase":"server_ready","message":"Execution server is ready","sequence":6,"timestamp":1790754395.7125227}

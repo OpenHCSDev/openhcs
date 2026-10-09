@@ -200,3 +200,6 @@ benchmark/results/napari_streaming_validator/
 .chunkhound/
 docs/generated_md/
 .grepai/
+
+# Validation run logs stay local; only evidence cited from paper/ or docs/ is tracked
+docs/validation/**/*.log

@@ -1,8 +1,0 @@
-PASS all 78 receipt files in actual manuscript/supplement figure directories inspected; 48 output receipts pass original strict codec
-29 document figures covered by exactly one receipt each; 155 retained outputs match; no scientific rerun.
-Historical source receipt audit: 69 unavailable, 15 changed; retained evidence is reused, not freshly regenerated.
-1 document figures covered by exactly one receipt each; 4 retained outputs match; no scientific rerun.
-Historical source receipt audit: 0 unavailable, 0 changed; retained evidence is reused, not freshly regenerated.
-SOURCE /home/ts/wt/openhcs-artifact-planning-publication-315-20260930/paper/manuscript.md 
-SOURCE /home/ts/wt/openhcs-artifact-planning-publication-315-20260930/paper/supplementary/README.md 
-PASS current paired source resolution and retained output acceptance; no conversion performed in this final check

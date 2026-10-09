@@ -1,9 +1,0 @@
-{
-  "source": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/openhcs-0.8.6.dist-info",
-  "destination": "/home/ts/code/projects/openhcs-benchmark-runs/perf-duplicate-editable-metadata-environment-20260930/quarantined-unrecorded-uv-metadata",
-  "files": [
-    "uv_build.json",
-    "uv_cache.json"
-  ],
-  "reason": "pip removed recorded stale 0.8.6 files but unrecorded uv metadata left an empty-name distribution that blocked normal reinstall. Quarantine, do not bypass dependency resolution."
-}

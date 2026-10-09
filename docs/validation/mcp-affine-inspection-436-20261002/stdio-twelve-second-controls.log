@@ -1,2 +1,0 @@
-Running as unit: dewey-436-stdio-twelve-20261002.scope; invocation ID: 37163889ea4d4eeda522f43ecdfe4a52
-BOUNDED_SOURCE peak_aggregate_rss_kib=524460 elapsed_seconds=8.096 returncode=-15 reason=512MiB aggregate RSS exceeded
