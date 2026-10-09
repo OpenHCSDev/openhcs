@@ -13,7 +13,6 @@ from openhcs.processing.materialization.core import MaterializationSpec
 from openhcs.processing.materialization.options import (
     CsvOptions,
     JsonOptions,
-    MaterializedFilenameIdentity,
     ROIOptions,
     TextOptions,
     TiffStackOptions,

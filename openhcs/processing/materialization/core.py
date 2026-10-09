@@ -77,7 +77,6 @@ from openhcs.core.source_matching import (
     source_component_metadata_value,
     source_metadata_value,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
@@ -88,10 +87,7 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamViewerComponentMetadataProjector,
     StreamScopedDisplayConfig,
 )
-from openhcs.processing.materialization.constants import (
-    MaterializationFormat,
-    WriteMode,
-)
+from openhcs.processing.materialization.constants import WriteMode
 from openhcs.processing.materialization.options import (
     CsvOptions,
     FileBundleOptions,
@@ -2562,7 +2558,6 @@ OutputPathProjection: TypeAlias = Callable[
 
 @dataclass(frozen=True)
 class WriterSpec:
-    format: MaterializationFormat
     options_type: type
     write: WriterFunction
     primary_path: PrimaryPathSelector
@@ -2634,7 +2629,6 @@ class BackendKwargsAuthority:
 
 def writer_for(
     options_type: type,
-    fmt: MaterializationFormat,
     *,
     primary_path: PrimaryPathSelector | None = None,
     candidate_paths: CandidatePathSelector | None = None,
@@ -2660,7 +2654,6 @@ def writer_for(
                 MaterializationCandidatePathAuthority.single_output
             )
         _WRITERS_BY_OPTIONS[options_type] = WriterSpec(
-            format=fmt,
             options_type=options_type,
             write=fn,
             primary_path=selected_primary_path,
@@ -3095,21 +3088,18 @@ class SingleFileWriterAuthority:
 
 def register_single_file_writer(
     options_type: type,
-    fmt: MaterializationFormat,
     *,
     render: Callable,
     validate_payload: Callable | None = None,
     primary_path: PrimaryPathSelector | None = None,
 ) -> None:
-    writer_for(options_type, fmt, primary_path=primary_path)(
+    writer_for(options_type, primary_path=primary_path)(
         SingleFileWriterAuthority.writer(render, validate_payload=validate_payload)
     )
 
 
-register_single_file_writer(CsvOptions, MaterializationFormat.CSV, render=_render_csv)
-register_single_file_writer(
-    JsonOptions, MaterializationFormat.JSON, render=_render_json
-)
+register_single_file_writer(CsvOptions, render=_render_csv)
+register_single_file_writer(JsonOptions, render=_render_json)
 
 
 class TextPayloadAuthority:
@@ -3126,7 +3116,6 @@ class TextPayloadAuthority:
 
 register_single_file_writer(
     TextOptions,
-    MaterializationFormat.TEXT,
     render=lambda payload, _options: payload,
     validate_payload=TextPayloadAuthority.validate,
 )
@@ -3280,7 +3269,6 @@ class ImageFileCandidatePathAuthority:
 
 @writer_for(
     ImageFileOptions,
-    MaterializationFormat.IMAGE_FILE,
     candidate_paths=ImageFileCandidatePathAuthority.paths,
 )
 def write_image_file(
@@ -3407,7 +3395,7 @@ def _file_bundle_outputs(
     return outputs
 
 
-@writer_for(FileBundleOptions, MaterializationFormat.FILE_BUNDLE)
+@writer_for(FileBundleOptions)
 def write_file_bundle(
     data: MaterializationValue,
     options: FileBundleOptions,
@@ -3760,7 +3748,6 @@ def _roi_output_path_projection(
 
 @writer_for(
     ROIOptions,
-    MaterializationFormat.ROI_ZIP,
     primary_path=ROIPrimaryPathAuthority.primary_path,
     candidate_paths=ROICandidatePathAuthority.paths,
     output_path_projection=_roi_output_path_projection,
@@ -3916,7 +3903,6 @@ def _swc_sample_type(node: SpatialGraphNode, default: int) -> int:
 
 @writer_for(
     SWCOptions,
-    MaterializationFormat.SWC,
 )
 def _write_spatial_graph_swc(
     data: MaterializationValue,
@@ -4004,7 +3990,7 @@ def _write_spatial_graph_swc(
     ]
 
 
-@writer_for(PointROIOptions, MaterializationFormat.ROI_ZIP)
+@writer_for(PointROIOptions)
 def _write_point_roi_zip(
     data: MaterializationValue,
     options: PointROIOptions,
@@ -4100,7 +4086,6 @@ def _write_point_roi_zip(
 
 @writer_for(
     SpatialGraphROIOptions,
-    MaterializationFormat.ROI_ZIP,
 )
 def _write_spatial_graph_roi_zip(
     data: MaterializationValue,
@@ -4277,7 +4262,6 @@ def image_file_uses_filename_source_identity(
 
 @writer_for(
     TiffStackOptions,
-    MaterializationFormat.TIFF_STACK,
     candidate_paths=TiffStackCandidatePathAuthority.paths,
 )
 def _write_tiff_stack(

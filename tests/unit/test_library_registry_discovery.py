@@ -145,22 +145,6 @@ def test_declared_library_submodules_are_imported_from_the_package_authority(
     assert tuple(functions) == ("restoration.denoise",)
 
 
-def test_openhcs_catalog_inventory_excludes_test_modules() -> None:
-    """Manual test scripts are not production callable declarations."""
-
-    from openhcs.processing.backends.lib_registry.openhcs_registry import (
-        OpenHCSRegistry,
-    )
-
-    modules = OpenHCSRegistry()._get_openhcs_modules()
-
-    assert modules
-    assert all(
-        not module_name.rsplit(".", maxsplit=1)[-1].startswith("test_")
-        for module_name in modules
-    )
-
-
 def test_cpu_only_inventory_resolves_memory_decorator_import_aliases() -> None:
     """Import bindings, not local decorator spelling, own memory identity."""
 

@@ -148,7 +148,7 @@ def recache_function_registry():
 
         # Step 3: Force re-initialization
         print("🔄 Force re-initializing function registry...")
-        func_registry._auto_initialize_registry()
+        func_registry.initialize_registry()
 
         # Step 4: Verify the new registry
         new_initialized = func_registry.is_registry_initialized()

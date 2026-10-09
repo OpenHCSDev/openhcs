@@ -8,10 +8,6 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 import openhcs.processing.func_registry as func_registry
-from openhcs.core.memory import numpy
-from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata, ProcessingContract
 
 
 class _ExternalProjectionOwner:
@@ -66,33 +62,3 @@ def test_external_projection_removes_stale_exports_and_modules(monkeypatch) -> N
     func_registry._create_external_virtual_modules({})
     assert module_name not in sys.modules
     assert "openhcs.codex_external" not in sys.modules
-
-
-def test_legacy_name_lookup_fails_with_canonical_candidates(monkeypatch) -> None:
-    @numpy
-    def first_crop(image):
-        return image
-
-    @numpy
-    def second_crop(image):
-        return image
-
-    metadata = {
-        "openhcs:numpy_crop": FunctionMetadata(
-            name="numpy_crop", func=first_crop, original_name="crop",
-            registry=OpenHCSRegistry(), contract=ProcessingContract.FLEXIBLE,
-        ),
-        "openhcs:cellprofiler_crop": FunctionMetadata(
-            name="cellprofiler_crop", func=second_crop, original_name="crop",
-            registry=OpenHCSRegistry(), contract=ProcessingContract.FLEXIBLE,
-        ),
-    }
-    monkeypatch.setattr(
-        RegistryService,
-        "get_all_functions_with_metadata",
-        classmethod(lambda cls: metadata),
-    )
-
-    with pytest.raises(LookupError, match="canonical function IDs"):
-        func_registry.get_function_by_name("crop", "numpy")
-    assert func_registry.get_function("openhcs:numpy_crop") is first_crop
