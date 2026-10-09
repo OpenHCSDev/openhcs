@@ -385,9 +385,9 @@ def compare(reference, key, summaries, output, aggregation, coded_plate, pipelin
             joined[-1].update({"guided_label": guided_label,
                               **WellEndpoints(**native[identity]).paired_values(
                                   WellEndpoints(**guided_native[identity]), metrics)})
-    if paired and (len(joined) != len(native) or
-                   {(row["plate"], row["well"]) for row in joined} != native.keys()):
-        raise ValueError("Reference must cover every paired physical well exactly once")
+    if (len(joined) != len(native) or
+            {(row["plate"], row["well"]) for row in joined} != native.keys()):
+        raise ValueError("Reference must cover every measured physical well exactly once")
     methods = [("metaxpress", ""), ("openhcs", "openhcs_")]
     if paired:
         methods.append(("guided_openhcs", "guided_openhcs_"))

@@ -122,6 +122,49 @@ class GuidedComparisonTests(unittest.TestCase):
             self.compare(self.root / "bad", guided_summaries=self.guided)
         self.assertFalse((self.root / "bad").exists())
 
+    def test_reference_covers_all_measured_wells_with_or_without_guided_run(self):
+        reference = evaluator.read_rows(self.reference)
+        key = json.loads(self.key.read_text())
+        second_curve = []
+        for row in reference:
+            well = "B" + row["well"][1:]
+            second_curve.append({**row, "well": well, "condition": "second-fixture"})
+            key["images"].append({"coded_relative_path": f"P001/{well}_w1.tif",
+                                  "source_path": f"/fixture/acquisition_physical/Images/{well}_w1.tif",
+                                  "source_well": well})
+            for site in range(1, 10):
+                length, branches = float(row["total_outgrowth"]), float(row["total_branches"])
+                self.write_plane(self.blind, well, site, length, branches)
+                self.write_plane(self.guided, well, site, length * 2, branches * 2)
+        self.key.write_text(json.dumps(key))
+        complete = reference + second_curve
+        for mode, options in (("single", {}), ("guided", self.guided_options())):
+            with self.subTest(mode=mode, coverage="complete"):
+                evaluator.write_rows(self.reference, complete)
+                output = self.root / f"{mode}-complete"
+                self.compare(output, **options)
+                self.assertEqual(len(evaluator.read_rows(output / "joined_wells.csv")), 20)
+            for defect, rows in (("missing-curve", reference),
+                                 ("duplicate-well", complete + [complete[0]])):
+                with self.subTest(mode=mode, coverage=defect):
+                    evaluator.write_rows(self.reference, rows)
+                    output = self.root / f"{mode}-{defect}"
+                    with self.assertRaisesRegex(ValueError, "every measured physical well exactly once"):
+                        self.compare(output, **options)
+                    self.assertFalse(output.exists())
+                    command = [sys.executable, str(SOURCE), "--reference", str(self.reference),
+                               "--key", str(self.key), "--summaries", str(self.blind),
+                               "--pipeline", str(self.pipeline), "--coded-plate", "P001",
+                               "--aggregation", "site-mean", "--output", str(output)]
+                    if options:
+                        command.extend(["--guided-summaries", str(self.guided),
+                                        "--guided-pipeline", str(self.guided_pipeline),
+                                        "--guided-label", options["guided_label"]])
+                    result = subprocess.run(command, capture_output=True, text=True)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("every measured physical well exactly once", result.stderr)
+                    self.assertFalse(output.exists())
+
     def test_optional_nuclear_detection_preserves_comparison_and_rejects_wrong_channels(self):
         for path in self.blind.glob("*_summary_*details.csv"):
             rows = evaluator.read_rows(path)
