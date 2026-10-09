@@ -13,8 +13,8 @@ from pathlib import Path
 import numpy as np
 
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.equivalence.images import RuntimeImageSnapshot
-from openhcs.core.equivalence.outputs import image_paths
+from benchmark.equivalence.images import RuntimeImageSnapshot
+from benchmark.equivalence.outputs import image_paths
 from openhcs.interop.cellprofiler import cellprofiler_terminal_artifact_specs
 
 _MODULE_COUNT_PATTERN = re.compile(r"^ModuleCount:(?P<count>[0-9]+)$", re.MULTILINE)

@@ -1,0 +1,1076 @@
+"""Exported-table relationship semantics used when comparing against native CellProfiler outputs."""
+
+from __future__ import annotations
+
+import math
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Self
+
+import numpy as np
+
+from benchmark.equivalence.object_label_measurements import (
+    RuntimeObjectLabelInstanceCatalog,
+    RuntimeObjectValuesByLabel,
+)
+from benchmark.equivalence.row_identity import (
+    RuntimeMeasurementRowSubjectProjection,
+)
+from benchmark.equivalence.table_snapshots import (
+    RuntimeTableSnapshot,
+    measurement_table_padding_group,
+)
+from openhcs.core.equivalence.cells import runtime_cell_signature
+from openhcs.core.equivalence.keys import (
+    RuntimeMeasurementFeatureKey,
+    RuntimeMeasurementSubjectKey,
+)
+from openhcs.core.equivalence.measurement_facts import (
+    RuntimeDirectionalPairMeasurementDerivationContract,
+    RuntimeMeasurementFactList,
+    RuntimeMeasurementFacts,
+    RuntimeRequiredMeasurementKeys,
+)
+from benchmark.equivalence.measurement_requirements import (
+    RequiredRuntimeMeasurementProjection,
+)
+from openhcs.core.equivalence.measurement_rows import (
+    RuntimeImageNumberOffset,
+    RuntimeMeasurementFeatureKeyCache,
+    RuntimeMeasurementPaddingGroupCache,
+    RuntimeMeasurementQualifierRenderCache,
+    RuntimeMeasurementRequiredKeyIndex,
+    RuntimeMeasurementRowMapping,
+    RuntimeMeasurementRowSchemaCache,
+    RuntimeMeasurementWideFeatureIndexCache,
+    RuntimeMeasurementWideFeaturePlanCache,
+    RuntimeRowProjectionContext,
+    runtime_measurement_row_schema_for_header,
+)
+from openhcs.core.equivalence.policy import (
+    RuntimeEquivalencePolicy,
+    RuntimeMeasurementDialect,
+    normalize_runtime_identifier,
+)
+from openhcs.core.equivalence.relationships import (
+    ObjectInstanceKeyPlaneAlignmentStrategy,
+    RelationshipAggregateFeatureContext,
+    RelationshipAggregateFeatureSemantics,
+    RuntimeScopedMeasurementTable,
+    _ObjectInstanceChildrenByParent,
+)
+from openhcs.core.measurement_row_materialization import (
+    columnar_row_values,
+    iter_measurement_rows,
+    measurement_object_label,
+)
+from openhcs.core.runtime_measurements import (
+    MeasurementRowAxisField,
+    MeasurementScalarLiteral,
+    MeasurementScope,
+    MeasurementStatistic,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.runtime_relationships import (
+    ChildCountFeatureDeclaration,
+    DirectedObjectRelationshipPayload,
+    DirectParentReferenceFeatureDeclaration,
+    DirectParentReferenceMeasurementFeature,
+    ObjectInstanceKey,
+    ObjectInstanceRelationship,
+    ObjectRelationship,
+    ObjectRelationshipDeclaration,
+)
+from openhcs.core.runtime_tabular_values import (
+    ColumnarRows,
+    measurement_row_mapping,
+)
+from openhcs.core.source_image_provenance import (
+    SourceImageProvenance,
+)
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source_plane_alignment import (
+    SourcePlaneIdentitySequence,
+    SourcePlaneIdentitySequenceAlignment,
+)
+
+RuntimeMeasurementKeySet = frozenset[RuntimeMeasurementFeatureKey]
+
+
+_ObjectInstanceAggregateValues = dict[tuple[ObjectInstanceKey, ...], float]
+
+
+@dataclass(frozen=True, slots=True)
+class RelationshipMeasurementSemantics:
+    """Measurement identity contract for a directed object relationship."""
+
+    relationship: ObjectRelationship
+    dialect: RuntimeMeasurementDialect
+
+    @property
+    def source_name(self) -> str:
+        return normalize_runtime_identifier(self.relationship.declaration.source.name)
+
+    @property
+    def target_name(self) -> str:
+        return normalize_runtime_identifier(self.relationship.declaration.target.name)
+
+    @property
+    def source_subject(self) -> RuntimeMeasurementSubjectKey:
+        return RuntimeMeasurementSubjectKey(
+            MeasurementScope.OBJECT,
+            self.source_name,
+        )
+
+    @property
+    def target_subject(self) -> RuntimeMeasurementSubjectKey:
+        return RuntimeMeasurementSubjectKey(
+            MeasurementScope.OBJECT,
+            self.target_name,
+        )
+
+    @property
+    def instance_relationship(self) -> ObjectInstanceRelationship:
+        return ObjectInstanceRelationship.from_id_columns(
+            tuple(
+                int(value)
+                for value in np.asarray(self.relationship.payload.source_ids).ravel()
+            ),
+            tuple(
+                int(value)
+                for value in np.asarray(self.relationship.payload.target_ids).ravel()
+            ),
+            slice_indices=self.relationship.payload.slice_indices,
+            slice_count=self.relationship.payload.slice_count,
+        )
+
+    @property
+    def aggregate_prefix(self) -> str:
+        return f"{MeasurementStatistic.MEAN.value}_{self.target_name}_"
+
+    @property
+    def child_count_key(self) -> RuntimeMeasurementFeatureKey:
+        return RuntimeMeasurementFeatureKey(
+            self.source_subject,
+            f"{self.target_name}_count",
+        )
+
+    @property
+    def parent_key(self) -> RuntimeMeasurementFeatureKey:
+        return RuntimeMeasurementFeatureKey(
+            self.target_subject,
+            self.source_name,
+        )
+
+    @property
+    def target_object_number_key(self) -> RuntimeMeasurementFeatureKey:
+        return RuntimeMeasurementFeatureKey.from_subject_feature(
+            self.target_subject,
+            ObjectCoreMeasurementFeature.OBJECT_NUMBER.value,
+        )
+
+    def aggregate_feature_name(
+        self,
+        child_feature_name: str,
+        *,
+        aggregate: str = MeasurementStatistic.MEAN.value,
+    ) -> str:
+        context = RelationshipAggregateFeatureContext(
+            source_name=self.source_name,
+            target_name=self.target_name,
+            feature_name=child_feature_name,
+            dialect=self.dialect,
+        )
+        return RelationshipAggregateFeatureSemantics.for_context(
+            context,
+            error_subject="relationship aggregate feature",
+        ).aggregate_feature_name(context, aggregate=aggregate)
+
+    def required_child_measurement_keys(
+        self,
+        required_measurement_keys: RuntimeRequiredMeasurementKeys,
+    ) -> RuntimeRequiredMeasurementKeys:
+        """Return child measurements needed to synthesize required aggregates."""
+        if required_measurement_keys is None:
+            return None
+        child_keys: set[RuntimeMeasurementFeatureKey] = set()
+        for key in required_measurement_keys:
+            if (
+                key.subject != self.source_subject
+                or key.statistic != MeasurementStatistic.VALUE.value
+                or not key.feature_name.startswith(self.aggregate_prefix)
+                or key.feature_name == self.aggregate_prefix
+            ):
+                continue
+            aggregate_child_feature_name = key.feature_name.removeprefix(
+                self.aggregate_prefix
+            )
+            context = RelationshipAggregateFeatureContext(
+                source_name=self.source_name,
+                target_name=self.target_name,
+                feature_name=aggregate_child_feature_name,
+                dialect=self.dialect,
+            )
+            semantics = RelationshipAggregateFeatureSemantics.for_context(
+                context,
+                error_subject="relationship aggregate child feature",
+            )
+            child_keys.update(
+                RuntimeMeasurementFeatureKey.from_subject_feature(
+                    self.target_subject,
+                    child_feature_name,
+                    source_name=key.source_name,
+                )
+                for child_feature_name in semantics.required_child_feature_names(
+                    context
+                )
+            )
+        return frozenset(child_keys)
+
+    def measurement_facts(
+        self,
+        policy: RuntimeEquivalencePolicy,
+        *,
+        object_label_catalog: RuntimeObjectLabelInstanceCatalog,
+    ) -> RuntimeMeasurementFacts:
+        """Return direct relationship measurements under canonical object identity."""
+        child_keys_by_parent = self.child_keys_by_parent(object_label_catalog)
+        parent_key_by_child = self.parent_key_by_child()
+        return (
+            *(
+                (
+                    self.child_count_key,
+                    runtime_cell_signature(
+                        str(len(child_keys_by_parent.get(source_key, ()))),
+                        policy,
+                    ),
+                )
+                for source_key in self.source_domain(object_label_catalog)
+            ),
+            *(
+                (
+                    self.parent_key,
+                    runtime_cell_signature(
+                        str(
+                            parent_key_by_child[target_key].object_id
+                            if target_key in parent_key_by_child
+                            else 0
+                        ),
+                        policy,
+                    ),
+                )
+                for target_key in self.target_domain(object_label_catalog)
+            ),
+        )
+
+    def aggregate_measurement_facts(
+        self,
+        child_values_by_feature: Mapping[
+            RuntimeMeasurementFeatureKey,
+            Mapping[ObjectInstanceKey, float],
+        ],
+        policy: RuntimeEquivalencePolicy,
+        *,
+        object_label_catalog: RuntimeObjectLabelInstanceCatalog,
+        existing_measurement_keys: RuntimeMeasurementKeySet = frozenset(),
+        required_measurement_keys: RuntimeRequiredMeasurementKeys = None,
+    ) -> RuntimeMeasurementFacts:
+        """Return source-row aggregate measurements derived from target rows."""
+        child_values = {
+            key: dict(values_by_child_id)
+            for key, values_by_child_id in child_values_by_feature.items()
+        }
+        child_values[self.target_object_number_key] = self.target_object_number_values(
+            object_label_catalog
+        )
+        if not child_values:
+            return ()
+
+        child_ids_by_parent = self.child_keys_by_parent(object_label_catalog)
+        aggregate_facts: RuntimeMeasurementFactList = []
+        for child_key, values_by_child_id in child_values.items():
+            if child_key.subject.scope is not MeasurementScope.OBJECT:
+                continue
+            if child_key.subject != self.target_subject:
+                continue
+            aggregate_key = RuntimeMeasurementFeatureKey.from_subject_feature(
+                self.source_subject,
+                self.aggregate_feature_name(child_key.feature_name),
+                source_name=child_key.source_name,
+            )
+            if (
+                aggregate_key in existing_measurement_keys
+                and child_key.feature_name
+                != ObjectCoreMeasurementFeature.OBJECT_NUMBER.value
+            ):
+                continue
+            if (
+                required_measurement_keys is not None
+                and aggregate_key not in required_measurement_keys
+            ):
+                continue
+            aligned_child_ids_by_parent = (
+                ObjectInstanceKeyPlaneAlignmentStrategy.align_child_ids_by_parent(
+                    child_ids_by_parent,
+                    values_by_child_id,
+                )
+            )
+            aggregate_values_by_parent = self.aggregate_values_by_parent(
+                aligned_child_ids_by_parent,
+                values_by_child_id,
+            )
+            for _parent_id, child_ids in aligned_child_ids_by_parent.items():
+                aggregate_value = aggregate_values_by_parent[child_ids]
+                if not math.isfinite(aggregate_value):
+                    continue
+                aggregate_facts.append(
+                    (
+                        aggregate_key,
+                        runtime_cell_signature(
+                            str(aggregate_value),
+                            policy,
+                        ),
+                    )
+                )
+        return tuple(aggregate_facts)
+
+    def source_domain(
+        self,
+        object_label_catalog: RuntimeObjectLabelInstanceCatalog,
+    ) -> tuple[ObjectInstanceKey, ...]:
+        """Return source-object identities represented by this relationship."""
+        return self.instance_relationship.source_domain(
+            object_label_catalog.count_for_subject(self.source_subject),
+            declared_keys=object_label_catalog.domain_for_subject(self.source_subject),
+        )
+
+    def target_domain(
+        self,
+        object_label_catalog: RuntimeObjectLabelInstanceCatalog,
+    ) -> tuple[ObjectInstanceKey, ...]:
+        """Return target-object identities represented by this relationship."""
+        return self.instance_relationship.target_domain(
+            object_label_catalog.count_for_subject(self.target_subject),
+            declared_keys=object_label_catalog.domain_for_subject(self.target_subject),
+        )
+
+    def child_keys_by_parent(
+        self,
+        object_label_catalog: RuntimeObjectLabelInstanceCatalog,
+    ) -> dict[ObjectInstanceKey, tuple[ObjectInstanceKey, ...]]:
+        """Return target identities grouped by source identity."""
+        return self.instance_relationship.child_keys_by_parent(
+            source_object_count=object_label_catalog.count_for_subject(
+                self.source_subject
+            ),
+            declared_source_keys=object_label_catalog.domain_for_subject(
+                self.source_subject
+            ),
+        )
+
+    def parent_key_by_child(self) -> dict[ObjectInstanceKey, ObjectInstanceKey]:
+        """Return source identity for each target identity."""
+        return self.instance_relationship.parent_key_by_child()
+
+    def target_object_number_values(
+        self,
+        object_label_catalog: RuntimeObjectLabelInstanceCatalog,
+    ) -> dict[ObjectInstanceKey, float]:
+        """Return target-object-number values keyed by target identity."""
+        return {
+            target_key: float(target_key.object_id)
+            for target_key in self.target_domain(object_label_catalog)
+        }
+
+    def aggregate_values_by_parent(
+        self,
+        child_ids_by_parent: _ObjectInstanceChildrenByParent,
+        values_by_child_id: Mapping[ObjectInstanceKey, float],
+    ) -> _ObjectInstanceAggregateValues:
+        """Return aggregate target values keyed by each parent child-domain."""
+        means: _ObjectInstanceAggregateValues = {}
+        for child_ids in child_ids_by_parent.values():
+            if child_ids in means:
+                continue
+            means[child_ids] = self.mean_child_value(child_ids, values_by_child_id)
+        return means
+
+    def mean_child_value(
+        self,
+        child_ids: tuple[ObjectInstanceKey, ...],
+        values_by_child_id: Mapping[ObjectInstanceKey, float],
+    ) -> float:
+        """Return the mean over child identities with available values."""
+        del self
+        values = tuple(
+            values_by_child_id[child_id]
+            for child_id in child_ids
+            if child_id in values_by_child_id
+        )
+        if not values:
+            return float("nan")
+        return float(sum(values) / len(values))
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeObjectRelationshipIdentity:
+    """Exact relationship identity used to collapse duplicate runtime artifacts."""
+
+    name: str
+    source_name: str
+    target_name: str
+    relationship_type: str
+    instance_relationship: ObjectInstanceRelationship
+
+    @classmethod
+    def from_relationship(
+        cls,
+        relationship: ObjectRelationship,
+    ) -> "RuntimeObjectRelationshipIdentity":
+        return cls(
+            name=relationship.name,
+            source_name=normalize_runtime_identifier(
+                relationship.declaration.source.name
+            ),
+            target_name=normalize_runtime_identifier(
+                relationship.declaration.target.name
+            ),
+            relationship_type=normalize_runtime_identifier(
+                relationship.declaration.relationship_type
+            ),
+            instance_relationship=ObjectInstanceRelationship.from_id_columns(
+                tuple(
+                    int(value)
+                    for value in np.asarray(relationship.payload.source_ids).ravel()
+                ),
+                tuple(
+                    int(value)
+                    for value in np.asarray(relationship.payload.target_ids).ravel()
+                ),
+                slice_indices=relationship.payload.slice_indices,
+                slice_count=relationship.payload.slice_count,
+            ),
+        )
+
+
+def object_measurement_values_by_label(
+    measurement_tables: tuple[RuntimeScopedMeasurementTable, ...],
+    object_name: str,
+    policy: RuntimeEquivalencePolicy,
+    *,
+    known_source_names: tuple[str, ...],
+    required_keys: RuntimeRequiredMeasurementKeys = None,
+    target_source_provenance: SourceImageProvenance | None = None,
+    source_image_set_identity_policy: SourceImageSetIdentityPolicy = (
+        SourceImageSetIdentityPolicy()
+    ),
+) -> RuntimeObjectValuesByLabel:
+    object_subject = RuntimeMeasurementSubjectKey(MeasurementScope.OBJECT, object_name)
+    values_by_feature: RuntimeObjectValuesByLabel = {}
+    row_required_keys = RequiredRuntimeMeasurementProjection(
+        required_keys,
+        policy,
+        known_source_names=known_source_names,
+    ).input_keys()
+    schema_cache: RuntimeMeasurementRowSchemaCache = {}
+    key_cache: RuntimeMeasurementFeatureKeyCache = {}
+    wide_feature_index_cache: RuntimeMeasurementWideFeatureIndexCache = {}
+    wide_feature_plan_cache: RuntimeMeasurementWideFeaturePlanCache = {}
+    qualifier_render_cache: RuntimeMeasurementQualifierRenderCache = {}
+    padding_group_cache: RuntimeMeasurementPaddingGroupCache = {}
+    required_key_index = RuntimeMeasurementRequiredKeyIndex.from_required_keys(
+        row_required_keys
+    )
+    derive_directional_pair_facts = RuntimeDirectionalPairMeasurementDerivationContract(
+        policy,
+        known_source_names,
+    ).required_keys_need_derivation(row_required_keys)
+    normalized_object_name = normalize_runtime_identifier(object_name)
+    target_source_axis: SourcePlaneIdentitySequence = (
+        ()
+        if target_source_provenance is None
+        else target_source_provenance.image_set_axis(source_image_set_identity_policy)
+    )
+    for scoped_table in measurement_tables:
+        table = scoped_table.table
+        if not measurement_table_may_contain_object_name(
+            table,
+            normalized_object_name,
+        ):
+            continue
+        table_subject = RuntimeMeasurementSubjectKey.from_table_subject(table.subject)
+        object_id_field = table.subject.object_id_field
+        table_padding_group = measurement_table_padding_group(table.name)
+        image_number_offset = RuntimeImageNumberOffset.from_measurement_table(table)
+        table_schema = runtime_measurement_row_schema_for_header(
+            tuple(field.name for field in table.rows.fields),
+            policy.measurement_dialect.row_qualifiers,
+            policy.measurement_dialect.row_identity_contract,
+            policy.measurement_dialect.non_measurement_field_prefixes,
+        )
+        aligned_slice_indices: tuple[int, ...] | None = None
+        if target_source_axis:
+            table_source_axis = table.source_provenance.image_set_axis(
+                source_image_set_identity_policy
+            )
+            if table_source_axis:
+                aligned_slice_indices = SourcePlaneIdentitySequenceAlignment(
+                    table_source_axis,
+                    target_source_axis,
+                ).target_indexes_for_image_planes()
+                if aligned_slice_indices is None:
+                    raise ValueError(
+                        f"Measurement table {table.name!r} source provenance does not "
+                        "align to its relationship source provenance."
+                    )
+        for row in iter_measurement_rows((table,)):
+            row_mapping = measurement_row_mapping(row)
+            runtime_row = RuntimeMeasurementRowMapping(
+                row_mapping,
+                object_row_identity=table.rows.object_row_identity,
+            )
+            try:
+                object_label = measurement_object_label(
+                    row_mapping,
+                    object_id_field=object_id_field,
+                )
+            except (TypeError, ValueError):
+                continue
+            if object_label is None:
+                continue
+            row_subject_projection = RuntimeMeasurementRowSubjectProjection(
+                table_subject,
+                table.source_image_name,
+                runtime_row,
+                policy.measurement_dialect,
+            )
+            subject = row_subject_projection.subject()
+            if subject != object_subject:
+                continue
+            source_qualification = subject.bind_row_source_identity(
+                row_subject_projection.source_name()
+            )
+            row_context = RuntimeRowProjectionContext.from_row(
+                runtime_row,
+                subject,
+                policy,
+                measurement_feature_owner=table.measurement_feature_owner,
+                source_name=source_qualification.feature_source_name,
+                known_source_names=known_source_names,
+                required_keys=row_required_keys,
+                table_padding_group=table_padding_group,
+                image_number_offset=image_number_offset,
+                derive_directional_pair_facts=derive_directional_pair_facts,
+                schema_cache=schema_cache,
+                key_cache=key_cache,
+                wide_feature_index_cache=wide_feature_index_cache,
+                wide_feature_plan_cache=wide_feature_plan_cache,
+                qualifier_render_cache=qualifier_render_cache,
+                padding_group_cache=padding_group_cache,
+                required_key_index=required_key_index,
+                table_schema=table_schema,
+            )
+            for key, value in row_context.numeric_values():
+                if row_required_keys is not None and key not in row_required_keys:
+                    continue
+                if key.statistic != MeasurementStatistic.VALUE.value:
+                    continue
+                if key not in values_by_feature:
+                    values_by_feature[key] = {}
+                object_instance_key = scoped_table.object_instance_key(
+                    runtime_row,
+                    object_label,
+                    image_number_offset=image_number_offset,
+                )
+                if aligned_slice_indices is not None:
+                    local_slice_index = object_instance_key.slice_index
+                    if local_slice_index is None:
+                        if len(aligned_slice_indices) != 1:
+                            raise ValueError(
+                                f"Measurement table {table.name!r} has axisless object "
+                                "rows on a multi-plane source axis."
+                            )
+                        local_slice_index = 0
+                    if local_slice_index >= len(aligned_slice_indices):
+                        raise ValueError(
+                            f"Measurement table {table.name!r} row slice "
+                            f"{local_slice_index} exceeds its source axis of "
+                            f"{len(aligned_slice_indices)} plane(s)."
+                        )
+                    object_instance_key = ObjectInstanceKey(
+                        object_instance_key.object_id,
+                        slice_index=aligned_slice_indices[local_slice_index],
+                    )
+                values_by_feature[key][object_instance_key] = value
+    return values_by_feature
+
+
+@dataclass(frozen=True, slots=True)
+class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics):
+    """Restore directed edge meaning using the saved object-row domains."""
+
+    object_tables: tuple[RuntimeScopedMeasurementTable, ...]
+    image_number_offset: RuntimeImageNumberOffset
+
+    @classmethod
+    def supports_table(cls, table: RuntimeTableSnapshot) -> bool:
+        fields = frozenset(normalize_runtime_identifier(name) for name in table.header)
+        declaration_fields = frozenset(
+            ObjectRelationshipDeclaration.exported_field_names
+        )
+        if not fields & declaration_fields:
+            return False
+        if not declaration_fields <= fields:
+            raise ValueError(
+                f"Relationship table {table.path} has an incomplete declaration schema."
+            )
+        return True
+
+    @classmethod
+    def validated_output_tables(
+        cls,
+        tables: tuple[RuntimeTableSnapshot, ...],
+        policy: RuntimeEquivalencePolicy,
+    ) -> tuple[tuple[RuntimeScopedMeasurementTable, ...], RuntimeImageNumberOffset]:
+        """Admit every edge against the same subject-owned tables used downstream."""
+        ordinary = tuple(table for table in tables if not cls.supports_table(table))
+        object_tables = tuple(
+            RuntimeScopedMeasurementTable(measurement)
+            for table in ordinary
+            for measurement in table.measurement_tables(policy.measurement_dialect)
+        )
+        image_offset = RuntimeImageNumberOffset.from_runtime_rows(
+            row
+            for table in object_tables
+            for row in table.table.rows.iter_row_mappings()
+        )
+        relationships = tuple(
+            relationship
+            for table in tables
+            if cls.supports_table(table)
+            for relationship in cls.from_table(
+                table, object_tables, policy, image_offset
+            )
+        )
+        for relationship in relationships:
+            relationship.validate_recorded_measurements()
+            relationship.validate_reciprocal_declarations(relationships)
+        return object_tables, image_offset
+
+    @classmethod
+    def from_table(
+        cls,
+        table: RuntimeTableSnapshot,
+        object_tables: tuple[RuntimeScopedMeasurementTable, ...],
+        policy: RuntimeEquivalencePolicy,
+        image_number_offset: RuntimeImageNumberOffset,
+    ) -> tuple[Self, ...]:
+        normalized_header = tuple(
+            normalize_runtime_identifier(name) for name in table.header
+        )
+        if len(set(normalized_header)) != len(normalized_header):
+            raise ValueError("Relationship table has duplicate normalized columns.")
+        groups: dict[
+            ObjectRelationshipDeclaration, list[RuntimeMeasurementRowMapping]
+        ] = {}
+        for values in table.required_rows():
+            row = RuntimeMeasurementRowMapping(
+                dict(zip(table.header, values, strict=True))
+            )
+            declaration = ObjectRelationshipDeclaration.from_exported_values(
+                *(
+                    row.first_value((field,))
+                    for field in ObjectRelationshipDeclaration.exported_field_names
+                )
+            )
+            groups.setdefault(declaration, []).append(row)
+        results = []
+        for declaration, rows in groups.items():
+            source_ids = []
+            target_ids = []
+            slice_indices = []
+            counts = set()
+            for row in rows:
+                source_id = MeasurementScalarLiteral(
+                    row.first_value((declaration.source_id_field,))
+                ).integer_value
+                target_id = MeasurementScalarLiteral(
+                    row.first_value((declaration.target_id_field,))
+                ).integer_value
+                if (
+                    source_id is None
+                    or target_id is None
+                    or min(source_id, target_id) < 0
+                ):
+                    raise ValueError(
+                        "Relationship endpoint IDs must be nonnegative integers."
+                    )
+                slice_index = image_number_offset.object_instance_key(
+                    row.row, 1
+                ).required_slice_index()
+                raw_count = row.first_value(("slice_count",))
+                count = MeasurementScalarLiteral(raw_count).integer_value
+                if raw_count is not None and count is None:
+                    raise ValueError(
+                        "Relationship slice count must be an integer when declared."
+                    )
+                counts.add(count)
+                source_ids.append(source_id)
+                target_ids.append(target_id)
+                slice_indices.append(slice_index)
+            if len(counts) != 1:
+                raise ValueError(
+                    "Relationship rows have conflicting declared slice counts."
+                )
+            relationship = ObjectRelationship(
+                name=declaration.artifact_name(),
+                declaration=declaration,
+                payload=DirectedObjectRelationshipPayload(
+                    source_ids=tuple(source_ids),
+                    target_ids=tuple(target_ids),
+                    slice_indices=tuple(slice_indices),
+                    slice_count=counts.pop(),
+                ),
+            )
+            results.append(
+                cls(
+                    relationship,
+                    policy.measurement_dialect,
+                    object_tables,
+                    image_number_offset,
+                )
+            )
+        return tuple(results)
+
+    @property
+    def source_name(self) -> str:
+        declaration = self.relationship.declaration
+        ref = (
+            declaration.source
+            if declaration.projects_parent_child_measurements()
+            else declaration.target
+        )
+        return normalize_runtime_identifier(ref.name)
+
+    @property
+    def target_name(self) -> str:
+        declaration = self.relationship.declaration
+        ref = (
+            declaration.target
+            if declaration.projects_parent_child_measurements()
+            else declaration.source
+        )
+        return normalize_runtime_identifier(ref.name)
+
+    @property
+    def instance_relationship(self) -> ObjectInstanceRelationship:
+        instances = super(
+            ExportedRelationshipMeasurementSemantics, self
+        ).instance_relationship
+        return (
+            instances
+            if self.relationship.declaration.projects_parent_child_measurements()
+            else instances.reverse_endpoints()
+        )
+
+    def validate_reciprocal_declarations(self, relationships: tuple[Self, ...]) -> None:
+        """Require an observed reverse declaration to retain producer and pairs."""
+        declaration = self.relationship.declaration
+        reverse = tuple(
+            other
+            for other in relationships
+            if other.source_subject == self.source_subject
+            and other.target_subject == self.target_subject
+            and other.relationship.declaration.source_role != declaration.source_role
+        )
+        if reverse and not any(
+            other.relationship.declaration.producer_module_number
+            == declaration.producer_module_number
+            and other.instance_relationship.slice_count
+            == self.instance_relationship.slice_count
+            and frozenset(
+                zip(
+                    other.instance_relationship.source_keys,
+                    other.instance_relationship.target_keys,
+                    strict=True,
+                )
+            )
+            == frozenset(
+                zip(
+                    self.instance_relationship.source_keys,
+                    self.instance_relationship.target_keys,
+                    strict=True,
+                )
+            )
+            for other in reverse
+        ):
+            raise ValueError(
+                "Relationship reverse declarations disagree on producer or directed pairs."
+            )
+
+    @classmethod
+    def object_rows(
+        cls,
+        object_tables: tuple[RuntimeScopedMeasurementTable, ...],
+        subject: RuntimeMeasurementSubjectKey,
+        image_number_offset: RuntimeImageNumberOffset,
+    ) -> dict[ObjectInstanceKey, RuntimeMeasurementRowMapping]:
+        rows: dict[ObjectInstanceKey, RuntimeMeasurementRowMapping] = {}
+        for scoped_table in object_tables:
+            table = scoped_table.table
+            if (
+                RuntimeMeasurementSubjectKey.from_table_subject(table.subject)
+                != subject
+            ):
+                continue
+            for values in table.rows.iter_row_mappings():
+                row = RuntimeMeasurementRowMapping(measurement_row_mapping(values))
+                object_id = row.object_label(
+                    object_id_field=table.subject.object_id_field
+                )
+                if object_id is None:
+                    raise ValueError(
+                        f"Relationship endpoint {subject.name!r} lacks an object identity."
+                    )
+                key = image_number_offset.object_instance_key(row.row, object_id)
+                key.required_slice_index()
+                if key in rows and rows[key].row != row.row:
+                    raise ValueError(
+                        f"Relationship endpoint {subject.name!r} has conflicting object rows for {key!r}."
+                    )
+                rows[key] = row
+        return rows
+
+    def source_domain(
+        self, object_label_catalog: RuntimeObjectLabelInstanceCatalog
+    ) -> tuple[ObjectInstanceKey, ...]:
+        del object_label_catalog
+        return tuple(
+            self.object_rows(
+                self.object_tables, self.source_subject, self.image_number_offset
+            )
+        )
+
+    def target_domain(
+        self, object_label_catalog: RuntimeObjectLabelInstanceCatalog
+    ) -> tuple[ObjectInstanceKey, ...]:
+        del object_label_catalog
+        return tuple(
+            self.object_rows(
+                self.object_tables, self.target_subject, self.image_number_offset
+            )
+        )
+
+    def child_keys_by_parent(
+        self, object_label_catalog: RuntimeObjectLabelInstanceCatalog
+    ) -> dict[ObjectInstanceKey, tuple[ObjectInstanceKey, ...]]:
+        return self.instance_relationship.child_keys_by_parent(
+            declared_source_keys=self.source_domain(object_label_catalog)
+        )
+
+    def validate_recorded_measurements(self) -> None:
+        """Check all edges and zero-child rows before suppressing redundant facts."""
+        parents = self.object_rows(
+            self.object_tables, self.source_subject, self.image_number_offset
+        )
+        children = self.object_rows(
+            self.object_tables, self.target_subject, self.image_number_offset
+        )
+        original = self.relationship.payload
+        for source_id, target_id, slice_index in zip(
+            original.source_ids,
+            original.target_ids,
+            original.slice_indices,
+            strict=True,
+        ):
+            parent_id, child_id = (
+                (source_id, target_id)
+                if self.relationship.declaration.projects_parent_child_measurements()
+                else (target_id, source_id)
+            )
+            if (
+                child_id <= 0
+                or ObjectInstanceKey(child_id, slice_index) not in children
+            ):
+                raise ValueError(
+                    "Relationship table refers to an absent child endpoint."
+                )
+            if (
+                parent_id > 0
+                and ObjectInstanceKey(parent_id, slice_index) not in parents
+            ):
+                raise ValueError(
+                    "Relationship table refers to an absent parent endpoint."
+                )
+        instances = self.instance_relationship
+        pairs = tuple(zip(instances.source_keys, instances.target_keys, strict=True))
+        if len(set(pairs)) != len(pairs):
+            raise ValueError("Relationship table contains duplicate directed edges.")
+        parent_by_child = instances.parent_key_by_child()
+        if len(parent_by_child) != len(pairs):
+            raise ValueError(
+                "Relationship table assigns contradictory parents to one child."
+            )
+        if (
+            not set(instances.source_keys) <= parents.keys()
+            or not set(instances.target_keys) <= children.keys()
+        ):
+            raise ValueError("Relationship table refers to an absent object endpoint.")
+        parent_feature = DirectParentReferenceFeatureDeclaration.feature_name(
+            DirectParentReferenceMeasurementFeature(
+                self.relationship.declaration.source.name
+                if self.relationship.declaration.projects_parent_child_measurements()
+                else self.relationship.declaration.target.name
+            )
+        )
+        for child, row in children.items():
+            observed = row.first_value((normalize_runtime_identifier(parent_feature),))
+            if observed is None:
+                raise ValueError(
+                    f"Relationship child {child!r} lacks its explicit parent measurement."
+                )
+            expected = (
+                parent_by_child[child].object_id if child in parent_by_child else 0
+            )
+            if MeasurementScalarLiteral(observed).integer_value != expected:
+                raise ValueError(
+                    f"Relationship edges disagree with {parent_feature!r} at child {child!r}."
+                )
+        counts = instances.child_keys_by_parent(declared_source_keys=parents)
+        count_feature = ChildCountFeatureDeclaration.feature_name(
+            self.relationship.declaration.target.name
+            if self.relationship.declaration.projects_parent_child_measurements()
+            else self.relationship.declaration.source.name
+        )
+        for parent, row in parents.items():
+            observed = row.first_value((normalize_runtime_identifier(count_feature),))
+            if observed is None or MeasurementScalarLiteral(
+                observed
+            ).integer_value != len(counts[parent]):
+                raise ValueError(
+                    f"Relationship edges disagree with {count_feature!r} at parent {parent!r}."
+                )
+
+    @classmethod
+    def correlated_object_relationships(
+        cls,
+        object_tables: tuple[RuntimeScopedMeasurementTable, ...],
+        image_number_offset: RuntimeImageNumberOffset,
+    ) -> dict[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship]:
+        """Retain exact native parent references, independently of value counters."""
+        pairs: dict[
+            RuntimeMeasurementFeatureKey,
+            list[tuple[ObjectInstanceKey, ObjectInstanceKey]],
+        ] = {}
+        for scoped_table in object_tables:
+            table = scoped_table.table
+            if table.subject.scope is not MeasurementScope.OBJECT:
+                continue
+            child_name = normalize_runtime_identifier(table.subject.name)
+            for field in table.rows.fields:
+                identity = DirectParentReferenceFeatureDeclaration.from_feature_name(
+                    field.name
+                )
+                if identity is None:
+                    continue
+                key = RuntimeMeasurementFeatureKey(
+                    RuntimeMeasurementSubjectKey(
+                        MeasurementScope.RELATIONSHIP, child_name
+                    ),
+                    normalize_runtime_identifier(identity.parent_object_name),
+                )
+                values = pairs.setdefault(key, [])
+                for raw_row in table.rows.iter_row_mappings():
+                    row = RuntimeMeasurementRowMapping(measurement_row_mapping(raw_row))
+                    child_id = row.object_label(
+                        object_id_field=table.subject.object_id_field
+                    )
+                    parent_id = MeasurementScalarLiteral(
+                        row.row[field.name]
+                    ).integer_value
+                    if child_id is None or parent_id is None or parent_id < 0:
+                        raise ValueError(
+                            "Relationship measurements require integral endpoint identities."
+                        )
+                    child_key = image_number_offset.object_instance_key(
+                        row.row, child_id
+                    )
+                    slice_index = child_key.required_slice_index()
+                    if parent_id > 0:
+                        values.append(
+                            (
+                                ObjectInstanceKey(parent_id, slice_index),
+                                child_key,
+                            )
+                        )
+        result = {}
+        for key, values in pairs.items():
+            ordered = tuple(
+                sorted(
+                    values,
+                    key=lambda pair: (
+                        pair[0].slice_index,
+                        pair[0].object_id,
+                        pair[1].object_id,
+                    ),
+                )
+            )
+            graph = ObjectInstanceRelationship(
+                tuple(pair[0] for pair in ordered), tuple(pair[1] for pair in ordered)
+            )
+            if len(set(graph.target_keys)) != len(graph.target_keys):
+                raise ValueError(
+                    "Relationship measurements assign duplicate or contradictory child identities."
+                )
+            parent_subject = RuntimeMeasurementSubjectKey(
+                MeasurementScope.OBJECT, key.feature_name
+            )
+            parents = cls.object_rows(
+                object_tables, parent_subject, image_number_offset
+            )
+            if not set(graph.source_keys) <= parents.keys():
+                raise ValueError(
+                    "Relationship measurements refer to an absent parent endpoint."
+                )
+            children_by_parent = graph.child_keys_by_parent(
+                declared_source_keys=parents
+            )
+            count_field = normalize_runtime_identifier(
+                ChildCountFeatureDeclaration.feature_name(key.subject.name)
+            )
+            for parent, row in parents.items():
+                observed = row.first_value((count_field,))
+                if observed is not None and MeasurementScalarLiteral(
+                    observed
+                ).integer_value != len(children_by_parent[parent]):
+                    raise ValueError(
+                        f"Relationship measurements disagree with {count_field!r} at parent {parent!r}."
+                    )
+            result[key] = graph
+        return result
+
+
+def measurement_table_may_contain_object_name(
+    table: MeasurementTable,
+    normalized_object_name: str,
+) -> bool:
+    """Return whether table ownership can match a normalized object target."""
+    declared_object_name = table.subject.object_name
+    if declared_object_name is not None:
+        return (
+            normalize_runtime_identifier(declared_object_name) == normalized_object_name
+        )
+    rows = table.rows
+    if not isinstance(rows, ColumnarRows):
+        return True
+    column_names = frozenset(str(column) for column in rows.columns)
+    if MeasurementRowAxisField.OBJECT_NAME.value not in column_names:
+        return True
+    return any(
+        normalize_runtime_identifier(str(value)) == normalized_object_name
+        for value in columnar_row_values(
+            rows, MeasurementRowAxisField.OBJECT_NAME.value
+        )
+        if value is not None
+    )

@@ -15,7 +15,7 @@ from benchmark.cellprofiler_comparison import (
     load_comparison_cases,
 )
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.equivalence.outputs import image_paths, table_paths
+from benchmark.equivalence.outputs import image_paths, table_paths
 
 FIELDNAMES = (
     "case_name",

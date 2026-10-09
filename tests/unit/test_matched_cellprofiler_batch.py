@@ -32,7 +32,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeOutputSnapshot,
     RuntimeTableSnapshot,

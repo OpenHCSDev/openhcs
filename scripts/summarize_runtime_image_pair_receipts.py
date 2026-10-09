@@ -10,8 +10,8 @@ from pathlib import Path
 
 import numpy as np
 
-from openhcs.core.equivalence.comparison import _comparable_image_pixels
-from openhcs.core.equivalence.images import RuntimeImageSnapshot
+from benchmark.equivalence.comparison import _comparable_image_pixels
+from benchmark.equivalence.images import RuntimeImageSnapshot
 
 FIELDNAMES = (
     "comparison_name",

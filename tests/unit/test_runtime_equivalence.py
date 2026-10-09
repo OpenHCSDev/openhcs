@@ -29,7 +29,7 @@ from openhcs.core.equivalence.measurement_rows import (
     RuntimeMeasurementRowMapping,
     measurement_row_image_identity_key,
 )
-from openhcs.core.equivalence.object_label_measurements import (
+from benchmark.equivalence.object_label_measurements import (
     ObjectLabelMeasurementCompletion,
 )
 from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
@@ -46,7 +46,7 @@ from openhcs.core.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
 )
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     RuntimeCellSignature,
     RuntimeCellValueKind,
     RuntimeImageSnapshot,
@@ -58,13 +58,13 @@ from openhcs.core.runtime_equivalence import (
     runtime_artifact_execution_equivalence,
     runtime_measurement_equivalence,
 )
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     RuntimeEquivalencePolicy as _RuntimeEquivalencePolicy,
 )
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     runtime_output_equivalence as _runtime_output_equivalence,
 )
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     runtime_reference_artifact_equivalence as _runtime_reference_artifact_equivalence,
 )
 from openhcs.core.runtime_execution_validation import (
@@ -1444,7 +1444,7 @@ def test_runtime_reference_artifact_equivalence_ignores_internal_tables_without_
         RuntimeExportObservation.from_output_root(candidate_root),
     )
     monkeypatch.setattr(
-        "openhcs.core.runtime_equivalence.runtime_artifact_measurement_source_names",
+        "benchmark.equivalence.runtime.runtime_artifact_measurement_source_names",
         lambda _candidate: (),
     )
 
@@ -11410,7 +11410,9 @@ def test_exported_relationships_consume_declared_object_identity(
 ) -> None:
     from dataclasses import replace
 
-    from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+    from benchmark.equivalence.table_snapshots import (
+        RuntimeTableSnapshot,
+    )
     from openhcs.core.runtime_measurements import RuntimeMeasurementRowIdentityContract
 
     dialect = replace(

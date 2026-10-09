@@ -29,9 +29,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.equivalence import (
-    measurement_qualifier_field_names,
-)
+from openhcs.core.equivalence.measurement_rows import measurement_qualifier_field_names
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,

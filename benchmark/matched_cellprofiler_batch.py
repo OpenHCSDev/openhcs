@@ -83,10 +83,12 @@ from openhcs.core.config import (
     VFSConfig,
     WellFilterConfig,
 )
-from openhcs.core.equivalence.comparison import runtime_image_differences
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
-from openhcs.core.equivalence.tables import RuntimeTableSnapshot
-from openhcs.core.equivalence.report import (
+from benchmark.equivalence.comparison import runtime_image_differences
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.table_snapshots import (
+    RuntimeTableSnapshot,
+)
+from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceReport,
 )
@@ -99,7 +101,7 @@ from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeMeasurementSnapshotCachePayload,
     runtime_measurement_equivalence,
@@ -270,7 +272,7 @@ def _require_compared_output_inventory(
     """Reject unqualified output formats and missing scientific output files."""
     # Validate all explicit edges against their object rows, then compare the
     # cross-output correlations before using redundant scalar table inventory.
-    from openhcs.core.equivalence.relationships import (
+    from benchmark.equivalence.exported_relationships import (
         ExportedRelationshipMeasurementSemantics,
     )
 

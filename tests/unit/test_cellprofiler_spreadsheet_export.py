@@ -1024,7 +1024,7 @@ def test_export_to_spreadsheet_copies_native_metadata_and_qualified_file_names()
 def test_combined_spreadsheet_retains_native_subject_headers_and_sparse_rows(
     tmp_path,
 ) -> None:
-    from openhcs.core.runtime_equivalence import RuntimeTableSnapshot
+    from benchmark.equivalence.runtime import RuntimeTableSnapshot
 
     records = tuple(
         _measurement_record(

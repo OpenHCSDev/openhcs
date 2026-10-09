@@ -1,10 +1,8 @@
-"""Table snapshot records for runtime equivalence."""
+"""Semantic snapshots of exported measurement tables compared against native CellProfiler outputs."""
 
 from __future__ import annotations
 
 import csv
-from collections import Counter
-from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
@@ -26,36 +24,26 @@ from openhcs.core.measurement_row_materialization import (
     MEASUREMENT_SPARSE_CELL,
     MeasurementSparseColumnarRows,
 )
+from openhcs.core.runtime_measurements import (
+    MeasurementRowAxisField,
+    MeasurementScalarLiteral,
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    RuntimeMeasurementRowIdentityContract,
+)
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
 )
-from openhcs.core.runtime_measurements import (
-    MeasurementRowValueField,
-    MeasurementRowAxisField,
-    MeasurementScope,
-    MeasurementSubject,
-    MeasurementScalarLiteral,
-    RuntimeMeasurementRowIdentityContract,
-)
-from openhcs.core.runtime_measurements import (
-    MeasurementTable,
-)
 
 if TYPE_CHECKING:
     from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
+from collections import Counter
+from collections.abc import Iterable
 
-MEASUREMENT_IDENTITY_FIELDS = frozenset(
-    {
-        "image_id",
-        *DEFAULT_RUNTIME_MEASUREMENT_DIALECT.row_identity_contract.image_identity_fields,
-        *MeasurementRowAxisField.object_id_field_names(),
-        MeasurementRowAxisField.OBJECT_NAME.value,
-        MeasurementRowAxisField.OBJECT_ROW_IDENTITY.value,
-        MeasurementRowAxisField.SOURCE_IMAGE_NAME.value,
-        "group_key",
-    }
-)
+from openhcs.core.equivalence.measurement_rows import MEASUREMENT_IDENTITY_FIELDS
+
 CSV_HEADER_CONTEXT_STOPWORDS = frozenset(
     {
         "image",
@@ -65,6 +53,8 @@ CSV_HEADER_CONTEXT_STOPWORDS = frozenset(
         "measurements",
     }
 )
+
+
 DEFAULT_MEASUREMENT_TABLE_PADDING_GROUP = "measurements"
 
 
@@ -605,18 +595,6 @@ class RuntimeTableSnapshot:
         )
 
 
-def is_wide_measurement_table(row: Mapping[str, object]) -> bool:
-    """Return whether a table encodes measurements as feature columns."""
-    normalized_fields = {normalize_runtime_identifier(field_name) for field_name in row}
-    if normalized_fields & frozenset(
-        MeasurementRowAxisField.feature_name_field_names()
-    ):
-        return False
-    if normalized_fields & frozenset(MeasurementRowValueField.field_names()):
-        return False
-    return True
-
-
 def read_semantic_csv_table(
     rows: Iterable[tuple[str, ...] | list[str]],
 ) -> tuple[tuple[str, ...], tuple[tuple[str, ...], ...], tuple[str | None, ...]]:
@@ -648,35 +626,10 @@ def read_semantic_csv_table(
     return (), (), ()
 
 
-def duplicate_values(values: tuple[str, ...]) -> tuple[str, ...]:
-    """Return duplicate values in first-observed order."""
-    counts = Counter(values)
-    return tuple(value for value, count in counts.items() if count > 1)
-
-
 def _semantic_csv_column_context(
     context: tuple[str, ...],
 ) -> tuple[str | None, ...]:
     return tuple(str(value).strip() or None for value in context)
-
-
-def _is_semantic_csv_header(header: tuple[str, ...]) -> bool:
-    if not header:
-        return False
-    if any(not column for column in header):
-        return False
-    return not duplicate_values(header)
-
-
-def _is_contextual_semantic_csv_header(header: tuple[str, ...]) -> bool:
-    if not header:
-        return False
-    if any(not column for column in header):
-        return False
-    if not duplicate_values(header):
-        return False
-    normalized_fields = {normalize_runtime_identifier(column) for column in header}
-    return bool(normalized_fields & MEASUREMENT_IDENTITY_FIELDS)
 
 
 def _is_contextual_semantic_csv_table_header(
@@ -701,3 +654,28 @@ def _is_contextual_semantic_csv_table_header(
     if duplicate_values(normalized_context):
         return True
     return bool(frozenset(normalized_context) & CSV_HEADER_CONTEXT_STOPWORDS)
+
+
+def _is_semantic_csv_header(header: tuple[str, ...]) -> bool:
+    if not header:
+        return False
+    if any(not column for column in header):
+        return False
+    return not duplicate_values(header)
+
+
+def _is_contextual_semantic_csv_header(header: tuple[str, ...]) -> bool:
+    if not header:
+        return False
+    if any(not column for column in header):
+        return False
+    if not duplicate_values(header):
+        return False
+    normalized_fields = {normalize_runtime_identifier(column) for column in header}
+    return bool(normalized_fields & MEASUREMENT_IDENTITY_FIELDS)
+
+
+def duplicate_values(values: tuple[str, ...]) -> tuple[str, ...]:
+    """Return duplicate values in first-observed order."""
+    counts = Counter(values)
+    return tuple(value for value, count in counts.items() if count > 1)

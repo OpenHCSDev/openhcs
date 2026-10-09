@@ -9,23 +9,25 @@ from pathlib import Path
 
 from benchmark.native_measurement_facts import retained_native_measurement_snapshot
 
-from openhcs.core.equivalence.comparison import (
+from benchmark.equivalence.comparison import (
     runtime_image_differences,
     runtime_table_differences,
 )
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
     normalize_runtime_identifier,
 )
-from openhcs.core.equivalence.report import (
+from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
     RuntimeEquivalenceReport,
 )
-from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from benchmark.equivalence.table_snapshots import (
+    RuntimeTableSnapshot,
+)
 from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeMeasurementSnapshotCachePayload,
     runtime_measurement_equivalence,

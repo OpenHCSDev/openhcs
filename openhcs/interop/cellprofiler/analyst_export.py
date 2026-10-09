@@ -45,7 +45,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     is_structural_missing_measurement_cell,
 )
-from openhcs.core.equivalence import measurement_qualifier_field_names
+from openhcs.core.equivalence.measurement_rows import measurement_qualifier_field_names
 from openhcs.core.equivalence.relationships import RuntimeScopedMeasurementTable
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,

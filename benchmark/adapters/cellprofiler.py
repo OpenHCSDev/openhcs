@@ -48,7 +48,7 @@ from openhcs.core.source_bindings import (
     source_bindings_defaults_to_base,
 )
 from openhcs.core.utils import WellFilterProcessor
-from openhcs.core.runtime_equivalence import RuntimeOutputSnapshot
+from benchmark.equivalence.runtime import RuntimeOutputSnapshot
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import (
     import_cellprofiler_pipeline,
