@@ -615,6 +615,56 @@ Labels identify authors in the linked records in Supplementary Data 7–8; multi
 | Laboratory neurites, fresh13 | gpt-6.1-sol | Nine development fields | Soma and path recovery | Matched image review |
 | Laboratory treatment, blind 1/2/3 | gpt-6.1-sol | 180 fields each; six/four/eight development fields | Control-normalized outgrowth response | Both drug responses recovered by all three; magnitudes varied |
 
+### Additional assays: detailed results
+
+The main text reports these single- and two-agent demonstrations in one summary paragraph. Their detailed results are given here; the trial-level table above lists every score.
+
+**BBBC007 DNA/actin.** Two later agents reached directed boundary fractions of 0.743 and 0.740 across 16 DNA/actin fields; the earlier held-out trial reached 0.671 across 12 fields (main Figure 4C; Supplementary Data 7). In one paired-field analysis, the agent detected 56 nuclei and kept 54 actin-supported cells after removing two seed-only candidates. Each cell mask included all pixels of its associated nucleus. Main Figure 4F shows a same-region merge repair.
+
+**H001 bright objects.** The H001 agent matched 59 of 64 computational-reference objects and raised F1 from 0.929 to 0.944 through self-directed repair (main Figures 3B and 4A). The matched views show correction of an elongated object's split and recovery of a pair lost during an intermediate revision.
+
+**H002 3D centres.** The H002 agent recovered all 15 annotated 3D centres within 30 voxels, with mean matched error of 4.80 voxels (main Figure 4D,I); a second agent also recovered 15 of 15, with mean matched error of 4.86 voxels. Eleven predictions of the first agent had no matching annotation; because annotations cover only some centres, these are not yet classified as false detections. A different agent repaired an internal body partition at Z=36 while keeping its neighbour separate (main Figure 4H).
+
+**Retinal somata.** The retinal repair trial detected 102 objects after improving fragmented soma footprints while keeping a neighbouring pair separate (main Figure 4G). A repeat detected 136 candidates, including ten at the border. Distributed raw/result review covered bright somata, diffuse rings and crowded regions (Supplementary Figure 4).
+
+**Neurite fields.** One autonomous agent analysed all nine laboratory neurite fields and revised its neurite admission settings after inspecting thin processes (main Figure 5II). Matched sparse and dense views showed recovery of raw-visible paths with the same soma labels in the reviewed field. In the public NeuronCyto II field, the initial pipeline recovered principal shafts and junctions (main Figure 5I); the final repair extended beyond that target. The initial result is shown alongside the published algorithm output.
+
+### BBBC039 field-level errors and repair
+
+The [per-field scores](task_only_analysis/bbbc039-uninspected-fields.csv) for the 175 fields that none of the three agents opened (rows with `opened_by_any_of_three_authors=False`) give the following pattern. Pooled counts reproduce the reported F1 values of 0.910, 0.906 and 0.906.
+
+| Agent | Fields with F1 ≥ 0.90 | Fields below 0.80 | Median field F1 | Missed nuclei | False detections | Fields with more misses than false detections |
+|---|---:|---:|---:|---:|---:|---:|
+| fresh612 | 121 | 6 | 0.919 | 2,661 | 951 | 171 |
+| fresh10 | 117 | 7 | 0.917 | 2,929 | 806 | 173 |
+| fresh13 | 121 | 6 | 0.915 | 2,743 | 1,033 | 171 |
+
+Misses made up 73% to 78% of each agent's errors. The same six fields (20641_A12_7, 20591_L01_3, 20590_D08_7, 20586_O15_6, 20626_E05_2 and 20630_P09_4) scored below 0.80 for all three agents; fresh10 also scored 0.727 on 20589_P23_7. These six fields hold 17 to 180 reference nuclei (median 59), against a median of 126 across all 175 fields. In field 20641_A12_7, all three agents missed 57 to 59 of 69 nuclei, giving F1 of 0.23 to 0.27. Field F1 was only weakly related to the number of nuclei (Spearman ρ −0.15 to −0.24); in the third of fields with the most nuclei (138 to 199), pooled F1 was 0.893 to 0.897, against 0.920 to 0.928 in the middle third.
+
+A same-input repair by fresh612 lowered the maxima-suppression size from 14 to 10 and raised F1 from 0.908 to 0.934 on the three inspected fields, recovering 14 missed nuclei while split reference nuclei increased from 28 to 43. The repair was not separately evaluated on the full collection. Between two independent agents' final pipelines on all 200 fields, per-field F1 differed mostly by less than 0.03, and the lower pooled score came chiefly from 314 additional missed nuclei (Supplementary Figure 3).
+
+### Skill revisions in reported trials
+
+The [trial resource table](task_only_analysis/trial_resources.csv) records, for each later trial, the SHA-256 hash of the skill entrypoint delivered to the agent (`skill_entrypoint_sha256`). The [treatment-assay cohort record](personal_neurite_autonomous/cohort.json) records the shared skill for the three laboratory treatment-assay agents. The table gives the first 12 hexadecimal characters; full hashes and hash scopes are in the source files.
+
+| Trial | Skill hash prefix |
+|---|---|
+| BBBC039, BBBC007 and BBBC013 earlier trials (gpt-5.6-sol, OpenHCS 0.8.5) | Not recorded |
+| BBBC039 fresh612 | 328600bf182d |
+| BBBC039 fresh10 | ccfb712b2ecb |
+| BBBC039 fresh13 | 997f30271129 |
+| BBBC013 fresh23 | 2eb9298d369f |
+| BBBC007 fresh19 | 997f30271129 |
+| BBBC007 fresh26 | ffb73f78ae93 |
+| H001 fresh586 | c0cc4e8db8aa (qualified managed delivery copy) |
+| H002 fresh15 | 997f30271129 |
+| H002 fresh23 rotation | 2eb9298d369f |
+| Retina fresh09 | ccfb712b2ecb |
+| Retina fresh26 | ffb73f78ae93 |
+| Public neurites fresh20 | 997f30271129 |
+| Laboratory neurites fresh13 | 997f30271129 |
+| Laboratory treatment assay, blind 1/2/3 | 6e5cfce7a3d6 (shared) |
+
 ### Source artwork and assisted mosaic review
 
 Main Figure 5 shows public shafts, autonomous laboratory-field analysis and
