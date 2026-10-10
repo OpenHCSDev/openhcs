@@ -82,7 +82,7 @@ from openhcs.authoring.session.views import (
     output_relations,
 )
 from openhcs.core.config import PipelineConfig
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.constants.constants import OrchestratorState
 from openhcs.core.path_cache import PathCacheKey
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (

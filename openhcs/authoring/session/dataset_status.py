@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.constants.constants import OrchestratorState
 from openhcs.core.debug_session_projection import (
     DebugSessionPhase,
     DebugSessionPhaseDeclarationBase,

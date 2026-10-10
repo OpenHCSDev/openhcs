@@ -19,7 +19,7 @@ from openhcs.core.execution_state import (
     ExecutionCompletionPayload,
     ManagerExecutionState,
 )
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.constants.constants import OrchestratorState
 
 
 @dataclass(frozen=True)

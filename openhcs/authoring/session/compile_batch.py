@@ -22,7 +22,7 @@ from openhcs.authoring.session.events import (
 )
 from openhcs.authoring.session.run_requests import dataset_pipeline_request
 from openhcs.core.execution_state import TerminalExecutionStatus
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.constants.constants import OrchestratorState
 from openhcs.runtime.zmq_execution_signature import TransportValue
 
 if TYPE_CHECKING:

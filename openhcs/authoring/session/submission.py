@@ -26,7 +26,7 @@ from openhcs.core.execution_state import (
     parse_terminal_status,
 )
 from openhcs.core.debug import DebugExecutionConfig
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.constants.constants import OrchestratorState
 from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 

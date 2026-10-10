@@ -13,15 +13,16 @@ OWNED_BOUNDARIES = (
     ROOT / "openhcs/core/progress/runtime_artifacts.py",
     ROOT / "openhcs/runtime/zmq_control.py",
     ROOT / "openhcs/pyqt_gui/widgets/artifact_plan_view.py",
-    ROOT
-    / "openhcs/pyqt_gui/widgets/shared/services/runtime_artifact_progress_service.py",
+    ROOT / "openhcs/authoring/session/progress_notifications.py",
 )
+# The session owns compile submission and progress projection (U1); like the
+# widgets before it, it submits to the server and never compiles itself.
 ARTIFACT_UI_BOUNDARIES = (
     ROOT / "openhcs/pyqt_gui/widgets/artifact_plan_view.py",
-    ROOT / "openhcs/pyqt_gui/widgets/shared/services/compile_workflow_service.py",
-    ROOT
-    / "openhcs/pyqt_gui/widgets/shared/services/runtime_artifact_progress_service.py",
-    ROOT / "openhcs/pyqt_gui/widgets/shared/services/progress_workflow_service.py",
+    ROOT / "openhcs/authoring/session/compilation.py",
+    ROOT / "openhcs/authoring/session/compile_batch.py",
+    ROOT / "openhcs/authoring/session/progress_notifications.py",
+    ROOT / "openhcs/authoring/session/progress.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_window.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_session.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_tab_builder.py",

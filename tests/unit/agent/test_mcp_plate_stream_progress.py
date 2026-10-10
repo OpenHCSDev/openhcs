@@ -2,6 +2,7 @@
 
 import asyncio
 from contextvars import ContextVar
+from dataclasses import replace
 import io
 from pathlib import Path
 import sys
@@ -80,7 +81,10 @@ def saved_roi_stream(tmp_path, monkeypatch):
         )
         assert restored.source_voxel_spacing == projection.image_metadata.source_voxel_spacing
         assert restored.source_spatial_domain == projection.image_metadata.source_spatial_domain
-        assert data == [geometry]
+        # The archive travels as saved: its geometry plus the bound source
+        # declaration, which the viewer reads and keeps out of the feature table.
+        assert [ROIArchiveSourceMetadata.geometry(rois) for rois in data] == [geometry]
+        assert ROIArchiveSourceMetadata.decode(data[0]) == persisted
         received.append((data, paths, request, identity.get()))
 
     def settle():
@@ -186,21 +190,26 @@ def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_
     timings.append(0.0)  # This declaration test does not repeat the slow experiment.
     hooks = []
 
-    class AuditCapability(AgentCapabilityDeclaration):
-        @classmethod
-        def execute_connection_request(cls, context, request, connection):
+    def audited(method):
+        def run(service, request, connection):
             hooks.append("enter")
-            result = super().invocation.execute(context, request, connection)
+            result = method(service, request, connection)
             hooks.append("exit")
             return result
 
-    class IndependentStream(AuditCapability, StreamPlateFilesToViewerCapability):
+        return run
+
+    # An independent declaration composes its own invocation from the inherited
+    # one; the generated MCP consumer runs whichever invocation it declares.
+    inherited = StreamPlateFilesToViewerCapability.invocation
+
+    class IndependentStream(StreamPlateFilesToViewerCapability):
         name = "openhcs_independent_stream_progress_441"
         cli_command = None
+        invocation = replace(inherited, method=audited(inherited.method))
 
-    class IndependentStreamAfter(StreamPlateFilesToViewerCapability, AuditCapability):
+    class IndependentStreamAfter(IndependentStream):
         name = "openhcs_independent_stream_progress_after_441"
-        cli_command = None
 
     class ProgressContext:
         request_context = object()
