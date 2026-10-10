@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Mapping
 
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 
@@ -19,7 +18,6 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowNavigationRequest,
     ViewerNativeViewportPresentation,
     ViewerWindowViewportRequest,
-    ViewerWindowViewportResult,
     ViewerWindowPayloadRequest,
     ViewerWindowRoiSummaryRequest,
     ViewerWindowSnapshotRequest,
@@ -32,7 +30,7 @@ from openhcs.mcp.dev_client_commanding import (
 )
 from openhcs.mcp.dev_client_core import (
     McpDevToolCall,
-    McpToolArgumentAuthority,
+    McpToolArguments,
     ViewerConnectionArguments,
     add_request_field_option,
     add_viewer_connection_options,
@@ -40,7 +38,6 @@ from openhcs.mcp.dev_client_core import (
     axis_indices_tool_argument,
     axis_indices_wire_argument,
     extend_required_component_labels,
-    optional_bool,
     parse_navigation_axis_indices,
     parse_json_object,
     parse_required_axis_labels,
@@ -53,7 +50,6 @@ from openhcs.mcp.dev_client_core import (
     viewer_route_key_argument,
     viewer_visible_route_keys_argument,
 )
-from openhcs.mcp.dev_client_rendering import ViewerImageSampleRenderOptions
 from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
 
 
@@ -121,11 +117,6 @@ class ViewerPayloadsCommandSpec(CapabilityBackedCommandSpec):
             type=int,
             help="Viewer control timeout in milliseconds.",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def calls_from_args(
         self,
@@ -179,11 +170,6 @@ class SnapshotViewerCommandSpec(SingleToolCommandSpec):
                 ViewerWindowSnapshotRequest,
                 "capture_scope",
             ),
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
         )
         add_viewer_connection_options(parser)
 
@@ -256,11 +242,6 @@ class ViewerStateCommandSpec(SingleToolCommandSpec):
             "--include-response",
             action="store_true",
             default=request_factory_parameter(cli_factory, "include_response").default,
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
         )
         add_viewer_connection_options(parser)
 
@@ -369,11 +350,6 @@ class ValidateViewerCommandSpec(SingleToolCommandSpec):
             "--include-state",
             action="store_true",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_viewer_connection_options(parser)
 
     def tool_arguments(
@@ -402,7 +378,7 @@ class ValidateViewerCommandSpec(SingleToolCommandSpec):
             require_nonzero_payloads=not args.allow_zero_payloads,
             include_state=args.include_state,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class ViewerRoisCommandSpec(SingleToolCommandSpec):
@@ -444,11 +420,6 @@ class ViewerRoisCommandSpec(SingleToolCommandSpec):
             "max_examples",
             "--max-examples",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_viewer_connection_options(parser)
 
     def tool_arguments(
@@ -483,7 +454,7 @@ class ViewerRoisCommandSpec(SingleToolCommandSpec):
             max_rois=args.max_rois,
             max_examples=args.max_examples,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class SampleViewerImageCommandSpec(SingleToolCommandSpec):
@@ -548,11 +519,6 @@ class SampleViewerImageCommandSpec(SingleToolCommandSpec):
             "--max-records",
             "--limit",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_viewer_connection_options(parser)
 
     def tool_arguments(
@@ -591,27 +557,7 @@ class SampleViewerImageCommandSpec(SingleToolCommandSpec):
             max_array_elements=args.max_array_elements,
             max_records=args.max_records,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
-
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> ViewerImageSampleRenderOptions:
-        return ViewerImageSampleRenderOptions(
-            include_array_values_requested=args.include_array_values,
-        )
-
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        return argparse.Namespace(
-            json=False,
-            include_array_values=optional_bool(
-                tool_arguments.get("include_array_values")
-            )
-            or False,
-        )
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class NavigateViewerCommandSpec(SingleToolCommandSpec):
@@ -690,11 +636,6 @@ class NavigateViewerCommandSpec(SingleToolCommandSpec):
             const=None,
             help="Leave target layer selection unchanged.",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_viewer_connection_options(parser)
 
     def tool_arguments(
@@ -726,7 +667,7 @@ class NavigateViewerCommandSpec(SingleToolCommandSpec):
             selected=args.selected,
             data_index=args.data_index,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class RetireViewerCommandSpec(SingleToolCommandSpec):
@@ -738,7 +679,6 @@ class RetireViewerCommandSpec(SingleToolCommandSpec):
             "--expected-producers", required=True, type=parse_json_object,
             help="JSON route-key mapping to complete producer_identities from viewer state.",
         )
-        parser.add_argument("--json", action="store_true")
         add_viewer_connection_options(parser)
 
     def tool_arguments(self, args: argparse.Namespace) -> dict[str, JsonValue]:
@@ -751,7 +691,7 @@ class RetireViewerCommandSpec(SingleToolCommandSpec):
             timeout_ms=(connection.timeout_ms or VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT),
             expected_producers=args.expected_producers,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class IsolateViewerCommandSpec(SingleToolCommandSpec):
@@ -766,11 +706,6 @@ class IsolateViewerCommandSpec(SingleToolCommandSpec):
             action="append",
             metavar="NAME=INDEX",
             help="Route-local semantic axis index for the selected route.",
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
         )
         add_viewer_connection_options(parser)
 
@@ -797,7 +732,7 @@ class IsolateViewerCommandSpec(SingleToolCommandSpec):
             selected_route_key=args.selected_route_key,
             axis_indices=parse_navigation_axis_indices(args.axis_index),
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class ViewerIntensityWindowCommandSpec(SingleToolCommandSpec):
@@ -832,11 +767,6 @@ class ViewerIntensityWindowCommandSpec(SingleToolCommandSpec):
             "high_percentile",
             "--high-percentile",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response.",
-        )
         add_viewer_connection_options(parser)
 
     def tool_arguments(
@@ -867,7 +797,7 @@ class ViewerIntensityWindowCommandSpec(SingleToolCommandSpec):
             low_percentile=args.low_percentile,
             high_percentile=args.high_percentile,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class SetViewerViewportCommandSpec(SingleToolCommandSpec):
@@ -889,11 +819,6 @@ class SetViewerViewportCommandSpec(SingleToolCommandSpec):
             "--zoom",
             type=float,
             help="Positive canvas-per-world zoom; omit to preserve the current zoom.",
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response.",
         )
         add_viewer_connection_options(parser)
 
@@ -927,4 +852,4 @@ class SetViewerViewportCommandSpec(SingleToolCommandSpec):
             ),
             presentation=presentation,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())

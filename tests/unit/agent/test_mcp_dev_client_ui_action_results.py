@@ -139,10 +139,11 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
     else:
         assert "Action: accepted poll=completed count=1" in rendered
         assert "Targets: scope-1" in rendered
-        assert '- plate-one: state=compiled, status="Compiled", terminal=<none>, selected=True' in rendered
+        assert "- plate-one: state=compiled, status=Compiled, " in rendered
+        assert "terminal=<none>, selected=True, root=/plate-one" in rendered
 
 
-def test_malformed_action_is_nonzero_and_preserves_invalid_wire_receipt(monkeypatch, capsys):
+def test_malformed_action_is_nonzero_and_preserves_invalid_wire_payload(monkeypatch, capsys):
     malformed = {"workflow": "run_plate", "action_result": {"status": "accepted"}}
     result = McpDevToolResult.from_payload(
         agent_capabilities.ui_selected_plate_workflow.name,
@@ -158,7 +159,7 @@ def test_malformed_action_is_nonzero_and_preserves_invalid_wire_receipt(monkeypa
     assert "mcp_payload_invalid" in capsys.readouterr().out
     assert dev_client.main(["selected-workflow", "run_plate", "--json"]) == 1
     rejection = json.loads(capsys.readouterr().out)["results"][0]["payloads"][0]
-    assert rejection["receipt"] == malformed
+    assert rejection["payload"] == malformed
     assert rejection["errors"] == to_jsonable(result.diagnostic_errors())
 
 
@@ -281,7 +282,7 @@ def test_independent_presentation_capabilities_cooperate_in_both_mro_orders(reve
     extension = type("ExtendedActionRenderer", (*bases, UiActionInvokeRenderer),
                      {"output_contract": ExtendedAction})
     try:
-        assert McpDevOutputRenderer.for_output_contract(ExtendedAction).renderer_type is extension
+        assert McpDevOutputRenderer.for_output_contract(ExtendedAction) is extension
         value = ExtendedAction(
             SCHEMA_VERSION, UiActionIdentity(widget_id="plate_manager", action_id="run_plate"),
             "accepted", UiMutationReceipt(UiMutationRequestToken(), accepted=True),

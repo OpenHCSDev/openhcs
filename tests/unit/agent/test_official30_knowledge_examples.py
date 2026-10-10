@@ -29,11 +29,15 @@ from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseService,
 )
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.mcp.dev_client_core import (
+    McpDevServerIdentity,
+    McpDevToolBatchResponse,
+    McpDevToolResult,
+)
 from openhcs.mcp.dev_client_renderers.knowledge import KnowledgeDocumentRenderer
-from python_introspect import to_jsonable
 
 OFFICIAL30_DOCUMENT_ID = "openhcs_official30_benchmark_recipes"
 
@@ -239,7 +243,7 @@ def test_requested_official30_source_is_importable_public_openhcs_python():
         )
     )
     source = _source_from_document_content(document.content)
-    pipeline_document = PipelineDocumentAuthority.from_source(source)
+    pipeline_document = PipelineDocumentCodec.from_source(source)
 
     assert document.errors == ()
     assert document.truncated is False
@@ -336,16 +340,16 @@ def test_official30_source_document_renders_through_mcp_dev_renderer():
             max_chars=50_000,
         )
     )
-    response = {
-        "errors": [],
-        "results": [
-            {
-                "tool": "openhcs_get_knowledge_document",
-                "mcp_error": False,
-                "payloads": [to_jsonable(document)],
-            }
-        ],
-    }
+    response = McpDevToolBatchResponse(
+        server=McpDevServerIdentity(command="python", module="openhcs.mcp"),
+        results=(
+            McpDevToolResult(
+                tool="openhcs_get_knowledge_document",
+                mcp_error=False,
+                payloads=(document,),
+            ),
+        ),
+    )
 
     rendered = KnowledgeDocumentRenderer.render(response)
 

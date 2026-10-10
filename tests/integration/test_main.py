@@ -8,7 +8,7 @@ Refactored using Systematic Code Refactoring Framework:
 - Reduced verbosity and defensive programming patterns
 """
 
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 
 import json
 import os
@@ -707,7 +707,7 @@ def _execute_pipeline_zmq(
         response = client.execute_pipeline(
             OpenHCSExecutionSubmission(
                 plate_id=str(test_config.plate_dir),
-                pipeline_document=PipelineDocumentAuthority.from_values(
+                pipeline_document=PipelineDocumentCodec.from_values(
                     pipeline_config=pipeline_config, pipeline_steps=pipeline
                 ),
                 global_config=global_config,

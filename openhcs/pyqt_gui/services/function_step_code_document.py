@@ -1,4 +1,4 @@
-"""PyQt adapter for the canonical FunctionStep code document."""
+"""PyQt adapter for the FunctionStep code document."""
 
 from __future__ import annotations
 
@@ -10,13 +10,13 @@ from pyqt_reactive.services.window_code_document import (
     WindowCodeDocumentDriver,
 )
 
-from openhcs.core.function_step_document import FunctionStepDocumentAuthority
+from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.ui.shared.code_editor_form_updater import CodeEditorFormUpdater
 
 
 class FunctionStepCodeDocumentDriver(WindowCodeDocumentDriver):
-    """Project a live FunctionStep through its semantic document authority."""
+    """Read and apply a live FunctionStep through its Python document."""
 
     def __init__(
         self,
@@ -36,10 +36,10 @@ class FunctionStepCodeDocumentDriver(WindowCodeDocumentDriver):
     def read_document(self, clean: bool = True) -> WindowCodeDocument:
         if self._before_read is not None:
             self._before_read()
-        document = FunctionStepDocumentAuthority.from_value(self._current_step())
+        document = FunctionStepDocumentCodec.from_value(self._current_step())
         return WindowCodeDocument(
             title=self._title,
-            source=FunctionStepDocumentAuthority.render(
+            source=FunctionStepDocumentCodec.render(
                 document,
                 clean_mode=clean,
             ),
@@ -58,4 +58,4 @@ class FunctionStepCodeDocumentDriver(WindowCodeDocumentDriver):
     @staticmethod
     def _step_from_source(source: str) -> FunctionStep:
         with CodeEditorFormUpdater.patch_lazy_constructors():
-            return FunctionStepDocumentAuthority.from_source(source).step
+            return FunctionStepDocumentCodec.from_source(source).step

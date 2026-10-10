@@ -30,7 +30,7 @@ from benchmark.agent_validation.contracts import (
 from benchmark.agent_validation.declarations import ValidationTaskDeclaration
 from benchmark.agent_validation.perturbations import DiagnosticPerturbationDeclaration
 from benchmark.agent_validation.scoring import AttemptJournalScorer
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from python_introspect import to_jsonable
 
 
@@ -108,7 +108,7 @@ class AgentValidationCorpus:
             if pipeline_document is not None:
                 pipeline_source_path = probe_root / "pipeline.py"
                 pipeline_source_path.write_text(
-                    PipelineDocumentAuthority.render(pipeline_document),
+                    PipelineDocumentCodec.render(pipeline_document),
                     encoding="utf-8",
                 )
                 pipeline_sha256 = _sha256_file(pipeline_source_path)

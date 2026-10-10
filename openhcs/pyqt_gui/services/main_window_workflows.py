@@ -14,7 +14,9 @@ from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
     QDockWidget,
+    QFileDialog,
     QMainWindow,
+    QMessageBox,
     QProgressBar,
     QStyle,
     QToolButton,
@@ -666,38 +668,38 @@ class MainWindowPipelineActions:
     def open_pipeline(self, selected_path: Path | None = None) -> None:
         file_path = selected_path
         if file_path is None:
-            from PyQt6.QtWidgets import QFileDialog
-
             selected, _ = QFileDialog.getOpenFileName(
                 self.main_window,
                 "Open Pipeline",
                 "",
-                "Function Files (*.func);;CellProfiler Pipelines (*.cppipe);;All Files (*)",
+                "OpenHCS Pipelines (*.py);;CellProfiler Pipelines (*.cppipe)",
             )
-            if selected:
-                file_path = Path(selected)
-            else:
+            if not selected:
                 return
-
-        self.pipeline_editor.load_pipeline_from_file(file_path)
+            file_path = Path(selected)
+        try:
+            self.pipeline_editor.load_pipeline_from_file(file_path)
+        except Exception as error:
+            logger.exception("Failed to open pipeline %s", file_path)
+            QMessageBox.critical(self.main_window, "Open Pipeline", str(error))
 
     def save_pipeline(self, selected_path: Path | None = None) -> None:
         file_path = selected_path
         if file_path is None:
-            from PyQt6.QtWidgets import QFileDialog
-
             selected, _ = QFileDialog.getSaveFileName(
                 self.main_window,
                 "Save Pipeline",
-                "pipeline.func",
-                "Function Files (*.func);;All Files (*)",
+                "pipeline.py",
+                "OpenHCS Pipelines (*.py)",
             )
-            if selected:
-                file_path = Path(selected)
-            else:
+            if not selected:
                 return
-
-        self.pipeline_editor.save_pipeline_to_file(file_path)
+            file_path = Path(selected).with_suffix(".py")
+        try:
+            self.pipeline_editor.save_pipeline_to_file(file_path)
+        except Exception as error:
+            logger.exception("Failed to save pipeline %s", file_path)
+            QMessageBox.critical(self.main_window, "Save Pipeline", str(error))
 
 
 @dataclass(frozen=True, slots=True)

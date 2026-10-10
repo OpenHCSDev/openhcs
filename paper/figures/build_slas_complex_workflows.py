@@ -11,7 +11,7 @@ from pathlib import Path
 
 from objectstate import semantic_values_equal
 from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 
@@ -82,10 +82,10 @@ def build() -> None:
         sources.add(example.source)
         modules = tuple(CPPipeParser().parse(example.source))
         steps, config = import_cellprofiler_pipeline(example.source)
-        document = PipelineDocumentAuthority.render(
+        document = PipelineDocumentCodec.render(
             PipelineDocument(config, steps), clean_mode=False
         )
-        restored = PipelineDocumentAuthority.from_source(document)
+        restored = PipelineDocumentCodec.from_source(document)
         rows = []
         for index, (step, recovered) in enumerate(
             zip(steps, restored.pipeline_steps, strict=True), 1

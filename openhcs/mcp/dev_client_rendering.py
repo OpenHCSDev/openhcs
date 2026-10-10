@@ -1,23 +1,30 @@
-"""Shared rendering contracts for the OpenHCS MCP dev client."""
+"""Shared rendering contracts for the OpenHCS MCP dev client.
+
+Every compact renderer is an ``McpDevOutputRenderer`` keyed by the output DTO
+it presents. The base decodes the framed tool batch once, renders the decoded
+payload through the renderer registered for its type, and appends the payload's
+warnings and the batch diagnostics. Renderers read DTO attributes only.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
 from typing import ClassVar, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import JsonObject, JsonValue, dataclass_from_mapping
+from python_introspect import JsonValue
 
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     CapabilityWorkflowGroup,
     get_agent_capability,
 )
-from openhcs.agent.dto.common import AgentError
+from openhcs.agent.dto.authoring import AuthoringContextRequest
+from openhcs.agent.dto.common import AgentError, AgentWarning
 
 DEFAULT_CODE_DOCUMENT_MAX_CHARS = 2_000
 PresentationValue = TypeVar("PresentationValue")
@@ -40,7 +47,11 @@ class WidgetTreeOutputFormat(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class McpDevOutputRenderOptions:
-    """Typed presentation options for an output-contract renderer."""
+    """Typed presentation options for an output-contract renderer.
+
+    Each options type declares its own CLI flags and reads them back; the
+    dataclass defaults are the options used when a generic ``call`` renders.
+    """
 
     @classmethod
     def configure_cli_parser(cls, parser: argparse.ArgumentParser) -> None:
@@ -53,20 +64,44 @@ class McpDevOutputRenderOptions:
         del args
         return cls()
 
-    def cli_argument_values(self) -> dict[str, object]:
-        """Project dataclass defaults into a namespace for generic call rendering."""
-        return asdict(self)
-
 
 @dataclass(frozen=True, slots=True)
 class AuthoringContextRenderOptions(McpDevOutputRenderOptions):
-    max_chars: int = 2_000
+    max_chars: int = AuthoringContextRequest().max_chars
+
+    @classmethod
+    def configure_cli_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--max-chars", type=int, default=cls().max_chars)
+
+    @classmethod
+    def from_cli_args(cls, args: argparse.Namespace) -> "AuthoringContextRenderOptions":
+        return cls(max_chars=args.max_chars)
 
 
 @dataclass(frozen=True, slots=True)
 class CodeDocumentRenderOptions(McpDevOutputRenderOptions):
     include_source: bool = True
     max_source_chars: int = DEFAULT_CODE_DOCUMENT_MAX_CHARS
+
+    @classmethod
+    def configure_cli_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "--no-source",
+            action="store_true",
+            help="Only render document metadata, revision, and snapshot information.",
+        )
+        parser.add_argument(
+            "--max-source-chars",
+            type=int,
+            default=cls().max_source_chars,
+        )
+
+    @classmethod
+    def from_cli_args(cls, args: argparse.Namespace) -> "CodeDocumentRenderOptions":
+        return cls(
+            include_source=not args.no_source,
+            max_source_chars=args.max_source_chars,
+        )
 
     def source_text(self, source: str) -> str:
         """One bounded source-text policy shared by all source presentations."""
@@ -84,16 +119,28 @@ class CodeDocumentRenderOptions(McpDevOutputRenderOptions):
 class UiActionCatalogRenderOptions(McpDevOutputRenderOptions):
     widget_id: str | None = None
 
+    @classmethod
+    def configure_cli_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "widget_id",
+            nargs="?",
+            help="Optional widget id filter, for example plate_manager.",
+        )
 
-@dataclass(frozen=True, slots=True)
-class UiActionInvokeRenderOptions(McpDevOutputRenderOptions):
-    widget_id: str | None = None
-    action_id: str | None = None
+    @classmethod
+    def from_cli_args(cls, args: argparse.Namespace) -> "UiActionCatalogRenderOptions":
+        return cls(widget_id=args.widget_id)
 
 
 @dataclass(frozen=True, slots=True)
 class ViewerImageSampleRenderOptions(McpDevOutputRenderOptions):
     include_array_values_requested: bool | None = None
+
+    @classmethod
+    def from_cli_args(
+        cls, args: argparse.Namespace
+    ) -> "ViewerImageSampleRenderOptions":
+        return cls(include_array_values_requested=args.include_array_values)
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,23 +165,72 @@ class CatalogRenderOptions(McpDevOutputRenderOptions):
     def from_cli_args(cls, args: argparse.Namespace) -> "CatalogRenderOptions":
         return cls(contains=args.contains, limit=args.limit)
 
+    def select(
+        self,
+        entries: Sequence[PresentationValue],
+        entry_text: Callable[[PresentationValue], str],
+    ) -> tuple[tuple[PresentationValue, ...], tuple[PresentationValue, ...]]:
+        """Return (matched, shown) entries for the ``--contains``/``--limit`` filter."""
+        matched = tuple(entries)
+        if self.contains:
+            needle = self.contains.casefold()
+            matched = tuple(
+                entry for entry in matched if needle in entry_text(entry).casefold()
+            )
+        return matched, matched[: max(self.limit, 0)]
+
+    def filter_lines(self) -> tuple[str, ...]:
+        return (f"Filter: contains={self.contains}",) if self.contains else ()
+
 
 @dataclass(frozen=True, slots=True)
 class WidgetTreeRenderOptions(McpDevOutputRenderOptions):
-    output: WidgetTreeOutputFormat = WidgetTreeOutputFormat.OUTLINE
     outline_root_class: str | None = None
     include_technical_widgets: bool = False
 
+    @classmethod
+    def configure_cli_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "--outline-root-class",
+            help="When rendering outline output, start at the first node with this Qt class.",
+        )
+        parser.add_argument(
+            "--include-technical-widgets",
+            action="store_true",
+            help="Include Qt infrastructure nodes such as scrollbars in outline output.",
+        )
+
+    @classmethod
+    def from_cli_args(cls, args: argparse.Namespace) -> "WidgetTreeRenderOptions":
+        return cls(
+            outline_root_class=args.outline_root_class,
+            include_technical_widgets=args.include_technical_widgets,
+        )
+
+
+def payload_warnings(value: object) -> tuple[AgentWarning, ...]:
+    """Collect the declared warnings carried anywhere in a decoded payload."""
+    if isinstance(value, AgentWarning):
+        return (value,)
+    if isinstance(value, list | tuple):
+        return tuple(warning for item in value for warning in payload_warnings(item))
+    if is_dataclass(value) and not isinstance(value, type):
+        return tuple(
+            warning
+            for declaration in fields(value)
+            for warning in payload_warnings(getattr(value, declaration.name))
+        )
+    return ()
+
 
 McpDevOutputRendererKey: TypeAlias = type
-McpDevOutputRenderFunction: TypeAlias = Callable[[JsonObject], str]
 
 
 def mcp_dev_output_renderer_key(
     name: str,
     renderer_type: type,
 ) -> McpDevOutputRendererKey | None:
-    """Return the declared output renderer key for a dev-client renderer."""
+    """A renderer registers the output contract its own class body declares."""
     del name
     declared_output_contract = vars(renderer_type).get("output_contract")
     if isinstance(declared_output_contract, type):
@@ -143,7 +239,14 @@ def mcp_dev_output_renderer_key(
 
 
 class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
-    """Registered compact renderer keyed by an agent output contract."""
+    """Compact renderer registered for one agent output DTO.
+
+    ``render`` is the single ingress: it decodes the batch, renders the first
+    decoded payload with the renderer registered for that payload's type (or
+    ``unavailable_summary`` when the call produced none), then appends the
+    payload's warnings and the batch's errors. Subclasses implement only
+    ``render_payload`` over their DTO.
+    """
 
     __registry__: ClassVar[
         dict[McpDevOutputRendererKey, type["McpDevOutputRenderer"]]
@@ -157,31 +260,19 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
     render_options_type: ClassVar[type[McpDevOutputRenderOptions]] = (
         McpDevOutputRenderOptions
     )
+    unavailable_summary: ClassVar[str] = "Result: <unavailable>"
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         # AutoRegisterMeta prefers an explicit (including inherited) key. A
-        # child must register its own declaration, not overwrite its parent's
-        # key merely because the metaclass assigned that key to the parent.
+        # child registers its own declaration, never its parent's key.
         cls.renderer_key = mcp_dev_output_renderer_key(cls.__name__, cls)
-
-    @classmethod
-    def declaration_types(cls):
-        """Derived hierarchy view, visiting a diamond's identity only once."""
-        pending = list(cls.__subclasses__())
-        seen: set[type] = set()
-        while pending:
-            member = pending.pop(0)
-            if member not in seen:
-                seen.add(member)
-                yield member
-                pending.extend(member.__subclasses__())
 
     @classmethod
     def for_output_contract(
         cls,
         output_contract: type | None,
-    ) -> "McpDevOutputRendererBinding | None":
+    ) -> type["McpDevOutputRenderer"] | None:
         if output_contract is None:
             return None
         from openhcs.mcp.dev_client_renderers import (
@@ -189,98 +280,100 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
         )
 
         ensure_dev_client_renderers_registered()
-        for owner in output_contract.__mro__:
-            renderer_type = cls.__registry__.get(owner)
-            if renderer_type is not None:
-                return McpDevOutputRendererBinding(output_contract, renderer_type)
-        for renderer_type in cls.declaration_types():
-            binding = renderer_type.binding_for_output_contract(output_contract)
-            if binding is not None:
-                return binding
-        return None
+        return next(
+            (
+                cls.__registry__[owner]
+                for owner in output_contract.__mro__
+                if owner in cls.__registry__
+            ),
+            None,
+        )
 
     @classmethod
-    def binding_for_output_contract(
-        cls,
-        output_contract: type,
-    ) -> "McpDevOutputRendererBinding | None":
-        declared_output_contract = vars(cls).get("output_contract")
-        if declared_output_contract is output_contract:
-            return McpDevOutputRendererBinding(
-                output_contract=output_contract,
-                renderer_type=cls,
+    def render(cls, response, options: McpDevOutputRenderOptions | None = None) -> str:
+        from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
+
+        decoded = McpDevToolBatchResponse.for_rendering(response)
+        payload = next(
+            (result.first_decoded_payload() for result in decoded.results), None
+        )
+        lines = [
+            cls.unavailable_summary
+            if payload is None
+            else cls.render_payload_value(
+                payload, cls.render_options_type() if options is None else options
             )
-        for binding in cls.render_bindings():
-            if binding.output_contract is output_contract:
-                return binding
-        return None
+        ]
+        lines.extend(cls.diagnostic_lines(decoded.diagnostic_errors()))
+        return "\n".join(lines)
 
     @classmethod
-    def render_bindings(cls) -> tuple["McpDevOutputRendererBinding", ...]:
-        """Return additional output-contract bindings owned by this renderer."""
-        return ()
+    def render_payload(cls, payload, options: McpDevOutputRenderOptions) -> str:
+        raise NotImplementedError(f"{cls.__name__} declares no payload presentation.")
 
     @classmethod
-    def render_result(cls, response, options: McpDevOutputRenderOptions) -> str:
+    def render_payload_value(cls, payload, options: McpDevOutputRenderOptions) -> str:
+        """Render one decoded payload by its own type, with its warnings."""
+        renderer_type = McpDevOutputRenderer.for_output_contract(type(payload))
+        if renderer_type is None:
+            raise TypeError(f"No renderer declared for {type(payload).__name__}")
+        if not isinstance(options, renderer_type.render_options_type):
+            options = renderer_type.render_options_type()
+        warnings = renderer_type.presented_warnings(payload, options)
+        return "\n".join(
+            (
+                renderer_type.render_payload(payload, options),
+                *(
+                    ("Warnings:", *diagnostic_lines(warnings))
+                    if warnings
+                    else ()
+                ),
+            )
+        )
+
+    @classmethod
+    def presented_warnings(
+        cls, payload, options: McpDevOutputRenderOptions
+    ) -> tuple[AgentWarning, ...]:
+        """The payload warnings this presentation shows (all, by default)."""
+        del options
+        return payload_warnings(payload)
+
+    @staticmethod
+    def diagnostic_lines(errors: Iterable[AgentError]) -> tuple[str, ...]:
+        errors = tuple(errors)
+        return ("Errors:", *diagnostic_lines(errors)) if errors else ()
+
+    # Shared text vocabulary for presenting DTO attribute values.
+
+    @staticmethod
+    def text(value: object, *, absent_text: str = "<none>") -> str:
+        if value is None:
+            return absent_text
+        if isinstance(value, Enum):
+            return str(value.value)
+        return str(value)
+
+    @staticmethod
+    def quoted(value: object) -> str:
+        if value is None:
+            return "<none>"
+        return json.dumps(str(value))
+
+    @staticmethod
+    def sequence_text(values: Iterable[object] | None) -> str:
+        items = () if values is None else tuple(values)
+        if not items:
+            return "<none>"
+        return ",".join(McpDevOutputRenderer.text(item) for item in items)
+
+    @staticmethod
+    def json_text(value: object) -> str:
+        if value is None:
+            return "<none>"
         from python_introspect import to_jsonable
 
-        return cls.render_with_options(to_jsonable(response), options)
-
-    @classmethod
-    def render(cls, response: JsonObject) -> str:
-        raise NotImplementedError
-
-    @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: McpDevOutputRenderOptions,
-    ) -> str:
-        del options
-        return cls.render(response)
-
-
-@dataclass(frozen=True, slots=True)
-class McpDevOutputRendererBinding:
-    """Typed binding from one output DTO contract to its renderer behavior."""
-
-    output_contract: type
-    renderer_type: type[McpDevOutputRenderer]
-    render_function: McpDevOutputRenderFunction | None = None
-
-    def render_result(self, response, options: McpDevOutputRenderOptions) -> str:
-        if self.render_function is not None:
-            from python_introspect import to_jsonable
-
-            return self.render_function(to_jsonable(response))
-        return self.renderer_type.render_result(response, options)
-
-    def configure_cli_parser(self, parser: argparse.ArgumentParser) -> None:
-        self.renderer_type.render_options_type.configure_cli_parser(parser)
-
-    def options_from_cli_args(
-        self,
-        args: argparse.Namespace,
-    ) -> McpDevOutputRenderOptions:
-        return self.renderer_type.render_options_type.from_cli_args(args)
-
-    def default_cli_argument_values(self) -> dict[str, object]:
-        return self.renderer_type.render_options_type().cli_argument_values()
-
-    def render_with_options(
-        self,
-        response: JsonObject,
-        options: McpDevOutputRenderOptions,
-    ) -> str:
-        if self.render_function is not None:
-            return self.render_function(response)
-        return self.renderer_type.render_with_options(response, options)
-
-
-class McpDevTypedOutputRenderer(McpDevOutputRenderer):
-    """Shared contract descent for typed presentation members, never raw readers."""
-
-    unavailable_summary: ClassVar[str] = "Result: <unavailable>"
+        return json.dumps(to_jsonable(value), sort_keys=True)
 
     @classmethod
     def json_value_count(cls, value: JsonValue) -> int:
@@ -303,232 +396,69 @@ class McpDevTypedOutputRenderer(McpDevOutputRenderer):
         """
         return () if value is None else render_lines(value)
 
-    @classmethod
-    def render_result(cls, response, options: McpDevOutputRenderOptions) -> str:
-        return cls.render_with_options(response, options)
 
-    @classmethod
-    def render(cls, response) -> str:
-        return cls.render_with_options(response, cls.render_options_type())
+def diagnostic_lines(errors) -> tuple[str, ...]:
+    """Group declared errors or warnings by message, showing at most three."""
+    grouped_codes: dict[str, list[str]] = {}
+    grouped_hints: dict[str, list[str]] = {}
+    for error in errors:
+        message = error.message
+        hint = getattr(error, "hint", None)
+        codes = grouped_codes.setdefault(message, [])
+        if error.code not in codes:
+            codes.append(error.code)
+        hints = grouped_hints.setdefault(message, [])
+        if hint is not None and json.dumps(str(hint)) not in hints:
+            hints.append(json.dumps(str(hint)))
 
-    @classmethod
-    def render_with_options(cls, response, options: McpDevOutputRenderOptions) -> str:
-        from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
-
-        decoded = McpDevToolBatchResponse.for_rendering(response)
-        payload = next(
-            (result.first_decoded_payload() for result in decoded.results), None
-        )
-        lines = [
-            cls.unavailable_summary
-            if payload is None
-            else cls.render_payload_value(payload, options)
-        ]
-        lines.extend(
-            McpDiagnosticRenderer.typed_error_lines(decoded.diagnostic_errors())
-        )
-        return "\n".join(lines)
-
-    @classmethod
-    def render_payload(cls, payload, options: McpDevOutputRenderOptions) -> str:
-        raise NotImplementedError
-
-    @classmethod
-    def render_payload_value(cls, payload, options: McpDevOutputRenderOptions) -> str:
-        binding = McpDevOutputRenderer.for_output_contract(type(payload))
-        if binding is None:
-            raise TypeError(f"No renderer declared for {type(payload).__name__}")
-        return binding.renderer_type.render_payload(payload, options)
-
-
-class McpDevPayloadProjection:
-    """Small read helpers for dev-client JSON envelopes."""
-
-    @staticmethod
-    def tool_result(
-        payload: JsonObject,
-        tool_name: str,
-    ) -> Mapping[str, JsonValue] | None:
-        results = payload.get("results")
-        if not isinstance(results, list):
-            return None
-        for result in results:
-            if isinstance(result, Mapping) and result.get("tool") == tool_name:
-                return result
-        return None
-
-    @staticmethod
-    def tool_response(
-        payload: JsonObject,
-        tool_name: str,
-    ) -> JsonObject:
-        result = McpDevPayloadProjection.tool_result(payload, tool_name)
-        if result is None:
-            return {
-                "server": payload.get("server", {}),
-                "errors": payload.get("errors", []),
-                "results": [],
-            }
-        return {
-            "server": payload.get("server", {}),
-            "errors": payload.get("errors", []),
-            "results": [dict(result)],
-        }
-
-    @staticmethod
-    def first_tool_payload(payload: JsonObject) -> Mapping[str, JsonValue] | None:
-        results = payload.get("results")
-        if not isinstance(results, list) or not results:
-            return None
-        first_result = results[0]
-        if not isinstance(first_result, Mapping):
-            return None
-        payloads = first_result.get("payloads")
-        if not isinstance(payloads, list) or not payloads:
-            return None
-        first_payload = payloads[0]
-        if not isinstance(first_payload, Mapping):
-            return None
-        return first_payload
-
-    @staticmethod
-    def tool_payload(
-        payload: JsonObject,
-        tool_name: str,
-    ) -> Mapping[str, JsonValue] | None:
-        result = McpDevPayloadProjection.tool_result(payload, tool_name)
-        if result is None:
-            return None
-        payloads = result.get("payloads")
-        if not isinstance(payloads, list) or not payloads:
-            return None
-        first_payload = payloads[0]
-        if not isinstance(first_payload, Mapping):
-            return None
-        return first_payload
-
-    @staticmethod
-    def nested_mapping(
-        payload: Mapping[str, JsonValue],
-        key: str,
-    ) -> Mapping[str, JsonValue]:
-        value = payload.get(key)
-        if isinstance(value, Mapping):
-            return value
-        return {}
-
-    @staticmethod
-    def sequence_of_mappings(value: JsonValue) -> tuple[Mapping[str, JsonValue], ...]:
-        if not isinstance(value, list):
-            return ()
-        return tuple(item for item in value if isinstance(item, Mapping))
-
-    @staticmethod
-    def text(value: JsonValue, *, absent_text: str = "<none>") -> str:
-        if value is None:
-            return absent_text
-        return str(value)
-
-    @staticmethod
-    def quoted_text(value: JsonValue) -> str:
-        if value is None:
-            return "<none>"
-        return json.dumps(str(value))
-
-
-class McpDiagnosticRenderer:
-    """Compact shared rendering for MCP error and warning payloads."""
-
-    @classmethod
-    def response_error_lines(cls, response: JsonObject) -> tuple[str, ...]:
-        """Render structured errors from the response and its tool payloads."""
-        errors = list(
-            McpDevPayloadProjection.sequence_of_mappings(response.get("errors"))
-        )
-        for result in McpDevPayloadProjection.sequence_of_mappings(
-            response.get("results")
-        ):
-            payloads = result.get("payloads")
-            if not isinstance(payloads, list):
-                continue
-            for payload in payloads:
-                if not isinstance(payload, Mapping):
-                    continue
-                errors.extend(
-                    McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-                )
-        return cls.error_lines(tuple(errors))
-
-    @staticmethod
-    def error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
-        return McpDiagnosticRenderer.typed_error_lines(
-            tuple(dataclass_from_mapping(AgentError, error) for error in errors)
-        )
-
-    @staticmethod
-    def typed_error_lines(errors) -> tuple[str, ...]:
-        grouped_codes: dict[str, list[str]] = {}
-        grouped_hints: dict[str, list[str]] = {}
-        for error in errors:
-            message = error.message
-            hint = error.hint
-            hint_text = (
-                None if hint is None else McpDevPayloadProjection.quoted_text(hint)
-            )
-            code = error.code
-            codes = grouped_codes.setdefault(message, [])
-            if code not in codes:
-                codes.append(code)
-            if hint_text is not None and hint_text not in grouped_hints.setdefault(
-                message,
-                [],
-            ):
-                grouped_hints[message].append(hint_text)
-
-        lines: list[str] = []
-        for message, codes in tuple(grouped_codes.items())[:3]:
-            code_text = codes[0] if len(codes) == 1 else ", ".join(codes)
-            line = f"- {code_text}: {message}"
-            hint_texts = grouped_hints.get(message, [])
-            if len(hint_texts) == 1:
-                line += f" hint={hint_texts[0]}"
-            elif len(hint_texts) > 1:
-                line += f" hints={len(hint_texts)} distinct; pass --json for details"
-            lines.append(line)
-        remaining_group_count = len(grouped_codes) - len(lines)
-        if remaining_group_count > 0:
-            lines.append(f"... {remaining_group_count} more diagnostics")
-        return tuple(lines)
+    lines: list[str] = []
+    for message, codes in tuple(grouped_codes.items())[:3]:
+        line = f"- {', '.join(codes)}: {message}"
+        hint_texts = grouped_hints[message]
+        if len(hint_texts) == 1:
+            line += f" hint={hint_texts[0]}"
+        elif len(hint_texts) > 1:
+            line += f" hints={len(hint_texts)} distinct; pass --json for details"
+        lines.append(line)
+    remaining_group_count = len(grouped_codes) - len(lines)
+    if remaining_group_count > 0:
+        lines.append(f"... {remaining_group_count} more diagnostics")
+    return tuple(lines)
 
 
 class ToolListRenderer:
-    """Compact renderer for current MCP tool metadata."""
+    """Compact renderer for the MCP ``tools/list`` response."""
 
     @classmethod
-    def project_response(
+    def selected_tools(
         cls,
-        response: JsonObject,
+        response,
         *,
-        contains: str | None = None,
-        limit: int = 80,
-    ) -> JsonObject:
-        """Return a bounded JSON response while preserving selected tool metadata."""
-        matched_tools, visible_tools = cls._selected_tools(
-            response,
-            contains=contains,
-            limit=limit,
+        contains: str | None,
+        limit: int,
+    ):
+        return CatalogRenderOptions(contains=contains, limit=limit).select(
+            response.tools,
+            lambda tool: f"{tool.name} {tool.description or ''}",
         )
-        projected = dict(response)
+
+    @classmethod
+    def project_response(cls, response, *, contains: str | None, limit: int):
+        """The JSON view keeps full metadata for the selected tools only."""
+        from dataclasses import replace
+
+        from python_introspect import to_jsonable
+
+        matched, visible = cls.selected_tools(
+            response, contains=contains, limit=limit
+        )
+        projected = to_jsonable(replace(response, tools=visible))
         projected.update(
             {
-                "matched_tool_count": len(matched_tools),
-                "returned_tool_count": len(visible_tools),
-                "truncated_tool_count": len(matched_tools) - len(visible_tools),
-                "filter": {
-                    "contains": contains,
-                    "limit": max(limit, 0),
-                },
-                "tools": [dict(tool) for tool in visible_tools],
+                "matched_tool_count": len(matched),
+                "returned_tool_count": len(visible),
+                "truncated_tool_count": len(matched) - len(visible),
+                "filter": {"contains": contains, "limit": max(limit, 0)},
             }
         )
         return projected
@@ -536,92 +466,55 @@ class ToolListRenderer:
     @classmethod
     def render(
         cls,
-        response: JsonObject,
+        response,
         *,
         contains: str | None = None,
         limit: int = 80,
         grouped: bool = True,
     ) -> str:
-        errors = McpDevPayloadProjection.sequence_of_mappings(response.get("errors"))
-        if errors:
-            return "\n".join(
-                ("Tools: failed", *McpDiagnosticRenderer.error_lines(errors))
-            )
-        tools, visible_tools = cls._selected_tools(
-            response,
-            contains=contains,
-            limit=limit,
+        if response.errors:
+            return "\n".join(("Tools: failed", *diagnostic_lines(response.errors)))
+        tools, visible_tools = cls.selected_tools(
+            response, contains=contains, limit=limit
         )
         lines = [
-            (
-                "Tools: "
-                f"matched={len(tools)} total={McpDevPayloadProjection.text(response.get('tool_count'))} "
-                f"shown={len(visible_tools)}"
-            )
+            f"Tools: matched={len(tools)} total={response.tool_count} "
+            f"shown={len(visible_tools)}"
         ]
         if contains:
             lines.append(f"Filter: contains={contains}")
         if visible_tools:
             lines.append("Tool names:")
-            if grouped:
-                lines.extend(cls._grouped_tool_lines(visible_tools))
-            else:
-                lines.extend(cls._tool_lines(visible_tools))
+            lines.extend(
+                cls._grouped_tool_lines(visible_tools)
+                if grouped
+                else cls._tool_lines(visible_tools)
+            )
         if len(visible_tools) < len(tools):
             lines.append(f"...<truncated {len(tools) - len(visible_tools)} tools>")
         return "\n".join(lines)
 
     @staticmethod
-    def _selected_tools(
-        response: JsonObject,
-        *,
-        contains: str | None,
-        limit: int,
-    ) -> tuple[
-        tuple[Mapping[str, JsonValue], ...],
-        tuple[Mapping[str, JsonValue], ...],
-    ]:
-        tools = McpDevPayloadProjection.sequence_of_mappings(response.get("tools"))
-        if contains:
-            needle = contains.casefold()
-            tools = tuple(
-                tool
-                for tool in tools
-                if needle in McpDevPayloadProjection.text(tool.get("name")).casefold()
-                or needle
-                in McpDevPayloadProjection.text(tool.get("description")).casefold()
-            )
-        return tools, tools[: max(limit, 0)]
-
-    @staticmethod
-    def _tool_lines(tools: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
-        lines: list[str] = []
-        for tool in tools:
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(tool.get('name'))}: "
-                f"{McpDevPayloadProjection.text(tool.get('description'))}"
-            )
-        return lines
+    def _tool_lines(tools) -> list[str]:
+        return [
+            f"- {tool.name}: {McpDevOutputRenderer.text(tool.description)}"
+            for tool in tools
+        ]
 
     @classmethod
-    def _grouped_tool_lines(
-        cls,
-        tools: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
-        entries = tuple((tool, cls._capability_for_tool(tool)) for tool in tools)
+    def _grouped_tool_lines(cls, tools) -> list[str]:
+        entries = tuple((tool, cls._capability_for_tool(tool.name)) for tool in tools)
         lines: list[str] = []
         for workflow_group in CapabilityWorkflowGroup:
-            group_entries = tuple(
-                (tool, capability)
+            group_tools = tuple(
+                tool
                 for tool, capability in entries
                 if capability is not None
                 and capability.exposition.workflow_group is workflow_group
             )
-            if not group_entries:
-                continue
-            lines.append(f"[{workflow_group.title}]")
-            lines.extend(cls._tool_lines(tuple(tool for tool, _ in group_entries)))
+            if group_tools:
+                lines.append(f"[{workflow_group.title}]")
+                lines.extend(cls._tool_lines(group_tools))
         ungrouped_tools = tuple(
             tool for tool, capability in entries if capability is None
         )
@@ -632,9 +525,8 @@ class ToolListRenderer:
 
     @staticmethod
     def _capability_for_tool(
-        tool: Mapping[str, JsonValue],
+        tool_name: str,
     ) -> type[AgentCapabilityDeclaration] | None:
-        tool_name = McpDevPayloadProjection.text(tool.get("name"))
         try:
             return get_agent_capability(tool_name)
         except KeyError:

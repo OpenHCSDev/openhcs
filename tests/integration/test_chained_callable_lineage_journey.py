@@ -24,7 +24,7 @@ from openhcs.core.config import (
 from openhcs.core.function_patterns import MainFlowInputProjection
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_stores import RuntimeArtifactQuery
@@ -80,7 +80,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
         )),
         component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
             num_workers=1,
             use_threading=True,
@@ -99,8 +99,8 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             for index in range(2)
         ],
     )
-    document = PipelineDocumentAuthority.from_source(
-        PipelineDocumentAuthority.render(document)
+    document = PipelineDocumentCodec.from_source(
+        PipelineDocumentCodec.render(document)
     )
     bundle = InProcessCompileInspectionGateway().compile(
         CompileInspectionInput(

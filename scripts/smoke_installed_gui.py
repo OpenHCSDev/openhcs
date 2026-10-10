@@ -12,19 +12,19 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from concurrent.futures import Future
-from dataclasses import asdict, dataclass, field, fields, replace
+from dataclasses import asdict, dataclass, field, replace
 from enum import Enum
 from importlib.metadata import distribution
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar, get_type_hints
+from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
     from zmqruntime import OperationDeadline
 
     from openhcs.agent.dto.execution import RuntimeServerInfo
-    from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
+    from openhcs.agent.dto.ui_bridge import UiWindowCatalog, UiWindowSnapshotResult
     from openhcs.agent.services.endpoint_function_catalog_service import (
         ZMQFunctionCatalogService,
     )
@@ -427,90 +427,34 @@ def with_isolated_runtime_topology(
     )
 
 
-def _tool_payload(
+def _typed_tool_payload(
     execution: McpDevCommandExecution,
     *,
-    tool_name: str,
-) -> dict[str, JsonValue]:
-    """Require one successful MCP result and return its JSON object payload."""
+    capability,
+    payload_type: type[AgentDtoT],
+) -> AgentDtoT:
+    """Require one successful MCP command and return its declared result."""
 
-    from openhcs.mcp.dev_client_rendering import McpDevPayloadProjection
+    from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
 
     if execution.returncode != 0:
         diagnostics = execution.rendered_output
         if execution.server_stderr_tail:
             diagnostics += f"\nMCP stderr:\n{execution.server_stderr_tail}"
         raise AssertionError(diagnostics)
-    payload = McpDevPayloadProjection.tool_payload(execution.payload, tool_name)
-    if payload is None:
-        raise AssertionError(f"MCP response omitted {tool_name!r} payload.")
-    return dict(payload)
-
-
-def _typed_tool_payload(
-    execution: McpDevCommandExecution,
-    *,
-    tool_name: str,
-    payload_type: type[AgentDtoT],
-) -> AgentDtoT:
-    """Hydrate one MCP result through the declared agent DTO contract."""
-
-    from python_introspect import dataclass_from_mapping
-
-    payload = _tool_payload(execution, tool_name=tool_name)
-    return dataclass_from_mapping(payload_type, dict(payload))
-
-
-def _declared_catalog_items(
-    execution: McpDevCommandExecution,
-    *,
-    tool_name: str,
-    catalog_type: type,
-    item_type: type,
-) -> tuple[Mapping[str, JsonValue], ...]:
-    """Read a flattened MCP catalog through its declared tuple field."""
-
-    type_hints = get_type_hints(catalog_type)
-    item_fields = tuple(
-        catalog_field
-        for catalog_field in fields(catalog_type)
-        if type_hints.get(catalog_field.name) == tuple[item_type, ...]
+    payload = McpDevToolBatchResponse.for_rendering(execution.payload).payload_for(
+        capability
     )
-    if len(item_fields) != 1:
-        raise TypeError(
-            f"{catalog_type.__name__} must declare exactly one {item_type.__name__} "
-            "tuple field."
-        )
-    payload = _tool_payload(execution, tool_name=tool_name)
-    items = payload.get(item_fields[0].name)
-    if not isinstance(items, list) or not all(
-        isinstance(item, Mapping) for item in items
-    ):
+    if not isinstance(payload, payload_type):
         raise AssertionError(
-            f"MCP {catalog_type.__name__} payload has invalid catalog items."
+            f"MCP response omitted the {payload_type.__name__} result of "
+            f"{capability.name!r}."
         )
-    return tuple(item for item in items if isinstance(item, Mapping))
+    return payload
 
 
-def _declared_identity_values(
-    items: tuple[Mapping[str, JsonValue], ...],
-    *,
-    identity_type: type,
-) -> tuple[str, ...]:
-    """Read one-field flattened identities through their nominal declaration."""
-
-    identity_fields = fields(identity_type)
-    if len(identity_fields) != 1:
-        raise TypeError(
-            f"{identity_type.__name__} must declare exactly one identity field."
-        )
-    field_name = identity_fields[0].name
-    values = tuple(item.get(field_name) for item in items)
-    if not all(isinstance(value, str) for value in values):
-        raise AssertionError(
-            f"MCP {identity_type.__name__} payload has invalid identity values."
-        )
-    return tuple(value for value in values if isinstance(value, str))
+def _window_ids(catalog: UiWindowCatalog) -> frozenset[str]:
+    return frozenset(window.window_id for window in catalog.windows)
 
 
 def _capture_installed_gui_snapshot(
@@ -526,7 +470,7 @@ def _capture_installed_gui_snapshot(
     from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 
     from openhcs.agent.capabilities import UiSnapshotWindowCapability
-    from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
+    from openhcs.agent.dto.ui_bridge import UiWindowCatalog, UiWindowSnapshotResult
     from openhcs.mcp.dev_client_commands.ui import WindowSnapshotCommandSpec
 
     execution = client.execute(
@@ -543,7 +487,7 @@ def _capture_installed_gui_snapshot(
     )
     result = _typed_tool_payload(
         execution,
-        tool_name=UiSnapshotWindowCapability.name,
+        capability=UiSnapshotWindowCapability,
         payload_type=UiWindowSnapshotResult,
     )
     return InstalledGuiSnapshotEvidenceAuthority.retain(
@@ -614,8 +558,6 @@ def run_installed_live_mcp_smoke(
         UiBridgeCatalog,
         UiBridgeStatus,
         UiWindowCatalog,
-        UiWindowIdentity,
-        UiWindowSummary,
     )
     from openhcs.agent.services.runtime_server_service import RuntimeServerService
     from openhcs.agent.ui_bridge_actions import PlateManagerAction
@@ -669,24 +611,23 @@ def run_installed_live_mcp_smoke(
         )
         health = _typed_tool_payload(
             smoke_execution,
-            tool_name=agent_capabilities.health_check.name,
+            capability=agent_capabilities.health_check,
             payload_type=McpServerHealthResult,
         )
         bridge_status = _typed_tool_payload(
             smoke_execution,
-            tool_name=agent_capabilities.ui_bridge_status.name,
+            capability=agent_capabilities.ui_bridge_status,
             payload_type=UiBridgeStatus,
         )
         bridge_catalog = _typed_tool_payload(
             smoke_execution,
-            tool_name=agent_capabilities.ui_list_bridges.name,
+            capability=agent_capabilities.ui_list_bridges,
             payload_type=UiBridgeCatalog,
         )
-        windows_before = _declared_catalog_items(
+        windows_before = _typed_tool_payload(
             smoke_execution,
-            tool_name=agent_capabilities.ui_list_windows.name,
-            catalog_type=UiWindowCatalog,
-            item_type=UiWindowSummary,
+            capability=agent_capabilities.ui_list_windows,
+            payload_type=UiWindowCatalog,
         )
         journal.record(InstalledGuiSmokePhase.MCP_SESSION_READY)
 
@@ -724,12 +665,7 @@ def run_installed_live_mcp_smoke(
             MainWindowWidgetIdentity.require_value(),
             PlateManagerWidgetIdentity.require_value(),
         }
-        observed_window_ids = set(
-            _declared_identity_values(
-                windows_before,
-                identity_type=UiWindowIdentity,
-            )
-        )
+        observed_window_ids = _window_ids(windows_before)
         if not required_window_ids <= observed_window_ids:
             raise AssertionError(
                 "Installed MCP did not discover the required live windows: "
@@ -752,7 +688,7 @@ def run_installed_live_mcp_smoke(
         )
         action_result = _typed_tool_payload(
             action_execution,
-            tool_name=agent_capabilities.ui_invoke_action.name,
+            capability=agent_capabilities.ui_invoke_action,
             payload_type=UiActionInvokeResult,
         )
         if action_result.status != UiActionInvocationStatus.ACCEPTED.value:
@@ -765,31 +701,19 @@ def run_installed_live_mcp_smoke(
             (windows_command.command, "--timeout-seconds", timeout_text),
             timeout_seconds=deadline.remaining_seconds(),
         )
-        windows_after = _declared_catalog_items(
+        windows_after = _typed_tool_payload(
             windows_execution,
-            tool_name=agent_capabilities.ui_list_windows.name,
-            catalog_type=UiWindowCatalog,
-            item_type=UiWindowSummary,
+            capability=agent_capabilities.ui_list_windows,
+            payload_type=UiWindowCatalog,
         )
-        if len(windows_after) <= len(windows_before):
+        if len(windows_after.windows) <= len(windows_before.windows):
             raise AssertionError(
                 "The declared code action did not expose its new live window: "
-                f"before={len(windows_before)} after={len(windows_after)}"
+                f"before={len(windows_before.windows)} "
+                f"after={len(windows_after.windows)}"
             )
 
-        window_ids_before = frozenset(
-            _declared_identity_values(
-                windows_before,
-                identity_type=UiWindowIdentity,
-            )
-        )
-        window_ids_after = frozenset(
-            _declared_identity_values(
-                windows_after,
-                identity_type=UiWindowIdentity,
-            )
-        )
-        new_window_ids = window_ids_after - window_ids_before
+        new_window_ids = _window_ids(windows_after) - _window_ids(windows_before)
         if not new_window_ids:
             raise AssertionError("Installed UI action exposed no new window identity.")
         journal.record(InstalledGuiSmokePhase.CAPTURING_WINDOWS)
@@ -823,8 +747,8 @@ def run_installed_live_mcp_smoke(
         mcp_server_source_path=str(server_source_path),
         mcp_server_version=health.openhcs_version,
         snapshots=snapshots,
-        window_count_after_action=len(windows_after),
-        window_count_before_action=len(windows_before),
+        window_count_after_action=len(windows_after.windows),
+        window_count_before_action=len(windows_before.windows),
     )
 
 

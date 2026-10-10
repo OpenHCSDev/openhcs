@@ -224,7 +224,7 @@ def test_adjacent_filters_preserve_original_named_object_lineage(
 ) -> None:
     from openhcs.core.artifacts import SourceStackLineageSourceRelation
     from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
-    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 
     cppipe_path = Path("pipelines/repeated-filters.cppipe")
@@ -267,7 +267,7 @@ FilterObjects:[module_num:5|enabled:True]
     )
     physical_cppipe = tmp_path / "repeated-filters.cppipe"
     physical_cppipe.write_text(filemanager.files[cppipe_path], encoding="utf-8")
-    reconstructed = PipelineDocumentAuthority.from_source(
+    reconstructed = PipelineDocumentCodec.from_source(
         "from pathlib import Path\n"
         "from openhcs.interop.cellprofiler.pipeline_import import "
         "import_cellprofiler_pipeline\n"

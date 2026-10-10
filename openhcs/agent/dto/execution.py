@@ -290,12 +290,6 @@ class ExecutionJobStatus(ExecutionJobIdentity, AgentResultEnvelope):
     response: JsonObject = field(default_factory=dict)
     progress: ExecutionProgressObservation | None = None
 
-    @classmethod
-    def serialized_progress_field_name(cls) -> str:
-        """Return the wire field owned by the progress declaration."""
-
-        return cls.progress.__name__
-
     @property
     def is_terminal(self) -> bool:
         """Delegate execution terminality to the generic lifecycle declaration."""

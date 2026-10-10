@@ -13,7 +13,7 @@ from openhcs.agent.capabilities import (
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.server import build_server
@@ -51,18 +51,18 @@ def test_original_mcp_function_help_and_pipeline_document_retain_declared_contro
     assert "in pixels" in control["description"]
     assert "minimum_inscribed_diameter_px=10" in control["default_repr"]
     settings = MetaXpressCellBodySettings(minimum_inscribed_diameter_px=5.0)
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(),
         pipeline_steps=[FunctionStep(func=(
             neurite_outgrowth_metaxpress, {"cell_body": settings}
         ))],
     )
-    source = PipelineDocumentAuthority.render(document)
-    restored = PipelineDocumentAuthority.from_source(source)
+    source = PipelineDocumentCodec.render(document)
+    restored = PipelineDocumentCodec.from_source(source)
     restored_settings = restored.pipeline_steps[0].func[1]["cell_body"]
     assert restored_settings == settings
     assert restored_settings.minimum_inscribed_diameter_px == 5.0
-    assert PipelineDocumentAuthority.render(restored) == source
+    assert PipelineDocumentCodec.render(restored) == source
 
 
 def test_independent_declaration_gets_real_mcp_schema_and_cooperative_validation():

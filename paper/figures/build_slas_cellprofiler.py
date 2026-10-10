@@ -17,7 +17,7 @@ from objectstate import semantic_values_equal
 
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
@@ -70,11 +70,11 @@ def build():
 
     OUTPUT.mkdir(parents=True, exist_ok=True)
     document_path = OUTPUT / "cellprofiler_translation_imported.py"
-    document_source = PipelineDocumentAuthority.render(
+    document_source = PipelineDocumentCodec.render(
         PipelineDocument(config, steps), clean_mode=False
     )
     document_source = black.format_str(document_source, mode=black.Mode())
-    restored = PipelineDocumentAuthority.from_source(document_source)
+    restored = PipelineDocumentCodec.from_source(document_source)
     if not semantic_values_equal(config, restored.pipeline_config):
         raise ValueError("Generated Python did not preserve imported pipeline settings")
     for original, recovered in zip(steps, restored.pipeline_steps, strict=True):

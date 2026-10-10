@@ -1357,26 +1357,8 @@ class OpenHCSMainWindow(QMainWindow):
                     f"Set current_plate to {plate_path} before loading pipeline"
                 )
 
-            # Load the pipeline file
-            from pathlib import Path
-
-            pipeline_file = Path(pipeline_path)
-
-            if not pipeline_file.exists():
-                raise FileNotFoundError(f"Pipeline file not found: {pipeline_path}")
-
-            # For .py files, read code and use existing _handle_edited_code
-            if pipeline_file.suffix == ".py":
-                with open(pipeline_file, "r") as f:
-                    code = f.read()
-
-                # Use existing infrastructure that already handles code execution
-                pipeline_editor._handle_edited_code(code)
-                logger.info(f"Loaded pipeline from Python file: {pipeline_path}")
-            else:
-                # For pickled files, use existing infrastructure
-                pipeline_editor.load_pipeline_from_file(pipeline_file)
-                logger.info(f"Loaded pipeline: {pipeline_path}")
+            pipeline_editor.load_pipeline_from_file(Path(pipeline_path))
+            logger.info(f"Loaded pipeline: {pipeline_path}")
 
         except Exception as e:
             logger.error(f"Failed to load pipeline: {e}", exc_info=True)

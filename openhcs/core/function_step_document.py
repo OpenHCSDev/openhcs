@@ -1,4 +1,4 @@
-"""Canonical Python document contract for one OpenHCS FunctionStep."""
+"""Python document for one OpenHCS FunctionStep."""
 
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ class FunctionStepDocument:
     step: FunctionStep
 
 
-class FunctionStepDocumentAuthority:
-    """Validate, parse, and render the canonical FunctionStep document shape."""
+class FunctionStepDocumentCodec:
+    """Validate, parse, and render the FunctionStep Python document."""
 
     HEADER = "# Function Step"
 
@@ -51,7 +51,7 @@ class FunctionStepDocumentAuthority:
 
     @classmethod
     def from_source(cls, source: str) -> FunctionStepDocument:
-        """Execute Python source and read its canonical FunctionStep assignment."""
+        """Execute Python source and read its FunctionStep assignment."""
 
         namespace: dict[str, object] = {}
         code = compile(source, "<openhcs-function-step-document>", "exec")

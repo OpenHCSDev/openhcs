@@ -175,9 +175,9 @@ The public importer lowers a ``.cppipe`` directly to the same declarations:
        source_root="/data/plate",
    )
 
-   from openhcs.core.pipeline_document import PipelineDocumentAuthority
+   from openhcs.core.pipeline_document import PipelineDocumentCodec
 
-   pipeline_document = PipelineDocumentAuthority.from_values(
+   pipeline_document = PipelineDocumentCodec.from_values(
        pipeline_config=pipeline_config,
        pipeline_steps=pipeline_steps,
    )

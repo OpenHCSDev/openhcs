@@ -41,7 +41,7 @@ from openhcs.agent.services.execution_session_service import (
 )
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig, PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp import server
@@ -75,7 +75,7 @@ def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("
         format="ImageXpress",
         random_seed=7,
     ).generate_dataset()
-    pipeline = PipelineDocumentAuthority.from_values(
+    pipeline = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(),
         pipeline_steps=[
             FunctionStep(name="Blur", func=(gaussian_blur, {"sigma": 1.0}))
@@ -100,7 +100,7 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
         PipelineSourceOrchestratorSessionRequest.from_fields(
             plate_path=str(source_identity),
             execution_plate_path=str(plate),
-            pipeline_source=PipelineDocumentAuthority.render(pipeline),
+            pipeline_source=PipelineDocumentCodec.render(pipeline),
             port=18000 + os.getpid() % 20000,
             persistent=False,
         )
@@ -486,7 +486,7 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
     source_identity = tmp_path / "source_identity"
     source_identity.mkdir()
     source_file = tmp_path / "pipeline.py"
-    source_file.write_text(PipelineDocumentAuthority.render(pipeline), encoding="utf-8")
+    source_file.write_text(PipelineDocumentCodec.render(pipeline), encoding="utf-8")
     output_dir = tmp_path / "cli_evidence"
     args = create_benchmark_argument_parser().parse_args(
         [
@@ -544,7 +544,7 @@ def test_live_cancellation_uses_ordinary_job_and_rejects_finalization(
     session = service.create_session_from_pipeline_source_request(
         PipelineSourceOrchestratorSessionRequest.from_fields(
             plate_path=str(plate),
-            pipeline_source=PipelineDocumentAuthority.render(pipeline),
+            pipeline_source=PipelineDocumentCodec.render(pipeline),
             port=24000 + os.getpid() % 20000,
             persistent=False,
         )

@@ -22,7 +22,7 @@ from openhcs.core.plate_file_inventory import PlateFileInventoryQuery
 from openhcs.core.synthetic_plate_generation import SYNTHETIC_PLATE_GENERATION_PROFILE
 from openhcs.mcp.dev_client_commanding import SingleToolCommandSpec
 from openhcs.mcp.dev_client_core import (
-    McpToolArgumentAuthority,
+    McpToolArguments,
     add_request_field_option,
     add_ui_connection_options,
     plate_file_stream_kind_argument,
@@ -145,11 +145,6 @@ class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
             "sample_file_limit",
             "--sample-file-limit",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -174,7 +169,7 @@ class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
             random_seed=args.random_seed,
             sample_file_limit=args.sample_file_limit,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class InspectPlateCommandSpec(SingleToolCommandSpec):
@@ -223,11 +218,6 @@ class InspectPlateCommandSpec(SingleToolCommandSpec):
             "max_files_to_parse",
             "--max-files-to-parse",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -242,7 +232,7 @@ class InspectPlateCommandSpec(SingleToolCommandSpec):
             max_parse_failure_samples=args.max_parse_failure_samples,
             max_files_to_parse=args.max_files_to_parse,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
@@ -311,11 +301,6 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
             "max_preview_bytes",
             "--max-preview-bytes",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -334,7 +319,7 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
             max_preview_lines=args.max_preview_lines,
             max_preview_bytes=args.max_preview_bytes,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class SamplePlateImageCommandSpec(SingleToolCommandSpec):
@@ -416,11 +401,6 @@ class SamplePlateImageCommandSpec(SingleToolCommandSpec):
             ),
             help="Include sampled pixel values in the response.",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -440,7 +420,7 @@ class SamplePlateImageCommandSpec(SingleToolCommandSpec):
             include_array_values=not args.no_array_values,
             max_array_elements=args.max_array_elements,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class PlateFileStreamCommandOptions:
@@ -558,11 +538,6 @@ class PlateFileStreamCommandOptions:
             action="store_false",
         )
         parser.add_argument("--fresh-viewer", action="store_true")
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
 
 class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
@@ -601,7 +576,7 @@ class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
             persistent=args.persistent,
             fresh_viewer=args.fresh_viewer,
         )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+        return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
 class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
@@ -654,11 +629,6 @@ class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
             "max_files_to_parse",
             "--max-files-to-parse",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def tool_arguments(
@@ -679,7 +649,7 @@ class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
             args,
             timeout_ms=args.timeout_ms,
         )
-        return McpToolArgumentAuthority.from_payload(payload)
+        return McpToolArguments.from_payload(payload)
 
 
 class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
@@ -767,11 +737,6 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
             "max_preview_bytes",
             "--max-preview-bytes",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def tool_arguments(
@@ -796,7 +761,7 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
             args,
             timeout_ms=args.timeout_ms,
         )
-        return McpToolArgumentAuthority.from_payload(payload)
+        return McpToolArguments.from_payload(payload)
 
 
 class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
@@ -891,11 +856,6 @@ class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
             ),
             help="Include sampled pixel values in the response.",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def tool_arguments(
@@ -921,7 +881,7 @@ class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
             args,
             timeout_ms=args.timeout_ms,
         )
-        return McpToolArgumentAuthority.from_payload(payload)
+        return McpToolArguments.from_payload(payload)
 
 
 class SelectedPlateStreamCommandSpec(SingleToolCommandSpec):
@@ -966,4 +926,4 @@ class SelectedPlateStreamCommandSpec(SingleToolCommandSpec):
             args,
             timeout_ms=args.timeout_ms,
         )
-        return McpToolArgumentAuthority.from_payload(payload)
+        return McpToolArguments.from_payload(payload)
