@@ -6,7 +6,6 @@ from typing import get_type_hints
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -23,6 +22,9 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
     mask_image,
     resize,
     resize_volumetric,
+)
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
 )
 
 
@@ -93,7 +95,7 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(
 
     result = CellProfilerFunctionContractExecutor().execute(
         contract, canonical, source, kwargs,
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     np.testing.assert_array_equal(
@@ -128,7 +130,7 @@ def test_prepared_resize_bare_pixels_preserve_canonical_return_contract(func):
 
     result = CellProfilerFunctionContractExecutor().execute(
         contract, canonical, pixels, kwargs,
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert isinstance(result, RuntimeArrayData)

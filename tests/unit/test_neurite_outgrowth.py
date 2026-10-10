@@ -10,7 +10,7 @@ from scipy import ndimage as ndi
 from skimage.draw import disk, line
 
 from openhcs.core.artifacts import (
-    ArtifactSidecarRole,
+    QaCheckpoint,
     ArtifactViewerStreaming,
     ImageArtifactType,
     MeasurementsArtifactType,
@@ -537,7 +537,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         *admission_specs,
     ):
         assert spec.artifact_type is ImageArtifactType
-        assert spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
+        assert spec.sidecar_role is QaCheckpoint
         assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
         assert tuple(type(output) for output in spec.materialization.outputs) == (
             ImageFileOptions,

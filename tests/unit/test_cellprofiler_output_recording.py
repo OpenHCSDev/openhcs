@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
@@ -38,6 +37,10 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     RelationshipsOutputRecorder,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    NaturalExecution,
+)
 
 
 def _contract(*, outputs: tuple[ArtifactSpec, ...]) -> CallableContract:
@@ -58,7 +61,7 @@ def _image_request(image: np.ndarray) -> CellProfilerImageRequest:
         payload=ImagePayloadMetadata().payload_with(image),
         source_image_name=None,
         source_aliases=(),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
 
@@ -93,7 +96,7 @@ def test_output_recording_uses_artifact_dependency_order() -> None:
         payload=image,
         kwargs={},
         source_image_name=None,
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     CellProfilerOutputRecorder.record_module_outputs(
@@ -234,7 +237,7 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
                 payload=source_payload,
                 source_image_name=measured_objects.name,
                 source_aliases=(),
-                execution_mode=ImagePayloadExecutionMode.NATURAL,
+                execution_mode=NaturalExecution,
                 plane_projection=plane_projection,
             ),
             kwargs={},
@@ -277,7 +280,7 @@ def test_output_recording_carries_exact_invocation_plane_projection(
         kwargs=call_kwargs,
         source_image_name=None,
         source_aliases=("OriginalCarrier",),
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
         plane_projection=invocation_projection,
     )
     CellProfilerOutputRecorder.record_module_outputs(
@@ -295,5 +298,5 @@ def test_output_recording_carries_exact_invocation_plane_projection(
     assert request.source.payload is image
     assert request.source.source_aliases == ("OriginalCarrier",)
     assert request.source.image_count == 2
-    assert request.source.execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert request.source.execution_mode is FullStackExecution
     assert request.source.plane_projection is invocation_projection

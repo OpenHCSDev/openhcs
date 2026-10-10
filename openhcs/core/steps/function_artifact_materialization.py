@@ -1252,9 +1252,9 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             PostExecuteHook.observe_saved(context, plan, self),
             MappingProxyType(
                 {
-                    Path(output.path): output.image_numbers_by_axis
+                    Path(output.path): output.sample_numbers_by_axis
                     for output in outputs
-                    if output.image_numbers_by_axis is not None
+                    if output.sample_numbers_by_axis is not None
                 }
             ),
         )

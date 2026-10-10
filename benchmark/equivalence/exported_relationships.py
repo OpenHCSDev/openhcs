@@ -35,7 +35,7 @@ from benchmark.equivalence.measurement_requirements import (
     RequiredRuntimeMeasurementProjection,
 )
 from openhcs.core.equivalence.measurement_rows import (
-    RuntimeImageNumberOffset,
+    RuntimeSampleNumberOffset,
     RuntimeMeasurementFeatureKeyCache,
     RuntimeMeasurementPaddingGroupCache,
     RuntimeMeasurementQualifierRenderCache,
@@ -47,11 +47,9 @@ from openhcs.core.equivalence.measurement_rows import (
     RuntimeRowProjectionContext,
     runtime_measurement_row_schema_for_header,
 )
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
-    normalize_runtime_identifier,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.equivalence.relationships import (
     ObjectInstanceKeyPlaneAlignmentStrategy,
     RelationshipAggregateFeatureContext,
@@ -73,10 +71,7 @@ from openhcs.core.runtime_measurements import (
     ObjectCoreMeasurementFeature,
 )
 from openhcs.core.runtime_relationships import (
-    ChildCountFeatureDeclaration,
     DirectedObjectRelationshipPayload,
-    DirectParentReferenceFeatureDeclaration,
-    DirectParentReferenceMeasurementFeature,
     ObjectInstanceKey,
     ObjectInstanceRelationship,
     ObjectRelationship,
@@ -106,7 +101,7 @@ class RelationshipMeasurementSemantics:
     """Measurement identity contract for a directed object relationship."""
 
     relationship: ObjectRelationship
-    dialect: RuntimeMeasurementDialect
+    dialect: MeasurementDialect
 
     @property
     def source_name(self) -> str:
@@ -502,7 +497,10 @@ def object_measurement_values_by_label(
         table_subject = RuntimeMeasurementSubjectKey.from_table_subject(table.subject)
         object_id_field = table.subject.object_id_field
         table_padding_group = measurement_table_padding_group(table.name)
-        image_number_offset = RuntimeImageNumberOffset.from_measurement_table(table)
+        sample_number_offset = RuntimeSampleNumberOffset.from_measurement_table(
+            policy.measurement_dialect.row_identity_contract,
+            table,
+        )
         table_schema = runtime_measurement_row_schema_for_header(
             tuple(field.name for field in table.rows.fields),
             policy.measurement_dialect.row_qualifiers,
@@ -560,7 +558,7 @@ def object_measurement_values_by_label(
                 known_source_names=known_source_names,
                 required_keys=row_required_keys,
                 table_padding_group=table_padding_group,
-                image_number_offset=image_number_offset,
+                sample_number_offset=sample_number_offset,
                 derive_directional_pair_facts=derive_directional_pair_facts,
                 schema_cache=schema_cache,
                 key_cache=key_cache,
@@ -581,7 +579,7 @@ def object_measurement_values_by_label(
                 object_instance_key = scoped_table.object_instance_key(
                     runtime_row,
                     object_label,
-                    image_number_offset=image_number_offset,
+                    sample_number_offset=sample_number_offset,
                 )
                 if aligned_slice_indices is not None:
                     local_slice_index = object_instance_key.slice_index
@@ -611,7 +609,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
     """Restore directed edge meaning using the saved object-row domains."""
 
     object_tables: tuple[RuntimeScopedMeasurementTable, ...]
-    image_number_offset: RuntimeImageNumberOffset
+    sample_number_offset: RuntimeSampleNumberOffset
 
     @classmethod
     def supports_table(cls, table: RuntimeTableSnapshot) -> bool:
@@ -632,7 +630,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         cls,
         tables: tuple[RuntimeTableSnapshot, ...],
         policy: RuntimeEquivalencePolicy,
-    ) -> tuple[tuple[RuntimeScopedMeasurementTable, ...], RuntimeImageNumberOffset]:
+    ) -> tuple[tuple[RuntimeScopedMeasurementTable, ...], RuntimeSampleNumberOffset]:
         """Admit every edge against the same subject-owned tables used downstream."""
         ordinary = tuple(table for table in tables if not cls.supports_table(table))
         object_tables = tuple(
@@ -640,10 +638,13 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
             for table in ordinary
             for measurement in table.measurement_tables(policy.measurement_dialect)
         )
-        image_offset = RuntimeImageNumberOffset.from_runtime_rows(
-            row
-            for table in object_tables
-            for row in table.table.rows.iter_row_mappings()
+        image_offset = RuntimeSampleNumberOffset.from_runtime_rows(
+            policy.measurement_dialect.row_identity_contract,
+            (
+                row
+                for table in object_tables
+                for row in table.table.rows.iter_row_mappings()
+            ),
         )
         relationships = tuple(
             relationship
@@ -664,7 +665,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         table: RuntimeTableSnapshot,
         object_tables: tuple[RuntimeScopedMeasurementTable, ...],
         policy: RuntimeEquivalencePolicy,
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
     ) -> tuple[Self, ...]:
         normalized_header = tuple(
             normalize_runtime_identifier(name) for name in table.header
@@ -706,7 +707,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                     raise ValueError(
                         "Relationship endpoint IDs must be nonnegative integers."
                     )
-                slice_index = image_number_offset.object_instance_key(
+                slice_index = sample_number_offset.object_instance_key(
                     row.row, 1
                 ).required_slice_index()
                 raw_count = row.first_value(("slice_count",))
@@ -738,7 +739,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                     relationship,
                     policy.measurement_dialect,
                     object_tables,
-                    image_number_offset,
+                    sample_number_offset,
                 )
             )
         return tuple(results)
@@ -814,7 +815,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         cls,
         object_tables: tuple[RuntimeScopedMeasurementTable, ...],
         subject: RuntimeMeasurementSubjectKey,
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
     ) -> dict[ObjectInstanceKey, RuntimeMeasurementRowMapping]:
         rows: dict[ObjectInstanceKey, RuntimeMeasurementRowMapping] = {}
         for scoped_table in object_tables:
@@ -833,7 +834,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                     raise ValueError(
                         f"Relationship endpoint {subject.name!r} lacks an object identity."
                     )
-                key = image_number_offset.object_instance_key(row.row, object_id)
+                key = sample_number_offset.object_instance_key(row.row, object_id)
                 key.required_slice_index()
                 if key in rows and rows[key].row != row.row:
                     raise ValueError(
@@ -848,7 +849,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         del object_label_catalog
         return tuple(
             self.object_rows(
-                self.object_tables, self.source_subject, self.image_number_offset
+                self.object_tables, self.source_subject, self.sample_number_offset
             )
         )
 
@@ -858,7 +859,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         del object_label_catalog
         return tuple(
             self.object_rows(
-                self.object_tables, self.target_subject, self.image_number_offset
+                self.object_tables, self.target_subject, self.sample_number_offset
             )
         )
 
@@ -872,10 +873,10 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
     def validate_recorded_measurements(self) -> None:
         """Check all edges and zero-child rows before suppressing redundant facts."""
         parents = self.object_rows(
-            self.object_tables, self.source_subject, self.image_number_offset
+            self.object_tables, self.source_subject, self.sample_number_offset
         )
         children = self.object_rows(
-            self.object_tables, self.target_subject, self.image_number_offset
+            self.object_tables, self.target_subject, self.sample_number_offset
         )
         original = self.relationship.payload
         for source_id, target_id, slice_index in zip(
@@ -917,12 +918,10 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
             or not set(instances.target_keys) <= children.keys()
         ):
             raise ValueError("Relationship table refers to an absent object endpoint.")
-        parent_feature = DirectParentReferenceFeatureDeclaration.feature_name(
-            DirectParentReferenceMeasurementFeature(
-                self.relationship.declaration.source.name
-                if self.relationship.declaration.projects_parent_child_measurements()
-                else self.relationship.declaration.target.name
-            )
+        parent_feature = self.dialect.parent_reference_feature_name(
+            self.relationship.declaration.source.name
+            if self.relationship.declaration.projects_parent_child_measurements()
+            else self.relationship.declaration.target.name
         )
         for child, row in children.items():
             observed = row.first_value((normalize_runtime_identifier(parent_feature),))
@@ -938,7 +937,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                     f"Relationship edges disagree with {parent_feature!r} at child {child!r}."
                 )
         counts = instances.child_keys_by_parent(declared_source_keys=parents)
-        count_feature = ChildCountFeatureDeclaration.feature_name(
+        count_feature = self.dialect.child_count_feature_name(
             self.relationship.declaration.target.name
             if self.relationship.declaration.projects_parent_child_measurements()
             else self.relationship.declaration.source.name
@@ -956,7 +955,8 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
     def correlated_object_relationships(
         cls,
         object_tables: tuple[RuntimeScopedMeasurementTable, ...],
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
+        dialect: MeasurementDialect,
     ) -> dict[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship]:
         """Retain exact native parent references, independently of value counters."""
         pairs: dict[
@@ -969,16 +969,14 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                 continue
             child_name = normalize_runtime_identifier(table.subject.name)
             for field in table.rows.fields:
-                identity = DirectParentReferenceFeatureDeclaration.from_feature_name(
-                    field.name
-                )
-                if identity is None:
+                parent_object_name = dialect.parent_reference_object_name(field.name)
+                if parent_object_name is None:
                     continue
                 key = RuntimeMeasurementFeatureKey(
                     RuntimeMeasurementSubjectKey(
                         MeasurementScope.RELATIONSHIP, child_name
                     ),
-                    normalize_runtime_identifier(identity.parent_object_name),
+                    normalize_runtime_identifier(parent_object_name),
                 )
                 values = pairs.setdefault(key, [])
                 for raw_row in table.rows.iter_row_mappings():
@@ -993,7 +991,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                         raise ValueError(
                             "Relationship measurements require integral endpoint identities."
                         )
-                    child_key = image_number_offset.object_instance_key(
+                    child_key = sample_number_offset.object_instance_key(
                         row.row, child_id
                     )
                     slice_index = child_key.required_slice_index()
@@ -1027,7 +1025,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                 MeasurementScope.OBJECT, key.feature_name
             )
             parents = cls.object_rows(
-                object_tables, parent_subject, image_number_offset
+                object_tables, parent_subject, sample_number_offset
             )
             if not set(graph.source_keys) <= parents.keys():
                 raise ValueError(
@@ -1037,7 +1035,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                 declared_source_keys=parents
             )
             count_field = normalize_runtime_identifier(
-                ChildCountFeatureDeclaration.feature_name(key.subject.name)
+                dialect.child_count_feature_name(key.subject.name)
             )
             for parent, row in parents.items():
                 observed = row.first_value((count_field,))

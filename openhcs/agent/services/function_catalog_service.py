@@ -1251,8 +1251,10 @@ def _runtime_contract_summary(
     )
     return FunctionRuntimeContractSummary(
         callable_kind=callable_kind,
-        processing_contract=_enum_member_name(contract.processing_contract),
-        declared_processing_contract=contract.declared_processing_contract,
+        processing_contract=(
+            None if contract.processing_contract is None
+            else contract.processing_contract.key
+        ),
         runtime_bound_parameters=contract.runtime_bound_parameters,
         required_axis_roles=tuple(
             role.__name__ for role in contract.required_axis_roles
@@ -1276,7 +1278,7 @@ def _artifact_spec(spec: ArtifactSpec) -> FunctionArtifactSpec:
         name=spec.name,
         kind=spec.artifact_type.value,
         required=spec.required,
-        sidecar_role=None if spec.sidecar_role is None else spec.sidecar_role.value,
+        sidecar_role=None if spec.sidecar_role is None else spec.sidecar_role.name,
         materialization_uses_source_identity_filename=spec.materialization_uses_source_identity_filename(),
         viewer_streaming=spec.viewer_streaming,
     )
@@ -1367,12 +1369,6 @@ def _pattern_compatibility_rule(
     if cellprofiler_module is None:
         return f"Regular OpenHCS callables may participate in standard FunctionStep callable, tuple, list, or dict patterns subject to compiler validation. {dict_rule}"
     return f"Generated CellProfiler lowering uses one CP module contract per FunctionStep by default. Do not mix multiple CP module callables in one generated step unless declarations and compile-time invocation contracts explicitly allow it. {dict_rule}"
-
-
-def _enum_member_name(value: Enum | None) -> str | None:
-    if value is None:
-        return None
-    return value.name
 
 
 def _bounded_detail_doc(

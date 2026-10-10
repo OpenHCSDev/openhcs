@@ -2,12 +2,8 @@
 
 from pathlib import Path
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode_from_callable,
-)
+from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.processing.backends.cellprofiler.area_occupied import (
     measure_image_volume_occupied_binary,
     measure_image_volume_occupied_objects,
@@ -27,8 +23,15 @@ from openhcs.processing.backends.cellprofiler.shape import (
     measure_object_size_shape,
 )
 from openhcs.processing.backends.cellprofiler.watershed import watershed_cellprofiler4
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
+)
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -49,7 +52,7 @@ def test_published_dimensionality_boundary_matches_callable_declarations() -> No
             CallableContract.from_callable(
                 plane_local_callable
             ).require_processing_contract()
-            is ProcessingContract.PURE_2D
+            is Pure2DContract
         )
         assert plane_local_callable.__name__.replace("_", "") in normalized_reference
 
@@ -57,11 +60,11 @@ def test_published_dimensionality_boundary_matches_callable_declarations() -> No
         CallableContract.from_callable(
             watershed_cellprofiler4
         ).runtime_image_execution_mode
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
     assert (
         object_label_input_execution_mode_from_callable(measure_object_size_shape)
-        is ObjectLabelInputExecutionMode.FULL_STACK
+        is FullStackLabels
     )
     for volume_callable in (
         measure_image_volume_occupied_binary,
@@ -71,7 +74,7 @@ def test_published_dimensionality_boundary_matches_callable_declarations() -> No
             CallableContract.from_callable(
                 volume_callable
             ).require_processing_contract()
-            is ProcessingContract.PURE_3D
+            is Pure3DContract
         )
 
     shape_features = set(MeasureObjectSizeShapeModule.standard_3d_features)

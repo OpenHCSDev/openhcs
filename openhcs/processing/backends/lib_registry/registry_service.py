@@ -37,7 +37,6 @@ from .unified_registry import (
     LIBRARY_REGISTRIES,
     FunctionMetadata,
     LibraryRegistryBase,
-    ProcessingContract,
 )
 
 if TYPE_CHECKING:
@@ -502,10 +501,6 @@ class RegistryService:
             reference.composite_key,
         )
         contract = reference.metadata.processing_contract
-        if not isinstance(contract, ProcessingContract):
-            contract = ProcessingContract.from_declared_name(
-                reference.metadata.declared_processing_contract
-            )
         if contract is None:
             metadata = registry.metadata_for_declared_callable(declared)
             if metadata is None:

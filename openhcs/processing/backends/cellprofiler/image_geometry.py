@@ -601,7 +601,11 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.runtime_image_values import ImagePayload
@@ -1082,7 +1086,7 @@ def align_label_plane_to_shape(
     return labels.astype(np.int32, copy=False)
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 @special_inputs("mask")
 def mask_image(
     image: ImagePayload,
@@ -1146,7 +1150,7 @@ def masked_image_plane(
     return (masked, np.asarray(binary_mask, dtype=bool))
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def mask_image_with_binary(
     image: ImagePayload, invert_mask: bool = False
 ) -> RuntimeArrayData:
@@ -1207,7 +1211,7 @@ def tile_output_shape(
     return (output_height, output_width)
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 def tile(
     image: ImagePayload,
     rows: int = 8,
@@ -1263,7 +1267,7 @@ def tile(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def resize(
     image: ImagePayload,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
@@ -1285,7 +1289,7 @@ def resize(
     return geometry.resize_payload(image)
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def resize_volumetric(
     image: ImagePayload,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
@@ -1309,7 +1313,7 @@ def resize_volumetric(
     return geometry.resize_payload(image)
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def flip_and_rotate(
     image: ImagePayload,
     flip_method: FlipMethod = FlipMethod.NONE,

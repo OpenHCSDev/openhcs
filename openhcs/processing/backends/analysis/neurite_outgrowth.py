@@ -23,7 +23,7 @@ from skimage.segmentation import expand_labels
 
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
-    ArtifactSidecarRole,
+    QaCheckpoint,
     ArtifactSpec,
     ArtifactViewerStreaming,
     ImageArtifactType,
@@ -1190,7 +1190,7 @@ def _neurite_qa_checkpoint_output(name: str) -> ArtifactSpec:
     return MainFlowPlaneProjectionOutputSpec.output(
         name,
         ImageArtifactType,
-        sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+        sidecar_role=QaCheckpoint,
         materialization=MaterializationSpec(
             ImageFileOptions(filename_suffix=f"_{name}.checkpoint.tif")
         ),

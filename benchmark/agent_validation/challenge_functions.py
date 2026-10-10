@@ -6,12 +6,12 @@ import numpy as np
 from skimage.segmentation import expand_labels
 
 from openhcs.core.memory import numpy
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
 )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def expand_labels_without_overlap(
     label_image: np.ndarray,
     radius: int = 1,

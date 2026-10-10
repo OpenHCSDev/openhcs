@@ -35,7 +35,9 @@ from openhcs.processing.backends.cellprofiler.relationships import (
     ObjectRelationshipBackendStrategy,
 )
 from openhcs.processing.backends.cellprofiler.thresholding import threshold_primitives
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 
 MORPHOLOGY = MorphologyBackendStrategy.for_memory_type(MemoryType.NUMPY)
 
@@ -879,7 +881,7 @@ def test_morphological_skeleton_uses_planar_processing_contract() -> None:
     np.testing.assert_array_equal(result > 0, expected)
     assert (
         morphology_module.morphologicalskeleton.__processing_contract__
-        is ProcessingContract.PURE_2D
+        is Pure2DContract
     )
 
 

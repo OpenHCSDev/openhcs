@@ -10,7 +10,7 @@ from typing import (
     ClassVar,
     TypeVar,
 )
-from openhcs.core.equivalence.policy import normalize_runtime_identifier
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import (
     MeasuredObjectAnchorFeatureMarker,
     MeasurementScope,

@@ -1,7 +1,9 @@
 """CellProfiler-compatible image projection backend."""
 
 from __future__ import annotations
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    VolumetricToSliceContract,
+)
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -183,7 +185,7 @@ class MaskProjectionStrategy(Float32ProjectionStrategy):
         return np.all(request.stack > 0, axis=0)
 
 
-@numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+@numpy(contract=VolumetricToSliceContract)
 def make_projection(
     image: np.ndarray,
     projection_type: ProjectionType = ProjectionType.AVERAGE,

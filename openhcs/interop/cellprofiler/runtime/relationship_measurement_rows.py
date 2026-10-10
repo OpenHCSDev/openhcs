@@ -33,6 +33,8 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
+)
+from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceFeatureDeclaration,
     DirectParentReferenceMeasurementFeature,
 )

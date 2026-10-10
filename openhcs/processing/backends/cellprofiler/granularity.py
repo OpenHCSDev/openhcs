@@ -91,7 +91,9 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
     OpencvBackendProvider,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.processing.backends.cellprofiler._granularity_native import (
     reconstruct_f32 as _reconstruct_f32,
     sample_order_one_grid as _sample_order_one_grid,
@@ -1548,7 +1550,7 @@ def object_granularity_values(
     return gs_per_object
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def measure_granularity(
     image: np.ndarray,
     subsample_size: float = 0.25,
@@ -1580,7 +1582,7 @@ def measure_granularity(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 def measure_granularity_objects(
     image: np.ndarray,

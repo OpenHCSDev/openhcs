@@ -44,7 +44,7 @@ from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
     ImagePayloadConsumption,
-    PrimaryImageCarrierRequirement,
+    PayloadAxisRequirement,
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_reference import FunctionReference
@@ -581,12 +581,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         for binding in self.runtime_parameter_bindings:
             kwargs[binding.parameter_name] = binding.value
         adapter = self.contract.runtime_adapter
-        processing = self.contract.processing_contract
-        declaration = (
-            None
-            if processing is None
-            else self.contract.require_processing_contract().declaration
-        )
+        declaration = self.contract.processing_contract
         object.__setattr__(
             self,
             "runtime_kwargs",
@@ -910,13 +905,13 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             plan for plan in self.artifact_output_plans if plan.ref() in canonical_refs
         )
 
-    def proves_primary_image_carrier(
+    def proves_payload_axis(
         self,
-        requirement: PrimaryImageCarrierRequirement,
+        requirement: PayloadAxisRequirement,
     ) -> bool:
-        """Return whether this declaration proves carrier preservation."""
+        """Return whether this declaration proves the required payload axis."""
 
-        transition = self.contract.primary_image_carrier_transition
+        transition = self.contract.payload_axis_transition
         return transition is not None and transition.proves(requirement)
 
     @classmethod
@@ -1219,24 +1214,24 @@ class CompiledFunctionGroup:
             for invocation in self.invocations
         )
 
-    def primary_image_carrier_proof(
+    def payload_axis_proof(
         self,
-        requirement: PrimaryImageCarrierRequirement,
+        requirement: PayloadAxisRequirement,
         *,
         stop_before: int | None = None,
-    ) -> PrimaryImageCarrierProof:
+    ) -> PayloadAxisProof:
         """Resolve a consumer's evidence backwards to its creation or source."""
 
         invocations = (
             self.invocations if stop_before is None else self.invocations[:stop_before]
         )
         for invocation in reversed(invocations):
-            if not invocation.proves_primary_image_carrier(requirement):
-                return UnprovedPrimaryImageCarrierProof(invocation)
-            transition = invocation.contract.primary_image_carrier_transition
+            if not invocation.proves_payload_axis(requirement):
+                return UnprovedPayloadAxisProof(invocation)
+            transition = invocation.contract.payload_axis_transition
             if transition.creates(requirement):
-                return CreatedPrimaryImageCarrierProof()
-        return InheritedPrimaryImageCarrierProof()
+                return CreatedPayloadAxisProof()
+        return InheritedPayloadAxisProof()
 
     @classmethod
     def from_normalized_group(
@@ -1272,8 +1267,8 @@ class CompiledFunctionGroup:
         )
 
 
-class PrimaryImageCarrierProof(ABC):
-    """One group-owned proof result, not another carrier metadata authority."""
+class PayloadAxisProof(ABC):
+    """Whether a group proves a payload-axis requirement, and how."""
 
     def validate_obligation(
         self,
@@ -1302,18 +1297,18 @@ class PrimaryImageCarrierProof(ABC):
         """Fulfill this member's source obligation or reject its invocation."""
 
 
-class InheritedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+class InheritedPayloadAxisProof(PayloadAxisProof):
     def _fulfill_obligation(self, failure_message, source_validation) -> bool:
         return source_validation()
 
 
-class CreatedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+class CreatedPayloadAxisProof(PayloadAxisProof):
     def _fulfill_obligation(self, failure_message, source_validation) -> bool:
         return True
 
 
 @dataclass(frozen=True, slots=True)
-class UnprovedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+class UnprovedPayloadAxisProof(PayloadAxisProof):
     invocation: CompiledFunctionInvocation
 
     def _fulfill_obligation(self, failure_message, source_validation) -> bool:

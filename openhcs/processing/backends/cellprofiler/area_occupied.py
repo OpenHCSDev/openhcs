@@ -27,14 +27,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    composed_image_payload,
-    object_label_input_execution_mode,
-    resolved_callable_parameter,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (composed_image_payload, object_label_input_execution_mode, resolved_callable_parameter, runtime_bound_parameters, special_inputs)
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_measurements import (
@@ -98,9 +91,15 @@ from openhcs.processing.backends.analysis.region_properties import (
     binary_area_and_perimeter_2d,
     label_area_and_rounded_perimeter_2d,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure3DContract,
+)
 from openhcs.core.runtime_array_values import array_geometry
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
@@ -772,7 +771,7 @@ class ObjectLabelsAreaOccupiedRequest:
 
 
 @composed_image_payload
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 @special_inputs("object_labels")
 @runtime_bound_parameters(
     AreaOccupiedRowsRuntimeParameter,
@@ -999,7 +998,7 @@ VolumeOccupiedVoxelSpacingInput = Annotated[
 ]
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def measure_image_volume_occupied_binary(
     image: np.ndarray, spacing: VolumeOccupiedVoxelSpacingInput = None
 ) -> Tuple[np.ndarray, DataclassMeasurementColumnarRows]:
@@ -1035,8 +1034,8 @@ def measure_image_volume_occupied_binary(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy(contract=Pure3DContract)
+@object_label_input_execution_mode(FullStackLabels)
 @special_inputs(
     MeasureImageAreaOccupiedBinaryModule.objects_binding.require_runtime_parameter_name()
 )

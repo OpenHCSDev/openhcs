@@ -15,11 +15,7 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
@@ -32,7 +28,10 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure3DContract,
+)
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -54,6 +53,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     cellprofiler_enum_setting_parser,
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
+)
+from openhcs.core.pipeline.function_contracts import (
+    MatchImageStackLabels,
 )
 
 if TYPE_CHECKING:
@@ -407,7 +409,7 @@ def _measure_image_overlap(
     return (ground_truth_image.astype(np.float32)[np.newaxis, ...], rows)
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def measureimageoverlap(
     image: np.ndarray,
 ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows]:
@@ -415,7 +417,7 @@ def measureimageoverlap(
     return _measure_image_overlap(image, calculate_emd=False)
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def measureimageoverlap_with_emd(
     image: np.ndarray,
     max_distance: int = 250,
@@ -573,8 +575,8 @@ def _measure_object_overlap(
     )
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
+@numpy(contract=FlexibleContract)
+@object_label_input_execution_mode(MatchImageStackLabels)
 @special_inputs("labels_ground_truth", "labels_test")
 def measure_object_overlap(
     image: np.ndarray,
@@ -590,8 +592,8 @@ def measure_object_overlap(
     )
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
+@numpy(contract=FlexibleContract)
+@object_label_input_execution_mode(MatchImageStackLabels)
 @special_inputs("labels_ground_truth", "labels_test")
 def measure_object_overlap_with_emd(
     image: np.ndarray,

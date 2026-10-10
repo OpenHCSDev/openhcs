@@ -2080,8 +2080,9 @@ class FunctionCoreExecutor:
                 "execution_axis_cardinality="
                 f"{plane_projector.runtime_slice_axis_size()!r}; "
                 "image_payload_execution_mode="
-                f"{contract.runtime_image_execution_mode}; "
-                f"processing_contract={contract.processing_contract}."
+                f"{getattr(contract.runtime_image_execution_mode, '__name__', None)}; "
+                "processing_contract="
+                f"{getattr(contract.processing_contract, '__name__', None)}."
             ) from exc
         RuntimeProfileLogger.log(
             logger,

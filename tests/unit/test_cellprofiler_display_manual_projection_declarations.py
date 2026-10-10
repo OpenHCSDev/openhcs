@@ -480,7 +480,7 @@ def test_display_callables_resolve_values_from_declared_measurement_tables() -> 
                 FieldSpec("Metadata_Well", str),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     object_plate_table = MeasurementTable(
         name="ObjectPlateMeasurements",

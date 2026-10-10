@@ -18,6 +18,7 @@ from typing import (
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 
+from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecRef
 from openhcs.core.callable_contract import (
@@ -402,6 +403,7 @@ class CellProfilerModule(
         CellProfilerModule.calculated_measurement_feature_prefix_declarations.__func__.cache_clear()
         CellProfilerModule.numbered_measurement_feature_prefix_alias_declarations.__func__.cache_clear()
         CellProfilerModule.scale_qualified_measurement_feature_prefix_declarations.__func__.cache_clear()
+        MeasurementDialect.declarations_changed()
 
     @classmethod
     def declared_function_names(cls) -> tuple[str, ...]:

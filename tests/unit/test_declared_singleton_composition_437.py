@@ -5,11 +5,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack)
 from openhcs.core.callable_contract import CallableContract, ImagePayloadConsumption
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
@@ -50,16 +46,23 @@ from openhcs.processing.backends.cellprofiler.color import (
     gray_to_color,
     GrayToColorModule,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
 from openhcs.core.axes import ColourAxis
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+    FullStackExecution,
+    NaturalExecution,
+)
 
 
 @artifact_inputs(ArtifactSpec.input("FITC", ImageArtifactType))
 @composed_image_payload
-@numpy_contract(contract=ProcessingContract.PURE_3D)
+@numpy_contract(contract=Pure3DContract)
 def independently_declared_source_echo(image):
     """A new source consumer, not a GrayToColor alias or special-case branch."""
     assert image.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
@@ -184,7 +187,7 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
         payload = invocation.payload
         execution_mode = invocation.execution_mode
         plane_projection = invocation.plane_projection
-    assert execution_mode is ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+    assert execution_mode is AlignedStackExecution
     assert isinstance(payload, AlignedImageStack)
     assert plane_projection == projection
     assert payload.slice_contexts == (contexts if aligned else ())
@@ -248,7 +251,7 @@ def test_declared_composed_scalar_introduces_one_source_axis():
         "independent scalar",
         (scalar,),
     )
-    assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert composition.execution_mode is FullStackExecution
     assert (
         composition.payload.metadata.plane_axis
         is RuntimePlaneAxis.SOURCE_BINDING
@@ -277,9 +280,9 @@ def test_natural_declaration_retains_exact_singleton(aligned):
     )
     assert composition.payload is current
     assert composition.execution_mode is (
-        ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        AlignedStackExecution
         if aligned
-        else ImagePayloadExecutionMode.NATURAL
+        else NaturalExecution
     )
     if not aligned:
         result = CellProfilerFunctionContractExecutor().execute(

@@ -6,6 +6,10 @@ private plate, segmentation replacement, mocked runtime or biological verdict.
 
 import numpy as np
 import pytest
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+    UneditedLabels,
+)
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
@@ -75,10 +79,10 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
     np.testing.assert_array_equal(original.data, image)
     np.testing.assert_array_equal(diagnostics.threshold_support.data, image > 0.2)
     np.testing.assert_array_equal(
-        diagnostics.unedited_objects.data, objects.unedited_labels
+        diagnostics.unedited_objects.data, objects.variant_labels(UneditedLabels)
     )
     np.testing.assert_array_equal(
-        diagnostics.small_removed_objects.data, objects.small_removed_labels
+        diagnostics.small_removed_objects.data, objects.variant_labels(SmallRemovedLabels)
     )
     assert measurements.row_count() > 0
     if mode in ("empty", "disabled", "watershed-disabled"):
@@ -350,11 +354,11 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         persisted.append(record.data)
     diagnostics = PrimaryObjectDiagnosticPlanes(*persisted)
     np.testing.assert_array_equal(
-        diagnostics.unedited_objects.data, primary_record.data.unedited_labels
+        diagnostics.unedited_objects.data, primary_record.data.variant_labels(UneditedLabels)
     )
     np.testing.assert_array_equal(
         diagnostics.small_removed_objects.data,
-        primary_record.data.small_removed_labels,
+        primary_record.data.variant_labels(SmallRemovedLabels),
     )
 
     # A memory-backed first step still owns persistent image artifacts. Later

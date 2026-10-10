@@ -2086,7 +2086,7 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
                 fields=(FieldSpec("image_area", float),),
             ),
             source_image_name="OrigBlue",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue"),
         ),
         MeasurementTable(
             name="measurements",

@@ -5,15 +5,10 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ImageOutputBundle,
-    ImagePayloadExecutionMode,
-)
+from openhcs.processing.backends.cellprofiler.crop import CropMask
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle)
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
     ArtifactSpec,
     ImageArtifactType,
     MeasurementsArtifactType,
@@ -31,13 +26,16 @@ from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
 )
 from tests.unit.test_function_artifact_outputs import (
     ContextStub,
     CoreExecutionRequest,
     _execute_function_core,
+)
+from openhcs.core.image_payload_execution_mode import (
+    NaturalExecution,
 )
 
 
@@ -159,7 +157,7 @@ def test_cellprofiler_execution_names_each_multi_canonical_stack_slice() -> None
         module_name="TestModule",
         metadata=CallableMetadata(
             artifact_outputs=(first, second),
-            processing_contract=ProcessingContract.PURE_3D,
+            processing_contract=Pure3DContract,
         ),
     )
     returned = CellProfilerFunctionContractExecutor().execute(
@@ -167,7 +165,7 @@ def test_cellprofiler_execution_names_each_multi_canonical_stack_slice() -> None
         process,
         np.zeros((1, 2, 2), dtype=np.float32),
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     resolved = contract.resolve_returned_output(returned)
@@ -216,7 +214,7 @@ def test_generic_function_save_records_canonical_and_trailing_outputs() -> None:
     mask = ArtifactSpec.output(
         "Second__crop_mask",
         ImageArtifactType,
-        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        sidecar_role=CropMask,
     )
     first_value = np.full((2, 3), 1, dtype=np.float32)
     second_value = np.full((2, 3), 2, dtype=np.float32)

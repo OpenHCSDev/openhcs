@@ -20,11 +20,9 @@ For example:
 .. code-block:: python
 
    from openhcs.core.memory import pyclesperanto
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure3DContract
 
-   @pyclesperanto(contract=ProcessingContract.PURE_3D)
+   @pyclesperanto(contract=Pure3DContract)
    def gaussian_volume(image, sigma: float = 1.0):
        import pyclesperanto as cle
 

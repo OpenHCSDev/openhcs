@@ -14,8 +14,8 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementTable
+from openhcs.core.measurement_dialect import PlainMeasurementDialect
 from openhcs.core.runtime_measurements import (
-    DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT,
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
@@ -227,8 +227,8 @@ def test_measurement_table_declares_non_object_rows_as_image_subject() -> None:
         name="count_measurements",
         rows=rows,
         subject=MeasurementSubject(
-            MeasurementScope.IMAGE,
-            MeasurementScope.IMAGE.value,
+            MeasurementScope.SAMPLE,
+            MeasurementScope.SAMPLE.value,
         ),
     )
     source_image_table = CropModule.build_measurement_table(
@@ -243,11 +243,11 @@ def test_measurement_table_declares_non_object_rows_as_image_subject() -> None:
     )
 
     assert generic_image_table.subject == MeasurementSubject(
-        MeasurementScope.IMAGE,
-        MeasurementScope.IMAGE.value,
+        MeasurementScope.SAMPLE,
+        MeasurementScope.SAMPLE.value,
     )
     assert source_image_table.subject == MeasurementSubject(
-        MeasurementScope.IMAGE,
+        MeasurementScope.SAMPLE,
         "DNA",
     )
     assert source_image_table.source_image_name == "DNA"
@@ -582,7 +582,7 @@ def test_wide_measurement_projection_reads_columns_without_materializing_rows() 
     )
 
     accumulator = WideMeasurementRowAccumulator(
-        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+        PlainMeasurementDialect.row_identity_contract
     )
     accumulator.add(
         rows,
@@ -629,7 +629,7 @@ def test_wide_measurement_projection_does_not_treat_descriptor_axes_as_identity(
     )
 
     accumulator = WideMeasurementRowAccumulator(
-        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+        PlainMeasurementDialect.row_identity_contract
     )
     accumulator.add(
         rows,
@@ -675,7 +675,7 @@ def test_concatenated_measurement_rows_preserve_structural_missing_cells() -> No
         )
     )
     accumulator = WideMeasurementRowAccumulator(
-        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+        PlainMeasurementDialect.row_identity_contract
     )
 
     accumulator.add(
@@ -696,8 +696,6 @@ def test_concatenated_measurement_rows_preserve_structural_missing_cells() -> No
 
 
 def test_declared_wide_admission_preserves_features_before_absent_object_column() -> None:
-    from openhcs.core.equivalence.policy import DEFAULT_RUNTIME_MEASUREMENT_DIALECT
-
     rows = MeasurementSparseColumnarRows.from_rows(
         ({"slice_index": 1, "contrast": 0.25, "entropy": 0.75},),
         fields=(
@@ -708,13 +706,13 @@ def test_declared_wide_admission_preserves_features_before_absent_object_column(
         ),
     )
     accumulator = WideMeasurementRowAccumulator(
-        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+        PlainMeasurementDialect.row_identity_contract
     )
     accumulator.add_declared_rows(
         rows,
-        DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        PlainMeasurementDialect.shared(),
         default_subject="Image",
-        default_scope=MeasurementScope.IMAGE,
+        default_scope=MeasurementScope.SAMPLE,
     )
 
     assert accumulator.row_mappings_by_subject()["Image"] == (
@@ -757,7 +755,7 @@ def test_long_form_projection_omits_structurally_missing_qualifiers() -> None:
         )
     )
     accumulator = WideMeasurementRowAccumulator(
-        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+        PlainMeasurementDialect.row_identity_contract
     )
 
     accumulator.add(
@@ -796,7 +794,7 @@ def test_object_scoped_long_form_projection_rejects_conflicting_values() -> None
         ),
     )
     accumulator = WideMeasurementRowAccumulator(
-        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+        PlainMeasurementDialect.row_identity_contract
     )
 
     accumulator.add(
@@ -811,7 +809,7 @@ def test_object_scoped_long_form_projection_rejects_conflicting_values() -> None
 
 def test_wide_measurement_projection_uses_row_owned_scope_for_artifact_table() -> None:
     accumulator = WideMeasurementRowAccumulator(
-        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+        PlainMeasurementDialect.row_identity_contract
     )
     accumulator.add(
         MeasurementSparseColumnarRows.from_rows(
@@ -872,7 +870,7 @@ def test_measurement_row_contract_owns_output_identity_without_renumbering(layou
                      for name in columns),
     )
     for contract, output_name in (
-        (DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT, "object_label"),
+        (PlainMeasurementDialect.row_identity_contract, "object_label"),
         (CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract, "object_number"),
     ):
         accumulator = WideMeasurementRowAccumulator(contract)

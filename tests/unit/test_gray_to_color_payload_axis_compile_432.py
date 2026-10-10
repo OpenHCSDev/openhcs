@@ -1,4 +1,4 @@
-"""#432: a created color carrier is not inherited from grayscale source files."""
+"""#432: a created color payload axis is not inherited from grayscale source files."""
 
 from dataclasses import replace
 
@@ -7,17 +7,18 @@ import pytest
 import tifffile
 
 from openhcs.core.callable_contract import (
-    CallableContract, PrimaryImageCarrierRequirement, PrimaryImageCarrierTransition,
-    declares_primary_image_carrier_transition, preserves_primary_image_carrier,
+    CallableContract, CreatedPayloadAxis, PayloadAxisRequirement, PreservedPayloadAxes,
+    creates_payload_axis, preserves_payload_axes,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.function_patterns import (
-    CompiledFunctionGroup, CompiledFunctionPattern, PrimaryImageCarrierProof,
-    InheritedPrimaryImageCarrierProof, CreatedPrimaryImageCarrierProof,
-    UnprovedPrimaryImageCarrierProof,
+    CompiledFunctionGroup, CompiledFunctionPattern, PayloadAxisProof,
+    InheritedPayloadAxisProof, CreatedPayloadAxisProof,
+    UnprovedPayloadAxisProof,
 )
 from openhcs.core.pipeline.compiler import PipelineCompiler
-from openhcs.core.aligned_image_payload import ImagePayloadBundleContext, ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
+from openhcs.core.image_payload_execution_mode import NaturalExecution
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.color import (
@@ -25,7 +26,7 @@ from openhcs.processing.backends.cellprofiler.color import (
     split_color_to_gray,
 )
 from test_gray_to_color_binding_axis_432 import _execute_bound_stack, _source_plane
-from test_primary_image_carrier_compile_gate import _compiled_pattern, _session
+from test_payload_axis_compile_gate import _compiled_pattern, _session
 from openhcs.core.payload_axes import ColourSampleAxisSpec
 from openhcs.core.axes import ColourAxis
 
@@ -53,7 +54,7 @@ def _gray_creator_session(tmp_path):
 def test_declared_gray_creator_proves_color_consumer_before_execution(tmp_path):
     # Intended acceptance: unchanged strict consumer accepts a declared creator.
     # Original RED matched the installed producer-step error, not a live replay.
-    PipelineCompiler.validate_primary_image_carrier_requirements(_gray_creator_session(tmp_path))
+    PipelineCompiler.validate_payload_axis_requirements(_gray_creator_session(tmp_path))
 
 
 def test_declared_gray_creator_proves_same_group_color_consumer(tmp_path):
@@ -67,23 +68,23 @@ def test_declared_gray_creator_proves_same_group_color_consumer(tmp_path):
         groups=(group,), is_grouped=False,
     ))}
     session.context.step_plans = session.plans
-    PipelineCompiler.validate_primary_image_carrier_requirements(session)
+    PipelineCompiler.validate_payload_axis_requirements(session)
 
 
-def test_preservation_annotation_cannot_create_missing_source_carrier(tmp_path):
+def test_preservation_annotation_cannot_create_missing_source_payload_axis(tmp_path):
     session = _gray_creator_session(tmp_path)
     producer = session.plans[0]
     (invocation,) = tuple(producer.compiled_function_pattern.iter_invocations())
     # A local counterexample only: do not mutate production callable/registry.
     falsely_preserving = replace(invocation, contract=replace(invocation.contract, metadata=replace(
-        invocation.contract.metadata, primary_image_carrier_transition=PrimaryImageCarrierTransition.PRESERVE,
+        invocation.contract.metadata, payload_axis_transition=PreservedPayloadAxes(),
     )))
     session.plans[0] = replace(producer, compiled_function_pattern=CompiledFunctionPattern(
         groups=(CompiledFunctionGroup("default", (falsely_preserving,)),), is_grouped=False,
     ))
     session.context.step_plans = session.plans
-    with pytest.raises(ValueError, match="requires a declared source channel axis"):
-        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+    with pytest.raises(ValueError, match="requires a declared ColourAxis payload axis"):
+        PipelineCompiler.validate_payload_axis_requirements(session)
 
 
 def _runtime_scalar_role_split():
@@ -101,7 +102,7 @@ def _runtime_scalar_role_split():
         contract, contract.resolve_canonical_raw_callable(), composite,
         {"mode": ColorToGrayMode.SPLIT, "image_type": ImageChannelType.CHANNELS,
          "channel_indices": (0, 1), "contributions": (1.0, 1.0)},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
     return result, (raw, capped)
 
@@ -116,7 +117,7 @@ def test_original_runtime_split_preserves_both_role_values_and_physical_channel(
         assert set(output.metadata.source_image_paths) == {"/synthetic/A01_s1_w2_z1_t1.tif"}
 
 
-def test_scalar_role_outputs_consume_the_color_carrier():
+def test_scalar_role_outputs_consume_the_color_payload_axis():
     result, _expected_roles = _runtime_scalar_role_split()
     for output in result.slices:
         assert output.data.shape == (4, 5)
@@ -125,13 +126,11 @@ def test_scalar_role_outputs_consume_the_color_carrier():
 
 @pytest.mark.parametrize("same_group", [False, True])
 def test_independent_creator_declaration_needs_no_consumer_edits(tmp_path, monkeypatch, same_group):
-    @declares_primary_image_carrier_transition(
-        PrimaryImageCarrierTransition.CREATE_SOURCE_CHANNEL_AXIS,
-    )
+    @creates_payload_axis(ColourAxis)
     def independent_lane_creator(image):
         return np.stack((image, image * 2), axis=-1)
 
-    @preserves_primary_image_carrier
+    @preserves_payload_axes
     def independent_lane_preserver(image):
         return image.copy()
 
@@ -159,13 +158,13 @@ def test_independent_creator_declaration_needs_no_consumer_edits(tmp_path, monke
     session.context.step_plans = session.plans
 
     def reject_source_backtracking(*args, **kwargs):
-        pytest.fail("A declared creator must stop source-carrier backtracking")
+        pytest.fail("A declared creator must stop source-payload axis backtracking")
 
     monkeypatch.setattr(
         "openhcs.core.pipeline.compiler.require_image_file_source_metadata",
         reject_source_backtracking,
     )
-    PipelineCompiler.validate_primary_image_carrier_requirements(session)
+    PipelineCompiler.validate_payload_axis_requirements(session)
 
 
 @pytest.mark.parametrize("unknown_after_creator", [False, True])
@@ -178,8 +177,8 @@ def test_group_proof_stops_at_creator_but_rejects_later_unknown(unknown_after_cr
         invocation for callable_ in functions
         for invocation in _compiled_pattern(callable_).iter_invocations()
     )
-    proof = CompiledFunctionGroup("default", invocations).primary_image_carrier_proof(
-        PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,
+    proof = CompiledFunctionGroup("default", invocations).payload_axis_proof(
+        PayloadAxisRequirement(ColourAxis),
     )
     failures = []
     assert proof.validate_obligation(
@@ -198,7 +197,7 @@ def test_inherited_proof_executes_actual_source_obligation_once(source_complete)
         visits.append("source")
         return source_complete
 
-    complete = InheritedPrimaryImageCarrierProof().validate_obligation(
+    complete = InheritedPayloadAxisProof().validate_obligation(
         source_validation=validate_source,
         failure_message=lambda invocation: pytest.fail("Inherited proof has no failed invocation"),
         failures=failures,
@@ -210,9 +209,9 @@ def test_inherited_proof_executes_actual_source_obligation_once(source_complete)
 
 @pytest.mark.parametrize("capability_first", [False, True])
 @pytest.mark.parametrize("proof_type,args,expected_visits,expected_failures", [
-    (InheritedPrimaryImageCarrierProof, (), ["before", "source", "after"], []),
-    (CreatedPrimaryImageCarrierProof, (), ["before", "after"], []),
-    (UnprovedPrimaryImageCarrierProof,
+    (InheritedPayloadAxisProof, (), ["before", "source", "after"], []),
+    (CreatedPayloadAxisProof, (), ["before", "after"], []),
+    (UnprovedPayloadAxisProof,
      tuple(_compiled_pattern(color_to_gray).iter_invocations()), ["before", "after"], ["rejected color_to_gray"]),
 ])
 def test_independent_same_node_validation_capability_composes_both_mro_orders(
@@ -220,7 +219,7 @@ def test_independent_same_node_validation_capability_composes_both_mro_orders(
 ):
     visits, failures = [], []
 
-    class ValidationVisitCapability(PrimaryImageCarrierProof):
+    class ValidationVisitCapability(PayloadAxisProof):
         def validate_obligation(self, **kwargs):
             visits.append("before")
             result = super().validate_obligation(**kwargs)
@@ -249,17 +248,17 @@ def test_source_validation_rejection_is_collected_once_by_proof_owner():
     failures = []
 
     def reject_source():
-        raise ValueError("exact source missing its declared carrier")
+        raise ValueError("exact source missing its declared payload axis")
 
-    assert InheritedPrimaryImageCarrierProof().validate_obligation(
+    assert InheritedPayloadAxisProof().validate_obligation(
         source_validation=reject_source,
         failure_message=lambda invocation: pytest.fail("No failed invocation"),
         failures=failures,
     )
-    assert failures == ["exact source missing its declared carrier"]
+    assert failures == ["exact source missing its declared payload axis"]
 
 
-def test_color_to_gray_does_not_preserve_consumed_carrier_for_later_consumer(tmp_path):
+def test_color_to_gray_does_not_preserve_consumed_payload_axis_for_later_consumer(tmp_path):
     session = _gray_creator_session(tmp_path)
     consumer = session.plans[1]
     session.plans[2] = replace(
@@ -271,7 +270,7 @@ def test_color_to_gray_does_not_preserve_consumed_carrier_for_later_consumer(tmp
     session.plans[1] = replace(consumer, step_scope_id="step-1")
     session.context.step_plans = session.plans
     with pytest.raises(ValueError, match="not preserved by producer step 1 callable 'color_to_gray'"):
-        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+        PipelineCompiler.validate_payload_axis_requirements(session)
 
 
 @pytest.mark.parametrize("image_type", tuple(ImageChannelType))
@@ -287,7 +286,7 @@ def test_scalar_projection_modes_keep_pixels_mask_and_original_source(image_type
         contract, contract.resolve_canonical_raw_callable(), source,
         {"mode": ColorToGrayMode.SPLIT, "image_type": image_type,
          "channel_indices": (0, 1), "contributions": (1.0, 1.0)},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
     for output, expected_pixels in zip(result.slices, expected, strict=True):
         np.testing.assert_array_equal(output.data, expected_pixels)

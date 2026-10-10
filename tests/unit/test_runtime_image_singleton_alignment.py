@@ -3,11 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImagePayloadExecutionMode,
-    compose_aligned_image_payload,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageStack, compose_aligned_image_payload)
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
@@ -17,6 +13,10 @@ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+    FullStackExecution,
+)
 
 _SPATIAL_DOMAIN = SourceSpatialDomain(source_shape_yx=(4, 5))
 _SINGLETON_MASK = np.array(
@@ -64,7 +64,7 @@ def test_scalar_image_aligns_with_nominal_singleton_owner(
     composition = compose_aligned_image_payload("Measurement consumer", payloads)
 
     assert composition.execution_mode is (
-        ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        AlignedStackExecution
     )
     assert isinstance(composition.payload, AlignedImageStack)
     assert len(composition.payload.slices) == 1
@@ -113,7 +113,7 @@ def test_same_shaped_scalar_images_do_not_invent_runtime_alignment() -> None:
         (_scalar_image(7), _scalar_image(11)),
     )
 
-    assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert composition.execution_mode is FullStackExecution
     assert not isinstance(composition.payload, AlignedImageStack)
     assert composition.payload.metadata.plane_axis is (
         RuntimePlaneAxis.SOURCE_BINDING

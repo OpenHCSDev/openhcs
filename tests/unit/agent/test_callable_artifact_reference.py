@@ -136,7 +136,7 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
     )
     contract = namespace["contract"]
     assert contract.input_memory_type == contract.output_memory_type == "numpy"
-    assert contract.processing_contract == namespace["ProcessingContract"].PURE_2D
+    assert contract.processing_contract is namespace["Pure2DContract"]
     specs = contract.artifact_outputs.specs
     assert tuple(spec.name for spec in specs) == (
         "fixture_image",

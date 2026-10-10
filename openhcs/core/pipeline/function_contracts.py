@@ -1,13 +1,14 @@
 """Function-level artifact contract decorators for the pipeline compiler."""
 
+from abc import ABC
 from collections.abc import Mapping, Sequence
-from enum import Enum
 import inspect
 from types import UnionType
 from typing import (
     Annotated,
     Any,
     Callable,
+    ClassVar,
     TypeVar,
     Union,
     get_args,
@@ -15,6 +16,7 @@ from typing import (
     get_type_hints,
 )
 
+from metaclass_registry import AutoRegisterMeta
 from python_introspect import RuntimeParameterDeclarationABC, add_parameter_exclusions
 
 from openhcs.core.artifacts import (
@@ -30,7 +32,10 @@ from openhcs.core.callable_contract import (
     ImagePayloadConsumption,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    ImagePayloadExecutionMode,
+)
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.variable_component_stack_requirement import (
     AlwaysRequiresVariableComponentStack,
@@ -146,46 +151,138 @@ def resolved_callable_parameter(
     return parameter.replace(annotation=annotation)
 
 
-class ObjectLabelInputExecutionMode(str, Enum):
+class ObjectLabelInputExecutionMode(ABC, metaclass=AutoRegisterMeta):
     """How a callable consumes object-label special-input domains."""
 
-    SLICE_ALIGNED = "slice_aligned"
-    FULL_STACK = "full_stack"
-    MATCH_IMAGE_STACK = "match_image_stack"
+    __registry_key__ = "key"
+    __skip_if_no_key__ = True
 
-    def preserves_full_stack(self, *, image_stack_required: bool) -> bool:
+    key: ClassVar[str | None] = None
+
+    @classmethod
+    def preserves_full_stack(cls, *, image_stack_required: bool) -> bool:
         """Return whether binding must preserve the declared label stack."""
+        del image_stack_required
+        return False
 
-        return self is self.FULL_STACK or (
-            self is self.MATCH_IMAGE_STACK and image_stack_required
-        )
-
+    @classmethod
     def invocation_kwargs(
-        self,
+        cls,
         kwargs: Mapping[str, Any],
         *,
-        execution_mode: ImagePayloadExecutionMode,
+        execution_mode: type[ImagePayloadExecutionMode],
         image_projection: RuntimePlaneAxisValueProjection | None,
         runtime_projection: RuntimePlaneAxisValueProjection | None,
         semantic_controls: Mapping[str, Any],
     ) -> dict[str, Any]:
+        """Return the invocation kwargs once the image's execution mode is known."""
+        del execution_mode, image_projection, runtime_projection
+        return {**kwargs, **semantic_controls}
+
+    @classmethod
+    def semantic_label_payload(cls, source_projected_payload, completion_payload):
+        """Return the label payload that represents this measurement domain."""
+        raise TypeError(
+            f"{cls.__name__} declares no object-measurement label domain."
+        )
+
+    @classmethod
+    def image_execution_mode(
+        cls,
+        labels,
+        default: type[ImagePayloadExecutionMode],
+        *,
+        runtime_slice_count: int | None = None,
+    ) -> type[ImagePayloadExecutionMode]:
+        """Return the image execution mode for the semantic label payload."""
+        raise TypeError(
+            f"{cls.__name__} declares no object-measurement execution mode."
+        )
+
+
+class SliceAlignedLabels(ObjectLabelInputExecutionMode):
+    """Labels are consumed plane by plane, aligned with the image."""
+
+    key = "slice_aligned"
+
+    @classmethod
+    def semantic_label_payload(cls, source_projected_payload, completion_payload):
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+        del source_projected_payload
+        projection = completion_payload.declared_plane_projection()
+        if projection is not None and projection.axis_size == 1:
+            return RuntimeSliceProjection.value_for_singleton_slice(
+                completion_payload,
+                source_description="Slice-aligned object-label input",
+            )
+        return completion_payload
+
+    @classmethod
+    def image_execution_mode(cls, labels, default, *, runtime_slice_count=None):
+        from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
+
+        if labels.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD:
+            return default.for_payload_scoped_labels(runtime_slice_count)
+        return default.for_plane_scoped_labels(labels.declared_plane_projection())
+
+
+class FullStackLabels(ObjectLabelInputExecutionMode):
+    """Labels are consumed as one whole stack."""
+
+    key = "full_stack"
+
+    @classmethod
+    def preserves_full_stack(cls, *, image_stack_required: bool) -> bool:
+        del image_stack_required
+        return True
+
+    @classmethod
+    def semantic_label_payload(cls, source_projected_payload, completion_payload):
+        del completion_payload
+        return source_projected_payload
+
+    @classmethod
+    def image_execution_mode(cls, labels, default, *, runtime_slice_count=None):
+        del labels, default, runtime_slice_count
+        return FullStackExecution
+
+
+class MatchImageStackLabels(ObjectLabelInputExecutionMode):
+    """Labels follow the image: a stack when the image needs one."""
+
+    key = "match_image_stack"
+
+    @classmethod
+    def preserves_full_stack(cls, *, image_stack_required: bool) -> bool:
+        return image_stack_required
+
+    @classmethod
+    def invocation_kwargs(
+        cls,
+        kwargs,
+        *,
+        execution_mode,
+        image_projection,
+        runtime_projection,
+        semantic_controls,
+    ):
         """Match scalar images to their declared singleton runtime root.
 
-        Explicit full-stack label consumers keep their domain. Matching labels
-        can consume a singleton root only after the image's final execution
-        mode and retained plane projection have been resolved.
+        Matching labels can consume a singleton root only after the image's
+        final execution mode and retained plane projection have been resolved.
         """
         if (
-            self is self.MATCH_IMAGE_STACK
-            and execution_mode is ImagePayloadExecutionMode.NATURAL
+            execution_mode.per_plane
             and image_projection is None
+            and runtime_projection is not None
+            and runtime_projection.axis_size == 1
         ):
-            if runtime_projection is not None and runtime_projection.axis_size == 1:
-                from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+            from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
-                kwargs = RuntimeSliceProjection.kwargs_for_slice(
-                    kwargs, runtime_projection.selected_plane(0)
-                )
+            kwargs = RuntimeSliceProjection.kwargs_for_slice(
+                kwargs, runtime_projection.selected_plane(0)
+            )
         return {**kwargs, **semantic_controls}
 
 
@@ -416,11 +513,11 @@ def execution_scope(
 
 
 def object_label_input_execution_mode(
-    mode: ObjectLabelInputExecutionMode,
+    mode: type[ObjectLabelInputExecutionMode],
 ) -> Callable[[F], F]:
     """Declare how a callable consumes object-label special inputs."""
 
-    if not isinstance(mode, ObjectLabelInputExecutionMode):
+    if not (isinstance(mode, type) and issubclass(mode, ObjectLabelInputExecutionMode)):
         raise TypeError(
             "object_label_input_execution_mode mode must be "
             "ObjectLabelInputExecutionMode."
@@ -435,17 +532,20 @@ def object_label_input_execution_mode(
 
 def object_label_input_execution_mode_from_callable(
     func: Callable,
-) -> ObjectLabelInputExecutionMode:
+) -> type[ObjectLabelInputExecutionMode]:
     """Return the declared object-label special-input execution mode."""
 
     try:
         namespace = vars(func)
     except TypeError:
-        return ObjectLabelInputExecutionMode.SLICE_ALIGNED
+        return SliceAlignedLabels
     if FunctionContractAttribute.object_label_input_execution_mode not in namespace:
-        return ObjectLabelInputExecutionMode.SLICE_ALIGNED
+        return SliceAlignedLabels
     declared = namespace[FunctionContractAttribute.object_label_input_execution_mode]
-    if not isinstance(declared, ObjectLabelInputExecutionMode):
+    if not (
+        isinstance(declared, type)
+        and issubclass(declared, ObjectLabelInputExecutionMode)
+    ):
         raise TypeError(
             f"{func} object-label input execution mode must be "
             "ObjectLabelInputExecutionMode."

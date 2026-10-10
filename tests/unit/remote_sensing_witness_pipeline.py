@@ -28,6 +28,7 @@ from openhcs.core.axes import (
     TileAxis,
     TimeAxis,
 )
+from openhcs.core.measurement_dialect import MeasurementDialect
 
 
 class RemoteSensing(AxisFamily):
@@ -51,6 +52,16 @@ class RemoteSensing(AxisFamily):
 
     class Scene(Axis, PartitionAxis, LabelValued):
         name = "scene"
+
+
+class RemoteSensingMeasurementDialect(MeasurementDialect):
+    """How this domain names its measurement rows: a plane is a reading."""
+
+    dialect_name = "remote_sensing"
+    axis_family = RemoteSensing
+
+    def row_field_name(self, field_name: str) -> str:
+        return {"slice_index": "reading"}.get(field_name, field_name)
 
 
 RemoteSensing.activate()
@@ -129,6 +140,9 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress import set_progress_queue
     from openhcs.core.steps.function_step import FunctionStep
+    from openhcs.processing.backends.analysis.count_cells_simple import (
+        count_cells_simple,
+    )
     from openhcs.processing.backends.processors.numpy_processor import (
         percentile_normalize,
         stack_percentile_normalize,
@@ -144,6 +158,13 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
         ),
         FunctionStep(
             func=(stack_percentile_normalize, {"target_max": 500.0}),
+            processing_config=LazyProcessingConfig(
+                variable_components=[RemoteSensing.Date],
+                group_by=RemoteSensing.Band,
+            ),
+        ),
+        FunctionStep(
+            func=count_cells_simple,
             processing_config=LazyProcessingConfig(
                 variable_components=[RemoteSensing.Date],
                 group_by=RemoteSensing.Band,
@@ -214,8 +235,22 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
         },
         "output_band_labels": metadata["subdirectories"]["images"]["bands"],
         "config_fields": sorted(field.name for field in fields(Config)),
+        "measurement_headers": sorted(
+            {
+                path.read_text().splitlines()[0]
+                for path in output_plate.rglob("*cell_counts*.csv")
+            }
+        ),
         "loaded_domain_modules": sorted(
-            name for name in sys.modules if name.startswith("openhcs.microscopes")
+            name
+            for name in sys.modules
+            if name.startswith(
+                (
+                    "openhcs.microscopes",
+                    "openhcs.interop",
+                    "openhcs.processing.backends.cellprofiler",
+                )
+            )
         ),
     }
 

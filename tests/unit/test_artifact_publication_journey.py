@@ -25,14 +25,14 @@ from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.pipeline.function_contracts import (
-    artifact_inputs, artifact_outputs, object_label_input_execution_mode,
-    ObjectLabelInputExecutionMode,
-)
+from openhcs.core.pipeline.function_contracts import (artifact_inputs, artifact_outputs, object_label_input_execution_mode)
 from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -50,10 +50,13 @@ from openhcs.processing.backends.cellprofiler.object_images import (
     convert_objects_to_image,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+)
 
 
 @artifact_outputs(ArtifactSpec.output("objects", ObjectLabelsArtifactType))
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def tiny_objects(image: np.ndarray) -> ObjectLabelValue:
     return SourceImageObjectLabelBuildRequest(
         image=image, labels=(np.asarray(image) > 0).astype(np.int32),
@@ -62,8 +65,8 @@ def tiny_objects(image: np.ndarray) -> ObjectLabelValue:
 
 
 @artifact_inputs(ArtifactSpec.input("objects", ObjectLabelsArtifactType, parameter_name="labels"))
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy_decorator(contract=Pure3DContract)
+@object_label_input_execution_mode(FullStackLabels)
 def render_labels(image: np.ndarray, labels: ObjectLabelValue) -> np.ndarray:
     return convert_objects_to_image(image, labels, image_mode=ImageMode.UINT16)
 
@@ -72,7 +75,7 @@ def render_labels(image: np.ndarray, labels: ObjectLabelValue) -> np.ndarray:
     "counts", MeasurementsArtifactType,
     relations=(ArtifactMeasurementSubjectRelation(),),
 ))
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def tiny_counts(image: np.ndarray):
     return image, MeasurementSparseColumnarRows.from_rows(
         ({"nonzero": int(np.count_nonzero(image))},),

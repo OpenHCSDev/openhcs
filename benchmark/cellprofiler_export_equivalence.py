@@ -14,10 +14,8 @@ from benchmark.equivalence.comparison import (
     runtime_table_differences,
 )
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-    normalize_runtime_identifier,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
@@ -26,7 +24,7 @@ from benchmark.equivalence.report import (
 from benchmark.equivalence.table_snapshots import (
     RuntimeTableSnapshot,
 )
-from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
+from openhcs.core.equivalence.measurement_rows import RuntimeSampleNumberOffset
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeMeasurementSnapshotCachePayload,
@@ -87,7 +85,7 @@ def cellprofiler_database_export_equivalence(
             candidate_image_numbers_by_path=(
                 None
                 if execution_axis_id is None
-                else candidate_exports.outputs.image_numbers_by_export_path
+                else candidate_exports.outputs.sample_numbers_by_export_path
             ),
             execution_axis_id=execution_axis_id,
             native_measurement_cache_root=native_measurement_cache_root,
@@ -581,7 +579,8 @@ def _candidate_sqlite_tables(
             raise ValueError(
                 "Comparison requires an exporter-admitted contiguous local image domain."
             )
-        candidate_offset = RuntimeImageNumberOffset.from_table_rows(
+        candidate_offset = RuntimeSampleNumberOffset.from_table_rows(
+            policy.measurement_dialect.row_identity_contract,
             ("image_number",),
             tuple((str(number),) for number in candidate_image_numbers),
         )
@@ -595,7 +594,7 @@ def _candidate_sqlite_tables(
                         name
                     ),
                     image_number_domain=candidate_image_number_domain,
-                    image_number_offset=(
+                    sample_number_offset=(
                         candidate_offset if name not in candidate_subjects else None
                     ),
                 ),
@@ -621,7 +620,7 @@ def cellprofiler_database_measurement_payloads(
         subjects_by_name = _declared_sqlite_table_subjects(properties)
         paths = _declared_sqlite_paths(_outputs_with_suffix(exports, ".db"), properties)
         for path in paths:
-            numbers_by_axis = exports.outputs.image_numbers_by_export_path.get(path)
+            numbers_by_axis = exports.outputs.sample_numbers_by_export_path.get(path)
             if numbers_by_axis is None or axis not in numbers_by_axis:
                 continue
             subjects = subjects_by_name.get(path.name, {})
@@ -672,8 +671,8 @@ def _sqlite_tables(
     tables = {}
     database_dialect = CellProfilerDatabaseColumnDialect()
     image_subject = MeasurementSubject(
-        MeasurementScope.IMAGE,
-        MeasurementScope.IMAGE.value,
+        MeasurementScope.SAMPLE,
+        MeasurementScope.SAMPLE.value,
     )
     structural_field_prefixes = tuple(
         normalize_runtime_identifier(
@@ -730,7 +729,7 @@ def _sqlite_tables(
                     str(table_name)
                 )
                 identity_fields = (
-                    policy.measurement_dialect.row_identity_contract.selected_image_identity_fields(
+                    policy.measurement_dialect.row_identity_contract.selected_sample_identity_fields(
                         frozenset(
                             normalize_runtime_identifier(name)
                             for name in semantic_header

@@ -15,10 +15,8 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageStack)
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -87,9 +85,15 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
     _cellprofiler_line_points,
     _fill_cellprofiler_line_points_numba,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+)
 from openhcs.core.axes import Axis
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -384,16 +388,16 @@ class IlluminationCalculationScopeExecutionModePolicy:
     @classmethod
     def execution_mode(
         cls,
-        default: ImagePayloadExecutionMode,
+        default: type[ImagePayloadExecutionMode],
         *,
         image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
         variable_components: tuple[type[Axis], ...],
-    ) -> ImagePayloadExecutionMode:
+    ) -> type[ImagePayloadExecutionMode]:
         del cls, image, variable_components
         scope = kwargs.get("calculation_scope", CalculationScope.EACH)
         if scope.uses_all_images:
-            return ImagePayloadExecutionMode.FULL_STACK
+            return FullStackExecution
         return default
 
 
@@ -922,7 +926,7 @@ class IlluminationCalculationRequest:
         return metadata.payload_with(image, self.mask_for_output(image))
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 def correct_illumination_calculate(
     image: ImagePayload,
     intensity_choice: IntensityChoice = IntensityChoice.REGULAR,
@@ -1050,7 +1054,7 @@ def _prepare_correct_illumination_calculate() -> None:
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("illumination_function")
 def correct_illumination_apply(
     image: ImagePayload,

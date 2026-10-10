@@ -21,13 +21,9 @@ from openhcs.core.equivalence.cells import (
 from openhcs.core.equivalence.keys import (
     RuntimeMeasurementFeatureKey,
 )
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
-    normalize_runtime_identifier,
-    runtime_measurement_dialect_cache_id,
-    runtime_measurement_dialect_for_cache_id,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.equivalence.measurement_facts import (
     RuntimeMeasurementFactCounterMapping,
 )
@@ -81,7 +77,7 @@ class RuntimeMeasurementFeatureSemanticProfile(
         """Return the most-derived semantic profile for ``key``."""
         return cls._for_feature_key_payload(
             key.to_cache_payload(),
-            runtime_measurement_dialect_cache_id(policy.measurement_dialect),
+            policy.measurement_dialect,
         )
 
     @classmethod
@@ -89,14 +85,14 @@ class RuntimeMeasurementFeatureSemanticProfile(
     def _for_feature_key_payload(
         cls,
         key_payload: object,
-        dialect_id: int,
+        dialect: MeasurementDialect,
     ) -> "RuntimeMeasurementFeatureSemanticProfile":
         """Return cached most-derived semantic profile for one key/dialect pair."""
         key = RuntimeMeasurementFeatureKey.from_cache_payload(key_payload)
         context = RuntimeMeasurementFeatureSemanticContext(
             key,
             RuntimeEquivalencePolicy(
-                measurement_dialect=runtime_measurement_dialect_for_cache_id(dialect_id)
+                measurement_dialect=dialect
             ),
         )
         strategy = cls.for_context(
@@ -257,7 +253,7 @@ class RuntimeMeasurementDescriptorSemantics(RuntimeMeasurementFeatureSemanticPro
     def descriptor_identity(
         self,
         key: RuntimeMeasurementFeatureKey,
-        dialect: RuntimeMeasurementDialect,
+        dialect: MeasurementDialect,
     ) -> object:
         """Return an opaque descriptor identity owned by this profile."""
 
@@ -402,7 +398,7 @@ class ObjectCalculatedFeatureSemanticProfile(
         return any(
             len(feature_parts) > len(prefix) and feature_parts[: len(prefix)] == prefix
             for prefix in (
-                context.policy.measurement_dialect.resolved_calculated_feature_prefixes()
+                context.policy.measurement_dialect.calculated_feature_prefixes()
             )
         )
 
@@ -482,7 +478,7 @@ def object_measurement_feature_matches_marker(
     return _object_measurement_feature_matches_marker_cached(
         key.to_cache_payload(),
         marker_type,
-        runtime_measurement_dialect_cache_id(policy.measurement_dialect),
+        policy.measurement_dialect,
     )
 
 
@@ -490,11 +486,11 @@ def object_measurement_feature_matches_marker(
 def _object_measurement_feature_matches_marker_cached(
     key_payload: object,
     marker_type: type[RuntimeMeasurementFeatureSemanticMarker],
-    dialect_id: int,
+    dialect: MeasurementDialect,
 ) -> bool:
     key = RuntimeMeasurementFeatureKey.from_cache_payload(key_payload)
     policy = RuntimeEquivalencePolicy(
-        measurement_dialect=runtime_measurement_dialect_for_cache_id(dialect_id)
+        measurement_dialect=dialect
     )
     provider_marker_types = policy.measurement_dialect.measurement_feature_marker_types(
         key
@@ -510,10 +506,10 @@ def _object_measurement_feature_matches_marker_cached(
 
 def object_measurement_feature_requires_sparse_boundary_object_count_stability(
     key: RuntimeMeasurementFeatureKey,
-    policy: RuntimeEquivalencePolicy | RuntimeMeasurementDialect,
+    policy: RuntimeEquivalencePolicy | MeasurementDialect,
 ) -> bool:
     """Return whether sparse-boundary equivalence for ``key`` is gated by object count."""
-    if isinstance(policy, RuntimeMeasurementDialect):
+    if isinstance(policy, MeasurementDialect):
         policy = RuntimeEquivalencePolicy(measurement_dialect=policy)
     provider_marker_types = policy.measurement_dialect.measurement_feature_marker_types(
         key

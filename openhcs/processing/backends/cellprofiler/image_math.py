@@ -47,8 +47,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_float,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
 )
 from openhcs.core.runtime_array_values import array_geometry
 from openhcs.core.runtime_image_values import ImagePayload
@@ -891,7 +891,7 @@ class ImageMathPreparedOperands:
         return value_payload
 
 
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
+@numpy_decorator(contract=FlexibleContract)
 def image_math(
     image: ImagePayload,
     operation: MathOperation = MathOperation.ADD,

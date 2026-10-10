@@ -922,25 +922,6 @@ class SourceVoxelSpacing:
         return bool(self.values_zyx)
 
     @classmethod
-    def from_cellprofiler_xyz(
-        cls,
-        *,
-        x: float,
-        y: float,
-        z: float,
-    ) -> "SourceVoxelSpacing":
-        """Return CellProfiler Image.spacing semantics from NamesAndTypes values."""
-        raw_y = float(y)
-        if raw_y <= 0:
-            raise ValueError(
-                "CellProfiler relative pixel spacing in Y must be positive."
-            )
-        return cls(
-            (float(z) / raw_y, 1.0, float(x) / raw_y),
-            unit=SourceVoxelSpacingUnit.RELATIVE,
-        )
-
-    @classmethod
     def from_source_metadata(
         cls,
         metadata: SourceMetadataMapping | None,

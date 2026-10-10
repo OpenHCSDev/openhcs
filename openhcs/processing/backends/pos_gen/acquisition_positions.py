@@ -10,7 +10,9 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
@@ -24,7 +26,7 @@ def _source_metadata(request: RuntimeAdapterRequest) -> ImagePayloadMetadata:
 
 @artifact_outputs(TILE_POSITIONS_OUTPUT)
 @runtime_adapter("source_metadata", _source_metadata)
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def acquisition_tile_positions(
     image_stack: np.ndarray,
     *,

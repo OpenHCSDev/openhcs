@@ -10,7 +10,6 @@ import pytest
 
 from openhcs.constants.input_source import InputSource
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -50,13 +49,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     measurement_rows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    composed_image_payload,
-    object_label_input_execution_mode,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (composed_image_payload, object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
 from openhcs.core.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementTableAxisProjection,
@@ -135,7 +128,7 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -168,7 +161,11 @@ from openhcs.processing.backends.cellprofiler.measurement_math import (
 from openhcs.processing.backends.cellprofiler.relationships import (
     RelateObjectsDistanceMethod,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    ProcessingContract,
+    Pure2DContract,
+)
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
     cellprofiler_runtime_input_edge_for_test,
@@ -179,6 +176,13 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+    SliceAlignedLabels,
+)
 
 AXIS_ID = "A01"
 DNA_IMAGE = "DNA"
@@ -403,7 +407,7 @@ def measurement_values_for_label_slices(
     plane_projector: RuntimePlaneProjection,
     object_name: str | None = None,
     row_axis: MeasurementRowAxisField = MeasurementRowAxisField.SLICE_INDEX,
-    dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    dialect=CELLPROFILER_MEASUREMENT_DIALECT,
 ) -> tuple[object, ...]:
     return MeasurementLabelSliceFeatureQuery(
         measurement_tables=measurement_tables,
@@ -542,7 +546,7 @@ RELATE_OBJECTS = "RelateObjects"
 CALCULATE_MATH = "CalculateMath"
 
 
-def declared_processing_contract(contract: ProcessingContract):
+def with_processing_contract(contract: type[ProcessingContract]):
     def decorator(func):
         func.__processing_contract__ = contract
         return func
@@ -4124,8 +4128,8 @@ def test_cellprofiler_adapter_records_ungrouped_measurements_once():
                 ({"image_area": 100.0},), fields=(FieldSpec("image_area", float),)
             ),
             subject=MeasurementSubject(
-                MeasurementScope.IMAGE,
-                MeasurementScope.IMAGE.value,
+                MeasurementScope.SAMPLE,
+                MeasurementScope.SAMPLE.value,
             ),
         )
     )
@@ -4480,7 +4484,7 @@ def test_cellprofiler_adapter_uses_schema_owned_by_measurement_rows():
                 ({"slice_index": 0, "area": 42.0},),
                 fields=(FieldSpec("slice_index", int), FieldSpec("area", float)),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         )
     )
 
@@ -4545,8 +4549,8 @@ def test_cellprofiler_adapter_does_not_list_undeclared_measurement_outputs():
                 fields=(FieldSpec("slice_index", int), FieldSpec("image_area", float)),
             ),
             subject=MeasurementSubject(
-                MeasurementScope.IMAGE,
-                MeasurementScope.IMAGE.value,
+                MeasurementScope.SAMPLE,
+                MeasurementScope.SAMPLE.value,
             ),
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/plate/Images/A01_s001_w1_z001_t001.tif",),
@@ -4705,8 +4709,8 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
                     ),
                 ),
                 subject=MeasurementSubject(
-                    MeasurementScope.IMAGE,
-                    MeasurementScope.IMAGE.value,
+                    MeasurementScope.SAMPLE,
+                    MeasurementScope.SAMPLE.value,
                 ),
             )
         )
@@ -4827,7 +4831,7 @@ def test_cellprofiler_adapter_aligns_multiplane_measurements_across_groups():
                     ),
                 ),
                 source_image_name="rawGFP",
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "rawGFP"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "rawGFP"),
                 source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                     paths=(f"/plate/Images/A01_{group_key}_rawGFP.tif",),
                 ),
@@ -4925,7 +4929,7 @@ def test_cellprofiler_adapter_rejects_single_slice_measurements_for_repeated_lab
                 ),
             ),
             source_image_name="rawGFP",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "rawGFP"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "rawGFP"),
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/plate/Images/A01_s001_rawGFP.tif",),
             ),
@@ -4997,7 +5001,7 @@ def test_measurement_lookup_uses_table_source_for_source_qualified_object_rows()
                     ),
                 ),
                 source_image_name=DNA_IMAGE,
-                subject=MeasurementSubject(MeasurementScope.IMAGE, DNA_IMAGE),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, DNA_IMAGE),
             ),
             MeasurementTable(
                 name=MEASURE_OBJECT_INTENSITY,
@@ -5016,14 +5020,14 @@ def test_measurement_lookup_uses_table_source_for_source_qualified_object_rows()
                     ),
                 ),
                 source_image_name="rawGFP",
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "rawGFP"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "rawGFP"),
             ),
         ),
         "Intensity_MeanIntensity_rawGFP",
         object_count=1,
         object_ids=(1,),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [5.0])
@@ -5047,7 +5051,7 @@ def test_measurement_lookup_row_source_owns_columnar_source_domain():
             ),
         ),
         source_image_name="rawGFP",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "rawGFP"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "rawGFP"),
     )
 
     with pytest.raises(ValueError, match="Could not resolve measurement feature"):
@@ -5057,7 +5061,7 @@ def test_measurement_lookup_row_source_owns_columnar_source_domain():
             object_count=1,
             object_ids=(1,),
             object_name=NUCLEI,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
     values = measurement_values_for_feature(
@@ -5066,7 +5070,7 @@ def test_measurement_lookup_row_source_owns_columnar_source_domain():
         object_count=1,
         object_ids=(1,),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [5.0])
@@ -5108,7 +5112,7 @@ def test_source_qualified_object_feature_ignores_unrelated_runtime_slice_scope()
                 ),
             ),
             source_image_name="rawGFP",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "rawGFP"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "rawGFP"),
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("/plate/Images/A01_s001_rawGFP.tif",),
             ),
@@ -5157,7 +5161,7 @@ def test_source_qualified_object_feature_ignores_unrelated_runtime_slice_scope()
         object_count=1,
         object_ids=(1,),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [5.0])
@@ -5189,7 +5193,7 @@ def test_measurement_lookup_normalizes_columnar_object_domain():
         object_count=1,
         object_ids=(1,),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [5.0])
@@ -5253,7 +5257,7 @@ def test_cellprofiler_adapter_multiplane_measurement_alignment_is_feature_scoped
                     DNA_IMAGE if group_key.startswith("dna") else "rawGFP"
                 ),
                 subject=MeasurementSubject(
-                    MeasurementScope.IMAGE,
+                    MeasurementScope.SAMPLE,
                     DNA_IMAGE if group_key.startswith("dna") else "rawGFP",
                 ),
                 source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -5947,7 +5951,7 @@ def test_cellprofiler_module_executor_records_and_publishes_object_output(
     image = np.zeros((2, 2), dtype=np.float32)
     labels = np.ones((2, 2), dtype=np.int32)
 
-    @declared_processing_contract(ProcessingContract.PURE_2D)
+    @with_processing_contract(Pure2DContract)
     def identify_primary_objects(image_arg, *, min_diameter):
         np.testing.assert_array_equal(image_arg.data, image)
         assert min_diameter == 8
@@ -6100,7 +6104,7 @@ def test_cellprofiler_module_executor_reads_objects_for_measurements(
         ),
     )
 
-    @declared_processing_contract(ProcessingContract.FLEXIBLE)
+    @with_processing_contract(FlexibleContract)
     def measure_object_size_shape(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -6175,8 +6179,8 @@ def test_cellprofiler_object_only_measurement_uses_label_domain_reference_image(
         ),
     )
 
-    @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
-    @declared_processing_contract(ProcessingContract.PURE_2D)
+    @object_label_input_execution_mode(SliceAlignedLabels)
+    @with_processing_contract(Pure2DContract)
     def measure_object_size_shape(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -6257,9 +6261,9 @@ def test_cellprofiler_object_only_pure_2d_module_executes_label_runtime_slices(
     seen: list[tuple[tuple[int, ...], int]] = []
     adapter.add_objects(NUCLEI, labels)
 
-    @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
+    @object_label_input_execution_mode(SliceAlignedLabels)
     @runtime_bound_parameters(SliceIndexRuntimeParameter)
-    @declared_processing_contract(ProcessingContract.PURE_2D)
+    @with_processing_contract(Pure2DContract)
     def measure_object_size_shape(
         image_arg: ImagePayload, *, labels: ObjectLabelValue, slice_index: int | None = None
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -6350,8 +6354,8 @@ def test_cellprofiler_object_only_full_stack_measurement_preserves_label_runtime
     seen: list[tuple[int, ...]] = []
     adapter.add_objects(NUCLEI, labels)
 
-    @object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
-    @declared_processing_contract(ProcessingContract.FLEXIBLE)
+    @object_label_input_execution_mode(FullStackLabels)
+    @with_processing_contract(FlexibleContract)
     def measure_object_size_shape(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -6437,7 +6441,7 @@ def test_cellprofiler_module_executor_measures_each_declared_image_for_single_ob
     )
     seen = []
 
-    @declared_processing_contract(ProcessingContract.PURE_2D)
+    @with_processing_contract(Pure2DContract)
     def measure_object_intensity(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -6530,8 +6534,8 @@ def test_cellprofiler_module_executor_keeps_coupled_measurement_images_composed(
     )
     seen = []
 
-    @declared_processing_contract(ProcessingContract.PURE_2D)
-    @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
+    @with_processing_contract(Pure2DContract)
+    @runtime_image_execution_mode(FullStackExecution)
     @composed_image_payload
     def measure_colocalization(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
@@ -6633,7 +6637,7 @@ def test_cellprofiler_module_executor_combines_multi_object_measurements(
         ),
     )
 
-    @declared_processing_contract(ProcessingContract.PURE_2D)
+    @with_processing_contract(Pure2DContract)
     def measure_object_size_shape(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -6885,7 +6889,7 @@ def test_measurement_lookup_aligns_values_to_label_slices():
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         plane_projector=RuntimePlaneProjection.stack(2),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert len(value_slices) == 2
@@ -6969,14 +6973,14 @@ def test_measurement_lookup_uses_canonical_runtime_identifier_for_numbered_featu
         "Children_PH3_Count",
         object_count=2,
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_array_equal(values, np.array([2.0, 5.0]))
 
 
 def test_cellprofiler_child_count_lookup_uses_parent_row_domain():
-    lookup = CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT.feature_lookup(
+    lookup = CELLPROFILER_MEASUREMENT_DIALECT.feature_lookup(
         "Children_PH3_Count"
     )
 
@@ -7003,7 +7007,7 @@ def test_adapter_batch_child_count_lookup_uses_parent_row_domain():
     values_by_label, positional_values = MeasurementObjectFeatureVectorBatchQuery(
         "Children_PH3_Count",
         ("PH3",),
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     ).value_indexes({"PH3": (table,)})["PH3"]
 
     assert positional_values == []
@@ -7149,7 +7153,7 @@ def test_object_measurement_table_index_uses_declared_subject_for_unnamed_rows()
         (table,),
         "Cells",
         "AreaShape_FormFactor",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tables == (table,)
@@ -7194,7 +7198,7 @@ def test_child_count_lookup_tolerates_heterogeneous_relationship_summary_rows():
         "Children_PH3_Count",
         object_count=2,
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [2.0, 0.0])
@@ -7617,7 +7621,7 @@ def test_measurement_lookup_filters_source_qualified_columnar_feature_rows():
         object_count=2,
         object_ids=(1, 2),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [0.05, 0.80])
@@ -7671,7 +7675,7 @@ def test_measurement_lookup_preserves_heterogeneous_columnar_batch_features():
         object_count=2,
         object_ids=(1, 2),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [0.05, 0.80])
@@ -7727,7 +7731,7 @@ def test_measurement_slice_projection_keeps_axisless_columnar_rows():
         object_count=1,
         object_ids=(1,),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     np.testing.assert_allclose(values, [0.05])
@@ -7842,7 +7846,7 @@ def test_measurement_lookup_allows_empty_multiplane_label_planes():
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         plane_projector=RuntimePlaneProjection.stack(2),
         object_name=NUCLEI,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert value_slices[0].size == 0
@@ -7894,7 +7898,7 @@ def test_measurement_lookup_rejects_singleton_columnar_slice_for_label_stack():
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             plane_projector=RuntimePlaneProjection.stack(2),
             object_name=NUCLEI,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
 
@@ -7930,7 +7934,7 @@ def test_measurement_lookup_rejects_singleton_indexed_slice_for_label_stack():
                     source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                         paths=("/src/plane_0.tif",),
                     ),
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "rawGFP"),
+                    subject=MeasurementSubject(MeasurementScope.SAMPLE, "rawGFP"),
                 ),
             ),
             "Intensity_MeanIntensity_rawGFP",
@@ -7948,7 +7952,7 @@ def test_measurement_lookup_rejects_singleton_indexed_slice_for_label_stack():
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             plane_projector=RuntimePlaneProjection.stack(2),
             object_name=NUCLEI,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
 
@@ -7984,7 +7988,7 @@ def test_measurement_lookup_rejects_shifted_slice_domain_for_local_label_stack()
                     source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                         paths=("/src/plane_0.tif", "/src/plane_1.tif"),
                     ),
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "rawGFP"),
+                    subject=MeasurementSubject(MeasurementScope.SAMPLE, "rawGFP"),
                 ),
             ),
             "Intensity_MeanIntensity_rawGFP",
@@ -8002,7 +8006,7 @@ def test_measurement_lookup_rejects_shifted_slice_domain_for_local_label_stack()
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             plane_projector=RuntimePlaneProjection.stack(2),
             object_name=NUCLEI,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
 
@@ -8051,7 +8055,7 @@ def test_measurement_lookup_rejects_smaller_axis_domain_for_label_stack():
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             plane_projector=RuntimePlaneProjection.stack(4),
             object_name=NUCLEI,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
 
@@ -9259,7 +9263,7 @@ def test_object_only_measurements_use_each_object_owned_reference_image(
     )
     seen_images = []
 
-    @declared_processing_contract(ProcessingContract.PURE_2D)
+    @with_processing_contract(Pure2DContract)
     def measure_object_size_shape(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -9364,7 +9368,7 @@ def test_cellprofiler_module_executor_measures_each_declared_image_and_object(
     )
     seen = []
 
-    @declared_processing_contract(ProcessingContract.FLEXIBLE)
+    @with_processing_contract(FlexibleContract)
     def measure_object_intensity(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
@@ -9581,7 +9585,7 @@ def test_cellprofiler_object_only_executor_does_not_iterate_image_stack(
             domain=ObjectLabelDomain(declared_object_ids=(1,)),
         )
 
-    identify_tertiary_objects.__processing_contract__ = ProcessingContract.PURE_2D
+    identify_tertiary_objects.__processing_contract__ = Pure2DContract
 
     executor = _executor(
         declaration_owned_cellprofiler_callable(identify_tertiary_objects),
@@ -9668,7 +9672,7 @@ def test_cellprofiler_module_executor_records_relationship_and_measurement_outpu
         ),
     )
 
-    @declared_processing_contract(ProcessingContract.FLEXIBLE)
+    @with_processing_contract(FlexibleContract)
     @special_inputs("parent_labels", "child_labels")
     def relate_objects(
         image_arg,

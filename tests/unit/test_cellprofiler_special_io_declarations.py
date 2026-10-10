@@ -8,11 +8,12 @@ import numpy as np
 import pytest
 from python_introspect import parameter_exclusions
 
+from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.core.aligned_image_payload import AlignedImageStack
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
+    QaCheckpoint,
     ArtifactSidecarSourceRelation,
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -220,7 +221,7 @@ def test_crop_previous_mask_declares_primary_image_stack_broadcast() -> None:
     previous_mask = ArtifactSpec.output(
         "opaque-mask-identity",
         ImageArtifactType,
-        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        sidecar_role=CropMask,
         relations=(ArtifactSidecarSourceRelation(source=previous_crop.ref()),),
     )
     contract = _contract(
@@ -718,13 +719,13 @@ def test_fixed_return_slots_follow_nominal_contract_output_order() -> None:
         if func is identify_primary_objects
     )
     diagnostic_outputs = primary_contract.trailing_return_output_specs[2:]
-    diagnostic_prefix = ArtifactSidecarRole.QA_CHECKPOINT.name_for(nuclei.name)
+    diagnostic_prefix = QaCheckpoint.name_for(nuclei.name)
     assert tuple(spec.name for spec in diagnostic_outputs) == tuple(
         f"{diagnostic_prefix}__{stage}"
         for stage in PrimaryObjectDiagnosticPlanes._fields
     )
     assert all(
-        spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
+        spec.sidecar_role is QaCheckpoint
         for spec in diagnostic_outputs
     )
 

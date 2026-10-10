@@ -6,12 +6,13 @@ from types import SimpleNamespace
 import pytest
 import numpy as np
 
+from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
+    MaterializedImageCopy,
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecRelation,
@@ -747,13 +748,13 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
     crop_mask_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        sidecar_role=CropMask,
         relations=(ArtifactMeasurementSubjectRelation(),),
     )
     image_copy_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        sidecar_role=ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY,
+        sidecar_role=MaterializedImageCopy,
         relations=(ArtifactMeasurementSubjectRelation(),),
     )
     base_contract = CallableContract.from_callable(identify)
@@ -1383,11 +1384,11 @@ def test_artifact_output_source_lookup_ignores_shared_input_broadcast_projection
     planner = _artifact_planner_stub()
     green = ArtifactSpec.input("OrigGreen", ImageArtifactType)
     red = ArtifactSpec.input("OrigRed", ImageArtifactType)
-    mask_name = ArtifactSidecarRole.CROP_MASK.name_for("CropBlue")
+    mask_name = CropMask.name_for("CropBlue")
     green_mask = ArtifactSpec.input(
         mask_name,
         ImageArtifactType,
-        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        sidecar_role=CropMask,
         relations=(InputStackBroadcastSourceRelation(source=green.ref()),),
     )
     red_mask = replace(
@@ -1433,7 +1434,7 @@ def test_artifact_output_source_lookup_ignores_shared_input_broadcast_projection
             name=mask_name,
             path="/memory/CropBlue__crop_mask.pkl",
             artifact_type=ImageArtifactType,
-            sidecar_role=ArtifactSidecarRole.CROP_MASK,
+            sidecar_role=CropMask,
             group_keys=("1",),
             group_component=Microscopy.Channel,
             variable_components=(Microscopy.Site,),

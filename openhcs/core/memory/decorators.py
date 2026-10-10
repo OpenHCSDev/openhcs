@@ -25,14 +25,25 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
         contract: Any = None,
         **kwargs: Any,
     ) -> Any:
-        if contract is None:
-            from openhcs.processing.backends.lib_registry.unified_registry import (
-                ProcessingContract,
-            )
+        from openhcs.core.processing_contracts import (
+            FlexibleContract,
+            ProcessingContract,
+        )
 
-            contract = ProcessingContract.FLEXIBLE
-        declared_processing_contract = _declared_processing_contract_name(contract)
-        if declared_processing_contract is None:
+        if contract is None:
+            contract = FlexibleContract
+        processing_contract = (
+            contract
+            if isinstance(contract, type) and issubclass(contract, ProcessingContract)
+            else None
+        )
+        if processing_contract is None:
+            if not callable(contract):
+                raise TypeError(
+                    "OpenHCS memory decorator contract must be a callable "
+                    "arraybridge validator or a ProcessingContract class; got "
+                    f"{contract!r}."
+                )
             kwargs["contract"] = contract
 
         if args and callable(args[0]) and len(args) == 1:
@@ -40,7 +51,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
-                declared_processing_contract=declared_processing_contract,
+                processing_contract=processing_contract,
             )
             return wrapped
 
@@ -51,7 +62,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
-                declared_processing_contract=declared_processing_contract,
+                processing_contract=processing_contract,
             )
             return wrapped
 
@@ -156,26 +167,11 @@ def image_payload_boundary(wrapped: Any) -> Any:
     return image_payload_callable
 
 
-def _declared_processing_contract_name(contract: Any) -> str | None:
-    """Return OpenHCS processing-contract metadata carried by a decorator."""
-    if contract is None or callable(contract):
-        return None
-    name = getattr(contract, "name", None)
-    if isinstance(name, str) and name:
-        return name
-    if isinstance(contract, str) and contract:
-        return contract
-    raise TypeError(
-        "OpenHCS memory decorator contract must be a callable arraybridge "
-        f"validator or a processing contract declaration; got {contract!r}."
-    )
-
-
 def _attach_openhcs_metadata(
     wrapped: Any,
     *,
     prepare: Any,
-    declared_processing_contract: str | None,
+    processing_contract: Any,
 ) -> None:
     from openhcs.core.callable_contract import attach_callable_contract_metadata
     from openhcs.core.config import runtime_config_parameter
@@ -206,11 +202,11 @@ def _attach_openhcs_metadata(
         from openhcs.core.callable_contract import attach_processing_prepare
 
         attach_processing_prepare(wrapped, prepare)
-    if declared_processing_contract is not None:
-        _strip_unowned_semantic_controls(wrapped, declared_processing_contract)
+    if processing_contract is not None:
+        _strip_unowned_semantic_controls(wrapped, processing_contract)
         attach_callable_contract_metadata(
             wrapped,
-            declared_processing_contract=declared_processing_contract,
+            processing_contract=processing_contract,
         )
 
 
@@ -234,23 +230,11 @@ def _signature_with_resolved_raw_annotations(wrapped: Any) -> inspect.Signature:
     )
 
 
-def _strip_unowned_semantic_controls(
-    wrapped: Any,
-    declared_processing_contract: str,
-) -> None:
-    from openhcs.processing.backends.lib_registry.unified_registry import (
-        ProcessingContract,
-    )
-
-    contract = ProcessingContract.from_declared_name(declared_processing_contract)
-    if contract is None:
-        return
-    allowed_semantic_control_names = (
-        contract.declaration.injected_semantic_control_parameter_names()
-    )
+def _strip_unowned_semantic_controls(wrapped: Any, contract: Any) -> None:
+    allowed_semantic_control_names = contract.injected_semantic_control_parameter_names()
     semantic_control_names = {
         parameter_type.require_parameter_name()
-        for parameter_type in ProcessingContract.semantic_control_parameter_types()
+        for parameter_type in contract.semantic_control_parameter_types()
     }
     params_to_strip = semantic_control_names - allowed_semantic_control_names
     if not params_to_strip:
@@ -265,7 +249,7 @@ def _strip_unowned_semantic_controls(
     )
     if enabled_hidden_defaults:
         raise ValueError(
-            f"Processing contract {declared_processing_contract!r} cannot hide "
+            f"Processing contract {contract.key!r} cannot hide "
             "enabled semantic-control defaults: "
             f"{enabled_hidden_defaults!r}."
         )

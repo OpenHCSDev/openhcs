@@ -42,7 +42,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
@@ -223,7 +223,7 @@ class MeasurementImageOperandVectorResolution:
         """Return declared image-measurement inputs that carry the feature."""
         query = MeasurementFeatureQuery(
             feature_name,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
         return cls.runtime_feature_tables(
             adapter,
@@ -265,7 +265,7 @@ class MeasurementImageOperandVectorResolution:
     def query(self) -> MeasurementFeatureQuery:
         return MeasurementFeatureQuery(
             self.feature_name,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
     def resolve(self) -> tuple[np.ndarray, ...] | None:
@@ -414,7 +414,7 @@ class CellProfilerObjectMeasurementVectorBinding(ObjectLabelMeasurementSliceRequ
             object_name=self.object_name,
             row_axis=MeasurementRowAxisField.SLICE_INDEX,
             plane_projector=self.request.adapter,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         ).values_for_labels(self.labels)
 
     def measurement_tables(
@@ -436,7 +436,7 @@ class CellProfilerObjectMeasurementVectorBinding(ObjectLabelMeasurementSliceRequ
             declared,
             self.object_name,
             self.feature_name,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
         if not matches:
             raise ValueError(
@@ -577,7 +577,7 @@ class CellProfilerObjectMeasurementVectorBatchBinding:
             },
             row_axis=MeasurementRowAxisField.SLICE_INDEX,
             plane_projector=adapter,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         ).values_by_object()
         CellProfilerRuntimeProfileLogger.label_batch(
             "adapter_object_label_batch_query",

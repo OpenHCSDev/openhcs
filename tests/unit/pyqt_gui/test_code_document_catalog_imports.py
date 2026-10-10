@@ -22,7 +22,9 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressOutgrowthSettings,
     neurite_outgrowth_metaxpress,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+)
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
     tophat,
@@ -52,7 +54,7 @@ def catalog():
             input_memory_type="numpy",
             output_memory_type="numpy",
             execution_memory_type="numpy",
-            processing_contract=ProcessingContract.FLEXIBLE,
+            processing_contract=FlexibleContract,
             runtime_bound_parameters=(SliceBySliceRuntimeParameter,),
         ),
     )
@@ -98,7 +100,7 @@ def test_catalog_import_preserves_selected_registry_wrapper(
     assert resolved is catalog.reference.return_value.resolve()
     transported = FunctionReferenceTransportAuthority.function_reference(resolved)
     assert transported.composite_key == catalog.reference.return_value.composite_key
-    assert transported.metadata.processing_contract is ProcessingContract.FLEXIBLE
+    assert transported.metadata.processing_contract is FlexibleContract
     assert SliceBySliceRuntimeParameter in transported.metadata.runtime_bound_parameters
     rendered = PlateManagerCodeDocumentAuthority.render(result)
     repeated = executor.validate_source(rendered, operations)

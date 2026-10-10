@@ -10,7 +10,7 @@ from openhcs.core.callable_contract import CallableContractRuntimeCache
 from openhcs.core.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
 )
-from openhcs.core.measurement_lookup_dialect import RuntimeMeasurementLookupAliasCache
+from openhcs.core.measurement_dialect import RuntimeMeasurementLookupAliasCache
 from openhcs.core.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
 from openhcs.processing.backends.cellprofiler.granularity import (
     GranularityImageSeriesCache,

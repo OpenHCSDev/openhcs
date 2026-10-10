@@ -22,7 +22,7 @@ from openhcs.interop.cellprofiler.module_settings import (
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-from openhcs.processing.backends.lib_registry.unified_registry import (
+from openhcs.core.processing_contracts import (
     ProcessingContract,
 )
 
@@ -93,11 +93,10 @@ class ModuleCompatibilityCoverage:
         return self.callable_contract.execution_scope
 
     @property
-    def processing_contract(self) -> ProcessingContract | None:
+    def processing_contract(self) -> type[ProcessingContract] | None:
         if self.callable_contract is None:
             return None
-        contract = self.callable_contract.processing_contract
-        return contract if isinstance(contract, ProcessingContract) else None
+        return self.callable_contract.processing_contract
 
     @property
     def respects_masks(self) -> bool:

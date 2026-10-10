@@ -31,8 +31,9 @@ from openhcs.core.runtime_batch_contracts import (
     SerialPure2DSliceBatchExecutor, runtime_callable_defaults,
 )
 from openhcs.core.pipeline.function_contracts import resolved_callable_parameter
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    RuntimeCallablePolicy, RuntimeInvocationKwargPolicy,
+from openhcs.core.processing_contracts import (
+    RuntimeCallablePolicy,
+    SignatureFilteredKwargs,
 )
 
 
@@ -292,7 +293,7 @@ def test_exact_raw_default_filter_and_type_views_refresh_with_library_snapshot()
     def raw(image: np.ndarray, scale: float = 2):
         return image * scale
     CallableProjection.from_callable(raw).warm_canonical_signature()
-    policy = RuntimeCallablePolicy(kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED)
+    policy = RuntimeCallablePolicy(kwarg_policy=SignatureFilteredKwargs)
     assert runtime_callable_defaults(raw)["scale"] == 2
     assert resolved_callable_parameter(raw, "scale").annotation is float
     assert policy.invocation(raw, (np.ones((2, 3)),), {"scale":3, "unknown":9}).call()[0,0] == 3
@@ -314,7 +315,7 @@ def test_different_wrapper_signature_remains_live_for_default_filter_and_paramet
     CallableProjection.from_callable(wrapper).warm_canonical_signature()
     assert runtime_callable_defaults(wrapper) == {"public":2}
     assert resolved_callable_parameter(wrapper, "public").annotation is int
-    policy = RuntimeCallablePolicy(kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED)
+    policy = RuntimeCallablePolicy(kwarg_policy=SignatureFilteredKwargs)
     assert policy.invocation(wrapper, (np.ones((2, 3)),), {"public":3, "private":99}).call()[0,0] == 3
     wrapper.__defaults__ = (5,)
     assert runtime_callable_defaults(wrapper) == {"public":5}

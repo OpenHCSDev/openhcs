@@ -43,7 +43,12 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.config import LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
+    VolumetricToSliceContract,
+)
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import (
     assemble_stack_cpu,
 )
@@ -65,7 +70,7 @@ _TRANSPORTED_FLEXIBLE_CALL_SHAPES: list[tuple[int, ...]] = []
 
 
 @numpy(
-    contract=ProcessingContract.FLEXIBLE,
+    contract=FlexibleContract,
     slice_by_slice_default=True,
 )
 def _transported_flexible_2d_default(image):
@@ -331,11 +336,11 @@ def test_validate_required_axis_roles_rejects_missing_role():
 
 
 def test_validate_processing_contract_rejects_pure_3d_without_variable_axis():
-    @numpy(contract=ProcessingContract.PURE_3D)
+    @numpy(contract=Pure3DContract)
     def full_stack(image):
         return image
 
-    with pytest.raises(ValueError, match="PURE_3D stack semantics"):
+    with pytest.raises(ValueError, match="pure_3d stack semantics"):
         FuncStepContractValidator.validate_processing_contract_variable_components(
             (),
             tuple(_compiled_pattern(full_stack).iter_invocations()),
@@ -344,7 +349,7 @@ def test_validate_processing_contract_rejects_pure_3d_without_variable_axis():
 
 
 def test_validate_processing_contract_allows_pure_3d_with_variable_axis():
-    @numpy(contract=ProcessingContract.PURE_3D)
+    @numpy(contract=Pure3DContract)
     def full_stack(image):
         return image
 
@@ -356,11 +361,11 @@ def test_validate_processing_contract_allows_pure_3d_with_variable_axis():
 
 
 def test_validate_processing_contract_rejects_volumetric_to_slice_without_variable_axis():
-    @numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+    @numpy(contract=VolumetricToSliceContract)
     def project_stack(image):
         return image
 
-    with pytest.raises(ValueError, match="VOLUMETRIC_TO_SLICE stack semantics"):
+    with pytest.raises(ValueError, match="volumetric_to_slice stack semantics"):
         FuncStepContractValidator.validate_processing_contract_variable_components(
             (),
             tuple(_compiled_pattern(project_stack).iter_invocations()),
@@ -369,7 +374,7 @@ def test_validate_processing_contract_rejects_volumetric_to_slice_without_variab
 
 
 def test_validate_processing_contract_allows_flexible_slice_by_slice_without_axis():
-    @numpy(contract=ProcessingContract.FLEXIBLE)
+    @numpy(contract=FlexibleContract)
     def flexible(image):
         return image
 
@@ -383,11 +388,11 @@ def test_validate_processing_contract_allows_flexible_slice_by_slice_without_axi
 
 
 def test_validate_processing_contract_rejects_flexible_full_stack_without_axis():
-    @numpy(contract=ProcessingContract.FLEXIBLE)
+    @numpy(contract=FlexibleContract)
     def flexible(image):
         return image
 
-    with pytest.raises(ValueError, match="FLEXIBLE stack semantics"):
+    with pytest.raises(ValueError, match="flexible stack semantics"):
         FuncStepContractValidator.validate_processing_contract_variable_components(
             (),
             tuple(
@@ -401,7 +406,7 @@ def test_validate_processing_contract_rejects_flexible_full_stack_without_axis()
 
 def test_validate_processing_contract_uses_flexible_signature_default():
     @numpy(
-        contract=ProcessingContract.FLEXIBLE,
+        contract=FlexibleContract,
         slice_by_slice_default=True,
     )
     def flexible_2d_default(image):
@@ -415,11 +420,11 @@ def test_validate_processing_contract_uses_flexible_signature_default():
 
 
 def test_validate_processing_contract_chain_rejects_stack_consumer_after_collapse():
-    @numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+    @numpy(contract=VolumetricToSliceContract)
     def collapse_stack(image):
         return image[0]
 
-    @numpy(contract=ProcessingContract.FLEXIBLE)
+    @numpy(contract=FlexibleContract)
     def consume_stack(image):
         return image
 
@@ -457,11 +462,11 @@ def test_validate_processing_contract_chain_rejects_assembly_before_stack_normal
 
 
 def test_validate_processing_contract_chain_allows_slice_consumer_after_collapse():
-    @numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+    @numpy(contract=VolumetricToSliceContract)
     def collapse_stack(image):
         return image[0]
 
-    @numpy(contract=ProcessingContract.FLEXIBLE)
+    @numpy(contract=FlexibleContract)
     def consume_slice(image):
         return image
 
@@ -477,11 +482,11 @@ def test_validate_processing_contract_chain_allows_slice_consumer_after_collapse
 
 
 def test_compiled_step_rejects_stack_consumer_after_prior_axis_collapse():
-    @numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+    @numpy(contract=VolumetricToSliceContract)
     def collapse_stack(image):
         return image[0]
 
-    @numpy(contract=ProcessingContract.FLEXIBLE)
+    @numpy(contract=FlexibleContract)
     def consume_stack(image):
         return image
 
@@ -536,7 +541,7 @@ def test_non_flexible_contract_rejects_enabled_hidden_slice_default():
     with pytest.raises(ValueError, match="cannot hide enabled semantic-control"):
 
         @numpy(
-            contract=ProcessingContract.PURE_3D,
+            contract=Pure3DContract,
             slice_by_slice_default=True,
         )
         def contradictory(image):
@@ -545,7 +550,7 @@ def test_non_flexible_contract_rejects_enabled_hidden_slice_default():
 
 def test_validate_declared_stack_requirement_rejects_without_variable_axis():
     @require_variable_component_stack
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     def stacked_callable(image):
         return image
 
@@ -636,12 +641,12 @@ def test_compiled_step_rejects_enriched_stack_requirement_before_runtime():
     provider = _MetadataTransformProvider(
         lambda metadata: replace(
             metadata,
-            processing_contract=ProcessingContract.PURE_3D,
+            processing_contract=Pure3DContract,
         )
     )
     step_plan = _compiled_semantic_step_plan(process, provider=provider)
 
-    with pytest.raises(ValueError, match="PURE_3D stack semantics"):
+    with pytest.raises(ValueError, match="pure_3d stack semantics"):
         FuncStepContractValidator.validate_compiled_step_plan(step_plan)
 
     assert runtime_calls == []
@@ -652,7 +657,7 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
         ArtifactSpec.input("left", ImageArtifactType),
         ArtifactSpec.input("right", ImageArtifactType),
     )
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     def combine(image):
         return image
 
@@ -692,12 +697,12 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
 
 def test_compiled_dict_branches_accept_their_exact_input_scopes():
     @artifact_inputs(ArtifactSpec.input("left", ImageArtifactType))
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     def process_left(image):
         return image
 
     @artifact_inputs(ArtifactSpec.input("right", ImageArtifactType))
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     def process_right(image):
         return image
 
@@ -742,7 +747,7 @@ def test_compiled_group_allows_distinct_enriched_callables_for_resolved_config()
         lambda metadata: replace(
             metadata,
             allowed_group_by_roles=(ColourAxis,),
-            processing_contract=ProcessingContract.PURE_2D,
+            processing_contract=Pure2DContract,
         )
     )
     step_plan = _compiled_semantic_step_plan(

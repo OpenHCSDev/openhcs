@@ -13,7 +13,9 @@ from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     SpeckleAccuracy,
     enhance_or_suppress_features,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.core.runtime_image_values import ImagePayload
@@ -86,7 +88,7 @@ def test_fast_speckles_registered_callable_keeps_independent_planes():
     ])
     actual = enhance_or_suppress_features(image, radius=5, dtype_config=DtypeConfig())
     np.testing.assert_array_equal(ImagePayload.of(actual).data, expected)
-    assert CallableContract.from_callable(enhance_or_suppress_features).processing_contract is ProcessingContract.PURE_2D
+    assert CallableContract.from_callable(enhance_or_suppress_features).processing_contract is Pure2DContract
 
 
 @pytest.mark.parametrize("shape,radius", [((1, 9), 150), ((5, 7), 12), ((17, 23), 5)])

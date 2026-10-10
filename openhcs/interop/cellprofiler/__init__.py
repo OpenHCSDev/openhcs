@@ -8,7 +8,6 @@ canonical owner of `.cppipe` import or CellProfiler measurement semantics.
 from python_introspect import exported_public_names
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
     cellprofiler_runtime_equivalence_policy,
 )
 from openhcs.interop.cellprofiler.measurement_lookup import (

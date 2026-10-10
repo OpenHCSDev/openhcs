@@ -33,7 +33,7 @@ from openhcs.core.compiled_execution import (
 )
 from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
-    PrimaryImageCarrierRequirement,
+    PayloadAxisRequirement,
 )
 from openhcs.core.context.processing_context import (
     ProcessingContext,
@@ -1125,7 +1125,7 @@ class PipelineCompiler:
     ) -> None:
         PipelineCompiler.validate_memory_contracts(session)
         PipelineCompiler.validate_source_workspace_projection(session)
-        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+        PipelineCompiler.validate_payload_axis_requirements(session)
         PipelineCompiler.assign_framework_device_resources(session)
         if enable_visualizer_override:
             PipelineCompiler.apply_global_visualizer_override(
@@ -1142,10 +1142,10 @@ class PipelineCompiler:
         projection.validate_runtime_metadata_projection(axis_id=session.axis_id)
 
     @staticmethod
-    def validate_primary_image_carrier_requirements(
+    def validate_payload_axis_requirements(
         session: CompilationSession,
     ) -> None:
-        """Prove callable-declared source carrier requirements before execution."""
+        """Prove callable-declared payload-axis requirements before execution."""
 
         failures: list[str] = []
         for step_index, plan in session.plans.items():
@@ -1154,7 +1154,7 @@ class PipelineCompiler:
                 continue
             for group in pattern.groups:
                 for invocation_index, invocation in enumerate(group.invocations):
-                    requirement = invocation.contract.primary_image_carrier_requirement
+                    requirement = invocation.contract.payload_axis_requirement
                     if requirement is None:
                         continue
                     owner = (
@@ -1163,19 +1163,19 @@ class PipelineCompiler:
                         f"{invocation.contract.function_name!r}"
                     )
                     prefix_proof = (
-                        group.primary_image_carrier_proof(
+                        group.payload_axis_proof(
                             requirement,
                             stop_before=invocation_index,
                         )
                     )
                     prefix_proof.validate_obligation(
                         failure_message=lambda unproved: (
-                            f"{owner}: carrier requirement {requirement.value!r} "
+                            f"{owner}: requirement {requirement.label} "
                             "is not preserved by earlier callable "
                             f"{unproved.contract.function_name!r} in the "
                             "same group."
                         ),
-                        source_validation=lambda: PipelineCompiler._validate_inherited_primary_image_carrier_requirement(
+                        source_validation=lambda: PipelineCompiler._validate_inherited_payload_axis_requirement(
                             session=session,
                             plan=plan,
                             group=group,
@@ -1187,19 +1187,19 @@ class PipelineCompiler:
                     )
         if failures:
             raise ValueError(
-                "Primary image carrier requirements failed before execution:\n- "
+                "Payload axis requirements failed before execution:\n- "
                 + "\n- ".join(failures)
             )
 
     @staticmethod
-    def _validate_primary_image_carrier_source_anchor(
+    def _validate_payload_axis_source_anchor(
         plan: CompiledStepPlan,
         group: CompiledFunctionGroup,
         *,
         session: CompilationSession,
         owner: str,
         grouped_pattern: bool,
-        requirement: PrimaryImageCarrierRequirement,
+        requirement: PayloadAxisRequirement,
         failures: list[str],
     ) -> bool:
         """Validate an exact source anchor, or leave ancestry work outstanding."""
@@ -1249,7 +1249,7 @@ class PipelineCompiler:
             source_binding_plan is not None
             and source_binding_plan.primary_plane_bindings
         ):
-            PipelineCompiler._validate_pipeline_start_carrier_requirement(
+            PipelineCompiler._validate_pipeline_start_payload_axis_requirement(
                 session=session, source_binding_plan=source_binding_plan,
                 owner=owner, requirement=requirement, failures=failures,
             )
@@ -1262,18 +1262,18 @@ class PipelineCompiler:
         return False
 
     @staticmethod
-    def _validate_inherited_primary_image_carrier_requirement(
+    def _validate_inherited_payload_axis_requirement(
         *,
         session: CompilationSession,
         plan: CompiledStepPlan,
         group: CompiledFunctionGroup,
         owner: str,
-        requirement: PrimaryImageCarrierRequirement,
+        requirement: PayloadAxisRequirement,
         failures: list[str],
     ) -> bool:
-        """Validate inheritance until a declaration creates the required carrier."""
+        """Validate inheritance until a declaration creates the required payload axis."""
 
-        if PipelineCompiler._validate_primary_image_carrier_source_anchor(
+        if PipelineCompiler._validate_payload_axis_source_anchor(
             plan, group, session=session, owner=owner,
             grouped_pattern=plan.compiled_function_pattern.is_grouped,
             requirement=requirement, failures=failures,
@@ -1283,7 +1283,7 @@ class PipelineCompiler:
             ancestry = session.main_flow_plan_ancestry(plan.step_index)
         except ValueError as error:
             failures.append(
-                f"{owner}: carrier requirement {requirement.value!r} has an "
+                f"{owner}: requirement {requirement.label} has an "
                 f"invalid compiled step dependency: {error}"
             )
             return True
@@ -1291,7 +1291,7 @@ class PipelineCompiler:
         for producer in ancestry[1:]:
             if producer.compiled_function_pattern is None:
                 failures.append(
-                    f"{owner}: carrier requirement {requirement.value!r} has no "
+                    f"{owner}: requirement {requirement.label} has no "
                     f"compiled producer proof for step {producer.step_index}."
                 )
                 return True
@@ -1301,33 +1301,33 @@ class PipelineCompiler:
                 )
             except ValueError as error:
                 failures.append(
-                    f"{owner}: carrier requirement {requirement.value!r} cannot "
-                    f"select a carrier-producing group from step "
+                    f"{owner}: requirement {requirement.label} cannot "
+                    f"select a producing group from step "
                     f"{producer.step_index}: {error}"
                 )
                 return True
             if producer_group is None:
                 failures.append(
-                    f"{owner}: carrier requirement {requirement.value!r} has no "
+                    f"{owner}: requirement {requirement.label} has no "
                     f"producer group {group.group_key!r} at step {producer.step_index}."
                 )
                 return True
             if not producer_group.invocations:
                 failures.append(
-                    f"{owner}: carrier requirement {requirement.value!r} has an "
+                    f"{owner}: requirement {requirement.label} has an "
                     f"empty producer group at step {producer.step_index}."
                 )
                 return True
-            proof = producer_group.primary_image_carrier_proof(
+            proof = producer_group.payload_axis_proof(
                 requirement
             )
             if proof.validate_obligation(
                 failure_message=lambda unproved: (
-                    f"{owner}: carrier requirement {requirement.value!r} is not "
+                    f"{owner}: requirement {requirement.label} is not "
                     f"preserved by producer step {producer.step_index} callable "
                     f"{unproved.contract.function_name!r}."
                 ),
-                source_validation=lambda: PipelineCompiler._validate_primary_image_carrier_source_anchor(
+                source_validation=lambda: PipelineCompiler._validate_payload_axis_source_anchor(
                     producer, producer_group, session=session, owner=owner,
                     grouped_pattern=producer.compiled_function_pattern.is_grouped,
                     requirement=requirement, failures=failures,
@@ -1341,11 +1341,11 @@ class PipelineCompiler:
             current.main_input_dependency.require_pipeline_start()
         except ValueError as error:
             failures.append(
-                f"{owner}: carrier requirement {requirement.value!r} cannot be "
+                f"{owner}: requirement {requirement.label} cannot be "
                 f"traced to an exact pipeline-start source: {error}"
             )
             return True
-        PipelineCompiler._validate_pipeline_start_carrier_requirement(
+        PipelineCompiler._validate_pipeline_start_payload_axis_requirement(
             session=session,
             source_binding_plan=CompiledSourceBindingPlan.empty(),
             owner=owner,
@@ -1355,12 +1355,12 @@ class PipelineCompiler:
         return True
 
     @staticmethod
-    def _validate_pipeline_start_carrier_requirement(
+    def _validate_pipeline_start_payload_axis_requirement(
         *,
         session: CompilationSession,
         source_binding_plan: CompiledSourceBindingPlan,
         owner: str,
-        requirement: PrimaryImageCarrierRequirement,
+        requirement: PayloadAxisRequirement,
         failures: list[str],
     ) -> None:
         """Validate every exact selected source for one pipeline-start callable."""
@@ -1384,8 +1384,8 @@ class PipelineCompiler:
                 if binding.alias not in matched_aliases:
                     failures.append(
                         f"{owner}: no exact source projection proves binding "
-                        f"{binding.alias!r} for carrier requirement "
-                        f"{requirement.value!r}."
+                        f"{binding.alias!r} for requirement "
+                        f"{requirement.label}."
                     )
         else:
             selected = tuple(
@@ -1397,8 +1397,8 @@ class PipelineCompiler:
             )
         if not selected:
             failures.append(
-                f"{owner}: no exact selected source proves carrier requirement "
-                f"{requirement.value!r}."
+                f"{owner}: no exact selected source proves requirement "
+                f"{requirement.label}."
             )
             return
 
@@ -1434,7 +1434,7 @@ class PipelineCompiler:
                 failures.append(
                     f"{owner}: binding {binding_alias!r}, source "
                     f"{source_ref.backend_address!r} does not prove "
-                    f"{requirement.value!r}: {error}"
+                    f"{requirement.label}: {error}"
                 )
 
     @staticmethod

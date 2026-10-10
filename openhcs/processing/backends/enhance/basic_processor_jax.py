@@ -8,7 +8,7 @@ from basicpy.basicpy import FittingMode
 
 from openhcs.core.axes import ColourAxis
 from openhcs.core.artifacts import (
-    ArtifactSidecarRole,
+    QaCheckpoint,
     ArtifactSpec,
     ArtifactViewerStreaming,
     ImageArtifactType,
@@ -23,7 +23,9 @@ from openhcs.core.pipeline.function_contracts import (
     required_axis_roles,
 )
 from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFieldOutput
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
@@ -36,7 +38,7 @@ def _fitted_field_output(name: str) -> ArtifactSpec:
     return MainFlowPlaneProjectionOutputSpec.output(
         name,
         ImageArtifactType,
-        sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+        sidecar_role=QaCheckpoint,
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
@@ -52,7 +54,7 @@ FLATFIELD_OUTPUT = _fitted_field_output("basic_flatfield")
 DARKFIELD_OUTPUT = _fitted_field_output("basic_darkfield")
 
 
-@numpy_func(contract=ProcessingContract.PURE_3D, dtype_config_default=DtypeConfig())
+@numpy_func(contract=Pure3DContract, dtype_config_default=DtypeConfig())
 @allowed_group_by_roles(ColourAxis)
 @required_axis_roles(FittedIlluminationFieldOutput.observation_role)
 

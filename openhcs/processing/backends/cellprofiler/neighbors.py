@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Annotated, ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
+from openhcs.interop.cellprofiler.object_label_variants import SmallRemovedLabels
 from openhcs.constants.constants import MemoryType
 from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.core.aligned_image_payload import AlignedImageStack
@@ -93,7 +94,9 @@ from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     NumbaBackendProvider,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
@@ -649,7 +652,7 @@ def neighbor_topology_backend(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels", "neighbor_labels")
 @runtime_bound_parameters(
     _NeighborsAreSameObjectsRuntimeParameter,
@@ -738,8 +741,8 @@ def measure_object_neighbors(
     )
     measured_variant_labels = object_label_dense_array(
         (
-            labels.small_removed_labels
-            if labels.small_removed_labels is not None
+            labels.variant_labels(SmallRemovedLabels)
+            if labels.variant_labels(SmallRemovedLabels) is not None
             else labels
         ),
         dtype=np.int32,
@@ -747,8 +750,8 @@ def measure_object_neighbors(
     neighbor_payload = labels if neighbor_labels is None else neighbor_labels
     neighbor_variant_labels = object_label_dense_array(
         (
-            neighbor_payload.small_removed_labels
-            if neighbor_payload.small_removed_labels is not None
+            neighbor_payload.variant_labels(SmallRemovedLabels)
+            if neighbor_payload.variant_labels(SmallRemovedLabels) is not None
             else neighbor_payload
         ),
         dtype=np.int32,

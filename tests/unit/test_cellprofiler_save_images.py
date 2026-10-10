@@ -12,7 +12,7 @@ import pytest
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
+    MaterializedImageCopy,
     ArtifactSpec,
     ArtifactSpecCollection,
     GroupLineageSourceRelation,
@@ -66,8 +66,8 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     save_images,
     save_images_with_measurements,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
 )
 from openhcs.processing.materialization import (
     ExecutionAxisMaterializationRelativePathScope,
@@ -214,7 +214,7 @@ def test_save_images_is_an_adapter_free_executable_axis_module() -> None:
     assert SaveImagesModule.main_flow_output_specs(()) == ()
 
     callable_contract = CallableContract.from_callable(save_images)
-    assert callable_contract.processing_contract is ProcessingContract.PURE_3D
+    assert callable_contract.processing_contract is Pure3DContract
     assert callable_contract.runtime_adapter is None
     assert callable_contract.resolve_runtime_callable() is save_images
     assert CallableContract.from_callable(save_images).artifact_input_parameter_names == ("image_to_save",)
@@ -232,7 +232,7 @@ def test_save_images_contract_consumes_runtime_image_and_declares_export_only() 
     assert contract.artifact_outputs.names() == ("SaveImages_9_image_1",)
     output = contract.artifact_outputs[0]
     assert output.artifact_type is ImageArtifactType
-    assert output.sidecar_role is ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY
+    assert output.sidecar_role is MaterializedImageCopy
     assert not output.participates_in_main_flow
     assert contract.preserves_input_main_flow()
     assert contract.canonical_return_output_specs.names() == ()
@@ -244,7 +244,7 @@ def test_save_images_contract_consumes_runtime_image_and_declares_export_only() 
 
 
 def test_materialized_image_copy_role_derives_from_generic_sidecar_authority() -> None:
-    assert ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY.name_for("SavedImage") == (
+    assert MaterializedImageCopy.name_for("SavedImage") == (
         "SavedImage__materialized_image_copy"
     )
 

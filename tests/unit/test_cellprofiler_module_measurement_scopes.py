@@ -50,7 +50,7 @@ def test_colocalization_slope_is_image_only() -> None:
     assert "materialized_measurement_fields" not in vars(MeasureColocalizationModule)
 
     slope_feature = MeasureColocalizationModule.MeasurementFeature.REGRESSION_SLOPE
-    assert slope_feature.emitted_in_scope(MeasurementScope.IMAGE)
+    assert slope_feature.emitted_in_scope(MeasurementScope.SAMPLE)
     assert not slope_feature.emitted_in_scope(MeasurementScope.OBJECT)
 
     assert "slope" in {field.name for field in fields(ColocalizationMeasurements)}

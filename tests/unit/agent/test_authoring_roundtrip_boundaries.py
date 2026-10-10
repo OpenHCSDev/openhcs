@@ -34,7 +34,9 @@ from openhcs.processing.backends.lib_registry.scikit_image_registry import (
 )
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
-    ProcessingContract,
+)
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
 )
 
 
@@ -114,12 +116,12 @@ def test_recursive_json_alias_keeps_declaration_namespace_in_new_descendant():
 def gamma_metadata(monkeypatch):
     registry = SkimageRegistry()
     wrapped = registry.reconstruct_cached_callable(
-        adjust_gamma, ProcessingContract.FLEXIBLE
+        adjust_gamma, FlexibleContract
     )
     metadata = FunctionMetadata(
         name="exposure.adjust_gamma",
         func=wrapped,
-        contract=ProcessingContract.FLEXIBLE,
+        contract=FlexibleContract,
         registry=registry,
         module=adjust_gamma.__module__,
         original_name=adjust_gamma.__name__,

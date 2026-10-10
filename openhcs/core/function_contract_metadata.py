@@ -12,9 +12,6 @@ class FunctionContractAttribute:
     artifact_outputs: ClassVar[str] = "__artifact_outputs__"
     processing_contract: ClassVar[str] = "__processing_contract__"
     execution_scope: ClassVar[str] = "__openhcs_execution_scope__"
-    declared_processing_contract: ClassVar[str] = (
-        "__openhcs_declared_processing_contract__"
-    )
     raw_processing_function: ClassVar[str] = "__openhcs_raw_processing_function__"
     canonical_signature: ClassVar[str] = "__openhcs_canonical_signature__"
     raw_runtime_signature: ClassVar[str] = "__openhcs_raw_runtime_signature__"
@@ -39,12 +36,8 @@ class FunctionContractAttribute:
         "__object_label_input_execution_mode__"
     )
     image_payload_consumption: ClassVar[str] = "__openhcs_image_payload_consumption__"
-    primary_image_carrier_requirement: ClassVar[str] = (
-        "__openhcs_primary_image_carrier_requirement__"
-    )
-    primary_image_carrier_transition: ClassVar[str] = (
-        "__openhcs_primary_image_carrier_transition__"
-    )
+    payload_axis_requirement: ClassVar[str] = "__openhcs_payload_axis_requirement__"
+    payload_axis_transition: ClassVar[str] = "__openhcs_payload_axis_transition__"
     declaration_revision: ClassVar[str] = "__openhcs_declaration_revision__"
 
     declaration_validation: ClassVar[str] = "__openhcs_declaration_validation__"

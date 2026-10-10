@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.measurement_scope import CELLPROFILER_SCOPE_NAMES
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -36,12 +38,7 @@ from openhcs.core.measurement_row_materialization import (
     measurement_row_has_object_identity,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    required_axis_roles,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, required_axis_roles, special_inputs)
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import RuntimeArrayData
@@ -80,7 +77,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
     parse_cellprofiler_int,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
 )
@@ -114,6 +113,9 @@ from openhcs.processing.backends.cellprofiler._backend import (
 )
 from openhcs.core.payload_axes import ColourSampleAxisSpec
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -137,7 +139,7 @@ class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPol
         """Own image-level counts without qualifying them by an input channel."""
 
         del source_image_name
-        return MeasurementScope.IMAGE.value
+        return CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE].casefold()
 
 
 class TrackObjectsModule(
@@ -294,7 +296,7 @@ class TrackObjectsModule(
             return row_policy.annotate_record_rows(
                 rows,
                 object_name=self.object_name,
-                source_image_name=MeasurementScope.IMAGE.value,
+                source_image_name=CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE].casefold(),
             )
 
     @classmethod
@@ -1317,8 +1319,8 @@ class DistanceTrackObjectsMethodStrategy(TrackObjectsMethodStrategy):
 
 
 @required_axis_roles(TimeAxis)
-@numpy(contract=ProcessingContract.PURE_3D)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy(contract=Pure3DContract)
+@object_label_input_execution_mode(FullStackLabels)
 @special_inputs("labels")
 def track_objects(
     image: ImagePayload,

@@ -32,11 +32,9 @@ nested step configuration.
 
    from openhcs.core.memory.decorators import numpy
    from openhcs.core.steps.function_step import FunctionStep
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure2DContract
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    def rescale(image, *, gain=1.0):
        return image * gain
 

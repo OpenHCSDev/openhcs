@@ -1,15 +1,7 @@
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    AlignedImageSliceContext,
-    ImageOutputBundle,
-    ImagePayloadExecutionMode,
-    compose_aligned_image_payload,
-    pack_aligned_image_outputs,
-    stack_image_payloads,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageStack, AlignedImageSliceContext, ImageOutputBundle, compose_aligned_image_payload, pack_aligned_image_outputs, stack_image_payloads)
 from openhcs.core.memory import (
     MEMORY_TYPE_NUMPY,
     stack_runtime_slices,
@@ -30,6 +22,11 @@ from openhcs.core.runtime_image_values import (
     MaskedImagePayload,
 )
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+    FullStackExecution,
+    NaturalExecution,
+)
 
 
 @pytest.mark.parametrize(
@@ -277,7 +274,7 @@ def test_image_bundle_composition_declares_source_binding_axis() -> None:
 
     composition = compose_aligned_image_payload("ImageMath", (first, second))
 
-    assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert composition.execution_mode is FullStackExecution
     assert composition.payload.metadata.plane_axis is (
         RuntimePlaneAxis.SOURCE_BINDING
     )
@@ -291,7 +288,7 @@ def test_single_runtime_slice_payload_is_not_repacked_as_source_binding() -> Non
 
     composition = compose_aligned_image_payload("MeasureImage", (payload,))
 
-    assert composition.execution_mode is ImagePayloadExecutionMode.NATURAL
+    assert composition.execution_mode is NaturalExecution
     assert composition.payload is payload
     assert composition.payload.metadata.plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
@@ -368,7 +365,7 @@ def test_single_aligned_payload_is_preserved_without_rebundling() -> None:
     composition = compose_aligned_image_payload("MeasureImage", (payload,))
 
     assert composition.execution_mode is (
-        ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        AlignedStackExecution
     )
     assert composition.payload is payload
 
@@ -390,7 +387,7 @@ def test_declared_output_contexts_preserve_aligned_multi_image_payloads() -> Non
     )
 
     assert composition.execution_mode is (
-        ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        AlignedStackExecution
     )
     assert isinstance(composition.payload, ImageOutputBundle)
     assert tuple(member.data for member in composition.payload.slices) == payloads
