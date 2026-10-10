@@ -48,6 +48,7 @@ from openhcs.processing.backends.cellprofiler.tracking import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.image_geometry import TileModule, tile
+from openhcs.core.axes import ColourAxis
 
 
 def _measurement_value(rows, *, slice_index, feature_name, object_label=None):
@@ -618,7 +619,6 @@ def test_track_objects_final_age_marks_terminal_track_labels():
 
 def test_retained_tracking_image_uses_track_palette_and_preserves_measurements():
     from openhcs.processing.backends.cellprofiler.tracking import TrackingDisplayMode
-    from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 
     labels = np.zeros((2, 32, 40), dtype=np.int32)
     labels[0, 8:20, 8:20] = 1
@@ -634,12 +634,12 @@ def test_retained_tracking_image_uses_track_palette_and_preserves_measurements()
         display_mode=TrackingDisplayMode.COLOR,
     )
     assert baseline.output_image is image
-    pixels = image_payload_data(retained.output_image)
-    metadata = image_payload_metadata(retained.output_image)
+    pixels = retained.output_image.data
+    metadata = retained.output_image.metadata
     assert pixels.shape == (2, 32, 40, 3)
     assert pixels.dtype == np.float32
     assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    assert metadata.source_channel_axis == -1
+    assert metadata.axis_position(ColourAxis) == -1
     assert metadata.unit_interval_intensity_scale == 255
     np.testing.assert_array_equal(pixels[:, 0, 0], np.zeros((2, 3)))
     assert np.any(pixels[0, 12, 12] != pixels[0, 12, 12, 0])
@@ -693,7 +693,6 @@ def test_tracking_image_modes_share_palette_but_only_numbered_mode_draws_ids():
 
 def test_retained_tracking_image_preserves_empty_frame_measurement_scale():
     from openhcs.processing.backends.cellprofiler.tracking import TrackingDisplayMode
-    from openhcs.core.runtime_image_values import image_payload_data
 
     labels = np.zeros((2, 24, 32), dtype=np.int32)
     labels[0, 8:12, 8:12] = 1
@@ -704,7 +703,7 @@ def test_retained_tracking_image_preserves_empty_frame_measurement_scale():
         save_color_coded_image=True,
         display_mode=TrackingDisplayMode.COLOR,
     )
-    assert image_payload_data(result.output_image).shape == (2, 24, 32, 3)
+    assert result.output_image.data.shape == (2, 24, 32, 3)
     image_rows = result.tracking_measurements.row_batches[1].rows
     assert tuple(row.scale for row in image_rows) == (37, 37)
     assert tuple(row.new_object_count for row in image_rows) == (1, 0)

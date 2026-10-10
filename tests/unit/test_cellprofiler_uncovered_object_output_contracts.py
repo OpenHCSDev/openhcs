@@ -33,10 +33,7 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -69,6 +66,8 @@ from openhcs.processing.backends.cellprofiler.worms import (
     IdentifyDeadWormsModule,
     identify_dead_worms,
 )
+from openhcs.core.memory.decorators import image_payload_boundary
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 CONVERT_SETTINGS = (
     ("Select the input image", "Binary"),
@@ -200,7 +199,7 @@ def test_object_leaf_callables_emit_schema_rows_then_nominal_labels() -> None:
     binary = np.zeros((12, 12), dtype=np.uint8)
     binary[2:5, 2:5] = 1
     binary[7:10, 7:10] = 1
-    converted = inspect.unwrap(convert_image_to_objects)(
+    converted = image_payload_boundary(inspect.unwrap(convert_image_to_objects))(
         binary,
         cast_to_bool=True,
         connectivity=1,
@@ -218,7 +217,7 @@ def test_object_leaf_callables_emit_schema_rows_then_nominal_labels() -> None:
     assert isinstance(converted[2], ObjectLabelValue)
     assert set(np.unique(object_label_dense_array(converted[2]))) == {0, 1, 2}
 
-    dead_worms = inspect.unwrap(identify_dead_worms)(
+    dead_worms = image_payload_boundary(inspect.unwrap(identify_dead_worms))(
         np.zeros((12, 12), dtype=np.uint8),
         angle_count=2,
     )
@@ -247,9 +246,9 @@ def test_image_conversion_preserves_source_pixels_and_metadata(
         source_component_metadata={"well": "A01", "channel": "1"},
         source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
     )
-    image = metadata.payload_with(pixels, None) if metadata_bearing else pixels
+    image = metadata.payload_with(pixels, None) if metadata_bearing else PlainImagePayload(pixels)
 
-    main_image, rows, objects = inspect.unwrap(convert_image_to_objects)(
+    main_image, rows, objects = image_payload_boundary(inspect.unwrap(convert_image_to_objects))(
         image, preserve_label=preserve_label,
     )
 
@@ -261,7 +260,7 @@ def test_image_conversion_preserves_source_pixels_and_metadata(
     assert tuple(rows.iter_row_mappings()) == (
         {"slice_index": 0, "object_count": 2, "mean_area": 9.0, "total_area": 18},
     )
-    source_metadata = image_payload_metadata(image)
+    source_metadata = image.metadata
     assert objects.source_provenance == source_metadata.source_provenance
     assert objects.parent_image_source_voxel_spacing == source_metadata.source_voxel_spacing
     assert objects.source_spatial_domain.source_shape_yx == pixels.shape
@@ -323,9 +322,7 @@ def test_identify_dead_worms_projects_exact_native_measurement_features() -> Non
                     plane_projection=SimpleNamespace(plane_index=None)
                 )
             ),
-            measurement_source_metadata=lambda _specs: image_payload_metadata(
-                label_payload
-            ),
+            measurement_source_metadata=lambda _specs: label_payload.metadata,
             source=SimpleNamespace(source_image_name="CellMask"),
         )
     )

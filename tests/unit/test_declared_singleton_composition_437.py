@@ -23,12 +23,7 @@ from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
 )
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -59,6 +54,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
+from openhcs.core.axes import ColourAxis
 
 
 @artifact_inputs(ArtifactSpec.input("FITC", ImageArtifactType))
@@ -66,7 +62,7 @@ from tests.unit.cellprofiler_runtime_test_support import (
 @numpy_contract(contract=ProcessingContract.PURE_3D)
 def independently_declared_source_echo(image):
     """A new source consumer, not a GrayToColor alias or special-case branch."""
-    assert image_payload_metadata(image).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert image.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     return RuntimeSliceProjection.value_for_slice(
         image,
         RuntimePlaneAxisValueProjection.from_selected_plane(
@@ -113,8 +109,8 @@ def _runtime_source(slice_count):
 @pytest.mark.parametrize("aligned", (False, True))
 def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
     source = _runtime_source(slice_count)
-    original_pixels = image_payload_data(source).copy()
-    original_masks = image_payload_mask(source).copy()
+    original_pixels = source.data.copy()
+    original_masks = source.mask.copy()
     projection = RuntimePlaneAxisValueProjection.preserve(
         axis=RuntimePlaneAxis.RUNTIME_SLICE,
         axis_size=slice_count,
@@ -193,15 +189,15 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
     assert plane_projection == projection
     assert payload.slice_contexts == (contexts if aligned else ())
     for index, plane in enumerate(payload.slices):
-        metadata = image_payload_metadata(plane)
+        metadata = plane.metadata
         assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
         assert metadata.source_image_names == ("FITC",)
         assert metadata.source_component_metadata["channel"] == "2"
         assert metadata.source_image_paths == (f"/synthetic/A01_s{index + 1}_w2.tif",)
         np.testing.assert_array_equal(
-            image_payload_data(plane)[0], original_pixels[index]
+            plane.data[0], original_pixels[index]
         )
-        np.testing.assert_array_equal(image_payload_mask(plane), original_masks[index])
+        np.testing.assert_array_equal(plane.mask, original_masks[index])
     result = CellProfilerFunctionContractExecutor().execute(
         contract,
         contract.resolve_canonical_raw_callable(),
@@ -216,24 +212,24 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
             result, projection.selected_plane(index)
         )
         np.testing.assert_array_equal(
-            image_payload_data(result_plane), original_pixels[index]
+            result_plane.data, original_pixels[index]
         )
         np.testing.assert_array_equal(
-            image_payload_mask(result_plane), original_masks[index]
+            result_plane.mask, original_masks[index]
         )
-        metadata = image_payload_metadata(result_plane)
+        metadata = result_plane.metadata
         assert metadata.plane_axis is None
-        assert metadata.source_channel_axis is None
+        assert metadata.axis_position(ColourAxis) is None
         assert (
             metadata.source_voxel_spacing
-            == image_payload_metadata(source).source_voxel_spacing
+            == source.metadata.source_voxel_spacing
         )
         assert (
             metadata.source_spatial_domain
-            == image_payload_metadata(source).source_spatial_domain
+            == source.metadata.source_spatial_domain
         )
-    np.testing.assert_array_equal(image_payload_data(source), original_pixels)
-    np.testing.assert_array_equal(image_payload_mask(source), original_masks)
+    np.testing.assert_array_equal(source.data, original_pixels)
+    np.testing.assert_array_equal(source.mask, original_masks)
 
 
 def test_declared_composed_scalar_introduces_one_source_axis():
@@ -254,7 +250,7 @@ def test_declared_composed_scalar_introduces_one_source_axis():
     )
     assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
     assert (
-        image_payload_metadata(composition.payload).plane_axis
+        composition.payload.metadata.plane_axis
         is RuntimePlaneAxis.SOURCE_BINDING
     )
     contract = CallableContract.from_callable(independently_declared_source_echo)
@@ -266,7 +262,7 @@ def test_declared_composed_scalar_introduces_one_source_axis():
         execution_mode=composition.execution_mode,
     )
     np.testing.assert_array_equal(
-        image_payload_data(result), image_payload_data(source)[0]
+        result.data, source.data[0]
     )
 
 
@@ -295,14 +291,14 @@ def test_natural_declaration_retains_exact_singleton(aligned):
         )
         # NONE still applies the original mask policy: masked pixels become zero.
         np.testing.assert_array_equal(
-            image_payload_data(result),
-            image_payload_data(source) * image_payload_mask(source),
+            result.data,
+            source.data * source.mask,
         )
         np.testing.assert_array_equal(
-            image_payload_mask(result), image_payload_mask(source)
+            result.mask, source.mask
         )
         assert (
-            image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
         )
 
 

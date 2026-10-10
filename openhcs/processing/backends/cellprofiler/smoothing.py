@@ -6,10 +6,6 @@ from typing import Any
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    with_image_payload_data,
-)
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_float,
@@ -77,10 +73,6 @@ from openhcs.core.runtime_batch_contracts import (
 )
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_image_values import (
-    image_payload_mask,
-    image_payload_metadata,
-)
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProvider,
     BackendProviderInput,
@@ -91,6 +83,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     OpencvBackendProvider,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class SmoothingMethod(Enum):
@@ -842,7 +835,7 @@ def smooth_image(
     smoothing_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
 ) -> np.ndarray:
     """Smooth one image payload using CellProfiler-compatible semantics."""
-    pixel_data = np.asarray(image_payload_data(image), dtype=np.float32)
+    pixel_data = np.asarray(image.data, dtype=np.float32)
     backend_provider = SmoothingBackendProviderPolicy.resolve(
         smoothing_method,
         smoothing_backend_provider,
@@ -853,7 +846,7 @@ def smooth_image(
             image_shape=tuple((int(axis) for axis in pixel_data.shape)),
         ),
     )
-    mask = image_payload_mask(image)
+    mask = image.mask
     if mask is not None:
         mask = np.asarray(mask, dtype=bool)
     selection = SmoothingBackendSelectionRequest(
@@ -874,7 +867,7 @@ def smooth_image(
     )
     output = SmoothingStrategy.for_request(request).smooth(request)
     return (
-        image_payload_metadata(image)
+        image.metadata
         .without_unit_interval_intensity_scale()
         .payload_with(np.asarray(output, dtype=np.float32), mask)
     )
@@ -882,7 +875,7 @@ def smooth_image(
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def smooth(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     smoothing_method: SmoothingMethod = SmoothingMethod.GAUSSIAN_FILTER,
     auto_object_size: bool = True,
     object_size: float = 16.0,
@@ -905,7 +898,7 @@ def smooth(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def reducenoise(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     patch_size: int = 5,
     patch_distance: int = 6,
     cutoff_distance: float = 0.1,
@@ -913,7 +906,7 @@ def reducenoise(
     """Reduce image noise using CellProfiler-compatible non-local means."""
     from skimage.restoration import denoise_nl_means
 
-    image_data = image_payload_data(image)
+    image_data = image.data
     if image_data.dtype != np.float32 and image_data.dtype != np.float64:
         image_data = image_data.astype(np.float32)
     denoised = denoise_nl_means(
@@ -924,7 +917,7 @@ def reducenoise(
         fast_mode=True,
         channel_axis=None,
     )
-    return with_image_payload_data(image, denoised.astype(np.float32))
+    return image.with_pixels(denoised.astype(np.float32))
 
 
 def smooth_batch(request: RuntimePure2DSliceBatchRequest) -> list[Any]:
@@ -934,7 +927,7 @@ def smooth_batch(request: RuntimePure2DSliceBatchRequest) -> list[Any]:
     pixel_stack = np.ascontiguousarray(
         np.stack(
             [
-                np.asarray(image_payload_data(slice_2d), dtype=np.float32)
+                np.asarray(slice_2d.data, dtype=np.float32)
                 for slice_2d in slices_2d
             ],
             axis=0,
@@ -957,11 +950,8 @@ def smooth_batch(request: RuntimePure2DSliceBatchRequest) -> list[Any]:
         SmoothingStrategyKey(backend_provider, smoothing_method)
     )
     if not strategy.supports_stack_batch:
-        return [
-            request.execute_one(slice_index)
-            for slice_index in range(request.slice_count)
-        ]
-    masks = tuple((image_payload_mask(slice_2d) for slice_2d in slices_2d))
+        return request.execute_each()
+    masks = tuple((slice_2d.mask for slice_2d in slices_2d))
     mask_stack = None
     if any((mask is not None for mask in masks)):
         mask_stack = np.stack(
@@ -979,7 +969,7 @@ def smooth_batch(request: RuntimePure2DSliceBatchRequest) -> list[Any]:
         pixel_stack, mask_stack, float(selection_request.sigma)
     ).astype(np.float32, copy=False)
     return [
-        image_payload_metadata(slice_2d)
+        slice_2d.metadata
         .without_unit_interval_intensity_scale()
         .payload_with(output_stack[slice_index], masks[slice_index])
         for slice_index, slice_2d in enumerate(slices_2d)

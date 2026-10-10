@@ -20,7 +20,7 @@ from openhcs.agent.services.plate_inspection_service import PlateInspectionServi
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
@@ -258,7 +258,7 @@ def test_mixed_plane_and_artifact_projections_keep_scope_and_storage_independent
             first.streamable_image_path, first.source_ref.backend,
             source_projection=projection, component_metadata=first.metadata,
         )
-        np.testing.assert_array_equal(image_payload_data(payload), expected)
+        np.testing.assert_array_equal(payload.data, expected)
 
 
 @pytest.mark.parametrize("main_branch", ("saved-0", "unmapped"))

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import (
     Iterable,
     Mapping,
@@ -15,11 +15,29 @@ from typing import Annotated, Any, Union, get_args, get_origin, get_type_hints
 
 import numpy as np
 
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+    RuntimeSliceProjectableValue,
+)
 
-class ColumnarRows(ABC):
+
+class ColumnarRows(RuntimeSliceProjectableValue):
     """Nominal ABC for schema-bearing table payloads exposing named columns."""
 
     object_row_identity: MeasurementObjectRowIdentity | None = None
+
+    def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
+        """Select the rows of one runtime slice through the rows' declared axis."""
+        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+            return self
+        from openhcs.core.measurement_row_materialization import (
+            MeasurementRowsAxisProjection,
+        )
+
+        return MeasurementRowsAxisProjection.from_rows(self).project_runtime_slice_index(
+            context.require_plane_index()
+        )
 
     @staticmethod
     def column_array(values: Sequence[object]) -> np.ndarray:

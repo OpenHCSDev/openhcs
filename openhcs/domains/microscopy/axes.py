@@ -30,6 +30,8 @@ class Microscopy(AxisFamily):
         "openhcs.domains.microscopy.analysis_consolidation",
     )
 
+    payload_spatial_rank = 2
+
     class Site(Axis, TileAxis, DefaultVariable, OrdinalValued):
         name = "site"
         filename_prefix = "s"

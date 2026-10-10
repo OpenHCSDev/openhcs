@@ -39,6 +39,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,8 +140,8 @@ def test_payload_scoped_labels_consume_declared_singleton_runtime_image_plane() 
 
     aligned = source.object_label_alignment_request(labels).aligned().image
 
-    assert isinstance(aligned, np.ndarray)
-    assert aligned.shape == (4, 5)
+    assert isinstance(aligned, PlainImagePayload)
+    assert aligned.data.shape == (4, 5)
 
 
 def test_payload_scoped_labels_preserve_declared_runtime_volume() -> None:

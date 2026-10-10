@@ -1,4 +1,11 @@
-"""Source-image XY placement domain and dense materialization."""
+"""Spatial domains of tensor payloads: rank, axis names, planar placement.
+
+``SourceSpatialDomain`` members form a family keyed by spatial rank. Each
+member names its spatial axes; payload axis specs, masks, object-label
+adapters, location features and sparse label columns take spatial names and
+positions from it. Planar placement (``origin_yx``, ``source_shape_yx``)
+locates a crop inside its source image and exists for ranks two and up.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +14,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, fields, replace
 from typing import Any, ClassVar, Generic, Self, TypeVar
 
-from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
+from metaclass_registry import AutoRegisterMeta, RegistryFamily
 import numpy as np
 
 from zmqruntime.viewer_protocol import (
@@ -17,7 +24,6 @@ from zmqruntime.viewer_protocol import (
     ViewerWireValue,
 )
 
-from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 from python_introspect import to_jsonable
 
 SourceSpatialAliasValueT = TypeVar("SourceSpatialAliasValueT")
@@ -84,16 +90,22 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
 
     __registry_family__ = RegistryFamily("spatial_rank")
     spatial_rank: ClassVar[int] = 2
+    axis_names: ClassVar[tuple[str, ...]] = ("y", "x")
+
+    @classmethod
+    def for_rank(cls, spatial_rank: int) -> type["SourceSpatialDomain"]:
+        """Return the declared spatial domain of one rank."""
+        owner = cls.__registry__.get(spatial_rank)
+        if owner is None:
+            raise ValueError(f"Unsupported source spatial rank {spatial_rank!r}.")
+        return owner
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, Any]) -> "SourceSpatialDomain":
-        """Decode the declared spatial owner, retaining its intrinsic dimensions."""
+        """Decode the declared spatial domain, retaining its intrinsic rank."""
         payload = dict(values)
-        dimensions = payload.pop("spatial_dimensions", 2)
-        owner = cls.__registry__.get(dimensions)
-        if owner is None:
-            raise ValueError(f"Unsupported source spatial dimensions {dimensions!r}.")
-        return owner(**payload).normalized()
+        dimensions = payload.pop("spatial_dimensions")
+        return cls.for_rank(dimensions)(**payload).normalized()
 
     def to_mapping(self) -> dict[str, Any]:
         """Serialize placement fields with the nominal spatial declaration."""
@@ -109,7 +121,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         """An ordinary source plane retains its XY placement owner."""
         return self
 
-    def admit_source_cohort(
+    def with_source_cohort(
         self,
         domain: "SourceSpatialDomain",
         *,
@@ -294,7 +306,7 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
         return replace(self, fill_value=fill_value)
 
     def normalized(self) -> Self:
-        """Return this domain with canonical tuple metadata values."""
+        """Return this domain with its placement values as int tuples."""
         origin_yx = (
             None
             if self.origin_yx is None
@@ -410,13 +422,14 @@ class VolumeSourceSpatialDomain(SourceSpatialDomain):
     """Intrinsic Z/Y/X image placement, independent of runtime slice transport.
 
     Args:
-        source_depth: Optional positive depth of the original intrinsic source
+        source_depth: Optional positive depth of the intrinsic source
             volume in Z planes; it is independent of current resampled pixels.
         origin_z: Optional nonnegative source-plane offset of the volume. Zero
-            places its first plane at the start of the original Z domain.
+            places its first plane at the start of the source Z domain.
     """
 
     spatial_rank: ClassVar[int] = 3
+    axis_names: ClassVar[tuple[str, ...]] = ("z", "y", "x")
     source_depth: int | None = None
     origin_z: int | None = 0
 
@@ -433,7 +446,7 @@ class VolumeSourceSpatialDomain(SourceSpatialDomain):
             raise ValueError("Intrinsic source volume origin must be nonnegative.")
         return domain
 
-    def admit_source_cohort(
+    def with_source_cohort(
         self,
         domain: SourceSpatialDomain,
         *,
@@ -451,7 +464,7 @@ class VolumeSourceSpatialDomain(SourceSpatialDomain):
         ).normalized()
 
     def intrinsic_plane_count(self, shape: Sequence[int], fallback: int) -> int:
-        if len(shape) < 3 or shape[0] <= 0:
+        if len(shape) < self.spatial_rank or shape[0] <= 0:
             raise ValueError("An intrinsic volume must retain its Z pixel axis.")
         return int(shape[0])
 
@@ -468,10 +481,11 @@ class VolumeSourceSpatialDomain(SourceSpatialDomain):
         )
 
     def require_image_window(self, image_shape_yx: Sequence[int]) -> None:
-        # Source depth describes original placement, independently of current
+        # Source depth describes source placement, independently of current
         # resampled pixels. XY placement retains its existing crop validation.
         shape = tuple(image_shape_yx)
-        super(VolumeSourceSpatialDomain, self).require_image_window(shape[-2:])
+        planar_rank = SourceSpatialDomain.spatial_rank
+        super(VolumeSourceSpatialDomain, self).require_image_window(shape[-planar_rank:])
 
     @classmethod
     def common_from_domains(
@@ -492,6 +506,42 @@ class VolumeSourceSpatialDomain(SourceSpatialDomain):
                 value.origin_z for value in values
             ).single,
         )
+
+
+class UnplacedSpatialDomainMixin:
+    """A spatial domain below rank two: it names its axes and has no planar placement."""
+
+    __slots__ = ()
+
+    def normalized(self) -> Self:
+        if self.origin_yx is not None or self.source_shape_yx is not None:
+            raise ValueError(
+                f"A rank-{self.spatial_rank} spatial domain has no planar placement."
+            )
+        return self
+
+
+@dataclass(frozen=True, slots=True)
+class PointSourceSpatialDomain(UnplacedSpatialDomainMixin, SourceSpatialDomain):
+    """No spatial axes: the payload's values are not located in space."""
+
+    spatial_rank: ClassVar[int] = 0
+    axis_names: ClassVar[tuple[str, ...]] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class LineSourceSpatialDomain(UnplacedSpatialDomainMixin, SourceSpatialDomain):
+    """One spatial axis."""
+
+    spatial_rank: ClassVar[int] = 1
+    axis_names: ClassVar[tuple[str, ...]] = ("x",)
+
+
+def payload_spatial_domain() -> SourceSpatialDomain:
+    """Return the spatial domain the active family declares for undeclared payloads."""
+    from openhcs.core.axes import AxisFamily
+
+    return SourceSpatialDomain.for_rank(AxisFamily.active().payload_spatial_rank)()
 
 
 to_jsonable.register(SourceSpatialDomain, SourceSpatialDomain.to_mapping)
@@ -532,7 +582,7 @@ class SourceSpatialDomainFields:
     """Source-image spatial domain carried by runtime payload metadata."""
 
     source_spatial_domain: SourceSpatialDomain = field(
-        default_factory=SourceSpatialDomain,
+        default_factory=payload_spatial_domain,
         metadata={ViewerWireField.IMAGE_METADATA: True},
     )
 
@@ -588,16 +638,20 @@ class CommonRuntimeValue:
         return None
 
 
-class SourceSpatialDomainAdapter(
-    NominalTypeKeyedStrategyMixin,
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Adapter for dense XY payloads that carry source-domain coordinates."""
+class SpatiallyPlacedValue(ABC):
+    """A runtime value that knows its placement in a source spatial domain."""
 
-    value_type: ClassVar[type[object] | tuple[type[object], ...] | None] = None
-    value_type_label: ClassVar[str | None] = None
-    __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
+    @abstractmethod
+    def spatial_adapter(
+        self,
+        *,
+        source_shape_override_yx: tuple[int, int] | None = None,
+    ) -> "SourceSpatialDomainAdapter":
+        """Return the adapter that places this value in its source domain."""
+
+
+class SourceSpatialDomainAdapter(ABC):
+    """Adapter for dense XY payloads that carry source-domain coordinates."""
 
     @classmethod
     def for_value(
@@ -606,13 +660,14 @@ class SourceSpatialDomainAdapter(
         *,
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> "SourceSpatialDomainAdapter | None":
-        strategy_types = cls.strategy_types_for_nominal_value(value)
-        if not strategy_types:
+        """Return the placement adapter of a placed value or a bare NumPy array."""
+        if isinstance(value, np.ndarray):
+            from openhcs.core.runtime_image_values import PlainImagePayload
+
+            value = PlainImagePayload(value)
+        if not isinstance(value, SpatiallyPlacedValue):
             return None
-        return strategy_types[0].for_value(
-            value,
-            source_shape_override_yx=source_shape_override_yx,
-        )
+        return value.spatial_adapter(source_shape_override_yx=source_shape_override_yx)
 
     @property
     @abstractmethod
@@ -805,7 +860,7 @@ def dense_array_in_source_spatial_domain(
 
     source_y, source_x = (int(source_shape[0]), int(source_shape[1]))
     origin_y, origin_x = (int(origin[0]), int(origin[1]))
-    if label_array.ndim < 2:
+    if label_array.ndim < SourceSpatialDomain.spatial_rank:
         raise ValueError(
             f"{value_name} spatial domains require at least 2D arrays; got "
             f"shape {label_array.shape!r}."

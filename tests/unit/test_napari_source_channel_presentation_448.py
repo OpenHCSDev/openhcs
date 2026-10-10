@@ -24,6 +24,8 @@ from tests.unit.test_napari_streaming_handlers import (
     _FakeViewer,
     _layer_item,
 )
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def _display(channels, channel_axis, site_count):
@@ -41,7 +43,7 @@ def _display(channels, channel_axis, site_count):
         ) / np.float32(65535)
         data = np.moveaxis(yxc, -1, channel_axis)
         metadata = ImagePayloadMetadata(
-            source_channel_axis=channel_axis,
+            axes=PayloadAxes.colour_samples(channel_axis),
             source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
             source_spatial_domain=SourceSpatialDomain(
                 origin_yx=(0, 0), source_shape_yx=(8, 8)
@@ -95,7 +97,7 @@ def test_non_rgb_carrier_reopens_with_native_yx(channels, channel_axis, site_cou
             native[index], np.moveaxis(original, channel_axis, 0)
         )
         np.testing.assert_array_equal(item.data, original)
-        assert item.image_metadata.source_channel_axis == channel_axis
+        assert item.image_metadata.axis_position(ColourAxis) == channel_axis
         assert item.image_metadata.source_image_provenance_planes.paths == (
             f"/synthetic/A01_s{index + 1:03}_w2.tif",
         )
@@ -132,7 +134,7 @@ def test_undeclared_extra_axis_is_not_guessed_as_rgb():
 def test_invalid_channel_declarations_fail_closed(shape, axis):
     with pytest.raises(ValueError):
         NapariImageLayerPresentationPolicy.for_payload(
-            np.ones(shape), ImagePayloadMetadata(source_channel_axis=axis)
+            np.ones(shape), ImagePayloadMetadata(axes=PayloadAxes.colour_samples(axis))
         )
 
 

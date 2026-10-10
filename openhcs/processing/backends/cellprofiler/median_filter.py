@@ -20,10 +20,6 @@ from openhcs.core.runtime_batch_contracts import (
     pure_2d_batch_executor,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    with_image_payload_data,
-)
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
@@ -43,6 +39,7 @@ from openhcs.processing.backends.processors.method_axes import ScipyBoundaryMode
 from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class MedianFilterModule(CellProfilerModule):
@@ -397,7 +394,7 @@ def median_filter_backend(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def medianfilter(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     window_size: int = 3,
     mode: ScipyBoundaryMode = ScipyBoundaryMode.CONSTANT,
 ) -> np.ndarray:
@@ -407,13 +404,13 @@ def medianfilter(
         mode: Boundary-padding mode used where the median window crosses an image
             edge.
     """
-    pixel_data = image_payload_data(image)
+    pixel_data = image.data
     filtered = median_filter_backend().filter(
         np.asarray(pixel_data),
         window_size=int(window_size),
         mode=mode,
     )
-    return with_image_payload_data(image, filtered)
+    return image.with_pixels(filtered)
 
 
 def prepare_medianfilter() -> None:

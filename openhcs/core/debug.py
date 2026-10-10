@@ -40,7 +40,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.progress import (
     ProgressEvent,
     ProgressIdentity,
@@ -710,12 +709,12 @@ class DebugInvocationParameter:
             image_data = value.array_payload_data()
             if isinstance(image_data, np.ndarray):
                 facts.append(f"dtype={str(image_data.dtype)!r}")
-            metadata = image_payload_metadata(value)
+            metadata = value.metadata
             if metadata.has_values:
                 facts.extend(
                     (
                         f"source_dtype={metadata.source_dtype!r}",
-                        f"source_channel_axis={metadata.source_channel_axis!r}",
+                        f"axes={metadata.axes!r}",
                         "source_plane_count="
                         f"{metadata.source_provenance.source_plane_count}",
                         "source_image_name_count="

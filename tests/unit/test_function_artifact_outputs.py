@@ -88,10 +88,6 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadataCompositionMode,
     ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-    image_payload_mask,
-    with_image_payload_data,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -114,6 +110,8 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
     TemplateMatchResult,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def passthrough(image):
@@ -295,9 +293,9 @@ def test_function_core_passes_payload_data_to_array_callable_and_restores_contex
         )
     )
 
-    assert image_payload_data(result).shape == (4, 8)
-    assert image_payload_data(result).dtype == tiles.dtype
-    assert image_payload_metadata(result).source_path == (
+    assert result.data.shape == (4, 8)
+    assert result.data.dtype == tiles.dtype
+    assert result.metadata.source_path == (
         "/input/A01_s001_w1_z001_t001.tif"
     )
 
@@ -321,8 +319,8 @@ def test_function_core_preserves_output_declared_runtime_slice_axis():
         )
     )
 
-    assert image_payload_data(result).shape == (1, 4, 5)
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.data.shape == (1, 4, 5)
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_image_output_context_preserves_stack_after_exact_source_projection():
@@ -353,9 +351,9 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
         ),
     )
 
-    assert image_payload_data(result).shape == (1, 4, 5)
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_metadata(result).source_image_names == (source_spec.name,)
+    assert result.data.shape == (1, 4, 5)
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.source_image_names == (source_spec.name,)
 
 
 def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
@@ -400,7 +398,7 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
         RuntimePlaneProjection.stack(2),
     )
 
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert metadata.plane_axis is None
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w2_z001_t001.tif",
@@ -448,12 +446,9 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
             "timepoint": "1",
         },
         source_image_names=(source_spec.name,),
-        source_channel_axis=2,
+        axes=PayloadAxes.colour_samples(2),
     ).payload_with(np.ones((4, 5, 3), dtype=np.float32), None)
-    output = with_image_payload_data(
-        source,
-        np.ones((4, 5, 3), dtype=np.uint8),
-    )
+    output = source.with_pixels(np.ones((4, 5, 3), dtype=np.uint8),)
     output_plan = ArtifactOutputPlan(
         name="SavedColorNeighbors",
         path="/memory/SavedColorNeighbors.png",
@@ -469,10 +464,10 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
         RuntimePlaneProjection.stack(1),
     )
 
-    assert image_payload_data(result).shape == (4, 5, 3)
-    metadata = image_payload_metadata(result)
+    assert result.data.shape == (4, 5, 3)
+    metadata = result.metadata
     assert metadata.plane_axis is None
-    assert metadata.normalized_source_channel_axis(result) == 2
+    assert metadata.axis_index(ColourAxis, result) == 2
     assert metadata.source_path == "/input/A01_s001_w1_z001_t001.tif"
 
 
@@ -481,11 +476,11 @@ def test_image_output_context_preserves_target_axis_across_source_rank_change() 
         source_path="/input/A01_s001_color.tif",
         source_component_metadata={"well": "A01", "site": "1"},
         source_image_names=("OrigColor",),
-        source_channel_axis=3,
+        axes=PayloadAxes.colour_samples(3),
     ).payload_with(np.ones((2, 4, 5, 3), dtype=np.float32), None)
     output = ImagePayloadMetadata(
         source_path="/input/A01_s001_color.tif",
-        source_channel_axis=4,
+        axes=PayloadAxes.colour_samples(4),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.ones((1, 2, 4, 5, 3), dtype=np.float32), None)
 
@@ -496,8 +491,8 @@ def test_image_output_context_preserves_target_axis_across_source_rank_change() 
         None,
     )
 
-    metadata = image_payload_metadata(result)
-    assert metadata.normalized_source_channel_axis(result) == 4
+    metadata = result.metadata
+    assert metadata.axis_index(ColourAxis, result) == 4
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert dict(metadata.source_component_metadata or {}) == {
         "well": "A01",
@@ -555,7 +550,7 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
         RuntimePlaneProjection.stack(2),
     )
 
-    result_metadata = image_payload_metadata(result)
+    result_metadata = result.metadata
     assert result_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert result_metadata.source_image_provenance_planes.count == 2
 
@@ -637,9 +632,9 @@ def test_image_output_context_projector_proves_source_ownership_once(
     )
 
     assert len(ownership_proofs) == 1
-    np.testing.assert_array_equal(image_payload_data(result), output)
-    assert image_payload_metadata(result).source_image_provenance_planes == (
-        image_payload_metadata(source).source_image_provenance_planes
+    np.testing.assert_array_equal(result.data, output)
+    assert result.metadata.source_image_provenance_planes == (
+        source.metadata.source_image_provenance_planes
     )
 
 
@@ -650,7 +645,7 @@ def test_composed_function_output_owns_collapsed_source_identity():
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
     output = ImagePayloadMetadata(
         source_path="/input/A01_s001_w1_z001_t001.tif",
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
     ).payload_with(np.ones((4, 5, 3), dtype=np.float32), None)
 
     @composed_image_payload
@@ -668,9 +663,9 @@ def test_composed_function_output_owns_collapsed_source_identity():
         )
     )
 
-    assert image_payload_data(result).shape == (4, 5, 3)
-    assert image_payload_metadata(result).plane_axis is None
-    assert image_payload_metadata(result).source_channel_axis == -1
+    assert result.data.shape == (4, 5, 3)
+    assert result.metadata.plane_axis is None
+    assert result.metadata.axis_position(ColourAxis) == -1
 
 
 def test_crop_mask_sidecar_names_derive_from_core_artifact_role():
@@ -690,7 +685,7 @@ def test_unstack_payload_context_slices_volume_stack_mask_with_volume_data():
         default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
 
-    assert image_payload_mask(slice_payload).shape == data[0].shape
+    assert slice_payload.mask.shape == data[0].shape
 
 
 def test_unstack_payload_context_preserves_volumetric_source_slice_identity():
@@ -711,10 +706,10 @@ def test_unstack_payload_context_preserves_volumetric_source_slice_identity():
     payload = metadata.payload_with(data, mask)
 
     [slice_payload] = unstack_image_payload_context(payload, [data])
-    slice_metadata = image_payload_metadata(slice_payload)
+    slice_metadata = slice_payload.metadata
 
-    np.testing.assert_array_equal(image_payload_data(slice_payload), data)
-    np.testing.assert_array_equal(image_payload_mask(slice_payload), mask)
+    np.testing.assert_array_equal(slice_payload.data, data)
+    np.testing.assert_array_equal(slice_payload.mask, mask)
     assert slice_metadata.source_image_provenance_planes.count == 3
     assert (
         tuple(
@@ -742,7 +737,7 @@ def test_unstack_payload_context_does_not_expand_scalar_source_without_plane_axi
     payload = metadata.payload_with(data, None)
 
     [slice_payload] = unstack_image_payload_context(payload, [data])
-    slice_metadata = image_payload_metadata(slice_payload)
+    slice_metadata = slice_payload.metadata
 
     assert not slice_metadata.source_image_provenance_planes.has_values
     assert slice_metadata.source_path == source_path
@@ -773,7 +768,7 @@ def test_unstack_payload_context_preserves_declared_axis_over_default():
     )
 
     assert [
-        image_payload_metadata(slice_payload).source_image_names
+        slice_payload.metadata.source_image_names
         for slice_payload in slices
     ] == [("DNA",), ("Actin",)]
 
@@ -792,8 +787,8 @@ def test_stack_payload_context_projects_single_payload_mask_to_stack_domain():
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
 
-    assert image_payload_mask(stacked).shape == stack.shape
-    np.testing.assert_array_equal(image_payload_mask(stacked), mask[np.newaxis, ...])
+    assert stacked.mask.shape == stack.shape
+    np.testing.assert_array_equal(stacked.mask, mask[np.newaxis, ...])
 
 
 def test_stack_image_payloads_uses_payload_memory_and_preserves_masks():
@@ -811,12 +806,12 @@ def test_stack_image_payloads_uses_payload_memory_and_preserves_masks():
     )
 
     np.testing.assert_array_equal(
-        image_payload_data(stacked),
-        np.stack(tuple(image_payload_data(payload) for payload in payloads)),
+        stacked.data,
+        np.stack(tuple(payload.data for payload in payloads)),
     )
     np.testing.assert_array_equal(
-        image_payload_mask(stacked),
-        np.stack(tuple(image_payload_mask(payload) for payload in payloads)),
+        stacked.mask,
+        np.stack(tuple(payload.mask for payload in payloads)),
     )
 
 
@@ -828,9 +823,9 @@ def test_stack_image_payloads_preserves_declared_singleton_stack_axis():
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
 
-    assert image_payload_data(stacked).shape == (1, 4, 5)
-    assert image_payload_metadata(stacked).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    np.testing.assert_array_equal(image_payload_data(stacked)[0], payload)
+    assert stacked.data.shape == (1, 4, 5)
+    assert stacked.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    np.testing.assert_array_equal(stacked.data[0], payload)
 
 
 def test_stack_payload_context_preserves_single_volumetric_payload_identity():
@@ -851,9 +846,9 @@ def test_stack_payload_context_preserves_single_volumetric_payload_identity():
         (payload,),
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
-    stacked_metadata = image_payload_metadata(stacked_payload)
+    stacked_metadata = stacked_payload.metadata
 
-    assert image_payload_data(stacked_payload).shape == (1, 3, 4, 5)
+    assert stacked_payload.data.shape == (1, 3, 4, 5)
     assert stacked_metadata.source_image_provenance_planes.count == 3
     assert stacked_metadata.source_image_provenance_planes.contributor_count == 0
     assert (
@@ -883,9 +878,7 @@ def test_stack_payload_context_nests_incompatible_singleton_plane_topology():
         (payload,),
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
-    provenance_planes = image_payload_metadata(
-        stacked_payload
-    ).source_image_provenance_planes
+    provenance_planes = stacked_payload.metadata.source_image_provenance_planes
 
     assert provenance_planes.count == 1
     assert provenance_planes.contributor_count == 2
@@ -911,7 +904,7 @@ def test_stack_payload_context_preserves_singleton_stack_payload_mask_domain():
     )
 
     np.testing.assert_array_equal(
-        image_payload_mask(stacked_payload),
+        stacked_payload.mask,
         mask[np.newaxis, ...],
     )
 
@@ -928,7 +921,7 @@ def test_stack_payload_context_composes_single_image_slice_mask_axis():
     )
 
     np.testing.assert_array_equal(
-        image_payload_mask(stacked_payload),
+        stacked_payload.mask,
         mask[np.newaxis, ...],
     )
 
@@ -1053,7 +1046,7 @@ def test_trailing_object_labels_do_not_replace_canonical_image_output():
         )
     )
 
-    np.testing.assert_array_equal(image_payload_data(result), output)
+    np.testing.assert_array_equal(result.data, output)
     [stored_labels] = context.runtime_value_store.find(
         name=labels_spec.name,
         axis_id=context.axis_id,
@@ -1117,7 +1110,7 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
         match_group=True,
     )
     assert len(stored) == 1
-    metadata = image_payload_metadata(stored[0].data)
+    metadata = stored[0].data.metadata
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
@@ -1187,7 +1180,7 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
     )
     assert len(stored) == 1
     assert stored[0].location.path == "/memory/A01_w2_segmentation_masks.pkl"
-    metadata = image_payload_metadata(stored[0].data)
+    metadata = stored[0].data.metadata
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
@@ -1276,7 +1269,7 @@ def test_execute_function_core_routes_exact_image_artifact_tuple_to_main_flow():
     )
 
     assert isinstance(result, AlignedImageStack)
-    assert tuple(image_payload_data(payload)[0, 0] for payload in result.slices) == (
+    assert tuple(payload.data[0, 0] for payload in result.slices) == (
         1,
         2,
     )
@@ -1284,8 +1277,8 @@ def test_execute_function_core_routes_exact_image_artifact_tuple_to_main_flow():
     green_records = context.runtime_value_store.find(name="Green", axis_id="A01")
     assert len(red_records) == 1
     assert len(green_records) == 1
-    assert image_payload_data(red_records[0].data)[0, 0] == 1
-    assert image_payload_data(green_records[0].data)[0, 0] == 2
+    assert red_records[0].data.data[0, 0] == 1
+    assert green_records[0].data.data[0, 0] == 2
 
 
 def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
@@ -1331,14 +1324,14 @@ def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
         )
     )
 
-    np.testing.assert_array_equal(image_payload_data(result), image)
+    np.testing.assert_array_equal(result.data, image)
     mask_records = context.runtime_value_store.find(
         name="CropGreen__crop_mask",
         axis_id="A01",
     )
     assert len(mask_records) == 1
     np.testing.assert_array_equal(
-        image_payload_data(mask_records[0].data),
+        mask_records[0].data.data,
         mask,
     )
 
@@ -1380,17 +1373,15 @@ def test_execute_function_core_saves_single_image_artifact_output_to_main_flow()
     )
 
     np.testing.assert_array_equal(result, output)
-    assert image_payload_metadata(result).source_image_names == ("CorrectedImage",)
-    assert image_payload_metadata(
-        result
-    ).source_provenance.represented_source_image_names == (
+    assert result.metadata.source_image_names == ("CorrectedImage",)
+    assert result.metadata.source_provenance.represented_source_image_names == (
         "CorrectedImage",
         "OrigGreen",
     )
     stored = context.runtime_value_store.find(name="CorrectedImage", axis_id="A01")
     assert len(stored) == 1
-    np.testing.assert_array_equal(image_payload_data(stored[0].data), output)
-    assert image_payload_metadata(stored[0].data).source_image_names == (
+    np.testing.assert_array_equal(stored[0].data.data, output)
+    assert stored[0].data.metadata.source_image_names == (
         "CorrectedImage",
     )
 
@@ -1425,8 +1416,8 @@ def test_saved_canonical_source_projection_survives_main_flow_return():
     stored = context.runtime_value_store.find(name=output.name, axis_id="A01")
     assert len(stored) == 1
     for payload in (result, stored[0].data):
-        np.testing.assert_array_equal(image_payload_data(payload), pixels[1])
-        metadata = image_payload_metadata(payload)
+        np.testing.assert_array_equal(payload.data, pixels[1])
+        metadata = payload.metadata
         assert metadata.plane_axis is None
         assert metadata.source_provenance.source_plane_count == 0
         assert metadata.source_path == paths[1]
@@ -1461,9 +1452,9 @@ def test_unsaved_main_return_reads_source_context_after_artifact_save(declared_c
         func_callable=produce, main_data_arg=source, base_kwargs={}, context=context,
         artifact_inputs={}, artifact_outputs={plan.ref(): plan},
     ))
-    np.testing.assert_array_equal(image_payload_data(result), np.ones((2, 3)))
-    assert image_payload_metadata(result).source_path == "/source/after.tif"
-    assert image_payload_metadata(result).source_component_metadata["site"] == "9"
+    np.testing.assert_array_equal(result.data, np.ones((2, 3)))
+    assert result.metadata.source_path == "/source/after.tif"
+    assert result.metadata.source_component_metadata["site"] == "9"
 
 
 def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
@@ -1520,14 +1511,14 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
     stored_data = stored.data
     assert isinstance(stored_data, RuntimeSliceAlignedValues)
     for index, source_payload in enumerate(source_slices):
-        output_payload = stored_data.value_for_slice(index)
-        metadata = image_payload_metadata(output_payload)
+        output_payload = stored_data.value_at(index)
+        metadata = output_payload.metadata
         np.testing.assert_array_equal(
-            image_payload_data(output_payload),
+            output_payload.data,
             output_slices[index],
         )
         assert (
-            metadata.source_path == image_payload_metadata(source_payload).source_path
+            metadata.source_path == source_payload.metadata.source_path
         )
         assert metadata.source_image_names == (output_spec.name,)
         assert metadata.source_provenance.represented_source_image_names == (
@@ -1537,7 +1528,7 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
 
     assert isinstance(result, RuntimeSliceAlignedValues)
     assert tuple(
-        image_payload_metadata(result.value_for_slice(index)).source_image_names
+        result.value_at(index).metadata.source_image_names
         for index in range(result.slice_count)
     ) == ((output_spec.name,), (output_spec.name,))
 
@@ -1638,7 +1629,7 @@ def test_execute_function_core_preserves_main_output_source_metadata():
         )
     )
 
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert metadata.source_path == "/input/01_POS002_D.TIF"
     assert dict(metadata.source_component_metadata) == {
         "well": "01",
@@ -1669,7 +1660,7 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
             "site": "1",
             "channel": "3",
         },
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
     ).payload_with(np.ones((2, 3, 3), dtype=np.uint16), None)
     source_input_spec = ArtifactSpec.input("source_image", ImageArtifactType)
 
@@ -1681,8 +1672,8 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
     )
     def enhance(image, *, runtime):
         del runtime
-        assert image_payload_metadata(image).source_image_provenance_planes == (
-            image_payload_metadata(ambient_source).source_image_provenance_planes
+        assert image.metadata.source_image_provenance_planes == (
+            ambient_source.metadata.source_image_provenance_planes
         )
         return adapter_output
 
@@ -1706,10 +1697,10 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
         )
     )
 
-    metadata = image_payload_metadata(result)
-    assert image_payload_data(result).shape == (2, 3, 3)
+    metadata = result.metadata
+    assert result.data.shape == (2, 3, 3)
     assert metadata.plane_axis is None
-    assert metadata.source_channel_axis == -1
+    assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_path == "/input/A01_s1_w3.tif"
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
@@ -1726,7 +1717,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
             "site": "1",
             "channel": "3",
         },
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
     ).payload_with(np.ones((2, 3, 3), dtype=np.uint16), None)
 
     @artifact_outputs(ArtifactSpec.output("RGBImage", ImageArtifactType))
@@ -1780,15 +1771,12 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
     )
     from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
 
-    stack_payload = ImagePayloadStackComposition.copy_whole_image(
-        scalar_output,
-        memory_type=MEMORY_TYPE_NUMPY,
-        device_id=None,
-    )
-    assert image_payload_data(stack_payload).shape == (2, 3, 3)
-    stack_metadata = image_payload_metadata(stack_payload)
+    stack_payload = (scalar_output).copied(memory_type=MEMORY_TYPE_NUMPY,
+        device_id=None,)
+    assert stack_payload.data.shape == (2, 3, 3)
+    stack_metadata = stack_payload.metadata
     assert stack_metadata.plane_axis is None
-    assert stack_metadata.source_channel_axis == -1
+    assert stack_metadata.axis_position(ColourAxis) == -1
 
 
 def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
@@ -1818,9 +1806,9 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
         declared_output, ["source-1.tif", "source-2.tif"]
     )
     assert len(output) == 1
-    assert image_payload_data(output[0][0]).shape == (4, 5)
+    assert output[0][0].data.shape == (4, 5)
     assert (
-        image_payload_metadata(declared_output).plane_axis
+        declared_output.metadata.plane_axis
         is RuntimePlaneAxis.RUNTIME_SLICE
     )
 
@@ -1980,17 +1968,17 @@ def test_execute_function_core_records_image_artifact_as_main_flow():
         )
     )
 
-    np.testing.assert_array_equal(image_payload_data(result), source_data + 1)
+    np.testing.assert_array_equal(result.data, source_data + 1)
     stored = context.runtime_value_store.find(
         name=illumination_spec.name,
         axis_id=context.axis_id,
     )
     assert len(stored) == 1
     np.testing.assert_array_equal(
-        image_payload_data(stored[0].data),
+        stored[0].data.data,
         source_data + 1,
     )
-    stored_metadata = image_payload_metadata(stored[0].data)
+    stored_metadata = stored[0].data.metadata
     assert stored_metadata.source_image_names == (illumination_spec.name,)
     assert stored_metadata.source_provenance.represented_source_image_names == (
         illumination_spec.name,
@@ -2083,7 +2071,7 @@ def test_execute_function_core_preserves_complete_main_output_source_identity_wi
         )
     )
 
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert (
         tuple(
             dict(item)
@@ -2192,7 +2180,7 @@ def test_execute_function_core_uses_object_input_source_for_image_artifact_outpu
 
     stored = context.runtime_value_store.find(name="label_image", axis_id="A01")
     assert len(stored) == 1
-    metadata = image_payload_metadata(stored[0].data)
+    metadata = stored[0].data.metadata
     assert (
         tuple(
             dict(item)
@@ -2320,11 +2308,11 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
     np.testing.assert_array_equal(
         label_set.labels,
         np.stack(
-            tuple(labels.value_for_slice(index) for index in range(labels.slice_count))
+            tuple(labels.value_at(index) for index in range(labels.slice_count))
         ),
     )
     assert label_set.source_provenance.source_image_provenance_planes.paths == tuple(
-        image_payload_metadata(item).source_path for item in source_slices
+        item.metadata.source_path for item in source_slices
     )
 
 
@@ -3005,7 +2993,7 @@ def test_declared_source_payload_projects_only_exact_main_flow_ref() -> None:
         loaded_artifact_payloads={},
     )
 
-    assert image_payload_metadata(result).source_image_names == ("OrigGreen",)
+    assert result.metadata.source_image_names == ("OrigGreen",)
 
 
 def test_declared_source_payload_preserves_compiled_complete_main_flow() -> None:

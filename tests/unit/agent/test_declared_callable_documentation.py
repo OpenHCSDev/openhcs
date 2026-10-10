@@ -16,7 +16,6 @@ from openhcs.agent.services.function_catalog_service import (
 )
 from openhcs.core.callable_contract import CallableContract, callable_request
 from openhcs.core.memory import numpy as numpy_contract
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.processors.numpy_processor import (
@@ -98,11 +97,11 @@ def test_flexible_controls_remain_typed_and_existing_mro_behavior_is_unchanged(m
     pixels = np.zeros((2, 4, 6))
     result = metadata.func(pixels, slice_by_slice=True)
     assert seen == [(4, 6), (4, 6)]
-    np.testing.assert_array_equal(image_payload_data(result), pixels + 0.5)
+    np.testing.assert_array_equal(result.data, pixels + 0.5)
     seen.clear()
     result = metadata.func(pixels, slice_by_slice=False)
     assert seen == [(2, 4, 6)]
-    np.testing.assert_array_equal(image_payload_data(result), pixels + 0.5)
+    np.testing.assert_array_equal(result.data, pixels + 0.5)
 
 
 @dataclass(frozen=True)

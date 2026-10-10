@@ -26,10 +26,6 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_bindings import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
@@ -1304,6 +1300,8 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class _ClassificationMethodBehavior(ABC):
@@ -2031,7 +2029,7 @@ def object_classification_backend(
     SliceIndexRuntimeParameter,
 )
 def classify_objects_single_measurement(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels: ObjectLabelValue,
     measurement_feature: str = "",
     measurement_values: np.ndarray | None = None,
@@ -2091,9 +2089,7 @@ def classify_objects_single_measurement(
     backend = object_classification_backend(
         backend_provider=classification_backend_provider
     )
-    classified_image_metadata = image_payload_metadata(image).replace_fields(
-        source_channel_axis=-1
-    )
+    classified_image_metadata = image.metadata.with_axis(ColourSampleAxisSpec(), -1)
     if classification_rules:
         results: list[ClassificationResult] = []
         classified_images: list[RuntimeArrayData] = []
@@ -2108,11 +2104,8 @@ def classify_objects_single_measurement(
                 measurement_values=rule_values,
             ).classify(image, labels, backend)
             classified_images.append(
-                with_image_payload_data(
-                    image,
-                    classification_rgb_image(classified_labels),
-                    metadata=classified_image_metadata,
-                )
+                image.with_pixels(classification_rgb_image(classified_labels),
+                    metadata=classified_image_metadata,)
             )
             results.append(result)
         configured_output_indices = tuple(
@@ -2159,11 +2152,8 @@ def classify_objects_single_measurement(
             f"{configured_output_indices!r}."
         )
     output = (
-        with_image_payload_data(
-            image,
-            classification_rgb_image(classified_labels),
-            metadata=classified_image_metadata,
-        )
+        image.with_pixels(classification_rgb_image(classified_labels),
+            metadata=classified_image_metadata,)
         if classified_image_rule_indices
         else labels
     )

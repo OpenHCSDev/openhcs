@@ -31,10 +31,7 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
@@ -70,6 +67,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _image_measurement_executor(
@@ -225,7 +223,7 @@ def test_main_flow_replacement_uses_declared_artifact_slot(
         main_flow_inputs=(source,),
     )
     image = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_path="/source/original.tif",
         source_image_names=("Original",),
     ).payload_with(np.zeros((4, 5, 3), dtype=np.float32), None)
@@ -244,7 +242,7 @@ def test_main_flow_replacement_uses_declared_artifact_slot(
 
     assert isinstance(result, ImageOutputBundle)
     assert tuple(context.output_key for context in result.slice_contexts) == ("Gray",)
-    np.testing.assert_array_equal(image_payload_data(result.slices[0]), gray_artifact)
+    np.testing.assert_array_equal(result.slices[0].data, gray_artifact)
 
 
 def test_composed_image_measurement_callable_retains_standard_execution() -> None:

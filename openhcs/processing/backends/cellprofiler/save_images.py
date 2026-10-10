@@ -35,11 +35,6 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
@@ -74,6 +69,7 @@ from openhcs.processing.materialization import (
     MaterializedFilenameIdentity,
     WriteMode,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
@@ -142,7 +138,8 @@ class SaveImagesBitDepth(str, Enum):
     def convert(self, payload: RuntimeArrayData) -> RuntimeArrayData:
         """Return a converted payload while retaining image provenance."""
 
-        data = np.asarray(image_payload_data(payload))
+        payload = ImagePayload.of(payload)
+        data = np.asarray(payload.data)
         if self is SaveImagesBitDepth.NATIVE:
             converted = data
         elif self is SaveImagesBitDepth.UINT8:
@@ -151,7 +148,7 @@ class SaveImagesBitDepth(str, Enum):
             converted = _image_payload_as_uint16(data)
         else:
             converted = data.astype(np.float32, copy=False)
-        return with_image_payload_data(payload, converted)
+        return payload.with_pixels(converted)
 
 
 class SaveImagesWhen(str, Enum):
@@ -936,7 +933,7 @@ def _recorded_save_images_rows(
 ) -> DataclassMeasurementColumnarRows:
     suffix = filename_suffix if append_suffix else ""
     if filename_method is SaveImagesFilenameMethod.FROM_IMAGE_FILENAME:
-        source_path = image_payload_metadata(filename_source).source_path
+        source_path = filename_source.metadata.source_path
         source_stem = (
             PurePosixPath(str(source_path).replace("\\", "/")).stem
             if source_path is not None
@@ -981,7 +978,7 @@ def _recorded_save_images_rows(
 @special_inputs("image_to_save")
 @runtime_context_parameter(None)
 def save_images(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     *,
     image_to_save: RuntimeArrayData,
     image_kind: SaveImagesImageKind = SaveImagesImageKind.IMAGE,
@@ -1037,7 +1034,7 @@ def save_images(
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 @runtime_context_parameter("context")
 def save_images_with_measurements(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     *,
     image_to_save: RuntimeArrayData,
     saved_image_name: str,

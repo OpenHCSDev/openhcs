@@ -11,21 +11,28 @@ import numpy as np
 from openhcs.core.runtime_object_label_domains import ObjectLabelIdDomainStrategy
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.source_spatial_domain import SpatialShapeYX
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
+from openhcs.core.source_spatial_domain import SourceSpatialDomain, SpatialShapeYX
 
 SINGLETON_AXIS_LENGTH = 1
 
 
 @dataclass(frozen=True, slots=True)
 class SparseIJVLabelRows(ColumnarRows):
-    """Sparse object-label table with CellProfiler-compatible y/x/label columns."""
+    """Sparse object-label table: one row per labelled pixel of a plane.
+
+    Columns are the planar spatial domain's axes followed by the label, which
+    is CellProfiler's IJV layout.
+    """
 
     data: Any
     slice_count: int | None = None
 
     YX_LABEL_FIELDS: ClassVar[tuple[FieldSpec, ...]] = (
-        FieldSpec("y", int),
-        FieldSpec("x", int),
+        *(FieldSpec(name, int) for name in SourceSpatialDomain.axis_names),
         FieldSpec("label", int),
     )
     SLICE_INDEX_FIELD: ClassVar[FieldSpec] = FieldSpec("slice_index", int)
@@ -79,6 +86,16 @@ class SparseIJVLabelRows(ColumnarRows):
         if self.has_slice_index:
             return (self.SLICE_INDEX_FIELD, *self.YX_LABEL_FIELDS)
         return self.YX_LABEL_FIELDS
+
+    def runtime_slice_count(self) -> int | None:
+        return self.slice_count
+
+    def value_for_slice(
+        self, context: RuntimePlaneAxisValueProjection
+    ) -> "SparseIJVLabelRows":
+        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+            return self
+        return self.slice(context.require_plane_index())
 
     @property
     def has_slice_index(self) -> bool:

@@ -33,6 +33,8 @@ from openhcs.core.axes import (
 class RemoteSensing(AxisFamily):
     """Scenes in parallel; tiles, spectral bands and acquisition dates within each."""
 
+    payload_spatial_rank = 2
+
     class Tile(Axis, TileAxis, DefaultVariable, OrdinalValued):
         name = "tile"
         filename_prefix = "f"

@@ -23,12 +23,7 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -46,6 +41,7 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity
 from openhcs.processing.backends.cellprofiler.morphology import remove_holes, remove_holes_3d
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def test_real_rescale_full_stack_materializes_composed_runtime_sources():
@@ -66,7 +62,7 @@ def test_real_rescale_full_stack_materializes_composed_runtime_sources():
         execution_mode=contract.runtime_image_execution_mode,
     )
     expected = np.stack((data, data), axis=1) / 23.0
-    np.testing.assert_allclose(image_payload_data(result), expected)
+    np.testing.assert_allclose(result.data, expected)
 
 
 @pytest.mark.parametrize("function", (remove_holes, remove_holes_3d))
@@ -113,9 +109,9 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
         )
         for value in (dense, literal)
     )
-    np.testing.assert_array_equal(image_payload_data(outputs[1]), image_payload_data(outputs[0]))
-    np.testing.assert_array_equal(image_payload_mask(outputs[1]), image_payload_mask(outputs[0]))
-    assert image_payload_metadata(outputs[1]) == image_payload_metadata(outputs[0])
+    np.testing.assert_array_equal(ImagePayload.of(outputs[1]).data, ImagePayload.of(outputs[0]).data)
+    np.testing.assert_array_equal(ImagePayload.of(outputs[1]).mask, ImagePayload.of(outputs[0]).mask)
+    assert ImagePayload.of(outputs[1]).metadata == ImagePayload.of(outputs[0]).metadata
 
 
 @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
@@ -135,8 +131,8 @@ def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
         assert not isinstance(image, AlignedImageStack)
         assert not isinstance(reference, AlignedImageStack)
         assert token is opaque
-        np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
-        np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+        np.testing.assert_array_equal(image.data, np.stack(planes))
+        np.testing.assert_array_equal(reference.data, np.stack(planes))
         return image
 
     contract = CallableContract(
@@ -167,7 +163,7 @@ def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
         execution_mode=ImagePayloadExecutionMode.FULL_STACK,
     )
     assert len(calls) == 1
-    np.testing.assert_array_equal(image_payload_data(result), np.stack(planes))
+    np.testing.assert_array_equal(result.data, np.stack(planes))
     assert kwargs["reference"] is aligned
 
 
@@ -204,7 +200,7 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
     ).payload
     dense = RuntimeSliceProjection.full_stack_value(composed)
     assert dense.shape == (2, 2, 3, 4)
-    metadata = image_payload_metadata(dense)
+    metadata = dense.metadata
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert metadata.source_voxel_spacing == spacing
     assert metadata.source_spatial_shape_yx == (3, 4)
@@ -217,10 +213,10 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
         for identity in metadata.source_provenance.represented_source_identities
     } == set(expected_paths)
     np.testing.assert_array_equal(
-        image_payload_mask(dense),
+        dense.mask,
         np.stack(
             [
-                np.broadcast_to(image_payload_mask(plane), (2, 3, 4))
+                np.broadcast_to(plane.mask, (2, 3, 4))
                 for plane in composed.slices
             ]
         ),
@@ -233,14 +229,12 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
             ),
         )
         np.testing.assert_array_equal(
-            image_payload_data(projected), image_payload_data(composed.slices[index])
+            projected.data, composed.slices[index].data
         )
         expected = {f"/synthetic/A01_s{index + 1}_w{channel}.tif" for channel in (1, 2)}
         assert {
             identity.path
-            for identity in image_payload_metadata(
-                projected
-            ).source_provenance.represented_source_identities
+            for identity in projected.metadata.source_provenance.represented_source_identities
         } == expected
 
 
@@ -254,12 +248,13 @@ def test_named_output_bundle_materializes_its_own_source_binding_axis():
         ),
     )
     dense = RuntimeSliceProjection.full_stack_value(bundle)
-    assert image_payload_metadata(dense).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    assert image_payload_metadata(
-        dense
-    ).source_provenance.represented_source_image_names == ("red", "green")
-    np.testing.assert_array_equal(image_payload_data(dense), np.stack(planes))
-    assert bundle.slices == planes
+    assert dense.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert dense.metadata.source_provenance.represented_source_image_names == ("red", "green")
+    np.testing.assert_array_equal(dense.data, np.stack(planes))
+    assert all(
+        slice_payload.data is plane
+        for slice_payload, plane in zip(bundle.slices, planes, strict=True)
+    )
 
 
 def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance():
@@ -283,7 +278,7 @@ def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance()
         tuple(AlignedImageSliceContext.main_flow(alias) for alias in ("red", "green")),
     )
     dense = RuntimeSliceProjection.full_stack_value(bundle)
-    metadata = image_payload_metadata(dense)
+    metadata = dense.metadata
     assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     assert metadata.source_image_names == ("red", "green")
     assert metadata.source_provenance.source_plane_count == 2
@@ -296,9 +291,9 @@ def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance()
             ),
         )
         np.testing.assert_array_equal(
-            image_payload_data(selected), image_payload_data(payloads[index])
+            selected.data, payloads[index].data
         )
-        selected_metadata = image_payload_metadata(selected)
+        selected_metadata = selected.metadata
         assert selected_metadata.source_image_names == (alias,)
         assert {
             identity.path
@@ -333,8 +328,8 @@ def test_new_calibrated_nominal_stack_reaches_real_callable_without_dispatch_edi
         {},
         execution_mode=contract.runtime_image_execution_mode,
     )
-    np.testing.assert_allclose(image_payload_data(result), data / 23.0)
-    metadata = image_payload_metadata(result)
+    np.testing.assert_allclose(result.data, data / 23.0)
+    metadata = result.metadata
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert metadata.source_voxel_spacing == spacing
     assert {
@@ -415,7 +410,7 @@ def test_full_stack_raw_callable_keeps_opaque_nonimage_kwargs(processing_contrac
         execution_mode=ImagePayloadExecutionMode.FULL_STACK,
     )
     assert calls == [opaque]
-    assert image_payload_data(result) is image
+    assert ImagePayload.of(result).data is image
 
 
 @pytest.mark.parametrize("reverse", (False, True))
@@ -447,8 +442,8 @@ def test_independent_composition_capabilities_cooperate_in_both_mro_orders(rever
     dense = RuntimeSliceProjection.full_stack_value(probe)
     assert calls == ["pixels", "mask"]
     np.testing.assert_array_equal(
-        image_payload_data(dense), np.stack((np.ones((2, 3)), np.full((2, 3), 2)))
+        dense.data, np.stack((np.ones((2, 3)), np.full((2, 3), 2)))
     )
     expected_mask = np.ones((2, 2, 3), dtype=bool)
     expected_mask[:, 0, 0] = False
-    np.testing.assert_array_equal(image_payload_mask(dense), expected_mask)
+    np.testing.assert_array_equal(dense.mask, expected_mask)

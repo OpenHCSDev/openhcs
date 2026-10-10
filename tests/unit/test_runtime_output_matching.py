@@ -19,7 +19,7 @@ from openhcs.core.callable_contract import (
     CallableMetadata,
     FunctionStepExecutionScope,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -30,6 +30,7 @@ from openhcs.core.function_patterns import (
     FunctionInvocationKey,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 def _contract(
@@ -87,7 +88,7 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
     assert returned[1] is trailing
     assert resolved[measurements.ref()] is trailing
     for index, spec in enumerate((first, second)):
-        selected = image_payload_data(resolved[spec.ref()])
+        selected = resolved[spec.ref()].data
         np.testing.assert_array_equal(selected, data[index])
         assert np.shares_memory(selected, data)
     assert contract.contextualize_returned_canonical_output(returned) is returned
@@ -120,8 +121,10 @@ def test_runtime_output_matcher_uses_exact_multi_canonical_contexts() -> None:
     first = ArtifactSpec.output("First", ImageArtifactType)
     second = ArtifactSpec.output("Second", ImageArtifactType)
     measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
+    first_value = PlainImagePayload(np.ones((2, 2)))
+    second_value = PlainImagePayload(np.zeros((2, 2)))
     canonical = AlignedImageStack(
-        ("second-value", "first-value"),
+        (second_value, first_value),
         (
             AlignedImageSliceContext.main_flow(
                 second.name,
@@ -139,8 +142,8 @@ def test_runtime_output_matcher_uses_exact_multi_canonical_contexts() -> None:
     )
 
     assert resolved == {
-        first.ref(): "first-value",
-        second.ref(): "second-value",
+        first.ref(): first_value,
+        second.ref(): second_value,
         measurements.ref(): "measurements",
     }
 
@@ -192,8 +195,8 @@ def test_runtime_invocation_selects_storage_without_truncating_callable_abi() ->
         artifact_output_plans=(first_plan, second_plan),
     )
     runtime_output_plans = (second_plan,)
-    first_value = np.zeros((4, 5), dtype=np.float32)
-    second_value = np.ones((4, 5), dtype=np.float32)
+    first_value = PlainImagePayload(np.zeros((4, 5), dtype=np.float32))
+    second_value = PlainImagePayload(np.ones((4, 5), dtype=np.float32))
     returned_stack = AlignedImageStack(
         (first_value, second_value),
         (
@@ -326,7 +329,9 @@ def test_runtime_output_matcher_rejects_context_free_multi_canonical_stack() -> 
 
     with pytest.raises(ValueError, match="require exact AlignedImageStack"):
         _contract(first, second).resolve_returned_output(
-            AlignedImageStack(("first", "second"))
+            AlignedImageStack(
+                (PlainImagePayload(np.zeros((2, 2))), PlainImagePayload(np.ones((2, 2))))
+            )
         )
 
 

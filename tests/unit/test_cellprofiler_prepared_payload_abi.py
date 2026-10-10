@@ -7,13 +7,7 @@ from scipy import ndimage
 
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.function_patterns import NormalizedFunctionGroup
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    normalize_image_payload_intensity,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -27,6 +21,8 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryMethod,
     identify_secondary_objects,
 )
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def _execute_prepared(func, source, kwargs, mode=ImagePayloadExecutionMode.NATURAL):
@@ -56,7 +52,7 @@ def test_prepared_color_to_gray_preserves_channel_mask_and_spatial_domain():
     mask[-1] = False
     domain = SourceSpatialDomain(origin_yx=(2, 3), source_shape_yx=(8, 10))
     source = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_image_names=("RGB",),
         source_path="/input/rgb.tif",
         source_spatial_domain=domain,
@@ -68,10 +64,10 @@ def test_prepared_color_to_gray_preserves_channel_mask_and_spatial_domain():
          "channel_indices": (0, 2), "contributions": (1.0, 3.0)},
     )
 
-    np.testing.assert_array_equal(image_payload_data(result), (pixels[..., 0] + 3 * pixels[..., 2]) / 4)
-    np.testing.assert_array_equal(image_payload_mask(result), mask)
-    metadata = image_payload_metadata(result)
-    assert metadata.source_channel_axis is None
+    np.testing.assert_array_equal(result.data, (pixels[..., 0] + 3 * pixels[..., 2]) / 4)
+    np.testing.assert_array_equal(result.mask, mask)
+    metadata = result.metadata
+    assert metadata.axis_position(ColourAxis) is None
     assert metadata.source_spatial_domain == domain
     assert metadata.source_image_paths == ("/input/rgb.tif",)
 
@@ -80,22 +76,19 @@ def test_prepared_medianfilter_keeps_original_intensity_scale_and_mask():
     pixels = np.arange(25, dtype=np.uint16).reshape(5, 5)
     mask = np.ones(pixels.shape, dtype=bool)
     mask[0] = False
-    source = normalize_image_payload_intensity(
-        ImagePayloadMetadata.for_array(pixels).payload_with(pixels, mask),
-        dtype=np.float32,
-    )
+    source = ImagePayloadMetadata.for_array(pixels).payload_with(pixels, mask).normalize_intensity_payload(dtype=np.float32,)
 
     result = _execute_prepared(
         medianfilter, source, {"window_size": 3}, ImagePayloadExecutionMode.FULL_STACK,
     )
 
     np.testing.assert_array_equal(
-        image_payload_data(result),
-        ndimage.median_filter(image_payload_data(source), size=3, mode="constant"),
+        result.data,
+        ndimage.median_filter(source.data, size=3, mode="constant"),
     )
-    np.testing.assert_array_equal(image_payload_mask(result), mask)
-    assert image_payload_metadata(result).unit_interval_intensity_scale == 65535
-    assert image_payload_data(result).dtype == np.float32
+    np.testing.assert_array_equal(result.mask, mask)
+    assert result.metadata.unit_interval_intensity_scale == 65535
+    assert result.data.dtype == np.float32
 
 
 def test_prepared_secondary_object_output_keeps_actual_source_spatial_domain():
@@ -122,6 +115,6 @@ def test_prepared_secondary_object_output_keeps_actual_source_spatial_domain():
     np.testing.assert_array_equal(object_label_dense_array(objects), expected.astype(np.int32))
     assert objects.source_spatial_domain.origin_yx == domain.origin_yx
     assert objects.source_spatial_domain.source_shape_yx == domain.source_shape_yx
-    assert objects.source_provenance == image_payload_metadata(source).source_provenance
+    assert objects.source_provenance == source.metadata.source_provenance
     assert relationship.source_ids == (1,)
     assert relationship.target_ids == (1,)

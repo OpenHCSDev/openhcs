@@ -586,26 +586,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 import numpy as np
-from openhcs.core.aligned_image_payload import (
-    ImagePayloadSliceStack,
-    payload_slices_for_alignment,
-)
+from openhcs.core.aligned_image_payload import ImagePayloadSliceStack
+from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.image_shapes import (
     trailing_spatial_target_shape,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.runtime_image_values import (
-    image_mask_for_data_domain,
-)
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-)
-from openhcs.core.runtime_image_values import (
-    image_payload_mask,
-)
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-)
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
@@ -615,6 +602,9 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class TileMethod(Enum):
@@ -882,10 +872,10 @@ class ResizeGeometry:
         return resized
 
     def resize_payload(self, image: Any) -> Any:
-        pixels = image_payload_data(image)
+        pixels = image.data
         output_pixels = self.resize_pixels(pixels)
-        mask = image_mask_for_data_domain(source_payload=image, data=pixels)
-        metadata = image_payload_metadata(image)
+        mask = image.mask_for_data(pixels)
+        metadata = image.metadata
         output_spatial_shape = metadata.spatial_shape_yx(output_pixels)
         if output_spatial_shape is None:
             raise ValueError("Resize output does not declare two spatial axes.")
@@ -912,14 +902,15 @@ class CellProfilerPlaneGeometry:
 
     @classmethod
     def from_image_plane(cls, image: Any) -> "CellProfilerPlaneGeometry":
-        image_array = np.asarray(image_payload_data(image))
-        metadata = image_payload_metadata(image)
+        image = ImagePayload.of(image)
+        image_array = np.asarray(image.data)
+        metadata = image.metadata
         if metadata.plane_axis is not None:
             raise ValueError(
                 "CellProfiler plane geometry requires an already-projected image; "
                 f"got declared {metadata.plane_axis.value!r} plane axis."
             )
-        channel_axis = metadata.normalized_source_channel_axis(image_array)
+        channel_axis = metadata.axis_index(ColourAxis, image_array)
         expected_rank = 2 if channel_axis is None else 3
         if image_array.ndim != expected_rank:
             raise ValueError(
@@ -982,8 +973,8 @@ def aligned_image_mask_planes(
     labels: bool = False,
 ) -> tuple[CellProfilerImageMaskPlane, ...]:
     """Pair image and mask planes with exact declared runtime cardinality."""
-    image_planes = payload_slices_for_alignment(image)
-    mask_planes = payload_slices_for_alignment(mask)
+    image_planes = RuntimeSliceProjection.alignment_slices(image)
+    mask_planes = RuntimeSliceProjection.alignment_slices(mask)
     if len(image_planes) != len(mask_planes):
         raise ValueError(
             "CellProfiler image and mask cardinalities must exactly match after "
@@ -1031,10 +1022,11 @@ def binary_mask_plane(
     labels: bool = False,
 ) -> np.ndarray:
     """Convert one CellProfiler mask/label plane to a 2D boolean mask."""
+    mask = ImagePayload.of(mask)
     mask_array = np.asarray(
         object_label_dense_array(mask)
         if isinstance(mask, ObjectLabelValue)
-        else image_payload_data(mask)
+        else mask.data
     )
     if labels:
         if mask_array.ndim != 2:
@@ -1043,7 +1035,7 @@ def binary_mask_plane(
                 f"got shape {mask_array.shape!r}."
             )
         return mask_array > 0
-    channel_axis = image_payload_metadata(mask).normalized_source_channel_axis(mask)
+    channel_axis = mask.metadata.axis_index(ColourAxis, mask)
     if channel_axis is not None:
         return np.any(mask_array > threshold, axis=channel_axis)
     if mask_array.ndim != 2:
@@ -1093,7 +1085,7 @@ def align_label_plane_to_shape(
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @special_inputs("mask")
 def mask_image(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     mask: np.ndarray | ObjectLabelValue,
     mask_source: MaskSource = MaskSource.IMAGE,
     invert_mask: bool = False,
@@ -1119,36 +1111,33 @@ def mask_image(
         )
     )
     masked_data = restore_image_mask_planes(
-        image_payload_data(image), tuple((result[0] for result in masked_plane_results))
+        image.data, tuple((result[0] for result in masked_plane_results))
     )
     output_mask = restore_image_mask_planes(
-        image_payload_data(image), tuple((result[1] for result in masked_plane_results))
+        image.data, tuple((result[1] for result in masked_plane_results))
     )
     return replace(
-        image_payload_metadata(image), mask_defines_border=True
+        image.metadata, mask_defines_border=True
     ).payload_with(masked_data, output_mask)
 
 
 def masked_image_plane(
     image: RuntimeArrayData, binary_mask: np.ndarray, *, invert_mask: bool
 ) -> tuple[np.ndarray, np.ndarray]:
-    image_data = image_payload_data(image)
+    image_data = image.data
     if invert_mask:
         binary_mask = ~binary_mask
-    projected_mask = image_mask_for_data_domain(
-        source_payload=image_data, data=image_data, explicit_mask=binary_mask
-    )
+    bare_image = PlainImagePayload(image_data)
+    projected_mask = bare_image.mask_for_data(image_data, mask=binary_mask)
     if projected_mask is None:
         raise ValueError(
             f"MaskImage mask cannot be projected into the image data domain; got mask={np.shape(binary_mask)!r}, image={np.shape(image_data)!r}."
         )
     binary_mask = np.asarray(projected_mask, dtype=bool)
-    existing_mask = image_payload_mask(image)
+    existing_mask = image.mask
     if existing_mask is not None:
-        existing_projected_mask = image_mask_for_data_domain(
-            source_payload=image_data,
-            data=image_data,
-            explicit_mask=existing_mask,
+        existing_projected_mask = bare_image.mask_for_data(
+            image_data, mask=existing_mask,
         )
         if existing_projected_mask is not None:
             binary_mask = binary_mask & np.asarray(existing_projected_mask, dtype=bool)
@@ -1159,15 +1148,15 @@ def masked_image_plane(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def mask_image_with_binary(
-    image: RuntimeArrayData, invert_mask: bool = False
+    image: ImagePayload, invert_mask: bool = False
 ) -> RuntimeArrayData:
     """Return a binary mask plane, optionally inverted."""
-    binary_mask = image_payload_data(image) > 0.5
+    binary_mask = image.data > 0.5
     if invert_mask:
         binary_mask = ~binary_mask
-    return image_payload_metadata(image).payload_with(
+    return image.metadata.payload_with(
         binary_mask.astype(np.float32),
-        image_payload_mask(image),
+        image.mask,
     )
 
 
@@ -1220,7 +1209,7 @@ def tile_output_shape(
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def tile(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     rows: int = 8,
     columns: int = 12,
     place_first: PlaceFirst = PlaceFirst.TOP_LEFT,
@@ -1230,7 +1219,7 @@ def tile(
     auto_columns: bool = False,
 ) -> RuntimeArrayData:
     """Tile multiple images together to form a CellProfiler montage image."""
-    image_data = image_payload_data(image)
+    image_data = image.data
     if image_data.ndim not in {3, 4}:
         raise ValueError(
             "Tile expects an image stack shaped (N, H, W) or (N, H, W, C), "
@@ -1262,12 +1251,12 @@ def tile(
     )
     for image_index in range(num_images):
         put_tile(image_data[image_index], output_pixels, image_index, geometry)
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     if metadata.plane_axis is not None:
         metadata = metadata.collapse_leading_plane_axis()
     return (
         metadata.replace_fields(
-            source_channel_axis=-1 if image_data.ndim == 4 else None
+            axes=PayloadAxes.colour_samples(-1 if image_data.ndim == 4 else None)
         )
         .with_spatial_resize((output_height, output_width))
         .payload_with(output_pixels, None)
@@ -1276,7 +1265,7 @@ def tile(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def resize(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
     resizing_factor_x: float = 0.25,
     resizing_factor_y: float = 0.25,
@@ -1285,7 +1274,7 @@ def resize(
     interpolation: InterpolationMethod = InterpolationMethod.NEAREST_NEIGHBOR,
 ) -> RuntimeArrayData:
     """Resize a CellProfiler image plane by factor or explicit dimensions."""
-    pixels = image_payload_data(image)
+    pixels = image.data
     geometry = ResizeGeometry.from_parameters(
         tuple(np.asarray(pixels).shape[:2]),
         resize_method=resize_method,
@@ -1298,7 +1287,7 @@ def resize(
 
 @numpy(contract=ProcessingContract.PURE_3D)
 def resize_volumetric(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
     resizing_factor_x: float = 0.25,
     resizing_factor_y: float = 0.25,
@@ -1309,7 +1298,7 @@ def resize_volumetric(
     interpolation: InterpolationMethod = InterpolationMethod.NEAREST_NEIGHBOR,
 ) -> RuntimeArrayData:
     """Resize a CellProfiler ZYX image volume by factor or explicit dimensions."""
-    pixels = image_payload_data(image)
+    pixels = image.data
     geometry = ResizeGeometry.from_trailing_spatial_parameters(
         tuple(np.asarray(pixels).shape),
         resize_method=resize_method,
@@ -1322,7 +1311,7 @@ def resize_volumetric(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def flip_and_rotate(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     flip_method: FlipMethod = FlipMethod.NONE,
     rotate_method: RotateMethod = RotateMethod.NONE,
     rotation_angle: float = 0.0,
@@ -1351,7 +1340,7 @@ def flip_and_rotate(
     """
     from scipy.ndimage import rotate as scipy_rotate
 
-    image_data = image_payload_data(image)
+    image_data = image.data
     pixel_data = image_data.copy()
     if flip_method != FlipMethod.NONE:
         if flip_method == FlipMethod.LEFT_TO_RIGHT:
@@ -1403,7 +1392,7 @@ def flip_and_rotate(
                         max_j = max_area_idx[1] + 1
                         pixel_data = pixel_data[min_i:max_i, min_j:max_j]
     return (
-        image_payload_metadata(image)
+        image.metadata
         .with_spatial_resize(pixel_data.shape[:2])
         .payload_with(pixel_data.astype(np.float32), None),
         DataclassMeasurementColumnarRows(

@@ -573,9 +573,8 @@ class ObjectLabelValue(
     SourceImageProvenanceFields,
     SourceSpatialDomainFields,
     ObjectLabelDomainMetadata,
-    runtime_image_values.ImagePayloadMetadataCarrier,
+    runtime_image_values.ImagePayload,
     RuntimeSliceIdentityProjectableValue,
-    runtime_array_values.RuntimeArrayPayload,
     ABC,
 ):
     """Nominal object-label carrier with dense labels and domain metadata."""
@@ -623,7 +622,8 @@ class ObjectLabelValue(
     def __array__(self, dtype: Any | None = None) -> Any:
         return np.asarray(self.labels, dtype=dtype)
 
-    def image_data(self) -> np.ndarray:
+    @property
+    def data(self) -> np.ndarray:
         """Return dense categorical pixels for image-domain consumers."""
         return object_label_dense_array(self)
 
@@ -701,6 +701,151 @@ class ObjectLabelValue(
         if projection is None or projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
             return None
         return projection.axis_size
+
+    # -- RuntimeSliceProjectableValue -------------------------------------
+
+    def runtime_slice_count(self) -> int | None:
+        if self.plane_axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+            return None
+        plane_count = self.declared_plane_count()
+        if plane_count is None:
+            from openhcs.core.runtime_slice_projection import (
+                RuntimeSliceProjectionDeclarationError,
+            )
+
+            raise RuntimeSliceProjectionDeclarationError(
+                "Runtime-slice object labels have no nominal plane-stack contract."
+            )
+        return plane_count
+
+    def value_for_slice(
+        self, context: RuntimePlaneAxisValueProjection
+    ) -> "ObjectLabelValue":
+        if self.plane_axis is not context.axis:
+            return self
+        plane_count = self.declared_plane_count()
+        if plane_count is None:
+            from openhcs.core.runtime_slice_projection import (
+                RuntimeSliceProjectionDeclarationError,
+            )
+
+            raise RuntimeSliceProjectionDeclarationError(
+                "Object labels have no nominal plane-stack contract for their "
+                f"declared {context.axis.value!r} axis."
+            )
+        if plane_count != context.axis_size:
+            raise ValueError(
+                "Object-label runtime plane-axis cardinality mismatch: "
+                f"declared {plane_count!r}, execution requires {context.axis_size}."
+            )
+        source_plane_count = self.source_provenance.source_plane_count
+        if source_plane_count not in (0, context.axis_size):
+            raise ValueError(
+                "Object-label source provenance must be absent or exactly match "
+                f"the declared plane axis: {source_plane_count} != {context.axis_size}."
+            )
+        return self.project_source_plane(context.require_plane_index())
+
+    def aligned_value(self, resolver: Any) -> Any:
+        slice_count = self.runtime_slice_plane_count()
+        projected: ObjectLabelValue = self
+        if slice_count is not None:
+            if slice_count != resolver.projection_axis.axis_size:
+                raise ValueError(
+                    "Runtime-slice object-label cardinality must exactly match the "
+                    f"declared projection axis: {slice_count} != "
+                    f"{resolver.projection_axis.axis_size}."
+                )
+            projected = self.value_for_slice(resolver.projection_axis)
+        return resolver.resolve_source_spatial_value(projected)
+
+    def project_declared_source(self, source_image_name: str) -> "ObjectLabelValue":
+        """Object labels keep their context; image-axis projection does not apply."""
+        del source_image_name
+        return self
+
+    def spatial_adapter(
+        self,
+        *,
+        source_shape_override_yx: tuple[int, int] | None = None,
+    ) -> Any:
+        """Place every label variant in this value's source domain."""
+        from openhcs.core.aligned_image_payload import (
+            ObjectLabelPayloadSourceSpatialDomainAdapter,
+        )
+
+        return ObjectLabelPayloadSourceSpatialDomainAdapter(
+            self, source_shape_override_yx=source_shape_override_yx,
+        )
+
+    # -- derived image outputs ------------------------------------------------
+
+    def requires_output_plane_contextualization(
+        self,
+        output: runtime_image_values.ImagePayload,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> bool:
+        """A volume label source binds an output's undeclared plane axis, even at depth one."""
+        del output
+        return (
+            plane_projection is not None
+            and plane_projection.plane_index is None
+            and self.metadata.plane_axis is None
+            and not self.metadata.persists_whole_image()
+            and np.ndim(object_label_dense_array(self)) >= 3
+        )
+
+    def contextualize_image_output(
+        self,
+        output: runtime_image_values.ImagePayload,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> runtime_image_values.ImagePayload:
+        """Project an image rendered from these labels onto the invocation plane axis."""
+        source_metadata = self.metadata
+        if source_metadata.persists_whole_image():
+            return source_metadata.derive_payload(self, output, plane_projection=None)
+        if plane_projection is None or plane_projection.plane_index is not None:
+            return source_metadata.derive_payload(
+                self, output, plane_projection=plane_projection,
+            )
+        plane_count = source_metadata.source_provenance.source_plane_count
+        if plane_count != plane_projection.axis_size:
+            raise ValueError(
+                "Object-label image output source-plane provenance must match the "
+                "declared runtime plane axis: "
+                f"{plane_count} != {plane_projection.axis_size}."
+            )
+        plane_projection.validate_shape(
+            output.geometry.shape,
+            value_name="Object-label image output payload",
+        )
+        contextualized_output = output.metadata.replace_fields(
+            plane_axis=plane_projection.axis,
+        ).attach_to(output)
+        return source_metadata.derive_payload(
+            self, contextualized_output, plane_projection=plane_projection,
+        )
+
+    def object_label_output(
+        self,
+        source: Any,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> "ObjectLabelValue":
+        """Keep this label domain, filling missing source-image context from ``source``."""
+        del plane_projection
+        return self.with_source_image_context(source).with_parent_image_context(source)
+
+    def alignment_slices(self) -> tuple[Any, ...]:
+        slice_count = self.runtime_slice_plane_count()
+        if slice_count is None:
+            return (self,)
+        projection = RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=slice_count,
+        )
+        return tuple(
+            self.value_for_slice(projection.selected_plane(index))
+            for index in range(slice_count)
+        )
 
     def declared_plane_count(self) -> int | None:
         """Return this value's validated plane-scoped label cardinality."""
@@ -948,9 +1093,7 @@ class ObjectLabelValue(
         projected_axis = RuntimePlaneAxisStrategy.for_enum_member(
             self.plane_axis
         ).projected_axis(projected_plane_count)
-        slice_metadata = runtime_image_values.image_payload_metadata(
-            self
-        ).for_grouped_source_plane_projection(
+        slice_metadata = self.metadata.for_grouped_source_plane_projection(
             source_plane_indices=source_plane_indices,
             runtime_plane_index=slice_index,
             runtime_plane_count=slice_count,
@@ -984,7 +1127,7 @@ class ObjectLabelValue(
             )
         if normalized_indices == tuple(range(plane_count)):
             return self
-        metadata = runtime_image_values.image_payload_metadata(self).for_source_planes(
+        metadata = self.metadata.for_source_planes(
             normalized_indices
         )
         variants = self.variant_data.project_planes(
@@ -1130,7 +1273,7 @@ class ObjectLabelValue(
         self, image: runtime_array_values.RuntimeArrayData
     ) -> Self:
         """Return this object-label value with missing provenance filled from image."""
-        metadata = runtime_image_values.image_payload_metadata(image)
+        metadata = image.metadata
         return self.with_variants(
             self.variant_data,
             source_provenance=object_label_source_context_provenance(self, image),
@@ -1147,7 +1290,7 @@ class ObjectLabelValue(
     ) -> "ObjectLabelValue":
         """Return this value with missing CellProfiler parent-image spacing filled."""
         parent_spacing = self.parent_image_source_voxel_spacing.with_missing_from(
-            runtime_image_values.image_payload_metadata(image).source_voxel_spacing
+            image.metadata.source_voxel_spacing
         )
         return self.with_variants(
             self.variant_data,
@@ -1161,9 +1304,7 @@ def object_label_source_context_provenance(
 ) -> SourceImageProvenance:
     """Merge image provenance into labels without reviving stale stack axes."""
     label_provenance = label.source_provenance
-    image_provenance = runtime_image_values.image_payload_metadata(
-        image
-    ).source_provenance
+    image_provenance = image.metadata.source_provenance
     if label.domain.scope is ObjectLabelDomainScope.PLANE:
         plane_count = label.declared_plane_count()
         if plane_count is None:
@@ -1251,6 +1392,15 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         default_factory=SourceVoxelSpacing
     )
 
+    def project_declared_source(self, source_image_name: str) -> "ObjectLabelSet":
+        """A named label set resolves only its own declared source name."""
+        if self.name != source_image_name:
+            raise ValueError(
+                f"Object-label payload {self.name!r} cannot resolve declared "
+                f"source {source_image_name!r}."
+            )
+        return self
+
     @classmethod
     def from_payload(
         cls,
@@ -1269,7 +1419,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         spatial_domain = payload.source_spatial_domain
         plane_axis = payload.plane_axis
         if source_image_payload is not None:
-            metadata = runtime_image_values.image_payload_metadata(source_image_payload)
+            metadata = source_image_payload.metadata
             provenance = object_label_source_context_provenance(
                 payload, source_image_payload
             )
@@ -1293,15 +1443,11 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         spacing = payload.parent_image_source_voxel_spacing
         if parent_image_payload is not None:
             spacing = spacing.with_missing_from(
-                runtime_image_values.image_payload_metadata(
-                    parent_image_payload
-                ).source_voxel_spacing
+                parent_image_payload.metadata.source_voxel_spacing
             )
         fallback_names = source_image_names
         if not fallback_names and source_image_payload is not None:
-            fallback_names = runtime_image_values.image_payload_metadata(
-                source_image_payload
-            ).source_image_names
+            fallback_names = source_image_payload.metadata.source_image_names
         if fallback_names:
             provenance = provenance.with_source_image_names(
                 provenance.source_image_names or fallback_names

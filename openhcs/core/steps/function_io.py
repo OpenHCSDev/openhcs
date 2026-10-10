@@ -18,9 +18,6 @@ from openhcs.core.image_file_serialization import (
     prepare_disk_image_payloads,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-)
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.axes import (
     Axis,
@@ -31,6 +28,7 @@ from openhcs.core.axes import (
     TileAxis,
     TimeAxis,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -61,7 +59,7 @@ def prepare_storage_image_payloads(
         )
     if backend == Backend.DISK.value:
         return prepare_disk_image_payloads(payloads, paths)
-    return [image_payload_data(payload) for payload in payloads]
+    return [ImagePayload.of(payload).data for payload in payloads]
 
 
 def generate_materialized_paths(

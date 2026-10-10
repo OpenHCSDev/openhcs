@@ -24,7 +24,6 @@ from openhcs.core.function_patterns import MainFlowInputProjection
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_stores import RuntimeArtifactQuery
 from openhcs.core.source_bindings import (
@@ -161,7 +160,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             )
             records.append(record)
         image, labels, rows = (record.data for record in records)
-        np.testing.assert_array_equal(np.squeeze(image_payload_data(image)), fixture)
+        np.testing.assert_array_equal(np.squeeze(image.data), fixture)
         np.testing.assert_array_equal(np.squeeze(object_label_dense_array(labels)), fixture)
         assert rows.subject.object_name == labels_plan.name
         assert rows.subject.id_field == "object_label"

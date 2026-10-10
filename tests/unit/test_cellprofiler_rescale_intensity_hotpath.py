@@ -10,12 +10,7 @@ import warnings
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.intensity import (
     AutomaticHigh,
     AutomaticLow,
@@ -25,6 +20,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
     StretchRescaleMethodRunner,
     rescale_intensity,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def _legacy_stretch(data: np.ndarray) -> np.ndarray:
@@ -69,13 +65,13 @@ def test_stretch_is_bit_exact_for_masked_60_plane_payload() -> None:
 
     expected = _legacy_stretch(pixels)
     np.testing.assert_array_equal(
-        image_payload_data(result).view(np.uint32),
+        result.data.view(np.uint32),
         expected.view(np.uint32),
     )
-    assert image_payload_data(result).shape == pixels.shape
-    assert image_payload_data(result).dtype == np.dtype(np.float32)
-    np.testing.assert_array_equal(image_payload_mask(result), mask)
-    assert image_payload_metadata(result) == metadata
+    assert result.data.shape == pixels.shape
+    assert result.data.dtype == np.dtype(np.float32)
+    np.testing.assert_array_equal(result.mask, mask)
+    assert result.metadata == metadata
 
 
 @pytest.mark.parametrize(
@@ -93,7 +89,7 @@ def test_stretch_preserves_legacy_edge_case_bits(pixels: np.ndarray) -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         expected = _legacy_stretch(pixels)
-        result = image_payload_data(_rescale_stretch(pixels))
+        result = ImagePayload.of(_rescale_stretch(pixels)).data
 
     np.testing.assert_array_equal(result.view(np.uint32), expected.view(np.uint32))
 

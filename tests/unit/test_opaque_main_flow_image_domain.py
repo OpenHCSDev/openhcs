@@ -10,12 +10,7 @@ from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_patterns import MainFlowInputProjection, compile_function_pattern
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -27,6 +22,9 @@ from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def _identity(image):
@@ -68,7 +66,7 @@ def test_opaque_whole_image_is_copied_without_a_new_execution_axis(shape, channe
         source_path="/input/A01_s001_w1_z001_t001.tif",
         source_component_metadata={"well": "A01", "site": "1", "channel": "1"},
         source_image_names=("WholeImage",),
-        source_channel_axis=channel_axis,
+        axes=PayloadAxes.colour_samples(channel_axis),
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(2, 3), source_shape_yx=(12, 13),
         ),
@@ -79,23 +77,21 @@ def test_opaque_whole_image_is_copied_without_a_new_execution_axis(shape, channe
     )
     assert len(projected) == 1
     assert projected[0][0] is payload
-    cached = ImagePayloadStackComposition.copy_whole_image(
-        payload, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
-    )
-    assert image_payload_data(cached).shape == shape
-    assert image_payload_metadata(cached) == metadata
-    np.testing.assert_array_equal(image_payload_data(cached), pixels)
-    np.testing.assert_array_equal(image_payload_mask(cached), mask)
-    assert not np.shares_memory(image_payload_data(cached), pixels)
-    assert not np.shares_memory(image_payload_mask(cached), mask)
-    assert image_payload_metadata(cached) is not metadata
+    cached = payload.copied(memory_type=MEMORY_TYPE_NUMPY, device_id=None)
+    assert cached.data.shape == shape
+    assert cached.metadata == metadata
+    np.testing.assert_array_equal(cached.data, pixels)
+    np.testing.assert_array_equal(cached.mask, mask)
+    assert not np.shares_memory(cached.data, pixels)
+    assert not np.shares_memory(cached.mask, mask)
+    assert cached.metadata is not metadata
     assert RuntimeSliceProjection.full_stack_value(cached) is cached
-    image_payload_data(cached).flat[0] = -100
-    image_payload_mask(cached).flat[0] = False
+    cached.data.flat[0] = -100
+    cached.mask.flat[0] = False
     assert pixels.flat[0] == 0
     assert mask.flat[0]
-    image_payload_metadata(cached).source_channel_axis = 0
-    assert metadata.source_channel_axis == channel_axis
+    cached.metadata.axes = PayloadAxes.colour_samples(0)
+    assert metadata.axis_position(ColourAxis) == channel_axis
 
 
 @pytest.mark.parametrize("count", [1, 3])
@@ -104,9 +100,9 @@ def test_declared_runtime_axis_retains_its_exact_count(count):
     payload = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(pixels)
     projected = _runtime()._project_output_slices(payload, ["source-1.tif", "source-2.tif"])
     assert len(projected) == count
-    assert all(image_payload_metadata(value).plane_axis is None for value, _context in projected)
-    assert image_payload_data(payload).shape == (count, 4, 5)
-    assert image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert all(value.metadata.plane_axis is None for value, _context in projected)
+    assert payload.data.shape == (count, 4, 5)
+    assert payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 @pytest.mark.parametrize("named", [False, True])
@@ -125,8 +121,8 @@ def test_nominal_alignment_owner_preserves_single_output_topology(named, axis):
     else:
         expected_shape = (1, 4, 5) if axis is RuntimePlaneAxis.RUNTIME_SLICE else (1, *shape)
         expected_axis = RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_data(stack_payload).shape == expected_shape
-    assert image_payload_metadata(stack_payload).plane_axis is expected_axis
+    assert stack_payload.data.shape == expected_shape
+    assert stack_payload.metadata.plane_axis is expected_axis
 
 
 @pytest.mark.parametrize("count", [1, 3])
@@ -134,15 +130,15 @@ def test_raw_array_fallback_keeps_explicit_runtime_unstack_contract(count):
     runtime = _runtime()
     runtime = replace(runtime, context=ProcessingContext(axis_id="A01"))
     runtime.context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
-    pixels = np.arange(count * 4 * 5, dtype=np.float32).reshape(count, 4, 5)
+    pixels = ImagePayload.of(np.arange(count * 4 * 5, dtype=np.float32).reshape(count, 4, 5))
     projected = runtime._project_output_slices(pixels, [f"source-{i}.tif" for i in range(count)])
     payloads = tuple(payload for payload, _context in projected)
     cached = ImagePayloadStackComposition.with_saved_output_context(
-        pixels, payloads, [image_payload_metadata(payload) for payload in payloads],
+        pixels, payloads, [payload.metadata for payload in payloads],
         single_output_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
-    assert image_payload_data(cached).shape == (count, 4, 5)
-    assert image_payload_metadata(cached).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert cached.data.shape == (count, 4, 5)
+    assert cached.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 class _MemoryFiles:
@@ -179,7 +175,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     components = {"well": "A01", "site": "1", "channel": "1", "z_index": "1", "timepoint": "1"}
     metadata = ImagePayloadMetadata(
         source_path=path, source_component_metadata=components, source_image_names=("WholeImage",),
-        source_channel_axis=channel_axis, plane_axis=axis,
+        axes=PayloadAxes.colour_samples(channel_axis), plane_axis=axis,
         source_image_provenance_planes=(
             SourceImageProvenancePlanes.from_components(paths=(path,), component_metadata=(components,))
             if axis is not None else SourceImageProvenancePlanes()
@@ -206,7 +202,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     manifest.record_outputs(plan, records)
     assert records[0].main_flow_plane_axis is axis
     physical = files.values[records[0].output_path]
-    assert np.shares_memory(image_payload_data(physical), pixels)
+    assert np.shares_memory(physical.data, pixels)
     if not cache_hit:
         context.runtime_image_stack_cache.clear()
     consumer_plan = replace(
@@ -224,19 +220,19 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     # exactly as it is when several members match.
     expected_pixels = pixels if axis is not None else pixels[None]
     expected_mask = mask if axis is not None or mask is None else mask[None]
-    assert image_payload_data(loaded).shape == expected_pixels.shape
-    assert image_payload_metadata(loaded).plane_axis is (axis or RuntimePlaneAxis.RUNTIME_SLICE)
-    np.testing.assert_array_equal(image_payload_data(loaded), expected_pixels)
-    np.testing.assert_array_equal(image_payload_mask(loaded), expected_mask)
-    assert not np.shares_memory(image_payload_data(loaded), pixels)
+    assert loaded.data.shape == expected_pixels.shape
+    assert loaded.metadata.plane_axis is (axis or RuntimePlaneAxis.RUNTIME_SLICE)
+    np.testing.assert_array_equal(loaded.data, expected_pixels)
+    np.testing.assert_array_equal(loaded.mask, expected_mask)
+    assert not np.shares_memory(loaded.data, pixels)
     if mask is not None:
-        assert not np.shares_memory(image_payload_mask(loaded), mask)
-    assert image_payload_metadata(loaded) is not image_payload_metadata(physical)
-    image_payload_metadata(loaded).source_provenance = image_payload_metadata(loaded).source_provenance.with_source_image_names(("Changed",))
-    assert image_payload_metadata(physical).source_image_names == ("WholeImage",)
-    image_payload_data(loaded).flat[0] = -100
+        assert not np.shares_memory(loaded.mask, mask)
+    assert loaded.metadata is not physical.metadata
+    loaded.metadata.source_provenance = loaded.metadata.source_provenance.with_source_image_names(("Changed",))
+    assert physical.metadata.source_image_names == ("WholeImage",)
+    loaded.data.flat[0] = -100
     if mask is not None:
-        image_payload_mask(loaded).flat[0] = False
+        loaded.mask.flat[0] = False
         assert mask.flat[0]
     assert pixels.flat[0] == 0
     consumer._record_main_flow_passthrough([records[0].relative_output_path])
@@ -383,19 +379,19 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
 
     with pytest.raises(ValueError, match="different declared image axes"):
         consumer_for(pattern).load_input_stack()
-    for name, expected, axis in (("Planes", image_payload_data(planes), RuntimePlaneAxis.RUNTIME_SLICE), ("Volume", opaque_pixels[None], RuntimePlaneAxis.RUNTIME_SLICE)):
+    for name, expected, axis in (("Planes", planes.data, RuntimePlaneAxis.RUNTIME_SLICE), ("Volume", opaque_pixels[None], RuntimePlaneAxis.RUNTIME_SLICE)):
         selected = consumer_for(_selected_pattern(name))
         actual = selected.load_input_stack()[1]
-        np.testing.assert_array_equal(image_payload_data(actual), expected)
-        assert image_payload_metadata(actual).plane_axis is axis
+        np.testing.assert_array_equal(actual.data, expected)
+        assert actual.metadata.plane_axis is axis
         if not cache_hit:
             context.runtime_image_stack_cache.clear()
         else:
             selected_path = next(r.output_path for r in records if r.producer_identity.output_key == name)
             context.runtime_image_stack_cache.store((selected_path,), memory_type=MEMORY_TYPE_NUMPY, stack=actual)
         repeated = selected.load_input_stack()[1]
-        np.testing.assert_array_equal(image_payload_data(repeated), expected)
-        assert image_payload_metadata(repeated).plane_axis is axis
+        np.testing.assert_array_equal(repeated.data, expected)
+        assert repeated.metadata.plane_axis is axis
 
 
 def test_multiple_unprojected_named_binding_domains_fail_existing_bundle_grammar():
@@ -419,9 +415,9 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
     bundle = ImageOutputBundle(payloads, contexts)
     stack_payload = bundle.copy_projected_output_stack(tuple(bundle.projected_output_slices()), memory_type=MEMORY_TYPE_NUMPY, device_id=None)
     expected = ImagePayloadBundleContext.from_payloads(payloads).compose()
-    assert image_payload_metadata(stack_payload).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    np.testing.assert_array_equal(image_payload_data(stack_payload), image_payload_data(expected))
-    np.testing.assert_array_equal(image_payload_mask(stack_payload), image_payload_mask(expected))
+    assert stack_payload.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    np.testing.assert_array_equal(stack_payload.data, expected.data)
+    np.testing.assert_array_equal(stack_payload.mask, expected.mask)
 
 
 @pytest.mark.parametrize("sites", [(1,), (1, 2, 3)], ids=("one-member", "three-members"))
@@ -442,15 +438,15 @@ def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path, sites):
         output_context=context, main_flow_plane_axis=None,
     ) for site in sites)
     payloads = tuple(ImagePayloadMetadata(
-        source_image_names=("RGBImage",), source_channel_axis=-1,
+        source_image_names=("RGBImage",), axes=PayloadAxes.colour_samples(-1),
     ).payload_with(np.full((4, 5, 3), site, dtype=np.float32)) for site in sites)
     output = ImagePayloadStackComposition.from_loaded_images(
         payloads, producer_records=records, execution_plan=plan,
         source_projection=None, workspace_source_lookups=(),
     )
-    assert image_payload_metadata(output).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_metadata(output).source_channel_axis == 3
-    np.testing.assert_array_equal(image_payload_data(output), np.stack([image_payload_data(p) for p in payloads]))
+    assert output.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert output.metadata.axis_position(ColourAxis) == 3
+    np.testing.assert_array_equal(output.data, np.stack([p.data for p in payloads]))
 
 
 def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, monkeypatch):
@@ -475,5 +471,5 @@ def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, 
         producer_records=records,
         execution_plan=plan, source_projection=None, workspace_source_lookups=(),
     )
-    assert image_payload_metadata(output).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    np.testing.assert_array_equal(image_payload_data(output), np.stack([image_payload_data(p) for p in payloads]))
+    assert output.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    np.testing.assert_array_equal(output.data, np.stack([p.data for p in payloads]))

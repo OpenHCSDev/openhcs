@@ -20,7 +20,7 @@ from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVa
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    RequiredSourceComponentMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -351,8 +351,8 @@ def test_strict_receiver_rejects_inconsistent_item_plane_domains(viewer_ack_retu
 @pytest.mark.parametrize("component", (Microscopy.Channel, Microscopy.Site))
 def test_existing_projection_owns_source_binding_label_planes(component):
     labels, pixels = _source_bound_labels(component)
-    payload = labels.metadata.attach_to(labels.image_data())
-    items = RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
+    payload = labels.metadata.attach_to(labels.data)
+    items = RequiredSourceComponentMetadata.project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload, source_description="automatic label TIFF",
             variable_components=(component,),
@@ -367,15 +367,15 @@ def test_existing_projection_owns_source_binding_label_planes(component):
         assert item.metadata.plane_axis is None
         assert item.require_source_component_metadata()[component.name] == index + 1
         assert item.metadata.source_voxel_spacing.values_zyx == (0.75, 0.75)
-        assert np.shares_memory(item.data, labels.image_data())
+        assert np.shares_memory(item.data, labels.data)
 
 
 def test_existing_projection_does_not_infer_runtime_axis_from_label_array():
     labels, _pixels = _source_bound_labels(Microscopy.Channel)
     with pytest.raises(RuntimeSliceProjectionDeclarationError, match="requires a nominal payload"):
-        RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
+        RequiredSourceComponentMetadata.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
-                value=labels.metadata.attach_to(labels.image_data()),
+                value=labels.metadata.attach_to(labels.data),
                 source_description="automatic label TIFF",
                 variable_components=(Microscopy.Channel,),
             )
@@ -385,9 +385,9 @@ def test_existing_projection_does_not_infer_runtime_axis_from_label_array():
 def test_existing_projection_rejects_label_source_cardinality_mismatch():
     labels, _pixels = _source_bound_labels(Microscopy.Channel)
     with pytest.raises(ValueError, match="metadata cardinality mismatch"):
-        RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
+        RequiredSourceComponentMetadata.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
-                value=labels.metadata.attach_to(labels.image_data()),
+                value=labels.metadata.attach_to(labels.data),
                 source_description="automatic label TIFF",
                 variable_components=(Microscopy.Channel,),
                 plane_projection=RuntimePlaneAxisValueProjection.preserve(

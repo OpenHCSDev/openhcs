@@ -3,10 +3,7 @@
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -48,7 +45,7 @@ def test_field_collapses_pixels_not_contributor_history():
             axis_size=3,
         ),
     )
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert result.shape == (8, 9)
     assert metadata.plane_axis is None
     assert len(metadata.source_image_paths) == 3

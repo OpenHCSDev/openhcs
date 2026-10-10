@@ -36,10 +36,6 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.interop.cellprofiler.parser import ModuleSetting
 from openhcs.interop.cellprofiler.setting_names import (
     optional_setting_value,
@@ -53,6 +49,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     MeasurementFeatureRecord,
 )
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import ImagePayload
 
 SeedObjectLabelsInput = Annotated[
     ObjectLabelValue,
@@ -359,7 +357,7 @@ def measure_object_skeleton(
 @numpy_backend(contract=ProcessingContract.PURE_2D)
 @special_inputs("seed_labels")
 def measure_object_skeleton_with_branchpoint_image(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     seed_labels: SeedObjectLabelsInput,
     fill_small_holes: bool = True,
     maximum_hole_size: int = 10,
@@ -377,11 +375,8 @@ def measure_object_skeleton_with_branchpoint_image(
         fill_small_holes=fill_small_holes,
         maximum_hole_size=maximum_hole_size,
     )
-    branchpoint_payload = with_image_payload_data(
-        image,
-        result.branchpoint_image,
-        metadata=image_payload_metadata(image).replace_fields(source_channel_axis=-1),
-    )
+    branchpoint_payload = image.with_pixels(result.branchpoint_image,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
     branchpoint_image = pack_aligned_image_outputs(
         (branchpoint_payload,),
         slice_contexts=(

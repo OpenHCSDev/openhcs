@@ -402,6 +402,13 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
     post-execute hooks, dataset root rules) import these on first registry
     access, so activation itself stays free of domain imports.
     """
+    payload_spatial_rank: ClassVar[int]
+    """Spatial rank of a payload that declares no spatial domain of its own.
+
+    Each family declares it: an undeclared array of rank r has r - k leading
+    undeclared axes and k trailing spatial axes, named by the spatial domain
+    of rank k.
+    """
 
     _active: ClassVar[type[AxisFamily] | None] = None
 
@@ -435,6 +442,12 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
         if not PartitionAxis.cardinality.admits(partition_count):
             raise TypeError(
                 f"Axis family {cls.__qualname__} must declare exactly one PartitionAxis."
+            )
+        spatial_rank = cls.__dict__.get("payload_spatial_rank")
+        if not isinstance(spatial_rank, int) or isinstance(spatial_rank, bool) or spatial_rank < 0:
+            raise TypeError(
+                f"Axis family {cls.__qualname__} must declare payload_spatial_rank "
+                "as a nonnegative int."
             )
         for axis in declared:
             if "family" in axis.__dict__:

@@ -37,11 +37,6 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_geometry,
-    image_payload_metadata,
-)
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     RuntimeMeasurementFeature,
@@ -104,6 +99,8 @@ from openhcs.processing.backends.analysis.region_properties import (
     label_area_and_rounded_perimeter_2d,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_array_values import array_geometry
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
@@ -782,7 +779,7 @@ class ObjectLabelsAreaOccupiedRequest:
     SliceIndexRuntimeParameter,
 )
 def measure_image_area_occupied(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     *,
     operand_choices: Sequence[OperandChoice] = (OperandChoice.BINARY_IMAGE,),
     area_occupied_rows: Sequence[AreaOccupiedRow] = (),
@@ -865,14 +862,14 @@ def _binary_images_from_payload(
 ) -> tuple[np.ndarray, ...]:
     if not binary_image_names:
         return ()
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     if metadata.plane_axis is None:
         if len(binary_image_names) != 1:
             raise ValueError(
                 "MeasureImageAreaOccupied requires a declared source-binding "
                 "axis for multiple binary-image rows."
             )
-        return (np.asarray(image_payload_data(image)),)
+        return (np.asarray(image.data),)
     if metadata.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
         raise ValueError(
             "MeasureImageAreaOccupied binary-image composition requires a "
@@ -891,13 +888,12 @@ def _binary_images_from_payload(
         source_aliases=source_aliases,
     )
     projection.validate_shape(
-        image_payload_geometry(image).shape,
+        array_geometry(image).shape,
         value_name="MeasureImageAreaOccupied binary image payload",
     )
     return tuple(
         np.asarray(
-            image_payload_data(
-                RuntimeSliceProjection.value_for_slice(
+            (RuntimeSliceProjection.value_for_slice(
                     image,
                     RuntimePlaneAxisValueProjection.from_selected_plane(
                         axis=RuntimePlaneAxis.SOURCE_BINDING,
@@ -905,8 +901,7 @@ def _binary_images_from_payload(
                         axis_size=projection.axis_size,
                         source_aliases=projection.source_aliases,
                     ),
-                )
-            )
+                )).data
         )
         for index in range(projection.axis_size)
     )

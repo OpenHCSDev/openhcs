@@ -58,15 +58,14 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.aligned_image_payload import stack_image_payloads
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCompositionMode,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.steps.function_io import get_all_image_paths
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.runtime_image_values import image_metadata_of
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
@@ -1540,10 +1539,13 @@ class SourceFileUniverse:
         filemanager: "FileManager",
         *,
         zarr_config: Mapping[str, object] | None = None,
-    ) -> list[RuntimeArrayData]:
+    ) -> list[ImagePayload]:
         """Load this exact source cohort, retaining its execution-local memory copy."""
         if self.backend is Backend.MEMORY:
-            return filemanager.load_batch(list(self.files), self.backend.value)
+            return [
+                ImagePayload.of(value)
+                for value in filemanager.load_batch(list(self.files), self.backend.value)
+            ]
         missing = tuple(dict.fromkeys(
             path for path in self.files
             if not filemanager.exists(path, Backend.MEMORY.value)
@@ -1573,7 +1575,10 @@ class SourceFileUniverse:
         if retained:
             loaded_by_path.update(zip(
                 retained,
-                filemanager.load_batch(list(retained), Backend.MEMORY.value),
+                (
+                    ImagePayload.of(value)
+                    for value in filemanager.load_batch(list(retained), Backend.MEMORY.value)
+                ),
                 strict=True,
             ))
         return [loaded_by_path[path] for path in self.files]
@@ -1665,7 +1670,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         source_provenance = (
             None
             if source_payload is None
-            else image_payload_metadata(source_payload).source_provenance
+            else image_metadata_of(source_payload).source_provenance
         )
         if source_provenance is not None and not source_provenance.has_values:
             raise ValueError(
@@ -1723,7 +1728,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         payload = (
             projected_payloads[0]
             if len(projected_payloads) == 1
-            and image_payload_metadata(projected_payloads[0]).persists_whole_image()
+            and projected_payloads[0].metadata.persists_whole_image()
             else stack_image_payloads(
                 projected_payloads,
                 metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
@@ -1750,7 +1755,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         assembled runtime cohort retains its held pixels, while an explicitly
         whole-image source retains its intrinsic spatial dimensions.
         """
-        metadata = image_payload_metadata(payload)
+        metadata = payload.metadata
         if not metadata.persists_whole_image() and metadata.plane_axis is None:
             if member_count != 1:
                 raise ValueError(
@@ -1762,8 +1767,8 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                     RuntimePlaneAxis.RUNTIME_SLICE
                 ),
             )
-            metadata = image_payload_metadata(payload)
-        domain = source_binding_plan.source_spatial_domain.admit_source_cohort(
+            metadata = payload.metadata
+        domain = source_binding_plan.source_spatial_domain.with_source_cohort(
             metadata.source_spatial_domain, depth=member_count,
         )
         return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)

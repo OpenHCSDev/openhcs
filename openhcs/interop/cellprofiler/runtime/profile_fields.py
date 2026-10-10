@@ -5,16 +5,13 @@ from __future__ import annotations
 import numpy as np
 
 from openhcs.core.runtime_profile import RuntimeProfileFieldValue
-from openhcs.core.image_shapes import ArrayShape
+from arraybridge import ArrayGeometry
 from openhcs.core.artifacts import ArtifactSpec
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     ObjectLabelStorageStrategy,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-)
+from openhcs.core.runtime_array_values import RuntimeArrayPayload, runtime_array_operand
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerMeasurementImage
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
@@ -37,7 +34,7 @@ def object_label_stage_profile_fields(
         ("reference_domain", measurement_image.reference_domain.value),
         ("value_type", type(value).__name__),
         ("data_type", type(label_data).__name__),
-        ("data_shape", ArrayShape.shape_for(label_data)),
+        ("data_shape", _shape_for(label_data)),
         ("domain_scope", domain.scope),
         ("plane_axis", value.plane_axis),
         ("representation", value.representation),
@@ -60,7 +57,7 @@ def dense_label_argument_stage_profile_fields(
     value: RuntimeCallableArgument,
 ) -> tuple[tuple[str, RuntimeProfileFieldValue], ...]:
     """Return structured profile fields for dense label arrays."""
-    data = image_payload_data(value)
+    data = runtime_array_operand(value)
     return (
         ("stage", stage),
         ("object", object_spec.name),
@@ -68,8 +65,13 @@ def dense_label_argument_stage_profile_fields(
         ("reference_domain", measurement_image.reference_domain.value),
         ("value_type", type(value).__name__),
         ("data_type", type(data).__name__),
-        ("data_shape", ArrayShape.shape_for(data)),
+        ("data_shape", _shape_for(data)),
     )
+
+
+def _shape_for(value: object) -> tuple[int, ...] | None:
+    geometry = ArrayGeometry.from_value(value)
+    return None if geometry is None or geometry.ndim == 0 else geometry.shape
 
 
 def cellprofiler_profile_payload_fields(
@@ -92,7 +94,7 @@ def cellprofiler_profile_payload_fields(
                 else int(np.prod(shape)) * np.dtype(value.dtype).itemsize
             ),
         }
-    data = image_payload_data(value)
+    data = value.data
     data_array = data if isinstance(data, np.ndarray) else None
     return {
         f"{prefix}_type": type(data).__name__,

@@ -12,12 +12,11 @@ from openhcs.core.image_file_serialization import (
     ImageFileSourceMetadata,
     image_file_source_metadata,
 )
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCarrier,
-    image_payload_data,
-    image_payload_metadata,
-    image_payload_mask,
+    ImagePayload,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
@@ -52,12 +51,13 @@ class ImagePayloadSourceMetadataContext:
             raise ValueError("ImagePayloadSourceMetadataContext requires source path.")
         return self.source_identity.path
 
-    def payload(self, image: Any) -> ImagePayloadMetadataCarrier:
+    def payload(self, image: Any) -> ImagePayload:
         """Keep loader metadata, deriving source facts only for bare pixels."""
-        metadata = image_payload_metadata(image)
+        image = ImagePayload.of(image)
+        metadata = image.metadata
         if not metadata.has_values:
             metadata = self.metadata(image)
-        return metadata.payload_with(image_payload_data(image), image_payload_mask(image))
+        return metadata.payload_with(image.data, image.mask)
 
     def metadata(
         self,
@@ -66,22 +66,24 @@ class ImagePayloadSourceMetadataContext:
         source_binding: NamedSourceBinding | None = None,
     ) -> ImagePayloadMetadata:
         """Return source-file metadata for pixels loaded through this I/O context."""
-        existing_metadata = image_payload_metadata(image)
+        image = ImagePayload.of(image)
+        existing_metadata = image.metadata
         resolved_source_path = self.resolved_source_path()
         source_metadata = image_file_source_metadata(resolved_source_path)
         source_dtype = source_metadata.source_dtype
         source_voxel_spacing = SourceVoxelSpacing.from_source_metadata(
             self.source_identity.component_metadata
         )
-        image_data = image_payload_data(image)
-        source_channel_axis = self.source_channel_axis(image, source_metadata)
+        image_data = image.data
+        colour_axis_position = self.colour_axis_position(image, source_metadata)
         if source_binding is not None:
-            source_channel_axis = source_binding.source_channel_axis_for_shape(
+            colour_axis_position = source_binding.source_channel_axis_for_shape(
                 tuple(int(value) for value in np.shape(image_data)),
-                observed_axis=source_channel_axis,
+                observed_axis=colour_axis_position,
             )
+        colour_axes = PayloadAxes.colour_samples(colour_axis_position)
         source_spatial_shape_yx = ImagePayloadMetadata(
-            source_channel_axis=source_channel_axis
+            axes=colour_axes
         ).spatial_shape_yx(image_data)
         spatial_origin_yx = (0, 0) if source_spatial_shape_yx is not None else None
         source_identity_path = self.source_path
@@ -103,7 +105,7 @@ class ImagePayloadSourceMetadataContext:
                 )
         if source_dtype is None:
             array_metadata = ImagePayloadMetadata.for_array(
-                image_payload_data(image),
+                image.data,
                 source_path=source_identity_path,
             )
             metadata = array_metadata.replace_fields(
@@ -114,7 +116,7 @@ class ImagePayloadSourceMetadataContext:
                     source_shape_yx=source_spatial_shape_yx,
                 ),
                 source_voxel_spacing=source_voxel_spacing,
-                source_channel_axis=source_channel_axis,
+                axes=colour_axes,
                 plane_axis=plane_axis,
             )
         else:
@@ -129,7 +131,7 @@ class ImagePayloadSourceMetadataContext:
                     source_shape_yx=source_spatial_shape_yx,
                 ),
                 source_voxel_spacing=source_voxel_spacing,
-                source_channel_axis=source_channel_axis,
+                axes=colour_axes,
                 plane_axis=plane_axis,
             )
         metadata = metadata.replace_fields(
@@ -142,22 +144,21 @@ class ImagePayloadSourceMetadataContext:
             existing_metadata
         ).with_missing_intensity_from(existing_metadata)
         if source_binding is not None:
-            # A declared absent channel axis must not be refilled from the
-            # previous carrier while merging missing source context.
-            metadata.source_channel_axis = source_channel_axis
+            # A declared absent colour axis must not be refilled from the
+            # previous payload while merging missing source context.
+            metadata.axes = colour_axes
         return metadata
 
     @staticmethod
-    def source_channel_axis(
-        image: Any,
+    def colour_axis_position(
+        image: ImagePayload,
         source_metadata: ImageFileSourceMetadata,
     ) -> int | None:
-        """Return the channel axis declared by the current pixel carrier."""
-        if isinstance(image, ImagePayloadMetadataCarrier):
-            metadata = image_payload_metadata(image)
-            if metadata.source_channel_axis is not None:
-                metadata.normalized_source_channel_axis(image)
-                return metadata.source_channel_axis
+        """Return the colour axis the pixels declare, else the file's own."""
+        position = image.metadata.axis_position(ColourAxis)
+        if position is not None:
+            image.metadata.axis_index(ColourAxis, image)
+            return position
         return source_metadata.pixel_semantics.validated_channel_axis(image)
 
     def resolved_source_path(self) -> Path | None:

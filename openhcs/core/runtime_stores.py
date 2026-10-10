@@ -32,9 +32,6 @@ from openhcs.core.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -425,7 +422,7 @@ class RuntimeArtifactInput:
             if selects_complete_producer:
                 record_coordinates.pop(producer_scope.component, None)
             if projected_components:
-                provenance = image_payload_metadata(record.data).source_provenance
+                provenance = record.data.metadata.source_provenance
                 plane_metadata = provenance.source_image_provenance_planes.runtime_component_metadata
                 metadata_rows = plane_metadata or (
                     (provenance.source_component_metadata,)
@@ -600,7 +597,7 @@ class RuntimeArtifactInput:
         )
         metadata_scope = SourceAxisMetadataScope.from_component_values(component_values)
         payload = value.data
-        source_provenance = image_payload_metadata(payload).source_provenance
+        source_provenance = payload.metadata.source_provenance
         plane_metadata = (
             source_provenance.source_image_provenance_planes.runtime_component_metadata
         )

@@ -19,7 +19,6 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -54,7 +53,7 @@ def receiver_transport(monkeypatch, viewer_ack_return_route):
 
     def observe_projection(request, image):
         projected = original_project(request, image)
-        projected_metadata.append(image_payload_metadata(projected))
+        projected_metadata.append(projected.metadata)
         return projected
 
     def receive(_manager, data, paths, backend, **fields):

@@ -27,10 +27,7 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_object_labels import (
@@ -118,7 +115,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
 
     assert recomposed is first
     np.testing.assert_array_equal(
-        image_payload_data(recomposed),
+        recomposed.data,
         np.full((1, 2, 2), 3.0, dtype=np.float32),
     )
 
@@ -136,7 +133,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
 
     assert refreshed is not recomposed
     np.testing.assert_array_equal(
-        image_payload_data(refreshed),
+        refreshed.data,
         np.full((1, 2, 2), 2.0, dtype=np.float32),
     )
 

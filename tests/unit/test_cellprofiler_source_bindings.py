@@ -24,8 +24,6 @@ from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import SourceImageIdentity
@@ -53,6 +51,8 @@ from openhcs.interop.cellprofiler.parser import (
     ModuleSetting,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def _field_names(record_type: type[object]) -> frozenset[str]:
@@ -850,23 +850,23 @@ def test_names_and_types_contributes_payload_loading_semantics(
             SourceImageIdentity(str(multiband_path)),
         ),
     )
-    multiband_metadata = image_payload_metadata(multiband)
-    assert multiband_metadata.source_channel_axis == -1
+    multiband_metadata = multiband.metadata
+    assert multiband_metadata.axis_position(ColourAxis) == -1
     assert multiband_metadata.source_spatial_shape_yx == (5, 6)
     grayscale = color.apply_loaded_payload(
         np.zeros((512, 512), dtype=np.uint8),
         None,
     )
-    assert image_payload_metadata(grayscale).source_channel_axis is None
+    assert grayscale.metadata.axis_position(ColourAxis) is None
     grayscale = color.apply_loaded_payload(
         ImageMetadataPayload(
             np.zeros((512, 512), dtype=np.uint8),
-            ImagePayloadMetadata(source_channel_axis=-1),
+            ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
         ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity("grayscale.tif")),
     )
-    assert image_payload_metadata(grayscale).source_channel_axis is None
-    assert image_payload_metadata(grayscale).source_spatial_shape_yx == (512, 512)
+    assert grayscale.metadata.axis_position(ColourAxis) is None
+    assert grayscale.metadata.source_spatial_shape_yx == (512, 512)
     assert mask.artifact_kind is ImageArtifactType
     assert mask.load_as_mask is True
     assert objects.artifact_kind is ObjectLabelsArtifactType
@@ -893,10 +893,10 @@ def test_monochrome_source_normalizes_before_collapsing_rgb_channels() -> None:
     observed = binding.apply_loaded_payload(rgb, None)
     expected = codes.astype(np.float32) / np.float32(255)
 
-    np.testing.assert_array_equal(image_payload_data(observed), expected)
-    metadata = image_payload_metadata(observed)
-    assert image_payload_data(observed).dtype == np.float32
-    assert metadata.source_channel_axis is None
+    np.testing.assert_array_equal(observed.data, expected)
+    metadata = observed.metadata
+    assert observed.data.dtype == np.float32
+    assert metadata.axis_position(ColourAxis) is None
     assert metadata.unit_interval_intensity_scale is None
 
 
@@ -920,7 +920,7 @@ def test_monochrome_source_uses_rgb_luminance_for_distinct_channels() -> None:
     observed = binding.apply_loaded_payload(rgb, None)
     expected = rgb2gray(rgb.astype(np.float32) / np.float32(255))
 
-    np.testing.assert_array_equal(image_payload_data(observed), expected)
+    np.testing.assert_array_equal(observed.data, expected)
 
 
 def test_names_and_types_repeated_columns_require_exact_cardinality() -> None:
@@ -1069,15 +1069,14 @@ def test_setup_fold_is_source_ordered_and_uses_module_registry() -> None:
 def test_declared_binary_source_preserves_foreground_through_cp_normalization(dtype, foreground):
     from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
     from openhcs.processing.backends.cellprofiler.image_geometry import binary_mask_plane
-    from openhcs.core.runtime_image_values import image_payload_data
 
     raw = np.asarray([[0, foreground], [foreground, 0]], dtype=dtype)
     context = ImagePayloadSourceMetadataContext(SourceImageIdentity('/input/mask.tif'))
     loaded = NamedSourceBinding(alias='Mask', load_as_mask=True).apply_loaded_payload(raw, context)
-    source_metadata = image_payload_metadata(loaded)
+    source_metadata = loaded.metadata
     normalized = normalize_cellprofiler_image_payload(loaded)
-    np.testing.assert_array_equal(image_payload_data(normalized), raw != 0)
+    np.testing.assert_array_equal(normalized.data, raw != 0)
     np.testing.assert_array_equal(binary_mask_plane(normalized), raw != 0)
     assert source_metadata.unit_interval_intensity.scale == 1
-    assert image_payload_metadata(normalized).source_provenance == source_metadata.source_provenance
+    assert normalized.metadata.source_provenance == source_metadata.source_provenance
     assert source_metadata.source_path == '/input/mask.tif'

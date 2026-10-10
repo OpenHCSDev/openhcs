@@ -22,7 +22,6 @@ from openhcs.core.artifacts import (
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.config import FijiStreamingConfig
 from openhcs.core.pipeline.function_contracts import composed_image_payload
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.vfs_protocol import PlateInputFile
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
@@ -72,7 +71,7 @@ def run_imagej_macro(
     if any(not name.strip() for name in output_image_names):
         raise ValueError("RunImagejMacro output image names cannot be blank.")
 
-    image_data = np.asarray(image_payload_data(image))
+    image_data = np.asarray(image)
     if len(input_filenames) > 1 and image_data.ndim < 3:
         raise ValueError(
             "RunImagejMacro with multiple input groups requires an explicit "

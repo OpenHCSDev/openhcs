@@ -28,8 +28,6 @@ from openhcs.core.runtime_adapters import (
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
-    image_payload_geometry,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelMeasurementSource,
@@ -46,6 +44,10 @@ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_spatial_domain import CommonRuntimeValue
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
+from openhcs.core.runtime_array_values import array_geometry
+from openhcs.core.axes import ColourAxis
+from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import owned_runtime_value
 
 
 class CellProfilerSourceIdentityMixin:
@@ -131,7 +133,7 @@ class CellProfilerSourceIdentityMixin:
         if not sources:
             return None
         provenances = tuple(
-            image_payload_metadata(source.payload).source_provenance.equality_identity
+            source.payload.metadata.source_provenance.equality_identity
             for source in sources
         )
         if CommonRuntimeValue.from_values(provenances).single is None:
@@ -230,16 +232,13 @@ class CellProfilerSourceIdentityMixin:
                 cls.scalar_source_provenance(value) for value in payload.slices
             )
         if isinstance(payload, RuntimeSliceAlignedValueSet):
-            return tuple(
-                cls.scalar_source_provenance(payload.value_for_slice(index))
-                for index in range(payload.slice_count)
-            )
+            return tuple(cls.scalar_source_provenance(value) for value in payload.values)
         count = RuntimeSliceProjection.slice_count_from_values((payload,))
-        metadata = image_payload_metadata(payload)
+        metadata = image_metadata_of(payload)
         provenance = metadata.source_provenance
         if count is None:
             return (provenance,)
-        if metadata.source_channel_axis == 0:
+        if metadata.axis_position(ColourAxis) == 0:
             raise ValueError(
                 "Image metadata cannot declare the same leading axis as both "
                 "plane and channel."
@@ -252,8 +251,8 @@ class CellProfilerSourceIdentityMixin:
     ) -> SourceImageProvenance:
         """Collapse an inner image bundle's source topology at its actual read epoch."""
         if not isinstance(payload, AlignedImageStack):
-            return image_payload_metadata(payload).source_provenance
-        metadata = tuple(image_payload_metadata(value) for value in payload.slices)
+            return payload.metadata.source_provenance
+        metadata = tuple(value.metadata for value in payload.slices)
         provenances = tuple(
             (
                 fields.source_provenance.for_source_plane(0)
@@ -462,6 +461,7 @@ class CellProfilerMeasurementImage(
     )
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "payload", owned_runtime_value(self.payload))
         self.validate_source_identity()
         if not isinstance(self.reference_domain, CellProfilerMeasurementImageDomain):
             raise TypeError(
@@ -537,7 +537,7 @@ class CellProfilerMeasurementImage(
                         f"{plane_projection!r}."
                     )
             else:
-                image_plane_axis = image_payload_metadata(image).plane_axis
+                image_plane_axis = image.metadata.plane_axis
                 if image_plane_axis is None:
                     plane_projection = None
                 elif image_plane_axis is not plane_projection.axis:
@@ -548,7 +548,7 @@ class CellProfilerMeasurementImage(
                     )
                 else:
                     plane_projection.validate_shape(
-                        image_payload_geometry(image).shape,
+                        array_geometry(image).shape,
                         value_name="Aligned measurement image",
                     )
         return replace(

@@ -31,11 +31,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     is_structural_missing_measurement_cell,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_intensity_scale,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
@@ -92,6 +88,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     threshold_primitives,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -365,7 +362,7 @@ class MeasureImageQualityModule(
             return cls(
                 request.output_value,
                 module_type=module_type,
-                source_metadata=image_payload_metadata(request.source.payload),
+                source_metadata=request.source.payload.metadata,
                 plane_projection=request.source.plane_projection,
             )
 
@@ -1618,7 +1615,7 @@ def _haralick_h3_numba(image: np.ndarray, scale: int) -> float:
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def measure_image_quality(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     include_scaling: bool = True,
     calculate_blur: bool = True,
     calculate_saturation: bool = True,
@@ -1640,7 +1637,7 @@ def measure_image_quality(
     total_started_at = time.perf_counter()
     records: list[ImageQualityMeasurementRecord] = []
     phase_started_at = time.perf_counter()
-    intensity_scale = image_payload_intensity_scale(image)
+    intensity_scale = image.intensity_scale()
     pixel_data = np.asarray(image, dtype=np.float32)
     runtime_profiler.log(
         "miq_prepare_image",

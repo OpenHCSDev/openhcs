@@ -14,9 +14,6 @@ from openhcs.constants import Backend
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
@@ -47,6 +44,7 @@ from openhcs.core.virtual_workspace_metadata import (
 )
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes import AxisFamily
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -664,13 +662,14 @@ class VirtualWorkspaceImagePayloadProjection:
             source_metadata = SourceMetadataFields.with_fields(
                 source_metadata, {}, without=(SOURCE_BINDING_ALIAS_METADATA_FIELD,)
             )
-        current_metadata = image_payload_metadata(payload)
+        payload = ImagePayload.of(payload)
+        current_metadata = payload.metadata
         metadata = self.metadata(current_metadata)
         metadata = metadata.replace_fields(
             source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
                 current_metadata.source_spatial_domain,
                 image_shape_yx=current_metadata.spatial_shape_yx(
-                    image_payload_data(payload)
+                    payload.data
                 ),
             )
         )
@@ -681,8 +680,8 @@ class VirtualWorkspaceImagePayloadProjection:
                 metadata.source_provenance.with_source_image_names((self.source_alias,))
             )
         return metadata.payload_with(
-            image_payload_data(payload),
-            image_payload_mask(payload),
+            payload.data,
+            payload.mask,
         )
 
 

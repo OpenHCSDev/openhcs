@@ -6,7 +6,6 @@ from typing import ClassVar
 
 from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.axes import AxisFamily, AxisRole, TileAxis
 
@@ -35,7 +34,7 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     @classmethod
     def validate_observation_domain(cls, source: RuntimeArrayData) -> None:
         """Reject mislabeled metadata-backed ensembles before fitting."""
-        metadata = image_payload_metadata(source)
+        metadata = source.metadata
         family = AxisFamily.active()
         retained_axes = tuple(
             family.named(name) for name in metadata.retained_plane_component_values()
@@ -68,7 +67,7 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
         if source.shape != (self.observation_count, *self.data.shape):
             raise ValueError("A fitted field must retain the source spatial grid.")
         self.validate_observation_domain(source)
-        metadata = image_payload_metadata(source).collapse_leading_plane_axis()
+        metadata = source.metadata.collapse_leading_plane_axis()
         # Model parameters are not unit-interval input pixels. Contributor source
         # dtypes/identities remain in provenance, not on the fitted field's range.
         metadata = metadata.replace_fields(

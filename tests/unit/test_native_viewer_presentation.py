@@ -57,6 +57,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponseField,
 )
+from openhcs.core.axes import ColourAxis
 
 
 def presentation():
@@ -660,7 +661,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     )
     np.testing.assert_array_equal(artifact.data, label_pixels)
     assert artifact.metadata.source_dtype == "int64"
-    assert artifact.metadata.source_channel_axis is None
+    assert artifact.metadata.axis_position(ColourAxis) is None
     assert artifact.metadata.plane_axis is None
     assert artifact.metadata.source_spatial_domain.source_shape_yx == (8, 9)
     assert (

@@ -26,9 +26,6 @@ from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-)
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
@@ -253,7 +250,7 @@ class RuntimeInputBindingRequest:
                     f"{current_image.slice_contexts!r}."
                 )
             return payload
-        metadata = image_payload_metadata(current_image)
+        metadata = current_image.metadata
         if (
             len(self.primary_image_inputs) == 1
             and self.primary_image_inputs[0] == spec
@@ -292,7 +289,7 @@ class RuntimeInputBindingRequest:
                     f"stack-broadcast source {source_ref!r}."
                 )
             return payload
-        return image_payload_metadata(current_image).project_declared_source_image(
+        return current_image.metadata.project_declared_source_image(
             current_image,
             source_ref.name,
         )
@@ -570,10 +567,8 @@ class RuntimeInputBindingRequest:
         identity_policy = SourceImageSetIdentityPolicy.from_source_bindings(
             self.adapter.request.source_binding_plan
         )
-        image_axis = image_payload_metadata(
-            broadcast_source
-        ).source_provenance.image_set_axis(identity_policy)
-        value_axis = image_payload_metadata(value).source_provenance.image_set_axis(
+        image_axis = broadcast_source.metadata.source_provenance.image_set_axis(identity_policy)
+        value_axis = value.metadata.source_provenance.image_set_axis(
             identity_policy
         )
         selected_indices = SourcePlaneIdentitySequenceAlignment(

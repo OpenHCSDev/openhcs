@@ -42,12 +42,6 @@ from openhcs.core.pipeline.function_contracts import (
     required_axis_roles,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -77,6 +71,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -99,9 +95,9 @@ class SelectedColorChannelProjection(ColorToGrayScalarOutputProjection):
     def project(
         self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
     ) -> RuntimeArrayData:
-        return image_payload_metadata(image).project_channel_payload(
+        return image.metadata.project_channel_payload(
             source_payload=image,
-            source_data=image_payload_data(image),
+            source_data=image.data,
             channel_index=channel_index,
             channel_data=output,
             channel_axis=-1,
@@ -113,10 +109,8 @@ class DerivedColorChannelProjection(ColorToGrayScalarOutputProjection):
         self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
     ) -> RuntimeArrayData:
         del channel_index
-        return with_image_payload_data(
-            image, output,
-            metadata=image_payload_metadata(image).without_source_channel_axis(),
-        )
+        return image.with_pixels(output,
+            metadata=image.metadata.without_axis(ColourAxis),)
 
 
 class ImageChannelType(Enum):
@@ -1546,7 +1540,7 @@ class CompositeGrayToColorRunner(GrayToColorSchemeRunner):
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def gray_to_color(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     color_scheme: GrayToColorModule.Scheme = GrayToColorModule.Scheme.RGB,
     rescale_intensity: bool = True,
     red_channel: int = -1,
@@ -1606,7 +1600,7 @@ def gray_to_color(
         channel_weights=channel_weights,
     )
     output = GrayToColorSchemeRunner.for_scheme(scheme).run(request)
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     if metadata.plane_axis is not None:
         if metadata.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
             raise ValueError(
@@ -1634,9 +1628,9 @@ def gray_to_color(
         if metadata.plane_axis is not None
         else metadata
     )
-    return replace(output_metadata, source_channel_axis=-1).payload_with(
+    return output_metadata.with_axis(ColourSampleAxisSpec(), -1).payload_with(
         output,
-        image_payload_mask(parent_image),
+        parent_image.mask,
     )
 
 
@@ -1645,7 +1639,7 @@ def gray_to_color(
 )
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def color_to_gray(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     mode: ColorToGrayMode = ColorToGrayMode.SPLIT,
     image_type: ImageChannelType = ImageChannelType.RGB,
     channel_indices: tuple[int, ...] = ColorToGrayModule.default_channel_indices,
@@ -1660,11 +1654,8 @@ def color_to_gray(
     """
     if mode is ColorToGrayMode.COMBINE:
         output = combine_color_to_gray(image, channel_indices, contributions)
-        return with_image_payload_data(
-            image,
-            output,
-            metadata=color_to_gray_combine_output_metadata(image),
-        )
+        return image.with_pixels(output,
+            metadata=color_to_gray_combine_output_metadata(image),)
     outputs = split_color_to_gray(image, image_type, channel_indices)
     return pack_aligned_image_outputs(
         tuple(
@@ -1686,7 +1677,7 @@ def _invert_for_printing_channels(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return CellProfiler red, green, and blue input planes."""
 
-    image_data = np.asarray(image_payload_data(image))
+    image_data = np.asarray(image.data)
     if input_mode is InvertInputMode.COLOR:
         if image_data.ndim != 3 or image_data.shape[-1] != 3:
             raise ValueError(
@@ -1748,13 +1739,8 @@ def _invert_for_printing_result(
     )
     if output_mode is OutputMode.COLOR:
         outputs = (
-            with_image_payload_data(
-                image,
-                np.stack(inverted_channels, axis=-1),
-                metadata=image_payload_metadata(image).replace_fields(
-                    source_channel_axis=-1
-                ),
-            ),
+            image.with_pixels(np.stack(inverted_channels, axis=-1),
+                metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),),
         )
         output_names = (color_output_name,)
     else:
@@ -1768,13 +1754,10 @@ def _invert_for_printing_result(
             )
             if enabled
         )
-        output_metadata = image_payload_metadata(image).without_source_channel_axis()
+        output_metadata = image.metadata.without_axis(ColourAxis)
         outputs = tuple(
-            with_image_payload_data(
-                image,
-                output,
-                metadata=output_metadata,
-            )
+            image.with_pixels(output,
+                metadata=output_metadata,)
             for enabled, output in zip(
                 enabled_outputs,
                 inverted_channels,
@@ -1801,7 +1784,7 @@ def _invert_for_printing_result(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1837,7 +1820,7 @@ def invert_for_printing(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing_grayscale(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1880,7 +1863,7 @@ def invert_for_printing_grayscale(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing_without_output(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1937,9 +1920,9 @@ def combine_color_to_gray(
 def color_to_gray_combine_output_metadata(image: RuntimeArrayData):
     """Return metadata for a color-to-grayscale semantic collapse."""
     return (
-        image_payload_metadata(image)
+        image.metadata
         .without_unit_interval_intensity_scale()
-        .without_source_channel_axis()
+        .without_axis(ColourAxis)
     )
 
 
@@ -1972,16 +1955,16 @@ def color_to_gray_channel(color_stack: np.ndarray, channel_index: int) -> np.nda
 
 def nhwc_color_stack(image: RuntimeArrayData) -> np.ndarray:
     """Return NHWC pixels from explicitly declared image layout metadata."""
-    image_data = np.asarray(image_payload_data(image))
-    metadata = image_payload_metadata(image)
-    channel_axis = metadata.normalized_source_channel_axis(image_data)
+    image_data = np.asarray(image.data)
+    metadata = image.metadata
+    channel_axis = metadata.axis_index(ColourAxis, image_data)
     if channel_axis is None:
         raise ValueError(
-            "ColorToGray requires ImagePayloadMetadata.source_channel_axis; "
+            "ColorToGray requires a declared colour axis; "
             "array shape cannot declare color semantics."
         )
     channel_last = np.moveaxis(image_data, channel_axis, -1)
-    if metadata.is_declared_source_channel_plane(image_data):
+    if metadata.declares_colour_samples_plane(image_data):
         if channel_last.ndim != 3:
             raise ValueError(
                 "ColorToGray image-plane storage must have one channel and two "
@@ -2002,15 +1985,15 @@ def nhwc_color_stack(image: RuntimeArrayData) -> np.ndarray:
 
 
 def restore_color_to_gray_shape(original: RuntimeArrayData, stack: np.ndarray) -> np.ndarray:
-    metadata = image_payload_metadata(original)
-    if metadata.is_declared_source_channel_plane(original):
+    metadata = original.metadata
+    if metadata.declares_colour_samples_plane(original):
         if stack.shape[0] != 1:
             raise ValueError(
                 "ColorToGray plane output must contain exactly one projected "
                 f"plane, got shape {stack.shape!r}."
             )
         return stack[0]
-    if metadata.is_declared_source_channel_stack(original):
+    if metadata.declares_colour_samples_stack(original):
         return stack
     raise ValueError(
         "ColorToGray output restoration requires declared source channel and "
@@ -2059,7 +2042,7 @@ def rgb_to_hsv_stack(rgb_stack: np.ndarray) -> np.ndarray:
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def unmix_colors(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     stain_names: Sequence[StainType] = (),
     custom_absorbances: Sequence[Sequence[float] | None] = (),
     stain1: StainType = StainType.HEMATOXYLIN,
@@ -2100,15 +2083,12 @@ def unmix_colors(
         custom_blue_absorbance_3: Blue optical-density component for custom stain 3.
     """
     rgb_image = _as_rgb_image(image)
-    output_metadata = image_payload_metadata(image).without_source_channel_axis()
+    output_metadata = image.metadata.without_axis(ColourAxis)
     if stain_names:
         return pack_aligned_image_outputs(
             tuple(
-                with_image_payload_data(
-                    image,
-                    output,
-                    metadata=output_metadata,
-                )
+                image.with_pixels(output,
+                    metadata=output_metadata,)
                 for output in _unmix_stain_outputs(
                     rgb_image,
                     _stain_definitions(stain_names, custom_absorbances),
@@ -2142,11 +2122,8 @@ def unmix_colors(
         raise ValueError(
             f"output_stain_index must be in [0, {len(outputs) - 1}], got {output_stain_index}."
         )
-    return with_image_payload_data(
-        image,
-        outputs[output_stain_index],
-        metadata=output_metadata,
-    )
+    return image.with_pixels(outputs[output_stain_index],
+        metadata=output_metadata,)
 
 
 def _stain_definitions(
