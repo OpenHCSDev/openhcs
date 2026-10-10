@@ -164,7 +164,7 @@ def test_analysis_submodule_import_does_not_load_unrelated_backends(
     source = """
 import sys
 from openhcs.processing.backends.analysis import region_properties
-assert region_properties.AnalysisBackendProvider.NUMBA.value == "numba"
+assert region_properties.LabelRegionPropertiesBackendStrategy.for_memory_type()
 prefix = "openhcs.processing.backends.analysis."
 unexpected = sorted(
     name

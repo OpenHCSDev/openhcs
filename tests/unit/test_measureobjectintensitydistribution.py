@@ -472,7 +472,7 @@ def test_explicit_numba_radial_provider_remains_available():
         backend_provider=CellProfilerBackendProvider.NUMBA,
     )
 
-    assert selected.backend_provider is CellProfilerBackendProvider.NUMBA
+    assert selected.backend_provider is CellProfilerBackendProvider.NUMBA.provider
 
 
 def test_measure_object_intensity_distribution_declares_slice_aligned_labels():

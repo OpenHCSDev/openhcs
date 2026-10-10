@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
-from typing import ClassVar, TypeVar
 
 import numpy as np
 from llvmlite import ir
@@ -14,6 +12,11 @@ from numba import njit, types
 from numba.extending import intrinsic
 
 from openhcs.constants.constants import MemoryType
+from openhcs.processing.backends.cellprofiler._backend import (
+    CellProfilerBackendStrategyMixin,
+    NumbaBackendProvider,
+    SkimageBackendProvider,
+)
 from openhcs.processing.backends.numpy_runtime import (
     numpy_avx512_skx_svml_symbol_available,
 )
@@ -84,123 +87,6 @@ _numpy_124_power_two = (
 )
 
 
-class AnalysisBackendProvider(str, Enum):
-    """Typed provider identifiers for reusable OpenHCS analysis primitives."""
-
-    NUMBA = "numba"
-    SKIMAGE = "skimage"
-
-
-DEFAULT_ANALYSIS_BACKEND_PROVIDER = AnalysisBackendProvider.NUMBA
-_BACKEND_KEY_SEPARATOR = ":"
-BackendProviderInput = AnalysisBackendProvider
-BackendStrategyT = TypeVar(
-    "BackendStrategyT",
-    bound="AnalysisBackendStrategyMixin",
-)
-
-
-def _normalize_backend_provider(
-    backend_provider: BackendProviderInput = DEFAULT_ANALYSIS_BACKEND_PROVIDER,
-) -> AnalysisBackendProvider:
-    if not isinstance(backend_provider, AnalysisBackendProvider):
-        raise TypeError(
-            "Analysis backend provider must be an AnalysisBackendProvider enum value"
-        )
-    return backend_provider
-
-
-def analysis_backend_key(
-    memory_type: MemoryType = MemoryType.NUMPY,
-    backend_provider: BackendProviderInput = DEFAULT_ANALYSIS_BACKEND_PROVIDER,
-) -> str:
-    """Return the registry key for one reusable analysis backend implementation."""
-    if not isinstance(memory_type, MemoryType):
-        raise TypeError("Analysis backend memory type must be a MemoryType enum value")
-    provider = _normalize_backend_provider(backend_provider)
-    return memory_type.value + _BACKEND_KEY_SEPARATOR + provider.value
-
-
-class AnalysisBackendStrategyMixin:
-    """Backend lookup for reusable OpenHCS analysis primitives."""
-
-    __registry__: ClassVar[dict[str, type[AnalysisBackendStrategyMixin]]]
-    backend_key: ClassVar[str | None] = None
-    memory_type: ClassVar[MemoryType | None] = None
-    backend_provider: ClassVar[AnalysisBackendProvider] = (
-        DEFAULT_ANALYSIS_BACKEND_PROVIDER
-    )
-    is_default_backend: ClassVar[bool] = False
-
-    @classmethod
-    def for_memory_type(
-        cls: type[BackendStrategyT],
-        memory_type: MemoryType = MemoryType.NUMPY,
-        *,
-        backend_provider: BackendProviderInput | None = None,
-    ) -> BackendStrategyT:
-        return cls._resolve_backend_class(memory_type, backend_provider)()
-
-    @classmethod
-    def available_backend_providers(
-        cls,
-        memory_type: MemoryType | None = None,
-    ) -> tuple[AnalysisBackendProvider, ...]:
-        if memory_type is not None and not isinstance(memory_type, MemoryType):
-            raise TypeError(
-                "Analysis backend memory type must be a MemoryType enum value"
-            )
-        providers: list[AnalysisBackendProvider] = []
-        for strategy_cls in cls.__registry__.values():
-            if memory_type is not None and strategy_cls.memory_type is not memory_type:
-                continue
-            providers.append(_normalize_backend_provider(strategy_cls.backend_provider))
-        return tuple(sorted(set(providers), key=lambda provider: provider.value))
-
-    @classmethod
-    def _resolve_backend_class(
-        cls: type[BackendStrategyT],
-        memory_type: MemoryType,
-        backend_provider: BackendProviderInput | None,
-    ) -> type[BackendStrategyT]:
-        if not isinstance(memory_type, MemoryType):
-            raise TypeError(
-                "Analysis backend memory type must be a MemoryType enum value"
-            )
-        registry = cls.__registry__
-        if backend_provider is not None:
-            provider = _normalize_backend_provider(backend_provider)
-            key = analysis_backend_key(memory_type, provider)
-            if key not in registry:
-                raise NotImplementedError(
-                    f"No {cls.__name__} backend is registered for memory type "
-                    f"{memory_type.value!r} and provider {provider.value!r}. Registered "
-                    f"providers for this memory type: "
-                    f"{cls.available_backend_providers(memory_type)!r}."
-                )
-            return registry[key]
-
-        matches = [
-            strategy_cls
-            for strategy_cls in registry.values()
-            if strategy_cls.memory_type is memory_type
-            and bool(strategy_cls.is_default_backend)
-        ]
-        if len(matches) == 1:
-            return matches[0]
-        if not matches:
-            raise NotImplementedError(
-                f"No default {cls.__name__} backend is registered for memory type "
-                f"{memory_type.value!r}. Registered providers for this memory type: "
-                f"{cls.available_backend_providers(memory_type)!r}."
-            )
-        raise RuntimeError(
-            f"Multiple default {cls.__name__} backends are registered for memory "
-            f"type {memory_type.value!r}: "
-            f"{tuple(strategy.__name__ for strategy in matches)!r}."
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class DenseLabelRegionProperties:
     """Dense per-label properties indexed by positive label order."""
@@ -229,65 +115,13 @@ class DenseLabelRegionProperties:
     inertia_tensor: np.ndarray
     inertia_tensor_eigvals: np.ndarray
 
-    def as_regionprops_table_subset(
-        self,
-        *,
-        include_advanced: bool = False,
-    ) -> dict[str, np.ndarray]:
-        """Return keys matching skimage.regionprops_table for covered fields."""
-        props: dict[str, np.ndarray] = {
-            "label": self.label,
-            "area": self.area,
-            "perimeter": self.perimeter,
-            "bbox-0": self.bbox_min_y,
-            "bbox-1": self.bbox_min_x,
-            "bbox-2": self.bbox_max_y,
-            "bbox-3": self.bbox_max_x,
-            "bbox_area": self.bbox_area,
-            "centroid-0": self.centroid_y,
-            "centroid-1": self.centroid_x,
-            "equivalent_diameter": self.equivalent_diameter,
-            "extent": self.extent,
-            "major_axis_length": self.major_axis_length,
-            "minor_axis_length": self.minor_axis_length,
-            "eccentricity": self.eccentricity,
-            "orientation": self.orientation,
-            "euler_number": self.euler_number,
-        }
-        if not include_advanced:
-            return props
-        for row in range(4):
-            for column in range(4):
-                props[f"moments-{row}-{column}"] = self.moments[:, row, column]
-                props[f"moments_central-{row}-{column}"] = self.moments_central[
-                    :, row, column
-                ]
-                props[f"moments_normalized-{row}-{column}"] = self.moments_normalized[
-                    :, row, column
-                ]
-        for index in range(7):
-            props[f"moments_hu-{index}"] = self.moments_hu[:, index]
-        for row in range(2):
-            for column in range(2):
-                props[f"inertia_tensor-{row}-{column}"] = self.inertia_tensor[
-                    :, row, column
-                ]
-        for index in range(2):
-            props[f"inertia_tensor_eigvals-{index}"] = self.inertia_tensor_eigvals[
-                :, index
-            ]
-        return props
-
 
 class LabelRegionPropertiesBackendStrategy(
-    AnalysisBackendStrategyMixin,
+    CellProfilerBackendStrategyMixin,
     ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Dense label-region properties keyed by OpenHCS memory type/provider."""
-
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def measure_2d(
@@ -304,13 +138,14 @@ class NumbaNumpyLabelRegionPropertiesBackendStrategy(
 ):
     """Numba-accelerated NumPy dense-label region properties."""
 
-    backend_key = analysis_backend_key(
-        MemoryType.NUMPY,
-        AnalysisBackendProvider.NUMBA,
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = AnalysisBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
+
+    def prepare_backend(self) -> None:
+        labels = np.array([[0, 1, 1], [0, 1, 0], [2, 2, 0]], dtype=np.int32)
+        self.measure_2d(labels, include_advanced=False)
+        self.measure_2d(labels, include_advanced=True)
 
     def measure_2d(
         self,
@@ -335,12 +170,8 @@ class SkimageNumpyLabelRegionPropertiesBackendStrategy(
 ):
     """scikit-image region-property backend for native CellProfiler parity."""
 
-    backend_key = analysis_backend_key(
-        MemoryType.NUMPY,
-        AnalysisBackendProvider.SKIMAGE,
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = AnalysisBackendProvider.SKIMAGE
+    backend_provider = SkimageBackendProvider
     is_default_backend = False
 
     def measure_2d(
@@ -471,16 +302,6 @@ def _regionprops_vector(
     for index in range(length):
         values[:, index] = np.asarray(props[f"{name}-{index}"], dtype=np.float64)
     return values
-
-
-def label_region_properties_backend(
-    *,
-    backend_provider: BackendProviderInput | None = None,
-) -> LabelRegionPropertiesBackendStrategy:
-    """Return the selected dense-label region-properties backend."""
-    return LabelRegionPropertiesBackendStrategy.for_memory_type(
-        backend_provider=backend_provider,
-    )
 
 
 def binary_area_and_perimeter_2d(mask: np.ndarray) -> tuple[float, float]:
@@ -1122,5 +943,4 @@ __all__ = [
     "LabelRegionPropertiesBackendStrategy",
     "NumbaNumpyLabelRegionPropertiesBackendStrategy",
     "SkimageNumpyLabelRegionPropertiesBackendStrategy",
-    "label_region_properties_backend",
 ]

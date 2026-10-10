@@ -824,7 +824,6 @@ def test_cellprofiler_uint8_normalization_is_source_format_blind(
 
 def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
     from openhcs.processing.backends.cellprofiler._backend import (
-        CellProfilerBackendAuthority,
         CellProfilerBackendProvider,
     )
     from openhcs.processing.backends.cellprofiler.intensity import (
@@ -847,7 +846,6 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
         NumbaNumpyNeighborTopologyBackendStrategy,
     )
     from openhcs.processing.backends.cellprofiler.shape import (
-        LegacyFastNumpyShapeMeasurementBackendStrategy,
         NumbaNumpyShapeMeasurementBackendStrategy,
         ShapeMeasurementBackendStrategy,
     )
@@ -871,9 +869,6 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
         ShapeZernikeBackendStrategy,
     )
 
-    assert CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY) == (
-        f"{MemoryType.NUMPY.value}:{CellProfilerBackendProvider.NATIVE.value}"
-    )
     assert type(MorphologyBackendStrategy.for_memory_type(MemoryType.NUMPY)) is (
         NumbaNumpyMorphologyBackendStrategy
     )
@@ -1001,7 +996,7 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
         is NumbaNumpyNeighborTopologyBackendStrategy
     )
     assert type(ShapeMeasurementBackendStrategy.for_memory_type(MemoryType.NUMPY)) is (
-        LegacyFastNumpyShapeMeasurementBackendStrategy
+        NumbaNumpyShapeMeasurementBackendStrategy
     )
     assert type(
         ShapeMeasurementBackendStrategy.for_memory_type(
@@ -2678,9 +2673,6 @@ def test_legacy_fast_shape_zernike_backend_canonicalizes_cocircular_supports() -
 def test_measure_object_size_shape_callable_defaults_are_declared_on_module() -> None:
     import inspect
 
-    from openhcs.processing.backends.analysis.region_properties import (
-        AnalysisBackendProvider,
-    )
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
@@ -2696,7 +2688,7 @@ def test_measure_object_size_shape_callable_defaults_are_declared_on_module() ->
     )
     assert (
         MeasureObjectSizeShapeModule.regionprops_backend_provider
-        is AnalysisBackendProvider.NUMBA
+        is CellProfilerBackendProvider.NUMBA
     )
     assert (
         inspect.signature(measure_object_size_shape)
@@ -2714,20 +2706,22 @@ def test_measure_object_size_shape_callable_defaults_are_declared_on_module() ->
         inspect.signature(measure_object_size_shape)
         .parameters["regionprops_backend_provider"]
         .default
-        is AnalysisBackendProvider.NUMBA
+        is CellProfilerBackendProvider.NUMBA
     )
     assert (
         inspect.signature(measure_object_size_shape_feature_arrays)
         .parameters["regionprops_backend_provider"]
         .default
-        is AnalysisBackendProvider.NUMBA
+        is CellProfilerBackendProvider.NUMBA
     )
 
 
 def test_measure_object_size_shape_orientation_matches_cp_numerical_profile() -> None:
     from openhcs.processing.backends.analysis.region_properties import (
         _NUMPY_124_SVML_POW_AVAILABLE,
-        AnalysisBackendProvider,
+    )
+    from openhcs.processing.backends.cellprofiler._backend import (
+        CellProfilerBackendProvider,
     )
     from openhcs.processing.backends.cellprofiler.shape import (
         MeasureObjectSizeShapeModule,
@@ -2753,8 +2747,8 @@ def test_measure_object_size_shape_orientation_matches_cp_numerical_profile() ->
             regionprops_backend_provider=provider,
         )[0][MeasureObjectSizeShapeModule.MeasurementFeature.ORIENTATION.value]
         for provider in (
-            AnalysisBackendProvider.NUMBA,
-            AnalysisBackendProvider.SKIMAGE,
+            CellProfilerBackendProvider.NUMBA,
+            CellProfilerBackendProvider.SKIMAGE,
         )
     )
 
@@ -2766,7 +2760,9 @@ def test_measure_object_size_shape_orientation_matches_cp_numerical_profile() ->
 def test_measure_object_size_shape_orientation_uses_explicit_second_moments() -> None:
     from openhcs.processing.backends.analysis.region_properties import (
         _NUMPY_124_SVML_POW_AVAILABLE,
-        AnalysisBackendProvider,
+    )
+    from openhcs.processing.backends.cellprofiler._backend import (
+        CellProfilerBackendProvider,
     )
     from openhcs.processing.backends.cellprofiler.shape import (
         MeasureObjectSizeShapeModule,
@@ -2791,8 +2787,8 @@ def test_measure_object_size_shape_orientation_uses_explicit_second_moments() ->
             regionprops_backend_provider=provider,
         )[0][MeasureObjectSizeShapeModule.MeasurementFeature.ORIENTATION.value]
         for provider in (
-            AnalysisBackendProvider.NUMBA,
-            AnalysisBackendProvider.SKIMAGE,
+            CellProfilerBackendProvider.NUMBA,
+            CellProfilerBackendProvider.SKIMAGE,
         )
     )
 
@@ -2804,8 +2800,8 @@ def test_measure_object_size_shape_orientation_uses_explicit_second_moments() ->
 def test_measure_object_size_shape_preserves_vertical_orientation_representatives() -> (
     None
 ):
-    from openhcs.processing.backends.analysis.region_properties import (
-        AnalysisBackendProvider,
+    from openhcs.processing.backends.cellprofiler._backend import (
+        CellProfilerBackendProvider,
     )
     from openhcs.processing.backends.cellprofiler.shape import (
         MeasureObjectSizeShapeModule,
@@ -2837,8 +2833,8 @@ def test_measure_object_size_shape_preserves_vertical_orientation_representative
             regionprops_backend_provider=provider,
         )[0][MeasureObjectSizeShapeModule.MeasurementFeature.ORIENTATION.value]
         for provider in (
-            AnalysisBackendProvider.NUMBA,
-            AnalysisBackendProvider.SKIMAGE,
+            CellProfilerBackendProvider.NUMBA,
+            CellProfilerBackendProvider.SKIMAGE,
         )
     )
 
@@ -2893,7 +2889,9 @@ def test_measure_object_size_shape_orientation_preserves_cp4281_tie_geometries(
 ) -> None:
     from openhcs.processing.backends.analysis.region_properties import (
         _NUMPY_124_SVML_POW_AVAILABLE,
-        AnalysisBackendProvider,
+    )
+    from openhcs.processing.backends.cellprofiler._backend import (
+        CellProfilerBackendProvider,
     )
     from openhcs.processing.backends.cellprofiler.shape import (
         MeasureObjectSizeShapeModule,
@@ -2909,8 +2907,8 @@ def test_measure_object_size_shape_orientation_preserves_cp4281_tie_geometries(
             regionprops_backend_provider=provider,
         )[0][MeasureObjectSizeShapeModule.MeasurementFeature.ORIENTATION.value]
         for provider in (
-            AnalysisBackendProvider.NUMBA,
-            AnalysisBackendProvider.SKIMAGE,
+            CellProfilerBackendProvider.NUMBA,
+            CellProfilerBackendProvider.SKIMAGE,
         )
     )
 
@@ -2982,7 +2980,9 @@ def test_measure_object_size_shape_orientation_matches_exact_case_matrix(
 ) -> None:
     from openhcs.processing.backends.analysis.region_properties import (
         _NUMPY_124_SVML_POW_AVAILABLE,
-        AnalysisBackendProvider,
+    )
+    from openhcs.processing.backends.cellprofiler._backend import (
+        CellProfilerBackendProvider,
     )
     from openhcs.processing.backends.cellprofiler.shape import (
         MeasureObjectSizeShapeModule,
@@ -2997,8 +2997,8 @@ def test_measure_object_size_shape_orientation_matches_exact_case_matrix(
     )
     expected = np.asarray((expected_orientation,), dtype=np.float64)
     for provider in (
-        AnalysisBackendProvider.NUMBA,
-        AnalysisBackendProvider.SKIMAGE,
+        CellProfilerBackendProvider.NUMBA,
+        CellProfilerBackendProvider.SKIMAGE,
     ):
         feature_values, _measured_labels = measure_object_size_shape_feature_arrays(
             labels,

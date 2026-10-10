@@ -1299,10 +1299,9 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NumbaBackendProvider,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 
@@ -1950,8 +1949,6 @@ class ObjectClassificationBackendStrategy(
 ):
     """Object classification primitives keyed by memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def positive_label_ids(self, labels: np.ndarray) -> np.ndarray:
@@ -1975,11 +1972,8 @@ class NumbaNumpyObjectClassificationBackendStrategy(
 ):
     """Numba-backed NumPy object classification primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:

@@ -138,10 +138,10 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
+    BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.colocalization_costes import (
     UnitIntervalDenseRankSemantics,
@@ -1295,8 +1295,6 @@ class ColocalizationCostesBackendStrategy(
 ):
     """Costes thresholding primitives keyed by OpenHCS memory/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def linear_costes(
@@ -1326,11 +1324,8 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
 ):
     """Numba implementation of Costes threshold searches."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def linear_costes(
@@ -1652,7 +1647,7 @@ class ColocalizationCostesThresholdCacheKey:
     pair_digest: bytes
     method: CostesMethod
     scale_max: int
-    backend_provider: CellProfilerBackendProvider | None
+    backend_provider: BackendProviderSelectionInput
 
 
 @dataclass(frozen=True, slots=True)
