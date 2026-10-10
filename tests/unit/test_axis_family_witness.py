@@ -161,3 +161,7 @@ def test_family_declaration_enforces_role_cardinality() -> None:
 
         class _NoKind(Axis, TileAxis):
             name = "x"
+
+    # A rejected declaration must not leak into other axes' role checks.
+    assert not issubclass(Microscopy.Channel, TileAxis)
+    assert not issubclass(RemoteSensing.Band, PartitionAxis)

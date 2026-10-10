@@ -29,7 +29,7 @@ from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 # Use direct import from core memory decorators to avoid circular imports
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation
 from openhcs.processing.backends.processors.method_axes import (

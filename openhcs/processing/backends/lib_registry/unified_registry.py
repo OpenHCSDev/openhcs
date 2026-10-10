@@ -73,7 +73,7 @@ from openhcs.core.memory import (
     stack_runtime_slices,
     unstack_runtime_slices,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayPayload, is_array_payload
 from openhcs.core.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor,
@@ -153,7 +153,6 @@ class RuntimeCallableViewStrategy(
     __registry_key__ = "view_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "view"
-    __enum_label_attr__ = "view_label"
 
     view: ClassVar[RuntimeCallableView | None] = None
     view_label: ClassVar[str | None] = None
@@ -193,7 +192,6 @@ class RuntimeInvocationKwargPolicyStrategy(
     __registry_key__ = "policy_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "policy"
-    __enum_label_attr__ = "policy_label"
 
     policy: ClassVar[RuntimeInvocationKwargPolicy | None] = None
     policy_label: ClassVar[str | None] = None

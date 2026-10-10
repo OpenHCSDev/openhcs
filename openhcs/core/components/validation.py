@@ -118,7 +118,7 @@ class GenericValidator:
         from openhcs.core.function_patterns import NormalizedFunctionPattern
 
         try:
-            # Use enum objects directly - orchestrator now accepts VariableComponents
+            # The orchestrator decodes the grouping axis itself
             available_keys = orchestrator.get_component_keys(
                 group_by, resolved_config=resolved_config
             )

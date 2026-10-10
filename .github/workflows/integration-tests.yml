@@ -236,9 +236,10 @@ jobs:
       - name: Run unit tests
         run: >-
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 +extension GLX"
-          python -m pytest tests/unit tests/core -p no:randomly -vv --tb=short
+          python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" --
+          tests/unit tests/core -p no:randomly -vv --tb=short
           -o faulthandler_timeout=120
-          --cov=openhcs --cov-report=
+          --cov-report=
 
       - name: Upload unit coverage artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -331,8 +332,9 @@ jobs:
           OPENHCS_TEST_WINDOW_DELAY: "0.1"
           OPENHCS_TEST_SAVE_DELAY: "0.1"
         run: >-
-          python -m pytest tests/pyqt_gui -p no:randomly -q --tb=short
-          --cov=openhcs --cov-report=
+          python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" --
+          tests/pyqt_gui -p no:randomly -q --tb=short
+          --cov-report=
 
       - name: Upload GUI coverage artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

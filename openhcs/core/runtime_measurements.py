@@ -29,9 +29,9 @@ from metaclass_registry import AutoRegisterMeta
 from metaclass_registry import RegistryFamily
 from metaclass_registry import RegistryKeyAttribute
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
-from openhcs.core.registry_strategies import GeneratedLeafClassSpec
-from openhcs.core.registry_strategies import str_enum_member_with_payload
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import GeneratedLeafClassSpec
+from metaclass_registry.strategies import str_enum_member_with_payload
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from typing import Any

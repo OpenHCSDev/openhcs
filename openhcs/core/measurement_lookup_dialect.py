@@ -11,7 +11,7 @@ from types import MappingProxyType
 from typing import Iterator
 
 from openhcs.core.public_api import declared_public_names
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+from metaclass_registry.caches import ProcessLocalBoundedCache
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 
 RuntimeMeasurementFeatureParts = tuple[str, ...]
@@ -300,7 +300,7 @@ class RuntimeMeasurementFeatureAliasSpan:
 
 
 class RuntimeMeasurementLookupAliasCache(
-    RegisteredProcessLocalBoundedCache[tuple[str, int, str], tuple[str, ...]]
+    ProcessLocalBoundedCache[tuple[str, int, str], tuple[str, ...]]
 ):
     """Process-local cache for dialect-resolved measurement lookup aliases."""
 

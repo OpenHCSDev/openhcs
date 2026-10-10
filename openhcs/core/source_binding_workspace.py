@@ -15,7 +15,7 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.image_shapes import ArrayShape
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     image_payload_data,
 )

@@ -8,7 +8,7 @@ from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
 )
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     StrategyLabelRegistryMixin,
 )

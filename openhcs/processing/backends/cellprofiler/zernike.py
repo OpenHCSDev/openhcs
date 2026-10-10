@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+from metaclass_registry.caches import ProcessLocalBoundedCache
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
@@ -52,11 +52,12 @@ from openhcs.interop.cellprofiler.module_measurement_features import (
     ShapeDescriptorFeature,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
+    BackendProvider,
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    LegacyFastBackendProvider,
+    NativeBackendProvider,
 )
 from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
@@ -520,7 +521,7 @@ class ZernikeIntensityDebugArrayTrace:
 class ZernikeIntensityDebugTrace:
     """Object-indexed Zernike state emitted only when debug tracing is enabled."""
 
-    backend_provider: CellProfilerBackendProvider
+    backend_provider: type[BackendProvider]
     image: ZernikeIntensityDebugArrayTrace
     labels: ZernikeIntensityDebugArrayTrace
     max_order: int
@@ -540,7 +541,7 @@ class ZernikeIntensityDebugTrace:
     def from_intensity_measurement(
         cls,
         *,
-        backend_provider: CellProfilerBackendProvider,
+        backend_provider: type[BackendProvider],
         image: np.ndarray,
         labels: np.ndarray,
         max_order: int,
@@ -582,7 +583,7 @@ class ZernikeIntensityDebugTrace:
         trace_dir.mkdir(parents=True, exist_ok=True)
         filename = (
             f"zernike_intensity_{os.getpid()}_{time.time_ns()}_"
-            f"{self.backend_provider.value}_{self.object_ids.size}_"
+            f"{self.backend_provider.selection_name}_{self.object_ids.size}_"
             f"{self.max_order}_{self.image.digest.hex()}_"
             f"{self.labels.digest.hex()}.pkl"
         )
@@ -761,7 +762,7 @@ class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRow
 
 @dataclass
 class ZernikeLabelGeometryCache(
-    RegisteredProcessLocalBoundedCache[
+    ProcessLocalBoundedCache[
         tuple[str, tuple[int, ...], bytes, str, tuple[int, ...], bytes],
         _ZernikeLabelGeometry,
     ]
@@ -778,8 +779,6 @@ class ShapeZernikeBackendStrategy(
 ):
     """Shape Zernike moment backends keyed by OpenHCS memory type."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def shape_zernike_moments(
@@ -835,12 +834,8 @@ class ShapeZernikeBackendStrategy(
 class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
     """Default shape-Zernike backend using shared label geometry."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY,
-        CellProfilerBackendProvider.LEGACY_FAST,
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.LEGACY_FAST
+    backend_provider = LegacyFastBackendProvider
     is_default_backend = False
 
     @staticmethod
@@ -1234,12 +1229,8 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
 class NativeNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
     """CellProfiler-source Zernike backend for parity-sensitive measurements."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY,
-        CellProfilerBackendProvider.NATIVE,
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def intensity_zernike_moments_batch(

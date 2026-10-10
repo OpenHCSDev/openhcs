@@ -12,7 +12,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     stack_image_payloads,
 )
-from openhcs.core.registry_strategies import NominalTypeKeyedStrategyMixin
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 from openhcs.core.runtime_array_values import (
     DataBackedRuntimeArrayPayload,
     RuntimeArrayData,

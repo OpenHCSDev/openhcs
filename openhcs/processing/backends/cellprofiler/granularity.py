@@ -43,8 +43,8 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.measurement_row_materialization import (
     ObjectMeasurementColumnarRows,
 )
-from openhcs.core.process_local_cache import (
-    RegisteredProcessLocalBoundedCache,
+from metaclass_registry.caches import (
+    ProcessLocalBoundedCache,
     SynchronizedBoundedCache,
 )
 from openhcs.core.runtime_tabular_values import (
@@ -84,11 +84,13 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     BackendProviderInput,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
+    CppBackendProvider,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
+    OpencvBackendProvider,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.cellprofiler._granularity_native import (
@@ -674,7 +676,7 @@ class GranularityImageSeriesCache(
         tuple[str, tuple[int, ...], bytes, float, float, int, int],
         GranularityImageSeries,
     ],
-    RegisteredProcessLocalBoundedCache[
+    ProcessLocalBoundedCache[
         tuple[str, tuple[int, ...], bytes, float, float, int, int],
         GranularityImageSeries,
     ],
@@ -709,8 +711,6 @@ class GranularityReconstructionBackendStrategy(
 ):
     """Exact grayscale reconstruction backend used by MeasureGranularity."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def reconstruct_radius_one(
@@ -768,8 +768,8 @@ class NativeGranularityReconstructionBackendStrategy(
 ):
     """Reference skimage reconstruction backend for granularity."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY)
     memory_type = MemoryType.NUMPY
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
     def reconstruct_radius_one(
@@ -788,12 +788,8 @@ class NumbaGranularityReconstructionBackendStrategy(
 ):
     """Single-thread exact radius-one FIFO reconstruction for granularity spectra."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY,
-        CellProfilerBackendProvider.NUMBA,
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = False
 
     def prepare_backend(self) -> None:
@@ -882,12 +878,8 @@ class CppGranularityReconstructionBackendStrategy(
 ):
     """Exact single-thread reconstruction backed by the C++ extension."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY,
-        CellProfilerBackendProvider.CPP,
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CPP
+    backend_provider = CppBackendProvider
     is_default_backend = True
 
     def reconstruct_radius_one(
@@ -990,12 +982,8 @@ class OpenCVGranularityReconstructionBackendStrategy(
 ):
     """Single-thread exact radius-one reconstruction via geodesic OpenCV dilation."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY,
-        CellProfilerBackendProvider.OPENCV,
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.OPENCV
+    backend_provider = OpencvBackendProvider
     is_default_backend = False
 
     def reconstruct_radius_one(

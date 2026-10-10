@@ -29,7 +29,7 @@ from openhcs.core.pipeline.function_contracts import (
     required_axis_roles,
 )
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -79,10 +79,9 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.alignment_mutual_information_offset import (
     mutual_information_offset_numba,
@@ -501,8 +500,6 @@ class AlignmentBackendStrategy(
 ):
     """Alignment operations keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def mutual_information_offset(
@@ -518,11 +515,8 @@ class AlignmentBackendStrategy(
 class NumbaNumpyAlignmentBackendStrategy(AlignmentBackendStrategy):
     """Numba-accelerated NumPy alignment primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -681,7 +675,6 @@ class AlignCropModeStrategy(
     __registry_key__ = "crop_mode_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "crop_mode"
-    __enum_label_attr__ = "crop_mode_label"
     crop_mode: ClassVar[AlignModule.CropMode | None] = None
     crop_mode_label: ClassVar[str | None] = None
 

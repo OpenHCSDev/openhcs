@@ -36,7 +36,7 @@ from openhcs.serialization.json import to_jsonable
 ))
 def test_source_leaf_composes_original_progress_and_affinity(declaration):
     assert issubclass(declaration, MainThreadProgressCapability)
-    spec = declaration.to_spec()
+    spec = declaration
     assert spec.progress_heartbeat_seconds == 1.0
     assert spec.progress_worker_thread_safe is False
     assert "progress_heartbeat_seconds" not in declaration.__dict__
@@ -131,21 +131,37 @@ def test_generated_inspection_main_thread_context_progress_and_terminal(error):
 def test_independent_new_leaf_cooperative_hooks_need_no_consumer_edits():
     calls = []
 
-    class AuditCapability(AgentCapabilityDeclaration):
-        @classmethod
-        def execute_request(cls, context, request):
-            calls.append(("audit-enter", cls.name))
-            result = super().execute_request(context, request)
-            calls.append(("audit-exit", cls.name))
+    class AuditInvocation:
+        """Cooperative invocation hook composed over the declared shape."""
+
+        __slots__ = ()
+
+        def invoke(self, declaration, binder, arguments):
+            calls.append(("audit-enter", declaration.name))
+            result = super().invoke(declaration, binder, arguments)
+            calls.append(("audit-exit", declaration.name))
             return result
 
-    class NewBefore(AuditCapability, InspectPipelineSourceArtifactPlanCapability):
+    base_invocation = InspectPipelineSourceArtifactPlanCapability.invocation
+    audited_type = type(
+        "AuditedInspectionInvocation",
+        (AuditInvocation, type(base_invocation)),
+        {"__slots__": ()},
+    )
+
+    class NewBefore(InspectPipelineSourceArtifactPlanCapability):
         name = "openhcs_affine_inspection_before"
         cli_command = None
+        invocation = audited_type(
+            service=base_invocation.service, method=base_invocation.method
+        )
 
-    class NewAfter(InspectPipelineSourceArtifactPlanCapability, AuditCapability):
+    class NewAfter(InspectPipelineSourceArtifactPlanCapability):
         name = "openhcs_affine_inspection_after"
         cli_command = None
+        invocation = audited_type(
+            service=base_invocation.service, method=base_invocation.method
+        )
 
     identity = ContextVar("new-affine-declaration", default="new-case")
     service = AffineInspectionService(identity)

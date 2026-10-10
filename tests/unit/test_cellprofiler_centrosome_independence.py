@@ -7,6 +7,7 @@ import numpy as np
 from openhcs.constants.constants import MemoryType
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
+    NativeBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.edge import (
     EdgeDirection,
@@ -84,7 +85,7 @@ def test_production_cellprofiler_backends_execute_without_centrosome(
     assert propagation.labels.shape == labels.shape
 
     convex_hull = ConvexHullSmoothingBackendStrategy.for_memory_type(
-        MemoryType.NUMPY, backend_provider=provider
+        MemoryType.NUMPY, backend_provider=CellProfilerBackendProvider.NATIVE
     ).smooth_background_plane(
         image,
         mask=mask,
@@ -96,7 +97,7 @@ def test_production_cellprofiler_backends_execute_without_centrosome(
     edge_request = EdgeEnhancementRequest(
         image=image,
         mask=mask,
-        backend_provider=CellProfilerBackendProvider.NATIVE,
+        backend_provider=NativeBackendProvider,
         method=EdgeMethod.CANNY,
         direction=EdgeDirection.ALL,
         automatic_threshold=False,
@@ -174,7 +175,7 @@ def test_canny_accepts_all_automatic_and_manual_threshold_combinations() -> None
         request = EdgeEnhancementRequest(
             image=image,
             mask=mask,
-            backend_provider=CellProfilerBackendProvider.NATIVE,
+            backend_provider=NativeBackendProvider,
             method=EdgeMethod.CANNY,
             direction=EdgeDirection.ALL,
             automatic_threshold=automatic_threshold,

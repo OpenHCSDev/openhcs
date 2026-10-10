@@ -6,6 +6,7 @@ import json
 from collections.abc import Iterable
 from pathlib import Path
 
+from benchmark.contracts.upstream_sources import DATASET_DATA_DIRECTORY
 from benchmark.contracts.dataset import AcquiredDataset, DatasetSpec
 from benchmark.datasets.cache import default_benchmark_dataset_cache_root
 
@@ -17,7 +18,7 @@ def cached_acquired_dataset(
 ) -> AcquiredDataset:
     """Resolve an already-acquired dataset without refreshing its source."""
     base_dir = cache_base or default_benchmark_dataset_cache_root()
-    data_dir = base_dir / spec.id / "data"
+    data_dir = base_dir / spec.id / DATASET_DATA_DIRECTORY
     if not data_dir.exists():
         raise FileNotFoundError(
             f"Cached dataset {spec.id!r} not found at {data_dir}. "

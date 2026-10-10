@@ -43,7 +43,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     RuntimeArrayData,
     image_payload_data,
@@ -111,10 +111,10 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
+    BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NumbaBackendProvider,
 )
 
 if TYPE_CHECKING:
@@ -976,8 +976,6 @@ class ObjectTrackingBackendStrategy(
 ):
     """TrackObjects primitives keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def label_centers(self, labels: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -1009,11 +1007,8 @@ class ObjectTrackingBackendStrategy(
 class NumbaNumpyObjectTrackingBackendStrategy(ObjectTrackingBackendStrategy):
     """Numba implementation of TrackObjects dense-label primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -1186,7 +1181,6 @@ class TrackObjectsMethodStrategy(
     __registry_key__ = "method_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
-    __enum_label_attr__ = "method_label"
     method: ClassVar[TrackingMethod | None] = None
     method_label: ClassVar[str | None] = None
 
@@ -1206,7 +1200,7 @@ class TrackObjectsMethodStrategy(
     def track(
         self,
         request: TrackingFrameRequest,
-        backend_provider: CellProfilerBackendProvider | None,
+        backend_provider: BackendProviderSelectionInput,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
         """Assign stable object identities for the current frame."""
         return self._track_with_backend(
@@ -1220,7 +1214,7 @@ class TrackObjectsMethodStrategy(
         self,
         request: TrackingFrameRequest,
         parent_object_numbers: np.ndarray,
-        backend_provider: CellProfilerBackendProvider | None,
+        backend_provider: BackendProviderSelectionInput,
     ) -> tuple[tuple[int, int], ...]:
         """Return CP's union of forward and reverse frame correspondences."""
 

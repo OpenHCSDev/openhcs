@@ -10,11 +10,11 @@ from pathlib import Path
 from typing import TypeAlias
 
 from benchmark.contracts.manifest_acquisition import (
-    ManifestRootAcquisitionSpec,
     manifest_root_requirements_by_root,
     manifest_auto_acquire_enabled,
     materialize_manifest_root,
 )
+from benchmark.contracts.upstream_sources import ManifestRootAcquisitionSpec
 from benchmark.datasets.cache import BenchmarkPathRootKind, resolve_benchmark_path_root
 
 JSONScalar: TypeAlias = str | int | float | bool | None

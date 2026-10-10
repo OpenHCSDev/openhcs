@@ -26,7 +26,7 @@ from openhcs.core.artifacts import (
     NamedArtifactPayload,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     NominalTypeStrategyFamilyMixin,
 )
@@ -67,7 +67,7 @@ from openhcs.core.source_spatial_domain import (
 from enum import Enum
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts import ArtifactPayloadShape
-from openhcs.core.registry_strategies import str_enum_member_with_payload
+from metaclass_registry.strategies import str_enum_member_with_payload
 
 _PRESERVE_PLANE_AXIS = object()
 
@@ -2110,7 +2110,6 @@ class ObjectLabelSetReplacementStrategy(
     __registry_key__ = "representation_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "representation"
-    __enum_label_attr__ = "representation_label"
 
     @abstractmethod
     def replacement_labels(self, labels: object) -> object:

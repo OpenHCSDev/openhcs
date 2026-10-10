@@ -60,12 +60,13 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
     with_image_payload_data,
 )
-from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.cellprofiler._backend import (
+    BackendProvider,
     BackendProviderInput,
+    CellProfilerBackendSelection,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendProvider,
-    CellProfilerBackendAuthority,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     CellProfilerPlaneGeometry,
@@ -85,10 +86,10 @@ class EdgeMethod(Enum):
     KIRSCH = "kirsch"
 
     @property
-    def default_backend_provider(self) -> CellProfilerBackendProvider:
+    def default_backend_provider(self) -> type[BackendProvider]:
         if self is EdgeMethod.SOBEL:
-            return CellProfilerBackendProvider.NUMBA
-        return CellProfilerBackendProvider.NATIVE
+            return NumbaBackendProvider
+        return NativeBackendProvider
 
 
 class EdgeDirection(CellProfilerEnumAttributeMixin, Enum):
@@ -112,14 +113,14 @@ class EdgeDirection(CellProfilerEnumAttributeMixin, Enum):
 
 @dataclass(frozen=True, slots=True)
 class EdgeEnhancementStrategyKey:
-    backend_provider: CellProfilerBackendProvider
+    backend_provider: type[BackendProvider]
     method: EdgeMethod
     direction: EdgeDirection
 
     @property
     def label(self) -> str:
         return (
-            f"{self.backend_provider.value}:{self.method.value}:{self.direction.value}"
+            f"{self.backend_provider.selection_name}:{self.method.value}:{self.direction.value}"
         )
 
 
@@ -127,7 +128,7 @@ class EdgeEnhancementStrategyKey:
 class EdgeEnhancementRequest:
     image: np.ndarray
     mask: np.ndarray
-    backend_provider: CellProfilerBackendProvider
+    backend_provider: type[BackendProvider]
     method: EdgeMethod
     direction: EdgeDirection
     automatic_threshold: bool
@@ -153,7 +154,7 @@ class EdgeEnhancementRequest:
         manual_threshold: float,
         threshold_adjustment_factor: float,
     ) -> "EdgeEnhancementRequest":
-        resolved_provider = CellProfilerBackendAuthority.provider_selection(
+        resolved_provider = CellProfilerBackendSelection.from_input(
             backend_provider
         ).provider_or(method.default_backend_provider)
         return cls(
@@ -209,7 +210,7 @@ class EdgeEnhancementStrategy(
             strategy_type = cls.__registry__.get(request.fallback_strategy_key.label)
         if strategy_type is None:
             raise NotImplementedError(
-                f"No CellProfiler edge enhancement backend is registered for provider {request.backend_provider.value!r}, method {request.method.value!r}, direction {request.direction.value!r}."
+                f"No CellProfiler edge enhancement backend is registered for provider {request.backend_provider.selection_name!r}, method {request.method.value!r}, direction {request.direction.value!r}."
             )
         return strategy_type()
 
@@ -221,7 +222,7 @@ class EdgeEnhancementStrategy(
 class EdgeEnhancementStrategyLeaf(EdgeEnhancementStrategy):
     """Declarative base for concrete edge enhancement leaves."""
 
-    backend_provider: ClassVar[CellProfilerBackendProvider | None] = None
+    backend_provider: ClassVar[type[BackendProvider] | None] = None
     method: ClassVar[EdgeMethod | None] = None
     direction: ClassVar[EdgeDirection | None] = None
 
@@ -238,7 +239,7 @@ class EdgeEnhancementStrategyLeaf(EdgeEnhancementStrategy):
 class NumbaSobelStrategy(EdgeEnhancementStrategyLeaf):
     """Shared Numba Sobel implementation for direction-specific leaves."""
 
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     method = EdgeMethod.SOBEL
 
     def prepare_backend(self) -> None:
@@ -274,7 +275,7 @@ class NumbaSobelVerticalStrategy(NumbaSobelStrategy):
 
 
 class NumpySobelAllStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.SOBEL
     direction = EdgeDirection.ALL
 
@@ -283,7 +284,7 @@ class NumpySobelAllStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpySobelHorizontalStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.SOBEL
     direction = EdgeDirection.HORIZONTAL
 
@@ -292,7 +293,7 @@ class NumpySobelHorizontalStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpySobelVerticalStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.SOBEL
     direction = EdgeDirection.VERTICAL
 
@@ -301,7 +302,7 @@ class NumpySobelVerticalStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpyPrewittAllStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.PREWITT
     direction = EdgeDirection.ALL
 
@@ -310,7 +311,7 @@ class NumpyPrewittAllStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpyPrewittHorizontalStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.PREWITT
     direction = EdgeDirection.HORIZONTAL
 
@@ -319,7 +320,7 @@ class NumpyPrewittHorizontalStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpyPrewittVerticalStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.PREWITT
     direction = EdgeDirection.VERTICAL
 
@@ -328,7 +329,7 @@ class NumpyPrewittVerticalStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpyLaplacianOfGaussianStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.LOG
     direction = EdgeDirection.ALL
 
@@ -340,7 +341,7 @@ class NumpyLaplacianOfGaussianStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpyCannyStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.CANNY
     direction = EdgeDirection.ALL
 
@@ -380,7 +381,7 @@ class NumpyCannyStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpyRobertsStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.ROBERTS
     direction = EdgeDirection.ALL
 
@@ -389,7 +390,7 @@ class NumpyRobertsStrategy(EdgeEnhancementStrategyLeaf):
 
 
 class NumpyKirschStrategy(EdgeEnhancementStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = EdgeMethod.KIRSCH
     direction = EdgeDirection.ALL
 

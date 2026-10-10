@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+from metaclass_registry.caches import ProcessLocalBoundedCache
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
@@ -52,7 +52,6 @@ from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     cellprofiler_enum_setting_parser,
-    coerce_cellprofiler_enum,
     parse_cellprofiler_bool,
     parse_cellprofiler_float,
     parse_cellprofiler_int,
@@ -80,10 +79,11 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
+    CentrosomeBackendProvider,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.thresholding import (
@@ -761,7 +761,7 @@ class ImageQualityThresholdMetrics(ImageQualityMeasurementRecord):
 
 @dataclass
 class RadialSpectrumGeometryCache(
-    RegisteredProcessLocalBoundedCache[tuple[int, int], _RadialSpectrumGeometry]
+    ProcessLocalBoundedCache[tuple[int, int], _RadialSpectrumGeometry]
 ):
     """Process-local numerical geometry with shared bounded storage."""
 
@@ -773,8 +773,6 @@ class ImageQualityBackendStrategy(
 ):
     """Image-quality primitives keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def haralick_h3(self, image: np.ndarray, *, scale: int) -> float:
@@ -1010,9 +1008,8 @@ class YenImageQualityThresholdStrategy(PrimitiveImageQualityThresholdStrategy):
 class NumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
     """Independent NumPy implementation of image-quality primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY)
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
     def haralick_h3(self, image: np.ndarray, *, scale: int) -> float:
@@ -1047,11 +1044,8 @@ class NumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
 class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
     """Numba-accelerated NumPy image-quality backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -1092,11 +1086,8 @@ class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
 class CentrosomeNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
     """Compatibility provider backed by absorbed image-quality primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CENTROSOME
+    backend_provider = CentrosomeBackendProvider
     is_default_backend = False
 
 

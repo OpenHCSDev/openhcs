@@ -37,13 +37,14 @@ from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     LabelsObjectInputPolicy,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
+    BackendProviderInput,
     CellProfilerBackendProvider,
+    CellProfilerBackendStrategyMixin,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.perf_fixtures import (
     capture_array_fixture,
-)
-from openhcs.processing.backends.analysis.region_properties import (
-    AnalysisBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.zernike import (
     ShapeZernikeFeatureAuthority,
@@ -407,7 +408,7 @@ class MeasureObjectSizeShapeModule(
         )
 
     zernike_backend_provider = CellProfilerBackendProvider.LEGACY_FAST
-    regionprops_backend_provider = AnalysisBackendProvider.NUMBA
+    regionprops_backend_provider = CellProfilerBackendProvider.NUMBA
     setting_bindings = (
         SettingToKeywordBinding(
             "Calculate the Zernike features?",
@@ -481,13 +482,8 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.processing.backends.analysis.region_properties import (
+    DenseLabelRegionProperties,
     LabelRegionPropertiesBackendStrategy,
-)
-from openhcs.processing.backends.cellprofiler._backend import (
-    BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
 )
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     feret_diameters_from_labels,
@@ -508,7 +504,7 @@ runtime_profiler = RuntimeProfiler(logger)
 ShapeFeatureArrays = tuple[dict[str, np.ndarray], np.ndarray]
 ShapeFeatureRows = tuple[dict[str, np.ndarray], np.ndarray, tuple[int, ...]]
 RegionpropsBackendProviderInput: TypeAlias = Annotated[
-    AnalysisBackendProvider,
+    CellProfilerBackendProvider,
     "Region-properties implementation used to calculate object geometry.",
 ]
 
@@ -747,7 +743,7 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             function="measure_object_size_shape",
         )
         phase_started_at = time.perf_counter()
-        fast_region_props = LabelRegionPropertiesBackendStrategy.for_memory_type(
+        region_props = LabelRegionPropertiesBackendStrategy.for_memory_type(
             backend_provider=self.regionprops_backend_provider
         ).measure_2d(
             labels,
@@ -757,37 +753,25 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             "moss_region_properties",
             time.perf_counter() - phase_started_at,
             function="measure_object_size_shape",
-            objects=int(fast_region_props.label.size),
-        )
-        phase_started_at = time.perf_counter()
-        props = fast_region_props.as_regionprops_table_subset(
-            include_advanced=self.calculate_advanced
-        )
-        runtime_profiler.log(
-            "moss_regionprops_table_subset",
-            time.perf_counter() - phase_started_at,
-            function="measure_object_size_shape",
-            fields=len(props),
+            objects=int(region_props.label.size),
         )
         phase_started_at = time.perf_counter()
         convex_area, solidity = _convex_area_and_solidity_from_labels(
-            labels, fast_region_props
+            labels, region_props
         )
         runtime_profiler.log(
             "moss_convex_area_solidity",
             time.perf_counter() - phase_started_at,
             function="measure_object_size_shape",
-            objects=int(fast_region_props.label.size),
+            objects=int(region_props.label.size),
         )
-        props["convex_area"] = convex_area
-        props["solidity"] = solidity
-        measured_labels = np.asarray(props["label"])
+        measured_labels = np.asarray(region_props.label)
         object_indices = self.object_indices(labels)
         nobjects = len(object_indices)
         if nobjects == 0:
             return ({}, measured_labels)
-        perimeter = np.asarray(props["perimeter"], dtype=float)
-        area = np.asarray(props["area"], dtype=float)
+        perimeter = np.asarray(region_props.perimeter, dtype=float)
+        area = np.asarray(region_props.area, dtype=float)
         phase_started_at = time.perf_counter()
         max_radius, mean_radius, median_radius = (
             shape_backend.radius_features_from_labels(labels, measured_labels)
@@ -812,8 +796,8 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             function="measure_object_size_shape",
             objects=int(measured_labels.size),
         )
-        center_x = np.asarray(props["centroid-1"], dtype=float)
-        center_y = np.asarray(props["centroid-0"], dtype=float)
+        center_x = np.asarray(region_props.centroid_x, dtype=float)
+        center_y = np.asarray(region_props.centroid_y, dtype=float)
         features = {
             _shape_feature(MeasureObjectSizeShapeModule.MeasurementFeature.AREA): area,
             _shape_feature(
@@ -821,16 +805,16 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             ): perimeter,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.MAJOR_AXIS_LENGTH
-            ): props["major_axis_length"],
+            ): region_props.major_axis_length,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.MINOR_AXIS_LENGTH
-            ): props["minor_axis_length"],
+            ): region_props.minor_axis_length,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.ECCENTRICITY
-            ): props["eccentricity"],
+            ): region_props.eccentricity,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.ORIENTATION
-            ): np.asarray(props["orientation"], dtype=float)
+            ): np.asarray(region_props.orientation, dtype=float)
             * (180 / np.pi),
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_X
@@ -840,34 +824,34 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             ): center_y,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_AREA
-            ): props["bbox_area"],
+            ): region_props.bbox_area,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_X
-            ): props["bbox-1"],
+            ): region_props.bbox_min_x,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_X
-            ): props["bbox-3"],
+            ): region_props.bbox_max_x,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_Y
-            ): props["bbox-0"],
+            ): region_props.bbox_min_y,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_Y
-            ): props["bbox-2"],
+            ): region_props.bbox_max_y,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.FORM_FACTOR
             ): form_factor,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.EXTENT
-            ): props["extent"],
+            ): region_props.extent,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.SOLIDITY
-            ): props["solidity"],
+            ): solidity,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.COMPACTNESS
             ): compactness,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.EULER_NUMBER
-            ): props["euler_number"],
+            ): region_props.euler_number,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.MAXIMUM_RADIUS
             ): max_radius,
@@ -879,7 +863,7 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             ): median_radius,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.CONVEX_AREA
-            ): props["convex_area"],
+            ): convex_area,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.MIN_FERET_DIAMETER
             ): min_feret_diameter,
@@ -888,11 +872,11 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             ): max_feret_diameter,
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.EQUIVALENT_DIAMETER
-            ): props["equivalent_diameter"],
+            ): region_props.equivalent_diameter,
         }
         if self.calculate_advanced:
             phase_started_at = time.perf_counter()
-            features.update(_advanced_2d_features(props))
+            features.update(_advanced_2d_features(region_props))
             runtime_profiler.log(
                 "moss_advanced_features",
                 time.perf_counter() - phase_started_at,
@@ -1276,8 +1260,6 @@ class ShapeMeasurementBackendStrategy(
 ):
     """Shape-measurement operations keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def form_factor_values(
@@ -1445,8 +1427,12 @@ class ShapeMeasurementBackendStrategy(
         """Return non-touching label color classes."""
 
 
-class NumbaShapeMeasurementMixin(ABC):
-    """Shared Numba-backed shape leaves reused by concrete backend policies."""
+class NumbaNumpyShapeMeasurementBackendStrategy(ShapeMeasurementBackendStrategy):
+    """Default NumPy shape backend built from Numba leaves."""
+
+    memory_type = MemoryType.NUMPY
+    backend_provider = NumbaBackendProvider
+    is_default_backend = True
 
     def prepare_3d_shape_measurements(self) -> None:
         """Derive binary Lewiner geometry and warm both supported input layouts."""
@@ -1596,7 +1582,7 @@ class NumbaShapeMeasurementMixin(ABC):
                 return False
         return True
 
-    def prepare_numba_shape_leaves(self) -> None:
+    def prepare_backend(self) -> None:
         labels = np.array([[0, 1, 1], [0, 1, 0], [2, 2, 0]], dtype=np.int32)
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
         label_ids = np.array([1, 2], dtype=np.int32)
@@ -1658,38 +1644,6 @@ class NumbaShapeMeasurementMixin(ABC):
         return feret_diameters_from_labels(labels, label_ids)
 
 
-class LegacyFastNumpyShapeMeasurementBackendStrategy(
-    NumbaShapeMeasurementMixin, ShapeMeasurementBackendStrategy
-):
-    """Default NumPy shape backend with native leaves and explicit gaps."""
-
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.LEGACY_FAST
-    )
-    memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.LEGACY_FAST
-    is_default_backend = True
-
-    def prepare_backend(self) -> None:
-        self.prepare_numba_shape_leaves()
-
-
-class NumbaNumpyShapeMeasurementBackendStrategy(
-    NumbaShapeMeasurementMixin, ShapeMeasurementBackendStrategy
-):
-    """Pure Numba shape backend. Unsupported leaves fail explicitly."""
-
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
-    memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
-    is_default_backend = False
-
-    def prepare_backend(self) -> None:
-        self.prepare_numba_shape_leaves()
-
-
 def _distance_to_edge_planewise(
     backend: ShapeMeasurementBackendStrategy, labels: np.ndarray
 ) -> np.ndarray:
@@ -1728,7 +1682,7 @@ def form_factor_values(
 
 
 def _convex_area_and_solidity_from_labels(
-    labels: np.ndarray, region_props: object
+    labels: np.ndarray, region_props: DenseLabelRegionProperties
 ) -> tuple[np.ndarray, np.ndarray]:
     """Return exact skimage-compatible convex area and solidity per label."""
     morphology_backend = MorphologyBackendStrategy.for_memory_type(MemoryType.NUMPY)
@@ -1809,7 +1763,9 @@ def _indexed_shape_feature(
     return feature.indexed_name(*indices)
 
 
-def _advanced_2d_features(props: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+def _advanced_2d_features(
+    region_props: DenseLabelRegionProperties,
+) -> dict[str, np.ndarray]:
     features: dict[str, np.ndarray] = {}
     for row in range(3):
         for column in range(4):
@@ -1819,14 +1775,14 @@ def _advanced_2d_features(props: dict[str, np.ndarray]) -> dict[str, np.ndarray]
                     row,
                     column,
                 )
-            ] = props[f"moments-{row}-{column}"]
+            ] = region_props.moments[:, row, column]
             features[
                 _indexed_shape_feature(
                     MeasureObjectSizeShapeModule.MeasurementFeature.CENTRAL_MOMENT,
                     row,
                     column,
                 )
-            ] = props[f"moments_central-{row}-{column}"]
+            ] = region_props.moments_central[:, row, column]
     for row in range(4):
         for column in range(4):
             features[
@@ -1835,13 +1791,13 @@ def _advanced_2d_features(props: dict[str, np.ndarray]) -> dict[str, np.ndarray]
                     row,
                     column,
                 )
-            ] = props[f"moments_normalized-{row}-{column}"]
+            ] = region_props.moments_normalized[:, row, column]
     for index in range(7):
         features[
             _indexed_shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.HU_MOMENT, index
             )
-        ] = props[f"moments_hu-{index}"]
+        ] = region_props.moments_hu[:, index]
     for row in range(2):
         for column in range(2):
             features[
@@ -1850,14 +1806,14 @@ def _advanced_2d_features(props: dict[str, np.ndarray]) -> dict[str, np.ndarray]
                     row,
                     column,
                 )
-            ] = props[f"inertia_tensor-{row}-{column}"]
+            ] = region_props.inertia_tensor[:, row, column]
     for index in range(2):
         features[
             _indexed_shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.INERTIA_TENSOR_EIGENVALUES,
                 index,
             )
-        ] = props[f"inertia_tensor_eigvals-{index}"]
+        ] = region_props.inertia_tensor_eigvals[:, index]
     return features
 
 
@@ -2541,7 +2497,6 @@ def _adjacent_label_mask_numpy(labels: np.ndarray) -> np.ndarray:
 
 
 __all__ = [
-    "LegacyFastNumpyShapeMeasurementBackendStrategy",
     "NumbaNumpyShapeMeasurementBackendStrategy",
     "ShapeMeasurementBackendStrategy",
     "form_factor_values",

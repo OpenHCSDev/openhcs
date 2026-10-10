@@ -22,7 +22,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.alias_property import AliasProperty
 import numpy as np
 
-from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
+from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,

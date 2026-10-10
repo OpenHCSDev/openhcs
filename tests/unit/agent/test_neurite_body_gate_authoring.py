@@ -9,7 +9,6 @@ import numpy as np
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     AgentDataclassRequestServiceInvocation,
-    CapabilityKind,
     ConfigDraftCapability,
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
@@ -91,13 +90,12 @@ def test_independent_declaration_gets_real_mcp_schema_and_cooperative_validation
 
     class BodyGateProbeCapability(ConfigDraftCapability):
         name = "openhcs_test_body_gate_probe"
-        kind = CapabilityKind.TOOL
         title = "Validate independent body controls"
         description = "Source-only automatic schema and cooperative MRO control."
         service = "test_body_controls"
         input_contract = AuditedBodyControls
         output_contract = AuditedBodyControls
-        request_invocation = AgentDataclassRequestServiceInvocation(
+        invocation = AgentDataclassRequestServiceInvocation(
             service=lambda context: context,
             method=validate_and_echo,
         )

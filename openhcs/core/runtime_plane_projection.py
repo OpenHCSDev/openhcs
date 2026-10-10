@@ -6,7 +6,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from metaclass_registry import AutoRegisterMeta
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from collections.abc import Sequence
 from typing import ClassVar
 from typing import Self

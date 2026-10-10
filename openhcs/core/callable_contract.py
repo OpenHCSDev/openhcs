@@ -59,7 +59,7 @@ from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
-from openhcs.core.process_local_cache import IdentityBoundProcessCache
+from metaclass_registry.caches import IdentityBoundProcessCache
 from openhcs.core.axes import AxisRole
 
 if TYPE_CHECKING:
@@ -88,7 +88,6 @@ _EnumT = TypeVar("_EnumT", bound=Enum)
 class CallableContractRuntimeCache(IdentityBoundProcessCache):
     """Retain executable callables for their exact compiled declaration owners."""
 
-    registry_key = "function_invocation_callable"
     resolution_lock = Lock()
 
 

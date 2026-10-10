@@ -47,7 +47,7 @@ from openhcs.agent.capabilities import (
     UiApplyCodeDocumentCapability,
     UiGetCodeDocumentCapability,
     ValidatePipelineCapability,
-    get_agent_capability_declaration,
+    get_agent_capability,
 )
 from openhcs.agent.dto.common import JsonObject, RenderedSource
 from openhcs.agent.dto.execution import ArtifactPlanInspection, ExecutionJobRef
@@ -257,7 +257,7 @@ def _derive_evidence(
             successful_results.extend(command_results)
     tool_names = tuple(result.tool for result in successful_results)
     declarations = tuple(
-        get_agent_capability_declaration(tool_name) for tool_name in tool_names
+        get_agent_capability(tool_name) for tool_name in tool_names
     )
     requirements: set[DslRequirement] = set()
     explanations: dict[DslRequirement, str] = {}
@@ -378,7 +378,7 @@ def _rendered_sources(
     results: list[McpDevToolResult],
 ) -> Iterator[RenderedSource]:
     for result in results:
-        declaration = get_agent_capability_declaration(result.tool)
+        declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, RenderPipelineSourceCapability):
             continue
         yield dataclass_from_mapping(
@@ -391,7 +391,7 @@ def _artifact_plans(
     results: list[McpDevToolResult],
 ) -> Iterator[ArtifactPlanInspection]:
     for result in results:
-        declaration = get_agent_capability_declaration(result.tool)
+        declaration = get_agent_capability(result.tool)
         if not issubclass(
             declaration,
             InspectPipelineSourceArtifactPlanCapability,
@@ -418,7 +418,7 @@ def _is_sequential_pattern(step: FunctionStep) -> bool:
 def _registered_function_paths(results: list[McpDevToolResult]) -> set[str]:
     paths: set[str] = set()
     for result in results:
-        declaration = get_agent_capability_declaration(result.tool)
+        declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, RegisterCustomFunctionCapability):
             continue
         registration = dataclass_from_mapping(
@@ -432,7 +432,7 @@ def _registered_function_paths(results: list[McpDevToolResult]) -> set[str]:
 def _described_function_paths(results: list[McpDevToolResult]) -> set[str]:
     paths: set[str] = set()
     for result in results:
-        declaration = get_agent_capability_declaration(result.tool)
+        declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, DescribeFunctionCapability):
             continue
         detail = dataclass_from_mapping(FunctionDetail, first_payload_mapping(result))
@@ -453,7 +453,7 @@ def _pipeline_function_paths(documents: tuple[PipelineDocument, ...]) -> set[str
 def _completed_job_kinds(results: list[McpDevToolResult]) -> set[str]:
     completed: set[str] = set()
     for result in results:
-        declaration = get_agent_capability_declaration(result.tool)
+        declaration = get_agent_capability(result.tool)
         if not issubclass(
             declaration,
             (
@@ -479,7 +479,7 @@ def _completed_job_kinds(results: list[McpDevToolResult]) -> set[str]:
 def _ui_function_paths(results: list[McpDevToolResult]) -> set[str]:
     paths: set[str] = set()
     for result in results:
-        declaration = get_agent_capability_declaration(result.tool)
+        declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, UiGetCodeDocumentCapability):
             continue
         document = dataclass_from_mapping(

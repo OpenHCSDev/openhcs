@@ -683,7 +683,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
     equal_value_components_numba,
 )
@@ -736,10 +736,13 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    CentrosomeBackendProvider,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
+    OpencvBackendProvider,
 )
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
@@ -1879,8 +1882,6 @@ class MorphologyBackendStrategy(
 ):
     """Nominal morphology operations keyed by OpenHCS memory type."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @classmethod
     def for_memory_type(
@@ -2068,8 +2069,8 @@ class MorphologyBackendStrategy(
 class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
     """Independent NumPy/SciPy/skimage morphology backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY)
     memory_type = MemoryType.NUMPY
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
     def connected_components(
@@ -2307,22 +2308,16 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
 class CentrosomeNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     """Compatibility provider backed by absorbed NumPy morphology semantics."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CENTROSOME
+    backend_provider = CentrosomeBackendProvider
     is_default_backend = False
 
 
 class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     """Numba-accelerated NumPy morphology backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -2792,11 +2787,8 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
 class OpenCVNumpyMorphologyBackendStrategy(NumbaNumpyMorphologyBackendStrategy):
     """OpenCV-accelerated NumPy morphology backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.OPENCV
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.OPENCV
+    backend_provider = OpencvBackendProvider
     is_default_backend = False
 
     def grayscale_closing(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
@@ -5272,7 +5264,6 @@ class MaskObjectsOverlapHandlingStrategy(
     __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "overlap_handling"
-    __enum_label_attr__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     overlap_handling: ClassVar[MaskObjectsOverlapHandling | None] = None
     strategy_label: ClassVar[str | None] = None
 
@@ -5409,7 +5400,6 @@ class MaskObjectsNumberingStrategy(
     __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "numbering"
-    __enum_label_attr__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     numbering: ClassVar[MaskObjectsNumberingChoice | None] = None
     strategy_label: ClassVar[str | None] = None
 

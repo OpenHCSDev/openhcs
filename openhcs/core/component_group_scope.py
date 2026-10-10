@@ -271,7 +271,7 @@ class RuntimeExecutionAxisScope:
             raise ValueError("RuntimeExecutionAxisScope.axis_id cannot be empty.")
         if self.component is not None and not is_axis(self.component):
             raise TypeError(
-                "RuntimeExecutionAxisScope.component must be an AllComponents value. "
+                "RuntimeExecutionAxisScope.component must be a declared axis. "
                 "Use RuntimeExecutionAxisScope.from_raw() for coercion."
             )
         if (self.component is None) != (self.value is None):

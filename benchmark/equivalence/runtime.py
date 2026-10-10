@@ -59,7 +59,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_tabular_values import measurement_row_mapping
 from openhcs.core.runtime_stores import StoredRuntimeValue
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,
 )

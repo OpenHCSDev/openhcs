@@ -37,7 +37,7 @@ from openhcs.core.artifacts import ArtifactMaterializationPayload
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     AlwaysMatchesContextMixin,
     MostDerivedContextStrategyMixin,
 )
@@ -140,7 +140,6 @@ class BackendCallKwargs(ABC, metaclass=AutoRegisterMeta):
     backend_kwargs_key_axis: ClassVar[str] = "backend_kwargs_kind"
     __registry_key__ = backend_kwargs_key_axis
     __skip_if_no_key__ = True
-    stable_key_axis: ClassVar[str] = backend_kwargs_key_axis
     backend_kwargs_kind: ClassVar[str | None] = None
 
     @classmethod
@@ -1363,7 +1362,6 @@ class SourceStemAuthority(
     authority_key_axis: ClassVar[str] = "authority_key"
     __registry_key__ = authority_key_axis
     __skip_if_no_key__ = True
-    stable_key_axis: ClassVar[str] = authority_key_axis
 
     authority_key: ClassVar[str | None] = None
     strategy_key_attr: ClassVar[str] = authority_key_axis

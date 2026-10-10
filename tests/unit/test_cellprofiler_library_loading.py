@@ -3954,7 +3954,7 @@ def test_correct_illumination_median_smoothing_default_uses_native_backend():
     )
 
     backend = RankMedianSmoothingBackendStrategy.for_memory_type()
-    assert backend.backend_provider is CellProfilerBackendProvider.NATIVE
+    assert backend.backend_provider is CellProfilerBackendProvider.NATIVE.provider
     NumbaNumpyRankMedianSmoothingBackendStrategy().prepare_backend()
 
 
@@ -4046,7 +4046,7 @@ def test_correct_illumination_convex_hull_smoothing_suppresses_sparse_spikes():
     assert illumination.dtype == np.float32
 
 
-def test_correct_illumination_centrosome_convex_hull_preserves_input_dtype():
+def test_correct_illumination_native_convex_hull_preserves_input_dtype():
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
@@ -4057,7 +4057,7 @@ def test_correct_illumination_centrosome_convex_hull_preserves_input_dtype():
         image,
         smoothing_method=IlluminationSmoothingMethod.CONVEX_HULL,
         rescale_option=IlluminationRescaleOption.NO,
-        convex_hull_backend_provider=CellProfilerBackendProvider.CENTROSOME,
+        convex_hull_backend_provider=CellProfilerBackendProvider.NATIVE,
         dtype_config=DtypeConfig(),
     )
 
@@ -4177,7 +4177,7 @@ def test_correct_illumination_convex_hull_default_uses_cellprofiler_reference_ba
         filter_size_method=IlluminationFilterSizeMethod.MANUALLY,
         manual_filter_size=3,
         rescale_option=IlluminationRescaleOption.NO,
-        convex_hull_backend_provider=CellProfilerBackendProvider.CENTROSOME,
+        convex_hull_backend_provider=CellProfilerBackendProvider.NATIVE,
         dtype_config=DtypeConfig(),
     )
     np.testing.assert_array_equal(illumination, expected)
@@ -4262,7 +4262,7 @@ def test_smooth_gaussian_default_provider_preserves_cellprofiler_semantics():
         SmoothingBackendProviderPolicy.resolve(
             SmoothingMethod.GAUSSIAN_FILTER, DEFAULT_CELLPROFILER_BACKEND_SELECTION
         )
-        is CellProfilerBackendProvider.NATIVE
+        is CellProfilerBackendProvider.NATIVE.provider
     )
     assert (
         SmoothingBackendProviderPolicy.resolve(
@@ -4275,7 +4275,7 @@ def test_smooth_gaussian_default_provider_preserves_cellprofiler_semantics():
                 image_shape=(64, 64),
             ),
         )
-        is CellProfilerBackendProvider.NATIVE
+        is CellProfilerBackendProvider.NATIVE.provider
     )
     assert (
         SmoothingBackendProviderPolicy.resolve(
@@ -4288,7 +4288,7 @@ def test_smooth_gaussian_default_provider_preserves_cellprofiler_semantics():
                 image_shape=(64, 64),
             ),
         )
-        is CellProfilerBackendProvider.OPENCV
+        is CellProfilerBackendProvider.OPENCV.provider
     )
 
 

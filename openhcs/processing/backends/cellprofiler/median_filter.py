@@ -31,10 +31,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler import _median_native
 from openhcs.processing.backends.cellprofiler.perf_fixtures import (
@@ -131,8 +130,6 @@ class MedianFilterBackendStrategy(
 ):
     """Median filtering operations keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def filter(
@@ -165,11 +162,8 @@ class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
             max_window_bytes=1024**3, max_chunk_bytes=16 * 1024**2
         )
     )
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:

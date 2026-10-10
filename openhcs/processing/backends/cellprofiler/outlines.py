@@ -56,9 +56,9 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.cellprofiler._backend import (
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    CentrosomeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.color import coerce_rgb_color
 from openhcs.processing.backends.cellprofiler.object_images import (
@@ -152,7 +152,6 @@ class OverlayObjectsModule(
 
 
 from openhcs.processing.backends.cellprofiler.image_geometry import (
-    CellProfilerPlaneGeometry,
     align_binary_mask_to_shape,
     align_label_plane_to_shape,
 )
@@ -689,8 +688,6 @@ class ObjectOutlineBackendStrategy(
 ):
     """Object outline operations keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def outline(self, labels: np.ndarray) -> np.ndarray:
@@ -700,11 +697,8 @@ class ObjectOutlineBackendStrategy(
 class NumbaNumpyObjectOutlineBackendStrategy(ObjectOutlineBackendStrategy):
     """Numba-accelerated NumPy object outline primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -725,11 +719,8 @@ class CentrosomeNumpyObjectOutlineBackendStrategy(
 ):
     """Compatibility provider backed by the absorbed outline primitive."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CENTROSOME
+    backend_provider = CentrosomeBackendProvider
     is_default_backend = False
 
 

@@ -12,7 +12,7 @@ from numba import njit
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
@@ -29,9 +29,11 @@ from openhcs.interop.cellprofiler.module_settings import (
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     SourceFileSettingBinding,
-    coerce_cellprofiler_enum,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.backends.cellprofiler._backend import (
+    OpencvBackendProvider,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -229,7 +231,6 @@ class FeatureOperationStrategy(
     __registry_key__ = STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
-    __enum_label_attr__ = STRATEGY_REGISTRY_KEY
     method: ClassVar[OperationMethod | None] = None
     method_label: ClassVar[str | None] = None
 
@@ -272,7 +273,6 @@ class FeatureEnhanceMethodStrategy(
     __registry_key__ = STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
-    __enum_label_attr__ = STRATEGY_REGISTRY_KEY
     method: ClassVar[EnhanceMethod | None] = None
     method_label: ClassVar[str | None] = None
 
@@ -307,12 +307,11 @@ class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         footprint = _structuring_element(request.radius)
         masked = request.mask_context.masked_original
         if request.speckle_accuracy is SpeckleAccuracy.FAST and request.radius > 3:
-            from ._backend import CellProfilerBackendProvider
             from .morphology import MorphologyBackendStrategy
 
             opened = MorphologyBackendStrategy.for_callable(
                 enhance_or_suppress_features,
-                backend_provider=CellProfilerBackendProvider.OPENCV,
+                backend_provider=OpencvBackendProvider,
             ).grayscale_opening(
                 masked, footprint,
             )

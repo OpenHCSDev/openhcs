@@ -37,7 +37,7 @@ from openhcs.core.invocation_artifacts import (
     InvocationArtifactDeclarationProviderLike,
     callable_contract_artifact_declarations,
 )
-from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
+from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,

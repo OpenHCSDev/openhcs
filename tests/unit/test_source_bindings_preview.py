@@ -1,22 +1,15 @@
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import ObjectLabelsArtifactType
 from openhcs.core.source_bindings import (
-    ComponentSelector,
     ImagePlaneSource,
-    ImportedMetadataJoin,
-    ImportedMetadataTable,
     MetadataExtractionRule,
     MetadataSource,
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingMatchDimension,
-    SourceBindingMatchField,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceProjectionRole,
     SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
@@ -24,13 +17,11 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     StepSourceBindingsConfig,
 )
-from openhcs.core.source_bindings_view import (
+from openhcs.core.source_bindings_preview import (
     SourceBindingDiagnosticSeverity,
     SourceBindingsPreview,
-    SourceBindingsViewModel,
     SourceInventory,
 )
-from openhcs.domains.microscopy.axes import Microscopy
 
 
 class FileManagerInventoryStub:
@@ -49,137 +40,6 @@ class FileManagerInventoryStub:
     ) -> list[str]:
         self.calls.append((str(directory), backend, recursive))
         return list(self.files)
-
-
-def test_source_bindings_view_model_projects_pipeline_and_step_bindings():
-    source_bindings = SourceBindingsConfig(
-        source_filters=(
-            SourceFilterClause(
-                SourceFilterSubject.EXTENSION,
-                SourceFilterMatchType.IS_TIF,
-            ),
-        ),
-        image_plane_sources=(ImagePlaneSource(uri="file:///tmp/A01_w1.tif"),),
-        imported_metadata_tables=(
-            ImportedMetadataTable(
-                location="metadata.csv",
-                joins=(ImportedMetadataJoin("Well", "well_id"),),
-            ),
-        ),
-        bindings=(
-            NamedSourceBinding(
-                alias="DNA",
-                selector=SourceSelector(
-                    components=(ComponentSelector(Microscopy.Channel, "1"),),
-                ),
-                origin=SourceBindingOrigin.PIPELINE_START,
-            ),
-            NamedSourceBinding(
-                alias="Nuclei",
-                artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
-                selector=SourceSelector(
-                    metadata=(MetadataSelector("object_type", "nuclei"),),
-                ),
-                origin=SourceBindingOrigin.PIPELINE_START,
-            ),
-        ),
-        metadata_rules=(
-            MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
-                pattern=r"(?P<well>[A-H]\d{2})_(?P<site>s\d+)\.tif",
-            ),
-        ),
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
-        grouping_metadata_fields=("Well",),
-    )
-    step_bindings = StepSourceBindingsConfig(
-        enabled=True,
-        bindings=(
-            NamedSourceBinding(
-                alias="LocalDNA",
-                selector=SourceSelector(
-                    filters=(
-                        SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.CONTAINS,
-                            "DNA",
-                        ),
-                    ),
-                ),
-            ),
-        ),
-        metadata_rules=(
-            MetadataExtractionRule(
-                source=MetadataSource.FOLDER_NAME,
-                pattern=r"Plate_(?P<plate>\d+)",
-            ),
-        ),
-    )
-
-    view = SourceBindingsViewModel.from_config_and_step_bindings(
-        source_bindings=source_bindings,
-        step_bindings=step_bindings,
-    )
-
-    assert view.pipeline_sources.image_plane_source_count == 1
-    assert view.pipeline_sources.filters[0].match_type == "is_tif"
-    assert view.pipeline_sources.imported_metadata_tables[0].joins == (
-        ("Well", "well_id"),
-    )
-    assert [(row.alias, row.artifact_kind) for row in view.pipeline_bindings] == [
-        ("DNA", "image"),
-        ("Nuclei", "object_labels"),
-    ]
-    assert view.pipeline_bindings[0].selector.components == (("channel", "1"),)
-    assert view.pipeline_bindings[1].projection_role == "source_artifact"
-    assert view.step_bindings[0].selector.filters[0].value == "DNA"
-    assert view.metadata_rules[0].extracted_fields == ("well", "site")
-    assert view.metadata_rules[1].declaration_scope == "step"
-    assert view.match_plans[0].method == "order"
-    assert view.grouping is not None
-    assert view.grouping.metadata_fields == ("Well",)
-    assert view.artifact_kinds == ("image", "object_labels")
-
-
-def test_source_bindings_view_model_exposes_metadata_match_dimensions():
-    step_bindings = StepSourceBindingsConfig(
-        enabled=True,
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
-                SourceBindingMatchDimension(
-                    fields=(
-                        SourceBindingMatchField("DNA", "well"),
-                        SourceBindingMatchField("GFP", "well"),
-                    ),
-                ),
-            ),
-        ),
-    )
-
-    view = SourceBindingsViewModel.from_config_and_step_bindings(
-        source_bindings=SourceBindingsConfig(),
-        step_bindings=step_bindings,
-    )
-
-    assert view.pipeline_bindings == ()
-    assert view.match_plans[0].declaration_scope == "step"
-    assert view.match_plans[0].dimensions[0].fields == (
-        ("DNA", "well"),
-        ("GFP", "well"),
-    )
-
-
-def test_source_bindings_view_model_accepts_empty_resolved_step_override():
-    view = SourceBindingsViewModel.from_config_and_step_bindings(
-        source_bindings=SourceBindingsConfig(),
-        step_bindings=StepSourceBindingsConfig(enabled=True),
-    )
-
-    assert view.step_bindings == ()
-    assert view.metadata_rules == ()
-    assert view.match_plans == ()
 
 
 def test_source_bindings_preview_reuses_typed_filter_and_order_matching(tmp_path):

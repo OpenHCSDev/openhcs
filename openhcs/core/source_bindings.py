@@ -15,7 +15,7 @@ from dataclasses import fields as dataclass_fields
 from enum import Enum
 from pathlib import Path, PureWindowsPath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, TypeVar
 from urllib.parse import unquote, urlsplit
 
 from metaclass_registry import AutoRegisterMeta
@@ -33,7 +33,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
 )
 from openhcs.core.component_set import ComponentSet
-
+from openhcs.core.field_label import FieldLabel
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
@@ -47,7 +47,7 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.axes import Axis, AxisChoices, AxisFamily, GroupingDeclaration
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
@@ -603,8 +603,8 @@ class SourceBindingMatchPlan:
 class ComponentSelector:
     """Component-axis key/value pair used either to select sources or assign identity."""
 
-    component: type[Axis]
-    """OpenHCS plate component, such as channel, site, Z index, or timepoint."""
+    component: Annotated[type[Axis], AxisChoices()]
+    """Declared axis of the active family, such as channel, site, Z index, or timepoint."""
 
     value: str
     """Exact semantic value selected or assigned for ``component``."""
@@ -647,13 +647,19 @@ class SourceSelector:
     storage format or infer its axes.
     """
 
-    components: tuple[ComponentSelector, ...] = ()
-    """Semantic component values required on selected source planes."""
+    components: Annotated[tuple[ComponentSelector, ...], FieldLabel("Select Axes")] = ()
+    """Component constraints used to choose sources, for example channel=1.
 
-    metadata: tuple[MetadataSelector, ...] = ()
-    """Exact metadata field/value pairs required on selected source planes."""
+    This filters candidates; it does not assign the output identity.
+    """
 
-    filters: tuple[SourceFilterClause, ...] = ()
+    metadata: Annotated[tuple[MetadataSelector, ...], FieldLabel("Select Metadata")] = ()
+    """Exact metadata field/value pairs required on selected sources, e.g. Well=A01.
+
+    This filters candidates; pairing sources into sets uses the match plan.
+    """
+
+    filters: Annotated[tuple[SourceFilterClause, ...], FieldLabel("Select Files")] = ()
     """Path-based clauses applied to source provenance before selection."""
 
     inherit_current_scope: bool = True
@@ -763,8 +769,13 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
     origin: SourceBindingOrigin = SourceBindingOrigin.STEP_INPUT
     """Whether selection starts from the prior step input or pipeline-start sources."""
 
-    component_identity: tuple[ComponentSelector, ...] = ()
-    """Semantic component axes assigned after selector resolution."""
+    component_identity: Annotated[
+        tuple[ComponentSelector, ...], FieldLabel("Assign Axes")
+    ] = ()
+    """Semantic component identity attached after selection, for example channel=1.
+
+    Outputs use it when they cannot inherit identity from a concrete input path.
+    """
 
     def __post_init__(self) -> None:
         normalized_alias = str(self.alias).strip()

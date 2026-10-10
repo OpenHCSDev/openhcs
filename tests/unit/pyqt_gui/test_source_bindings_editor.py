@@ -6,6 +6,7 @@ from PyQt6.QtCore import QEvent, QEventLoop, QPoint, QPointF, QRect, Qt, QTimer
 from PyQt6.QtGui import QColor, QEnterEvent, QWheelEvent
 from PyQt6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QComboBox,
     QLabel,
     QPushButton,
@@ -44,15 +45,13 @@ from openhcs.core.config import (
 )
 from openhcs.constants.constants import Backend
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.source_bindings_view import SourceInventory
+from openhcs.core.source_bindings_preview import SourceInventory
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
-    MatchPlanColumn,
-    MetadataRuleColumn,
+    DataclassFieldColumns,
     EditableTableLayout,
-    FreeFormCellEditorKind,
-    SourceBindingColumn,
+    RowSuggestion,
     SourceBindingsEditorWidget,
-    SourceFilterColumn,
+    SourceSetPairingRow,
     StructuredSelectorCellWidget,
     StructuredSelectorDialog,
 )
@@ -100,6 +99,7 @@ from pyqt_reactive.widgets.shared.clickable_help_components import ProvenanceLab
 from pyqt_reactive.widgets.no_scroll_spinbox import NoScrollComboBox, NoneAwareCheckBox
 from pyqt_reactive.widgets.shared.scoped_table_widget import ScopedTableWidget
 from pyqt_reactive.widgets.shared.scope_color_utils import get_scope_color_scheme
+from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -127,6 +127,14 @@ class QtApplicationHarness:
         return cls.app_instance
 
 
+def column_index(row_type: type, name: str) -> int:
+    return DataclassFieldColumns.of(row_type).named(name).index
+
+
+def binding_row_index(name: str) -> int:
+    return column_index(NamedSourceBinding, name)
+
+
 def set_combo_cell_text(table, row: int, column: int, text: str) -> None:
     widget = table.cellWidget(row, column)
     assert isinstance(widget, QComboBox)
@@ -135,23 +143,28 @@ def set_combo_cell_text(table, row: int, column: int, text: str) -> None:
     widget.setCurrentIndex(index)
 
 
-def set_editable_cell_text(table, row: int, column: int, text: str) -> None:
+def set_editable_cell_text(table, row: int, column: int, value: object) -> None:
+    """Edit one cell: text for text items, typed values for typed widgets."""
+
     widget = table.cellWidget(row, column)
     if isinstance(widget, StructuredSelectorCellWidget):
-        widget.set_text(text)
+        widget.set_value(value)
+        return
+    if isinstance(widget, QCheckBox):
+        widget.setChecked(value)
         return
     if isinstance(widget, QComboBox):
-        widget.setCurrentText(text)
+        widget.setCurrentText(value)
         return
     item = table.item(row, column)
     assert item is not None
-    item.setText(text)
+    item.setText(value)
 
 
 def table_cell_text(table, row: int, column: int) -> str:
     widget = table.cellWidget(row, column)
     if isinstance(widget, StructuredSelectorCellWidget):
-        return widget.text()
+        return widget.line_edit.text()
     if isinstance(widget, QComboBox):
         value = widget.currentData()
         if isinstance(value, Enum):
@@ -166,91 +179,79 @@ def table_cell_text(table, row: int, column: int) -> str:
     return item.text().strip()
 
 
-def binding_cell_position(
-    binding_index: int,
-    field: SourceBindingColumn,
-) -> tuple[int, int]:
-    return int(field), binding_index
+def binding_cell_position(binding_index: int, field: str) -> tuple[int, int]:
+    return binding_row_index(field), binding_index
 
 
-def set_binding_cell_text(
-    table,
-    binding_index: int,
-    field: SourceBindingColumn,
-    text: str,
-) -> None:
-    set_editable_cell_text(table, *binding_cell_position(binding_index, field), text)
+def set_binding_cell_text(table, binding_index: int, field: str, value: object) -> None:
+    set_editable_cell_text(table, *binding_cell_position(binding_index, field), value)
 
 
-def set_binding_combo_cell_text(
-    table,
-    binding_index: int,
-    field: SourceBindingColumn,
-    text: str,
-) -> None:
-    set_combo_cell_text(table, *binding_cell_position(binding_index, field), text)
-
-
-def binding_cell_widget(table, binding_index: int, field: SourceBindingColumn):
+def binding_cell_widget(table, binding_index: int, field: str):
     return table.cellWidget(*binding_cell_position(binding_index, field))
 
 
-def test_structured_selector_cell_widget_uses_semantic_editor_kind() -> None:
+def test_structured_selector_dialog_edits_typed_filter_rows() -> None:
     QtApplicationHarness.app()
 
-    widget = StructuredSelectorCellWidget(
-        values=("file:contains:DNA",),
-        value="",
-        editor_kind=FreeFormCellEditorKind.FILTER_CLAUSES,
-        apply_changes=lambda: None,
+    existing = SourceFilterClause(
+        SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA", any_group=1
+    )
+    dialog = StructuredSelectorDialog(
+        element_type=SourceFilterClause,
+        suggestions=(
+            RowSuggestion.of(
+                SourceFilterClause,
+                subject=SourceFilterSubject.DIRECTORY,
+                match_type=SourceFilterMatchType.IS_IMAGE,
+            ),
+        ),
+        value=(existing,),
     )
 
-    assert widget.editor_kind is FreeFormCellEditorKind.FILTER_CLAUSES
+    assert dialog.table.columnCount() == len(DataclassFieldColumns.of(SourceFilterClause))
+    assert dialog.value() == (existing,)
+
+    dialog._append_suggestion(dialog.suggestions.item(0).data(Qt.ItemDataRole.UserRole))
+
+    assert dialog.value() == (
+        existing,
+        SourceFilterClause(SourceFilterSubject.DIRECTORY, SourceFilterMatchType.IS_IMAGE),
+    )
 
 
-def test_structured_selector_dialog_edits_filter_rows_without_text_area() -> None:
+def test_structured_selector_dialog_choices_come_from_field_type() -> None:
     QtApplicationHarness.app()
 
     dialog = StructuredSelectorDialog(
-        editor_kind=FreeFormCellEditorKind.FILTER_CLAUSES,
-        suggestions=("metadata:equals:A01",),
-        value="file:contains:DNA",
+        element_type=ComponentSelector,
+        suggestions=(),
+        value=(ComponentSelector(Microscopy.Channel, "DNA"),),
     )
 
-    assert dialog.table.columnCount() == 3
-    assert dialog.value() == "file:contains:DNA"
-
-    dialog._append_suggestion("metadata:equals:A01")
-
-    assert dialog.value() == "file:contains:DNA;metadata:equals:A01"
-
-
-def test_structured_selector_dialog_uses_closed_domain_combo_cells() -> None:
-    QtApplicationHarness.app()
-
-    dialog = StructuredSelectorDialog(
-        editor_kind=FreeFormCellEditorKind.COMPONENT_SELECTORS,
-        suggestions=("channel=DNA",),
-        value="channel=DNA",
+    component_widget = dialog.table.cellWidget(
+        0, column_index(ComponentSelector, "component")
     )
-
-    component_widget = dialog.table.cellWidget(0, 0)
     assert isinstance(component_widget, QComboBox)
-    assert component_widget.findText(Microscopy.Channel.name) >= 0
+    assert tuple(
+        component_widget.itemData(index) for index in range(component_widget.count())
+    ) == AxisFamily.active().axes
+    assert component_widget.currentData() is Microscopy.Channel
 
 
 def test_structured_selector_dialog_reports_incomplete_rows() -> None:
     QtApplicationHarness.app()
 
     dialog = StructuredSelectorDialog(
-        editor_kind=FreeFormCellEditorKind.METADATA_SELECTORS,
+        element_type=MetadataSelector,
         suggestions=(),
-        value="",
+        value=(),
     )
 
-    dialog._append_row(("Well", ""))
+    dialog.append_draft({"field": "Well"})
 
     assert "Incomplete rows ignored: 1" == dialog.validation_label.text()
+    assert dialog.value() == ()
 
 
 def test_source_bindings_config_uses_inline_dataclass_widget_info() -> None:
@@ -335,19 +336,19 @@ def test_source_bindings_editor_edits_pipeline_source_filters() -> None:
     set_combo_cell_text(
         widget.source_filters_table,
         0,
-        int(SourceFilterColumn.SUBJECT),
+        column_index(SourceFilterClause, "subject"),
         "extension",
     )
     set_combo_cell_text(
         widget.source_filters_table,
         0,
-        int(SourceFilterColumn.MATCH_TYPE),
+        column_index(SourceFilterClause, "match_type"),
         "equals",
     )
     set_editable_cell_text(
         widget.source_filters_table,
         0,
-        int(SourceFilterColumn.VALUE),
+        column_index(SourceFilterClause, "value"),
         ".tif",
     )
 
@@ -374,7 +375,7 @@ def test_source_bindings_source_filter_dropdown_ignores_wheel() -> None:
     assert widget.source_filters_table is not None
     combo = widget.source_filters_table.cellWidget(
         0,
-        int(SourceFilterColumn.MATCH_TYPE),
+        column_index(SourceFilterClause, "match_type"),
     )
     assert isinstance(combo, NoScrollComboBox)
     assert combo.currentData() is SourceFilterMatchType.CONTAINS
@@ -580,13 +581,13 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
         set_combo_cell_text(
             source_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         set_editable_cell_text(
             source_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "DNA",
         )
 
@@ -596,8 +597,8 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
         set_editable_cell_text(
             source_widget.match_plan_table,
             0,
-            int(MatchPlanColumn.FIELDS),
-            "DNA=well",
+            column_index(SourceSetPairingRow, "fields"),
+            (SourceBindingMatchField("DNA", "well"),),
         )
 
         for _ in range(10):
@@ -842,7 +843,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
@@ -851,7 +852,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
         set_combo_cell_text(
             pipeline_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
             "equals",
         )
         loop = QEventLoop()
@@ -874,7 +875,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
@@ -888,7 +889,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
@@ -902,7 +903,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
@@ -1220,7 +1221,7 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         set_combo_cell_text(
             source_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
@@ -1229,7 +1230,7 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         set_editable_cell_text(
             source_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "DNA",
         )
         for _ in range(10):
@@ -1250,7 +1251,7 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
@@ -1260,7 +1261,7 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         )
         inherited_match_type_widget = step_widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(inherited_match_type_widget, QComboBox)
         assert (
@@ -1269,7 +1270,7 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         )
         inherited_value_item = step_widget.source_filters_table.item(
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
         )
         assert inherited_value_item is not None
         assert inherited_value_item.font().italic()
@@ -1279,8 +1280,8 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         set_editable_cell_text(
             source_widget.match_plan_table,
             0,
-            int(MatchPlanColumn.FIELDS),
-            "DNA=well",
+            column_index(SourceSetPairingRow, "fields"),
+            (SourceBindingMatchField("DNA", "well"),),
         )
         for _ in range(10):
             QApplication.processEvents()
@@ -1293,8 +1294,8 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         set_editable_cell_text(
             source_widget.match_plan_table,
             1,
-            int(MatchPlanColumn.FIELDS),
-            "GFP=well",
+            column_index(SourceSetPairingRow, "fields"),
+            (SourceBindingMatchField("GFP", "well"),),
         )
         for _ in range(10):
             QApplication.processEvents()
@@ -1459,7 +1460,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
@@ -1467,7 +1468,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
         set_editable_cell_text(
             step_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "RNA",
         )
         for _ in range(10):
@@ -1485,7 +1486,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "RNA"
         )
@@ -1507,19 +1508,19 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
         inherited_value_item = step_widget.source_filters_table.item(
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
         )
         assert inherited_value_item is not None
         assert inherited_value_item.font().italic()
         inherited_match_type_widget = step_widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(inherited_match_type_widget, QComboBox)
         assert (
@@ -1578,14 +1579,14 @@ def test_source_bindings_inherited_table_combo_activation_materializes_child() -
         assert step_widget.source_filters_table is not None
         match_type_widget = step_widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert (
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
@@ -1671,7 +1672,7 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
         set_editable_cell_text(
             step_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "RNA",
         )
         for _ in range(10):
@@ -1702,7 +1703,7 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
@@ -1759,7 +1760,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         set_editable_cell_text(
             step_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "RNA",
         )
         for _ in range(10):
@@ -1775,7 +1776,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         )
         value_item = step_widget.source_filters_table.item(
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
         )
         assert value_item is not None
         assert value_item.data(Qt.ItemDataRole.UserRole) == "RNA"
@@ -1785,7 +1786,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "RNA"
         )
@@ -1800,7 +1801,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         set_editable_cell_text(
             step_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "RNA2",
         )
         for _ in range(10):
@@ -1816,7 +1817,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         )
         value_item = step_widget.source_filters_table.item(
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
         )
         assert value_item is not None
         assert value_item.data(Qt.ItemDataRole.UserRole) == "RNA2"
@@ -1831,7 +1832,7 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         set_editable_cell_text(
             step_widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "RNA2",
         )
         for _ in range(10):
@@ -2199,14 +2200,14 @@ def test_source_bindings_editor_uses_resolved_placeholder_tables() -> None:
 
     match_type_widget = widget.source_filters_table.cellWidget(
         0,
-        int(SourceFilterColumn.MATCH_TYPE),
+        column_index(SourceFilterClause, "match_type"),
     )
     assert isinstance(match_type_widget, QComboBox)
     assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
     assert match_type_widget.currentText() == "contains"
     assert PlaceholderConfig.text_color_name() in match_type_widget.styleSheet()
 
-    value_item = widget.source_filters_table.item(0, int(SourceFilterColumn.VALUE))
+    value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
     assert value_item is not None
     assert value_item.font().italic()
     assert value_item.foreground().color().name() == PlaceholderConfig.text_color_name()
@@ -2232,7 +2233,7 @@ def test_source_bindings_table_row_value_read_does_not_emit_item_changed() -> No
 
     assert widget.source_filters_table is not None
     assert widget.source_filters_controller is not None
-    value_item = widget.source_filters_table.item(0, int(SourceFilterColumn.VALUE))
+    value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
     assert value_item is not None
     value_item.setText("*DNA")
     value_item.setData(Qt.ItemDataRole.UserRole, "DNA")
@@ -2241,7 +2242,7 @@ def test_source_bindings_table_row_value_read_does_not_emit_item_changed() -> No
     widget.source_filters_table.itemChanged.connect(emitted.append)
 
     assert widget.source_filters_controller.row_values() == (
-        ("file", "contains", "DNA", ""),
+        (SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA", ""),
     )
     assert emitted == []
 
@@ -2269,7 +2270,7 @@ def test_source_bindings_editor_editing_inherited_table_makes_lazy_child_concret
     set_editable_cell_text(
         widget.source_filters_table,
         0,
-        int(SourceFilterColumn.VALUE),
+        column_index(SourceFilterClause, "value"),
         "RNA",
     )
     QApplication.processEvents()
@@ -2434,7 +2435,7 @@ def test_source_bindings_child_reset_noops_for_already_inherited_table_preview()
             table_cell_text(
                 step_widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
@@ -2510,7 +2511,7 @@ def test_source_bindings_editor_tables_expand_without_vertical_scrollbars() -> N
 
     assert table.verticalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     assert not table.verticalHeader().isHidden()
-    assert table.verticalHeaderItem(int(SourceBindingColumn.ALIAS)).text() == "Alias"
+    assert table.verticalHeaderItem(binding_row_index("alias")).text() == "Alias"
     expected_minimum_height = table.horizontalHeader().height() + sum(
         table.rowHeight(row) for row in range(table.rowCount())
     )
@@ -2742,15 +2743,15 @@ def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> Non
         assert table.rowCount() == 1
         assert state.parameters["step_source_bindings_config.metadata_rules"] is None
 
-        source_widget = table.cellWidget(0, int(MetadataRuleColumn.SOURCE))
-        pattern_item = table.item(0, int(MetadataRuleColumn.PATTERN))
+        source_widget = table.cellWidget(0, column_index(MetadataExtractionRule, "source"))
+        pattern_item = table.item(0, column_index(MetadataExtractionRule, "pattern"))
         assert isinstance(source_widget, QComboBox)
         assert pattern_item is not None
         assert source_widget.currentText() == "_file_name"
         assert pattern_item.text() == f"_{inherited_rule.pattern}"
-        assert table_cell_text(table, 0, int(MetadataRuleColumn.SOURCE)) == "file_name"
+        assert table_cell_text(table, 0, column_index(MetadataExtractionRule, "source")) == "file_name"
         assert (
-            table_cell_text(table, 0, int(MetadataRuleColumn.PATTERN))
+            table_cell_text(table, 0, column_index(MetadataExtractionRule, "pattern"))
             == inherited_rule.pattern
         )
 
@@ -2758,18 +2759,18 @@ def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> Non
         set_editable_cell_text(
             table,
             0,
-            int(MetadataRuleColumn.PATTERN),
+            column_index(MetadataExtractionRule, "pattern"),
             local_pattern,
         )
         for _ in range(10):
             QApplication.processEvents()
 
-        pattern_item = table.item(0, int(MetadataRuleColumn.PATTERN))
+        pattern_item = table.item(0, column_index(MetadataExtractionRule, "pattern"))
         assert pattern_item is not None
         assert pattern_item.text() == f"*_{local_pattern}"
         assert pattern_item.data(Qt.ItemDataRole.UserRole) == local_pattern
         assert (
-            table_cell_text(table, 0, int(MetadataRuleColumn.PATTERN)) == local_pattern
+            table_cell_text(table, 0, column_index(MetadataExtractionRule, "pattern")) == local_pattern
         )
         assert state.parameters["step_source_bindings_config.metadata_rules"] == (
             MetadataExtractionRule(
@@ -2793,24 +2794,24 @@ def test_source_bindings_editor_explains_binding_selector_and_roles() -> None:
     dialog = widget._create_step_bindings_dialog()
     table = dialog.editor.table
 
-    select_axes = table.verticalHeaderItem(int(SourceBindingColumn.COMPONENTS))
-    select_metadata = table.verticalHeaderItem(int(SourceBindingColumn.METADATA))
-    assign_axes = table.verticalHeaderItem(int(SourceBindingColumn.IDENTITY))
-    set_role = table.verticalHeaderItem(int(SourceBindingColumn.SET_ROLE))
-    projection_role = table.verticalHeaderItem(int(SourceBindingColumn.PROJECTION_ROLE))
+    select_axes = table.verticalHeaderItem(binding_row_index("components"))
+    select_metadata = table.verticalHeaderItem(binding_row_index("metadata"))
+    assign_axes = table.verticalHeaderItem(binding_row_index("component_identity"))
+    set_role = table.verticalHeaderItem(binding_row_index("source_set_role"))
+    projection_role = table.verticalHeaderItem(binding_row_index("projection_role"))
 
     assert select_axes.text() == "Select Axes"
     assert "choose sources" in select_axes.toolTip()
     assert "does not assign" in select_axes.toolTip()
     assert select_metadata.text() == "Select Metadata"
     assert "filters candidates" in select_metadata.toolTip()
-    assert "Source Set Pairing" in select_metadata.toolTip()
+    assert "match plan" in select_metadata.toolTip()
     assert assign_axes.text() == "Assign Axes"
     assert "attached after selection" in assign_axes.toolTip()
-    assert set_role.text() == "Set Role"
+    assert set_role.text() == "Source Set Role"
     assert "broadcast" in set_role.toolTip()
     assert projection_role.text() == "Projection Role"
-    assert "typed source artifact" in projection_role.toolTip()
+    assert "source artifact" in projection_role.toolTip()
 
 
 def test_source_bindings_editor_explains_image_set_pairing_table() -> None:
@@ -2820,10 +2821,10 @@ def test_source_bindings_editor_explains_image_set_pairing_table() -> None:
     assert widget.match_plan_table is not None
 
     method_header = widget.match_plan_table.horizontalHeaderItem(
-        int(MatchPlanColumn.METHOD)
+        column_index(SourceSetPairingRow, "method")
     )
     fields_header = widget.match_plan_table.horizontalHeaderItem(
-        int(MatchPlanColumn.FIELDS)
+        column_index(SourceSetPairingRow, "fields")
     )
     button_labels = tuple(button.text() for button in widget.findChildren(QPushButton))
     section_titles = tuple(label.text() for label in widget.findChildren(QLabel))
@@ -2831,7 +2832,7 @@ def test_source_bindings_editor_explains_image_set_pairing_table() -> None:
     assert method_header.text() == "Pairing Method"
     assert "grouped into one source set" in method_header.toolTip()
     assert fields_header.text() == "Pairing Keys"
-    assert "DNA=Well;GFP=Well" in fields_header.toolTip()
+    assert "shared source-set key" in fields_header.toolTip()
     assert "Add pairing key" in button_labels
     assert "Source Set Pairing" in section_titles
 
@@ -2991,8 +2992,8 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
     )
     assert widget.match_plan_table.rowCount() == 2
     assert (
-        table_cell_text(widget.match_plan_table, 1, int(MatchPlanColumn.FIELDS))
-        == "GFP=site"
+        table_cell_text(widget.match_plan_table, 1, column_index(SourceSetPairingRow, "fields"))
+        == "GFP:site"
     )
 
 
@@ -3063,7 +3064,7 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
@@ -3071,13 +3072,13 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
         set_combo_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
         match_type_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.currentText() == "*_contains"
@@ -3094,7 +3095,7 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
         )
         match_type_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.currentData() is SourceFilterMatchType.EQUALS
@@ -3148,13 +3149,13 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         set_combo_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
         match_type_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.currentText() == "*_contains"
@@ -3162,11 +3163,11 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         set_editable_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "RNA",
         )
         QApplication.processEvents()
-        value_item = widget.source_filters_table.item(0, int(SourceFilterColumn.VALUE))
+        value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
         assert value_item is not None
         assert value_item.text() == "*_RNA"
         assert "source_bindings.source_filters" in state.dirty_fields
@@ -3183,14 +3184,14 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
 
         match_type_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
         assert match_type_widget.currentText() == "*_contains"
         assert match_type_widget.property("objectstate_dirty") is True
 
-        value_item = widget.source_filters_table.item(0, int(SourceFilterColumn.VALUE))
+        value_item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
         assert value_item is not None
         assert value_item.data(Qt.ItemDataRole.UserRole) == "DNA"
         assert value_item.text() == "_DNA"
@@ -3272,7 +3273,7 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
         set_combo_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
@@ -3290,7 +3291,7 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
         queued.clear()
         registered.clear()
         combo = widget.source_filters_table.cellWidget(
-            0, int(SourceFilterColumn.MATCH_TYPE)
+            0, column_index(SourceFilterClause, "match_type")
         )
         assert isinstance(combo, QComboBox)
         assert combo.currentData() is SourceFilterMatchType.CONTAINS
@@ -3454,7 +3455,7 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
 
         subject_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.SUBJECT),
+            column_index(SourceFilterClause, "subject"),
         )
         assert isinstance(subject_widget, QComboBox)
         assert subject_widget.property("objectstate_signature_diff") is True
@@ -3462,7 +3463,7 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
 
         match_type_widget = widget.source_filters_table.cellWidget(
             1,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.property("objectstate_signature_diff") is True
@@ -3470,7 +3471,7 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
 
         value_item = widget.source_filters_table.item(
             1,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
         )
         assert value_item is not None
         assert value_item.font().underline()
@@ -3531,7 +3532,7 @@ def test_inline_source_bindings_structural_path_flash_targets_table_cell() -> No
         cell_rect = widget.source_filters_table.visualRect(
             widget.source_filters_table.model().index(
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
         )
         cell_window_pos = manager.mapFromGlobal(
@@ -3623,7 +3624,7 @@ def test_inline_source_bindings_structural_provenance_navigation_flashes_table_c
         cell_rect = widget.source_filters_table.visualRect(
             widget.source_filters_table.model().index(
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
         )
         cell_window_pos = manager.mapFromGlobal(
@@ -3718,7 +3719,7 @@ def test_source_bindings_cell_flash_element_masks_cell_and_child_label() -> None
         cell_rect = widget.source_filters_table.visualRect(
             widget.source_filters_table.model().index(
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
         )
         cell_window_pos = manager.mapFromGlobal(
@@ -3915,7 +3916,7 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
@@ -3923,7 +3924,7 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         set_combo_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
             "contains",
         )
         QApplication.processEvents()
@@ -3931,13 +3932,13 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
         match_type_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
@@ -3961,13 +3962,13 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
         match_type_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.currentData() is SourceFilterMatchType.EQUALS
@@ -3991,13 +3992,13 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
         match_type_widget = widget.source_filters_table.cellWidget(
             0,
-            int(SourceFilterColumn.MATCH_TYPE),
+            column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
         assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
@@ -4050,7 +4051,7 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
@@ -4058,7 +4059,7 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         set_editable_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.VALUE),
+            column_index(SourceFilterClause, "value"),
             "RNA",
         )
         QApplication.processEvents()
@@ -4066,11 +4067,11 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "RNA"
         )
-        item = widget.source_filters_table.item(0, int(SourceFilterColumn.VALUE))
+        item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
         assert item is not None
         assert item.data(Qt.ItemDataRole.UserRole) == "RNA"
         assert item.text() == "*_RNA"
@@ -4088,11 +4089,11 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
-        item = widget.source_filters_table.item(0, int(SourceFilterColumn.VALUE))
+        item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
         assert item is not None
         assert item.data(Qt.ItemDataRole.UserRole) == "DNA"
         assert item.text() == "*_DNA"
@@ -4110,11 +4111,11 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "RNA"
         )
-        item = widget.source_filters_table.item(0, int(SourceFilterColumn.VALUE))
+        item = widget.source_filters_table.item(0, column_index(SourceFilterClause, "value"))
         assert item is not None
         assert item.data(Qt.ItemDataRole.UserRole) == "RNA"
         assert item.text() == "*_RNA"
@@ -4178,7 +4179,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
@@ -4186,7 +4187,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
@@ -4221,7 +4222,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "contains"
         )
@@ -4229,7 +4230,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "RNA"
         )
@@ -4250,7 +4251,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.MATCH_TYPE),
+                column_index(SourceFilterClause, "match_type"),
             )
             == "equals"
         )
@@ -4258,7 +4259,7 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
             table_cell_text(
                 widget.source_filters_table,
                 0,
-                int(SourceFilterColumn.VALUE),
+                column_index(SourceFilterClause, "value"),
             )
             == "DNA"
         )
@@ -4432,7 +4433,7 @@ def test_source_bindings_editor_set_value_resets_stale_preview_table() -> None:
         table_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.SUBJECT),
+            column_index(SourceFilterClause, "subject"),
         )
         == "extension"
     )
@@ -4443,7 +4444,7 @@ def test_source_bindings_editor_set_value_resets_stale_preview_table() -> None:
         table_cell_text(
             widget.source_filters_table,
             0,
-            int(SourceFilterColumn.SUBJECT),
+            column_index(SourceFilterClause, "subject"),
         )
         == "file"
     )
@@ -4498,7 +4499,7 @@ def test_source_bindings_editor_edits_step_binding_table() -> None:
     widget.add_binding_row(NamedSourceBinding(alias="DNA"))
     dialog = widget._create_step_bindings_dialog()
     table = dialog.editor.table
-    set_binding_cell_text(table, 0, SourceBindingColumn.ALIAS, "OrigDNA")
+    set_binding_cell_text(table, 0, "alias", "OrigDNA")
     widget._apply_step_bindings(dialog.bindings())
 
     edited = widget.get_value()
@@ -4526,7 +4527,7 @@ def test_source_bindings_editor_preserves_selector_on_basic_edits() -> None:
     )
     dialog = widget._create_step_bindings_dialog()
     table = dialog.editor.table
-    set_binding_cell_text(table, 0, SourceBindingColumn.ALIAS, "OrigDNA")
+    set_binding_cell_text(table, 0, "alias", "OrigDNA")
     widget._apply_step_bindings(dialog.bindings())
 
     edited = widget.get_value().bindings[0]
@@ -4546,7 +4547,7 @@ def test_source_bindings_editor_preserves_binding_identity_on_basic_edits() -> N
     )
     dialog = widget._create_step_bindings_dialog()
     table = dialog.editor.table
-    set_binding_cell_text(table, 0, SourceBindingColumn.ALIAS, "OrigDNA")
+    set_binding_cell_text(table, 0, "alias", "OrigDNA")
     widget._apply_step_bindings(dialog.bindings())
 
     edited = widget.get_value().bindings[0]
@@ -4564,19 +4565,19 @@ def test_source_bindings_editor_edits_binding_identity_columns() -> None:
     table = dialog.editor.table
     set_editable_cell_text(
         table,
-        *binding_cell_position(0, SourceBindingColumn.IDENTITY),
-        "channel=2;site=1",
+        *binding_cell_position(0, "component_identity"),
+        (ComponentSelector(Microscopy.Channel, "2"), ComponentSelector(Microscopy.Site, "1")),
     )
     set_binding_cell_text(
         table,
         0,
-        SourceBindingColumn.SET_ROLE,
+        "source_set_role",
         SourceSetRole.BROADCAST.value,
     )
     set_binding_cell_text(
         table,
         0,
-        SourceBindingColumn.PROJECTION_ROLE,
+        "projection_role",
         SourceProjectionRole.SOURCE_ARTIFACT.value,
     )
     widget._apply_step_bindings(dialog.bindings())
@@ -4599,20 +4600,20 @@ def test_source_bindings_editor_edits_selector_columns() -> None:
     table = dialog.editor.table
     set_editable_cell_text(
         table,
-        *binding_cell_position(0, SourceBindingColumn.COMPONENTS),
-        "channel=DNA;site=1",
+        *binding_cell_position(0, "components"),
+        (ComponentSelector(Microscopy.Channel, "DNA"), ComponentSelector(Microscopy.Site, "1")),
     )
     set_editable_cell_text(
         table,
-        *binding_cell_position(0, SourceBindingColumn.METADATA),
-        "Well=A01",
+        *binding_cell_position(0, "metadata"),
+        (MetadataSelector("Well", "A01"),),
     )
     set_editable_cell_text(
         table,
-        *binding_cell_position(0, SourceBindingColumn.FILTERS),
-        "file:contains:DNA",
+        *binding_cell_position(0, "filters"),
+        (SourceFilterClause(SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA"),),
     )
-    set_binding_cell_text(table, 0, SourceBindingColumn.INHERIT, "False")
+    set_binding_cell_text(table, 0, "inherit_current_scope", False)
     widget._apply_step_bindings(dialog.bindings())
 
     selector = widget.get_value().bindings[0].selector
@@ -4665,13 +4666,13 @@ def test_source_bindings_editor_uses_free_form_selector_pickers(tmp_path) -> Non
     widget.add_binding_row(NamedSourceBinding(alias="DNA"))
     dialog = widget._create_step_bindings_dialog()
     table = dialog.editor.table
-    components_widget = binding_cell_widget(table, 0, SourceBindingColumn.COMPONENTS)
-    metadata_widget = binding_cell_widget(table, 0, SourceBindingColumn.METADATA)
+    components_widget = binding_cell_widget(table, 0, "components")
+    metadata_widget = binding_cell_widget(table, 0, "metadata")
 
     assert isinstance(components_widget, StructuredSelectorCellWidget)
     assert isinstance(metadata_widget, StructuredSelectorCellWidget)
-    assert "channel=" in components_widget.values
-    assert "Well=A01" in metadata_widget.values
+    assert "channel" in {suggestion.label for suggestion in components_widget.suggestions}
+    assert "Well:A01" in {suggestion.label for suggestion in metadata_widget.suggestions}
 
 
 def test_source_bindings_editor_removes_selected_binding_row() -> None:
@@ -4704,18 +4705,18 @@ def test_source_bindings_editor_edits_metadata_rules() -> None:
     set_combo_cell_text(
         widget.metadata_rules_table,
         0,
-        int(MetadataRuleColumn.SOURCE),
+        column_index(MetadataExtractionRule, "source"),
         "file_name",
     )
     widget.metadata_rules_table.item(
         0,
-        int(MetadataRuleColumn.PATTERN),
+        column_index(MetadataExtractionRule, "pattern"),
     ).setText(r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif")
     set_editable_cell_text(
         widget.metadata_rules_table,
         0,
-        int(MetadataRuleColumn.FILTERS),
-        "file:contains:DNA",
+        column_index(MetadataExtractionRule, "filters"),
+        (SourceFilterClause(SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA"),),
     )
 
     rules = widget.get_value().metadata_rules
@@ -4743,14 +4744,14 @@ def test_source_bindings_editor_edits_match_plan() -> None:
     set_combo_cell_text(
         widget.match_plan_table,
         0,
-        int(MatchPlanColumn.METHOD),
+        column_index(SourceSetPairingRow, "method"),
         "metadata",
     )
     set_editable_cell_text(
         widget.match_plan_table,
         0,
-        int(MatchPlanColumn.FIELDS),
-        "DNA=well;GFP=well",
+        column_index(SourceSetPairingRow, "fields"),
+        (SourceBindingMatchField("DNA", "well"), SourceBindingMatchField("GFP", "well")),
     )
 
     assert widget.get_value().match_plan == SourceBindingMatchPlan(
@@ -4775,17 +4776,17 @@ def test_source_bindings_editor_enum_columns_use_typed_combos() -> None:
     table = dialog.editor.table
     set_combo_cell_text(
         table,
-        *binding_cell_position(0, SourceBindingColumn.KIND),
+        *binding_cell_position(0, "artifact_kind"),
         "object_labels",
     )
     set_combo_cell_text(
         table,
-        *binding_cell_position(0, SourceBindingColumn.ORIGIN),
+        *binding_cell_position(0, "origin"),
         "pipeline_start",
     )
     set_combo_cell_text(
         table,
-        *binding_cell_position(0, SourceBindingColumn.PROJECTION_ROLE),
+        *binding_cell_position(0, "projection_role"),
         "source_artifact",
     )
     widget._apply_step_bindings(dialog.bindings())

@@ -29,8 +29,8 @@ from openhcs.core.measurement_row_materialization import (
     measurement_rows,
     measurement_table_axis_values,
 )
-from openhcs.core.process_local_cache import BoundedCache
-from openhcs.core.registry_strategies import NominalTypeKeyedStrategyMixin
+from metaclass_registry.caches import BoundedCache
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import (
     MeasurementRowValueField,

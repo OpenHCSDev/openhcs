@@ -23,7 +23,7 @@ from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.lazy_gpu_imports import jax
 from openhcs.core.memory import jax as jax_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.processors.method_axes import (
     StackProjectionMethod,
 )

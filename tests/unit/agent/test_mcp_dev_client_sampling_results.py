@@ -237,7 +237,7 @@ def test_new_declaration_composes_real_cooperative_sampling_hooks(reverse_order)
         output_contract = NewSample
 
     value = NewSample(schema_version=SCHEMA_VERSION, plate_path="new-plate", requested_image_path="new-image")
-    response = batch(value, NewCapability.to_spec())
+    response = batch(value, NewCapability)
     assert type(response.results[0].first_decoded_payload()) is NewSample
     command = CapabilityBackedCommandSpec.for_capability_name(NewCapability.name)
     text = command.render_result(response, command.call_render_args({}))

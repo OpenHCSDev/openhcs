@@ -16,7 +16,7 @@ from openhcs.core.function_step_document import (
     FunctionStepDocumentAuthority,
 )
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
-from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
+from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,

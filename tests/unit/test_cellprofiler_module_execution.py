@@ -10441,11 +10441,11 @@ def test_secondary_propagation_methods_own_numba_default_backend():
 
     assert (
         PropagationSegmentationStrategy().propagation_backend_provider(request)
-        is CellProfilerBackendProvider.NUMBA
+        is CellProfilerBackendProvider.NUMBA.provider
     )
     assert (
         DistanceMaskedSegmentationStrategy().propagation_backend_provider(request)
-        is CellProfilerBackendProvider.NUMBA
+        is CellProfilerBackendProvider.NUMBA.provider
     )
 
 

@@ -34,7 +34,7 @@ from openhcs.agent.skill_sync import (
     installed_skill_bundle,
     sync_skills,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
 CLIENT_REGISTRATION_SCHEMA_VERSION = "openhcs.mcp.client-registration.v1"
 OPENHCS_MCP_SERVER_NAME = "openhcs"

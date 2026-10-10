@@ -88,7 +88,7 @@ from openhcs.core.config import (
     NapariDisplayConfig,
     NapariVariableSizeHandling,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )

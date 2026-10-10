@@ -9,8 +9,8 @@ from enum import Enum
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry import RegistryFamily
 from metaclass_registry import RegistryKeyAttribute
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
-from openhcs.core.registry_strategies import NominalTypeKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisProjector
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection

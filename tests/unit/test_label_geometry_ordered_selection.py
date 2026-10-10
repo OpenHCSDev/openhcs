@@ -9,7 +9,6 @@ from openhcs.processing.backends.cellprofiler.label_geometry import (
     _numpy124_partition_indices_numba,
 )
 from openhcs.processing.backends.cellprofiler.shape import (
-    LegacyFastNumpyShapeMeasurementBackendStrategy,
     NumbaNumpyShapeMeasurementBackendStrategy,
 )
 
@@ -61,11 +60,6 @@ def test_selected_positions_keep_their_exact_legacy_relative_order(
 
 
 @pytest.mark.parametrize(
-    "backend_type",
-    (LegacyFastNumpyShapeMeasurementBackendStrategy,
-     NumbaNumpyShapeMeasurementBackendStrategy),
-)
-@pytest.mark.parametrize(
     "nonfinite,masked,expected",
     (
         (False, False, ([[4, 0], [1, 1], [1, 1]], [[8, 9], [0, 0], [0, 0]])),
@@ -74,8 +68,8 @@ def test_selected_positions_keep_their_exact_legacy_relative_order(
         (True, True, ([[2, 1], [1, 1], [1, 1]], [[2, 3], [6, 6], [6, 6]])),
     ),
 )
-def test_both_nominal_backends_preserve_mask_nan_and_absent_label_coordinates(
-    backend_type, nonfinite, masked, expected
+def test_shape_backend_preserves_mask_nan_and_absent_label_coordinates(
+    nonfinite, masked, expected
 ):
     image = np.tile(np.array([0.0, 1.0, 2.0, 2.0, 0.0, -1.0]), 12).reshape(6, 12)
     labels = np.tile(np.array([0, 1, 1, 2, 2, -1], np.int32), 12).reshape(6, 12)
@@ -85,7 +79,7 @@ def test_both_nominal_backends_preserve_mask_nan_and_absent_label_coordinates(
         image.flat[25] = np.inf
         image.flat[37] = -np.inf
     mask = (np.arange(72).reshape(6, 12) % 4) != 0 if masked else None
-    actual = backend_type().maximum_position_of_labels(
+    actual = NumbaNumpyShapeMeasurementBackendStrategy().maximum_position_of_labels(
         image, labels, requested, mask=mask
     )
     for actual_axis, expected_axis in zip(actual, expected, strict=True):
@@ -93,7 +87,7 @@ def test_both_nominal_backends_preserve_mask_nan_and_absent_label_coordinates(
 
 
 def test_backend_preparation_covers_full_and_selected_array_abis(monkeypatch):
-    backend = LegacyFastNumpyShapeMeasurementBackendStrategy()
+    backend = NumbaNumpyShapeMeasurementBackendStrategy()
     backend.prepare_backend()
     original = Dispatcher.compile
 

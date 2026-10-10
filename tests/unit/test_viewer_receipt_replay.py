@@ -325,7 +325,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         results=(McpDevToolResult(GetViewerWindowStateCapability.name, False, (state,)),),
     ))
     decoded = McpDevToolBatchResponse.for_rendering(public_wire)
-    received = decoded.payload_for(GetViewerWindowStateCapability.to_spec())
+    received = decoded.payload_for(GetViewerWindowStateCapability)
     assert isinstance(received.layers[0].payload_summaries[0], ViewerPayloadSummary)
     assert received.layers[0].payload_summaries[0].require_plane_components() == {"channel": (2, 1)}
     binding = McpDevOutputRenderer.for_output_contract(GetViewerWindowStateCapability.output_contract)

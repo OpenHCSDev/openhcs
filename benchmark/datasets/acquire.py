@@ -14,6 +14,7 @@ from metaclass_registry import AutoRegisterMeta
 import requests
 from tqdm import tqdm
 
+from benchmark.contracts.upstream_sources import DATASET_DATA_DIRECTORY
 from benchmark.contracts.dataset import (
     AcquiredDataset,
     ArchiveFormat,
@@ -486,7 +487,7 @@ def acquire_dataset(
     base_dir = cache_base or default_benchmark_dataset_cache_root()
     cache_root = base_dir / spec.id
     archive_dir = cache_root / "archives"
-    extract_dir = cache_root / "data"
+    extract_dir = cache_root / DATASET_DATA_DIRECTORY
     context = DatasetAcquisitionContext(
         spec=spec,
         cache_root=cache_root,

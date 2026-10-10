@@ -26,6 +26,15 @@ class AxisDeclarationMeta(AutoRegisterMeta):
     their ``repr`` is their declared qualified name rather than ``<class …>``.
     """
 
+    def __init__(cls, name, bases, namespace, **kwargs) -> None:
+        # Declarations are checked once the class is complete. Raising from
+        # ``__init_subclass__`` would leave a half-built ABC subclass whose
+        # inherited subclass-check state makes unrelated axes pass role checks.
+        super().__init__(name, bases, namespace, **kwargs)
+        validate = getattr(cls, "_validate_declaration", None)
+        if validate is not None:
+            validate()
+
     def __repr__(cls) -> str:
         return cls.__qualname__
 
@@ -203,6 +212,12 @@ class Axis(GroupingDeclaration):
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         super().__init_subclass__(**kwargs)
+        cls.axis_key = f"{cls.__module__}:{cls.__qualname__}"
+
+    @classmethod
+    def _validate_declaration(cls) -> None:
+        if "_validate_declaration" in cls.__dict__:
+            return  # the declaring base itself
         if "name" not in cls.__dict__:
             raise TypeError(f"Axis {cls.__qualname__} must declare its boundary name.")
         kinds = [base for base in cls.__mro__ if AxisValueKind in base.__bases__]
@@ -211,8 +226,6 @@ class Axis(GroupingDeclaration):
                 f"Axis {cls.__qualname__} must carry exactly one AxisValueKind; "
                 f"found {[kind.__name__ for kind in kinds]}."
             )
-
-        cls.axis_key = f"{cls.__module__}:{cls.__qualname__}"
 
     def __new__(cls, *args: object, **kwargs: object):
         raise TypeError(f"{cls.__qualname__} is an axis declaration, not a value type.")
@@ -284,9 +297,12 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
 
     _active: ClassVar[type[AxisFamily] | None] = None
 
-    def __init_subclass__(cls, **kwargs: object) -> None:
-        super().__init_subclass__(**kwargs)
+    @classmethod
+    def _validate_declaration(cls) -> None:
+        if "_validate_declaration" in cls.__dict__:
+            return  # the declaring base itself
         declared = tuple(value for value in cls.__dict__.values() if is_axis(value))
+
         if not declared:
             raise TypeError(f"Axis family {cls.__qualname__} declares no axes.")
         names = [axis.name for axis in declared]
@@ -514,6 +530,13 @@ class _AxisDeclarationChoices(AnnotationChoices):
         return f"{type(self).__name__}()"
 
 
+class AxisChoices(_AxisDeclarationChoices):
+    """A field holding any axis of the active family."""
+
+    def choices(self) -> tuple[object, ...]:
+        return AxisFamily.active().axes
+
+
 class VariableAxisChoices(_AxisDeclarationChoices):
     """A field holding variable axes of the active family."""
 
@@ -545,6 +568,7 @@ def _declared_roles(axes: tuple[type[Axis], ...]) -> tuple[type[AxisRole], ...]:
 __all__ = [
     "AtMostOne",
     "Axis",
+    "AxisChoices",
     "AxisDeclarationMeta",
     "AxisFamily",
     "AxisFamilyNotActive",

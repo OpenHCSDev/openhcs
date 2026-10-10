@@ -13,7 +13,7 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.capabilities import (
-    AgentCapabilitySpec,
+    AgentCapabilityDeclaration,
     CapabilityWorkflowGroup,
     get_agent_capability,
 )
@@ -616,7 +616,7 @@ class ToolListRenderer:
                 (tool, capability)
                 for tool, capability in entries
                 if capability is not None
-                and capability.workflow_group is workflow_group
+                and capability.exposition.workflow_group is workflow_group
             )
             if not group_entries:
                 continue
@@ -633,7 +633,7 @@ class ToolListRenderer:
     @staticmethod
     def _capability_for_tool(
         tool: Mapping[str, JsonValue],
-    ) -> AgentCapabilitySpec | None:
+    ) -> type[AgentCapabilityDeclaration] | None:
         tool_name = McpDevPayloadProjection.text(tool.get("name"))
         try:
             return get_agent_capability(tool_name)
