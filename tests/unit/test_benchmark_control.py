@@ -1284,8 +1284,8 @@ def test_direct_benchmark_capability_lookup_loads_extension_first() -> None:
             "-c",
             (
                 "from openhcs.agent.capabilities import "
-                "get_agent_capability_declaration; "
-                "declaration = get_agent_capability_declaration("
+                "get_agent_capability; "
+                "declaration = get_agent_capability("
                 "'openhcs_inspect_benchmark_run'); "
                 "assert declaration.name == 'openhcs_inspect_benchmark_run'"
             ),

@@ -62,12 +62,12 @@ def probe(**values):
 def test_public_probe_command_preserves_false_zero_empty_and_decoded_identity():
     raw = response(ProbeViewerWindowCapability, probe())
     decoded = McpDevToolBatchResponse.for_rendering(raw)
-    payload = decoded.payload_for(ProbeViewerWindowCapability.to_spec())
+    payload = decoded.payload_for(ProbeViewerWindowCapability)
     assert type(payload) is ViewerWindowProbeResult
     assert type(payload.viewer) is ViewerWindowDescriptor
     assert payload.viewer.viewer_type is ViewerType.NAPARI
     assert McpDevToolBatchResponse.for_rendering(decoded).payload_for(
-        ProbeViewerWindowCapability.to_spec()
+        ProbeViewerWindowCapability
     ) is payload
     args = _build_parser().parse_args(("probe-viewer", "5992"))
     rendered = McpDevCommandSpec.for_name("probe-viewer").render_response(decoded, args)
@@ -94,7 +94,7 @@ def test_validation_descends_inherited_counters_policy_and_layer_records():
     decoded = McpDevToolBatchResponse.for_rendering(
         response(ValidateViewerWindowStateCapability, original)
     )
-    value = decoded.payload_for(ValidateViewerWindowStateCapability.to_spec())
+    value = decoded.payload_for(ValidateViewerWindowStateCapability)
     assert type(value.layer_summaries[0]) is ViewerWindowLayerValidationSummary
     assert value.validation_policy.require_nonzero_payloads is False
     args = _build_parser().parse_args(("validate-viewer", "5992"))
@@ -111,7 +111,7 @@ def test_invalid_boolean_contract_remains_a_failure_with_original_raw_receipt(va
     original = raw["results"][0]["payloads"][0]
     original["reachable"] = value
     decoded = McpDevToolBatchResponse.for_rendering(raw)
-    assert decoded.payload_for(ProbeViewerWindowCapability.to_spec()) is None
+    assert decoded.payload_for(ProbeViewerWindowCapability) is None
     assert decoded.results[0].payloads[0].receipt is original
     rendered = ViewerProbeRenderer.render(decoded)
     assert rendered.startswith("Viewer probe: unavailable\n")
@@ -140,7 +140,7 @@ def state(**values):
 
 def render_state(raw):
     decoded = McpDevToolBatchResponse.for_rendering(raw)
-    value = decoded.payload_for(GetViewerWindowStateCapability.to_spec())
+    value = decoded.payload_for(GetViewerWindowStateCapability)
     assert value is not None
     binding = McpDevOutputRenderer.for_output_contract(type(value))
     assert binding.renderer_type is ViewerStateRenderer
@@ -230,7 +230,7 @@ def test_malformed_native_declarations_remain_errors_not_absent_sections(member,
     else:
         original[member] = bad
     decoded = McpDevToolBatchResponse.for_rendering(raw)
-    assert decoded.payload_for(GetViewerWindowStateCapability.to_spec()) is None
+    assert decoded.payload_for(GetViewerWindowStateCapability) is None
     assert decoded.results[0].payloads[0].receipt is original
     rendered = ViewerStateRenderer.render(decoded)
     assert "mcp_payload_invalid" in rendered
@@ -256,7 +256,7 @@ def test_independent_dto_and_capability_inherit_original_renderer_without_roster
     decoded = McpDevToolBatchResponse.for_rendering(
         response(IndependentProbeCapability, original)
     )
-    payload = decoded.payload_for(IndependentProbeCapability.to_spec())
+    payload = decoded.payload_for(IndependentProbeCapability)
     assert type(payload) is IndependentProbeResult
     binding = McpDevOutputRenderer.for_output_contract(type(payload))
     assert binding.renderer_type is ViewerProbeRenderer

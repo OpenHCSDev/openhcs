@@ -32,8 +32,8 @@ from tests.unit.agent.test_plate_inspection_service import ImageXpressPlateFixtu
 @pytest.mark.parametrize("declaration", (QueryPlateFilesCapability, SamplePlateImageCapability))
 def test_physical_reader_declarations_inherit_original_affine_progress(declaration):
     assert issubclass(declaration, MainThreadProgressCapability)
-    assert declaration.to_spec().progress_heartbeat_seconds == 1.0
-    assert declaration.to_spec().progress_worker_thread_safe is False
+    assert declaration.progress_heartbeat_seconds == 1.0
+    assert declaration.progress_worker_thread_safe is False
     assert "progress_worker_thread_safe" not in declaration.__dict__
 
 

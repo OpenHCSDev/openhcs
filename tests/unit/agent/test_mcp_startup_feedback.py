@@ -2,7 +2,6 @@
 
 import asyncio
 import threading
-from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -59,7 +58,7 @@ class RecordingContext:
     ),
 )
 def test_submission_leaf_declares_existing_worker_progress(declaration):
-    spec = declaration.to_spec()
+    spec = declaration
     assert 0 < spec.progress_heartbeat_seconds < DEFAULT_CALL_TIMEOUT_SECONDS
     assert spec.progress_worker_thread_safe is True
     assert issubclass(declaration, ProgressAcknowledgedCapability)
@@ -69,8 +68,8 @@ def test_submission_leaf_declares_existing_worker_progress(declaration):
 def test_reused_client_reports_actual_phase_before_heartbeat_and_retains_ui_callback():
     ui = []
     client = ZMQExecutionClient(port=5555, connection_status_callback=ui.append)
-    capability = replace(
-        SearchFunctionsCapability.to_spec(), progress_heartbeat_seconds=0.02
+    capability = SimpleNamespace(
+        title=SearchFunctionsCapability.title, progress_heartbeat_seconds=0.02
     )
 
     async def exercise():
@@ -123,7 +122,7 @@ def test_terminal_operation_preserves_error_and_flushes_original_status(error_ty
 
         with pytest.raises(error_type) as caught:
             await _await_with_declared_progress(
-                SearchFunctionsCapability.to_spec(), context, operation()
+                SearchFunctionsCapability, context, operation()
             )
         assert caught.value is error
         assert "failed: Exact child failed" in context.messages[-1][1]
@@ -138,7 +137,7 @@ def test_terminal_operation_preserves_error_and_flushes_original_status(error_ty
 
 def test_catalog_family_inherits_progress_without_search_leaf_repetition():
     assert (
-        DescribeFunctionCapability.to_spec().progress_heartbeat_seconds
+        DescribeFunctionCapability.progress_heartbeat_seconds
         == ProgressAcknowledgedCapability.progress_heartbeat_seconds
     )
     assert "progress_heartbeat_seconds" not in SearchFunctionsCapability.__dict__
@@ -233,7 +232,7 @@ def test_cancelled_progress_await_drops_late_worker_callbacks_and_restores_scope
         context = RecordingContext()
         task = asyncio.create_task(
             _await_with_declared_progress(
-                SearchFunctionsCapability.to_spec(), context, asyncio.to_thread(worker)
+                SearchFunctionsCapability, context, asyncio.to_thread(worker)
             )
         )
         try:
@@ -270,7 +269,7 @@ def test_concurrent_mcp_requests_share_one_client_without_cross_talk():
             return label
 
         result = await _await_with_declared_progress(
-            SearchFunctionsCapability.to_spec(), context, operation()
+            SearchFunctionsCapability, context, operation()
         )
         return result, context.messages
 
@@ -289,17 +288,30 @@ def test_new_catalog_declarations_and_cooperative_hooks_use_unchanged_generated_
     client = ZMQExecutionClient(port=5555)
     page = FunctionCatalogPage(SCHEMA_VERSION, "new-case", (), 0, 50)
 
-    class InvocationAudit(AgentCapabilityDeclaration):
-        @classmethod
-        def execute_request(cls, context, request):
-            context.audit.append(cls.name)
-            return super().execute_request(context, request)
+    class InvocationAudit:
+        """Cooperative invocation hook composed over the declared shape."""
 
-    class NewBefore(InvocationAudit, SearchFunctionsCapability):
+        __slots__ = ()
+
+        def invoke(self, declaration, binder, arguments):
+            binder.context.audit.append(declaration.name)
+            return super().invoke(declaration, binder, arguments)
+
+    base_invocation = SearchFunctionsCapability.invocation
+    audited_type = type(
+        "AuditedSearchInvocation",
+        (InvocationAudit, type(base_invocation)),
+        {"__slots__": ()},
+    )
+
+    class NewBefore(SearchFunctionsCapability):
         name = "openhcs_source_feedback_before"
         cli_command = None
+        invocation = audited_type(
+            service=base_invocation.service, method=base_invocation.method
+        )
 
-    class NewAfter(SearchFunctionsCapability, InvocationAudit):
+    class NewAfter(SearchFunctionsCapability):
         name = "openhcs_source_feedback_after"
         cli_command = None
 
@@ -323,7 +335,7 @@ def test_new_catalog_declarations_and_cooperative_hooks_use_unchanged_generated_
                 assert "New declaration feedback" in progress.messages[-1][1]
 
         asyncio.run(exercise())
-        assert context.audit == [NewBefore.name, NewAfter.name]
+        assert context.audit == [NewBefore.name]
     finally:
         for declaration in (NewBefore, NewAfter):
             AgentCapabilityDeclaration.__registry__.pop(declaration.name)

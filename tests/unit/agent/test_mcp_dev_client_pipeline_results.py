@@ -505,7 +505,7 @@ def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
         cli_command = "s1-extension-inspection"
         output_contract = ExtendedInspection
 
-    response = batch(ExtensionCapability.to_spec(), value)
+    response = batch(ExtensionCapability, value)
     assert type(response.results[0].first_decoded_payload()) is ExtendedInspection
     assert "plate=extended" in PipelineArtifactPlanRenderer.render(response)
     command = CapabilityBackedCommandSpec.for_capability_name(ExtensionCapability.name)
@@ -576,7 +576,7 @@ def test_cooperative_diamond_renderer_identity_is_visited_once(reverse_order):
     expected = ["right", "left"] if reverse_order else ["left", "right"]
     assert events == [*expected, "ancestor"]
     events.clear()
-    response = batch(DiamondCapability.to_spec(), value)
+    response = batch(DiamondCapability, value)
     command = CapabilityBackedCommandSpec.for_capability_name(DiamondCapability.name)
     assert command.render_result(response, command.call_render_args({})) == value.value
     assert events == [*expected, "ancestor"]

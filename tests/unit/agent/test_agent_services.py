@@ -3702,7 +3702,7 @@ def test_compile_inspection_uses_metadata_owner_despite_environment_drift(
 def test_compile_inspection_capability_declares_workspace_persistence():
     from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
 
-    spec = InspectPipelineSourceArtifactPlanCapability.to_spec()
+    spec = InspectPipelineSourceArtifactPlanCapability
     assert spec.mutating is True
     assert spec.read_only is False
     assert spec.side_effects == ("may_persist_workspace_metadata",)

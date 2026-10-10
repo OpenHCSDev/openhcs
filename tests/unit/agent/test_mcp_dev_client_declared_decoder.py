@@ -59,7 +59,7 @@ def test_contradictory_tool_error_contract_remains_a_failed_receipt(change):
 def test_actual_saved_successful_startup_descends_without_presentation():
     path = Path(__file__).resolve().parents[2] / "fixtures/mcp/start-owned-runtime-400.json"
     response = McpDevToolBatchResponse.for_rendering(json.loads(path.read_text()))
-    value = response.payload_for(StartOwnedRuntimeCapability.to_spec())
+    value = response.payload_for(StartOwnedRuntimeCapability)
     assert type(value) is RuntimeBootstrapState
     assert isinstance(value.handle, RuntimeBootstrapHandle)
     assert value.handle.process_identity.pid == 2153942
