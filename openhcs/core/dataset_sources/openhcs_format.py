@@ -1104,7 +1104,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
         """Create or update subdirectory-keyed OpenHCS metadata file.
 
         Args:
-            skip_if_complete: If True, skip update if metadata already complete (has channels)
+            skip_if_complete: If True, skip update if the record already has every axis's value labels
             allow_none_override: If True, None values override existing fields;
                                if False (default), None values are filtered out to preserve existing fields
         """
@@ -1123,8 +1123,10 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             with open(metadata_path, "r") as f:
                 existing = json.load(f)
 
-            subdir_data = existing.get("subdirectories", {}).get(sub_dir, {})
-            if subdir_data.get("channels"):
+            subdir_data = existing.get(FIELDS.SUBDIRECTORIES, {}).get(sub_dir, {})
+            if all(
+                field in subdir_data for field in OpenHCSMetadata.collection_fields()
+            ):
                 self.logger.debug(f"Metadata for {sub_dir} already complete, skipping")
                 return
 

@@ -18,7 +18,6 @@ from benchmark.contracts.dataset import (
 from benchmark.datasets.acquire import acquire_dataset
 from benchmark.datasets.registry import DATASET_REGISTRY
 from openhcs.core.components.component_values import AxisValues
-from openhcs.core.virtual_workspace_metadata import component_metadata_field
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.core.axes import AxisFamily
@@ -295,7 +294,7 @@ def _result_fieldnames() -> tuple[str, ...]:
 def _csv_row(result: BioFormatsHcsValidationResult) -> dict[str, object]:
     row = asdict(result)
     for component in AxisFamily.active().axes:
-        field_name = component_metadata_field(component)
+        field_name = component.metadata_collection_field
         row[field_name] = ";".join(row[field_name])
     row["grid_dimensions"] = (
         "" if result.grid_dimensions is None else _shape_label(result.grid_dimensions)
@@ -308,7 +307,7 @@ def _csv_row(result: BioFormatsHcsValidationResult) -> dict[str, object]:
 def _json_row(result: BioFormatsHcsValidationResult) -> dict[str, object]:
     row = asdict(result)
     for component in AxisFamily.active().axes:
-        field_name = component_metadata_field(component)
+        field_name = component.metadata_collection_field
         row[field_name] = list(row[field_name])
     row["grid_dimensions"] = (
         None if result.grid_dimensions is None else list(result.grid_dimensions)

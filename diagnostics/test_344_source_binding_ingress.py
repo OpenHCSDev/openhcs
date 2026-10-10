@@ -14,7 +14,6 @@ from openhcs.core.source_bindings import (
     MetadataExtractionRule, MetadataSource, source_bindings_defaults_to_base,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceProjectionSet
-from openhcs.core.dataset_sources.source import create_microscope_handler
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 
@@ -38,8 +37,8 @@ def _config():
 
 def test_explicit_imagexpress_with_bindings_is_routed_to_generic_ingestion():
     # Factory construction only. No initialize_workspace, I/O or compile.
-    handler = create_microscope_handler(
-        microscope_type="imagexpress",
+    handler = ImageXpressHandler.open(
+        ROOT,
         filemanager=FileManager(_create_storage_registry()),
         source_bindings_config=_config(),
     )

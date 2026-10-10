@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.axes import AxisFamily
+
 import csv
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, is_dataclass
@@ -480,8 +482,10 @@ class PlateFileRecord:
             if needle not in haystack:
                 return False
         if query.well is not None:
-            well = self.metadata.get("well")
-            if well is None or str(well) != query.well:
+            partition_value = self.metadata.get(
+                AxisFamily.active().partition_axis().name
+            )
+            if partition_value is None or str(partition_value) != query.well:
                 return False
         return True
 

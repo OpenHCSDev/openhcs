@@ -51,6 +51,10 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.dataset_sources.dataset_roots import (
+    DatasetRootRule,
+    LocalDirectoryRoot,
+)
 from openhcs.core.dataset_sources.source import (
     PreparedWorkspaceSource,
     SourceSelectionRole,
@@ -1790,9 +1794,9 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         if output_plate_root in current_paths:
             return
 
-        # PipelineOrchestrator requires a real directory for non-OMERO paths.
-        # Ensure it exists so we can register an orchestrator.
-        if not output_plate_root.startswith("/omero/"):
+        # Local-directory datasets need a real directory before an orchestrator
+        # can open them; datasets a domain root rule claims do not.
+        if DatasetRootRule.for_dataset(output_plate_root) is LocalDirectoryRoot:
             out_path = Path(output_plate_root)
             try:
                 out_path.mkdir(parents=True, exist_ok=True)
