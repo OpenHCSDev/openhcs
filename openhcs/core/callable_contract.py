@@ -1207,8 +1207,6 @@ class CallableContract(ArtifactPlanKeySelector):
         input_specs = self.artifact_inputs
         source_refs = self.output_group_scope_sources
         if not source_refs:
-            if self.main_flow_supplies_primary_image:
-                return ArtifactSpecCollection(())
             return input_specs
         sources = ArtifactSpecCollection(
             source_spec
@@ -1229,11 +1227,22 @@ class CallableContract(ArtifactPlanKeySelector):
         return sources
 
     @property
+    def lifecycle_anchor_owner_inputs(self) -> ArtifactSpecCollection:
+        """Inputs whose stored values, not main-flow anchors, drive invocation.
+
+        A callable fed main-flow pixels runs once per main-flow anchor; its
+        undeclared artifact inputs are context for that anchor. A declared
+        group-lineage relation still names its owning inputs.
+        """
+        if self.main_flow_supplies_primary_image and not self.output_group_scope_sources:
+            return ArtifactSpecCollection(())
+        return self.group_scope_inputs
+
+    @property
     def main_flow_supplies_primary_image(self) -> bool:
         """Whether the runtime passes main-flow pixels as the primary argument.
 
-        Such a callable runs once per main-flow cohort; its artifact inputs are
-        context for that cohort, not the owner of its group scope.
+        Such a callable runs once per main-flow cohort.
         """
         adapter = self.runtime_adapter
         return self.accepts_implicit_main_flow_input and not (

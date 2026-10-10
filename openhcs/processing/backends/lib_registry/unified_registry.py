@@ -1507,6 +1507,15 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         if metadata is not None:
             yield metadata
 
+    def owns_module(self, module_name: str) -> bool:
+        """Whether ``module_name`` lies inside this registry's declared modules."""
+
+        return any(
+            module_name == module_pattern
+            or module_name.startswith(f"{module_pattern}.")
+            for module_pattern in self.get_module_patterns()
+        )
+
     def composite_keys_for_declared_callable(
         self,
         func: Callable,
@@ -1518,11 +1527,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             return (metadata.composite_key,)
 
         declared = inspect.unwrap(func)
-        if not any(
-            declared.__module__ == module_pattern
-            or declared.__module__.startswith(f"{module_pattern}.")
-            for module_pattern in self.get_module_patterns()
-        ):
+        if not self.owns_module(declared.__module__):
             return ()
 
         module_names = (
