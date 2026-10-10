@@ -31,7 +31,7 @@ from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -194,7 +194,7 @@ def _submission(
     return OpenHCSExecutionSubmission(
         plate_id=plate_root,
         execution_plate_id=plate_root,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
         global_config=global_config,
@@ -252,7 +252,7 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
     )
     wire = ZMQExecutionClient().serialize_task(submission.compile_request())
     wire_pipeline = _exec_pipeline_source(wire[MessageFields.PIPELINE_CODE])
-    wire_pipeline_document = PipelineDocumentAuthority.from_namespace(wire_pipeline)
+    wire_pipeline_document = PipelineDocumentCodec.from_namespace(wire_pipeline)
     wire_global_config = _exec_config_source(wire[MessageFields.CONFIG_CODE])
 
     assert wire[MessageFields.COMPILE_ONLY] is True

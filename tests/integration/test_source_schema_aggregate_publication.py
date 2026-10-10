@@ -30,7 +30,7 @@ from openhcs.core.memory import numpy as numpy_function
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     ComponentSelector,
     MetadataExtractionRule,
@@ -76,7 +76,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
 
     registered = register_custom_function(volume_scalar_609)
     try:
-        document = PipelineDocumentAuthority.from_values(
+        document = PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(
                 dataset_source=SourceBindingsSource,
                 source_bindings_config=LazySourceBindingsConfig(

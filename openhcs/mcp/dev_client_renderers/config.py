@@ -11,12 +11,11 @@ from openhcs.agent.dto.config import (
 )
 from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
-    McpDevPayloadProjection,
-    McpDevTypedOutputRenderer,
+    McpDevOutputRenderer,
 )
 
 
-class ConfigSchemaRenderer(McpDevTypedOutputRenderer):
+class ConfigSchemaRenderer(McpDevOutputRenderer):
     """Render reflected config fields as a compact, searchable catalog."""
 
     output_contract = ConfigSchema
@@ -30,11 +29,8 @@ class ConfigSchemaRenderer(McpDevTypedOutputRenderer):
         options: CatalogRenderOptions,
     ) -> str:
         all_fields = payload.fields
-        matched_fields = cls._matching_fields(all_fields, options.contains)
-        visible_fields = matched_fields[: max(options.limit, 0)]
-        path_text = McpDevPayloadProjection.text(
-            payload.path_prefix, absent_text="<root>"
-        )
+        matched_fields, visible_fields = options.select(all_fields, cls._field_line)
+        path_text = cls.text(payload.path_prefix, absent_text="<root>")
         lines = [
             (
                 "Config schema: "
@@ -49,8 +45,7 @@ class ConfigSchemaRenderer(McpDevTypedOutputRenderer):
                 f"types={len(payload.types)}"
             ),
         ]
-        if options.contains:
-            lines.append(f"Filter: contains={options.contains}")
+        lines.extend(options.filter_lines())
         if visible_fields:
             lines.append("Field paths:")
             lines.extend(cls._field_line(field) for field in visible_fields)
@@ -62,19 +57,6 @@ class ConfigSchemaRenderer(McpDevTypedOutputRenderer):
             lines.append("Type inheritance (declaration-derived):")
             lines.extend(cls._type_line(type_schema) for type_schema in payload.types)
         return "\n".join(lines)
-
-    @classmethod
-    def _matching_fields(
-        cls,
-        fields: tuple[ConfigFieldSchema, ...],
-        contains: str | None,
-    ) -> tuple[ConfigFieldSchema, ...]:
-        if not contains:
-            return fields
-        needle = contains.casefold()
-        return tuple(
-            field for field in fields if needle in cls._field_line(field).casefold()
-        )
 
     @classmethod
     def _field_line(cls, field: ConfigFieldSchema) -> str:

@@ -71,7 +71,6 @@ from openhcs.pyqt_gui.windows.dual_editor_tab_builder import (
     _DualEditorTabBuildContext,
     _DualEditorTabBuilder,
 )
-from openhcs.ui.shared.pattern_data_manager import PatternDataManager
 
 logger = logging.getLogger(__name__)
 
@@ -264,9 +263,6 @@ class DualEditorWindow(BaseFormDialog):
         self.on_save_callback = on_save_callback
         self.orchestrator = orchestrator  # Store orchestrator for context management
         self.plate_scope = str(plate_scope)
-
-        # Pattern management (extracted from Textual version)
-        self.pattern_manager = PatternDataManager()
 
         # Store original step reference (never modified)
         # CRITICAL: For new steps, this must be None until first save
@@ -835,7 +831,6 @@ class DualEditorWindow(BaseFormDialog):
         if event_bus:
             event_bus.pipeline_changed.connect(self._on_pipeline_changed)
             event_bus.config_changed.connect(self._on_config_changed)
-            event_bus.register_window(self)
             self._event_bus = event_bus
             logger.debug("Connected to global event bus for cross-window updates")
 
@@ -872,7 +867,6 @@ class DualEditorWindow(BaseFormDialog):
                 event_bus.config_changed.disconnect(self._on_config_changed)
             except TypeError:
                 pass
-            event_bus.unregister_window(self)
             self._event_bus = None
 
         orchestrator_signal = self._orchestrator_config_signal

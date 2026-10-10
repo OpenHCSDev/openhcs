@@ -33,7 +33,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSummary,
 )
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.dev_client import McpDevCommandExecution
 from python_introspect import to_jsonable
@@ -103,8 +103,8 @@ def _failed_payload_execution(tool: str):
 
 
 def _pipeline_source() -> str:
-    return PipelineDocumentAuthority.render(
-        PipelineDocumentAuthority.from_values(
+    return PipelineDocumentCodec.render(
+        PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(),
             pipeline_steps=[
                 FunctionStep(
@@ -319,8 +319,8 @@ def test_structured_tool_failures_do_not_create_semantic_evidence(tmp_path: Path
 def test_signature_projection_requires_the_same_function_identity(tmp_path: Path):
     source = _pipeline_source()
     entry = _function_entry()
-    unrelated_ui_source = PipelineDocumentAuthority.render(
-        PipelineDocumentAuthority.from_values(
+    unrelated_ui_source = PipelineDocumentCodec.render(
+        PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(),
             pipeline_steps=[],
         )

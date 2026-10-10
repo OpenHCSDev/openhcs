@@ -5,6 +5,7 @@ from openhcs.mcp.dev_client_renderers.pipeline import PipelineArtifactPlanRender
 
 def test_artifact_plan_renderer_shows_main_flow_and_viewer_plans() -> None:
     response = {
+        "server": {"command": "python", "module": "openhcs.mcp"},
         "errors": [],
         "results": [
             {
@@ -12,6 +13,7 @@ def test_artifact_plan_renderer_shows_main_flow_and_viewer_plans() -> None:
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "plate_path": "/tmp/plate",
                         "axis_count": 1,
                         "step_count": 1,
@@ -22,6 +24,7 @@ def test_artifact_plan_renderer_shows_main_flow_and_viewer_plans() -> None:
                                 "step_index": 0,
                                 "step_name": "Denoise",
                                 "axis_id": "A01",
+                                "output_dir": "/tmp/out",
                                 "execution_groups": [None],
                                 "main_flow_axis_persistence_enabled": False,
                                 "main_flow_materialization": {

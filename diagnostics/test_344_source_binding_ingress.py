@@ -8,7 +8,7 @@ from polystore.base import _create_storage_registry
 from polystore.filemanager import FileManager
 
 from openhcs.constants import AllComponents, Backend
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector, SourceSetAssembler
 from openhcs.core.source_bindings import (
     MetadataExtractionRule, MetadataSource, source_bindings_defaults_to_base,
@@ -30,7 +30,7 @@ PATHS = tuple(
 
 
 def _config():
-    document = PipelineDocumentAuthority.from_source(EXAMPLE.read_text())
+    document = PipelineDocumentCodec.from_source(EXAMPLE.read_text())
     assert document.pipeline_config.dataset_source is ImageXpressHandler
     return source_bindings_defaults_to_base(document.pipeline_config.source_bindings_config)
 

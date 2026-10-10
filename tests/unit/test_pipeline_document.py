@@ -8,7 +8,7 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.pipeline_document import (
     PipelineDocument,
-    PipelineDocumentAuthority,
+    PipelineDocumentCodec,
     PipelineDocumentField,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -28,13 +28,13 @@ def test_pipeline_document_fields_own_exact_public_names() -> None:
 
 
 def test_pipeline_document_round_trip_renders_config_and_normalized_steps() -> None:
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(),
         pipeline_steps=[_step()],
     )
 
-    source = PipelineDocumentAuthority.render(document)
-    restored = PipelineDocumentAuthority.from_source(source)
+    source = PipelineDocumentCodec.render(document)
+    restored = PipelineDocumentCodec.from_source(source)
 
     assert "pipeline_config = PipelineConfig(" in source
     assert "pipeline_steps = [" in source
@@ -44,9 +44,9 @@ def test_pipeline_document_round_trip_renders_config_and_normalized_steps() -> N
     assert restored.pipeline_steps[0].func is RegistryService.registered_callable(
         cellprofiler_backend.crop
     )
-    assert PipelineDocumentAuthority.render(restored) == source
+    assert PipelineDocumentCodec.render(restored) == source
     assert restored.original_source == source
-    assert PipelineDocumentAuthority.execution_source(restored) == source
+    assert PipelineDocumentCodec.execution_source(restored) == source
 
 
 def test_from_values_copies_the_step_sequence_and_delegates_normalization(
@@ -66,7 +66,7 @@ def test_from_values_copies_the_step_sequence_and_delegates_normalization(
         normalize_pipeline,
     )
 
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(),
         pipeline_steps=source_steps,
     )
@@ -77,18 +77,18 @@ def test_from_values_copies_the_step_sequence_and_delegates_normalization(
 
 
 def test_execution_source_preserves_reviewed_source_without_parallel_state() -> None:
-    canonical = PipelineDocumentAuthority.render(
-        PipelineDocumentAuthority.from_values(
+    canonical = PipelineDocumentCodec.render(
+        PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(),
             pipeline_steps=[],
         )
     )
     reviewed_source = f"{canonical}\n# reviewed source marker\n"
 
-    document = PipelineDocumentAuthority.from_source(reviewed_source)
+    document = PipelineDocumentCodec.from_source(reviewed_source)
 
     assert document.original_source == reviewed_source
-    assert PipelineDocumentAuthority.execution_source(document) == reviewed_source
+    assert PipelineDocumentCodec.execution_source(document) == reviewed_source
 
 
 @pytest.mark.parametrize(
@@ -131,18 +131,18 @@ def test_from_namespace_requires_steps_and_validates_explicit_types(
     message: str,
 ) -> None:
     with pytest.raises(error_type, match=message):
-        PipelineDocumentAuthority.from_namespace(namespace)
+        PipelineDocumentCodec.from_namespace(namespace)
 
 
 def test_from_namespace_defaults_missing_pipeline_config() -> None:
-    document = PipelineDocumentAuthority.from_namespace({"pipeline_steps": [_step()]})
+    document = PipelineDocumentCodec.from_namespace({"pipeline_steps": [_step()]})
 
     assert document.pipeline_config == PipelineConfig()
 
 
 def test_from_namespace_does_not_accept_aliases() -> None:
     with pytest.raises(ValueError, match="pipeline_steps"):
-        PipelineDocumentAuthority.from_namespace(
+        PipelineDocumentCodec.from_namespace(
             {
                 "config": PipelineConfig(),
                 "steps": [_step()],
@@ -157,7 +157,7 @@ def test_render_revalidates_direct_pipeline_document_instances() -> None:
     )
 
     with pytest.raises(TypeError, match="PipelineConfig"):
-        PipelineDocumentAuthority.render(invalid)
+        PipelineDocumentCodec.render(invalid)
 
 
 def test_pipeline_document_preserves_intrinsic_volume_source_declaration():
@@ -170,7 +170,7 @@ def test_pipeline_document_preserves_intrinsic_volume_source_declaration():
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 
     domain = VolumeSourceSpatialDomain()
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(
                 source_spatial_domain=domain
@@ -178,8 +178,8 @@ def test_pipeline_document_preserves_intrinsic_volume_source_declaration():
         ),
         pipeline_steps=[],
     )
-    source = PipelineDocumentAuthority.render(document)
-    restored = PipelineDocumentAuthority.from_source(source)
+    source = PipelineDocumentCodec.render(document)
+    restored = PipelineDocumentCodec.from_source(source)
     assert (
         restored.pipeline_config.source_bindings_config.source_spatial_domain == domain
     )

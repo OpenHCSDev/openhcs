@@ -1,5 +1,5 @@
 from __future__ import annotations
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 
 import ast
 import os
@@ -197,13 +197,13 @@ def _execute_imported_cppipe_via_zmq(
         plate_id=source_root,
         execution_plate_id=execution_plate_path,
         selected_pipeline_path=cppipe_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
         global_config=global_config,
         config_params=config_params,
     )
-    assert submission.pipeline_code() == PipelineDocumentAuthority.render(
+    assert submission.pipeline_code() == PipelineDocumentCodec.render(
         submission.pipeline_document
     )
 
@@ -227,7 +227,7 @@ def _execute_imported_cppipe_via_zmq(
             plate_id=source_root,
             execution_plate_id=execution_plate_path,
             selected_pipeline_path=cppipe_path,
-            pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
             ),
             global_config=global_config,
@@ -395,13 +395,13 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
         plate_id=source_root,
         execution_plate_id=source_root,
         selected_pipeline_path=selected_pipeline_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
         global_config=global_config,
         config_params={"runtime_observation_export_path": str(observation_path)},
     )
-    assert submission.pipeline_code() == PipelineDocumentAuthority.render(
+    assert submission.pipeline_code() == PipelineDocumentCodec.render(
         submission.pipeline_document
     )
 

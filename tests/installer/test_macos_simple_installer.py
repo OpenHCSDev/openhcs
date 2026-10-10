@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.desktop_installation import (
+from openhcs.desktop.installation import (
     DESKTOP_INSTALL_PROFILE,
     DesktopPackageSourceOverrideVariable,
 )

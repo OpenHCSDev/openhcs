@@ -18,7 +18,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -55,7 +55,7 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
             source_stack_components=(), source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5))),
         napari_streaming_config=LazyNapariStreamingConfig(enabled=False),
     )
-    document = PipelineDocumentAuthority.from_values(pipeline_config=config, pipeline_steps=steps)
+    document = PipelineDocumentCodec.from_values(pipeline_config=config, pipeline_steps=steps)
     bundle = InProcessCompileInspectionGateway().compile(CompileInspectionInput(
         plate=source, pipeline_document=document, axis_filter=('A01',),
         global_pipeline_config=GlobalPipelineConfig(num_workers=1, use_threading=True),

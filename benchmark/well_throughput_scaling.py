@@ -49,7 +49,7 @@ from openhcs.core.config import (
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.source_matching import with_source_component_metadata
 from openhcs.core.source_projection import (
@@ -2132,7 +2132,7 @@ def run_case_well_throughput(
         plate_id=dataset_path,
         execution_plate_id=source_workspace_path,
         selected_pipeline_path=cppipe_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config,
             pipeline_steps=FunctionStepTransportAuthority.normalize_pipeline(
                 prepared.pipeline_steps

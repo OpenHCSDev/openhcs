@@ -1,4 +1,4 @@
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 import csv
 import io
 import logging
@@ -253,7 +253,7 @@ def persisted_special_output_probe(image):
     ensure_global_config_context(GlobalPipelineConfig, global_config)
     submission = OpenHCSExecutionSubmission(
         plate_id=plate_dir,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
         global_config=global_config,
@@ -261,7 +261,7 @@ def persisted_special_output_probe(image):
             "runtime_observation_export_path": str(observation_path),
         },
     )
-    assert submission.pipeline_code() == PipelineDocumentAuthority.render(
+    assert submission.pipeline_code() == PipelineDocumentCodec.render(
         submission.pipeline_document
     )
     client = ZMQExecutionClient(
@@ -284,7 +284,7 @@ def persisted_special_output_probe(image):
             client.submit_pipeline(
                 OpenHCSExecutionSubmission(
                     plate_id=plate_dir,
-                    pipeline_document=PipelineDocumentAuthority.from_values(
+                    pipeline_document=PipelineDocumentCodec.from_values(
                         pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
                     ),
                     global_config=global_config,

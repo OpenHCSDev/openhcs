@@ -1073,8 +1073,6 @@ class PipelineOrchestrator:
 
     def clear_pipeline_config(self) -> None:
         """Clear per-orchestrator configuration."""
-        # REMOVED: Thread-local modification - dual-axis resolver handles context automatically
-        # No need to modify thread-local storage when clearing orchestrator config
         self.pipeline_config = None
         # Clear metadata cache for this orchestrator
         self.metadata_cache.clear_cache()

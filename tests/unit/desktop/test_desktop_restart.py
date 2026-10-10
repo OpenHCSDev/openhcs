@@ -11,8 +11,8 @@ from PyQt6.QtWidgets import QMessageBox, QWidget
 from pyqt_reactive.theming import ColorScheme
 from zmqruntime import EndpointApplication
 
-from openhcs.pyqt_gui.services.desktop_restart import DesktopSessionRestart
-from openhcs.pyqt_gui.services.desktop_update import (
+from openhcs.desktop.restart import DesktopSessionRestart
+from openhcs.desktop.update import (
     UPDATE_SESSION_ARGUMENT,
     DesktopRestartEnvironment,
     DesktopRestartPurpose,
@@ -20,7 +20,7 @@ from openhcs.pyqt_gui.services.desktop_update import (
     DesktopUpdateError,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-from openhcs.pyqt_gui.services.zmq_version_restart import (
+from openhcs.desktop.zmq_version_restart import (
     ZMQVersionRestartDialogPresenter,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
@@ -41,7 +41,7 @@ def test_desktop_restart_worker_receives_session_and_restart_arguments(
     session.history_document.write_text("history", encoding="utf-8")
     launched = []
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_restart.subprocess.Popen",
+        "openhcs.desktop.restart.subprocess.Popen",
         lambda command, **kwargs: launched.append((command, kwargs)),
     )
 
@@ -86,7 +86,7 @@ def test_version_restart_capture_omits_update_only_assets(
             require_plate_manager=lambda: plate_manager,
         ),
         runtime_context=SimpleNamespace(ui_config=object()),
-        window_services=SimpleNamespace(
+        service_adapter=SimpleNamespace(
             get_current_color_scheme=lambda: (_ for _ in ()).throw(
                 AssertionError("version restart must not prepare updater assets")
             ),

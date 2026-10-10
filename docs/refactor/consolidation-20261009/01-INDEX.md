@@ -108,11 +108,11 @@ The owner set the direction: OpenHCS is a domain-blind tensor dataflow kernel, m
 | G5 | Processing contract family owns execute; role-declared function requirements; measurement dialect ABC with the CellProfiler instance in interop | K3, K8 | G1 |
 | G6 | Viewers take declared axes; slot families; one control family (fixes Fiji answering SUCCESS to unknown messages); `ViewerFamily` | C7 | G1 |
 | G7 | Runtime vocabulary and protocol: partition, dataset and axis values; typed worker IPC; lane identity derived | K7, C6 | G1, L3 |
-| G8 | Authoring surfaces: container manager, MCP component filters, grid role, importer and scope families | none | G1, G4 |
+| G8 | Taken over by U1 (04-ARCHITECTURE.md, The UI) | none | none |
 | L1–L7 | First-party library moves (04-ARCHITECTURE.md, First-party libraries) | C4 → L5 | in the listed order |
 | C1, C2, C3, C5, K2, K5, K6 | Unchanged from the table above. K6 uses L2's codec; C3 hands its table to L4 | | |
 | W | Witness: a non-microscopy family runs end to end in CI with zero kernel edits; a ratchet on domain member references in kernel modules | none | G1–G7 |
-| P | Layout: `openhcs/kernel`, `openhcs/authoring`, `openhcs/domains/{microscopy,cellprofiler}` | P1, P2 | last |
+| P | Layout: `openhcs/kernel`, `openhcs/authoring`, `openhcs/domains/{microscopy,cellprofiler}`; CI guard that the kernel imports no domain code; then the kernel splits into its own distribution (04-ARCHITECTURE.md, End state) | P1, P2 | last |
 
 Order:
 

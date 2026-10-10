@@ -9,7 +9,6 @@ import logging
 import dataclasses
 from functools import partial
 from typing import Callable, Optional, Union, get_args, get_origin
-from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QWidget,
@@ -25,7 +24,6 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.abstract import AbstractStep
 from python_introspect import SignatureAnalyzer
 from openhcs.core.config import PipelineConfig
-from openhcs.core.path_cache import PathCacheKey
 from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorWidget
@@ -61,23 +59,11 @@ from openhcs.pyqt_gui.services.config_window_code_document import (
     ExternalCodeEditorPreference,
 )
 
-# REMOVED: LazyDataclassFactory import - no longer needed since step editor
-# uses existing lazy dataclass instances from the step
 from pyqt_reactive.forms.parameter_type_utils import ParameterTypeUtils
 from openhcs.ui.shared.code_editor_form_updater import CodeEditorFormUpdater
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 
 logger = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass(frozen=True)
-class StepSettingsDialogRequest:
-    """Cached file-dialog request for loading or saving step settings."""
-
-    title: str
-    mode: str
-    cache_key: PathCacheKey = PathCacheKey.STEP_SETTINGS
-    file_filter: str = "Step Files (*.step);;All Files (*)"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -101,84 +87,6 @@ class StepEditorStateRequest:
                 f"Registry has: {[s.scope_id for s in ObjectStateRegistry.get_all()]}"
             )
         return state
-
-
-class StepSettingsFileController:
-    """Own load/save behavior for serialized step settings."""
-
-    def __init__(self, editor: "StepParameterEditorWidget"):
-        self.editor = editor
-
-    def load_step_settings(self) -> None:
-        file_path = self._show_dialog(
-            StepSettingsDialogRequest(
-                title="Load Step Settings (.step)",
-                mode="open",
-            )
-        )
-        if file_path:
-            self._load_from_file(file_path)
-
-    def save_step_settings(self) -> None:
-        file_path = self._show_dialog(
-            StepSettingsDialogRequest(
-                title="Save Step Settings (.step)",
-                mode="save",
-            )
-        )
-        if file_path:
-            self._save_to_file(file_path)
-
-    def _show_dialog(self, request: StepSettingsDialogRequest) -> Optional[Path]:
-        if not self.editor.service_adapter:
-            logger.warning("No service adapter available for file dialog")
-            return None
-
-        return self.editor.service_adapter.show_cached_file_dialog(
-            cache_key=request.cache_key,
-            title=request.title,
-            file_filter=request.file_filter,
-            mode=request.mode,
-        )
-
-    def _load_from_file(self, file_path: Path) -> None:
-        try:
-            import dill as pickle
-
-            with open(file_path, "rb") as handle:
-                step_data = pickle.load(handle)
-
-            if self.editor._before_mutation is not None:
-                self.editor._before_mutation()
-            for param_name, value in step_data.items():
-                self.editor.form_manager.update_parameter(param_name, value)
-            self.editor.step = self.editor.state.to_object()
-
-            self.editor.form_manager._refresh_all_placeholders()
-            logger.debug("Loaded %d parameters from %s", len(step_data), file_path.name)
-
-        except Exception as exc:
-            logger.error("Failed to load step settings from %s: %s", file_path, exc)
-            if self.editor.service_adapter:
-                self.editor.service_adapter.show_error_dialog(
-                    f"Failed to load step settings: {exc}"
-                )
-
-    def _save_to_file(self, file_path: Path) -> None:
-        try:
-            import dill as pickle
-
-            step_data = self.editor.state.get_current_values()
-            with open(file_path, "wb") as handle:
-                pickle.dump(step_data, handle)
-            logger.debug("Saved %d parameters to %s", len(step_data), file_path.name)
-
-        except Exception as exc:
-            logger.error("Failed to save step settings to %s: %s", file_path, exc)
-            if self.editor.service_adapter:
-                self.editor.service_adapter.show_error_dialog(
-                    f"Failed to save step settings: {exc}"
-                )
 
 
 class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QWidget):
@@ -240,7 +148,6 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
         self._action_buttons_container = DetachableActionBar(
             object_name="step_action_buttons_container"
         )
-        self.step_settings_files = StepSettingsFileController(self)
 
         code_btn = QPushButton("Code")
         code_btn.setMaximumWidth(60)
@@ -428,11 +335,6 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
                 return field.name
         return None
 
-    # REMOVED: _create_step_level_config method - dead code
-    # The step editor should use the existing lazy dataclass instances from the step,
-    # not create new "StepLevel" versions. The AbstractStep already has the correct
-    # lazy dataclass types (LazyNapariStreamingConfig, LazyStepMaterializationConfig, etc.)
-
     def _collect_dataclass_parameters(self, parameter_types):
         """Return dataclass-based parameters for building the hierarchy tree."""
         dataclass_params = {}
@@ -577,14 +479,6 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
 
         except Exception as e:
             logger.error(f"Error updating step parameter {param_name}: {e}")
-
-    def load_step_settings(self):
-        """Load step settings from .step file (mirrors Textual TUI)."""
-        self.step_settings_files.load_step_settings()
-
-    def save_step_settings(self):
-        """Save step settings to .step file (mirrors Textual TUI)."""
-        self.step_settings_files.save_step_settings()
 
     def update_step(self, step: FunctionStep):
         """Update the step and refresh the form."""

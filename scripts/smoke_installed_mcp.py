@@ -261,7 +261,7 @@ async def _run_measured_execution_protocol_smoke(
 
     from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
     from openhcs.core.config import PipelineConfig
-    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.steps import FunctionStep
     from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 
@@ -292,13 +292,13 @@ async def _run_measured_execution_protocol_smoke(
     cli_plate = output_dir / "cli_execution_plate"
     shutil.copytree(plate, cli_plate)
 
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(),
         pipeline_steps=[
             FunctionStep(name="Blur", func=(gaussian_blur, {"sigma": 1.0}))
         ],
     )
-    pipeline_source = PipelineDocumentAuthority.render(document)
+    pipeline_source = PipelineDocumentCodec.render(document)
     source_file = output_dir / "pipeline.py"
     source_file.write_text(pipeline_source, encoding="utf-8")
     created = _tool_payload(

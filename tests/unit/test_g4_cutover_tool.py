@@ -13,7 +13,7 @@ from pathlib import Path
 import openhcs
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 from openhcs.microscopes.opera_phenix import OperaPhenixHandler
 
@@ -52,6 +52,6 @@ def test_pre_g4_global_config_loads_with_its_source_and_domain_sections(tmp_path
 
 def test_pre_g4_pipeline_loads_with_its_source(tmp_path):
     target = _migrated(tmp_path, "pre_g4_pipeline.py.fixture", "pipeline.py")
-    document = PipelineDocumentAuthority.from_source(target.read_text())
+    document = PipelineDocumentCodec.from_source(target.read_text())
     assert document.pipeline_config.dataset_source is OperaPhenixHandler
     assert len(document.pipeline_steps) == 1

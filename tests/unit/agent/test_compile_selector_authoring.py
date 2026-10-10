@@ -20,7 +20,7 @@ from openhcs.core.invocation_artifacts import (
     InvocationContractPlan,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.interop.cellprofiler.compile_time_contracts import (
     CellProfilerInvocationContractProviderFactory,
 )
@@ -126,7 +126,7 @@ def test_named_selectors_validate_render_parse_and_reconstruct_defaults(clean):
     service, ref = draft(gray_to_color, kwargs)
     result = service.validate(ref)
     assert result.valid, result.errors
-    restored = PipelineDocumentAuthority.from_source(
+    restored = PipelineDocumentCodec.from_source(
         service.render_source(ref, clean=clean).source
     )
     invocation = next(
@@ -246,7 +246,7 @@ def test_additional_real_module_admits_declared_selectors():
     }
     service, ref = draft(correct_illumination_apply, kwargs)
     assert service.validate(ref).valid
-    restored = PipelineDocumentAuthority.from_source(service.render_source(ref).source)
+    restored = PipelineDocumentCodec.from_source(service.render_source(ref).source)
     invocation = next(
         normalize_function_pattern(restored.pipeline_steps[0].func).iter_items()
     )
@@ -294,7 +294,7 @@ def test_new_declaration_composes_independent_settings_without_consumer_edits(
         assert len(kwargs) == 2
         service, ref = draft(new_authoring_callable, kwargs)
         assert service.validate(ref).valid
-        restored = PipelineDocumentAuthority.from_source(
+        restored = PipelineDocumentCodec.from_source(
             service.render_source(ref).source
         )
         invocation = next(

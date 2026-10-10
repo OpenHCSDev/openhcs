@@ -45,7 +45,7 @@ from openhcs.core.execution_state import (
 )
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import (
     ProgressEvent,
     ProgressIdentity,
@@ -66,7 +66,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize,
 )
 from openhcs.pyqt_gui.config import get_default_ui_config
-from openhcs.pyqt_gui.services.desktop_update import (
+from openhcs.desktop.update import (
     DesktopRestartSession,
     DesktopRestartSucceeded,
     DesktopRestartUiState,
@@ -2162,8 +2162,8 @@ class TestPlateManagerWidget:
 
         manager.service_adapter.show_error_dialog = show_error_dialog
         manager.execution_error.connect(manager._handle_execution_error)
-        replacement_source = PipelineDocumentAuthority.render(
-            PipelineDocumentAuthority.from_values(
+        replacement_source = PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(),
                 pipeline_steps=[
                     FunctionStep(

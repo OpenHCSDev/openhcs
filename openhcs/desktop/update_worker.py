@@ -100,7 +100,7 @@ class DesktopUpdateCompleteEvent(DesktopUpdateProgressEventABC):
 
 @dataclass(frozen=True, slots=True)
 class DesktopUpdateProgressTheme:
-    """Environment-independent theme projection owned by the progress surface."""
+    """Environment-independent colours for the update progress window."""
 
     window_bg: str
     panel_bg: str
@@ -285,7 +285,7 @@ class DesktopUpdatePlan:
         ]
 
     def dependency_check_command(self) -> list[str]:
-        """Verify the candidate through the same package-manager authority."""
+        """Verify the candidate through the same package manager."""
 
         return [
             self.update_executable,
@@ -319,7 +319,7 @@ class DesktopUpdatePlan:
 
 
 def _deployment_restart_executable(output: str) -> str:
-    """Read the restart target published by the platform deployment authority."""
+    """Read the restart target published by the platform desktop deployment."""
 
     reports: list[dict[str, object]] = []
     for line in output.splitlines():

@@ -25,7 +25,7 @@ from openhcs.core.execution_state import (
     ManagerExecutionState,
 )
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
-from openhcs.pyqt_gui.services.zmq_version_restart import ZMQVersionRestartWorkflow
+from openhcs.desktop.zmq_version_restart import ZMQVersionRestartWorkflow
 from openhcs.pyqt_gui.windows.managed_windows import LogViewerWindowWrapper
 
 
@@ -326,7 +326,7 @@ def test_background_initialization_prepares_execution_services() -> None:
     window = SimpleNamespace(
         show_window=lambda window_id: calls.append(("show_window", window_id)),
         show_default_windows=lambda: calls.append(("show_default_windows",)),
-        window_services=SimpleNamespace(
+        service_adapter=SimpleNamespace(
             execute_async_operation=lambda operation: calls.append(
                 ("execute_async_operation", operation)
             ),

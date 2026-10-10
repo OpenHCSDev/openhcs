@@ -10,7 +10,7 @@ import pytest
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.debug import DebugExecutionConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -73,7 +73,7 @@ class RejectingCompileClient(FakeExecutionClient):
 def _submission():
     return OpenHCSExecutionSubmission(
         plate_id="/tmp/plate",
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
         global_config=GlobalPipelineConfig(),
@@ -232,18 +232,18 @@ def test_compiled_pipeline_run_does_not_report_failed_execution_as_complete():
 def test_compiled_run_retains_its_admitted_wire_and_standalone_request_stays_fresh(monkeypatch):
     submission = _submission()
     rendered = []
-    original_render = PipelineDocumentAuthority.render
+    original_render = PipelineDocumentCodec.render
 
     def render(document):
         rendered.append(document)
         return original_render(document)
 
-    monkeypatch.setattr(PipelineDocumentAuthority, "render", render)
+    monkeypatch.setattr(PipelineDocumentCodec, "render", render)
 
     class EditingClient(FakeExecutionClient):
         def submit_compile(self, request):
             response = super().submit_compile(request)
-            submission.pipeline_document = PipelineDocumentAuthority.from_values(
+            submission.pipeline_document = PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(num_workers=3), pipeline_steps=[]
             )
             submission.global_pipeline_config = replace(

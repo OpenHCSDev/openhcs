@@ -97,7 +97,7 @@ from openhcs.core.equivalence.policy import (
     normalize_runtime_identifier,
 )
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.runtime_exports import RuntimeExportObservation
 from benchmark.equivalence.runtime import (
@@ -1659,7 +1659,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
             plate_id=case.dataset_path,
             execution_plate_id=prepared.execution_plate_path,
             selected_pipeline_path=case.cppipe_path,
-            pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config,
                 pipeline_steps=prepared.pipeline_steps,
             ),
