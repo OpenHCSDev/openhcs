@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -21,6 +20,9 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.shape import MeasureObjectSizeShapeModule, measure_object_size_shape
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 
 def _source(labels, *, axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_count=None, spacing=(1.3556, 1.3556)):
@@ -96,7 +98,7 @@ def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
     _image, rows = CellProfilerFunctionContractExecutor().execute(
         contract, contract.resolve_canonical_raw_callable(), source,
         {"labels": value, "calculate_advanced": False, "calculate_zernikes": False},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
     area = MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value
     # Raw shape rows retain the exact authored label domain of each plane.

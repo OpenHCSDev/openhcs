@@ -41,14 +41,13 @@ from openhcs.core.equivalence.measurement_facts import (
     RuntimeRowProjectionRecords,
     RuntimeRowProjectionValueT,
 )
-from openhcs.core.equivalence.policy import (
-    DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
-    RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.measurement_dialect import (
+    MeasurementDialect,
     RuntimeMeasurementQualifierValueMode,
     RuntimeMeasurementRowQualifier,
-    normalize_runtime_identifier,
 )
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurement_row_materialization import (
     MeasurementRowDeclaredValue,
     MeasurementRowObjectIdentityRole,
@@ -58,8 +57,6 @@ from openhcs.core.measurement_row_materialization import (
     measurement_row_has_long_form_measurement_fields,
 )
 from openhcs.core.runtime_measurements import (
-    aggregate_image_number_reference_measurement_field,
-    image_number_reference_measurement_field,
     MeasurementRowValueField,
     MeasurementRowAxisField,
     MeasurementScope,
@@ -75,27 +72,28 @@ from openhcs.core.runtime_relationships import (
     ObjectInstanceKey,
 )
 
-MEASUREMENT_IDENTITY_FIELDS = frozenset(
-    {
-        "image_id",
-        *DEFAULT_RUNTIME_MEASUREMENT_DIALECT.row_identity_contract.image_identity_fields,
-        *MeasurementRowAxisField.object_id_field_names(),
-        MeasurementRowAxisField.OBJECT_NAME.value,
-        MeasurementRowAxisField.OBJECT_ROW_IDENTITY.value,
-        MeasurementRowAxisField.SOURCE_IMAGE_NAME.value,
-        "group_key",
-    }
-)
+@lru_cache(maxsize=64)
+def measurement_identity_fields(
+    contract: RuntimeMeasurementRowIdentityContract,
+) -> frozenset[str]:
+    """Structural row fields that identify a row rather than measure it."""
+    return frozenset(
+        {
+            *contract.sample_identity_fields,
+            *MeasurementRowAxisField.object_id_field_names(),
+            MeasurementRowAxisField.OBJECT_NAME.value,
+            MeasurementRowAxisField.OBJECT_ROW_IDENTITY.value,
+            MeasurementRowAxisField.SOURCE_IMAGE_NAME.value,
+            "group_key",
+        }
+    )
 
 
-IMAGE_IDENTITY_FIELDS = (
-    DEFAULT_RUNTIME_MEASUREMENT_DIALECT.row_identity_contract.image_identity_fields
-)
 RUNTIME_AXIS_ROW_IDENTITY_FIELD = "_runtime_axis"
 _MeasurementQualifierValueRenderer = Callable[[tuple[object, ...]], str | None]
 _MEASUREMENT_DIALECT_QUALIFIER_FIELD_NAMES_CACHE: dict[
     int,
-    tuple[RuntimeMeasurementDialect, frozenset[str]],
+    tuple[MeasurementDialect, frozenset[str]],
 ] = {}
 
 
@@ -153,18 +151,18 @@ _MEASUREMENT_QUALIFIER_VALUE_RENDERERS = _measurement_qualifier_value_renderers(
 )
 
 
-def measurement_row_image_identity_key(
+def measurement_row_sample_identity_key(
     row: Mapping[str, object],
-    dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+    dialect: MeasurementDialect,
 ) -> tuple[tuple[str, object], ...]:
-    """Return the image identity carried by a measurement row."""
+    """Return the sample identity carried by a measurement row."""
     contract = dialect.row_identity_contract
     normalized_present_fields = frozenset(
         normalize_runtime_identifier(field_name)
         for field_name, value in row.items()
         if value is not None and str(value).strip()
     )
-    selected_fields = contract.selected_image_identity_fields(normalized_present_fields)
+    selected_fields = contract.selected_sample_identity_fields(normalized_present_fields)
     identity_values: list[tuple[str, object]] = []
     for field_name, value in row.items():
         normalized_field_name = normalize_runtime_identifier(field_name)
@@ -182,10 +180,10 @@ def measurement_row_image_identity_key(
 def axis_scoped_measurement_row_identity(
     row: Mapping[str, object],
     axis_key: str | None,
-    dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+    dialect: MeasurementDialect,
 ) -> tuple[tuple[str, object], ...]:
-    """Return row identity scoped by runtime axis for local image numbering."""
-    row_identity = measurement_row_image_identity_key(row, dialect)
+    """Return row identity scoped by runtime axis for local sample numbering."""
+    row_identity = measurement_row_sample_identity_key(row, dialect)
     if axis_key is None:
         return row_identity
     return (
@@ -195,9 +193,10 @@ def axis_scoped_measurement_row_identity(
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeImageNumberOffset:
-    """Compute image-number offset for table rows."""
+class RuntimeSampleNumberOffset:
+    """Offset that maps a table's external sample numbers to local numbering."""
 
+    contract: RuntimeMeasurementRowIdentityContract
     value: float = 0.0
 
     def __post_init__(self) -> None:
@@ -206,76 +205,87 @@ class RuntimeImageNumberOffset:
     @classmethod
     def from_table_rows(
         cls,
+        contract: RuntimeMeasurementRowIdentityContract,
         header: tuple[str, ...],
         rows: tuple[tuple[str, ...], ...],
-    ) -> "RuntimeImageNumberOffset":
-        image_number_indexes = tuple(
+    ) -> "RuntimeSampleNumberOffset":
+        number_indexes = tuple(
             index
             for index, field_name in enumerate(header)
-            if normalize_runtime_identifier(field_name) == "image_number"
+            if normalize_runtime_identifier(field_name) == contract.sample_number_field
         )
-        if not image_number_indexes:
-            return cls()
-        image_number_index = image_number_indexes[0]
+        if not number_indexes:
+            return cls(contract)
+        number_index = number_indexes[0]
         return cls(
-            cls._offset_from_values(
-                row[image_number_index] for row in rows if image_number_index < len(row)
-            )
+            contract,
+            cls.offset_from_values(
+                row[number_index] for row in rows if number_index < len(row)
+            ),
         )
 
     @classmethod
-    def from_runtime_rows(cls, rows: Iterable[object]) -> "RuntimeImageNumberOffset":
+    def from_runtime_rows(
+        cls,
+        contract: RuntimeMeasurementRowIdentityContract,
+        rows: Iterable[object],
+    ) -> "RuntimeSampleNumberOffset":
         return cls(
-            cls._offset_from_values(
-                image_number
+            contract,
+            cls.offset_from_values(
+                sample_number
                 for row in rows
-                for image_number in (
+                for sample_number in (
                     RuntimeMeasurementRowMapping(
                         measurement_row_mapping(row)
-                    ).first_value(("image_number",)),
+                    ).first_value((contract.sample_number_field,)),
                 )
-                if image_number is not None
-            )
+                if sample_number is not None
+            ),
         )
 
     @classmethod
-    def from_measurement_table(cls, table: object) -> "RuntimeImageNumberOffset":
-        """Return image-number offset from table schema/columns when available."""
-        return cls.from_runtime_rows(table.rows.iter_row_mappings())
+    def from_measurement_table(
+        cls,
+        contract: RuntimeMeasurementRowIdentityContract,
+        table: object,
+    ) -> "RuntimeSampleNumberOffset":
+        """Return the sample-number offset from table columns when available."""
+        return cls.from_runtime_rows(contract, table.rows.iter_row_mappings())
 
-    @classmethod
-    def _offset_from_values(cls, values: Iterable[object]) -> float:
-        image_numbers: list[float] = []
+    @staticmethod
+    def offset_from_values(values: Iterable[object]) -> float:
+        sample_numbers: list[float] = []
         for value in values:
             try:
-                image_number = float(str(value).strip())
+                sample_number = float(str(value).strip())
             except ValueError:
                 continue
-            if math.isfinite(image_number) and image_number > 0:
-                image_numbers.append(image_number)
-        if not image_numbers:
+            if math.isfinite(sample_number) and sample_number > 0:
+                sample_numbers.append(sample_number)
+        if not sample_numbers:
             return 0.0
-        return min(image_numbers) - 1.0
+        return min(sample_numbers) - 1.0
 
     def normalized_reference_value(
         self,
         field_name: str,
         value: object,
     ) -> object:
-        """Normalize image-number reference values to axis-local numbering."""
+        """Normalize sample-number reference values to axis-local numbering."""
         if self.value == 0:
             return value
-        if not image_number_reference_measurement_field(field_name):
+        if not self.contract.is_sample_number_reference(field_name):
             return value
         if isinstance(value, Mapping):
             return {
                 key: self.normalized_reference_value(field_name, nested_value)
                 for key, nested_value in value.items()
             }
-        return self.normalized_image_number(value)
+        return self.normalized_sample_number(value)
 
-    def normalized_image_number(self, value: object) -> object:
-        """Project a schema-declared external image number into the local domain."""
+    def normalized_sample_number(self, value: object) -> object:
+        """Project an external sample number into the local domain."""
         if self.value == 0:
             return value
         numeric_value = runtime_numeric_text_value(str(value))
@@ -291,14 +301,16 @@ class RuntimeImageNumberOffset:
         row: Mapping[str, object],
         object_id: int,
     ) -> ObjectInstanceKey:
-        """Normalize an external image-number row into runtime object identity."""
+        """Normalize an external sample-number row into runtime object identity."""
         runtime_key = ObjectInstanceKey.from_measurement_row(row, object_id)
         if runtime_key.slice_index is not None:
             return runtime_key
-        image_number = RuntimeMeasurementRowMapping(row).first_value(("image_number",))
-        if image_number is None:
+        sample_number = RuntimeMeasurementRowMapping(row).first_value(
+            (self.contract.sample_number_field,)
+        )
+        if sample_number is None:
             return runtime_key
-        numeric_value = runtime_numeric_text_value(str(image_number))
+        numeric_value = runtime_numeric_text_value(str(sample_number))
         if numeric_value is None or not math.isfinite(numeric_value):
             return runtime_key
         slice_index = numeric_value - self.value - 1.0
@@ -309,7 +321,7 @@ class RuntimeImageNumberOffset:
 
 def measurement_row_qualifiers(
     row: Mapping[str, object],
-    dialect: RuntimeMeasurementDialect,
+    dialect: MeasurementDialect,
     field_name: str,
 ) -> tuple[str, ...]:
     return _measurement_row_qualifiers_for_field(
@@ -321,7 +333,7 @@ def measurement_row_qualifiers(
 
 def measurement_row_qualifiers_from_values(
     row_values: Mapping[str, object],
-    dialect: RuntimeMeasurementDialect,
+    dialect: MeasurementDialect,
     field_name: str,
 ) -> tuple[str, ...]:
     return _measurement_row_qualifiers_for_field(
@@ -380,7 +392,7 @@ def measurement_row_qualifiers_from_indexed_values_cached(
 
 def row_qualifier_columns(
     normalized_fields: tuple[str, ...],
-    dialect: RuntimeMeasurementDialect,
+    dialect: MeasurementDialect,
 ) -> tuple[tuple[str, int], ...]:
     qualifier_fields = measurement_qualifier_field_names(dialect)
     return tuple(
@@ -412,7 +424,7 @@ def row_qualifier_applies_to_field(
 
 
 def measurement_qualifier_field_names(
-    dialect: RuntimeMeasurementDialect,
+    dialect: MeasurementDialect,
 ) -> frozenset[str]:
     cached = _MEASUREMENT_DIALECT_QUALIFIER_FIELD_NAMES_CACHE.get(id(dialect))
     if cached is not None and cached[0] is dialect:
@@ -430,7 +442,7 @@ def measurement_qualifier_field_names(
 
 
 def _measurement_row_qualifiers_for_field(
-    dialect: RuntimeMeasurementDialect,
+    dialect: MeasurementDialect,
     field_name: str,
     render: Callable[[RuntimeMeasurementRowQualifier], str | None],
 ) -> tuple[str, ...]:
@@ -665,11 +677,12 @@ def runtime_measurement_field_indexes(
 
 def normalized_runtime_measurement_identity_field_matches_qualifier_names(
     normalized: str,
+    identity_fields: frozenset[str],
     qualifier_field_names: frozenset[str],
     non_measurement_field_prefixes: tuple[str, ...],
 ) -> bool:
     """Return whether a normalized field is structural row metadata."""
-    if normalized in MEASUREMENT_IDENTITY_FIELDS:
+    if normalized in identity_fields:
         return True
     if normalized in qualifier_field_names:
         return True
@@ -693,7 +706,7 @@ def runtime_measurement_row_schema_for_header(
     aggregate_reference_indexes = frozenset(
         index
         for index, field_name in enumerate(header)
-        if aggregate_image_number_reference_measurement_field(field_name)
+        if row_identity_contract.is_aggregate_sample_number_reference(field_name)
     )
     normalized_field_indexes = {
         field_name: index for index, field_name in enumerate(normalized_fields)
@@ -703,11 +716,13 @@ def runtime_measurement_row_schema_for_header(
         for qualifier in row_qualifiers
         for field_name in qualifier.field_names
     )
+    identity_fields = measurement_identity_fields(row_identity_contract)
     feature_indexes = tuple(
         index
         for index, field_name in enumerate(normalized_fields)
         if not normalized_runtime_measurement_identity_field_matches_qualifier_names(
             field_name,
+            identity_fields,
             qualifier_field_names,
             non_measurement_field_prefixes,
         )
@@ -1002,7 +1017,7 @@ class RuntimeMeasurementRowMapping:
         repr=False,
         compare=False,
     )
-    _image_identity_key_cache: dict[
+    _sample_identity_key_cache: dict[
         int,
         tuple[tuple[str, object], ...],
     ] = field(default_factory=dict, init=False, repr=False, compare=False)
@@ -1069,9 +1084,6 @@ class RuntimeMeasurementRowMapping:
                 return True
         return False
 
-    def has_image_identity(self) -> bool:
-        return self.has_identity_value(IMAGE_IDENTITY_FIELDS)
-
     def has_object_identity(self) -> bool:
         return self.object_label() is not None
 
@@ -1108,7 +1120,7 @@ class RuntimeMeasurementRowMapping:
 
     def object_identity_value(
         self,
-        dialect: RuntimeMeasurementDialect,
+        dialect: MeasurementDialect,
     ) -> tuple[str, object] | None:
         """Return the object-identity field and value selected by the dialect."""
         selected_field = dialect.row_identity_contract.selected_object_identity_field(
@@ -1132,12 +1144,12 @@ class RuntimeMeasurementRowMapping:
             ),
         )
 
-    def image_identity_key(
+    def sample_identity_key(
         self,
-        dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        dialect: MeasurementDialect,
     ) -> tuple[tuple[str, object], ...]:
         cache_key = id(dialect)
-        cached = self._image_identity_key_cache.get(cache_key)
+        cached = self._sample_identity_key_cache.get(cache_key)
         if cached is not None:
             return cached
         contract = dialect.row_identity_contract
@@ -1147,7 +1159,7 @@ class RuntimeMeasurementRowMapping:
             for value in (self.row[field_name],)
             if runtime_measurement_row_value_is_present_without_formatting(value)
         )
-        selected_fields = contract.selected_image_identity_fields(
+        selected_fields = contract.selected_sample_identity_fields(
             normalized_present_fields
         )
         identity_values = tuple(
@@ -1160,15 +1172,15 @@ class RuntimeMeasurementRowMapping:
                 if normalized_field_name in selected_fields
             )
         )
-        self._image_identity_key_cache[cache_key] = identity_values
+        self._sample_identity_key_cache[cache_key] = identity_values
         return identity_values
 
     def axis_scoped_identity(
         self,
         axis_key: str | None,
-        dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        dialect: MeasurementDialect,
     ) -> RuntimeMeasurementRowIdentity:
-        row_identity = self.image_identity_key(dialect)
+        row_identity = self.sample_identity_key(dialect)
         if axis_key is None:
             return row_identity
         return (
@@ -1181,18 +1193,18 @@ def runtime_metadata_map_row_matches(
     subject: RuntimeMeasurementSubjectKey,
     row: RuntimeMeasurementRowMapping,
 ) -> bool:
-    """Return whether a row is an experiment metadata key/value row."""
-    if subject.scope is not MeasurementScope.EXPERIMENT:
+    """Return whether a row is a run metadata key/value row."""
+    if subject.scope is not MeasurementScope.RUN:
         return False
     return row.normalized_field_names == frozenset(("key", "value"))
 
 
 def normalized_runtime_measurement_identity_field_matches(
     normalized: str,
-    dialect: RuntimeMeasurementDialect,
+    dialect: MeasurementDialect,
 ) -> bool:
     """Return whether a normalized field is row identity, qualifier, or metadata."""
-    if normalized in MEASUREMENT_IDENTITY_FIELDS:
+    if normalized in measurement_identity_fields(dialect.row_identity_contract):
         return True
     if normalized in measurement_qualifier_field_names(dialect):
         return True
@@ -1242,7 +1254,7 @@ class RuntimeRowProjectionContext:
     known_source_names: tuple[str, ...]
     required_keys: RuntimeRequiredMeasurementKeys
     table_padding_group: str
-    image_number_offset: RuntimeImageNumberOffset
+    sample_number_offset: RuntimeSampleNumberOffset
     derive_directional_pair_facts: bool
     schema_cache: RuntimeMeasurementRowSchemaCache
     key_cache: RuntimeMeasurementFeatureKeyCache
@@ -1265,7 +1277,7 @@ class RuntimeRowProjectionContext:
         known_source_names: tuple[str, ...],
         required_keys: RuntimeRequiredMeasurementKeys,
         table_padding_group: str,
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
         derive_directional_pair_facts: bool,
         schema_cache: RuntimeMeasurementRowSchemaCache,
         key_cache: RuntimeMeasurementFeatureKeyCache,
@@ -1285,7 +1297,7 @@ class RuntimeRowProjectionContext:
             known_source_names=known_source_names,
             required_keys=required_keys,
             table_padding_group=table_padding_group,
-            image_number_offset=image_number_offset,
+            sample_number_offset=sample_number_offset,
             derive_directional_pair_facts=derive_directional_pair_facts,
             schema_cache=schema_cache,
             key_cache=key_cache,
@@ -1725,7 +1737,7 @@ class RuntimeRowProjectionContext:
             return ()
         if not runtime_measurement_value_is_present(raw_value):
             return ()
-        value = self.image_number_offset.normalized_reference_value(
+        value = self.sample_number_offset.normalized_reference_value(
             field_name,
             raw_value,
         )
@@ -1768,7 +1780,7 @@ class RuntimeRowProjectionContext:
         raw_value = row_values.at(column.index)
         if not runtime_measurement_value_is_present(raw_value):
             return ()
-        value = self.image_number_offset.normalized_reference_value(
+        value = self.sample_number_offset.normalized_reference_value(
             column.field_name,
             raw_value,
         )
@@ -2182,7 +2194,7 @@ class RuntimeLongFormMeasurementContext:
     policy: RuntimeEquivalencePolicy
     source_name: str | None
     known_source_names: tuple[str, ...]
-    image_number_offset: RuntimeImageNumberOffset
+    sample_number_offset: RuntimeSampleNumberOffset
 
 
 @dataclass(frozen=True, slots=True)
@@ -2192,7 +2204,7 @@ class CachedRuntimeLongFormMeasurementContext:
     policy: RuntimeEquivalencePolicy
     source_name: str | None
     known_source_names: tuple[str, ...]
-    image_number_offset: RuntimeImageNumberOffset
+    sample_number_offset: RuntimeSampleNumberOffset
     feature_indexes: tuple[int, ...]
     value_indexes: tuple[int, ...]
     indexed_qualifiers: tuple[RuntimeMeasurementIndexedQualifier, ...]
@@ -2214,7 +2226,7 @@ class CachedRuntimeLongFormMeasurementContext:
             context.policy,
             context.source_name,
             context.known_source_names,
-            context.image_number_offset,
+            context.sample_number_offset,
             feature_indexes,
             value_indexes,
             indexed_qualifiers,
@@ -2231,26 +2243,17 @@ class RuntimeLongFormMeasurementSource:
     value: object
 
     @classmethod
-    def from_row(
-        cls,
-        row: RuntimeMeasurementRowMapping,
-    ) -> "RuntimeLongFormMeasurementSource | None":
-        feature_name = row.first_value(
-            MeasurementRowAxisField.feature_name_field_names_ordered()
-        )
-        value = row.first_value(MeasurementRowValueField.field_names_ordered())
-        return cls.from_feature_value(feature_name, value)
-
-    @classmethod
     def from_indexed_values(
         cls,
         row_values: RuntimeIndexedRowValues,
         feature_indexes: tuple[int, ...],
         value_indexes: tuple[int, ...],
+        contract: RuntimeMeasurementRowIdentityContract,
     ) -> "RuntimeLongFormMeasurementSource | None":
         return cls.from_feature_value(
             row_values.first_at(feature_indexes),
             row_values.first_at(value_indexes),
+            contract,
         )
 
     @classmethod
@@ -2258,20 +2261,21 @@ class RuntimeLongFormMeasurementSource:
         cls,
         feature_name: object | None,
         value: object | None,
+        contract: RuntimeMeasurementRowIdentityContract,
     ) -> "RuntimeLongFormMeasurementSource | None":
         if feature_name is None or value is None:
             return None
         feature_text = str(feature_name)
-        if aggregate_image_number_reference_measurement_field(feature_text):
+        if contract.is_aggregate_sample_number_reference(feature_text):
             return None
         return cls(feature_text, value)
 
     def cell_signature(
         self,
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
         policy: RuntimeEquivalencePolicy,
     ) -> RuntimeCellSignature:
-        normalized_value = image_number_offset.normalized_reference_value(
+        normalized_value = sample_number_offset.normalized_reference_value(
             self.feature_text,
             self.value,
         )
@@ -2309,6 +2313,7 @@ class RuntimeMeasurementLongFormFactProjector:
             self.context.row_values,
             self.context.feature_indexes,
             self.context.value_indexes,
+            self.context.sample_number_offset.contract,
         )
         if source is None:
             return RuntimeLongFormMeasurementFact(None, None)
@@ -2345,7 +2350,7 @@ class RuntimeMeasurementLongFormFactProjector:
         return RuntimeLongFormMeasurementFact(
             key,
             source.cell_signature(
-                self.context.image_number_offset,
+                self.context.sample_number_offset,
                 self.context.policy,
             ),
         )

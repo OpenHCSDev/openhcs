@@ -1,3 +1,4 @@
+from openhcs.core.measurement_dialect import PlainMeasurementDialect
 """Runtime equivalence package boundary tests."""
 
 import ast
@@ -16,8 +17,9 @@ from openhcs.core.equivalence.cells import (
 )
 from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
     RuntimeMeasurementFeatureNumericTolerance,
+)
+from openhcs.core.runtime_identifier import (
     normalize_runtime_identifier,
     normalize_runtime_source_name,
 )
@@ -46,7 +48,7 @@ PROJECT_ROOT = Path(__file__).parents[2]
 
 
 def test_runtime_equivalence_policy_types_have_package_owner() -> None:
-    policy = RuntimeEquivalencePolicy(measurement_dialect=RuntimeMeasurementDialect())
+    policy = RuntimeEquivalencePolicy(measurement_dialect=PlainMeasurementDialect.shared())
 
     assert policy.measurement_dialect is not None
     assert normalize_runtime_identifier("MeanIntensity_OrigBlue") == (
@@ -60,7 +62,7 @@ def test_runtime_equivalence_policy_types_have_package_owner() -> None:
 def test_default_measurement_dialect_renders_backend_neutral_spatial_grid_names() -> (
     None
 ):
-    dialect = RuntimeMeasurementDialect()
+    dialect = PlainMeasurementDialect.shared()
 
     assert dialect.spatial_grid_measurement_feature_name("Grid", "x_origin") == (
         "spatial_grid_grid_x_origin"
@@ -127,7 +129,7 @@ def test_runtime_equivalence_policy_non_negative_fields_are_annotation_driven() 
 
 
 def test_runtime_equivalence_measurement_keys_have_package_owner() -> None:
-    subject = RuntimeMeasurementSubjectKey(MeasurementScope.IMAGE, "OrigBlue")
+    subject = RuntimeMeasurementSubjectKey(MeasurementScope.SAMPLE, "OrigBlue")
     feature = RuntimeMeasurementFeatureKey(
         subject,
         "mean_intensity",

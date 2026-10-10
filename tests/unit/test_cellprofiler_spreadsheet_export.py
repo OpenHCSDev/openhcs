@@ -308,7 +308,7 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
     measurements_a = _measurement_record(
         "measurements_a",
         axis_id="A01",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         rows=(
             {
                 "slice_index": 0,
@@ -347,7 +347,7 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
     undeclared = _measurement_record(
         "undeclared",
         axis_id="A01",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         rows=({"slice_index": 0, "Leaked": 999},),
     )
     batch = RuntimeArtifactBatch(
@@ -508,7 +508,7 @@ def test_spreadsheet_preserves_independent_contributor_filenames(names: tuple[st
 def test_requested_source_columns_preserve_original_extraction_path_template() -> None:
     image = _measurement_record(
         'image', axis_id='A01',
-        subject=MeasurementSubject(MeasurementScope.IMAGE, 'Image'),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, 'Image'),
         rows=({'slice_index': 0, 'Count_Cells': 1},),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             component_metadata=({'site': '1', DECLARED_SOURCE_METADATA_FIELD: {'Run': 'run1'}},),
@@ -537,7 +537,7 @@ def test_requested_source_columns_preserve_original_extraction_path_template() -
 def test_spreadsheet_rejects_existing_filename_conflicting_with_provenance() -> None:
     record = _measurement_record(
         'image', axis_id='A01',
-        subject=MeasurementSubject(MeasurementScope.IMAGE, 'Image'),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, 'Image'),
         rows=({'slice_index': 0, 'FileName_Body': 'other.tif'},),
         source_image_provenance_planes=SourceImageProvenancePlanes((
             RuntimeSourceImageProvenancePlane(
@@ -565,7 +565,7 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
                 _measurement_record(
                     "measurements",
                     axis_id=axis,
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                    subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
                     rows=({"slice_index": 0, "Count": count},),
                 ),
             )
@@ -592,7 +592,7 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
         )
         assert len(outputs) == 1
         assert outputs[0].path == "/analysis/Image.csv"
-        assert outputs[0].image_numbers_by_axis == {"A01": (1,), "A02": (2,)}
+        assert outputs[0].sample_numbers_by_axis == {"A01": (1,), "A02": (2,)}
         primary_path = materialize(
             MaterializationSpec(FileBundleOptions()),
             data=bundle,
@@ -610,7 +610,7 @@ def test_columnar_aggregates_preserve_missing_cells_and_exclude_non_numeric_valu
     image = _measurement_record(
         "image",
         axis_id="A01",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         rows=({"slice_index": 0, "Count": 3},),
     )
     object_rows = (
@@ -692,7 +692,7 @@ def test_export_to_spreadsheet_rejects_append_order_slice_synthesis() -> None:
         _measurement_record(
             "align_measurements",
             axis_id="A01",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             rows=(
                 {
                     "slice_index": 0,
@@ -725,7 +725,7 @@ def test_export_to_spreadsheet_projects_site_group_scope_without_relabeling_stac
         _measurement_record(
             "align_measurements",
             axis_id="A01",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             rows=(
                 {
                     "slice_index": 0,
@@ -764,7 +764,7 @@ def test_export_to_spreadsheet_uses_declared_image_set_identity_across_channels(
     image_record = _measurement_record(
         "image_measurements",
         axis_id="A01",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         rows=({"slice_index": 0, "Count": 2},),
         group_component=Microscopy.Channel,
         group_key="1",
@@ -883,7 +883,7 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
             _measurement_record(
                 f"field{site}_counts",
                 axis_id="A01",
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
                 rows=({"slice_index": 0, "Count_Cells": 2},),
                 source_image_provenance_planes=provenance,
                 group_component=Microscopy.Channel,
@@ -927,7 +927,7 @@ def test_export_to_spreadsheet_nulls_metadata_that_differs_between_image_planes(
         _measurement_record(
             f"channel_{channel}_measurements",
             axis_id="A01",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             rows=({"slice_index": 0, f"Count_{channel}": int(channel)},),
             group_component=Microscopy.Channel,
             group_key=channel,
@@ -980,7 +980,7 @@ def test_export_to_spreadsheet_copies_native_metadata_and_qualified_file_names()
     image = _measurement_record(
         "image",
         axis_id="A01",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         rows=(
             {
                 "slice_index": 0,
@@ -1062,9 +1062,15 @@ def test_combined_spreadsheet_retains_native_subject_headers_and_sparse_rows(
         ("1", "1", "2.0", "1", "3.0"),
         ("1", "2", "4.0", "", ""),
     )
+    from openhcs.interop.cellprofiler.measurement_dialect import (
+        CELLPROFILER_MEASUREMENT_DIALECT,
+    )
+
     path = tmp_path / "Combined.csv"
     path.write_text(bundle["Combined.csv"])
-    tables = RuntimeTableSnapshot.from_csv(path).measurement_tables()
+    tables = RuntimeTableSnapshot.from_csv(path).measurement_tables(
+        CELLPROFILER_MEASUREMENT_DIALECT
+    )
     assert tuple(table.subject.name for table in tables) == (
         "Image",
         "Cells",
@@ -1178,8 +1184,8 @@ def test_export_to_spreadsheet_aggregates_mixed_producer_declared_rows() -> None
         "identify_primary_objects_measurements",
         axis_id="A01",
         subject=MeasurementSubject(
-            MeasurementScope.IMAGE,
-            MeasurementScope.IMAGE.value,
+            MeasurementScope.SAMPLE,
+            MeasurementScope.SAMPLE.value,
         ),
         rows=producer_rows,
     )
@@ -1214,7 +1220,7 @@ def test_export_to_spreadsheet_resolves_slice_indices_per_producer_table() -> No
         _measurement_record(
             name,
             axis_id="A01",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             rows=({"slice_index": 0, feature: value},),
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(
@@ -1313,7 +1319,7 @@ def test_export_to_spreadsheet_rejects_axisless_image_rows_across_image_sets() -
     record = _measurement_record(
         name,
         axis_id="A01",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         rows=({"Count": 3},),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             component_metadata=(
@@ -1467,7 +1473,7 @@ def test_export_to_spreadsheet_keeps_crop_outputs_distinct_at_same_slice_index()
         _measurement_record(
             f"{source_image_name}_crop_measurements",
             axis_id="A01",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             source_image_name=source_image_name,
             rows=CropModule.prepare_measurement_record_rows(
                 MeasurementSparseColumnarRows.from_rows(
@@ -1592,7 +1598,7 @@ def test_export_to_spreadsheet_leaves_track_objects_features_unsuffixed() -> Non
         _measurement_record(
             "tracking_image_measurements",
             axis_id="A01",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             source_image_name="DNA",
             rows=({"slice_index": 0, image_feature: 3},),
         ),
@@ -1720,7 +1726,7 @@ def test_export_to_spreadsheet_folds_neighbor_scale_once() -> None:
     image_record = _measurement_record(
         "image_measurements",
         axis_id="A01",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         rows=({"slice_index": 0, "Count_Cells": 1},),
     )
     neighbor_record = _measurement_record(
@@ -1778,7 +1784,7 @@ def test_export_to_spreadsheet_routes_row_owned_objects_and_normalizes_ids() -> 
                 _measurement_record(
                     "mixed_measurements",
                     axis_id="A01",
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                    subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
                     rows=(
                         {
                             "slice_index": 0,
@@ -2169,7 +2175,7 @@ def test_partitioned_export_admits_only_consumed_relationship_subject(selection_
             _measurement_record(
                 "images",
                 axis_id=axis,
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
                 rows=(
                     {
                         "slice_index": 0,
@@ -2266,7 +2272,7 @@ def test_partitioned_relationship_export_preserves_producer_then_axis_order(
         image = _measurement_record(
             "images",
             axis_id=axis,
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             rows=({"slice_index": 0, "Count": 2},),
         )
         edges = []

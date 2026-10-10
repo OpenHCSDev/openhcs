@@ -311,6 +311,8 @@ def test_pipeline_runs_end_to_end_through_the_kernel_dataset_source(tmp_path) ->
     assert not {"analysis_consolidation_config", "plate_metadata_config"} & set(
         report["config_fields"]
     )
+    # The measurement step's rows are named by the domain's own dialect.
+    assert report["measurement_headers"] == ["reading,cell_count,tile,band,date,scene"]
     assert report["loaded_domain_modules"] == []
 
 

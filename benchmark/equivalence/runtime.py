@@ -73,11 +73,13 @@ from openhcs.core.runtime_relationships import (
 )
 from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
     RuntimeMeasurementFeatureNumericTolerance,
-    RuntimeMeasurementSourceQualifiedFeature,
-    normalize_runtime_identifier,
 )
+from openhcs.core.measurement_dialect import (
+    MeasurementDialect,
+    RuntimeMeasurementSourceQualifiedFeature,
+)
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.equivalence.keys import (
     RuntimeAggregateFeatureIdentity,
     RuntimeMeasurementFeatureKey,
@@ -96,7 +98,7 @@ from benchmark.equivalence.table_snapshots import (
     measurement_table_padding_group,
 )
 from openhcs.core.equivalence.measurement_rows import (
-    RuntimeImageNumberOffset,
+    RuntimeSampleNumberOffset,
     RuntimeMeasurementFeatureKeyCache,
     RuntimeMeasurementPaddingGroupCache,
     RuntimeMeasurementQualifierRenderCache,
@@ -173,9 +175,6 @@ from benchmark.equivalence.comparison import (
 from openhcs.core.source_image_provenance import SourceImageProvenanceIdentity
 from openhcs.core.equivalence.measurement_facts import (
     RuntimeMeasurementFact,
-)
-from openhcs.core.runtime_measurements import (
-    parts_contain_adjacent_image_number,
 )
 
 _RUNTIME_MEASUREMENT_PROJECTION_MODULES = (
@@ -302,7 +301,9 @@ class AggregateMeanKeyProjection:
             )
             if self.required_keys is not None and mean_key not in self.required_keys:
                 mean_key = None
-            elif image_number_reference_feature(self.value_key):
+            elif sample_number_reference_feature(
+                self.value_key, self.policy.measurement_dialect
+            ):
                 mean_key = None
             elif object_measurement_feature_matches_marker(
                 self.value_key,
@@ -515,7 +516,7 @@ class RuntimeMeasurementObservationAxis:
     def accept_measurement_table(
         self,
         record: StoredRuntimeValue,
-        dialect: RuntimeMeasurementDialect,
+        dialect: MeasurementDialect,
     ) -> None:
         self.measurement_tables.extend(
             RuntimeScopedMeasurementTable(
@@ -821,7 +822,7 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
             row: RuntimeMeasurementRowMapping,
             table_subject: RuntimeMeasurementSubjectKey,
             table_padding_group: str,
-            image_number_offset: RuntimeImageNumberOffset,
+            sample_number_offset: RuntimeSampleNumberOffset,
         ) -> None:
             row_subject_projection = RuntimeMeasurementRowSubjectProjection(
                 table_subject,
@@ -848,7 +849,7 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
                 known_source_names=self.known_source_names,
                 required_keys=row_required_keys,
                 table_padding_group=table_padding_group,
-                image_number_offset=image_number_offset,
+                sample_number_offset=sample_number_offset,
                 derive_directional_pair_facts=row_derive_directional_pair_facts,
                 schema_cache=schema_cache,
                 key_cache=key_cache,
@@ -872,15 +873,18 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
 
         table_subject = RuntimeMeasurementSubjectKey.from_table_subject(table.subject)
         table_padding_group = measurement_table_padding_group(table.name)
-        image_number_offset = RuntimeImageNumberOffset.from_measurement_table(table)
+        sample_number_offset = RuntimeSampleNumberOffset.from_measurement_table(
+            self.policy.measurement_dialect.row_identity_contract,
+            table,
+        )
         recorder = RuntimeTableRowProjectionRecorder(
             state=self,
-            image_number_offset=image_number_offset,
+            sample_number_offset=sample_number_offset,
             required_key_index=row_required_key_index,
             axis_key=axis_key,
             scoped_table=scoped_table,
             object_row_occurrence_scope=scoped_table.object_row_occurrence_scope(
-                image_number_offset
+                sample_number_offset
             ),
             image_row_occurrence_identity=scoped_table.image_row_occurrence_identity(
                 axis_key,
@@ -895,7 +899,7 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
                 ),
                 table_subject,
                 table_padding_group,
-                image_number_offset,
+                sample_number_offset,
             )
 
     def project_measurement_fact_counts(self) -> RuntimeMeasurementFactCounterMap:
@@ -1020,7 +1024,7 @@ class RuntimeMeasurementRowProjectionRecorder(ABC):
     """Shared semantic recorder for projected measurement rows."""
 
     state: RuntimeMeasurementProjectionState
-    image_number_offset: RuntimeImageNumberOffset
+    sample_number_offset: RuntimeSampleNumberOffset
     required_key_index: RuntimeMeasurementRequiredKeyIndex
     axis_key: str | None = None
 
@@ -1184,7 +1188,7 @@ class RuntimeTableRowProjectionRecorder(RuntimeMeasurementRowProjectionRecorder)
             self.scoped_table.object_instance_key(
                 row,
                 object_label,
-                image_number_offset=self.image_number_offset,
+                sample_number_offset=self.sample_number_offset,
             ),
             occurrence_scope=self.object_row_occurrence_scope,
         )
@@ -1195,7 +1199,7 @@ class RuntimeTableRowProjectionRecorder(RuntimeMeasurementRowProjectionRecorder)
         key: RuntimeMeasurementFeatureKey,
         value: RuntimeCellSignature,
     ) -> bool:
-        if key.subject.scope is not MeasurementScope.IMAGE:
+        if key.subject.scope is not MeasurementScope.SAMPLE:
             return True
         occurrence_axis_key, source_identity = self.image_row_occurrence_identity
         image_identity = row.axis_scoped_identity(
@@ -1608,7 +1612,7 @@ class RuntimeMeasurementSnapshot:
         cls,
         snapshot: "RuntimeOutputSnapshot",
         *,
-        policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+        policy: RuntimeEquivalencePolicy,
         known_source_names: tuple[str, ...] = (),
     ) -> "RuntimeMeasurementSnapshot":
         """Project exported tables into semantic measurement facts."""
@@ -1629,7 +1633,7 @@ class RuntimeMeasurementSnapshot:
         cls,
         snapshots: tuple[RuntimeOutputSnapshot, ...],
         *,
-        policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+        policy: RuntimeEquivalencePolicy,
         known_source_names: tuple[str, ...] = (),
     ) -> tuple[RuntimeMeasurementSnapshot, ...]:
         """Derive facts once per exact admitted joint input in one actual batch.
@@ -1640,8 +1644,9 @@ class RuntimeMeasurementSnapshot:
         admitted = []
         results = []
         for snapshot in snapshots:
-            image_offset = RuntimeImageNumberOffset(
-                RuntimeImageNumberOffset._offset_from_values(
+            image_offset = RuntimeSampleNumberOffset(
+                policy.measurement_dialect.row_identity_contract,
+                RuntimeSampleNumberOffset.offset_from_values(
                     value
                     for table in snapshot.tables
                     if not ExportedRelationshipMeasurementSemantics.supports_table(
@@ -1688,7 +1693,7 @@ class RuntimeMeasurementSnapshot:
     def _from_scoped_output_tables(
         cls,
         tables: tuple[RuntimeScopedMeasurementTable, ...],
-        image_offset: RuntimeImageNumberOffset,
+        image_offset: RuntimeSampleNumberOffset,
         *,
         policy: RuntimeEquivalencePolicy,
         known_source_names: tuple[str, ...],
@@ -1699,7 +1704,7 @@ class RuntimeMeasurementSnapshot:
         )
         correlations = (
             ExportedRelationshipMeasurementSemantics.correlated_object_relationships(
-                tables, image_offset
+                tables, image_offset, policy.measurement_dialect
             )
         )
         state.record_measurement_tables(tables, None)
@@ -1714,7 +1719,7 @@ class RuntimeMeasurementSnapshot:
         cls,
         observation: RuntimeArtifactExecutionObservation,
         *,
-        policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+        policy: RuntimeEquivalencePolicy,
         known_source_names: tuple[str, ...] = (),
         required_measurement_keys: RuntimeRequiredMeasurementKeys = None,
     ) -> "RuntimeMeasurementSnapshot":
@@ -1872,7 +1877,7 @@ def runtime_output_equivalence(
     reference: RuntimeOutputSnapshot,
     candidate: RuntimeOutputSnapshot,
     *,
-    policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+    policy: RuntimeEquivalencePolicy,
 ) -> RuntimeEquivalenceReport:
     """Compare two runtime output snapshots for semantic equivalence."""
     return RuntimeEquivalenceReport(
@@ -1887,7 +1892,7 @@ def runtime_output_root_equivalence(
     reference_output_root: Path,
     candidate_output_root: Path,
     *,
-    policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+    policy: RuntimeEquivalencePolicy,
 ) -> RuntimeEquivalenceReport:
     """Compare two runtime output directories for semantic equivalence."""
     return runtime_output_equivalence(
@@ -1901,7 +1906,7 @@ def runtime_measurement_equivalence(
     reference: RuntimeMeasurementSnapshot,
     candidate: RuntimeMeasurementSnapshot,
     *,
-    policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+    policy: RuntimeEquivalencePolicy,
 ) -> RuntimeEquivalenceReport:
     """Compare measurement facts and any jointly supplied saved edge correlations.
 
@@ -1929,7 +1934,7 @@ def runtime_reference_artifact_equivalence(
     reference: RuntimeOutputSnapshot,
     candidate: RuntimeArtifactExecutionObservation,
     *,
-    policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+    policy: RuntimeEquivalencePolicy,
 ) -> RuntimeEquivalenceReport:
     """Compare an external output reference to typed runtime artifact execution."""
     known_source_names = runtime_artifact_measurement_source_names(candidate)
@@ -1990,7 +1995,7 @@ def runtime_artifact_execution_equivalence(
     reference: RuntimeArtifactExecutionObservation,
     candidate: RuntimeArtifactExecutionObservation,
     *,
-    policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
+    policy: RuntimeEquivalencePolicy,
 ) -> RuntimeEquivalenceReport:
     """Compare runtime artifact state and file outputs for semantic equivalence."""
     return RuntimeEquivalenceReport(
@@ -2536,7 +2541,7 @@ class RuntimeThresholdSensitivePairToleranceContract:
         """Return whether this feature is a threshold-sensitive pair family."""
         return feature.belongs_to_source_qualified_feature_family(
             self.policy.measurement_dialect,
-            self.policy.measurement_dialect.resolved_threshold_sensitive_pair_feature_names(),
+            self.policy.measurement_dialect.threshold_sensitive_pair_feature_names(),
         )
 
     def companion_features(
@@ -2548,7 +2553,7 @@ class RuntimeThresholdSensitivePairToleranceContract:
         """Return comparable pair-orientation companions for ``feature``."""
         source_tokens = feature.source_token_counter(
             self.policy.measurement_dialect,
-            self.policy.measurement_dialect.resolved_threshold_sensitive_pair_feature_names(),
+            self.policy.measurement_dialect.threshold_sensitive_pair_feature_names(),
         )
         if source_tokens is None:
             return ()
@@ -2586,7 +2591,7 @@ class RuntimeThresholdSensitivePairToleranceContract:
         if other.subject.scope is not feature.subject.scope:
             return False
         if (
-            feature.subject.scope is not MeasurementScope.IMAGE
+            feature.subject.scope is not MeasurementScope.SAMPLE
             and other.subject != feature.subject
         ):
             return False
@@ -2597,11 +2602,11 @@ class RuntimeThresholdSensitivePairToleranceContract:
 
         feature_family = feature.source_qualified_feature_family(
             self.policy.measurement_dialect,
-            self.policy.measurement_dialect.resolved_threshold_sensitive_pair_feature_names(),
+            self.policy.measurement_dialect.threshold_sensitive_pair_feature_names(),
         )
         other_family = other.source_qualified_feature_family(
             self.policy.measurement_dialect,
-            self.policy.measurement_dialect.resolved_threshold_sensitive_pair_feature_names(),
+            self.policy.measurement_dialect.threshold_sensitive_pair_feature_names(),
         )
         if feature_family is None or other_family is None:
             return False
@@ -2610,7 +2615,7 @@ class RuntimeThresholdSensitivePairToleranceContract:
         return (
             other.source_token_counter(
                 self.policy.measurement_dialect,
-                self.policy.measurement_dialect.resolved_threshold_sensitive_pair_feature_names(),
+                self.policy.measurement_dialect.threshold_sensitive_pair_feature_names(),
             )
             == source_tokens
         )
@@ -2804,11 +2809,19 @@ def record_measurement_facts(
         runtime_measurement_fact_counter(measurement_fact_counts, key)[value] += 1
 
 
-def image_number_reference_feature(key: RuntimeMeasurementFeatureKey) -> bool:
-    parts = tuple(part for part in key.feature_name.split("_") if part)
-    if parts_contain_adjacent_image_number(parts):
+def sample_number_reference_feature(
+    key: RuntimeMeasurementFeatureKey,
+    dialect: MeasurementDialect,
+) -> bool:
+    if dialect.row_identity_contract.is_sample_number_reference(key.feature_name):
         return True
-    return key.source_name == "image" and "parent" in parts and "number" in parts
+    parts = tuple(part for part in key.feature_name.split("_") if part)
+    return (
+        key.source_name
+        == normalize_runtime_identifier(dialect.scope_name(MeasurementScope.SAMPLE))
+        and "parent" in parts
+        and "number" in parts
+    )
 
 
 def runtime_measurement_fact_counter(

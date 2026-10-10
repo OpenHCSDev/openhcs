@@ -27,10 +27,8 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
 )
 from openhcs.core.callable_contract import (
-    PrimaryImageCarrierTransition,
-    PrimaryImageCarrierRequirement,
-    declares_primary_image_carrier_transition,
-    requires_primary_image_carrier,
+    creates_payload_axis,
+    requires_payload_axis,
 )
 from openhcs.core.memory.decorators import numpy
 from openhcs.processing.backends.processors.numpy_processor import (
@@ -70,7 +68,10 @@ from openhcs.interop.cellprofiler.settings_binder import (
     normalize_cellprofiler_setting_name,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure3DContract,
+)
 from openhcs.core.payload_axes import ColourSampleAxisSpec
 from openhcs.core.runtime_image_values import ImagePayload
 
@@ -1533,12 +1534,10 @@ class CompositeGrayToColorRunner(GrayToColorSchemeRunner):
         return self.final_rgb(rgb_image, request)
 
 
-@declares_primary_image_carrier_transition(
-    PrimaryImageCarrierTransition.CREATE_SOURCE_CHANNEL_AXIS,
-)
+@creates_payload_axis(ColourAxis)
 @required_axis_roles(ColourAxis)
 @composed_image_payload
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def gray_to_color(
     image: ImagePayload,
     color_scheme: GrayToColorModule.Scheme = GrayToColorModule.Scheme.RGB,
@@ -1634,10 +1633,8 @@ def gray_to_color(
     )
 
 
-@requires_primary_image_carrier(
-    PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,
-)
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@requires_payload_axis(ColourAxis)
+@numpy(contract=FlexibleContract)
 def color_to_gray(
     image: ImagePayload,
     mode: ColorToGrayMode = ColorToGrayMode.SPLIT,
@@ -1782,7 +1779,7 @@ def _invert_for_printing_result(
 
 
 @composed_image_payload
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def invert_for_printing(
     image: ImagePayload,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
@@ -1818,7 +1815,7 @@ def invert_for_printing(
 
 
 @composed_image_payload
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def invert_for_printing_grayscale(
     image: ImagePayload,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
@@ -1861,7 +1858,7 @@ def invert_for_printing_grayscale(
 
 
 @composed_image_payload
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def invert_for_printing_without_output(
     image: ImagePayload,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
@@ -2040,7 +2037,7 @@ def rgb_to_hsv_stack(rgb_stack: np.ndarray) -> np.ndarray:
     return np.stack((hue, saturation, value), axis=-1).astype(np.float32)
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 def unmix_colors(
     image: ImagePayload,
     stain_names: Sequence[StainType] = (),

@@ -8,7 +8,7 @@ from functools import partial
 import time
 from typing import TYPE_CHECKING
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec
 from openhcs.core.callable_contract import CallableContract
@@ -31,9 +31,6 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     _execute_runtime_batch_invocation,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerMeasurementImage
-from openhcs.interop.cellprofiler.runtime.object_measurement_execution import (
-    CellProfilerObjectMeasurementExecutionPolicy,
-)
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     measurement_table_rows,
 )
@@ -72,7 +69,7 @@ ObjectMeasurementBatchExecutor = Callable[
 
 def object_measurement_runtime_inputs(
     *,
-    object_label_execution: ObjectLabelInputExecutionMode,
+    object_label_execution: type[ObjectLabelInputExecutionMode],
     measurement_image: CellProfilerMeasurementImage,
     object_spec: ArtifactSpec,
     label_payload: RuntimeCallableArgument,
@@ -155,9 +152,7 @@ def object_measurement_runtime_inputs(
                 completion_label_payload,
             )
         )
-    execution_policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        object_label_execution
-    )
+    execution_policy = object_label_execution
     semantic_label_payload = execution_policy.semantic_label_payload(
         prepared_labels.source_projected_payload,
         completion_label_payload,

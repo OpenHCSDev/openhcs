@@ -3,7 +3,10 @@
 from __future__ import annotations
 from collections.abc import Callable
 from typing import Annotated, TYPE_CHECKING
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -301,7 +304,7 @@ class SkeletonLengthByLabel:
         return np.atleast_1d(lengths).astype(float)
 
 
-@numpy_backend(contract=ProcessingContract.PURE_2D)
+@numpy_backend(contract=Pure2DContract)
 def measure_image_skeleton(
     image: np.ndarray,
 ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows]:
@@ -315,7 +318,7 @@ def measure_image_skeleton(
     )
 
 
-@numpy_backend(contract=ProcessingContract.PURE_3D)
+@numpy_backend(contract=Pure3DContract)
 def measure_image_skeleton_3d(
     image: np.ndarray,
 ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows]:
@@ -329,7 +332,7 @@ def measure_image_skeleton_3d(
     )
 
 
-@numpy_backend(contract=ProcessingContract.PURE_2D)
+@numpy_backend(contract=Pure2DContract)
 @special_inputs("seed_labels")
 def measure_object_skeleton(
     image: np.ndarray,
@@ -354,7 +357,7 @@ def measure_object_skeleton(
     )
 
 
-@numpy_backend(contract=ProcessingContract.PURE_2D)
+@numpy_backend(contract=Pure2DContract)
 @special_inputs("seed_labels")
 def measure_object_skeleton_with_branchpoint_image(
     image: ImagePayload,

@@ -39,6 +39,9 @@ from openhcs.core.equivalence.measurement_features import (
     SparseNumericCounterToleranceProfile,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.interop.cellprofiler.measurement_dialect import (
+    CellProfilerEquivalencePolicy,
+)
 from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
 )
@@ -186,14 +189,15 @@ class ZernikeDescriptorSparseNumericTolerance(SparseNumericCounterToleranceProfi
                 "Zernike descriptor sparse tolerance requires "
                 "IndexedObjectZernikeDescriptor."
             )
+        zernike_policy = CellProfilerEquivalencePolicy.for_policy(policy)
         abs_tolerance = (
-            policy.zernike_descriptor_phase_abs_tolerance
+            zernike_policy.zernike_descriptor_phase_abs_tolerance
             if descriptor.family is ObjectZernikeDescriptorFeature.INTENSITY_PHASE
-            else policy.zernike_descriptor_magnitude_abs_tolerance
+            else zernike_policy.zernike_descriptor_magnitude_abs_tolerance
         )
         return (
             abs_tolerance,
-            policy.zernike_descriptor_rel_tolerance,
+            zernike_policy.zernike_descriptor_rel_tolerance,
             policy.object_boundary_jitter_max_unstable_values,
             policy.object_boundary_jitter_max_unstable_fraction,
         )
@@ -447,7 +451,9 @@ class IntensityMagnitudeObjectZernikeDescriptorDeclaration(
         policy: RuntimeEquivalencePolicy,
     ) -> bool:
         del descriptor
-        if not policy.allow_unstable_zernike_descriptors:
+        if not CellProfilerEquivalencePolicy.for_policy(
+            policy
+        ).allow_unstable_zernike_descriptors:
             return False
         return MeasurementFeatureStabilityPolicy(
             key,

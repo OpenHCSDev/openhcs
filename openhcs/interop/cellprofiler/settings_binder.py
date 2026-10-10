@@ -174,7 +174,7 @@ class SettingToKeywordBinding:
     artifact_plan_type: type[ArtifactPlan] | None = None
     artifact_type: type[ArtifactType] | None = None
     runtime_parameter_name: str | None = None
-    sidecar_role: ArtifactSidecarRole | None = None
+    sidecar_role: type[ArtifactSidecarRole] | None = None
 
     def __post_init__(self) -> None:
         artifact_fields = (self.artifact_plan_type, self.artifact_type)
@@ -208,10 +208,13 @@ class SettingToKeywordBinding:
                     "SettingToKeywordBinding.runtime_parameter_name cannot be empty."
                 )
         if self.sidecar_role is not None:
-            if not isinstance(self.sidecar_role, ArtifactSidecarRole):
+            if not (
+                isinstance(self.sidecar_role, type)
+                and issubclass(self.sidecar_role, ArtifactSidecarRole)
+            ):
                 raise TypeError(
-                    "SettingToKeywordBinding.sidecar_role must be "
-                    f"ArtifactSidecarRole, got {type(self.sidecar_role).__name__}."
+                    "SettingToKeywordBinding.sidecar_role must be an "
+                    f"ArtifactSidecarRole class, got {self.sidecar_role!r}."
                 )
             if self.artifact_plan_type is not ArtifactInputPlan:
                 raise ValueError(
@@ -228,7 +231,7 @@ class SettingToKeywordBinding:
         runtime_parameter_name: str | None = None,
         parse: SettingParser | None = None,
         repeated: bool = False,
-        sidecar_role: ArtifactSidecarRole | None = None,
+        sidecar_role: type[ArtifactSidecarRole] | None = None,
     ) -> "SettingToKeywordBinding":
         """Declare one setting-backed artifact input."""
 
@@ -264,7 +267,7 @@ class SettingToKeywordBinding:
 
     def artifact_input_domain_key(
         self,
-    ) -> tuple[type[ArtifactType], ArtifactSidecarRole | None]:
+    ) -> tuple[type[ArtifactType], type[ArtifactSidecarRole] | None]:
         """Return the exact artifact domain used to reconstruct this input."""
 
         if self.require_artifact_plan_type() is not ArtifactInputPlan:

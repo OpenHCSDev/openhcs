@@ -9,6 +9,9 @@ import unittest
 from pathlib import Path
 
 from packaging.requirements import Requirement
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 WRAPPER = ROOT / "openhcs/processing/backends/enhance/basic_processor_jax.py"
@@ -93,7 +96,7 @@ class BasicPySourceTests(unittest.TestCase):
     def test_existing_contracts_own_pipeline_axis_admission(self):
         decorators = {ast.unparse(node) for node in self.function.decorator_list}
         self.assertIn(
-            "jax_func(contract=ProcessingContract.PURE_3D, dtype_config_default=DtypeConfig())",
+            "jax_func(contract=Pure3DContract, dtype_config_default=DtypeConfig())",
             decorators,
         )
         self.assertIn("allowed_group_by_roles(ColourAxis)", decorators)

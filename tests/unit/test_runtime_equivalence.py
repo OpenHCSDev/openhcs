@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.measurement_dialect import CellProfilerEquivalencePolicy
+
+from openhcs.core.measurement_dialect import PlainMeasurementDialect
+
 from collections import Counter
 from pathlib import Path
 from types import SimpleNamespace
@@ -26,12 +30,11 @@ from openhcs.core.equivalence.measurement_features import (
 )
 from openhcs.core.equivalence.measurement_rows import (
     RuntimeMeasurementRowMapping,
-    measurement_row_image_identity_key,
+    measurement_row_sample_identity_key,
 )
 from benchmark.equivalence.object_label_measurements import (
     ObjectLabelMeasurementCompletion,
 )
-from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 from openhcs.core.equivalence.relationships import (
     ObjectInstanceKeyPlaneAlignmentStrategy,
 )
@@ -163,7 +166,7 @@ def runtime_reference_artifact_equivalence(*args, policy=None, **kwargs):
 def test_measurement_row_identity_prefers_runtime_slice_index_over_image_number() -> (
     None
 ):
-    identity = measurement_row_image_identity_key(
+    identity = measurement_row_sample_identity_key(
         {
             "slice_index": 1,
             "image_number": 1,
@@ -1064,7 +1067,7 @@ def test_cellprofiler_runtime_policy_allows_float32_image_roundoff(
 
 def test_cellprofiler_runtime_policy_allows_measurement_roundoff() -> None:
     feature = RuntimeMeasurementFeatureKey(
-        RuntimeMeasurementSubjectKey(MeasurementScope.IMAGE, None),
+        RuntimeMeasurementSubjectKey(MeasurementScope.SAMPLE, None),
         "final_threshold",
         source_name="Embryos",
     )
@@ -1357,7 +1360,7 @@ def test_runtime_reference_artifact_equivalence_skips_candidate_images_without_r
         rows=MeasurementSparseColumnarRows.from_rows(
             ({"count_nuclei": 2},), fields=(FieldSpec("count_nuclei", int),)
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     store.record(
         RuntimeValue(
@@ -1493,7 +1496,7 @@ def test_runtime_execution_equivalence_detects_artifact_count_mismatch(
         RuntimeExportObservation.from_output_root(tmp_path / "candidate"),
     )
 
-    report = runtime_artifact_execution_equivalence(reference, candidate)
+    report = runtime_artifact_execution_equivalence(reference, candidate, policy=RuntimeEquivalencePolicy())
 
     assert report.failure_messages() == (
         "runtime artifact counts differ: "
@@ -2120,7 +2123,7 @@ def test_cellprofiler_dialect_places_image_sources_in_feature_suffix() -> None:
     identity = CELLPROFILER_MEASUREMENT_DIALECT.encode_source_qualified_feature(
         "align_xshift",
         "Stain1",
-        MeasurementScope.IMAGE,
+        MeasurementScope.SAMPLE,
     )
 
     assert identity.feature_name == "align_xshift_stain_1"
@@ -2680,17 +2683,24 @@ def test_runtime_measurement_equivalence_tolerates_sparse_intensity_zernike_boun
     zernike_policy_report = runtime_measurement_equivalence(
         reference,
         candidate,
-        policy=RuntimeEquivalencePolicy(allow_unstable_zernike_descriptors=True),
+        policy=CellProfilerEquivalencePolicy(
+            measurement_dialect=CELLPROFILER_MEASUREMENT_DIALECT,
+            allow_unstable_zernike_descriptors=True,
+        ),
     )
     unstable_geometry_report = runtime_measurement_equivalence(
         reference,
         unstable_geometry_candidate,
-        policy=RuntimeEquivalencePolicy(allow_unstable_zernike_descriptors=True),
+        policy=CellProfilerEquivalencePolicy(
+            measurement_dialect=CELLPROFILER_MEASUREMENT_DIALECT,
+            allow_unstable_zernike_descriptors=True,
+        ),
     )
     sparse_geometry_report = runtime_measurement_equivalence(
         reference,
         unstable_geometry_candidate,
-        policy=RuntimeEquivalencePolicy(
+        policy=CellProfilerEquivalencePolicy(
+            measurement_dialect=CELLPROFILER_MEASUREMENT_DIALECT,
             allow_unstable_zernike_descriptors=True,
             allow_sparse_object_boundary_jitter=True,
         ),
@@ -2762,11 +2772,11 @@ def test_cellprofiler_descriptor_profile_accepts_native_intensity_zernike_names(
 
 
 def test_calculated_object_identifier_profile_is_most_derived() -> None:
-    policy = _RuntimeEquivalencePolicy(
-        measurement_dialect=RuntimeMeasurementDialect(
-            calculated_feature_prefixes=(("calculated",),),
-        ),
-    )
+    class CalculatedDialect(PlainMeasurementDialect):
+        def calculated_feature_prefix_declarations(self):
+            return (("calculated",),)
+
+    policy = _RuntimeEquivalencePolicy(measurement_dialect=CalculatedDialect())
     key = RuntimeMeasurementFeatureKey(
         subject=RuntimeMeasurementSubjectKey(MeasurementScope.OBJECT, "Worms"),
         feature_name="calculated_object_number",
@@ -3132,7 +3142,7 @@ def test_runtime_reference_artifact_equivalence_allows_threshold_entropy_jitter(
                 FieldSpec("sum_of_entropies_cells", float),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     store.record(
         RuntimeValue(
@@ -3164,7 +3174,7 @@ def test_runtime_reference_artifact_equivalence_allows_threshold_entropy_jitter(
     )
 
     assert strict_report.failure_messages() == (
-        "measurement feature image:image/sum_of_entropies_cells values differ",
+        "measurement feature sample:sample/sum_of_entropies_cells values differ",
     )
     assert entropy_policy_report.is_equivalent
 
@@ -3190,7 +3200,7 @@ def test_cellprofiler_runtime_policy_allows_threshold_entropy_roundoff(
                 FieldSpec("sum_of_entropies_cells", float),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     store.record(
         RuntimeValue(
@@ -3333,7 +3343,7 @@ def test_runtime_reference_artifact_equivalence_allows_sparse_object_boundary_ji
                 FieldSpec("count_cells", int),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     for table in (object_table, image_table):
         store.record(
@@ -3823,7 +3833,7 @@ def test_cellprofiler_runtime_policy_allows_source_qualified_intensity_boundary_
                 FieldSpec("count_cells", int),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     for table in (object_table, image_table):
         store.record(
@@ -3900,7 +3910,7 @@ def test_cellprofiler_runtime_policy_allows_calculated_object_boundary_jitter(
                 FieldSpec("count_cells", int),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     for table in (object_table, count_table):
         store.record(
@@ -4286,7 +4296,7 @@ def test_runtime_reference_artifact_equivalence_derives_relationship_child_means
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -4577,7 +4587,7 @@ def test_runtime_reference_artifact_equivalence_derives_relationship_child_means
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -4986,7 +4996,7 @@ def test_runtime_reference_artifact_equivalence_uses_sparse_object_identity_doma
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -5075,7 +5085,7 @@ def test_runtime_reference_artifact_equivalence_uses_represented_relationship_so
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -5191,7 +5201,7 @@ def test_runtime_reference_artifact_equivalence_omits_missing_relationship_child
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -5283,7 +5293,7 @@ def test_runtime_reference_artifact_equivalence_aligns_image_numbered_child_rows
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -5368,7 +5378,7 @@ def test_runtime_reference_artifact_equivalence_does_not_treat_measurement_group
                 ),
             ),
             source_image_name="Green",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
         )
         store.record(
             RuntimeValue(
@@ -5462,7 +5472,7 @@ def test_runtime_reference_artifact_equivalence_does_not_treat_paired_artifact_g
                 ),
             ),
             source_image_name="Green",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
         )
         store.record(
             RuntimeValue(
@@ -5557,7 +5567,7 @@ def test_runtime_reference_artifact_equivalence_keys_relationship_child_means_by
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -5644,7 +5654,7 @@ def test_runtime_reference_artifact_equivalence_aligns_scoped_child_tables_by_so
                 ),
             ),
             source_image_name="Green",
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
             source_provenance=SourceImageProvenance(
                 source_path=f"/input/A01_s{site}_w3.tif",
                 source_component_metadata={
@@ -5764,7 +5774,7 @@ def test_runtime_reference_artifact_equivalence_aligns_unsliced_relationship_to_
             ),
         ),
         source_image_name="Green",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Green"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Green"),
     )
     store.record(
         RuntimeValue(
@@ -6263,7 +6273,7 @@ def test_runtime_reference_artifact_equivalence_matches_multi_source_image_measu
             ({"correlation": 0.5},), fields=(FieldSpec("correlation", float),)
         ),
         source_image_name="Stain1__Stain2",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Stain1__Stain2"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Stain1__Stain2"),
     )
     store.record(
         RuntimeValue(
@@ -6310,7 +6320,7 @@ def test_runtime_reference_artifact_equivalence_matches_reversed_pair_features(
             ({"k2": 0.25},), fields=(FieldSpec("k2", float),)
         ),
         source_image_name="Stain1__Stain2",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Stain1__Stain2"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Stain1__Stain2"),
     )
     store.record(
         RuntimeValue(
@@ -6363,7 +6373,7 @@ def test_runtime_reference_artifact_equivalence_matches_colocalization_correlati
             ),
         ),
         source_image_name="Stain1__Stain2",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Stain1__Stain2"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Stain1__Stain2"),
     )
     store.record(
         RuntimeValue(
@@ -6425,7 +6435,7 @@ def test_runtime_reference_artifact_equivalence_matches_area_occupied_owner_suff
             ),
         ),
         subject=MeasurementSubject(
-            MeasurementScope.IMAGE, MeasurementScope.IMAGE.value
+            MeasurementScope.SAMPLE, MeasurementScope.SAMPLE.value
         ),
     )
     store.record(
@@ -6486,7 +6496,7 @@ def test_runtime_reference_artifact_equivalence_scopes_aggregate_math_to_image(
             ),
         ),
         subject=MeasurementSubject(
-            MeasurementScope.IMAGE, MeasurementScope.IMAGE.value
+            MeasurementScope.SAMPLE, MeasurementScope.SAMPLE.value
         ),
     )
     store.record(
@@ -6539,7 +6549,7 @@ def test_runtime_reference_artifact_equivalence_matches_image_source_features(
             fields=(FieldSpec("focus_score", float),),
         ),
         source_image_name="OrigBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue"),
     )
     store.record(
         RuntimeValue(
@@ -6603,7 +6613,7 @@ def test_runtime_reference_artifact_equivalence_preserves_row_source_qualified_i
             ),
         ),
         subject=MeasurementSubject(
-            MeasurementScope.IMAGE, MeasurementScope.IMAGE.value
+            MeasurementScope.SAMPLE, MeasurementScope.SAMPLE.value
         ),
     )
     store = RuntimeValueStore()
@@ -6726,7 +6736,7 @@ def test_runtime_reference_artifact_equivalence_preserves_qualified_correlation_
             ),
         ),
         source_image_name="CropBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "CropBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "CropBlue"),
     )
     store.record(
         RuntimeValue(
@@ -6775,7 +6785,7 @@ def test_runtime_reference_artifact_equivalence_ignores_image_provenance_fields(
             ({"focus_score": 0.75},), fields=(FieldSpec("focus_score", float),)
         ),
         source_image_name="OrigBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue"),
     )
     store.record(
         RuntimeValue(
@@ -6836,7 +6846,7 @@ def test_runtime_reference_artifact_equivalence_excludes_cellprofiler_bookkeepin
                         fields=(FieldSpec("focus_score", float),),
                     ),
                     source_image_name="OrigBlue",
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue"),
+                    subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue"),
                 ),
             ),
             path="/memory/MeasureImageQuality.pkl",
@@ -6891,7 +6901,7 @@ def test_runtime_reference_artifact_equivalence_matches_crop_feature_aliases(
             ),
         ),
         source_image_name="CropBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "CropBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "CropBlue"),
     )
     store.record(
         RuntimeValue(
@@ -6958,7 +6968,7 @@ def test_runtime_reference_artifact_equivalence_keeps_crop_original_area_semanti
             ),
         ),
         source_image_name="Cropped",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Cropped"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Cropped"),
     )
     store.record(
         RuntimeValue(
@@ -7019,7 +7029,7 @@ def test_runtime_reference_artifact_equivalence_matches_image_quality_qualifiers
             ),
         ),
         source_image_name="OrigBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue"),
     )
     store.record(
         RuntimeValue(
@@ -7068,7 +7078,7 @@ def test_runtime_reference_artifact_equivalence_detects_unmatched_scale_counts(
             ({"correlation": 0.25},), fields=(FieldSpec("correlation", float),)
         ),
         source_image_name="OrigBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue"),
     )
     store.record(
         RuntimeValue(
@@ -7095,7 +7105,7 @@ def test_runtime_reference_artifact_equivalence_detects_unmatched_scale_counts(
     )
 
     assert report.failure_messages() == (
-        "measurement feature image:image/correlation_orig_blue values differ",
+        "measurement feature sample:sample/correlation_orig_blue values differ",
     )
 
 
@@ -7146,7 +7156,7 @@ def test_runtime_reference_artifact_equivalence_matches_directional_pair_feature
             ),
         ),
         source_image_name="CropBlue__CropGreen",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "CropBlue__CropGreen"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "CropBlue__CropGreen"),
     )
     store.record(
         RuntimeValue(
@@ -7204,7 +7214,7 @@ def test_runtime_reference_artifact_equivalence_matches_undirected_pair_features
             ),
         ),
         source_image_name="Stain1__Stain2",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Stain1__Stain2"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Stain1__Stain2"),
     )
     store.record(
         RuntimeValue(
@@ -7272,11 +7282,11 @@ def test_runtime_reference_artifact_equivalence_derives_explicit_slope_from_cand
         known_source_names=(candidate_source_name,),
     )
     regression_slope_feature = (
-        policy.measurement_dialect.resolved_pair_regression_slope_feature_name()
+        policy.measurement_dialect.pair_regression_slope_feature_name()
     )
     assert regression_slope_feature is not None
     expected_slope_key = RuntimeMeasurementFeatureKey.from_source_qualified_feature(
-        RuntimeMeasurementSubjectKey(MeasurementScope.IMAGE, "Image"),
+        RuntimeMeasurementSubjectKey(MeasurementScope.SAMPLE, "sample"),
         regression_slope_feature,
         f"{reference_first_source}__{reference_second_source}",
         policy.measurement_dialect,
@@ -7307,7 +7317,7 @@ def test_runtime_reference_artifact_equivalence_derives_explicit_slope_from_cand
             ),
         ),
         source_image_name=candidate_source_name,
-        subject=MeasurementSubject(MeasurementScope.IMAGE, candidate_source_name),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, candidate_source_name),
     )
     store.record(
         RuntimeValue(
@@ -7367,7 +7377,7 @@ def test_runtime_reference_artifact_equivalence_does_not_require_derived_reverse
         ),
         source_image_name="CropBlue__CropGreen",
         subject=MeasurementSubject(
-            MeasurementScope.IMAGE,
+            MeasurementScope.SAMPLE,
             "CropBlue__CropGreen",
         ),
         measurement_feature_owner=MeasureColocalizationModule,
@@ -7449,7 +7459,7 @@ def test_runtime_reference_artifact_equivalence_allows_threshold_sensitive_pair_
             ),
         ),
         source_image_name="Stain1__Stain2",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Stain1__Stain2"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Stain1__Stain2"),
     )
     store.record(
         RuntimeValue(
@@ -7483,14 +7493,14 @@ def test_runtime_reference_artifact_equivalence_allows_threshold_sensitive_pair_
     )
 
     assert strict_report.failure_messages() == (
-        "measurement feature image:image/costes_stain_1_stain_2 values differ",
-        "measurement feature image:image/costes_stain_2_stain_1 values differ",
-        "measurement feature image:image/k_stain_1_stain_2 values differ",
-        "measurement feature image:image/k_stain_2_stain_1 values differ",
-        "measurement feature image:image/manders_stain_1_stain_2 values differ",
-        "measurement feature image:image/manders_stain_2_stain_1 values differ",
-        "measurement feature image:image/rwc_stain_1_stain_2 values differ",
-        "measurement feature image:image/rwc_stain_2_stain_1 values differ",
+        "measurement feature sample:sample/costes_stain_1_stain_2 values differ",
+        "measurement feature sample:sample/costes_stain_2_stain_1 values differ",
+        "measurement feature sample:sample/k_stain_1_stain_2 values differ",
+        "measurement feature sample:sample/k_stain_2_stain_1 values differ",
+        "measurement feature sample:sample/manders_stain_1_stain_2 values differ",
+        "measurement feature sample:sample/manders_stain_2_stain_1 values differ",
+        "measurement feature sample:sample/rwc_stain_1_stain_2 values differ",
+        "measurement feature sample:sample/rwc_stain_2_stain_1 values differ",
     )
     assert threshold_pair_report.is_equivalent
 
@@ -8763,7 +8773,7 @@ def test_runtime_measurement_snapshot_preserves_plane_local_single_row_aggregate
             ),
         ),
         source_image_name="CropBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "CropBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "CropBlue"),
     )
     records_by_axis = {}
     for site in (1, 2, 3):
@@ -8786,7 +8796,7 @@ def test_runtime_measurement_snapshot_preserves_plane_local_single_row_aggregate
         records_by_axis,
         RuntimeExportObservation.from_output_root(candidate_root),
     )
-    subject = RuntimeMeasurementSubjectKey(MeasurementScope.IMAGE, "Image")
+    subject = RuntimeMeasurementSubjectKey(MeasurementScope.SAMPLE, "sample")
     area_key = RuntimeMeasurementFeatureKey(
         subject,
         "area_retained_after_cropping_crop_blue",
@@ -8887,7 +8897,7 @@ def test_runtime_measurement_snapshot_encodes_object_source_as_feature_suffix(
             ),
         ),
         source_image_name="RawGFP",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "RawGFP"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "RawGFP"),
     )
     store = RuntimeValueStore()
     store.record(
@@ -9660,7 +9670,7 @@ def test_runtime_measurement_snapshot_row_source_identity_does_not_qualify_image
         RuntimeExportObservation.from_output_root(candidate_root),
     )
     key = RuntimeMeasurementFeatureKey(
-        RuntimeMeasurementSubjectKey(MeasurementScope.IMAGE, "image"),
+        RuntimeMeasurementSubjectKey(MeasurementScope.SAMPLE, "sample"),
         "track_objects_new_object_count_embryos_50",
     )
 
@@ -10740,7 +10750,7 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_measurement_ar
                 FieldSpec("object_name", str),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "DNA"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "DNA"),
     )
     records = tuple(
         StoredRuntimeValue(
@@ -10798,7 +10808,7 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_image_feature_
     table = MeasurementTable(
         name="IdentifyPrimaryObjects_6_measurements",
         rows=table_rows,
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     records = tuple(
         StoredRuntimeValue(
@@ -10856,7 +10866,7 @@ def test_runtime_reference_artifact_equivalence_ignores_grouped_duplicate_image_
             ),
         ),
         source_path="/source/A01_s001_w1_z001_t001.TIF",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     records = tuple(
         StoredRuntimeValue(
@@ -10929,7 +10939,7 @@ def test_runtime_reference_artifact_equivalence_applies_tolerance_after_same_pat
                 FieldSpec("source_image_name", str),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "CropBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "CropBlue"),
     )
     records = tuple(
         StoredRuntimeValue(
@@ -10992,7 +11002,7 @@ def test_runtime_reference_artifact_equivalence_preserves_same_table_image_featu
                 FieldSpec("result_value", float),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     store = RuntimeValueStore()
     store.record(
@@ -11055,7 +11065,7 @@ def test_runtime_reference_artifact_equivalence_preserves_distinct_source_image_
                 ),
             ),
             source_path=source_path,
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         )
         observation_records.append(
             StoredRuntimeValue(
@@ -11109,7 +11119,7 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_aggregate_tabl
             ),
         ),
         source_image_name="Tissue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Tissue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Tissue"),
     )
     records_by_axis = {
         axis: (
@@ -11185,7 +11195,7 @@ def test_runtime_reference_artifact_equivalence_ignores_group_replayed_image_tab
                     ),
                 ),
                 source_path=f"/source/channel_{channel}.tif",
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             ),
             location=RuntimeArtifactLocation(
                 path=f"/memory/CalculateMath_{channel}.pkl",
@@ -11246,7 +11256,7 @@ def test_runtime_reference_artifact_equivalence_preserves_local_group_image_rows
                     ),
                 ),
                 source_path=f"/source/channel_{channel}.tif",
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             ),
             location=RuntimeArtifactLocation(
                 path=f"/memory/CalculateMath_{channel}.pkl",
@@ -11293,7 +11303,7 @@ def test_runtime_reference_artifact_equivalence_preserves_same_value_wide_image_
             ),
         ),
         source_image_name="Tissue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Tissue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Tissue"),
     )
     observation = RuntimeArtifactExecutionObservation(
         {
@@ -11375,7 +11385,7 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_object_rows(
         table = MeasurementTable(
             name="MeasureTexture",
             rows=rows,
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "DNA"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "DNA"),
         )
         records.append(
             StoredRuntimeValue(
@@ -11414,13 +11424,19 @@ def test_exported_relationships_consume_declared_object_identity(
         RuntimeTableSnapshot,
     )
     from openhcs.core.runtime_measurements import RuntimeMeasurementRowIdentityContract
-
-    dialect = replace(
-        CELLPROFILER_MEASUREMENT_DIALECT,
-        row_identity_contract=RuntimeMeasurementRowIdentityContract(
-            object_identity_fields=(object_id_field,)
-        ),
+    from openhcs.interop.cellprofiler.measurement_dialect import (
+        CellProfilerMeasurementDialect,
     )
+
+    class DeclaredIdentityDialect(CellProfilerMeasurementDialect):
+        dialect_name = None
+        row_identity_contract = RuntimeMeasurementRowIdentityContract(
+            fallback_sample_fields=frozenset({"image_number", "image_id"}),
+            sample_number_field="image_number",
+            object_identity_fields=(object_id_field,),
+        )
+
+    dialect = DeclaredIdentityDialect()
     policy = RuntimeEquivalencePolicy(measurement_dialect=dialect)
     parents = RuntimeTableSnapshot(
         Path("Per_Parents.csv"),

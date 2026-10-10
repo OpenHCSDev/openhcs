@@ -1,5 +1,9 @@
 from dataclasses import dataclass, replace
 import sqlite3
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+    UneditedLabels,
+)
 from types import MappingProxyType, SimpleNamespace
 from typing import Annotated, cast
 
@@ -10,26 +14,17 @@ import skimage.morphology
 
 import openhcs.processing.backends.cellprofiler.secondary as iso
 import openhcs.processing.backends.cellprofiler.secondary as ito
-from openhcs.core.runtime_relationships import (
+from openhcs.processing.backends.cellprofiler.crop import CropMask
+from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceFeatureDeclaration,
     DirectParentReferenceMeasurementFeature,
 )
 from openhcs.constants.constants import Backend, MemoryType
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ProducedImageStack,
-    ImageOutputBundle,
-    ImagePayloadBundleContext,
-    ImagePayloadExecutionMode,
-    aligned_image_stack_kwargs,
-    compose_aligned_image_payload,
-    pack_aligned_image_outputs,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ProducedImageStack, ImageOutputBundle, ImagePayloadBundleContext, aligned_image_stack_kwargs, compose_aligned_image_payload, pack_aligned_image_outputs)
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
     ArtifactSpec,
     ArtifactSpecRelation,
     ArtifactType,
@@ -71,13 +66,7 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    object_label_input_execution_mode_from_callable,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, object_label_input_execution_mode_from_callable, runtime_bound_parameters, special_inputs)
 from openhcs.core.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
     RuntimeArtifactQueryContext,
@@ -197,6 +186,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
+    CellProfilerContractCall,
     CellProfilerFunctionContractExecutor,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import (
@@ -223,9 +213,6 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
 )
 from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
-)
-from openhcs.interop.cellprofiler.runtime.object_measurement_execution import (
-    CellProfilerObjectMeasurementExecutionPolicy,
 )
 from openhcs.interop.cellprofiler.runtime.object_measurement_row_completion import (
     ObjectMeasurementRowCompletionSchema,
@@ -385,11 +372,14 @@ from openhcs.processing.backends.cellprofiler.worms import (
     OverlapStyle,
     UntangleWormsModule,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
     ProcessingContract,
     Pure2DAuxiliaryOutputAggregator,
+    Pure2DContract,
     Pure2DInputSlicer,
     Pure2DSliceResultBatch,
+    Pure3DContract,
 )
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
@@ -400,6 +390,16 @@ from openhcs.core.axes import Axis, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+    FullStackExecution,
+    NaturalExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+    MatchImageStackLabels,
+    SliceAlignedLabels,
+)
 
 
 def _compiled_callable_contract(
@@ -993,7 +993,7 @@ def test_special_object_label_input_preserves_runtime_slice_domain() -> None:
         del guiding_labels
         return image
 
-    consume_guiding_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    consume_guiding_labels.__processing_contract__ = Pure2DContract
 
     labels = np.array(
         [
@@ -1056,7 +1056,7 @@ def test_special_object_label_input_preserves_declared_singleton_label_planes() 
         del guiding_labels
         return image
 
-    consume_guiding_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    consume_guiding_labels.__processing_contract__ = Pure2DContract
 
     labels = np.array(
         [
@@ -1130,7 +1130,7 @@ def test_special_object_label_input_preserves_projected_overlap_domains() -> Non
         del guiding_labels
         return image
 
-    consume_guiding_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    consume_guiding_labels.__processing_contract__ = Pure2DContract
 
     labels = np.zeros((2, 2, 3, 3), dtype=np.int32)
     labels[0, 0, 0, 0] = 1
@@ -1207,7 +1207,7 @@ def test_special_object_label_input_preserves_nominal_value_for_scalar_parameter
         del guiding_labels
         return image
 
-    consume_guiding_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    consume_guiding_labels.__processing_contract__ = Pure2DContract
 
     objects = ObjectLabelSet(
         name="Guides",
@@ -1734,7 +1734,7 @@ def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload(
         source_image_name="RuntimeAlias",
         source_aliases=("RuntimeAlias",),
         image_count=1,
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     (measurement_image,) = executor._measurement_image_inputs(
@@ -2081,21 +2081,21 @@ def test_pure_3d_executor_rejects_runtime_slice_aligned_label_kwargs() -> None:
         del labels
         return image
 
-    keep_stack.__processing_contract__ = ProcessingContract.PURE_3D
+    keep_stack.__processing_contract__ = Pure3DContract
     callable_contract = _compiled_callable_contract(
         keep_stack, artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),)
     )
 
     with pytest.raises(
         ValueError,
-        match="keep_stack.*ProcessingContract.PURE_3D.*runtime-slice-aligned kwargs.*labels",
+        match="keep_stack.*pure_3d.*runtime-slice-aligned kwargs.*labels",
     ):
         CellProfilerFunctionContractExecutor().execute(
             callable_contract,
             keep_stack,
             np.zeros((2, 2, 2), dtype=np.float32),
             {"labels": RuntimeSliceAlignedValues((np.zeros((2, 2), dtype=np.int32),))},
-            execution_mode=ImagePayloadExecutionMode.NATURAL,
+            execution_mode=NaturalExecution,
         )
 
 
@@ -2599,7 +2599,7 @@ def test_track_objects_retained_image_uses_tracked_object_source_payload() -> No
             payload=current_payload,
             source_image_name=None,
             image_count=3,
-            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+            execution_mode=FullStackExecution,
         ),
         current_image=current_payload,
         kwargs={},
@@ -3236,7 +3236,7 @@ def test_object_output_measurements_derive_count_and_locations_from_output_label
         for row in rows
         if row.get("feature_name") == "Location_Center_X"
     } == {1, 2}
-    assert table.subject == MeasurementSubject(MeasurementScope.IMAGE, "Mask")
+    assert table.subject == MeasurementSubject(MeasurementScope.SAMPLE, "Mask")
     assert table.source_image_name == "Mask"
 
     store = RuntimeValueStore()
@@ -3388,7 +3388,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
     assert len(tables) == 1
     table = tables[0]
     assert table.subject is not None
-    assert table.subject.scope is MeasurementScope.IMAGE
+    assert table.subject.scope is MeasurementScope.SAMPLE
     assert table.subject.name == "Mask"
     rows = table.rows.row_mappings()
     image_rows = tuple(row for row in rows if row.get("object_name") is None)
@@ -3604,7 +3604,7 @@ def test_image_sidecar_is_not_packed_into_replacement_main_flow() -> None:
     sidecar = ArtifactSpec.output(
         "CropGreen__crop_mask",
         ImageArtifactType,
-        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        sidecar_role=CropMask,
     )
     contract = _compiled_callable_contract(
         CellProfilerModule.require_module("Crop").require_callable(),
@@ -3811,7 +3811,7 @@ def test_default_row_policy_accepts_multi_source_image_row_ownership() -> None:
                 FieldSpec("result_value", float),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
 
     row_policy = CellProfilerObjectMeasurementRowPolicy()
@@ -5126,7 +5126,7 @@ def test_image_stack_requirement_does_not_control_scalar_object_input_projection
         del labels, slice_by_slice
         return image
 
-    consume_labels.__processing_contract__ = ProcessingContract.FLEXIBLE
+    consume_labels.__processing_contract__ = FlexibleContract
     contract = _compiled_callable_contract(
         consume_labels,
         artifact_inputs=(object_spec,),
@@ -5183,7 +5183,7 @@ def test_match_image_stack_object_input_follows_declared_image_execution(
     )
     object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
 
-    @object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
+    @object_label_input_execution_mode(MatchImageStackLabels)
     def consume_labels(
         image: np.ndarray,
         labels: ObjectLabelValue,
@@ -5193,7 +5193,7 @@ def test_match_image_stack_object_input_follows_declared_image_execution(
         del labels, slice_by_slice
         return image
 
-    consume_labels.__processing_contract__ = ProcessingContract.FLEXIBLE
+    consume_labels.__processing_contract__ = FlexibleContract
     contract = _compiled_callable_contract(
         consume_labels,
         artifact_inputs=(object_spec,),
@@ -5242,7 +5242,7 @@ def test_pure_3d_executor_preserves_nominal_singleton_object_label_stack() -> No
         seen_label_shape.append(object_label_dense_array(labels).shape)
         return image
 
-    full_stack_identity.__processing_contract__ = ProcessingContract.PURE_3D
+    full_stack_identity.__processing_contract__ = Pure3DContract
     callable_contract = _compiled_callable_contract(
         full_stack_identity,
         artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),),
@@ -5253,7 +5253,7 @@ def test_pure_3d_executor_preserves_nominal_singleton_object_label_stack() -> No
         full_stack_identity,
         np.zeros((1, 2, 2), dtype=np.float32),
         {"labels": labels},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert result.shape == (1, 2, 2)
@@ -5355,7 +5355,7 @@ def test_cellprofiler_contract_executor_applies_pure_2d_after_input_resolution()
         calls.append(image.shape)
         return image + 1
 
-    add_one.__processing_contract__ = ProcessingContract.PURE_2D
+    add_one.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         add_one, artifact_outputs=(ArtifactSpec.output("Filtered", ImageArtifactType),)
     )
@@ -5373,7 +5373,7 @@ def test_cellprofiler_contract_executor_applies_pure_2d_after_input_resolution()
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
         ),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert calls == [(4, 5), (4, 5)]
@@ -5391,7 +5391,7 @@ def test_cellprofiler_contract_executor_preserves_declared_two_channel_color_pla
         calls.append(image.shape)
         return image[..., 0]
 
-    split_first_channel.__processing_contract__ = ProcessingContract.PURE_2D
+    split_first_channel.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         split_first_channel,
         artifact_outputs=(ArtifactSpec.output("Gray", ImageArtifactType),),
@@ -5407,7 +5407,7 @@ def test_cellprofiler_contract_executor_preserves_declared_two_channel_color_pla
         split_first_channel,
         image,
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert calls == [(4, 5, 2)]
@@ -5424,7 +5424,7 @@ def test_cellprofiler_contract_executor_slices_declared_two_channel_color_stack(
         calls.append(image.shape)
         return image[..., 0]
 
-    split_first_channel.__processing_contract__ = ProcessingContract.PURE_2D
+    split_first_channel.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         split_first_channel,
         artifact_outputs=(ArtifactSpec.output("Gray", ImageArtifactType),),
@@ -5454,7 +5454,7 @@ def test_cellprofiler_contract_executor_slices_declared_two_channel_color_stack(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
         ),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert calls == [(4, 5, 2), (4, 5, 2)]
@@ -5477,7 +5477,7 @@ def test_cellprofiler_contract_executor_preserves_inner_volume_dimensions():
         calls.append((image.shape, dense_labels.shape, int(dense_labels[0, 0, 0])))
         return image + dense_labels
 
-    add_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    add_labels.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         add_labels,
         artifact_inputs=(ArtifactSpec.input("Labels", ObjectLabelsArtifactType),),
@@ -5507,7 +5507,7 @@ def test_cellprofiler_contract_executor_preserves_inner_volume_dimensions():
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
         ),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert calls == [((3, 4, 5), (3, 4, 5), index) for index in range(2)]
@@ -5524,7 +5524,7 @@ def test_cellprofiler_contract_executor_rejects_kwarg_only_runtime_axis():
         calls.append((image.shape, labels.shape, int(labels[0, 0, 0])))
         return image, labels
 
-    keep_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    keep_labels.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         keep_labels,
         artifact_outputs=(
@@ -5553,7 +5553,7 @@ def test_cellprofiler_contract_executor_rejects_kwarg_only_runtime_axis():
             keep_labels,
             image,
             {"labels": labels},
-            execution_mode=ImagePayloadExecutionMode.NATURAL,
+            execution_mode=NaturalExecution,
         )
 
     assert calls == []
@@ -5575,7 +5575,7 @@ def test_cellprofiler_contract_executor_projects_declared_runtime_slice_label_kw
         calls.append((image.shape, dense_labels.shape, int(dense_labels[0, 0])))
         return image, labels
 
-    keep_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    keep_labels.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         keep_labels,
         artifact_outputs=(
@@ -5609,7 +5609,7 @@ def test_cellprofiler_contract_executor_projects_declared_runtime_slice_label_kw
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=3,
         ),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert calls == [((4, 5), (4, 5), 0) for _ in range(3)]
@@ -5621,7 +5621,7 @@ def test_cellprofiler_contract_executor_stacks_singleton_plane_outputs():
     def add_singleton_plane(image: np.ndarray) -> np.ndarray:
         return image[np.newaxis, ...] + 1
 
-    add_singleton_plane.__processing_contract__ = ProcessingContract.PURE_2D
+    add_singleton_plane.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         add_singleton_plane,
         artifact_outputs=(ArtifactSpec.output("Filtered", ImageArtifactType),),
@@ -5640,7 +5640,7 @@ def test_cellprofiler_contract_executor_stacks_singleton_plane_outputs():
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
         ),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert result.data.shape == (2, 1, 4, 5)
@@ -5655,7 +5655,7 @@ def test_cellprofiler_contract_executor_stacks_singleton_color_outputs():
         rgb = np.repeat(image[..., np.newaxis], 3, axis=-1)
         return rgb[np.newaxis, ...] + 1
 
-    add_singleton_color_plane.__processing_contract__ = ProcessingContract.PURE_2D
+    add_singleton_color_plane.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         add_singleton_color_plane,
         artifact_outputs=(ArtifactSpec.output("Color", ImageArtifactType),),
@@ -5674,7 +5674,7 @@ def test_cellprofiler_contract_executor_stacks_singleton_color_outputs():
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
         ),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert result.data.shape == (2, 1, 4, 5, 3)
@@ -5689,7 +5689,7 @@ def test_cellprofiler_contract_executor_stacks_singleton_volume_outputs():
         volume = np.stack((image, image + 1), axis=0)
         return volume[np.newaxis, ...]
 
-    add_singleton_volume.__processing_contract__ = ProcessingContract.PURE_2D
+    add_singleton_volume.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         add_singleton_volume,
         artifact_outputs=(ArtifactSpec.output("Volume", ImageArtifactType),),
@@ -5708,7 +5708,7 @@ def test_cellprofiler_contract_executor_stacks_singleton_volume_outputs():
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=3,
         ),
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert result.data.shape == (3, 1, 2, 4, 5)
@@ -5865,7 +5865,7 @@ def test_measurement_table_derives_exact_schema_from_dataclass_rows() -> None:
             ),
             row_type=StackStats,
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
 
     assert table.rows.row_mappings() == (
@@ -5993,7 +5993,7 @@ def test_measurement_table_preserves_declared_object_and_source_axes() -> None:
     )
 
     assert table.subject == MeasurementSubject(
-        MeasurementScope.IMAGE,
+        MeasurementScope.SAMPLE,
         "DNA",
     )
     projected_by_object: dict[str, list[int]] = {}
@@ -6122,18 +6122,17 @@ def test_pure_2d_slice_execution_injects_slice_index_for_declared_callables() ->
         seen.append(slice_index)
         return image
 
-    CellProfilerFunctionContractExecutor(
-        plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            axis_size=3,
-        )
-    ).execute_pure_2d_slice(
+    call = CellProfilerContractCall(
         CallableContract.from_callable(records_slice_index),
         records_slice_index,
+        RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis_size=3,
+        ),
+    )
+    call.invoke(
         np.zeros((2, 2), dtype=np.float32),
-        {},
-        2,
-        3,
+        call.slice_kwargs(None, {}, 2, 3),
     )
 
     assert seen == [2]
@@ -7065,7 +7064,7 @@ def test_object_intensity_measurement_image_batch_delegates_natural_prepared_req
     requests = (
         PreparedObjectMeasurementInvocation(
             source_image_name="OrigDNA",
-            execution_mode=ImagePayloadExecutionMode.NATURAL,
+            execution_mode=NaturalExecution,
             func=measure_object_intensity,
             image=np.asarray([[1.0, 2.0]], dtype=np.float32),
             kwargs={"labels": labels},
@@ -7082,7 +7081,7 @@ def test_object_intensity_measurement_image_batch_delegates_natural_prepared_req
         ),
         PreparedObjectMeasurementInvocation(
             source_image_name="OrigRNA",
-            execution_mode=ImagePayloadExecutionMode.NATURAL,
+            execution_mode=NaturalExecution,
             func=measure_object_intensity,
             image=np.asarray([[3.0, 4.0]], dtype=np.float32),
             kwargs={"labels": labels},
@@ -7678,7 +7677,7 @@ def test_cellprofiler_contract_executor_stacks_color_slice_outputs():
         calls.append(image.shape)
         return np.stack((image, image, image), axis=-1)
 
-    colorize.__processing_contract__ = ProcessingContract.PURE_2D
+    colorize.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(colorize)
     callable_contract = replace(
         raw_contract,
@@ -7697,7 +7696,7 @@ def test_cellprofiler_contract_executor_stacks_color_slice_outputs():
         colorize,
         stack,
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -8193,7 +8192,7 @@ def test_full_stack_preserves_nominal_object_label_output() -> None:
         assert stack.shape == (1, 2, 2)
         return stack, {"count": 1}, label_payload
 
-    segment_like.__processing_contract__ = ProcessingContract.PURE_2D
+    segment_like.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         segment_like,
         artifact_outputs=(
@@ -8212,7 +8211,7 @@ def test_full_stack_preserves_nominal_object_label_output() -> None:
         segment_like,
         image,
         {},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert result_image is image
@@ -8239,7 +8238,7 @@ def test_full_stack_pure_2d_implicit_main_output_aligns_declared_object_labels()
         assert stack.shape == (1, 2, 2)
         return stack, {"count": 1}, label_payload
 
-    watershed_like.__processing_contract__ = ProcessingContract.PURE_2D
+    watershed_like.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         watershed_like,
         artifact_outputs=(
@@ -8258,7 +8257,7 @@ def test_full_stack_pure_2d_implicit_main_output_aligns_declared_object_labels()
         watershed_like,
         image,
         {},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert result_image is image
@@ -8309,7 +8308,7 @@ def test_full_stack_pure_2d_non_flow_main_keeps_relationship_output_alignment() 
         assert stack.shape == (1, 2, 2)
         return stack, {"count": 1}, relationship, labels
 
-    object_transform_like.__processing_contract__ = ProcessingContract.PURE_2D
+    object_transform_like.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         object_transform_like,
         artifact_inputs=(parent_spec,),
@@ -8331,7 +8330,7 @@ def test_full_stack_pure_2d_non_flow_main_keeps_relationship_output_alignment() 
         object_transform_like,
         image,
         {},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert result_image is image
@@ -8477,7 +8476,7 @@ def test_illumination_apply_projects_broadcast_input_to_selected_primary_site(
         source_image_name=original_spec.name,
         source_aliases=(original_spec.name,),
         image_count=1,
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
     invocation = executor._invocation_request(
         image_request=image_request,
@@ -8681,7 +8680,7 @@ def test_image_output_projection_uses_exact_invocation_projection(
                 payload=source_payload,
                 source_image_name=source_spec.name,
                 image_count=2,
-                execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                execution_mode=FullStackExecution,
                 plane_projection=plane_projection,
             ),
             current_image=source_payload,
@@ -8849,7 +8848,7 @@ def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
                 payload=source_payload,
                 source_image_name=source_spec.name,
                 image_count=1,
-                execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                execution_mode=FullStackExecution,
             ),
             current_image=source_payload,
             kwargs={},
@@ -9024,7 +9023,7 @@ def test_cellprofiler_contract_executor_slices_aligned_runtime_kwargs():
         calls.append((image.shape, object_label_dense_array(labels).shape))
         return image, labels
 
-    keep_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    keep_labels.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(keep_labels)
     callable_contract = replace(
         raw_contract,
@@ -9056,7 +9055,7 @@ def test_cellprofiler_contract_executor_slices_aligned_runtime_kwargs():
         keep_labels,
         stack,
         {"labels": labels},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -9077,14 +9076,13 @@ def test_cellprofiler_contract_executor_aggregates_object_label_payload_auxiliar
             ObjectLabelPayload(
                 variant_data=ObjectLabelVariantData(
                     labels=labels,
-                    unedited_labels=labels + 10,
-                    small_removed_labels=labels + 20,
+                    variants={UneditedLabels: labels + 10, SmallRemovedLabels: labels + 20},
                 ),
                 domain=ObjectLabelDomain(declared_object_ids=(object_id,)),
             ),
         )
 
-    keep_payload.__processing_contract__ = ProcessingContract.PURE_2D
+    keep_payload.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(keep_payload)
     callable_contract = replace(
         raw_contract,
@@ -9111,7 +9109,7 @@ def test_cellprofiler_contract_executor_aggregates_object_label_payload_auxiliar
         keep_payload,
         stack,
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -9124,11 +9122,11 @@ def test_cellprofiler_contract_executor_aggregates_object_label_payload_auxiliar
     np.testing.assert_array_equal(result_payload.labels[0], np.full((4, 5), 1))
     np.testing.assert_array_equal(result_payload.labels[1], np.full((4, 5), 2))
     np.testing.assert_array_equal(
-        result_payload.unedited_labels,
+        result_payload.variant_labels(UneditedLabels),
         result_payload.labels + 10,
     )
     np.testing.assert_array_equal(
-        result_payload.small_removed_labels,
+        result_payload.variant_labels(SmallRemovedLabels),
         result_payload.labels + 20,
     )
 
@@ -9150,7 +9148,7 @@ def test_cellprofiler_contract_executor_preserves_site_metadata_for_object_label
             ).payload(),
         )
 
-    segment.__processing_contract__ = ProcessingContract.PURE_2D
+    segment.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(segment)
     callable_contract = replace(
         raw_contract,
@@ -9181,7 +9179,7 @@ def test_cellprofiler_contract_executor_preserves_site_metadata_for_object_label
         segment,
         image,
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -9224,7 +9222,7 @@ def test_aligned_stack_object_label_auxiliary_aggregates_on_runtime_slice_axis()
             ).label_set(name="Nuclei", source_image_name="OrigBlue"),
         )
 
-    segment.__processing_contract__ = ProcessingContract.PURE_2D
+    segment.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         segment,
         artifact_outputs=(
@@ -9254,7 +9252,7 @@ def test_aligned_stack_object_label_auxiliary_aggregates_on_runtime_slice_axis()
         segment,
         AlignedImageStack((first_site, second_site)),
         {},
-        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -9967,7 +9965,7 @@ def test_cellprofiler_contract_executor_projects_batch_relationship_auxiliary():
     def relate(image: np.ndarray):
         return image, DirectedObjectRelationshipPayload(source_ids=(), target_ids=())
 
-    relate.__processing_contract__ = ProcessingContract.PURE_2D
+    relate.__processing_contract__ = Pure2DContract
     parent_spec = ArtifactSpec.input("Parents", ObjectLabelsArtifactType)
     child_spec = ArtifactSpec.input("Children", ObjectLabelsArtifactType)
     raw_contract = CallableContract.from_callable(relate)
@@ -9992,7 +9990,7 @@ def test_cellprofiler_contract_executor_projects_batch_relationship_auxiliary():
         relate,
         stack,
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -10016,7 +10014,7 @@ def test_cellprofiler_contract_executor_aggregates_volume_label_auxiliary():
             domain=ObjectLabelDomain(declared_object_ids=(1,)),
         )
 
-    keep_volume_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    keep_volume_labels.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(keep_volume_labels)
     callable_contract = replace(
         raw_contract,
@@ -10043,7 +10041,7 @@ def test_cellprofiler_contract_executor_aggregates_volume_label_auxiliary():
         keep_volume_labels,
         stack,
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -10065,7 +10063,7 @@ def test_cellprofiler_contract_executor_preserves_single_slice_dataclass_auxilia
         assert slice_count == 1
         return image, SliceStats(slice_index=slice_index, threshold_used=0.25)
 
-    segment.__processing_contract__ = ProcessingContract.PURE_2D
+    segment.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         segment,
         artifact_outputs=(
@@ -10080,7 +10078,7 @@ def test_cellprofiler_contract_executor_preserves_single_slice_dataclass_auxilia
         segment,
         image,
         {},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     np.testing.assert_array_equal(result_image, image)
@@ -10094,7 +10092,7 @@ def test_cellprofiler_contract_executor_does_not_infer_stack_from_ndarray_kwargs
         calls.append((image.shape, labels.shape))
         return labels + 1
 
-    increment_labels.__processing_contract__ = ProcessingContract.PURE_2D
+    increment_labels.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(increment_labels)
     callable_contract = replace(
         raw_contract,
@@ -10116,7 +10114,7 @@ def test_cellprofiler_contract_executor_does_not_infer_stack_from_ndarray_kwargs
         increment_labels,
         image,
         {"labels": labels},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     assert calls == [((4, 5), (2, 4, 5))]
@@ -10194,7 +10192,7 @@ def test_cellprofiler_contract_executor_broadcasts_2d_labels_to_image_stack():
         calls.append((image.shape, labels.shape, int(image[0, 0])))
         return image + labels
 
-    add_label_values.__processing_contract__ = ProcessingContract.PURE_2D
+    add_label_values.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(add_label_values)
     callable_contract = replace(
         raw_contract,
@@ -10219,7 +10217,7 @@ def test_cellprofiler_contract_executor_broadcasts_2d_labels_to_image_stack():
         add_label_values,
         image,
         {"labels": labels},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -10364,7 +10362,7 @@ def test_distance_b_limits_expansion_from_accepted_primary_labels(monkeypatch):
             inputs=SourceImageObjectLabelBuildRequest(
                 image=np.zeros((1, 5), dtype=np.float32),
                 labels=final_labels,
-                unedited_labels=unedited_labels,
+                variants={UneditedLabels: unedited_labels},
             ),
             thresholded=np.ones((1, 5), dtype=bool),
             distance_to_dilate=2,
@@ -10404,7 +10402,7 @@ def test_secondary_propagation_uses_threshold_mask_without_seed_or(monkeypatch):
             inputs=SourceImageObjectLabelBuildRequest(
                 image=np.zeros((2, 2), dtype=np.float32),
                 labels=labels,
-                unedited_labels=labels,
+                variants={UneditedLabels: labels},
             ),
             thresholded=thresholded,
             distance_to_dilate=10,
@@ -10425,7 +10423,7 @@ def test_secondary_propagation_methods_own_numba_default_backend():
         inputs=SourceImageObjectLabelBuildRequest(
             image=np.zeros((2, 2), dtype=np.float32),
             labels=np.zeros((2, 2), dtype=np.int32),
-            unedited_labels=np.zeros((2, 2), dtype=np.int32),
+            variants={UneditedLabels: np.zeros((2, 2), dtype=np.int32)},
         ),
         thresholded=np.zeros((2, 2), dtype=bool),
         distance_to_dilate=10,
@@ -10513,7 +10511,7 @@ def test_secondary_propagation_rejects_undeclared_spatial_domain_mismatch():
                 inputs=SourceImageObjectLabelBuildRequest(
                     image=image,
                     labels=labels,
-                    unedited_labels=labels,
+                    variants={UneditedLabels: labels},
                 ),
                 thresholded=mask,
                 distance_to_dilate=10,
@@ -11261,7 +11259,7 @@ def test_cellprofiler_contract_executor_preserves_multi_image_stack_payload():
         calls.append(image.shape)
         return image
 
-    keep_stack.__processing_contract__ = ProcessingContract.PURE_2D
+    keep_stack.__processing_contract__ = Pure2DContract
     callable_contract = _compiled_callable_contract(
         keep_stack, artifact_outputs=(ArtifactSpec.output("Stack", ImageArtifactType),)
     )
@@ -11272,7 +11270,7 @@ def test_cellprofiler_contract_executor_preserves_multi_image_stack_payload():
         keep_stack,
         stack,
         {},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert calls == [(3, 4, 5)]
@@ -11344,7 +11342,7 @@ def test_compose_image_payload_broadcasts_only_from_declared_stack_owner():
     )
 
     assert composition.execution_mode is (
-        ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        AlignedStackExecution
     )
     assert isinstance(composition.payload, AlignedImageStack)
     assert len(composition.payload.slices) == 2
@@ -11373,7 +11371,7 @@ def test_compose_image_payload_does_not_invent_pairwise_alignment_from_shape():
         (first, second),
     )
 
-    assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert composition.execution_mode is FullStackExecution
     assert composition.payload.data.shape == (2, 2, 2, 4, 5)
     np.testing.assert_array_equal(composition.payload.data[0], first)
     np.testing.assert_array_equal(composition.payload.data[1], second)
@@ -11546,7 +11544,7 @@ def test_tile_aligned_multi_image_stack_tiles_each_runtime_slice() -> None:
         tile,
         aligned_stack,
         {"rows": 1, "columns": 2},
-        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -11567,7 +11565,7 @@ def test_cellprofiler_contract_executor_applies_aligned_multi_image_stack():
         calls.append(image.shape)
         return image[0] - image[1]
 
-    subtract_illumination.__processing_contract__ = ProcessingContract.PURE_2D
+    subtract_illumination.__processing_contract__ = Pure2DContract
     raw_contract = CallableContract.from_callable(subtract_illumination)
     callable_contract = replace(
         raw_contract,
@@ -11598,7 +11596,7 @@ def test_cellprofiler_contract_executor_applies_aligned_multi_image_stack():
         subtract_illumination,
         aligned_stack,
         {},
-        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -11615,7 +11613,7 @@ def test_aligned_multi_image_stack_rejects_volumetric_contract() -> None:
     def keep_volume(image: np.ndarray) -> np.ndarray:
         return image
 
-    keep_volume.__processing_contract__ = ProcessingContract.PURE_3D
+    keep_volume.__processing_contract__ = Pure3DContract
     raw_contract = CallableContract.from_callable(keep_volume)
     callable_contract = replace(
         raw_contract,
@@ -11631,13 +11629,13 @@ def test_aligned_multi_image_stack_rejects_volumetric_contract() -> None:
         )
     )
 
-    with pytest.raises(ValueError, match="ProcessingContract.PURE_3D"):
+    with pytest.raises(ValueError, match="pure_3d"):
         CellProfilerFunctionContractExecutor().execute(
             callable_contract,
             keep_volume,
             aligned_stack,
             {},
-            execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+            execution_mode=AlignedStackExecution,
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
                 axis=RuntimePlaneAxis.RUNTIME_SLICE,
                 axis_size=2,
@@ -12022,14 +12020,14 @@ def test_track_objects_record_builder_uses_nominal_image_table_ownership() -> No
     )
     assert all(
         rows_by_feature[feature_name]["source_image_name"]
-        == MeasurementScope.IMAGE.value
+        == "image"
         and "object_name" not in rows_by_feature[feature_name]
         for feature_name in image_feature_names | mean_feature_names
     )
     assert table.source_image_name is None
     assert table.subject == MeasurementSubject(
-        MeasurementScope.IMAGE,
-        MeasurementScope.IMAGE.value,
+        MeasurementScope.SAMPLE,
+        "image",
     )
 
 
@@ -12353,7 +12351,7 @@ def test_align_measurement_builder_records_output_scoped_shifts() -> None:
     )
     table = measurement_table_for_module(request)
 
-    assert table.subject == MeasurementSubject(MeasurementScope.IMAGE, "image")
+    assert table.subject == MeasurementSubject(MeasurementScope.SAMPLE, "image")
     assert table.source_image_name is None
     assert dict(table.source_component_metadata or {}) == {
         "well": "A01",
@@ -12612,7 +12610,7 @@ def test_untangle_measurement_object_names_use_compiled_relations(
         output_value=MeasurementTable(
             name=measurements.name,
             rows=MeasurementSparseColumnarRows.from_rows((), fields=()),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
         kwargs={},
     )
@@ -12723,7 +12721,7 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
         source_aliases=(),
         payload=payload,
         reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
-        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        execution_mode=AlignedStackExecution,
     )
 
     assert carrier.payload is payload
@@ -12733,10 +12731,10 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
 
 @pytest.mark.parametrize(
     "execution_mode",
-    (ImagePayloadExecutionMode.NATURAL, ImagePayloadExecutionMode.FULL_STACK),
+    (NaturalExecution, FullStackExecution),
 )
 def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
-    execution_mode: ImagePayloadExecutionMode,
+    execution_mode: type[ImagePayloadExecutionMode],
 ) -> None:
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5) / 20
     mask = np.ones(pixels.shape, dtype=bool)
@@ -15630,11 +15628,6 @@ def test_callable_contract_rejects_missing_processing_contract():
             raise RuntimeError("2D only")
         return image
 
-    attach_callable_contract_metadata(
-        two_dimensional_only,
-        declared_processing_contract="unknown",
-    )
-
     with pytest.raises(TypeError, match="must declare a ProcessingContract"):
         CallableContract.from_callable(
             two_dimensional_only
@@ -16572,7 +16565,7 @@ def test_measurement_labels_do_not_project_runtime_slice_stack_for_aligned_measu
     )
     measurement_image = CellProfilerMeasurementImage(
         source_image_name="CropBlue__CropGreen",
-        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        execution_mode=AlignedStackExecution,
         source_aliases=("CropBlue", "CropGreen"),
         payload=AlignedImageStack(
             tuple(
@@ -18001,15 +17994,13 @@ def test_structuring_element_execution_uses_callable_processing_contract() -> No
 
     assert kwargs["structuring_element"] is StructuringElement.DISK
     contract = CallableContract.from_callable(closing)
-    assert contract.require_processing_contract() is ProcessingContract.FLEXIBLE
-    assert contract.runtime_image_execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert contract.require_processing_contract() is FlexibleContract
+    assert contract.runtime_image_execution_mode is FullStackExecution
     assert closing.__signature__.parameters["slice_by_slice"].default is True
 
 
 def test_object_measurement_execution_policy_uses_full_stack_for_3d_labels() -> None:
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.FULL_STACK
-    )
+    policy = FullStackLabels
     labels = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 5, 5), dtype=np.int32)),
@@ -18017,18 +18008,16 @@ def test_object_measurement_execution_policy_uses_full_stack_for_3d_labels() -> 
 
     mode = policy.image_execution_mode(
         labels,
-        ImagePayloadExecutionMode.NATURAL,
+        NaturalExecution,
     )
 
-    assert mode is ImagePayloadExecutionMode.FULL_STACK
+    assert mode is FullStackExecution
 
 
 def test_object_measurement_execution_policy_uses_full_stack_for_source_bound_volume_labels() -> (
     None
 ):
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.FULL_STACK
-    )
+    policy = FullStackLabels
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
             labels=np.zeros((2, 3, 5, 5), dtype=np.int32)
@@ -18042,18 +18031,16 @@ def test_object_measurement_execution_policy_uses_full_stack_for_source_bound_vo
 
     mode = policy.image_execution_mode(
         labels,
-        ImagePayloadExecutionMode.NATURAL,
+        NaturalExecution,
     )
 
-    assert mode is ImagePayloadExecutionMode.FULL_STACK
+    assert mode is FullStackExecution
 
 
 def test_object_measurement_execution_policy_keeps_payload_domain_labels_full_stack() -> (
     None
 ):
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.FULL_STACK
-    )
+    policy = FullStackLabels
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 5, 5), dtype=np.int32)),
         domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
@@ -18061,17 +18048,15 @@ def test_object_measurement_execution_policy_keeps_payload_domain_labels_full_st
 
     mode = policy.image_execution_mode(
         labels,
-        ImagePayloadExecutionMode.NATURAL,
+        NaturalExecution,
         runtime_slice_count=3,
     )
 
-    assert mode is ImagePayloadExecutionMode.FULL_STACK
+    assert mode is FullStackExecution
 
 
 def test_slice_aligned_measurement_preserves_singleton_aligned_image_owner() -> None:
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.SLICE_ALIGNED
-    )
+    policy = SliceAlignedLabels
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((5, 5), dtype=np.int32)),
         domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
@@ -18079,19 +18064,17 @@ def test_slice_aligned_measurement_preserves_singleton_aligned_image_owner() -> 
 
     mode = policy.image_execution_mode(
         labels,
-        ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        AlignedStackExecution,
         runtime_slice_count=1,
     )
 
-    assert mode is ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+    assert mode is AlignedStackExecution
 
 
 def test_object_measurement_execution_policy_keeps_declared_full_stack_for_plane_labels() -> (
     None
 ):
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.FULL_STACK
-    )
+    policy = FullStackLabels
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 5, 5), dtype=np.int32)),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
@@ -18103,23 +18086,23 @@ def test_object_measurement_execution_policy_keeps_declared_full_stack_for_plane
 
     mode = policy.image_execution_mode(
         labels,
-        ImagePayloadExecutionMode.NATURAL,
+        NaturalExecution,
         runtime_slice_count=3,
     )
 
-    assert mode is ImagePayloadExecutionMode.FULL_STACK
+    assert mode is FullStackExecution
 
 
 def test_full_stack_object_measurement_executor_preserves_volume_call() -> None:
     calls: list[tuple[int, ...]] = []
 
-    @object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+    @object_label_input_execution_mode(FullStackLabels)
     def measure_volume(image: np.ndarray, labels: np.ndarray) -> np.ndarray:
         del labels
         calls.append(tuple(int(axis) for axis in image.shape))
         return image
 
-    measure_volume.__processing_contract__ = ProcessingContract.PURE_2D
+    measure_volume.__processing_contract__ = Pure2DContract
     image = np.zeros((3, 5, 7), dtype=np.float32)
     labels = np.zeros_like(image, dtype=np.int32)
     callable_contract = _compiled_callable_contract(
@@ -18134,7 +18117,7 @@ def test_full_stack_object_measurement_executor_preserves_volume_call() -> None:
         measure_volume,
         image,
         {"labels": labels},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert calls == [(3, 5, 7)]
@@ -18144,12 +18127,12 @@ def test_full_stack_object_measurement_executor_preserves_volume_call() -> None:
 def test_full_stack_image_executor_preserves_volume_call() -> None:
     calls: list[tuple[int, ...]] = []
 
-    @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
+    @runtime_image_execution_mode(FullStackExecution)
     def filter_volume(image: np.ndarray) -> np.ndarray:
         calls.append(tuple(int(axis) for axis in image.shape))
         return image + 1
 
-    filter_volume.__processing_contract__ = ProcessingContract.PURE_2D
+    filter_volume.__processing_contract__ = Pure2DContract
     image = np.zeros((3, 5, 7), dtype=np.float32)
     callable_contract = _compiled_callable_contract(
         filter_volume,
@@ -18161,7 +18144,7 @@ def test_full_stack_image_executor_preserves_volume_call() -> None:
         filter_volume,
         image,
         {},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert calls == [(3, 5, 7)]
@@ -18180,7 +18163,7 @@ def test_convert_objects_to_image_contract_preserves_volume_label_payload() -> N
         CallableContract.from_callable(
             convert_objects_to_image
         ).require_processing_contract()
-        is ProcessingContract.PURE_3D
+        is Pure3DContract
     )
     callable_contract = _compiled_callable_contract(
         convert_objects_to_image,
@@ -18195,7 +18178,7 @@ def test_convert_objects_to_image_contract_preserves_volume_label_payload() -> N
             "labels": label_payload,
             "image_mode": ImageMode.UINT16,
         },
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     np.testing.assert_array_equal(result.data, labels)
@@ -18372,9 +18355,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
 def test_object_measurement_execution_policy_uses_full_stack_for_single_runtime_slice_volume() -> (
     None
 ):
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.FULL_STACK
-    )
+    policy = FullStackLabels
     labels = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 5, 5), dtype=np.int32)),
@@ -18383,11 +18364,11 @@ def test_object_measurement_execution_policy_uses_full_stack_for_single_runtime_
 
     mode = policy.image_execution_mode(
         labels,
-        ImagePayloadExecutionMode.NATURAL,
+        NaturalExecution,
         runtime_slice_count=1,
     )
 
-    assert mode is ImagePayloadExecutionMode.FULL_STACK
+    assert mode is FullStackExecution
 
 
 def test_measure_object_size_shape_payload_runtime_slice_stack_rows_are_per_slice() -> (
@@ -18648,9 +18629,7 @@ def test_resize_objects_3d_drops_cellprofiler_parent_image_spacing() -> None:
 def test_object_measurement_execution_policy_keeps_declared_full_stack_for_2d_labels() -> (
     None
 ):
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.FULL_STACK
-    )
+    policy = FullStackLabels
     labels = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(labels=np.zeros((5, 5), dtype=np.int32)),
@@ -18658,10 +18637,10 @@ def test_object_measurement_execution_policy_keeps_declared_full_stack_for_2d_la
 
     mode = policy.image_execution_mode(
         labels,
-        ImagePayloadExecutionMode.NATURAL,
+        NaturalExecution,
     )
 
-    assert mode is ImagePayloadExecutionMode.FULL_STACK
+    assert mode is FullStackExecution
 
 
 @pytest.mark.parametrize("image_count", (1, 2))

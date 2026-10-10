@@ -36,12 +36,15 @@ from openhcs.processing.backends.processors.method_axes import (
     OrthogonalProjectionPlane,
     SpatialBinMethod,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    VolumetricToSliceContract,
+)
 
 logger = logging.getLogger(__name__)
 
 
-@numpy_func(contract=ProcessingContract.PURE_2D)
+@numpy_func(contract=Pure2DContract)
 def non_local_means_denoise_planes(
     image: np.ndarray,
     *,
@@ -490,7 +493,7 @@ class NumpyWeightedProjectionKernelPreparation(
                             _indexed_weighted_projection(members, indices, weights, axis=0)
 
 
-@numpy_func(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+@numpy_func(contract=VolumetricToSliceContract)
 def create_composite(
     stack: np.ndarray, weights: Optional[List[float]] = None
 ) -> np.ndarray:
@@ -911,7 +914,7 @@ def stack_equalize_histogram(
         return equalized_stack.astype(input_dtype)
 
 
-@numpy_func(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+@numpy_func(contract=VolumetricToSliceContract)
 def create_projection(
     stack: np.ndarray,
     method: NumpyStackProjectionMethod = NumpyStackProjectionMethod.MAX,

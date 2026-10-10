@@ -24,7 +24,9 @@ from openhcs.processing.backends.lib_registry.scikit_image_registry import (
 )
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
-    ProcessingContract,
+)
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
 )
 
 
@@ -88,7 +90,7 @@ def test_cold_external_resolution_retains_registry_classified_contract(
         ),
         composite_key="skimage:filters.threshold_otsu",
         metadata=CallableMetadata(
-            processing_contract=ProcessingContract.FLEXIBLE,
+            processing_contract=FlexibleContract,
         ),
     )
     monkeypatch.setattr(RegistryService, "_metadata_cache", None)
@@ -98,7 +100,7 @@ def test_cold_external_resolution_retains_registry_classified_contract(
 
     assert (
         CallableContract.from_callable(resolved).processing_contract
-        is ProcessingContract.FLEXIBLE
+        is FlexibleContract
     )
 
 
@@ -107,11 +109,11 @@ def test_raw_resolution_cannot_replace_processing_reference_metadata(
     monkeypatch, raw_first
 ) -> None:
     registry = SkimageRegistry()
-    wrapped = registry.reconstruct_cached_callable(sobel, ProcessingContract.FLEXIBLE)
+    wrapped = registry.reconstruct_cached_callable(sobel, FlexibleContract)
     metadata = FunctionMetadata(
         name="filters.sobel",
         func=wrapped,
-        contract=ProcessingContract.FLEXIBLE,
+        contract=FlexibleContract,
         registry=registry,
         module="skimage.filters.edges",
         original_name="sobel",

@@ -68,6 +68,12 @@ from openhcs.interop.cellprofiler.setting_names import (
     required_setting_value,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelVariantData
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    SliceAlignedLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -268,15 +274,9 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from openhcs.core.alias_property import AliasProperty
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory import numpy as numpy_decorator
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
 from openhcs.core.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
@@ -345,7 +345,11 @@ from openhcs.processing.backends.cellprofiler.label_geometry import (
     _numpy124_ordered_label_maximum_indices,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.core.equivalence.measurement_features import (
     TieSensitiveLocationValueFeatureRelation,
 )
@@ -1527,7 +1531,7 @@ def _object_intensity_batch_groups(
 def _object_intensity_batch_key(
     request: RuntimeBatchInvocationRequest,
 ) -> tuple[tuple[str, Hashable], ...] | None:
-    if request.execution_mode is not ImagePayloadExecutionMode.FULL_STACK:
+    if not request.execution_mode.whole_stack:
         return None
     if request.image.mask is not None:
         return None
@@ -1550,9 +1554,9 @@ def _object_intensity_batch_key(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
+@numpy_decorator(contract=FlexibleContract)
 @special_inputs("labels")
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
+@object_label_input_execution_mode(SliceAlignedLabels)
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 def measure_object_intensity(
     image: ImagePayload,
@@ -1609,7 +1613,7 @@ def prepare_measure_object_intensity() -> None:
     ObjectIntensityBackendStrategy.prepare_registered_family()
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def measure_image_intensity(
     image: np.ndarray,
     calculate_percentiles: bool = False,
@@ -1633,7 +1637,7 @@ def measure_image_intensity(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def measure_image_intensity_objects(
     image: np.ndarray,
@@ -1849,8 +1853,8 @@ class DivideByValueRescaleMethodRunner(RescaleMethodRunner):
         return context.divided_by(context.divisor_value)
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy_decorator(contract=Pure2DContract)
 def rescale_intensity(
     image: ImagePayload,
     rescale_method: RescaleMethod = RescaleMethod.STRETCH,
@@ -1906,7 +1910,7 @@ def rescale_source_range(
     return (src_min, src_max)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
+@numpy_decorator(contract=Pure3DContract)
 def rescale_intensity_match_maximum(image: np.ndarray) -> np.ndarray:
     """Scale image[0] so its maximum matches image[1]'s maximum."""
     input_data = image[0].astype(np.float64)

@@ -5,7 +5,6 @@ Original: gaussianfilter
 
 from typing import ClassVar
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.settings_binder import (
@@ -16,6 +15,9 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 
 class GaussianFilterModule(CellProfilerModule):
@@ -32,12 +34,14 @@ class GaussianFilterModule(CellProfilerModule):
 
 import numpy as np
 from openhcs.core.memory.decorators import numpy
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=FlexibleContract)
 def gaussian_filter(image: ImagePayload, sigma: float = 1.0) -> np.ndarray:
     """
     Apply CellProfiler-compatible Gaussian smoothing to an image.

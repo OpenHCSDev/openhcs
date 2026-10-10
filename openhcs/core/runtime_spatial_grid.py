@@ -21,7 +21,7 @@ from openhcs.core.source_image_provenance import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
+    from openhcs.core.measurement_dialect import MeasurementDialect
     from openhcs.core.runtime_measurements import MeasurementTable
 
 from enum import Enum
@@ -328,7 +328,7 @@ class SpatialGrid(SourceImageProvenanceFields, NamedArtifactPayload):
 
     def measurement_table(
         self,
-        dialect: "RuntimeMeasurementDialect",
+        dialect: "MeasurementDialect",
         slice_indices: tuple[int, ...] | None = None,
     ) -> "MeasurementTable":
         """Expose this grid's current geometry as image measurements."""
@@ -368,7 +368,10 @@ class SpatialGrid(SourceImageProvenanceFields, NamedArtifactPayload):
                     *(FieldSpec(name, type(value)) for name, value in row.items()),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(
+                MeasurementScope.SAMPLE,
+                dialect.scope_name(MeasurementScope.SAMPLE),
+            ),
             source_provenance=self.source_provenance,
         )
 

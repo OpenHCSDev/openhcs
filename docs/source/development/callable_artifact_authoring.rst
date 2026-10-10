@@ -140,9 +140,7 @@ The dataclass owns the row schema, including the empty-row case.
    from openhcs.core.runtime_measurements import (
        RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure2DContract
    from openhcs.processing.materialization import (
        CsvOptions, MaterializationSpec, ROIOptions,
    )
@@ -184,7 +182,7 @@ The dataclass owns the row schema, including the empty-row case.
        materialization=MaterializationSpec(CsvOptions()),
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    @artifact_outputs(FIXTURE_IMAGE, FIXTURE_LABELS, FIXTURE_ROWS)
    def inspect_label_fixture(
        image: np.ndarray,
@@ -387,7 +385,7 @@ keep its labels/rows declarations and replace its image declarations/decorator:
        "fixture_diagnostic", ImageArtifactType,
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    @artifact_outputs(
        FIXTURE_IMAGE, FIXTURE_DIAGNOSTIC, FIXTURE_LABELS, FIXTURE_ROWS,
    )
@@ -437,15 +435,13 @@ as its own custom-function source:
    from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
    from openhcs.core.pipeline.function_contracts import artifact_inputs
    from openhcs.core.runtime_object_labels import ObjectLabelValue
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure2DContract
 
    STORED_LABELS = ArtifactSpec.input(
        "fixture_labels", ObjectLabelsArtifactType, parameter_name="objects",
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    @artifact_inputs(STORED_LABELS)
    def mask_declared_objects(
        image: np.ndarray, *, objects: ObjectLabelValue,

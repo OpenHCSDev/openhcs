@@ -3,10 +3,21 @@
 from __future__ import annotations
 
 from enum import Enum
+from types import MappingProxyType
+
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementScopeSelection,
 )
+
+
+CELLPROFILER_SCOPE_NAMES = MappingProxyType(
+    {
+        MeasurementScope.SAMPLE: "Image",
+        MeasurementScope.RUN: "Experiment",
+    }
+)
+"""CellProfiler's table names for the kernel's sample and run scopes."""
 
 
 class CellProfilerMeasurementTargetScope(str, Enum):
@@ -21,12 +32,12 @@ class CellProfilerMeasurementTargetScope(str, Enum):
         """Return the OpenHCS measurement scopes represented by this target."""
         match self:
             case CellProfilerMeasurementTargetScope.IMAGE:
-                return MeasurementScopeSelection.of(MeasurementScope.IMAGE)
+                return MeasurementScopeSelection.of(MeasurementScope.SAMPLE)
             case CellProfilerMeasurementTargetScope.OBJECT:
                 return MeasurementScopeSelection.of(MeasurementScope.OBJECT)
             case CellProfilerMeasurementTargetScope.BOTH:
                 return MeasurementScopeSelection.of(
-                    MeasurementScope.IMAGE,
+                    MeasurementScope.SAMPLE,
                     MeasurementScope.OBJECT,
                 )
         raise TypeError(f"Unsupported CellProfiler measurement target {self!r}.")

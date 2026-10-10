@@ -55,7 +55,9 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
     MeasureObjectNeighborsModule,
     measure_object_neighbors,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 
 
 def _neighbor_step() -> FunctionStep:
@@ -330,7 +332,7 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
     cells = ArtifactSpec.output("Cells", ObjectLabelsArtifactType)
 
     @artifact_outputs(cells)
-    @numpy(contract=ProcessingContract.PURE_3D)
+    @numpy(contract=Pure3DContract)
     def fixture_producer(image):
         return image
 
@@ -495,7 +497,7 @@ def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() 
     }
 
     @artifact_outputs(*object_specs)
-    @numpy(contract=ProcessingContract.PURE_3D)
+    @numpy(contract=Pure3DContract)
     def fixture_producer(image):
         return image
 

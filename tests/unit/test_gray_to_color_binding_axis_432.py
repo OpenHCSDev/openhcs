@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.aligned_image_payload import AlignedImageStack, ImagePayloadBundleContext, ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.config import StepSourceBindingsConfig
@@ -34,6 +34,10 @@ from test_cellprofiler_generic_special_input_binding import _compile_public_step
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+    FullStackExecution,
+)
 
 
 @pytest.mark.parametrize("explicit_selector", [False, True])
@@ -87,7 +91,7 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     assert request.image_count == 1
     # The source's acquisition axis remains distinct from the named input axis.
     assert isinstance(request.payload, AlignedImageStack)
-    assert request.execution_mode is ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+    assert request.execution_mode is AlignedStackExecution
     assert request.plane_projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert request.plane_projection.axis_size == 1
     assert request.plane_projection.plane_index is None
@@ -132,7 +136,7 @@ def _execute_bound_stack(bundle):
     return CellProfilerFunctionContractExecutor().execute(
         contract, contract.resolve_canonical_raw_callable(), bundle,
         {"color_scheme": GrayToColorModule.Scheme.STACK, "rescale_intensity": False},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.SOURCE_BINDING,
             axis_size=bundle.data.shape[0],

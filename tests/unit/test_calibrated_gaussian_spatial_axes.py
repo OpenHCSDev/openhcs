@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 from skimage.filters import gaussian
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_image_values import (
     ImagePayloadAxisFields,
@@ -20,6 +19,9 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import Cel
 from openhcs.processing.backends.cellprofiler.gaussian_filter import gaussian_filter
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 
 def _execute(source):
@@ -29,7 +31,7 @@ def _execute(source):
     ))
     return CellProfilerFunctionContractExecutor().execute(
         contract, contract.resolve_canonical_raw_callable(), source, {"sigma": 1.5},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
 

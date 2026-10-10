@@ -35,7 +35,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.measurement_lookup import (
     child_count_feature_child_name,
@@ -58,7 +58,7 @@ class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
         return MeasurementFeatureQuery(
             self.feature_name,
             object_name=self.object_name,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
     @property
@@ -85,7 +85,7 @@ class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
             tuple(cast(MeasurementTable, record.data) for record in records),
             self.object_name,
             self.feature_name,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
         return tables
 
@@ -275,7 +275,7 @@ class ObjectLabelMeasurementSliceRequest(ObjectFeatureMeasurementContext):
                 object_name=self.object_name,
                 row_axis=MeasurementRowAxisField.SLICE_INDEX,
                 plane_projector=adapter,
-                dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+                dialect=CELLPROFILER_MEASUREMENT_DIALECT,
             ).values_for_labels(self.labels)
         return object_label_values_cache.store_value(query, values)
 

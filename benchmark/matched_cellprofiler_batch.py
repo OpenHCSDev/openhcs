@@ -6,6 +6,10 @@ boundary, not an alternative pipeline engine or a paper speedup generator.
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.measurement_dialect import (
+    CELLPROFILER_MEASUREMENT_DIALECT,
+)
+
 import argparse
 import json
 import operator
@@ -83,6 +87,7 @@ from openhcs.core.config import (
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from benchmark.equivalence.comparison import runtime_image_differences
+from benchmark.equivalence.outputs import ExportedTableAxis
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from benchmark.equivalence.table_snapshots import (
     RuntimeTableSnapshot,
@@ -92,10 +97,8 @@ from benchmark.equivalence.report import (
     RuntimeEquivalenceReport,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-    normalize_runtime_identifier,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress.types import ProgressEvent, ProgressPhase
@@ -276,14 +279,19 @@ def _require_compared_output_inventory(
         ExportedRelationshipMeasurementSemantics,
     )
 
-    # The inventory's default dialect is deliberately separate from the CSV
-    # comparison policy. Retain its edge admission without rebuilding scalar
-    # measurement counters already consumed by the value comparison.
+    # Edge admission reads saved CellProfiler outputs in CellProfiler's
+    # dialect, apart from the CSV comparison policy. Retain it without
+    # rebuilding scalar measurement counters already consumed by the value
+    # comparison.
+    relationship_policy = RuntimeEquivalencePolicy(
+        measurement_dialect=CELLPROFILER_MEASUREMENT_DIALECT
+    )
     correlations = tuple(
         ExportedRelationshipMeasurementSemantics.correlated_object_relationships(
             *ExportedRelationshipMeasurementSemantics.validated_output_tables(
-                snapshot.tables, RuntimeEquivalencePolicy()
-            )
+                snapshot.tables, relationship_policy
+            ),
+            relationship_policy.measurement_dialect,
         )
         for snapshot in (reference_snapshot, candidate_snapshot)
     )
@@ -350,7 +358,9 @@ def _require_compared_output_inventory(
                         subject.scope.value,
                         normalize_runtime_identifier(subject.name),
                     )
-                    for _name, subject, _indexes in table.measurement_subject_columns()
+                    for _name, subject, _indexes in table.measurement_subject_columns(
+                        CELLPROFILER_MEASUREMENT_DIALECT
+                    )
                 ),
                 len(table.rows),
             )
@@ -426,8 +436,11 @@ def _saved_output_equivalence(
         candidate_exports,
         source_workspaces=source_workspaces,
         image_set_policy=image_set_policy,
-        execution_axis_id=execution_axis_id,
-        measurement_dialect=policy.measurement_dialect,
+        execution_axis=(
+            None
+            if execution_axis_id is None
+            else ExportedTableAxis(execution_axis_id, policy.measurement_dialect)
+        ),
     )
     csv_report = runtime_measurement_equivalence(
         retained_native_measurement_snapshot(
@@ -1805,8 +1818,9 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
                     RuntimeOutputSnapshot(
                         tables=RuntimeOutputSnapshot.exported_table_snapshots(
                             exports,
-                            execution_axis_id=well,
-                            measurement_dialect=policy.measurement_dialect,
+                            execution_axis=ExportedTableAxis(
+                                well, policy.measurement_dialect
+                            ),
                             source_tables=tuple(
                                 table
                                 for table in source_tables

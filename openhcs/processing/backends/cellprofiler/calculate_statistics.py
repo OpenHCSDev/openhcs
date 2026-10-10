@@ -10,7 +10,6 @@ from typing import ClassVar, Tuple
 import numpy as np
 import scipy.optimize
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -21,7 +20,7 @@ from openhcs.core.callable_contract import (
     KeywordRuntimeParameter,
     runtime_image_execution_mode,
 )
-from openhcs.core.equivalence.policy import normalize_runtime_identifier
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurement_feature_queries import (
     MeasurementFeatureQuery,
@@ -49,7 +48,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
@@ -69,9 +68,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
+)
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
 )
 
 
@@ -376,7 +380,7 @@ def _feature_values_by_slice(
     query = MeasurementFeatureQuery(
         feature_name,
         object_name=object_name,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
     values_by_slice: dict[int, float] = {}
     for slice_index in slice_indices:
@@ -415,17 +419,17 @@ def _statistics_feature_series(
     """Enumerate numeric image and averaged-object features from typed tables."""
     series_by_identity: dict[tuple[str, str], dict[int, float]] = {}
     for table in measurement_tables:
-        if table.subject.scope not in {MeasurementScope.IMAGE, MeasurementScope.OBJECT}:
+        if table.subject.scope not in {MeasurementScope.SAMPLE, MeasurementScope.OBJECT}:
             continue
         semantics = ColumnarMeasurementTableSchema.from_table(table)
         object_names = (
-            (MeasurementScope.IMAGE.value.title(),)
-            if table.subject.scope is MeasurementScope.IMAGE
+            (CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE),)
+            if table.subject.scope is MeasurementScope.SAMPLE
             else semantics.object_names(table)
         )
         for object_name in object_names:
             query_object_name = (
-                None if table.subject.scope is MeasurementScope.IMAGE else object_name
+                None if table.subject.scope is MeasurementScope.SAMPLE else object_name
             )
             for feature_name in sorted(semantics.feature_names(table)):
                 if (
@@ -562,8 +566,8 @@ def _statistics_rows(
     )
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.PURE_2D)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=Pure2DContract)
 @runtime_bound_parameters(_CalculateStatisticsMeasurementTablesRuntimeParameter)
 def calculate_statistics(
     image: np.ndarray,
@@ -696,6 +700,6 @@ class CalculateStatisticsModule(
         return MeasurementTable(
             name=name,
             rows=rows,
-            subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
+            subject=MeasurementSubject(MeasurementScope.RUN),
             measurement_feature_owner=cls,
         )

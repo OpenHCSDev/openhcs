@@ -14,6 +14,10 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from python_introspect import public_names_from_objects, set_signature_analysis_target
 
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+    UneditedLabels,
+)
 from openhcs.constants.constants import MemoryType
 from openhcs.core.artifacts import (
     ArtifactSpec,
@@ -94,7 +98,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -354,7 +360,7 @@ class SecondaryInputNormalization:
         image = np.asarray(self.image)
         labels = object_label_dense_array(self.primary_labels, dtype=np.int32)
         unedited_labels = np.asarray(
-            self.primary_labels.variant_data.labels_for_variant("unedited"),
+            self.primary_labels.variant_data.labels_for_variant(UneditedLabels),
             dtype=np.int32,
         )
         if image.ndim != 2 or labels.ndim != 2 or unedited_labels.ndim != 2:
@@ -364,7 +370,7 @@ class SecondaryInputNormalization:
         return SourceImageObjectLabelBuildRequest(
             image=image,
             labels=labels,
-            unedited_labels=_secondary_seed_labels(labels, unedited_labels),
+            variants={UneditedLabels: _secondary_seed_labels(labels, unedited_labels)},
         )
 
 
@@ -394,9 +400,10 @@ class SecondarySegmentationRequest:
 
     @property
     def seed_labels(self) -> np.ndarray:
-        if self.inputs.unedited_labels is None:
+        seed_labels = self.inputs.variants.get(UneditedLabels)
+        if seed_labels is None:
             raise ValueError("Secondary segmentation requires unedited primary labels.")
-        return np.asarray(self.inputs.unedited_labels, dtype=np.int32)
+        return np.asarray(seed_labels, dtype=np.int32)
 
     @property
     def label_plane(self) -> np.ndarray:
@@ -1120,8 +1127,7 @@ def _replacement_primary_output_from_relationship(
     return SourceImageObjectLabelBuildRequest(
         image=image,
         labels=replacement_labels,
-        unedited_labels=variants.unedited_labels,
-        small_removed_labels=variants.small_removed_labels,
+        variants=variants.variants,
         declared_object_ids=declared_ids,
         parent_image_source_voxel_spacing=(
             primary_labels.parent_image_source_voxel_spacing
@@ -1237,7 +1243,7 @@ def _execute_identify_secondary_objects(
     raw_labels = SecondarySegmentationStrategy.for_enum_member(method).segment(
         SecondarySegmentationRequest(
             inputs=SourceImageObjectLabelBuildRequest(
-                image=img, labels=inputs.labels, unedited_labels=inputs.unedited_labels
+                image=img, labels=inputs.labels, variants=inputs.variants
             ),
             thresholded=threshold.mask,
             distance_to_dilate=distance_to_dilate,
@@ -1284,8 +1290,10 @@ def _execute_identify_secondary_objects(
     secondary_output = SourceImageObjectLabelBuildRequest(
         image=image,
         labels=object_labels.segmented,
-        unedited_labels=object_labels.unedited_segmented,
-        small_removed_labels=object_labels.small_removed_segmented,
+        variants={
+            UneditedLabels: object_labels.unedited_segmented,
+            SmallRemovedLabels: object_labels.small_removed_segmented,
+        },
         declared_object_count=object_labels.object_count,
     ).payload()
     primary_secondary_relationship = object_label_parent_child_payload(
@@ -1317,7 +1325,7 @@ def _execute_identify_secondary_objects(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("primary_labels")
 def identify_secondary_objects(
     image: ImagePayload,
@@ -1387,7 +1395,7 @@ def identify_secondary_objects(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("primary_labels")
 def identify_secondary_objects_with_replacement_primary(
     image: ImagePayload,
@@ -1983,7 +1991,7 @@ class TertiaryObjectSegmentation:
         )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("secondary_labels", "primary_labels")
 def identify_tertiary_objects(
     image: np.ndarray,

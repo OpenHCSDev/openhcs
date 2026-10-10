@@ -45,7 +45,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     cellprofiler_enum_setting_parser,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.core.pipeline.function_contracts import special_inputs
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 
@@ -63,7 +65,7 @@ class EditedObjectStats:
     objects_removed: int
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 def edit_objects_manually(
     image: np.ndarray,

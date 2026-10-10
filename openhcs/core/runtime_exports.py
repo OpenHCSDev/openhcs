@@ -211,7 +211,7 @@ class RuntimeExportObservation:
             if address.key.scope.axis_id == axis_id
             for location in locations
         }
-        numbered = self.outputs.image_numbers_by_export_path
+        numbered = self.outputs.sample_numbers_by_export_path
         paths = tuple(
             path
             for path in self.output_files

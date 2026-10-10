@@ -71,7 +71,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
@@ -171,7 +171,7 @@ def measurement_values_for_label_slices(
     plane_projector: RuntimePlaneProjection,
     object_name: str | None = None,
     row_axis: MeasurementRowAxisField = MeasurementRowAxisField.SLICE_INDEX,
-    dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    dialect=CELLPROFILER_MEASUREMENT_DIALECT,
 ) -> tuple[object, ...]:
     return MeasurementLabelSliceFeatureQuery(
         measurement_tables=measurement_tables,
@@ -438,7 +438,7 @@ def test_source_qualified_columnar_query_uses_row_source_over_table_source() -> 
             ),
         ),
         source_image_name="OrigBlue__OrigGreen",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue__OrigGreen"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue__OrigGreen"),
     )
 
     values = measurement_values_for_feature(
@@ -446,7 +446,7 @@ def test_source_qualified_columnar_query_uses_row_source_over_table_source() -> 
         "Intensity_MaxIntensity_OrigGreen",
         object_count=2,
         object_name="Nuclei",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert values.tolist() == [0.5, 0.9]
@@ -490,12 +490,12 @@ def test_source_qualified_sequence_query_uses_row_source_over_table_source() -> 
             ),
         ),
         source_image_name="OrigBlue__OrigGreen",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "OrigBlue__OrigGreen"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "OrigBlue__OrigGreen"),
     )
     query = MeasurementFeatureQuery(
         "Intensity_MaxIntensity_OrigGreen",
         object_name="Nuclei",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert query.table_may_carry_feature(table)
@@ -725,7 +725,7 @@ def test_cellprofiler_shape_area_query_uses_volume_when_area_is_empty() -> None:
         "AreaShape_Area",
         object_count=2,
         object_name="Cells",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert values.tolist() == [12.0, 24.0]
@@ -782,7 +782,7 @@ def test_heterogeneous_shape_rows_prefer_area_over_later_volume_alias() -> None:
         labels,
         plane_projector=RuntimePlaneProjection.selected(0, 1),
         object_name="Nuclei",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tuple(value.tolist() for value in values) == ([3.0, 5.0],)
@@ -822,7 +822,7 @@ def test_label_slice_measurement_lookup_uses_runtime_slice_axis() -> None:
         labels,
         plane_projector=RuntimePlaneProjection.stack(2),
         object_name="Cells",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tuple(value.tolist() for value in values) == ([0.5, 0.7], [0.9])
@@ -862,7 +862,7 @@ def test_projected_payload_measurement_lookup_uses_selected_runtime_slice() -> N
         labels,
         plane_projector=RuntimePlaneProjection.selected(1, 2),
         object_name="Cells",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tuple(value.tolist() for value in values) == ([0.9, 1.1],)
@@ -903,7 +903,7 @@ def test_payload_measurement_projection_ignores_source_contributor_alias_count()
         labels,
         plane_projector=RuntimePlaneProjection.selected(0, 1),
         object_name="Cells",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tuple(value.tolist() for value in values) == ([0.5, 0.7],)
@@ -927,7 +927,7 @@ def test_payload_measurement_lookup_rejects_unselected_runtime_stack() -> None:
             labels,
             plane_projector=RuntimePlaneProjection.stack(2),
             object_name="Cells",
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
 
@@ -960,7 +960,7 @@ def test_payload_measurement_lookup_accepts_declared_singleton_runtime_stack() -
         labels,
         plane_projector=RuntimePlaneProjection.stack(1),
         object_name="Cells",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tuple(value.tolist() for value in values) == ([0.5],)
@@ -1056,7 +1056,7 @@ def test_batch_label_slice_measurement_lookup_scans_each_axis_once(
     batch_values = MeasurementLabelSliceFeatureBatchQuery(
         measurement_tables=(table,),
         feature_name="AreaShape_FormFactor",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         row_axis=MeasurementRowAxisField.SLICE_INDEX,
         plane_projector=RuntimePlaneProjection.stack(2),
         labels_by_object={
@@ -1142,7 +1142,7 @@ def test_label_slice_measurement_lookup_preserves_producer_runtime_slice_axis() 
         labels,
         plane_projector=RuntimePlaneProjection.stack(2),
         object_name="Tiles",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tuple(value.tolist() for value in values) == ([0.25], [0.0])
@@ -1174,12 +1174,12 @@ def test_axis_batch_observes_current_values_across_complete_object_axes() -> Non
             ),
         ),
         source_image_name="CropBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "CropBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "CropBlue"),
     )
     batch_query = MeasurementObjectFeatureVectorBatchQuery(
         "Intensity_MeanIntensity_CropBlue",
         ("Nuclei",),
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
     table_map = {"Nuclei": (table,)}
     initial = batch_query.value_indexes_by_axis(
@@ -1205,7 +1205,7 @@ def test_axis_batch_observes_current_values_across_complete_object_axes() -> Non
         labels,
         plane_projector=RuntimePlaneProjection.stack(3),
         object_name="Nuclei",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert tuple(value.tolist() for value in values) == (
@@ -1240,7 +1240,7 @@ def test_axis_batch_projection_rejects_missing_object_axes() -> None:
             ),
         ),
         source_image_name="CropBlue",
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "CropBlue"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "CropBlue"),
     )
     labels = object_labels(
         np.array(
@@ -1261,7 +1261,7 @@ def test_axis_batch_projection_rejects_missing_object_axes() -> None:
             labels,
             plane_projector=RuntimePlaneProjection.stack(3),
             object_name="Nuclei",
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
 
 
@@ -1308,7 +1308,7 @@ def test_mixed_wide_and_long_measurement_rows_resolve_explicit_feature_rows() ->
         "Children_Objects2_Count",
         object_count=2,
         object_name="Objects1",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     assert values.tolist() == [2.0, 0.0]
@@ -1449,7 +1449,7 @@ def test_measurement_table_union_composes_ordered_source_provenance() -> None:
 
 
 def test_measurement_table_union_bundles_sources_per_declared_runtime_slice() -> None:
-    subject = MeasurementSubject(MeasurementScope.IMAGE, "quality_metrics")
+    subject = MeasurementSubject(MeasurementScope.SAMPLE, "quality_metrics")
     tables = tuple(
         MeasurementTable(
             name="quality_metrics",
@@ -1810,7 +1810,7 @@ def test_batch_measurement_queries_release_owners_and_observe_store_replacement(
         query = MeasurementLabelSliceFeatureBatchQuery(
             measurement_tables=(table,),
             feature_name="AreaShape_FormFactor",
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
             row_axis=MeasurementRowAxisField.SLICE_INDEX,
             plane_projector=RuntimePlaneProjection.stack(2),
             labels_by_object=labels,

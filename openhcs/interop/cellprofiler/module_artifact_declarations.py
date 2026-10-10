@@ -38,7 +38,7 @@ from openhcs.core.callable_contract import (
     ImagePayloadConsumption,
 )
 from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.equivalence.policy import normalize_runtime_identifier
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
@@ -552,7 +552,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
 
         from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
         from openhcs.interop.cellprofiler.measurement_dialect import (
-            CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            CELLPROFILER_MEASUREMENT_DIALECT,
         )
         from openhcs.interop.cellprofiler.measurement_lookup import (
             CellProfilerMeasurementFeature,
@@ -567,7 +567,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
             alias
             for alias in MeasurementFeatureQuery(
                 feature_name,
-                dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+                dialect=CELLPROFILER_MEASUREMENT_DIALECT,
             ).source_candidates
         )
         feature_object_names = frozenset(

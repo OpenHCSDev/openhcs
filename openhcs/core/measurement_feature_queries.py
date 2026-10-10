@@ -11,11 +11,12 @@ from typing import Any, ClassVar
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
-from openhcs.core.measurement_lookup_dialect import (
-    CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT,
+from openhcs.core.measurement_dialect import (
+    EXECUTING_MEASUREMENT_DIALECT,
+    MeasurementDialect,
+    MeasurementDialectLike,
     RuntimeMeasurementFeatureLookup,
-    RuntimeMeasurementLookupDialectLike,
-    resolve_runtime_measurement_lookup_dialect,
+    resolve_measurement_dialect,
 )
 from openhcs.core.measurement_row_materialization import (
     MeasurementRowOwnership,
@@ -36,7 +37,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowValueField,
     MeasurementRowAxisField,
     MeasurementScalarLiteral,
-    MeasurementScope,
     ObjectLabelMeasurementValues,
     measurement_axis_integer_domain,
     measurement_axis_integer_value,
@@ -54,7 +54,6 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenance
 
-MEASUREMENT_UNQUALIFIED_SOURCE_NAMES = frozenset(("", MeasurementScope.IMAGE.value))
 MeasurementValueIndexResult = tuple[dict[int, float], list[float]]
 OptionalMeasurementValueIndexResult = MeasurementValueIndexResult | None
 MeasurementTablesByObject = Mapping[str, tuple[MeasurementTable, ...]]
@@ -289,11 +288,11 @@ class ColumnarMeasurementTableSchema:
         object_name: str,
         feature_name: str,
         *,
-        dialect: RuntimeMeasurementLookupDialectLike = CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT,
+        dialect: MeasurementDialectLike = EXECUTING_MEASUREMENT_DIALECT,
     ) -> tuple[MeasurementTable, ...]:
         query = MeasurementFeatureQuery(feature_name, dialect=dialect)
         query_object = (
-            resolve_runtime_measurement_lookup_dialect(dialect)
+            resolve_measurement_dialect(dialect)
             .feature_lookup(feature_name)
             .query_object_name(object_name)
         )
@@ -694,8 +693,8 @@ class MeasurementFeatureQuery:
 
     feature_name: str
     object_name: str | None = None
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
+    dialect: MeasurementDialectLike = (
+        EXECUTING_MEASUREMENT_DIALECT
     )
 
     def __post_init__(self) -> None:
@@ -706,7 +705,7 @@ class MeasurementFeatureQuery:
 
     @property
     def feature_lookup(self) -> RuntimeMeasurementFeatureLookup:
-        return resolve_runtime_measurement_lookup_dialect(self.dialect).feature_lookup(
+        return resolve_measurement_dialect(self.dialect).feature_lookup(
             self.feature_name
         )
 
@@ -873,7 +872,7 @@ class MeasurementFeatureQuery:
         if source_image_name is None:
             return True
         normalized_source = normalize_measurement_token(source_image_name)
-        if normalized_source in MEASUREMENT_UNQUALIFIED_SOURCE_NAMES:
+        if normalized_source in MeasurementDialect.unqualified_sample_names():
             return True
         return normalized_source in self.source_candidates
 
@@ -908,8 +907,8 @@ class MeasurementObjectFeatureVectorBatchQuery:
 
     feature_name: str
     object_names: tuple[str, ...]
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
+    dialect: MeasurementDialectLike = (
+        EXECUTING_MEASUREMENT_DIALECT
     )
 
     def __post_init__(self) -> None:
@@ -933,7 +932,7 @@ class MeasurementObjectFeatureVectorBatchQuery:
     ) -> MeasurementValueIndexesByObject:
         """Return current object-feature indexes from one correlated table pass."""
         object_names = self.normalized_object_names
-        lookup = resolve_runtime_measurement_lookup_dialect(
+        lookup = resolve_measurement_dialect(
             self.dialect
         ).feature_lookup(self.feature_name)
         query_objects_by_requested_object = {
@@ -991,7 +990,7 @@ class MeasurementObjectFeatureVectorBatchQuery:
     ) -> dict[int, MeasurementValueIndexesByObject] | None:
         """Return current feature indexes preserving complete object/axis rows."""
         object_names = self.normalized_object_names
-        lookup = resolve_runtime_measurement_lookup_dialect(
+        lookup = resolve_measurement_dialect(
             self.dialect
         ).feature_lookup(self.feature_name)
         query_objects_by_requested_object = {
@@ -1092,7 +1091,7 @@ class MeasurementObjectFeatureVectorBatchQuery:
         semantics = ColumnarMeasurementTableSchema.from_table(table)
         if not semantics.object_names(table):
             return requested_object_names
-        feature_lookup = resolve_runtime_measurement_lookup_dialect(
+        feature_lookup = resolve_measurement_dialect(
             self.dialect
         ).feature_lookup(self.feature_name)
         return tuple(
@@ -1389,13 +1388,13 @@ def normalize_measurement_token(value: object) -> str:
 def ordered_measurement_feature_candidates(
     feature_name: str,
     *,
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
+    dialect: MeasurementDialectLike = (
+        EXECUTING_MEASUREMENT_DIALECT
     ),
 ) -> tuple[str, ...]:
     """Return schema-safe feature-field aliases from most specific to least specific."""
     return (
-        resolve_runtime_measurement_lookup_dialect(dialect)
+        resolve_measurement_dialect(dialect)
         .feature_lookup(feature_name)
         .field_aliases
     )
@@ -1446,7 +1445,7 @@ def measurement_row_source_matches_feature(
     if source_image_name is None:
         return True
     normalized_source = normalize_measurement_token(source_image_name)
-    if normalized_source in MEASUREMENT_UNQUALIFIED_SOURCE_NAMES:
+    if normalized_source in MeasurementDialect.unqualified_sample_names():
         return True
     return normalized_source in query.source_candidates
 
@@ -1458,8 +1457,8 @@ def measurement_values_for_feature(
     object_count: int,
     object_ids: Sequence[int] | None = None,
     object_name: str | None = None,
-    dialect: RuntimeMeasurementLookupDialectLike = (
-        CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT
+    dialect: MeasurementDialectLike = (
+        EXECUTING_MEASUREMENT_DIALECT
     ),
 ) -> Any:
     """Return object-indexed measurement values for one feature."""

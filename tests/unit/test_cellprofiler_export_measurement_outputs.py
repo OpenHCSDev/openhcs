@@ -11,7 +11,7 @@ import numpy as np
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
+    MaterializedImageCopy,
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecRelation,
@@ -387,7 +387,7 @@ def test_save_images_file_measurement_output_and_rows_are_conditional() -> None:
 
     assert isinstance(contextualized, MeasurementTable)
     assert contextualized.name == measurement.name
-    assert contextualized.subject.scope is MeasurementScope.IMAGE
+    assert contextualized.subject.scope is MeasurementScope.SAMPLE
     assert contextualized.subject.name == "DNA"
     assert contextualized.source_image_name == "DNA"
     RuntimeValue.normalize(measurement_plan, contextualized, axis_id="A01")
@@ -520,7 +520,7 @@ def test_public_callables_reconstruct_active_export_contracts() -> None:
     ) == (ImageArtifactType,)
     assert tuple(
         spec.sidecar_role for spec in save_primary_contract.artifact_outputs
-    ) == (ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY,)
+    ) == (MaterializedImageCopy,)
     assert save_primary_contract.canonical_return_output_specs.names() == ()
     assert save_primary_contract.trailing_return_output_specs.names() == (
         save_primary_contract.artifact_outputs[0].name,
@@ -534,7 +534,7 @@ def test_public_callables_reconstruct_active_export_contracts() -> None:
         MeasurementsArtifactType,
     )
     assert tuple(spec.sidecar_role for spec in save_contract.artifact_outputs) == (
-        ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY,
+        MaterializedImageCopy,
         None,
     )
     assert save_contract.canonical_return_output_specs.names() == ()

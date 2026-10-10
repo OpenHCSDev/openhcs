@@ -37,7 +37,9 @@ from openhcs.core.invocation_artifacts import (
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -45,13 +47,13 @@ def _identity(image, *, sigma: float = 1.0):
     return image
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def _native_image(image):
     return image
 
 
 @artifact_outputs(ArtifactSpec.output("OrigColor", ImageArtifactType))
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def _native_named_image(image):
     return image
 

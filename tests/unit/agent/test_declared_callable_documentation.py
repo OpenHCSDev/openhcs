@@ -17,7 +17,10 @@ from openhcs.agent.services.function_catalog_service import (
 from openhcs.core.callable_contract import CallableContract, callable_request
 from openhcs.core.memory import numpy as numpy_contract
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.processing.backends.processors.numpy_processor import (
     non_local_means_denoise_planes,
 )
@@ -48,7 +51,7 @@ def test_installed_witness_declaration_doc_and_parameter_contract_agree(monkeypa
     assert catalog.search(query="independent grayscale planes").total == 1
 
 
-@pytest.mark.parametrize("contract", (ProcessingContract.PURE_2D, ProcessingContract.PURE_3D))
+@pytest.mark.parametrize("contract", (Pure2DContract, Pure3DContract))
 def test_new_declaration_preserves_authored_prose_without_consumer_edits(monkeypatch, contract):
     @numpy_contract(contract=contract)
     def independent_doc_probe(image: np.ndarray, *, offset: float = 0.75) -> np.ndarray:
@@ -117,7 +120,7 @@ def test_nominal_request_boundary_is_not_unwrapped_to_private_implementation(mon
         return request.image
 
     implementation.__doc__ = "Public request-binding declaration prose."
-    declaration = numpy_contract(contract=ProcessingContract.PURE_2D)(implementation)
+    declaration = numpy_contract(contract=Pure2DContract)(implementation)
     catalog, metadata = _catalog(monkeypatch, declaration)
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
     assert detail.doc == "Public request-binding declaration prose."

@@ -22,9 +22,7 @@ from openhcs.core.equivalence.measurement_facts import (
 from benchmark.equivalence.measurement_requirements import (
     RequiredRuntimeMeasurementProjection,
 )
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
@@ -57,9 +55,7 @@ from benchmark.equivalence.row_identity import (
 from openhcs.core.equivalence.measurement_facts import (
     RuntimeMeasurementFactCounterMapping,
 )
-from openhcs.core.equivalence.policy import (
-    normalize_runtime_identifier,
-)
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import (
     ObjectCountFeatureMarker,
     ObjectIdentifierFeatureMarker,

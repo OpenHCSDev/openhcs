@@ -3,6 +3,10 @@
 import logging
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+    UneditedLabels,
+)
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
@@ -29,7 +33,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
     parse_cellprofiler_int,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
 )
@@ -119,7 +125,7 @@ class ExcessObjectHandling(CellProfilerEnumAttributeMixin, Enum):
     ERASE = ("Erase", True)
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def identify_primary_objects(
     image: ImagePayload,
     min_diameter: int = 10,
@@ -556,8 +562,10 @@ def identify_primary_objects(
     label_payload = SourceImageObjectLabelBuildRequest(
         image=image,
         labels=labeled_image.astype(np.int32, copy=False),
-        unedited_labels=unedited_labels.astype(np.int32, copy=False),
-        small_removed_labels=small_removed_labels.astype(np.int32, copy=False),
+        variants={
+            UneditedLabels: unedited_labels.astype(np.int32, copy=False),
+            SmallRemovedLabels: small_removed_labels.astype(np.int32, copy=False),
+        },
         declared_object_count=object_count,
     ).payload()
     runtime_profiler.log(

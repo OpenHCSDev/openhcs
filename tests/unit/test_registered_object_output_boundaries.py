@@ -27,7 +27,7 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.processing.backends.cellprofiler.object_filtering import (
@@ -85,7 +85,7 @@ def test_categorical_shape_rows_survive_completion_and_original_feature_lookup(
         measurement_tables=(table,),
         feature_name=feature,
         object_name="Objects",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         plane_projector=RuntimePlaneProjection.stack(1),
     ).values_for_labels(payload)
     multiplier = 1 if dimensions == 2 else 2

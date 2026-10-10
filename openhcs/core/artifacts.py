@@ -44,7 +44,7 @@ if TYPE_CHECKING:
         RuntimeMeasurementFeatureOwner,
     )
     from openhcs.core.runtime_stores import StoredRuntimeValue
-    from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
+    from openhcs.core.measurement_dialect import MeasurementDialect
     from openhcs.core.source_projection import OpenHCSPlaneAddress
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
@@ -439,7 +439,7 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def publishes_to_main_flow(
         cls,
-        sidecar_role: "ArtifactSidecarRole | None",
+        sidecar_role: "type[ArtifactSidecarRole] | None",
     ) -> bool:
         """Return whether this artifact role participates in canonical image flow."""
 
@@ -1170,7 +1170,7 @@ class MeasurementBearingArtifactType(ArtifactType):
     @classmethod
     @abstractmethod
     def measurement_tables(
-        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+        cls, value: "RuntimeValue", dialect: "MeasurementDialect"
     ) -> tuple["MeasurementTable", ...]:
         """Derive table views without publishing a second artifact authority."""
 
@@ -1183,7 +1183,7 @@ class MeasurementsArtifactType(MeasurementBearingArtifactType):
 
     @classmethod
     def measurement_tables(
-        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+        cls, value: "RuntimeValue", dialect: "MeasurementDialect"
     ) -> tuple["MeasurementTable", ...]:
         del dialect
         return (cast("MeasurementTable", value.data),)
@@ -1500,7 +1500,7 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
 
     @classmethod
     def measurement_tables(
-        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+        cls, value: "RuntimeValue", dialect: "MeasurementDialect"
     ) -> tuple["MeasurementTable", ...]:
         from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
         from openhcs.core.runtime_spatial_grid import SpatialGrid
@@ -1742,15 +1742,21 @@ class MetadataArtifactType(ArtifactType):
     payload_description = "metadata mapping"
 
 
-class ArtifactSidecarRole(str, Enum):
-    """Named sidecar artifact roles derived from a primary artifact."""
+class ArtifactSidecarRole(ABC, metaclass=AutoRegisterMeta):
+    """A named sidecar artifact derived from a primary artifact.
 
-    CROP_MASK = "crop_mask"
-    MATERIALIZED_IMAGE_COPY = "materialized_image_copy"
-    QA_CHECKPOINT = "qa_checkpoint"
+    Each role is a subclass; a domain declares its own roles beside the
+    kernel's two.
+    """
 
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str]
+
+    @classmethod
     def name_for(
-        self,
+        cls,
         primary_artifact_name: str,
         *,
         separator: str = "__",
@@ -1761,7 +1767,19 @@ class ArtifactSidecarRole(str, Enum):
         normalized = primary_artifact_name.strip()
         if not normalized:
             raise ValueError("primary_artifact_name cannot be empty.")
-        return f"{normalized}{separator}{self.value}"
+        return f"{normalized}{separator}{cls.name}"
+
+
+class MaterializedImageCopy(ArtifactSidecarRole):
+    """A materialized copy of an image artifact (for example a saved image)."""
+
+    name = "materialized_image_copy"
+
+
+class QaCheckpoint(ArtifactSidecarRole):
+    """An inspection checkpoint published beside a primary artifact."""
+
+    name = "qa_checkpoint"
 
 
 class ArtifactViewerStreaming(str, Enum):
@@ -2379,7 +2397,7 @@ class ImageMeasurementSubjectRelation(ArtifactSpecRelation):
             MeasurementSubject,
         )
 
-        return MeasurementSubject(MeasurementScope.IMAGE, self.source.name)
+        return MeasurementSubject(MeasurementScope.SAMPLE, self.source.name)
 
 
 @dataclass(frozen=True)
@@ -2436,7 +2454,7 @@ class ArtifactSpec:
     materialization: ArtifactMaterializationPayload | None = None
     viewer_streaming: ArtifactViewerStreaming = ArtifactViewerStreaming.AUTOMATIC
     required: bool = True
-    sidecar_role: ArtifactSidecarRole | None = None
+    sidecar_role: type[ArtifactSidecarRole] | None = None
     relations: tuple[ArtifactSpecRelation, ...] = ()
     plan_type: type["ArtifactPlan"] | None = field(default=None, kw_only=True)
     measurement_feature_owner: type["RuntimeMeasurementFeatureOwner"] | None = field(
@@ -3281,7 +3299,7 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
     variable_components: tuple[type[Axis], ...] = ()
     component_domains: tuple[ComponentGroupScope, ...] = ()
     paths_by_group: Mapping[str | None, str] | None = None
-    sidecar_role: ArtifactSidecarRole | None = None
+    sidecar_role: type[ArtifactSidecarRole] | None = None
 
     _missing_group_uses_default_path: ClassVar[bool] = False
     relations: tuple[ArtifactSpecRelation, ...] = ()

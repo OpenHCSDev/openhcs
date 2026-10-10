@@ -4,7 +4,6 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
@@ -34,6 +33,10 @@ from openhcs.processing.backends.cellprofiler.worms import (
 )
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    NaturalExecution,
+)
 
 
 def _prepared_contract(func):
@@ -116,7 +119,7 @@ def test_prepared_grid_objects_preserve_rgb_mask_calibration_and_crop_domain(sha
     returned_image, _rows, objects = CellProfilerFunctionContractExecutor().execute(
         contract, contract.resolve_canonical_raw_callable(), source,
         {"topology_inputs": topology_inputs, "shape_choice": shape_choice},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert returned_image is source
@@ -161,7 +164,7 @@ def test_prepared_align_preserves_named_plane_axis_masks_and_source_identity(col
         source,
         {"method": AlignModule.Method.NORMALIZED_CROSS_CORRELATION,
          "crop_mode": AlignModule.CropMode.KEEP_SIZE},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
     assert len(outputs.slices) == 2
@@ -195,7 +198,7 @@ def test_prepared_crop_preserves_rgb_spatial_mask_and_calibrated_source_domain()
         {"left_right_rectangle_positions": (1, 4),
          "top_bottom_rectangle_positions": (0, 3),
          "removal_method": CropModule.RemovalMethod.NO},
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
     )
 
     expected_crop = np.zeros((4, 5), dtype=bool)

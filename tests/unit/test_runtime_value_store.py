@@ -1,3 +1,4 @@
+from openhcs.core.measurement_dialect import PlainMeasurementDialect
 from dataclasses import replace
 import pickle
 
@@ -34,12 +35,10 @@ from openhcs.core.runtime_stores import (
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 from openhcs.core.callable_contract import CallableContract
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementObservationAxis,
 )
-from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
@@ -788,7 +787,7 @@ def test_runtime_artifact_input_collects_exact_complete_producer_scope():
                         ({"value": float(group_key)},),
                         fields=(FieldSpec("value", float),),
                     ),
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                    subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
                 ),
                 axis_id="A01",
             ),
@@ -828,7 +827,7 @@ def test_runtime_artifact_input_collects_exact_complete_producer_scope():
     composed = runtime_input.composed_value(records)
     assert isinstance(composed, MeasurementTable)
     assert composed.name == "measurements"
-    assert composed.subject == MeasurementSubject(MeasurementScope.IMAGE, "Image")
+    assert composed.subject == MeasurementSubject(MeasurementScope.SAMPLE, "Image")
     assert tuple(composed.rows.column_values("value")) == (1.0, 2.0)
 
 
@@ -2421,7 +2420,7 @@ def test_runtime_measurement_observation_axis_accepts_table_record_once():
              )
     axis = RuntimeMeasurementObservationAxis("A01")
 
-    axis.accept_measurement_table(record, RuntimeMeasurementDialect())
+    axis.accept_measurement_table(record, PlainMeasurementDialect.shared())
 
     assert len(axis.measurement_tables) == 1
     scoped_table = axis.measurement_tables[0]
@@ -2698,7 +2697,7 @@ def test_changed_stored_measurement_subject_requires_a_transient_value():
         name=value.name, artifact_type=value.artifact_type,
         path="/memory/measurements.pkl",
     )
-    record.data.subject = MeasurementSubject(MeasurementScope.IMAGE, "NextImage")
+    record.data.subject = MeasurementSubject(MeasurementScope.SAMPLE, "NextImage")
 
     admitted = record.validated_for_output_plan(plan, axis_id="A01")
 

@@ -17,7 +17,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 
 
@@ -58,7 +58,7 @@ def test_relateobjects_child_mean_qualification_retains_explicit_nan_only() -> N
     query = MeasurementFeatureQuery(
         feature_name,
         object_name="Mitochondria",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     default_indexes = MeasurementFeatureValueIndex.from_columnar_table_by_object(
