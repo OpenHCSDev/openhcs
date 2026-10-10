@@ -85,7 +85,7 @@ def test_prepared_primary_context_consumers_keep_nominal_payload_and_bare_pixels
     assert projected.mask is mask
     assert projected.metadata.source_spatial_domain.origin_yx == (2, 3)
     assert projected.metadata.source_image_paths == ("/input/rgb.tif",)
-    assert contract.raw_main_flow_call_argument(pixels) is pixels
+    assert contract.raw_main_flow_call_argument(pixels).data is pixels
 
 
 @pytest.mark.parametrize("shape", ((5, 5), (4, 7)))

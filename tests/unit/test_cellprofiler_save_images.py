@@ -81,6 +81,7 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def _module(**settings: str) -> ModuleBlock:
@@ -480,7 +481,7 @@ def test_save_images_converts_and_materializes_through_registered_image_formats(
 
     np.testing.assert_array_equal(returned_main, main)
     assert np.shares_memory(returned_main, main)
-    assert np.asarray(converted.data).dtype == np.dtype(expected_dtype)
+    assert np.asarray(ImagePayload.of(converted).data).dtype == np.dtype(expected_dtype)
 
     filemanager = FileManager({"memory": MemoryStorageBackend()})
     primary_path = materialize(
@@ -1228,7 +1229,7 @@ def test_save_images_bit_depth_conversion_preserves_image_metadata() -> None:
     converted = SaveImagesBitDepth.UINT16.convert(payload)
 
     assert converted.metadata == metadata
-    assert np.asarray(converted.data).dtype == np.uint16
+    assert np.asarray(ImagePayload.of(converted).data).dtype == np.uint16
     np.testing.assert_array_equal(
         converted.data,
         np.asarray(((0, 65535), (16384, 49151)), dtype=np.uint16),

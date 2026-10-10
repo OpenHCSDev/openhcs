@@ -641,8 +641,8 @@ class ImagePayloadMetadata(
         )
 
     def attach_to(self, payload: "ImagePayload") -> "ImagePayload":
-        """Attach this metadata to an existing image payload."""
-        return payload.with_metadata(self)
+        """Attach this metadata to image pixels, wrapping bare pixels once."""
+        return ImagePayload.of(payload).with_metadata(self)
 
     def attach_source_context_to(self, payload: "ImagePayload") -> "ImagePayload":
         """Attach source context while retaining the payload's declared array axes."""
@@ -1681,6 +1681,24 @@ def owned_runtime_value(value: Any) -> Any:
     return PlainImagePayload(value)
 
 
+def image_metadata_of(value: Any) -> "ImagePayloadMetadata":
+    """Image metadata of a runtime value of any artifact kind.
+
+    Kind-generic layers (projection items, materialization, output recording)
+    hold values of every artifact kind. Only image payloads carry image
+    metadata; every other kind carries none. This is the one place that
+    decision is made until K2 gives each artifact kind its own metadata.
+    """
+    value = owned_runtime_value(value)
+    return value.metadata if isinstance(value, ImagePayload) else ImagePayloadMetadata()
+
+
+def array_data_of(value: Any) -> Any:
+    """Array of an image payload, or a value of another artifact kind unchanged."""
+    value = owned_runtime_value(value)
+    return value.data if isinstance(value, ImagePayload) else value
+
+
 @dataclass(frozen=True, slots=True)
 class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Pixels that carry no metadata and no mask."""
@@ -1891,11 +1909,16 @@ def project_image_mask_to_data_domain(
     mask: Any,
     data: Any,
     *,
-    metadata: ImagePayloadMetadata,
+    metadata: ImagePayloadMetadata | None = None,
 ) -> Any | None:
-    """Validate a mask against explicit image-domain metadata."""
+    """Validate a mask against the image domain that ``metadata`` declares.
+
+    Without ``metadata`` the domain is the one ``data`` itself declares.
+    """
     if mask is None:
         return None
+    if metadata is None:
+        metadata = image_metadata_of(data)
     data_array = runtime_array_operand(data)
     candidate = mask_array(mask)
     target = MemoryType(detect_memory_type(data_array))

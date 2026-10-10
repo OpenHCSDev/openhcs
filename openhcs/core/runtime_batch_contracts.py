@@ -212,9 +212,7 @@ class RuntimeArtifactPartitionBatchRequest:
             RuntimeInvocationKwargPolicyStrategy,
         )
 
-        from openhcs.core.memory.decorators import image_payload_boundary
-
-        raw_callable = image_payload_boundary(contract.resolve_raw_runtime_callable())
+        raw_callable = contract.resolve_raw_runtime_callable()
         kwargs = RuntimeInvocationKwargPolicyStrategy.for_policy(
             RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED
         ).accepted_kwargs(

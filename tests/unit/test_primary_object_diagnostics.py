@@ -369,6 +369,30 @@ def test_processing_body_is_unchanged_except_same_run_evidence_capture():
             return self.generic_visit(node)
 
     after = RemoveEvidence().visit(after)
+
+    class PayloadAttributes(ast.NodeTransformer):
+        """The accessor functions became payload attributes (G3)."""
+
+        ACCESSORS = {
+            "image_payload_data": "data",
+            "image_payload_metadata": "metadata",
+            "image_payload_mask": "mask",
+        }
+
+        def visit_Call(self, node):
+            self.generic_visit(node)
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id in self.ACCESSORS
+                and len(node.args) == 1
+                and not node.keywords
+            ):
+                return ast.Attribute(
+                    value=node.args[0], attr=self.ACCESSORS[node.func.id], ctx=ast.Load()
+                )
+            return node
+
+    before = PayloadAttributes().visit(before)
     # Compare the original algorithm, not docstring, signature or output ABI.
     assert ast.dump(ast.Module(body=before.body[1:-1], type_ignores=[])) == ast.dump(
         ast.Module(body=after.body[1:-1], type_ignores=[]))

@@ -30,6 +30,7 @@ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
 
 from enum import Enum
+from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
 logger = logging.getLogger(__name__)
 
@@ -109,8 +110,8 @@ class MeasurementImageLabelAlignmentRequest:
 
     @property
     def image(self) -> RuntimeArrayData | AlignedImageStack:
-        """Return image data from the owning measurement-image source."""
-        return self.source.alignment_image
+        """Return the owning measurement-image source's image as a payload."""
+        return owned_runtime_value(self.source.alignment_image)
 
     @property
     def image_data(self) -> RuntimeArrayData | AlignedImageStack:
@@ -484,7 +485,7 @@ class MeasurementImageLabelAlignmentRequest:
         label_payload: ObjectLabelValue | None = None,
     ) -> None:
         """Require exact dense shapes after nominal source-domain projection."""
-        image_data = image.data
+        image_data = ImagePayload.of(image).data
         label_data = (
             object_label_dense_array(labels)
             if isinstance(labels, ObjectLabelValue)
@@ -529,7 +530,7 @@ class PreparedMeasurementObjectLabels:
     def aligned_image(self) -> RuntimeArrayData | AlignedImageStack:
         """Return the image from the source that owns its projected semantics."""
 
-        return self.aligned_source.alignment_image
+        return owned_runtime_value(self.aligned_source.alignment_image)
 
     @classmethod
     def from_source(

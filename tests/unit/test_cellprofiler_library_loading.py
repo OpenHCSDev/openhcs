@@ -187,6 +187,8 @@ from openhcs.core.axes import TimeAxis
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
+from openhcs.core.memory.decorators import image_payload_boundary
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 
@@ -441,6 +443,7 @@ def test_resize_objects_preserves_leading_axes_for_volume_stacks() -> None:
     raw_resize_objects = resize_objects
     while hasattr(raw_resize_objects, "__wrapped__"):
         raw_resize_objects = raw_resize_objects.__wrapped__
+    raw_resize_objects = image_payload_boundary(raw_resize_objects)
     _output, stats, resized, relationship = raw_resize_objects(
         image,
         label_payload,
@@ -488,6 +491,7 @@ def test_resize_preserves_resized_image_mask() -> None:
     raw_resize = resize
     while hasattr(raw_resize, "__wrapped__"):
         raw_resize = raw_resize.__wrapped__
+    raw_resize = image_payload_boundary(raw_resize)
     resized = raw_resize(
         MaskedImagePayload(data=image, mask=mask),
         resizing_factor_x=0.5,
@@ -507,6 +511,7 @@ def test_resize_volumetric_preserves_resized_image_mask() -> None:
     raw_resize = resize_volumetric
     while hasattr(raw_resize, "__wrapped__"):
         raw_resize = raw_resize.__wrapped__
+    raw_resize = image_payload_boundary(raw_resize)
     resized = raw_resize(
         MaskedImagePayload(data=image, mask=mask),
         resizing_factor_x=0.5,
@@ -525,6 +530,7 @@ def test_resize_volumetric_projects_declared_volume_factors_onto_2d_slice() -> N
     raw_resize = resize_volumetric
     while hasattr(raw_resize, "__wrapped__"):
         raw_resize = raw_resize.__wrapped__
+    raw_resize = image_payload_boundary(raw_resize)
     resized = raw_resize(
         MaskedImagePayload(data=image, mask=mask),
         resizing_factor_x=0.5,
@@ -543,6 +549,7 @@ def test_resize_volumetric_preserves_leading_channel_axis() -> None:
     raw_resize = resize_volumetric
     while hasattr(raw_resize, "__wrapped__"):
         raw_resize = raw_resize.__wrapped__
+    raw_resize = image_payload_boundary(raw_resize)
     resized = raw_resize(
         MaskedImagePayload(data=image, mask=mask),
         resizing_factor_x=0.5,
@@ -559,6 +566,7 @@ def test_resize_volumetric_projects_default_cellprofiler_validity_mask() -> None
     raw_resize = resize_volumetric
     while hasattr(raw_resize, "__wrapped__"):
         raw_resize = raw_resize.__wrapped__
+    raw_resize = image_payload_boundary(raw_resize)
     downsampled = raw_resize(
         image, resizing_factor_x=0.5, resizing_factor_y=0.5, resizing_factor_z=1.0
     )
@@ -584,6 +592,7 @@ def test_erode_objects_preserves_leading_axes_for_volume_stacks() -> None:
     raw_erode_objects = erode_objects
     while hasattr(raw_erode_objects, "__wrapped__"):
         raw_erode_objects = raw_erode_objects.__wrapped__
+    raw_erode_objects = image_payload_boundary(raw_erode_objects)
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(declared_object_ids=(1,)),
@@ -606,6 +615,7 @@ def test_erode_image_preserves_leading_axes_for_volume_stacks() -> None:
     raw_erode_image = erode_image
     while hasattr(raw_erode_image, "__wrapped__"):
         raw_erode_image = raw_erode_image.__wrapped__
+    raw_erode_image = image_payload_boundary(raw_erode_image)
     eroded = raw_erode_image(
         image,
         structuring_element=StructuringElement.BALL,
@@ -626,6 +636,7 @@ def test_convert_objects_to_image_accepts_volume_label_stacks() -> None:
     raw_convert_objects_to_image = convert_objects_to_image
     while hasattr(raw_convert_objects_to_image, "__wrapped__"):
         raw_convert_objects_to_image = raw_convert_objects_to_image.__wrapped__
+    raw_convert_objects_to_image = image_payload_boundary(raw_convert_objects_to_image)
     converted = raw_convert_objects_to_image(
         np.zeros_like(labels, dtype=np.float32),
         labels,
@@ -647,6 +658,7 @@ def test_convert_objects_to_image_uint16_preserves_integer_object_ids() -> None:
     raw_convert_objects_to_image = convert_objects_to_image
     while hasattr(raw_convert_objects_to_image, "__wrapped__"):
         raw_convert_objects_to_image = raw_convert_objects_to_image.__wrapped__
+    raw_convert_objects_to_image = image_payload_boundary(raw_convert_objects_to_image)
     converted = raw_convert_objects_to_image(
         np.zeros_like(labels, dtype=np.float32),
         labels,
@@ -663,6 +675,7 @@ def test_overlay_objects_rejects_mismatched_label_geometry() -> None:
     raw_overlay_objects = overlay_objects
     while hasattr(raw_overlay_objects, "__wrapped__"):
         raw_overlay_objects = raw_overlay_objects.__wrapped__
+    raw_overlay_objects = image_payload_boundary(raw_overlay_objects)
     with pytest.raises(ValueError, match="must exactly match"):
         raw_overlay_objects(
             image,
@@ -687,6 +700,7 @@ def test_overlay_objects_preserves_payload_scoped_volume() -> None:
     raw_overlay_objects = overlay_objects
     while hasattr(raw_overlay_objects, "__wrapped__"):
         raw_overlay_objects = raw_overlay_objects.__wrapped__
+    raw_overlay_objects = image_payload_boundary(raw_overlay_objects)
 
     result = raw_overlay_objects(image, labels, opacity=0.2)
 
@@ -739,6 +753,7 @@ def test_opening_default_backend_matches_skimage_grayscale_opening() -> None:
     raw_opening = opening
     while hasattr(raw_opening, "__wrapped__"):
         raw_opening = raw_opening.__wrapped__
+    raw_opening = image_payload_boundary(raw_opening)
     observed = raw_opening(
         image,
         structuring_element=StructuringElement.DISK,
@@ -755,6 +770,7 @@ def test_closing_default_backend_matches_skimage_grayscale_closing() -> None:
     raw_closing = closing
     while hasattr(raw_closing, "__wrapped__"):
         raw_closing = raw_closing.__wrapped__
+    raw_closing = image_payload_boundary(raw_closing)
     observed = raw_closing(
         image,
         structuring_element=StructuringElement.DISK,
@@ -3424,8 +3440,8 @@ def test_image_math_preserves_or_ignores_masked_image_payload():
     assert isinstance(preserved, MaskedImagePayload)
     np.testing.assert_array_equal(preserved.mask, mask)
     np.testing.assert_allclose(preserved.data, (1 - image) * mask)
-    assert isinstance(ignored, np.ndarray)
-    np.testing.assert_allclose(ignored, 1 - image)
+    assert isinstance(ignored, PlainImagePayload)
+    np.testing.assert_allclose(ignored.data, 1 - image)
 
 
 def test_image_math_combines_operand_masks_without_reexpanding_single_output():

@@ -36,6 +36,7 @@ from openhcs.core.source_binding_selection import (
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.axes import AxisFamily, PartitionAxis
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +99,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     ) -> RuntimeArrayData:
         """Attach this exact produced-output identity to a reloaded payload."""
 
+        payload = ImagePayload.of(payload)
         metadata = self.image_metadata or payload.metadata
         return metadata.with_source_component_metadata(
             self.component_metadata(metadata.source_component_metadata)

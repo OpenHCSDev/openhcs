@@ -61,6 +61,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
 )
 from openhcs.core.axes import ColourAxis
+from openhcs.core.memory.decorators import image_payload_boundary
 
 
 def _module_block(
@@ -273,7 +274,7 @@ def test_classify_objects_runtime_returns_active_images_in_rule_order(
     active_indices = (
         () if active_count == 0 else ((1,) if active_count == 1 else (0, 1))
     )
-    output, _rows = inspect.unwrap(classify_objects_single_measurement)(
+    output, _rows = image_payload_boundary(inspect.unwrap(classify_objects_single_measurement))(
         image,
         object_payload,
         classification_rules=_classification_rules(active_count),
@@ -453,7 +454,7 @@ def test_measure_colocalization_runtime_returns_masks_in_contract_order(
         ColocalizationThresholdMaskRuntimeOutput(all_groups[0], 1),
         ColocalizationThresholdMaskRuntimeOutput(all_groups[1], 0, object_payload),
     )[:active_count]
-    output, _rows = inspect.unwrap(measure_colocalization)(
+    output, _rows = image_payload_boundary(inspect.unwrap(measure_colocalization))(
         image,
         do_correlation=False,
         do_manders=False,
@@ -607,7 +608,7 @@ def test_intensity_distribution_runtime_returns_heatmaps_in_contract_order(
         IntensityDistributionHeatmapRuntimeOutput(group, object_payload)
         for group in active_groups
     )
-    output, _rows = inspect.unwrap(measure_object_intensity_distribution)(
+    output, _rows = image_payload_boundary(inspect.unwrap(measure_object_intensity_distribution))(
         image,
         object_payload,
         bin_count=4,

@@ -66,6 +66,8 @@ from openhcs.interop.cellprofiler.runtime.profile_fields import (
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
+from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 if TYPE_CHECKING:
@@ -292,7 +294,7 @@ class ImageOutputRecorder(CellProfilerOutputRecorder):
     def raw_runtime_input_value(
         self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
-        payload = value
+        payload = ImagePayload.of(value)
         metadata = payload.metadata
         metadata = metadata.with_source_provenance(
             metadata.source_provenance.with_derived_source_image_names(
@@ -544,7 +546,7 @@ class RelationshipsOutputRecorder(CellProfilerOutputRecorder):
                 f"ObjectRelationshipDeclaration, got {len(relations)}."
             )
         _relationship_spec, declaration = relations[0]
-        source_metadata = request.source.payload.metadata
+        source_metadata = image_metadata_of(request.source.payload)
         request.adapter.add_relationship(
             ObjectRelationship.from_payload(
                 name=request.spec.name,

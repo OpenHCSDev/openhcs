@@ -20,6 +20,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
     StretchRescaleMethodRunner,
     rescale_intensity,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def _legacy_stretch(data: np.ndarray) -> np.ndarray:
@@ -88,7 +89,7 @@ def test_stretch_preserves_legacy_edge_case_bits(pixels: np.ndarray) -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         expected = _legacy_stretch(pixels)
-        result = _rescale_stretch(pixels).data
+        result = ImagePayload.of(_rescale_stretch(pixels)).data
 
     np.testing.assert_array_equal(result.view(np.uint32), expected.view(np.uint32))
 

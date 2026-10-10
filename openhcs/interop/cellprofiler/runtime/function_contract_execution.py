@@ -7,7 +7,6 @@ from collections.abc import Callable
 
 import numpy as np
 
-from openhcs.core.memory.decorators import image_payload_boundary
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadExecutionMode,
@@ -54,6 +53,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
 )
 from openhcs.core.runtime_array_values import array_geometry
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.runtime_image_values import owned_runtime_value
 
 _CELLPROFILER_RUNTIME_CALLABLE_POLICY = RuntimeCallablePolicy(
     # execute() resolves the compiled raw target before processing dispatch.
@@ -107,9 +107,7 @@ class CellProfilerFunctionContractExecutor:
         executor = type(self)(plane_projection=plane_projection)
         function_name = callable_contract.function_name
         processing_contract = callable_contract.require_processing_contract()
-        runtime_func = image_payload_boundary(
-            callable_contract.resolve_raw_runtime_callable()
-        )
+        runtime_func = callable_contract.resolve_raw_runtime_callable()
         mode = execution_mode
         CellProfilerRuntimeProfileLogger.log_module_profile(
             "cp_executor_mode_resolution",
@@ -446,7 +444,7 @@ class CellProfilerFunctionContractExecutor:
             f"CellProfiler module {callable_contract.module_name!r} callable "
             f"{function_name!r}"
         )
-        memory_type = image.memory_type
+        memory_type = owned_runtime_value(image).memory_type
         if memory_type != "numpy":
             return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
                 callable_contract,

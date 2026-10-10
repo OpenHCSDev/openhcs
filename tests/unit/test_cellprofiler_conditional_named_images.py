@@ -49,6 +49,7 @@ from openhcs.processing.backends.cellprofiler.skeleton import (
     measure_object_skeleton_with_branchpoint_image,
 )
 from openhcs.core.axes import ColourAxis
+from openhcs.core.memory.decorators import image_payload_boundary
 
 
 def _invocation(func: Callable, kwargs: Mapping[str, object] | None = None):
@@ -255,7 +256,7 @@ def test_invert_for_printing_runtime_returns_enabled_channels_in_rgb_order() -> 
     image[..., 0] = 0.2
     image[..., 1] = 0.4
     image[..., 2] = 0.6
-    raw = inspect.unwrap(invert_for_printing)
+    raw = image_payload_boundary(inspect.unwrap(invert_for_printing))
     expected = (
         np.full((2, 3), 0.24, dtype=np.float32),
         np.full((2, 3), 0.32, dtype=np.float32),
@@ -290,7 +291,7 @@ def test_invert_for_printing_runtime_declares_color_channel_axis() -> None:
     image[..., 1] = 0.4
     image[..., 2] = 0.6
 
-    output = inspect.unwrap(invert_for_printing)(
+    output = image_payload_boundary(inspect.unwrap(invert_for_printing))(
         image,
         output_mode=OutputMode.COLOR,
     )
@@ -377,7 +378,7 @@ def test_measure_object_skeleton_retained_runtime_image_is_exact_analysis_image(
     labels = np.zeros((9, 9), dtype=np.int32)
     labels[3:6, 3:5] = 1
     payload = ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=labels))
-    raw = inspect.unwrap(measure_object_skeleton_with_branchpoint_image)
+    raw = image_payload_boundary(inspect.unwrap(measure_object_skeleton_with_branchpoint_image))
 
     branchpoint_image, rows = raw(
         skeleton,
@@ -496,7 +497,7 @@ def test_run_imagej_macro_runtime_returns_declared_group_order(
         )
 
     monkeypatch.setattr(FijiMacroExecutionRequest, "send", fake_send)
-    raw = inspect.unwrap(run_imagej_macro)
+    raw = image_payload_boundary(inspect.unwrap(run_imagej_macro))
     result = raw(
         np.stack(
             (

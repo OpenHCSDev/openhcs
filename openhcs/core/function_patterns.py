@@ -56,6 +56,7 @@ from openhcs.core.invocation_artifacts import (
     callable_contract_artifact_declarations,
 )
 from openhcs.core.runtime_image_values import project_image_mask_to_data_domain
+from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
 FunctionPatternCallable: TypeAlias = Callable | FunctionReference
 FunctionPatternSyntax: TypeAlias = Callable | tuple | list | dict
@@ -673,10 +674,15 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         )
 
     def convert_input(self, payload: object, source_memory_type: str) -> object:
-        """Place the active predecessor's image on the compiled input domain."""
+        """Place the active predecessor's image on the compiled input domain.
+
+        Main-flow values of other kinds have no pixels to place.
+        """
+        payload = owned_runtime_value(payload)
         if self._input_memory_type is None:
-            payload.data
             self.contract.require_memory_types()
+        if not isinstance(payload, ImagePayload):
+            return payload
         if isinstance(payload, ImagePayloadStackComposition):
             return payload.compose(
                 memory_type=self._input_memory_type.value,

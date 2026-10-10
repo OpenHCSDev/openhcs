@@ -1703,6 +1703,7 @@ class ColocalizationImagePairContext:
     def from_request(
         cls, image: object, *, channel_1: int, channel_2: int
     ) -> "ColocalizationImagePairContext":
+        image = ImagePayload.of(image)
         image_data = cls.measurement_pixels(image)
         image_float = np.asarray(image_data, dtype=np.float32)
         first_image = image_float[channel_1]
@@ -2235,6 +2236,7 @@ def _prepare_object_colocalization_context(
     image_pair_context: ColocalizationImagePairContext | None,
     object_label_context: ColocalizationObjectLabelContext | None,
 ) -> ObjectColocalizationRequestContext:
+    image = ImagePayload.of(image)
     if image_pair_context is None:
         image_pair_context = ColocalizationImagePairContext.from_request(
             image, channel_1=channel_1, channel_2=channel_2
@@ -3178,7 +3180,7 @@ class ColocalizationCostesThresholdBatch(RuntimeSliceInvariantValue):
     ) -> ColocalizationImagePairContext:
         """Return the batch-local resolved image-pair context."""
         kwargs = request.kwargs
-        image_data = request.image.data
+        image_data = ImagePayload.of(request.image).data
         channel_1 = int(kwargs.get("channel_1", 0))
         channel_2 = int(kwargs.get("channel_2", 1))
         key = ColocalizationImagePairCacheKey(

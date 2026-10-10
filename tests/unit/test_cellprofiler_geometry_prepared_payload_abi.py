@@ -46,7 +46,7 @@ def test_prepared_resize_preserves_typed_primary_and_bare_array(func):
     contract = _prepared_contract(func)
 
     assert contract.raw_main_flow_call_argument(source) is source
-    assert contract.raw_main_flow_call_argument(pixels) is pixels
+    assert contract.raw_main_flow_call_argument(pixels).data is pixels
 
 
 @pytest.mark.parametrize("axis", (None, RuntimePlaneAxis.RUNTIME_SLICE))

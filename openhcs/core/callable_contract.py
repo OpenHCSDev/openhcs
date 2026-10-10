@@ -504,7 +504,6 @@ class CallableMetadata:
 
         from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
-        source_payload = owned_runtime_value(source_payload)
         primary_name = self.primary_input_name(signature.parameters)
         annotation = None if primary_name is None else signature.parameters[primary_name].annotation
         if (
@@ -512,6 +511,7 @@ class CallableMetadata:
             and self.image_payload_consumption is ImagePayloadConsumption.COMPOSED
         ):
             return source_payload
+        source_payload = owned_runtime_value(source_payload)
         return source_payload if any(
             isinstance(source_payload, argument_type)
             for argument_type in self._nominal_argument_types(annotation)
@@ -1046,6 +1046,7 @@ class CallableContract(ArtifactPlanKeySelector):
             AlignedImageStack,
             pack_aligned_image_outputs,
         )
+        from openhcs.core.runtime_image_values import owned_runtime_value
         from openhcs.core.runtime_output_matching import split_runtime_output
         from openhcs.core.runtime_slice_projection import (
             RuntimeSliceProjection,
@@ -1056,6 +1057,7 @@ class CallableContract(ArtifactPlanKeySelector):
         if len(canonical_specs) <= 1:
             return returned_output
         canonical_output, trailing_outputs = split_runtime_output(returned_output)
+        canonical_output = owned_runtime_value(canonical_output)
         if isinstance(canonical_output, AlignedImageStack):
             if canonical_output.slice_contexts:
                 return returned_output

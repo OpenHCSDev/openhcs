@@ -9564,7 +9564,7 @@ def test_cellprofiler_object_only_executor_does_not_iterate_image_stack(
     seen_images = []
 
     def identify_tertiary_objects(
-        image_arg,
+        image_arg: ImagePayload,
         *,
         primary_labels: ObjectLabelValue,
         secondary_labels: ObjectLabelValue,

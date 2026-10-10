@@ -41,6 +41,7 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity
 from openhcs.processing.backends.cellprofiler.morphology import remove_holes, remove_holes_3d
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def test_real_rescale_full_stack_materializes_composed_runtime_sources():
@@ -108,9 +109,9 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
         )
         for value in (dense, literal)
     )
-    np.testing.assert_array_equal(outputs[1].data, outputs[0].data)
-    np.testing.assert_array_equal(outputs[1].mask, outputs[0].mask)
-    assert outputs[1].metadata == outputs[0].metadata
+    np.testing.assert_array_equal(ImagePayload.of(outputs[1]).data, ImagePayload.of(outputs[0]).data)
+    np.testing.assert_array_equal(ImagePayload.of(outputs[1]).mask, ImagePayload.of(outputs[0]).mask)
+    assert ImagePayload.of(outputs[1]).metadata == ImagePayload.of(outputs[0]).metadata
 
 
 @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
@@ -250,7 +251,10 @@ def test_named_output_bundle_materializes_its_own_source_binding_axis():
     assert dense.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     assert dense.metadata.source_provenance.represented_source_image_names == ("red", "green")
     np.testing.assert_array_equal(dense.data, np.stack(planes))
-    assert bundle.slices == planes
+    assert all(
+        slice_payload.data is plane
+        for slice_payload, plane in zip(bundle.slices, planes, strict=True)
+    )
 
 
 def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance():
@@ -406,7 +410,7 @@ def test_full_stack_raw_callable_keeps_opaque_nonimage_kwargs(processing_contrac
         execution_mode=ImagePayloadExecutionMode.FULL_STACK,
     )
     assert calls == [opaque]
-    assert result.data is image
+    assert ImagePayload.of(result).data is image
 
 
 @pytest.mark.parametrize("reverse", (False, True))

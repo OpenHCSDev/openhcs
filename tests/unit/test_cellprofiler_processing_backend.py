@@ -27,6 +27,8 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.core.memory.decorators import image_payload_boundary
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 def _processing_contract(function):
@@ -297,6 +299,7 @@ def test_resize_objects_replaces_source_spatial_domain(
     )
     while hasattr(function, "__wrapped__"):
         function = function.__wrapped__
+    function = image_payload_boundary(function)
 
     _image, _stats, resized, _relationship = function(
         np.zeros(shape, dtype=np.float32),
@@ -753,7 +756,7 @@ def test_cellprofiler_uint8_source_normalization_matches_native_pixel_domain() -
     )
 
     image = np.asarray([[7, 98, 128, 254, 255]], dtype=np.uint8)
-    core_normalized = np.asarray(image.normalize_intensity_payload())
+    core_normalized = np.asarray(PlainImagePayload(image).normalize_intensity_payload())
     pathless_normalized = np.asarray(normalize_cellprofiler_image_payload(image))
     jpg_payload = MaskedImagePayload(
         data=image,
@@ -798,7 +801,7 @@ def test_cellprofiler_uint8_normalization_is_source_format_blind(
     )
 
     image = np.asarray([[7, 98, 128, 254, 255]], dtype=np.uint8)
-    numpy_domain = np.asarray(image.normalize_intensity_payload())
+    numpy_domain = np.asarray(PlainImagePayload(image).normalize_intensity_payload())
     metadata = ImagePayloadMetadata.for_array(
         image,
         source_path="virtual/source.png",

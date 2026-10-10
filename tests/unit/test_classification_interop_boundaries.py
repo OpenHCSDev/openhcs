@@ -81,6 +81,7 @@ from tests.unit.test_cellprofiler_conditional_analysis_images import (
     _object_payload,
     _public_function_step_contract,
 )
+from openhcs.core.memory.decorators import image_payload_boundary
 
 
 @dataclass(frozen=True)
@@ -172,7 +173,7 @@ def test_scalar_retained_image_survives_compilation_and_real_runtime_binding():
     request = _runtime_request(contract, kwargs)
     bound = ClassifyObjectsSingleMeasurementModule.bind_runtime_inputs(request)
     assert bound["classified_image_rule_indices"] == (0,)
-    output, rows = inspect.unwrap(classify_objects_single_measurement)(
+    output, rows = image_payload_boundary(inspect.unwrap(classify_objects_single_measurement))(
         request.current_image, **kwargs, **bound
     )
     assert bound["retained_image_name"] == "engineering_class_rgb"
@@ -190,7 +191,7 @@ def test_scalar_retained_image_survives_compilation_and_real_runtime_binding():
 
 def test_scalar_runtime_keeps_strict_declared_output_check():
     with pytest.raises(ValueError, match="declared image outputs do not match"):
-        inspect.unwrap(classify_objects_single_measurement)(
+        image_payload_boundary(inspect.unwrap(classify_objects_single_measurement))(
             np.zeros((8, 8)),
             _object_payload(),
             measurement_values=np.array((9.0, 300.0)),
@@ -323,7 +324,7 @@ def test_independent_custom_feature_compiles_and_binds_real_rows_to_original_sca
     }
     request = _runtime_request(contract, kwargs, table)
     bound = ClassifyObjectsSingleMeasurementModule.bind_runtime_inputs(request)
-    image, result = inspect.unwrap(classify_objects_single_measurement)(
+    image, result = image_payload_boundary(inspect.unwrap(classify_objects_single_measurement))(
         request.current_image, **kwargs, **bound
     )
     np.testing.assert_array_equal(bound["measurement_values"], (9, 300))
@@ -606,6 +607,6 @@ def test_scalar_output_binding_rejects_inconsistent_compiled_declarations(defect
         ValueError, match="at most one|one exact|declared image outputs do not match"
     ):
         bound = ClassifyObjectsSingleMeasurementModule.bind_runtime_inputs(request)
-        inspect.unwrap(classify_objects_single_measurement)(
+        image_payload_boundary(inspect.unwrap(classify_objects_single_measurement))(
             request.current_image, **kwargs, **bound
         )

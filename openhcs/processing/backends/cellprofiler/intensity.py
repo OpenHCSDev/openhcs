@@ -1703,7 +1703,7 @@ class RescaleIntensityContext:
         dest_high: float,
         divisor_value: float,
     ) -> "RescaleIntensityContext":
-        source_data = np.asarray(image.data)
+        source_data = np.asarray(ImagePayload.of(image).data)
         return cls(
             data=source_data.astype(np.float32, copy=False),
             automatic_low=coerce_cellprofiler_enum(AutomaticLow, automatic_low),

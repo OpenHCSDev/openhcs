@@ -312,12 +312,12 @@ def test_pure_2d_contract_projects_stack_shaped_kwargs_per_slice() -> None:
     seen_true_indices: list[tuple[int, int]] = []
 
     def apply_mask(
-        image: ImageMetadataPayload,
+        image: ImagePayload,
         *,
-        mask: ImageMetadataPayload,
-    ) -> ImageMetadataPayload:
+        mask: ImagePayload,
+    ) -> ImagePayload:
         image_data = image.data
-        mask_data = mask.data
+        mask_data = ImagePayload.of(mask).data
         seen_shapes.append(mask_data.shape)
         true_y, true_x = np.argwhere(mask_data)[0]
         seen_true_indices.append((int(true_y), int(true_x)))

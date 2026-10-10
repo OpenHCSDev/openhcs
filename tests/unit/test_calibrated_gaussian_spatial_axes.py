@@ -110,14 +110,14 @@ def test_missing_physical_z_spacing_still_rejects():
 
 
 def test_invalid_channel_and_spatial_rank_still_reject():
-    with pytest.raises(ValueError, match="channel axis"):
+    with pytest.raises(ValueError, match="invalid for payload rank"):
         _execute(_source(np.zeros((9, 11)), channel_axis=4))
     with pytest.raises(ValueError, match="spatial rank"):
         _execute(_source(np.zeros((9, 11)), domain=VolumeSourceSpatialDomain(source_depth=3)))
 
 
 @pytest.mark.parametrize(
-    "shape,channel_axis,non_channel_axes,yx",
+    "shape,channel_axis,undeclared_axes,yx",
     (
         ((7,), None, (0,), None),
         ((7, 9), 0, (1,), None),
@@ -125,12 +125,12 @@ def test_invalid_channel_and_spatial_rank_still_reject():
         ((2, 7, 9, 3), -1, (0, 1, 2), (1, 2)),
     ),
 )
-def test_optional_yx_and_strict_intrinsic_share_non_channel_projection(
-    shape, channel_axis, non_channel_axes, yx,
+def test_optional_yx_and_strict_intrinsic_share_undeclared_axes(
+    shape, channel_axis, undeclared_axes, yx,
 ):
     metadata = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(channel_axis))
     pixels = np.zeros(shape)
-    assert metadata.non_channel_axes(pixels) == non_channel_axes
+    assert metadata.undeclared_axes(pixels) == undeclared_axes
     assert metadata.spatial_axes_yx(pixels) == yx
     if yx is None:
         with pytest.raises(ValueError, match="spatial rank"):
@@ -149,21 +149,21 @@ def test_yx_does_not_inherit_strict_volume_rank_requirement():
 
 def test_axis_capability_is_inherited_without_metadata_overrides():
     for name in (
-        "non_channel_axes", "normalized_source_channel_axis", "spatial_axes_yx",
-        "is_declared_source_channel_plane", "is_declared_source_channel_stack",
+        "undeclared_axes", "axis_position", "axis_index", "spatial_axes_yx",
+        "declares_colour_samples_plane", "declares_colour_samples_stack",
     ):
         assert name not in ImagePayloadMetadata.__dict__
         assert getattr(ImagePayloadMetadata, name) is getattr(ImagePayloadAxisFields, name)
     metadata = ImagePayloadMetadata()
     assert metadata.axis_position(ColourAxis) is None
     assert metadata.plane_axis is None
-    assert metadata.non_channel_axes(np.zeros((3, 7, 9))) == (0, 1, 2)
+    assert metadata.undeclared_axes(np.zeros((3, 7, 9))) == (0, 1, 2)
 
 
 @pytest.mark.parametrize("projection", ("spatial_axes_yx", "spatial_axes"))
 def test_both_spatial_projections_preserve_invalid_channel_rejection(projection):
     metadata = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(4))
-    with pytest.raises(ValueError, match="channel axis"):
+    with pytest.raises(ValueError, match="invalid for payload rank"):
         getattr(metadata, projection)(np.zeros((7, 9)))
 
 

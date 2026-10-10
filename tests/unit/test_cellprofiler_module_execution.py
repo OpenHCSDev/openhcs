@@ -1746,7 +1746,7 @@ def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload(
     )
 
     assert measurement_image.source_aliases == (image_spec.name,)
-    assert measurement_image.payload is image_request.payload
+    assert measurement_image.payload.data is image_request.payload
     assert measurement_image.execution_mode is image_request.execution_mode
     assert measurement_image.plane_projection is image_request.plane_projection
     assert not measurement_image.align_to_labels
@@ -7802,7 +7802,7 @@ def test_color_to_gray_combines_openhcs_color_stack() -> None:
 def test_color_to_gray_rejects_shape_only_color_semantics() -> None:
     image = np.zeros((2, 4, 5, 3), dtype=np.float32)
 
-    with pytest.raises(ValueError, match="source_channel_axis"):
+    with pytest.raises(ValueError, match="declared colour axis"):
         color_to_gray(
             image,
             mode=ColorToGrayMode.COMBINE,
@@ -9800,7 +9800,10 @@ def test_pattern_group_runtime_leaves_variable_shape_aligned_outputs_uncached():
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
     output = runtime._project_output_slices(aligned, matching_files)
-    assert [payload for payload, _context in output] == [first, second]
+    assert all(
+        payload.data is pixels
+        for (payload, _context), pixels in zip(output, (first, second), strict=True)
+    )
     assert aligned.copy_projected_output_stack(
         output, memory_type="numpy", device_id=None,
     ) is None
@@ -10692,7 +10695,6 @@ def test_object_label_endpoint_uses_declared_runtime_slice_axis() -> None:
         context=RuntimeSliceProjection.context_for_value(
             payload,
             slice_index=1,
-            source_description="test object-label endpoint",
         ),
     )
 
@@ -10717,7 +10719,6 @@ def test_object_label_endpoint_keeps_planar_payload_in_slice_scope() -> None:
         context=RuntimeSliceProjection.context_for_value(
             payload,
             slice_index=0,
-            source_description="test planar object-label endpoint",
         ),
     )
 
@@ -11289,7 +11290,7 @@ def test_object_only_measurement_carrier_preserves_color_stack() -> None:
         reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
     )
 
-    assert carrier.payload is color_stack
+    assert carrier.payload.data is color_stack
     assert carrier.reference_domain is CellProfilerMeasurementImageDomain.OBJECT_LABELS
 
 
@@ -13868,7 +13869,7 @@ def test_object_lineage_measurement_table_preserves_current_payload_metadata() -
         MeasurementSparseColumnarRows.from_rows((), fields=()),
     )
 
-    assert source_metadata == carrier.metadata
+    assert source_metadata == ImagePayloadMetadata()
 
 
 def test_relationship_rows_do_not_slice_payload_scoped_3d_lineage_by_z_plane() -> None:
@@ -15450,7 +15451,7 @@ def test_measurement_table_slice_count_rejects_sparse_row_axis_values() -> None:
         RuntimeSliceProjectionDeclarationError,
         match="source-plane provenance",
     ):
-        RuntimeSliceProjection.measurement_table_slice_count(table)
+        table.runtime_slice_count()
     with pytest.raises(RuntimeSliceProjectionDeclarationError):
         RuntimeSliceProjection.slice_count_from_values((table,))
 
@@ -15477,7 +15478,7 @@ def test_measurement_table_slice_count_rejects_columnar_row_inference() -> None:
         RuntimeSliceProjectionDeclarationError,
         match="source-plane provenance",
     ):
-        RuntimeSliceProjection.measurement_table_slice_count(table)
+        table.runtime_slice_count()
 
 
 def test_measurement_table_for_slice_preserves_columnar_rows() -> None:

@@ -46,6 +46,8 @@ from openhcs.core.source_spatial_domain import CommonRuntimeValue
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.core.runtime_array_values import array_geometry
 from openhcs.core.axes import ColourAxis
+from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.runtime_image_values import owned_runtime_value
 
 
 class CellProfilerSourceIdentityMixin:
@@ -232,7 +234,7 @@ class CellProfilerSourceIdentityMixin:
         if isinstance(payload, RuntimeSliceAlignedValueSet):
             return tuple(cls.scalar_source_provenance(value) for value in payload.values)
         count = RuntimeSliceProjection.slice_count_from_values((payload,))
-        metadata = payload.metadata
+        metadata = image_metadata_of(payload)
         provenance = metadata.source_provenance
         if count is None:
             return (provenance,)
@@ -459,6 +461,7 @@ class CellProfilerMeasurementImage(
     )
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "payload", owned_runtime_value(self.payload))
         self.validate_source_identity()
         if not isinstance(self.reference_domain, CellProfilerMeasurementImageDomain):
             raise TypeError(

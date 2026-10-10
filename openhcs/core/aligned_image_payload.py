@@ -353,7 +353,7 @@ class AlignedImageStackKwargResolver:
         """Project a nominal value into the declared reference payload domain."""
         if self.reference_payload is None:
             return value
-        metadata = self.reference_payload.metadata
+        metadata = ImagePayload.of(self.reference_payload).metadata
         source_shape = metadata.source_spatial_domain.source_shape_yx
         if source_shape is None:
             return value
@@ -1760,7 +1760,7 @@ def pack_aligned_image_outputs(
 ) -> Any:
     """Pack one or more image outputs into the callable's single return value."""
 
-    packed = tuple(outputs)
+    packed = tuple(ImagePayload.of(output) for output in outputs)
     if not packed:
         raise ValueError("Image output packing requires at least one output.")
     contexts = tuple(slice_contexts)

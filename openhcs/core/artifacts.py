@@ -567,7 +567,9 @@ class ImagePayloadArtifactKind(ArtifactType):
     def materialization_image_metadata(
         cls, value: "RuntimeValue"
     ) -> "ImagePayloadMetadata":
-        return cls.materialization_payload(value).metadata
+        from openhcs.core.runtime_image_values import image_metadata_of
+
+        return image_metadata_of(cls.materialization_payload(value))
 
 
 class ImageArtifactType(ImagePayloadArtifactKind):
@@ -626,7 +628,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     ) -> object:
         from openhcs.core.projected_image_output import SourceProjectedImageOutput
         from openhcs.core.runtime_artifact_values import RuntimeValue
-        from openhcs.core.runtime_image_values import owned_runtime_value
+        from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
         from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
         from openhcs.core.runtime_slice_alignment import (
             RuntimeSliceAlignedValueSet,
@@ -665,6 +667,9 @@ class ImageArtifactType(ImagePayloadArtifactKind):
                     for slice_index, item in enumerate(output_value.values)
                 )
             )
+        if not isinstance(output_value, ImagePayload):
+            # A value without pixels has no image source context to receive.
+            return output_value
         source_ref = (
             None if output_plan is None else output_plan.source_context_source()
         )
@@ -994,11 +999,17 @@ class ObjectLabelsArtifactType(ImagePayloadArtifactKind):
         output_plan: ArtifactOutputPlan | None,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
-        from openhcs.core.runtime_image_values import owned_runtime_value
+        from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+        from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 
-        return owned_runtime_value(output_value).object_label_output(
-            source_payload, plane_projection,
-        )
+        output_value = owned_runtime_value(output_value)
+        if not isinstance(output_value, (ImagePayload, RuntimeSliceAlignedValueSet)):
+            raise TypeError(
+                f"Object-label output {type(output_value).__name__} has no "
+                "registered nominal strategy; return an ObjectLabelValue or an "
+                "image payload."
+            )
+        return output_value.object_label_output(source_payload, plane_projection)
 
     @classmethod
     def contextualize_output_from_projector(
@@ -1237,7 +1248,9 @@ class MeasurementsArtifactType(MeasurementBearingArtifactType):
         del plane_projection
         subject = cls._declared_subject(output_plan)
         assert output_plan is not None
-        source_provenance = source_payload.metadata.source_provenance
+        from openhcs.core.runtime_image_values import image_metadata_of
+
+        source_provenance = image_metadata_of(source_payload).source_provenance
         if isinstance(output_value, MeasurementTable):
             cls._validate_nominal_table(output_value, output_plan, subject)
             contextualized_provenance = (

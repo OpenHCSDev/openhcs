@@ -25,6 +25,7 @@ from openhcs.core.steps.function_runtime import (
 )
 from openhcs.core.steps.function_output_manifest import NoStepOutputManifestMatch
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 def _identity(image):
@@ -161,8 +162,8 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
     group = replace(request.compiled_group, invocations=(invocation, invocation))
     request = replace(request, compiled_group=group)
     loaded = PatternGroupData.from_loaded_group(request, paths, payload)
-    first_output = np.ones((2, 3, 4), dtype=np.float32)
-    second_output = np.full((2, 3, 4), 2, dtype=np.float32)
+    first_output = PlainImagePayload(np.ones((2, 3, 4), dtype=np.float32))
+    second_output = PlainImagePayload(np.full((2, 3, 4), 2, dtype=np.float32))
     seen = []
 
     def execute(executor, *, debug_sink=None):

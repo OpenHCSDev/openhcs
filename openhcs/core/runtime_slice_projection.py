@@ -14,13 +14,14 @@ from arraybridge.decorators import DtypeConversionConfig
 
 from openhcs.core.axes import Axis
 from openhcs.core.runtime_array_values import RuntimeArrayData, is_array_payload
-from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimeSliceProjectableValue,
 )
 from openhcs.core.source_image_provenance import SourceComponentMetadata
+from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
@@ -80,7 +81,9 @@ class RuntimeProjectionSourceIdentityRequest:
         context: RuntimePlaneAxisValueProjection,
     ) -> tuple[int, ...] | None:
         """Return exact provenance projection for the request-declared stack axis."""
-        source_plane_count = self.value.metadata.source_provenance.source_plane_count
+        source_plane_count = image_metadata_of(
+            self.value
+        ).source_provenance.source_plane_count
         if source_plane_count == 0:
             return None
         if source_plane_count != context.axis_size:
@@ -247,14 +250,12 @@ class RuntimeProjectedPayloadItem:
 
     @property
     def data(self) -> RuntimeProjectionData:
-        return self.value.data if isinstance(self.value, ImagePayload) else self.value
+        return array_data_of(self.value)
 
     @property
     def metadata(self) -> ImagePayloadMetadata:
         """Image metadata of the item; items of non-image kinds carry none."""
-        if isinstance(self.value, ImagePayload):
-            return self.value.metadata
-        return ImagePayloadMetadata()
+        return image_metadata_of(self.value)
 
     @property
     def source_component_metadata(self) -> SourceComponentMetadata | None:

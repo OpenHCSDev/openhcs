@@ -1022,10 +1022,11 @@ def binary_mask_plane(
     labels: bool = False,
 ) -> np.ndarray:
     """Convert one CellProfiler mask/label plane to a 2D boolean mask."""
+    mask = ImagePayload.of(mask)
     mask_array = np.asarray(
         object_label_dense_array(mask)
         if isinstance(mask, ObjectLabelValue)
-        else ImagePayload.of(mask).data
+        else mask.data
     )
     if labels:
         if mask_array.ndim != 2:

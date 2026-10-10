@@ -43,6 +43,7 @@ from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
+from openhcs.core.runtime_image_values import image_metadata_of
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
@@ -162,7 +163,9 @@ class RelationshipMeasurementRows:
                         name=spec.name,
                         declaration=declaration,
                         payload=payload,
-                        source_provenance=self.request.source.payload.metadata.source_provenance,
+                        source_provenance=image_metadata_of(
+                            self.request.source.payload
+                        ).source_provenance,
                     ),
                 )
             case RuntimeSliceAlignedValues(slices=slices):
@@ -530,7 +533,6 @@ class RelationshipMeasurementRows:
             labels,
             slice_index=slice_index,
             slice_count=slice_count,
-            source_description=f"object labels {spec.name!r}",
         )
         return RuntimeSliceProjection.object_label_endpoint(labels, context=context)
 

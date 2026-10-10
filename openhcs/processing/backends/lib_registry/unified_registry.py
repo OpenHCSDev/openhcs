@@ -115,6 +115,9 @@ from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
 from openhcs.core.xdg_paths import get_cache_file_path
+from openhcs.core.runtime_image_values import owned_runtime_value
+from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.runtime_image_values import image_metadata_of
 
 logger = logging.getLogger(__name__)
 
@@ -393,7 +396,8 @@ def contextualize_main_image_output(source_image: Any, result: Any) -> Any:
         return result
     if not isinstance(result, np.ndarray):
         return result
-    if (
+    source_image = owned_runtime_value(source_image)
+    if not isinstance(source_image, ImagePayload) or (
         source_image.mask is None
         and not source_image.metadata.has_values
     ):
@@ -580,6 +584,12 @@ class MaskedImagePayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
     """Register masked image payloads for PURE_2D input slicing."""
 
     value_type = MaskedImagePayload
+
+
+class PlainImagePayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
+    """Slice bare pixels wrapped at the boundary like any image payload."""
+
+    value_type = PlainImagePayload
 
 
 class ImageMetadataPayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
@@ -1196,7 +1206,7 @@ class VolumetricToSliceProcessingContract(VariableComponentStackProcessingContra
     def main_flow_output_source_payload(self, source_payload: Any) -> Any:
         """Consume the declared leading plane axis while preserving provenance."""
 
-        metadata = source_payload.metadata
+        metadata = image_metadata_of(source_payload)
         if not metadata.has_values:
             return source_payload
         if metadata.plane_axis is None:

@@ -19,6 +19,7 @@ from openhcs.core.source_bindings import NamedSourceBinding
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 def source(data, *, scale=255, channel_axis=None):
@@ -93,7 +94,7 @@ def test_normalized_and_remapped_float_pixels_do_not_reenter_source_codes():
 
 def test_unscaled_analytical_float_uses_no_observed_range_or_guessed_factor():
     pixels = np.array([[-3.5, 800.0], [0.25, 2.0]], dtype=np.float32)
-    np.testing.assert_array_equal(pixels.normalize_intensity_payload(), pixels)
+    np.testing.assert_array_equal(PlainImagePayload(pixels).normalize_intensity_payload(), pixels)
 
 
 @pytest.mark.parametrize('scale', (0, -1, float('nan'), float('inf')))

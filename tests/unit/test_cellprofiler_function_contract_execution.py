@@ -333,7 +333,7 @@ def test_prepared_raw_abi_performs_no_introspection_until_explicit_refresh(
 
     def raw(image: np.ndarray) -> np.ndarray:
         seen.append(isinstance(image, ArrayPayload))
-        return image.data
+        return image
 
     contract = _compiled_contract(
         raw, ProcessingContract.PURE_2D,

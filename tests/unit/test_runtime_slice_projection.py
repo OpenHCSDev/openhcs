@@ -41,6 +41,7 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_slice_projection import (
+    OptionalSourceIdentity,
     RuntimeProjectionSourceIdentityRequest,
     RuntimeSliceProjection,
     RuntimeSliceProjectionDeclarationError,

@@ -210,7 +210,7 @@ def test_producer_and_execution_cohorts_remain_distinct(exported_volume, change)
     "metadata_changes, message",
     (
         ({"plane_axis": RuntimePlaneAxis.RUNTIME_SLICE}, "scalar image metadata"),
-        ({"source_channel_axis": 0}, "color axis"),
+        ({"axes": PayloadAxes.colour_samples(0)}, "declared non-spatial axes"),
         ({"source_dtype": "uint8"}, "declared dtype"),
         ({"mask_defines_border": True}, "incompatible image metadata"),
         (
@@ -378,7 +378,7 @@ def test_channel_slice_precedes_invalid_declared_axis_and_uses_modulo():
     with pytest.raises(RuntimeError, match="pixel slice failure"):
         metadata.project_channel_payload(pixels, pixels, 1, channel_axis=9)
     assert events == [(slice(1, 2), slice(None), slice(None))]
-    with pytest.raises(ValueError, match="Source channel axis 99 is invalid"):
+    with pytest.raises(ValueError, match="axis at position 99 is invalid"):
         metadata.project_channel_payload(
             pixels, pixels, 1, channel_data=np.zeros((1, 5, 7)), channel_axis=9
         )

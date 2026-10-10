@@ -373,6 +373,7 @@ def convert_objects_to_image(
     rendered = ImageModeRenderer.for_enum_member(image_mode).render(
         label_array, colormap_value=colormap_value
     )
+    labels = ImagePayload.of(labels)
     label_metadata = labels.metadata
     output_metadata = (
         ImagePayloadMetadata(intensity_scale=1.0).with_source_context_from(

@@ -103,6 +103,7 @@ from openhcs.processing.materialization.options import (
 )
 from openhcs.core.axes import Axis
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -1215,7 +1216,7 @@ class MaterializationInputItem(RuntimeProjectedPayloadItem):
 
     @property
     def data(self) -> MaterializationValue:
-        return runtime_array_operand(self.value.data)
+        return runtime_array_operand(array_data_of(self.value))
 
     @property
     def runtime_plane(self) -> RuntimeProjectionPlaneMetadata | None:
@@ -1280,7 +1281,7 @@ class SourcePlaneProjectionContract:
                 plane_count_source
                 for payload in payloads
                 for plane_count_source in (
-                    payload.metadata.source_provenance.plane_count_sources
+                    image_metadata_of(payload).source_provenance.plane_count_sources
                 )
             )
         )
