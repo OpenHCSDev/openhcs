@@ -18,8 +18,8 @@ from pyqt_reactive.theming import ColorScheme, ThemeManager
 
 from openhcs.core.path_cache import (
     PathCacheKey,
-    cache_dialog_path,
-    get_cached_dialog_path,
+    cache_path,
+    get_initial_path,
 )
 
 logger = logging.getLogger(__name__)
@@ -282,52 +282,6 @@ class PyQtServiceAdapter:
             default_button=QMessageBox.StandardButton.Ok,
         ).exec()
 
-    def show_cached_file_dialog(
-        self,
-        cache_key: PathCacheKey,
-        title: str = "Select File",
-        file_filter: str = "All Files (*)",
-        mode: str = "open",
-        fallback_path: Optional[Path] = None,
-    ) -> Optional[Path]:
-        """
-        Show file dialog with path caching (mirrors Textual TUI pattern).
-
-        Args:
-            cache_key: Cache key for remembering last used path
-            title: Dialog title
-            file_filter: File filter string (e.g., "Pipeline Files (*.pipeline)")
-            mode: "open" or "save"
-            fallback_path: Fallback path if no cached path exists
-
-        Returns:
-            Selected file path or None if cancelled
-        """
-        # Get cached initial directory
-        initial_dir = str(get_cached_dialog_path(cache_key, fallback_path))
-
-        try:
-            if mode == "save":
-                file_path, _ = QFileDialog.getSaveFileName(
-                    self.main_window, title, initial_dir, file_filter
-                )
-            else:  # mode == "open"
-                file_path, _ = QFileDialog.getOpenFileName(
-                    self.main_window, title, initial_dir, file_filter
-                )
-
-            if file_path:
-                selected_path = Path(file_path)
-                # Cache the parent directory for future dialogs
-                cache_dialog_path(cache_key, selected_path.parent)
-                return selected_path
-
-            return None
-
-        except Exception as e:
-            logger.error(f"File dialog failed: {e}")
-            raise
-
     def show_cached_directory_dialog(
         self,
         cache_key: PathCacheKey,
@@ -350,7 +304,7 @@ class PyQtServiceAdapter:
             - List[Path] if allow_multiple=True
         """
         # Get cached initial directory
-        initial_path = get_cached_dialog_path(cache_key, fallback_path)
+        initial_path = get_initial_path(cache_key, fallback_path)
         initial_dir = str(initial_path)
 
         try:
@@ -411,7 +365,7 @@ class PyQtServiceAdapter:
                     selected_paths = [Path(p) for p in dialog.selectedFiles()]
                     if selected_paths:
                         # Cache the first selected directory
-                        cache_dialog_path(cache_key, selected_paths[0])
+                        cache_path(cache_key, selected_paths[0])
                         return selected_paths
                 return None
             else:
@@ -423,7 +377,7 @@ class PyQtServiceAdapter:
                 if dir_path:
                     selected_path = Path(dir_path)
                     # Cache the selected directory
-                    cache_dialog_path(cache_key, selected_path)
+                    cache_path(cache_key, selected_path)
                     return selected_path
 
                 return None

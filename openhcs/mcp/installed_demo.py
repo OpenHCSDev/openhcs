@@ -31,7 +31,7 @@ from openhcs.agent.dto.execution import ExecutionJobStatus, ExecutionStatusReque
 from openhcs.core.config import LazyNapariStreamingConfig
 from openhcs.core.execution_state import TerminalExecutionStatus
 from openhcs.core.native_threading import configure_native_thread_environment
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -340,7 +340,7 @@ def build_portable_neurite_source(
         enabled=viewer,
         viewer_port=viewer_port,
     )
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=pipeline_config,
         pipeline_steps=configured_steps,
     )
@@ -349,7 +349,7 @@ def build_portable_neurite_source(
         endpoint_config.viewer_runtime_config().transport_endpoint,
         OPENHCS_ZMQ_CONFIG,
     )
-    return PipelineDocumentAuthority.render(document), endpoint
+    return PipelineDocumentCodec.render(document), endpoint
 
 
 def _generate_plate(client: McpDevClient, plate_path: Path) -> dict[str, Any]:

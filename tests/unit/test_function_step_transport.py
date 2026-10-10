@@ -1,7 +1,7 @@
 """Transport boundaries for public FunctionStep declarations."""
 
 from __future__ import annotations
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 
 import ast
 import concurrent.futures
@@ -183,7 +183,7 @@ def test_submission_namespace_and_server_payload_use_direct_step_lists() -> None
     pipeline_config = PipelineConfig()
     submission = OpenHCSExecutionSubmission(
         plate_id="/tmp/plate",
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=[step]
         ),
         global_config=global_config,
@@ -197,7 +197,7 @@ def test_submission_namespace_and_server_payload_use_direct_step_lists() -> None
     assert submitted_kwargs == step.func[1]
     assert submission.global_pipeline_config is global_config
     assert submission.pipeline_config is pipeline_config
-    assert submission.pipeline_code() == PipelineDocumentAuthority.render(
+    assert submission.pipeline_code() == PipelineDocumentCodec.render(
         submission.pipeline_document
     )
     assert not hasattr(submission, "submission_pipeline")
@@ -205,14 +205,14 @@ def test_submission_namespace_and_server_payload_use_direct_step_lists() -> None
 
 
 def test_request_builder_stores_explicit_pipeline_code_directly() -> None:
-    pipeline_document = PipelineDocumentAuthority.from_values(
+    pipeline_document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(),
         pipeline_steps=[],
     )
-    pipeline_source = PipelineDocumentAuthority.render(pipeline_document)
+    pipeline_source = PipelineDocumentCodec.render(pipeline_document)
     submission = OpenHCSExecutionSubmission(
         plate_id="/tmp/plate",
-        pipeline_document=PipelineDocumentAuthority.from_source(pipeline_source),
+        pipeline_document=PipelineDocumentCodec.from_source(pipeline_source),
         global_config=GlobalPipelineConfig(),
     )
     compile_submission = submission.compile_request()
@@ -271,14 +271,14 @@ def test_zmq_execution_cancellation_uses_bounded_control_request(monkeypatch) ->
 def test_zmq_execution_submission_serializes_default_plate_config_on_client() -> None:
     submission = OpenHCSExecutionSubmission(
         plate_id="/tmp/plate",
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
         global_config=GlobalPipelineConfig(),
     )
 
     payload = ZMQExecutionClient().serialize_task(submission)
-    document = PipelineDocumentAuthority.from_source(
+    document = PipelineDocumentCodec.from_source(
         payload[MessageFields.PIPELINE_CODE]
     )
 

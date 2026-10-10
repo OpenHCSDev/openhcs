@@ -29,7 +29,7 @@ from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseService,
 )
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.dev_client_renderers.knowledge import KnowledgeDocumentRenderer
@@ -239,7 +239,7 @@ def test_requested_official30_source_is_importable_public_openhcs_python():
         )
     )
     source = _source_from_document_content(document.content)
-    pipeline_document = PipelineDocumentAuthority.from_source(source)
+    pipeline_document = PipelineDocumentCodec.from_source(source)
 
     assert document.errors == ()
     assert document.truncated is False

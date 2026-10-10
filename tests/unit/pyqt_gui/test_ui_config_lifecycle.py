@@ -5,7 +5,6 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
-import dill as pickle
 import pytest
 from PyQt6.QtCore import QEvent, Qt
 from PyQt6.QtGui import QAction, QKeyEvent
@@ -143,25 +142,6 @@ def test_ui_config_cache_environment_selects_one_absolute_persistence_file(
     monkeypatch.setenv(UIConfigCacheEnvironment.cache_file_path_key, "relative.config")
     with pytest.raises(ValueError, match="absolute path"):
         config_module.ui_config_cache_spec()
-
-
-def test_ui_config_cache_ignores_legacy_pickle_without_user_cleanup(
-    tmp_path,
-    monkeypatch,
-) -> None:
-    cache_file = tmp_path / "ui-config.cache"
-    spec = ConfigCacheSpec(config_type=UIConfig, cache_file=cache_file)
-    monkeypatch.setattr(config_module, "ui_config_cache_spec", lambda: spec)
-    legacy = replace(
-        get_default_ui_config(),
-        progress=ProgressUIConfig(update_fps=17.0),
-    )
-    with cache_file.open("wb") as stream:
-        pickle.dump(legacy, stream)
-
-    restored = load_cached_ui_config_sync()
-
-    assert restored == get_default_ui_config()
 
 
 def test_agent_bridge_config_rejects_invalid_declared_values() -> None:

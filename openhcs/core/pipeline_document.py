@@ -1,4 +1,4 @@
-"""Canonical Python document contract for one OpenHCS pipeline."""
+"""Python document for one OpenHCS pipeline: its config and steps."""
 
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ class PipelineDocument:
     original_source: str | None = None
 
 
-class PipelineDocumentAuthority:
-    """Validate, parse, and render the canonical pipeline document shape."""
+class PipelineDocumentCodec:
+    """Validate, parse, and render the pipeline Python document."""
 
     HEADER = "# OpenHCS pipeline"
 
@@ -73,7 +73,7 @@ class PipelineDocumentAuthority:
 
     @classmethod
     def from_source(cls, source: str) -> PipelineDocument:
-        """Execute Python source and read its canonical pipeline assignments."""
+        """Execute Python source and read its pipeline assignments."""
 
         namespace: dict[str, object] = {}
         code = compile(source, "<openhcs-pipeline-document>", "exec")
@@ -82,7 +82,7 @@ class PipelineDocumentAuthority:
 
     @classmethod
     def execution_source(cls, document: PipelineDocument) -> str:
-        """Return the reviewed source when present, otherwise canonical source."""
+        """Return the source it was parsed from, otherwise freshly rendered source."""
 
         if document.original_source is not None:
             return document.original_source

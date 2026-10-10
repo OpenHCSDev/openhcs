@@ -45,7 +45,7 @@ from openhcs.core.invocation_artifacts import (
 )
 from openhcs.core.pipeline_document import (
     PipelineDocument,
-    PipelineDocumentAuthority,
+    PipelineDocumentCodec,
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
@@ -299,7 +299,7 @@ class PipelineAuthoringService:
                 "PipelineSpec.pipeline_config_id must resolve to PipelineConfig; "
                 f"got {type(pipeline_config).__name__}."
             )
-        return PipelineDocumentAuthority.from_values(
+        return PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config,
             pipeline_steps=normalized_steps,
         )
@@ -314,7 +314,7 @@ class PipelineAuthoringService:
         return RenderedSource(
             schema_version=SCHEMA_VERSION,
             title=f"{_pipeline_id(pipeline_ref)} source",
-            source=PipelineDocumentAuthority.render(
+            source=PipelineDocumentCodec.render(
                 document,
                 clean_mode=clean,
             ),

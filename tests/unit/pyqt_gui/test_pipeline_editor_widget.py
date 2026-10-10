@@ -34,7 +34,7 @@ from openhcs.core.config import (
 from openhcs.core.debug import DebugCommandType, DebugTerminalSummary
 from openhcs.core.execution_state import ManagerExecutionState
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.processing.backends.cellprofiler import correct_illumination_apply
@@ -344,8 +344,8 @@ def test_pipeline_editor_code_document_driver_reads_validates_and_applies() -> N
         assert "pipeline_steps" in document.source
         assert "Original" in document.source
         driver.validate_source(
-            PipelineDocumentAuthority.render(
-                PipelineDocumentAuthority.from_values(
+            PipelineDocumentCodec.render(
+                PipelineDocumentCodec.from_values(
                     pipeline_config=PipelineConfig(),
                     pipeline_steps=[FunctionStep(name="Applied")],
                 )
@@ -426,8 +426,8 @@ def test_pipeline_editor_code_document_driver_apply_mutates_pipeline() -> None:
     try:
         assert driver is not None
         driver.apply_source(
-            PipelineDocumentAuthority.render(
-                PipelineDocumentAuthority.from_values(
+            PipelineDocumentCodec.render(
+                PipelineDocumentCodec.from_values(
                     pipeline_config=PipelineConfig(),
                     pipeline_steps=[FunctionStep(name="Applied")],
                 )
@@ -454,8 +454,8 @@ def test_pipeline_editor_code_document_apply_notifies_plate_manager() -> None:
     try:
         assert driver is not None
         driver.apply_source(
-            PipelineDocumentAuthority.render(
-                PipelineDocumentAuthority.from_values(
+            PipelineDocumentCodec.render(
+                PipelineDocumentCodec.from_values(
                     pipeline_config=PipelineConfig(),
                     pipeline_steps=[FunctionStep(name="Replacement")],
                 )
@@ -496,8 +496,8 @@ def test_pipeline_editor_code_document_commits_reconciled_step_tree() -> None:
     try:
         assert driver is not None
         driver.apply_source(
-            PipelineDocumentAuthority.render(
-                PipelineDocumentAuthority.from_values(
+            PipelineDocumentCodec.render(
+                PipelineDocumentCodec.from_values(
                     pipeline_config=PipelineConfig(),
                     pipeline_steps=[
                         FunctionStep(
@@ -596,8 +596,8 @@ def test_pipeline_editor_code_document_applies_during_execution() -> None:
     try:
         assert driver is not None
         driver.apply_source(
-            PipelineDocumentAuthority.render(
-                PipelineDocumentAuthority.from_values(
+            PipelineDocumentCodec.render(
+                PipelineDocumentCodec.from_values(
                     pipeline_config=PipelineConfig(),
                     pipeline_steps=[FunctionStep(name="Replacement")],
                 )
@@ -1371,13 +1371,13 @@ def test_complete_pipeline_round_trip_preserves_repeated_step_scopes() -> None:
         )
         original_steps = PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)
         ObjectStateRegistry.ensure_baseline_snapshot()
-        source = PipelineDocumentAuthority.render(
-            PipelineDocumentAuthority.from_values(
+        source = PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(),
                 pipeline_steps=original_steps,
             )
         )
-        edited_steps = PipelineDocumentAuthority.from_source(source).pipeline_steps
+        edited_steps = PipelineDocumentCodec.from_source(source).pipeline_steps
         edited_steps[0] = copy(edited_steps[0])
         edited_steps[0].name = "Launch Readiness Enhancement"
 

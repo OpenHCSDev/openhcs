@@ -53,7 +53,7 @@ def test_complete_real_authoring_render_reconstruction_no_fixture_execution(driv
     from openhcs.agent.services.config_service import ConfigService
     from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
     from openhcs.core.function_patterns import normalize_function_pattern
-    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.processing.backends.cellprofiler.classification import (
         ClassificationThresholdMethod, classify_objects_two_measurements,
     )
@@ -87,7 +87,7 @@ def test_complete_real_authoring_render_reconstruction_no_fixture_execution(driv
     assert validated.valid, validated.errors
     for clean in (True, False):
         rendered = author.render_source(ref.pipeline_id, clean=clean)
-        document = PipelineDocumentAuthority.from_source(rendered.source)
+        document = PipelineDocumentCodec.from_source(rendered.source)
         assert len(document.pipeline_steps) == 2
         assert document.pipeline_config.source_bindings_config.source_voxel_spacing.values_zyx == (1.3556, 1.3556)
         assert document.pipeline_config.path_planning_config.output_dir_suffix == "_classification388_public_pair"

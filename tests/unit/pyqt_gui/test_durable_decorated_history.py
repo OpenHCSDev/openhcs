@@ -15,7 +15,7 @@ from pyqt_reactive.services.scope_token_service import ScopeTokenService
 
 from openhcs.core.config import PipelineConfig
 from openhcs.core.memory import numpy
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import tophat
 from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
@@ -57,8 +57,8 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
         head_id = ObjectStateRegistry.get_branch_history()[-1].id
         expected_current = PipelineObjectStateBinding.steps_for_plate(SCOPE)[0]
         snapshot_ids = tuple(s.id for s in ObjectStateRegistry.get_branch_history())
-        source = PipelineDocumentAuthority.render(
-            PipelineDocumentAuthority.from_values(
+        source = PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(),
                 pipeline_steps=PipelineObjectStateBinding.steps_for_plate(SCOPE),
             )
@@ -70,7 +70,7 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
 
         ObjectStateRegistry.clear()
         ScopeTokenService.clear_scope(SCOPE)
-        parsed = PipelineDocumentAuthority.from_source(declarations.read_text())
+        parsed = PipelineDocumentCodec.from_source(declarations.read_text())
         PipelineObjectStateBinding.update_plate_steps(SCOPE, parsed.pipeline_steps)
         ObjectStateRegistry.load_history_from_file(str(history))
         assert (
