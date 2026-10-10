@@ -91,34 +91,6 @@ class ComponentConfiguration(Generic[T]):
             if component is not self.multiprocessing_axis
         )
 
-    def get_available_variable_components(self) -> List[T]:
-        """
-        Get all components that can be used as variable_components.
-
-        Returns:
-            List of components available as variable components
-        """
-        return list(self.get_remaining_components())
-
-    def get_available_group_by_components(
-        self, exclude_variable: Optional[List[T]] = None
-    ) -> List[T]:
-        """
-        Get components that can be used as group_by, excluding variable components.
-
-        Args:
-            exclude_variable: Variable components to exclude from group_by options
-
-        Returns:
-            List of components available as group_by
-        """
-        excluded = set(exclude_variable or ())
-        return [
-            component
-            for component in self.get_remaining_components()
-            if component not in excluded
-        ]
-
 
 class ComponentConfigurationFactory:
     """Factory for creating ComponentConfiguration instances."""

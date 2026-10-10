@@ -13,7 +13,7 @@ import pytest
 from python_introspect import dataclass_from_mapping
 
 import openhcs
-from openhcs.mcp.memory_diagnostic import (
+from scripts.mcp_memory_diagnostic import (
     DiagnosticSourceIdentity,
     MemoryDiagnosticReport,
     MemoryDiagnosticMcpClient,
@@ -21,7 +21,7 @@ from openhcs.mcp.memory_diagnostic import (
     RetentionMetric,
     read_request_sequence,
 )
-from openhcs.mcp.memory_diagnostic_launch import DiagnosticServerSpec
+from scripts.mcp_memory_diagnostic_launch import DiagnosticServerSpec
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
 
@@ -183,13 +183,12 @@ def test_diagnostic_child_retains_selected_source_from_competing_cwd(
     # Actual source entrypoint and launch owner, but provenance-only mode: no
     # MCP server, GUI, scientific framework, or execution runtime is started.
     competing = tmp_path / "competing"
-    package = competing / "openhcs" / "mcp"
-    package.mkdir(parents=True)
-    (package.parent / "__init__.py").write_text(
+    (competing / "openhcs").mkdir(parents=True)
+    (competing / "openhcs" / "__init__.py").write_text(
         "raise RuntimeError('foreign OpenHCS')\n"
     )
-    (package / "__init__.py").write_text("")
-    (package / "memory_diagnostic.py").write_text(
+    (competing / "scripts").mkdir()
+    (competing / "scripts" / "mcp_memory_diagnostic.py").write_text(
         "raise RuntimeError('foreign diagnostic')\n"
     )
     monkeypatch.delenv("PYTHONPATH", raising=False)
@@ -219,7 +218,7 @@ def test_diagnostic_child_retains_selected_source_from_competing_cwd(
     identity.require_authority(authority)
     assert (
         Path(identity.diagnostic_source_path)
-        == authority.import_root / "openhcs/mcp/memory_diagnostic.py"
+        == authority.import_root / "scripts/mcp_memory_diagnostic.py"
     )
     assert Path(identity.openhcs_source_path) == Path(openhcs.__file__).resolve()
 

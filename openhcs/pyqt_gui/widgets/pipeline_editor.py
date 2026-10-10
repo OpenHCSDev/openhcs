@@ -32,8 +32,6 @@ from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
-
-# Import ABC base class (Phase 4 migration)
 from pyqt_reactive.widgets.shared.abstract_manager_widget import (
     AbstractManagerWidget,
     ListItemFormat,
@@ -126,9 +124,6 @@ from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 from openhcs.ui.shared.plate_scope_identity import (
     PipelineScopeIdentity,
-)
-from openhcs.utils.pipeline_migration import (
-    load_pipeline_with_migration,
 )
 
 logger = logging.getLogger(__name__)
@@ -959,47 +954,42 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         return self._get_steps_from_pipeline_state(self.current_plate)
 
     def load_pipeline_from_file(self, file_path: Path):
-        """
-        Load pipeline from file with automatic migration for backward compatibility.
-
-        Args:
-            file_path: Path to pipeline file
-        """
+        """Load a saved pipeline (pickled step list) or a CellProfiler `.cppipe`."""
         try:
             if file_path.suffix == ".cppipe":
                 self._load_cppipe_pipeline_from_file(file_path)
                 return
 
-            # Use migration utility to load with backward compatibility
-            steps = load_pipeline_with_migration(file_path)
+            import dill as pickle
 
-            if steps is not None:
-                self.require_pipeline_definition_mutation_allowed(self.current_plate)
-                self.pipeline_steps = steps
-                # Don't register here; update_pipeline_for_plate handles atomic registration
-                self._normalize_step_scope_tokens(register=False)
-
-                # Update Pipeline ObjectState with loaded steps
-                if self.current_plate:
-                    self.update_pipeline_for_plate(
-                        self.current_plate, self.pipeline_steps
-                    )
-                    self.notify_pipeline_definition_changed(self.current_plate)
-                    logger.debug(
-                        f"Updated Pipeline ObjectState ({len(self.pipeline_steps)} steps) for plate: {self.current_plate}"
-                    )
-
-                self.update_item_list()
-                self._suppress_pipeline_state_sync = True
-                try:
-                    self.pipeline_changed.emit(self.pipeline_steps)
-                finally:
-                    self._suppress_pipeline_state_sync = False
-                self.status_message.emit(
-                    f"Loaded {len(steps)} steps from {file_path.name}"
+            with open(file_path, "rb") as f:
+                steps = pickle.load(f)
+            if not isinstance(steps, list):
+                raise TypeError(
+                    f"Pipeline file {file_path.name} holds "
+                    f"{type(steps).__name__}, expected a list of steps."
                 )
-            else:
-                self.status_message.emit(f"Invalid pipeline format in {file_path.name}")
+
+            self.require_pipeline_definition_mutation_allowed(self.current_plate)
+            self.pipeline_steps = steps
+            # Don't register here; update_pipeline_for_plate handles atomic registration
+            self._normalize_step_scope_tokens(register=False)
+
+            # Update Pipeline ObjectState with loaded steps
+            if self.current_plate:
+                self.update_pipeline_for_plate(self.current_plate, self.pipeline_steps)
+                self.notify_pipeline_definition_changed(self.current_plate)
+                logger.debug(
+                    f"Updated Pipeline ObjectState ({len(self.pipeline_steps)} steps) for plate: {self.current_plate}"
+                )
+
+            self.update_item_list()
+            self._suppress_pipeline_state_sync = True
+            try:
+                self.pipeline_changed.emit(self.pipeline_steps)
+            finally:
+                self._suppress_pipeline_state_sync = False
+            self.status_message.emit(f"Loaded {len(steps)} steps from {file_path.name}")
 
         except Exception as e:
             logger.error(f"Failed to load pipeline: {e}")

@@ -49,7 +49,7 @@ from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
-from openhcs.introspection import SignatureAnalyzer
+from python_introspect import SignatureAnalyzer
 from openhcs.pyqt_gui.services.step_scope_identity import (
     StepEditorScope,
     build_step_scope_id,

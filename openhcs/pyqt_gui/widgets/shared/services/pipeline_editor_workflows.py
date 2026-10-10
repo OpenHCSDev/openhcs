@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
-from objectstate import patch_lazy_constructors
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6.QtWidgets import QFileDialog
 from pyqt_reactive.widgets.shared.manager_workflows import (
@@ -38,7 +37,6 @@ from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     PipelineDebugActionDeclarationBase,
 )
 from openhcs.pyqt_gui.windows.debug_inspector_window import DebugInspectorWindow
-from openhcs.utils.pipeline_migration import patch_step_constructors_for_migration
 
 logger = logging.getLogger(__name__)
 
@@ -514,23 +512,8 @@ class PipelineEditorCodeWorkflow(ManagerCodeExecutionWorkflow):
     editor: Any
 
     def migration_namespace(self, code: str, error: Exception) -> dict | None:
-        error_msg = str(error)
-        if "unexpected keyword argument" not in error_msg:
-            return None
-        if "group_by" not in error_msg and "variable_components" not in error_msg:
-            return None
-
-        logger.info(
-            "Detected old-format step constructor, retrying with migration patch: %s",
-            error,
-        )
-        namespace: dict[str, Any] = {}
-        with (
-            patch_lazy_constructors(),
-            patch_step_constructors_for_migration(),
-        ):
-            exec(code, namespace)
-        return namespace
+        del code, error
+        return None
 
     def apply_namespace(self, namespace: dict) -> bool:
         if not self.validate_namespace(namespace):

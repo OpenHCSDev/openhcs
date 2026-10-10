@@ -10,7 +10,7 @@ from typing import Generic, TypeVar, List, Optional, Dict, Any, Union, Type
 from enum import Enum
 from dataclasses import dataclass
 
-from openhcs.components.framework import ComponentConfiguration
+from openhcs.core.components.framework import ComponentConfiguration
 from openhcs.constants.constants import GroupBy
 
 logger = logging.getLogger(__name__)
@@ -225,22 +225,3 @@ class GenericValidator(Generic[T]):
                 is_valid=False,
                 error_message=f"Failed to validate dict pattern keys for {group_by.value}: {e}",
             )
-
-    def validate_component_combination_constraint(
-        self, variable_components: List[T], group_by: Optional[T]
-    ) -> ValidationResult:
-        """
-        Validate the core constraint: group_by ∉ variable_components.
-
-        Args:
-            variable_components: List of variable components
-            group_by: Optional group_by component
-
-        Returns:
-            ValidationResult indicating success or failure
-        """
-        try:
-            self.config.validate_combination(variable_components, group_by)
-            return ValidationResult(is_valid=True)
-        except ValueError as e:
-            return ValidationResult(is_valid=False, error_message=str(e))

@@ -83,47 +83,58 @@ def _operations(editor: _PipelineEditorHarness) -> ManagerActionOperations:
     )
 
 
-INVALID_LEGACY_SOURCE = """
-from openhcs.core.config import PipelineConfig
+INVALID_SOURCE = """
+from openhcs.core.config import LazyProcessingConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 pipeline_config = PipelineConfig()
-pipeline_steps = [FunctionStep(func=[], group_by='banana')]
+pipeline_steps = [
+    FunctionStep(func=[], processing_config=LazyProcessingConfig(group_by='banana'))
+]
 """
 
-VALID_LEGACY_SOURCE = """
+VALID_SOURCE = """
 from openhcs.constants import GroupBy
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config import LazyProcessingConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 pipeline_config = PipelineConfig()
-pipeline_steps = [FunctionStep(func=[], group_by=GroupBy.CHANNEL)]
+pipeline_steps = [
+    FunctionStep(
+        func=[], processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL)
+    )
+]
 """
 
 VALID_DEFAULT_CONFIG_SOURCE = """
 from openhcs.constants import GroupBy
+from openhcs.core.config import LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
 
-pipeline_steps = [FunctionStep(func=[], group_by=GroupBy.CHANNEL)]
+pipeline_steps = [
+    FunctionStep(
+        func=[], processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL)
+    )
+]
 """
 
 
-def test_invalid_legacy_config_is_rejected_before_pipeline_editor_mutation() -> None:
+def test_invalid_config_is_rejected_before_pipeline_editor_mutation() -> None:
     editor = _PipelineEditorHarness()
     operations = _operations(editor)
     controller = ManagerActionController()
 
     with pytest.raises(TypeError, match="LazyProcessingConfig.group_by"):
-        controller.validate_edited_code(operations, INVALID_LEGACY_SOURCE)
+        controller.validate_edited_code(operations, INVALID_SOURCE)
     with pytest.raises(TypeError, match="LazyProcessingConfig.group_by"):
-        controller.apply_edited_code(operations, INVALID_LEGACY_SOURCE)
+        controller.apply_edited_code(operations, INVALID_SOURCE)
 
     assert editor.pipeline_steps == []
     assert editor.item_list_update_count == 0
     assert editor.pipeline_changed.values == []
 
-    controller.validate_edited_code(operations, VALID_LEGACY_SOURCE)
-    controller.apply_edited_code(operations, VALID_LEGACY_SOURCE)
+    controller.validate_edited_code(operations, VALID_SOURCE)
+    controller.apply_edited_code(operations, VALID_SOURCE)
 
     assert len(editor.pipeline_steps) == 1
     assert editor.pipeline_steps[0].processing_config.group_by is GroupBy.CHANNEL

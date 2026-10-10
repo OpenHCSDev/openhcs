@@ -218,10 +218,6 @@ class GenericFilenameParser(ABC):
         """
         return self.construct_filename(components)
 
-    def get_component_names(self) -> tuple[str, ...]:
-        """Get all component names for this parser."""
-        return AllComponents.ordered_names()
-
     def component_for_name(self, component_name: str) -> AllComponents:
         """Resolve one external component name through the declared enum."""
 
@@ -252,41 +248,3 @@ class GenericFilenameParser(ABC):
             component_values,
             extension=extension or self.DEFAULT_EXTENSION,
         )
-
-    @staticmethod
-    def validate_component_value(value: FilenameParseValue) -> bool:
-        """Validate one generic parsed value without a mirrored component table."""
-
-        if value is None:
-            return True
-        if isinstance(value, str):
-            return bool(value) or "{" in value
-        if isinstance(value, int):
-            return value >= 0
-        return isinstance(value, (float, bool))
-
-    def extract_component(
-        self,
-        filename: str,
-        component: AllComponents,
-    ) -> FilenameParseValue:
-        """Extract one exact nominal component from a parsed filename."""
-
-        parsed = self.parse_filename(filename)
-        return None if parsed is None else parsed.value_for(component)
-
-    def validate_parse_result(self, result: FilenameParseResult) -> bool:
-        """Validate a complete result against this parser's declaration."""
-
-        declared_components = tuple(AllComponents)
-        if (
-            tuple(component for component, _ in result.declared_values())
-            != declared_components
-        ):
-            logger.warning("Parsed filename components do not match parser declaration")
-            return False
-        for component, value in result.declared_values():
-            if not self.validate_component_value(value):
-                logger.warning("Invalid value for %s: %r", component.value, value)
-                return False
-        return True

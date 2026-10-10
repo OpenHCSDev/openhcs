@@ -90,8 +90,8 @@ def main() -> None:
             for path in (
                 args.path
                 or [
-                    Path("openhcs/mcp/memory_diagnostic.py"),
-                    Path("openhcs/mcp/memory_diagnostic_launch.py"),
+                    Path("scripts/mcp_memory_diagnostic.py"),
+                    Path("scripts/mcp_memory_diagnostic_launch.py"),
                 ]
             )
         ]

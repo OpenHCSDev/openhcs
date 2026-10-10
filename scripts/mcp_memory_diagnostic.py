@@ -1,6 +1,6 @@
 """Bounded, provider-free retention measurements through the real MCP server.
 
-Run with ``python -m openhcs.mcp.memory_diagnostic --output receipt.json``.
+Run with ``python -m scripts.mcp_memory_diagnostic --output receipt.json``.
 Only this disposable diagnostic entrypoint adds the process-local sampling tool;
 normal OpenHCS MCP capabilities, transport, context, and services are unchanged.
 No execution servers, JVMs, viewers, or GPU workloads are started by the sequence.
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     )
 
 PROBE_TOOL = "openhcs_diagnostic_process_memory"
-DIAGNOSTIC_MODULE = "openhcs.mcp.memory_diagnostic"
+DIAGNOSTIC_MODULE = "scripts.mcp_memory_diagnostic"
 SCRATCH_ROOT = (
     Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
     / "agent-scratch"
@@ -377,7 +377,7 @@ async def diagnose(
         McpDevStdioSession,
         McpDevToolCall,
     )
-    from openhcs.mcp.memory_diagnostic_launch import DiagnosticServerSpec
+    from scripts.mcp_memory_diagnostic_launch import DiagnosticServerSpec
 
     sequence = (
         read_request_sequence(sequence_path)
