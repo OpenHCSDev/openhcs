@@ -1419,9 +1419,9 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
         return cls(
             window_components=projection.window_components,
             coordinate_components=FijiHyperstackCoordinateComponents(
-                channel=layout.components_in(FijiSlots.Channel),
-                z_axis_components=layout.components_in(FijiSlots.Slice),
-                frame=layout.components_in(FijiSlots.Frame),
+                channel=layout.components_in(FijiSlots.HyperstackChannel),
+                z_axis_components=layout.components_in(FijiSlots.HyperstackSlice),
+                frame=layout.components_in(FijiSlots.HyperstackFrame),
             ),
             windows=projection.windows,
             fixed_window_labels=projection.fixed_window_labels,

@@ -138,9 +138,9 @@ def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> Non
     Microscopy.activate()
     fiji = ViewerMappingDisplayConfigInput(fiji_payload).layout()
     assert fiji.declared_axes.names() == ("tile", "band", "date", "scene")
-    assert fiji.components_in(FijiSlots.Channel) == ("band",)
-    assert fiji.components_in(FijiSlots.Slice) == ()
-    assert fiji.components_in(FijiSlots.Frame) == ("tile", "date", "scene")
+    assert fiji.components_in(FijiSlots.HyperstackChannel) == ("band",)
+    assert fiji.components_in(FijiSlots.HyperstackSlice) == ()
+    assert fiji.components_in(FijiSlots.HyperstackFrame) == ("tile", "date", "scene")
     assert FijiDisplaySettings.from_display_payload(fiji_payload) == FijiDisplaySettings(
         lut="Fire"
     )

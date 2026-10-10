@@ -264,11 +264,11 @@ class ViewerSlotFamily(ABC):
     @classmethod
     @cache
     def choice_enum(cls, name: str, module: str) -> type[Enum]:
-        """The form-choice view of this family (members named after the slots)."""
+        """The form-choice view of this family (members named after the slots' wire values)."""
 
         choices = Enum(
             name,
-            [(slot.__name__.upper(), slot.wire_value) for slot in cls.slots],
+            [(slot.wire_value.upper(), slot.wire_value) for slot in cls.slots],
             module=module,
         )
         choices.__doc__ = cls.__doc__.splitlines()[0]
@@ -298,19 +298,19 @@ class FijiSlots(ViewerSlotFamily):
         wire_value = "window"
         separates_values = True
 
-    class Channel(ViewerSlot):
+    class HyperstackChannel(ViewerSlot):
         wire_value = "channel"
         roles = (ColourAxis,)
 
-    class Slice(ViewerSlot):
+    class HyperstackSlice(ViewerSlot):
         wire_value = "slice"
         roles = (StackAxis,)
 
-    class Frame(ViewerSlot):
+    class HyperstackFrame(ViewerSlot):
         wire_value = "frame"
         roles = (TimeAxis,)
 
-    default_slot = Frame
+    default_slot = HyperstackFrame
 
 
 # ---------------------------------------------------------------------------
