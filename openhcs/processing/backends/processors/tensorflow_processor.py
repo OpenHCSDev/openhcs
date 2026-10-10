@@ -23,7 +23,7 @@ from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.memory import tensorflow as tensorflow_func
 from openhcs.core.lazy_gpu_imports import tf
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.processors.method_axes import (
     StackProjectionMethod,
 )

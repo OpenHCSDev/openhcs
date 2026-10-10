@@ -682,7 +682,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
     equal_value_components_numba,
 )
@@ -5271,7 +5271,6 @@ class MaskObjectsOverlapHandlingStrategy(
     __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "overlap_handling"
-    __enum_label_attr__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     overlap_handling: ClassVar[MaskObjectsOverlapHandling | None] = None
     strategy_label: ClassVar[str | None] = None
 
@@ -5408,7 +5407,6 @@ class MaskObjectsNumberingStrategy(
     __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "numbering"
-    __enum_label_attr__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     numbering: ClassVar[MaskObjectsNumberingChoice | None] = None
     strategy_label: ClassVar[str | None] = None
 

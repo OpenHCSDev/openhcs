@@ -26,7 +26,7 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
 )
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.process_local_cache import BoundedCache
+from metaclass_registry.caches import BoundedCache
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_artifact_values import (
     ArtifactKey,

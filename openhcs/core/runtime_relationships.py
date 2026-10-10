@@ -26,7 +26,7 @@ from openhcs.core.source_image_provenance import (
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
-from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
+from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     ObjectReferenceFeatureMarker,

@@ -33,7 +33,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     enum_member_with_payload,
 )
@@ -972,7 +972,6 @@ class MathOperationStrategy(
     __registry_key__ = "operation_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "operation"
-    __enum_label_attr__ = "operation_label"
     operation: ClassVar[MathOperation | None] = None
     operation_label: ClassVar[str | None] = None
 
@@ -1033,7 +1032,6 @@ class RoundingStrategy(
     __registry_key__ = "rounding_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "rounding"
-    __enum_label_attr__ = "rounding_label"
     rounding: ClassVar[RoundingMethod | None] = None
     rounding_label: ClassVar[str | None] = None
 

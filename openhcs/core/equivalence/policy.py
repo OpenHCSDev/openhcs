@@ -11,7 +11,7 @@ from types import MappingProxyType
 from typing import Annotated, ClassVar, get_args, get_origin, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_identifier import (
     normalize_runtime_identifier,
     normalize_runtime_source_name,
@@ -181,7 +181,6 @@ class RuntimeMeasurementQualifierSuffixMatchStrategy(
     __registry_key__ = "strategy_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "value_mode"
-    __enum_label_attr__ = "strategy_label"
 
     value_mode: ClassVar[RuntimeMeasurementQualifierValueMode | None] = None
     strategy_label: ClassVar[str | None] = None

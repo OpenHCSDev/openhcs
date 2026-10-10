@@ -31,7 +31,7 @@ from openhcs.core.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
     MeasurementValueIndexResult,
 )
-from openhcs.core.process_local_cache import BoundedCache
+from metaclass_registry.caches import BoundedCache
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+from metaclass_registry.caches import ProcessLocalBoundedCache
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
@@ -761,7 +761,7 @@ class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRow
 
 @dataclass
 class ZernikeLabelGeometryCache(
-    RegisteredProcessLocalBoundedCache[
+    ProcessLocalBoundedCache[
         tuple[str, tuple[int, ...], bytes, str, tuple[int, ...], bytes],
         _ZernikeLabelGeometry,
     ]

@@ -10,7 +10,7 @@ from typing import Any
 from metaclass_registry import AutoRegisterMeta
 import pandas as pd
 
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.formats.experimental_layout_rows import ExperimentalAnalysisScope
 
 PlateDictionary = dict[str, dict[str, dict[str, Any]]]

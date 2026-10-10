@@ -31,7 +31,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_relationships import (
@@ -165,7 +165,6 @@ class NeighborDistancePlanner(
     __registry_key__ = "method_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
-    __enum_label_attr__ = "method_label"
     method_label: ClassVar[str | None] = None
     method: ClassVar[DistanceMethod | None] = None
 

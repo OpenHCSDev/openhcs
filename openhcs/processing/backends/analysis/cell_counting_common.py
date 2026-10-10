@@ -10,7 +10,7 @@ from typing import Any, Callable, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
 
 class DetectionMethod(Enum):

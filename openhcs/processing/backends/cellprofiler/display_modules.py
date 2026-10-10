@@ -28,7 +28,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
@@ -959,7 +959,6 @@ class PlateDimensionStrategy(
     plate_type: ClassVar[PlateType | None] = None
     plate_type_label: ClassVar[str | None] = None
     __enum_member_attr__ = "plate_type"
-    __enum_label_attr__ = "plate_type_label"
 
     @classmethod
     def for_plate_type(cls, plate_type: PlateType) -> "PlateDimensionStrategy":

@@ -22,7 +22,7 @@ from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     prepare_disk_image_payloads,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,

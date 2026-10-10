@@ -28,7 +28,7 @@ from openhcs.agent.runtime_platform import (
     AgentRuntimePlatformAuthority,
     AgentRuntimePlatformKey,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.mcp.bootstrap import (
     MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE,
     MCP_STABLE_LAUNCH_COMMAND_ENVIRONMENT_VARIABLE,

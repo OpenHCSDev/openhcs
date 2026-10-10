@@ -44,7 +44,7 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import runtime_bound_parameters
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -281,7 +281,6 @@ class RobustBackgroundCenterStrategy(
     __registry_key__ = "averaging_method_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "averaging_method"
-    __enum_label_attr__ = "averaging_method_label"
     averaging_method: ClassVar[CellProfilerAveragingMethod | None] = None
     averaging_method_label: ClassVar[str | None] = None
 
@@ -386,7 +385,6 @@ class RobustBackgroundSpreadStrategy(
     __registry_key__ = "variance_method_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "variance_method"
-    __enum_label_attr__ = "variance_method_label"
     variance_method: ClassVar[CellProfilerVarianceMethod | None] = None
     variance_method_label: ClassVar[str | None] = None
 
@@ -2851,7 +2849,6 @@ class ThresholdMethodRowSelectionPolicy(
     __registry_key__ = "scope_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "scope"
-    __enum_label_attr__ = "scope_label"
     scope: ClassVar[CellProfilerThresholdScope | None] = None
     scope_label: ClassVar[str | None] = None
     measurement_row_type: ClassVar[type[ThresholdMeasurementFeatureRecord]]

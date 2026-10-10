@@ -25,7 +25,7 @@ from openhcs.core.artifacts import (
     SpatialGridArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
+from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImageOutputBundle,

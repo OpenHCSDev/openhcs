@@ -1285,7 +1285,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.registry_strategies import enum_member_with_payload
+from metaclass_registry.strategies import enum_member_with_payload
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,

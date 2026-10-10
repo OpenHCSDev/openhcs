@@ -12,7 +12,7 @@ from numba import njit
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
@@ -229,7 +229,6 @@ class FeatureOperationStrategy(
     __registry_key__ = STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
-    __enum_label_attr__ = STRATEGY_REGISTRY_KEY
     method: ClassVar[OperationMethod | None] = None
     method_label: ClassVar[str | None] = None
 
@@ -272,7 +271,6 @@ class FeatureEnhanceMethodStrategy(
     __registry_key__ = STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
-    __enum_label_attr__ = STRATEGY_REGISTRY_KEY
     method: ClassVar[EnhanceMethod | None] = None
     method_label: ClassVar[str | None] = None
 

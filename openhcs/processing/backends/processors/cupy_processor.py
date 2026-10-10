@@ -22,7 +22,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.memory import cupy as cupy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.processors.method_axes import (
     EdgeMagnitudeMethod,
     ScipyBoundaryMode,

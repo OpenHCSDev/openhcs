@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+from metaclass_registry.caches import ProcessLocalBoundedCache
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
@@ -48,7 +48,7 @@ from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.equivalence.policy import (
     RuntimeMeasurementQualifierSuffixMatchStrategy,
 )
-from openhcs.core.registry_strategies import enum_member_with_payload
+from metaclass_registry.strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_image_values import (
@@ -962,7 +962,7 @@ runtime_profiler = RuntimeProfiler(logger)
 
 @dataclass
 class RadialLabelGeometryCache(
-    RegisteredProcessLocalBoundedCache[
+    ProcessLocalBoundedCache[
         "RadialLabelGeometryCacheKey", "RadialLabelGeometry"
     ]
 ):

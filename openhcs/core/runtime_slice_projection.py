@@ -22,7 +22,7 @@ from openhcs.core.aligned_image_payload import (
     ImageOutputBundle,
 )
 from openhcs.core.measurement_row_materialization import MeasurementRowsAxisProjection
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     NominalTypeKeyedStrategyMixin,
 )
@@ -266,7 +266,6 @@ class RuntimeProjectionSourceIdentityRequirementStrategy(
     __registry_key__ = "requirement_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "requirement"
-    __enum_label_attr__ = "requirement_label"
 
     requirement: ClassVar[RuntimeProjectionSourceIdentityRequirement | None] = None
     requirement_label: ClassVar[str | None] = None
