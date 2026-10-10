@@ -7,10 +7,9 @@ a two-phase (compile-all-then-execute-all) pipeline execution model.
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union, Set
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
-from openhcs.constants.constants import Backend, LOADABLE_IMAGE_EXTENSIONS, OrchestratorState
-from openhcs.constants import Microscope
+from openhcs.constants.constants import Backend, OrchestratorState
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
@@ -53,8 +52,8 @@ if TYPE_CHECKING:
 from polystore.zarr import ZarrStorageBackend
 
 # PipelineConfig now imported directly above
-from openhcs.microscopes import create_microscope_handler
-from openhcs.microscopes.microscope_base import MicroscopeHandler
+from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 
@@ -216,8 +215,8 @@ class PipelineOrchestrator:
         self, progress_callback: Optional[Callable[[Dict[str, Any]], None]]
     ) -> None:
         self.input_dir: Optional[Path] = None
-        self.microscope_handler: Optional[MicroscopeHandler] = None
-        self._microscope_handler_rebuild_type: type[MicroscopeHandler] | None = None
+        self.microscope_handler: Optional[DatasetSource] = None
+        self._microscope_handler_rebuild_type: type[DatasetSource] | None = None
         self.default_pipeline_definition: Optional[List[AbstractStep]] = None
         self._initialized: bool = False
         self._state: OrchestratorState = OrchestratorState.CREATED
@@ -325,16 +324,10 @@ class PipelineOrchestrator:
                 if resolved_config is None
                 else resolved_config
             )
-            microscope_type = (
-                shared_context.microscope.value
-                if shared_context.microscope != Microscope.AUTO
-                else "auto"
-            )
             if self._microscope_handler_rebuild_type is None:
-                self.microscope_handler = create_microscope_handler(
-                    plate_folder=str(self.plate_path),
+                self.microscope_handler = shared_context.dataset_source.open(
+                    self.plate_path,
                     filemanager=self.filemanager,
-                    microscope_type=microscope_type,
                     source_bindings_config=shared_context.source_bindings_config,
                 )
             else:
@@ -567,14 +560,14 @@ class PipelineOrchestrator:
         Skips remote-service handlers because they do not have local source
         directories.
         """
-        from openhcs.microscopes.openhcs import (
+        from openhcs.core.dataset_sources.openhcs_format import (
             OpenHCSMetadataGenerator,
             get_subdirectory_name,
         )
 
         source_role = self.microscope_handler.source_selection_role()
         if not source_role.requires_local_directory:
-            logger.debug("Skipping local metadata creation for %s", source_role.value)
+            logger.debug("Skipping local metadata creation for %s", source_role.role_name)
             return
 
         # For plates with virtual workspace, metadata is already created by _build_virtual_mapping()
@@ -651,14 +644,8 @@ class PipelineOrchestrator:
         context = ProcessingContext(
             axis_id=axis_id,
             filemanager=self.filemanager,
-            analysis_consolidation_config=(
-                effective_config.analysis_consolidation_config
-            ),
-            plate_metadata_config=effective_config.plate_metadata_config,
             tiff_config=effective_config.tiff_config,
-            auto_add_output_plate_to_plate_manager=(
-                effective_config.auto_add_output_plate_to_plate_manager
-            ),
+            post_execute_hooks=PostExecuteHook.bind_all(effective_config),
             transport_config=self.transport_config,
         )
         # Orchestrator reference removed - was orphaned and unpickleable
@@ -703,10 +690,10 @@ class PipelineOrchestrator:
         plate_path = Path(self.plate_path)
         from openhcs.core.source_workspace_projection import (
             VirtualWorkspaceSourceProjection,
-            VirtualWorkspaceSourceProjectionAuthority,
+            WorkspaceSourceProjections,
         )
 
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        projection = WorkspaceSourceProjections.from_plate_metadata(
             plate_path=plate_path,
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,
@@ -927,83 +914,26 @@ class PipelineOrchestrator:
             f"Caching component keys for: {[comp.name for comp in components]}"
         )
 
-        # Initialize component sets for all requested components
-        component_sets: Dict[type[Axis], Set[Union[str, int]]] = {}
-        for component in components:
-            component_sets[component] = set()
-
-        # Single pass through all filenames - extract all components at once
         try:
-            # Use primary backend from microscope handler
-            backend_to_use = self.microscope_handler.get_primary_backend(
-                self.input_dir, self.filemanager
+            axis_values = self.microscope_handler.axis_values(
+                self.input_dir, self.filemanager, components
             )
-            logger.info(
-                "Component key discovery: input_dir=%s backend_to_use=%s microscope=%s parser=%s",
-                self.input_dir,
-                backend_to_use,
-                self.microscope_handler.microscope_type,
-                self.microscope_handler.parser.__class__.__name__,
-            )
-
-            filenames = self.filemanager.list_files(
-                str(self.input_dir),
-                backend_to_use,
-                extensions=LOADABLE_IMAGE_EXTENSIONS,
-            )
-            logger.info(
-                "Component key discovery: listed %d files (extensions=%s)",
-                len(filenames),
-                LOADABLE_IMAGE_EXTENSIONS,
-            )
-            if filenames:
-                preview = [str(p) for p in filenames[:10]]
-                logger.debug(
-                    "Component key discovery: first %d files: %s",
-                    len(preview),
-                    preview,
-                )
-
-            for filename in filenames:
-                parsed_info = self.microscope_handler.parser.parse_filename(
-                    str(filename)
-                )
-                if parsed_info:
-                    # Extract all requested components from this filename
-                    for component in component_sets:
-                        component_value = parsed_info.value_for(component)
-                        if component_value is not None:
-                            component_sets[component].add(component_value)
-                else:
-                    logger.warning(
-                        "Could not parse filename: %s (backend=%s input_dir=%s)",
-                        filename,
-                        backend_to_use,
-                        self.input_dir,
-                    )
-
         except Exception as e:
             logger.error(
                 f"Error listing files or parsing filenames from {self.input_dir}: {e}",
                 exc_info=True,
             )
-            # Initialize empty sets for failed parsing
-            for component in component_sets:
-                component_sets[component] = set()
+            axis_values = {component: [] for component in components}
 
-        # Convert sets to sorted lists and store in cache
-        for component, component_set in component_sets.items():
-            sorted_components = [str(comp) for comp in sorted(list(component_set))]
-            self._component_keys_cache[component] = sorted_components
-            logger.debug(f"Cached {len(sorted_components)} {component.name} keys")
-
-            if not sorted_components:
+        for component, values in axis_values.items():
+            self._component_keys_cache[component] = values
+            if not values:
                 logger.warning(
                     f"No {component.name} values found in input directory: {self.input_dir}"
                 )
 
         logger.info(
-            f"Component key caching complete. Cached {len(component_sets)} component types in single pass."
+            f"Component key caching complete. Cached {len(axis_values)} axes in single pass."
         )
 
     def clear_component_cache(

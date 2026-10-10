@@ -547,7 +547,6 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     from polystore.streaming.viewer_transport import ViewerStreamKwarg
     from polystore.virtual_workspace import SourcePixelRef
 
-    from openhcs.constants.constants import Microscope
     from openhcs.core.config import NapariStreamingConfig
     from openhcs.core.image_file_serialization import ImageFileFormat
     from openhcs.core.source_image_provenance import (
@@ -566,8 +565,8 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
         StreamingService,
     )
     from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
-    from openhcs.microscopes.microscope_base import create_microscope_handler
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     filemanager = FileManager({"disk": DiskStorageBackend()})
     parser = SourceSchemaFilenameParser()
@@ -612,7 +611,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
         arrays.append(array)
     subdirectory = SourceProjectionSet(tuple(projections)).metadata_dict(
         parser=parser,
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name=type(parser).__name__,
         grid_dimensions=[],
         pixel_size=1.3556,
@@ -621,7 +620,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     AtomicMetadataWriter().replace_subdirectory_metadata(
         tmp_path / "openhcs_metadata.json", ".", subdirectory
     )
-    handler = create_microscope_handler("auto", tmp_path, filemanager)
+    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=filemanager)
     input_dir = handler.initialize_workspace(tmp_path, filemanager)
     service = StreamingService(filemanager, handler, input_dir)
     paths = tuple(subdirectory["image_files"])

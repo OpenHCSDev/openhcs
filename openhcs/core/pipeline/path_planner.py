@@ -1431,11 +1431,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                 if output_groups is not None and output_ref in output_groups
                 else PathPlannerGroupScope.ungrouped()
             )
-            normalized_groups = list(group_scope.keys)
-            paths_by_group = self.planner.paths.paths_by_group(
-                str(path),
-                normalized_groups,
-            )
+            paths_by_group = self.planner.paths.paths_by_group(str(path), group_scope)
             source_stack_axes: list[ComponentSet] = []
             source_stack_domains: list[PathPlannerGroupScope] = []
             source_binding_domains: list[PathPlannerGroupScope] = []
@@ -1575,7 +1571,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                         relation_source_scopes,
                     )
                 ),
-                group_keys=tuple(normalized_groups),
+                group_keys=group_scope.keys,
                 group_component=group_scope.component,
                 variable_components=(
                     source_stack_axes[0].as_tuple() if source_stack_axes else ()
@@ -1984,10 +1980,12 @@ class PathPlannerPathAuthority:
     @staticmethod
     def paths_by_group(
         base_path: str,
-        group_keys: List[Optional[str]],
+        group_scope: ComponentGroupScope,
     ) -> Dict[Optional[str], str]:
         """Expand one artifact path into per-execution-group artifact paths."""
-        return dict(_cached_paths_by_group(base_path, tuple(group_keys)))
+        return dict(
+            _cached_paths_by_group(base_path, group_scope.component, group_scope.keys)
+        )
 
     @staticmethod
     def analysis_results_dir_for(image_dir: Path) -> Path:
@@ -2390,21 +2388,6 @@ class PipelinePathPlanner:
         """
         return _cached_axis_filename(axis_id, key, extension, step_index)
 
-    @staticmethod
-    def build_dict_pattern_path(base_path: str, dict_key: str) -> str:
-        """Build channel-specific path for dict patterns.
-
-        Inserts _w{dict_key} after well ID in the filename.
-        Example: "dir/A01_rois_step7.pkl" + "1" -> "dir/A01_w1_rois_step7.pkl"
-
-        Args:
-            base_path: Base path without channel component
-            dict_key: Dict pattern key (e.g., "1" for channel 1)
-
-        Returns:
-            Channel-specific path
-        """
-        return _cached_dict_pattern_path(base_path, dict_key)
 
 
 @lru_cache(maxsize=65536)
@@ -2414,18 +2397,12 @@ def _cached_output_plate_root(
     output_dir_suffix: str,
 ) -> str:
     """Return the output plate root for one normalized path config."""
+    from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
+
     path = Path(plate_path)
-    if plate_path.startswith("/omero/"):
-        base = path.parent
-    elif global_output_folder:
-        base = Path(global_output_folder)
-        if not base.is_absolute():
-            raise ValueError(
-                "PathPlanner requires compiled global_output_folder to be "
-                f"absolute, got {global_output_folder!r}."
-            )
-    else:
-        base = path.parent
+    base = DatasetRootRule.for_dataset(plate_path).output_base(
+        path, global_output_folder
+    )
     return str(base / f"{path.name}{output_dir_suffix}")
 
 
@@ -2492,14 +2469,9 @@ def _cached_axis_filename(
 
 
 @lru_cache(maxsize=65536)
-def _cached_dict_pattern_path(base_path: str, dict_key: str) -> str:
-    """Return the grouped artifact path for one base path and group key."""
-    return grouped_artifact_path(base_path, dict_key)
-
-
-@lru_cache(maxsize=32768)
 def _cached_paths_by_group(
     base_path: str,
+    group_axis: type[Axis] | None,
     group_keys: tuple[str | None, ...],
 ) -> tuple[tuple[str | None, str], ...]:
     """Return immutable grouped-path items for cache-safe reuse."""
@@ -2509,7 +2481,7 @@ def _cached_paths_by_group(
             (
                 base_path
                 if group_key is None
-                else _cached_dict_pattern_path(base_path, group_key)
+                else grouped_artifact_path(base_path, group_axis, group_key)
             ),
         )
         for group_key in group_keys

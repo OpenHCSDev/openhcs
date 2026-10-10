@@ -4,9 +4,7 @@ from pathlib import Path
 import pytest
 
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.microscopes.bioformats_adapter import (
-    SourcePlaneStoreAdapter,
-)
+from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from tests.unit.bioformats_imagexpress_fixture import IMAGE_XPRESS_PLATE_FACTORY

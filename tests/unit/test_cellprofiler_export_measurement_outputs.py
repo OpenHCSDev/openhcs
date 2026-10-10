@@ -40,7 +40,7 @@ from openhcs.core.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source_matching import (
     SourceImageSetIdentityPolicy,
-    with_original_source_metadata,
+    with_declared_source_metadata,
 )
 
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
@@ -150,7 +150,7 @@ def _runtime_image_batch(*image_names: str) -> RuntimeArtifactBatch:
         )
         payload = ImagePayloadMetadata(
             source_path=source_path,
-            source_component_metadata=with_original_source_metadata(
+            source_component_metadata=with_declared_source_metadata(
                 component_metadata,
                 component_metadata,
                 path=source_path,
@@ -188,7 +188,7 @@ def _export_context() -> ProcessingContext:
     )
     context.plate_path = Path("/")
     context.microscope_handler = SimpleNamespace(
-        source_admission_config=lambda: None,
+        source_bindings_still_required=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_metadata_document=lambda _plate_path: None
         ),

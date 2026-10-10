@@ -20,7 +20,7 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.step_dependencies import StepInputDependency
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis

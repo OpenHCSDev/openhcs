@@ -13,8 +13,8 @@ from polystore.memory import MemoryStorageBackend
 from test_function_outputs import (
     context_stub, function_step_plan, record_output_path,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
+from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext, stack_image_payloads
 from openhcs.core.artifacts import ArtifactOutputPlan, ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
@@ -63,7 +63,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         Backend.MEMORY.value: MemoryStorageBackend(),
     })
     context = context_stub(filemanager, parser=SourceSchemaFilenameParser())
-    context.microscope_handler.microscope_type = Microscope.OPENHCS.value
+    context.microscope_handler.source_name = "openhcsdata"
     context.runtime_value_store = RuntimeValueStore()
     context.metadata_cache = {}
     context.tiff_config = None

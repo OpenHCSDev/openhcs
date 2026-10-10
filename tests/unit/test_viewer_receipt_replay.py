@@ -291,7 +291,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     )
     assert producer is not None
     assert producer.identities == state.layers[0].producer_identities
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     source = ViewerStreamingSource(
         plate_path=str(tmp_path),

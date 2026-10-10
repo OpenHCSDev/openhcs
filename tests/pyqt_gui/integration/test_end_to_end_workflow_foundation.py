@@ -37,7 +37,6 @@ from PyQt6.QtWidgets import (
 )
 from pyqt_reactive.forms.parameter_form_manager import ParameterFormManager
 
-from openhcs.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -50,6 +49,7 @@ from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, get_default_ui_config
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.windows.config_window import ConfigWindow
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 # ============================================================================
 # CORE CONFIGURATION AND ENUMS
@@ -493,7 +493,7 @@ def _create_test_global_config() -> GlobalPipelineConfig:
 
     return GlobalPipelineConfig(
         num_workers=8,
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
         use_threading=True,
         # Add well_filter values that test scenarios expect to inherit
         well_filter_config=WellFilterConfig(well_filter=5),

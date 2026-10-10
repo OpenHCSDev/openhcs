@@ -1,9 +1,4 @@
-"""
-Microscope interfaces for openhcs.
-
-This module provides abstract base classes for microscope-specific functionality,
-including filename parsing and metadata handling.
-"""
+"""Filename parsing and metadata reading: the parts a dataset source composes."""
 
 from __future__ import annotations
 
@@ -40,7 +35,7 @@ if TYPE_CHECKING:
     from openhcs.core.source_workspace_projection import (
         VirtualWorkspaceSourceProjection,
     )
-    from openhcs.microscopes.openhcs import OpenHCSMetadata
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
 
 
 @dataclass(frozen=True, slots=True, init=False, eq=False)
@@ -84,7 +79,7 @@ MetadataComponentValuesInput = Mapping[object, object | None]
 
 
 class MetadataComponentValueSet:
-    """Complete immutable metadata keyed by canonical component declarations."""
+    """Complete immutable metadata keyed by declared axis."""
 
     __slots__ = ("_component_values",)
 
@@ -135,7 +130,7 @@ class MetadataComponentValueSet:
 
 @dataclass(frozen=True)
 class AnalysisResultDirectory:
-    """Named analysis-results directory declared by microscope metadata."""
+    """Named analysis-results directory declared by dataset metadata."""
 
     subdirectory_name: str
     path: Path
@@ -148,7 +143,7 @@ class AnalysisResultDirectory:
         path: Path,
         source_projection: VirtualWorkspaceSourceProjection | None = None,
     ) -> AnalysisResultDirectory | None:
-        """Admit existing declared directories without inventing missing results."""
+        """Keep declared directories that exist, without inventing missing results."""
         if not path.exists():
             return None
         if not path.is_dir():
@@ -161,7 +156,7 @@ class AnalysisResultDirectory:
     def source_binding_for(
         self, virtual_path: str, full_path: str
     ) -> SourceProjection | None:
-        """Resolve a file through this directory's metadata-owned source authority."""
+        """Resolve a file through the source bindings this directory's metadata declares."""
         if self.source_projection is None:
             return None
         from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
@@ -172,7 +167,7 @@ class AnalysisResultDirectory:
 
 
 class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):
-    """Nominal metadata artifact resolver owned by microscope metadata."""
+    """Metadata artifact a dataset's metadata handler can resolve."""
 
     __registry_key__ = "artifact_name"
     __skip_if_no_key__ = True
@@ -220,7 +215,7 @@ class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):
 
 
 class GridDimensionsMetadataArtifactProvider(MetadataArtifactProvider):
-    """Provide stitching grid dimensions from microscope metadata."""
+    """Provide tile grid dimensions from dataset metadata."""
 
     artifact_name = "grid_dimensions"
     description = "Grid dimensions (num_rows, num_cols) for position generation."
@@ -378,8 +373,8 @@ class FilenameParser(
         pass
 
 
-class MicroscopeImagePathParser(ABC):
-    """Interpret acquisition paths using the microscope's existing filename owner.
+class FilenameParserCapability(ABC):
+    """Optional filename-parser capability of a dataset source.
 
     Independent folder capabilities cooperate through ``image_path_components``;
     consumers never need to know which acquisition layout supplies an axis.
@@ -454,7 +449,7 @@ class MicroscopeImagePathParser(ABC):
 
 class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     """
-    Abstract base class for handling microscope metadata.
+    Abstract base class for reading a dataset's metadata.
 
     All metadata methods require str or Path objects for file paths.
 
@@ -597,7 +592,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         """Publish parsed source identities with acquisition-owned calibration.
 
         The filename parser owns component interpretation; this metadata owner
-        supplies physical coordinates. Explicit source spacing remains authoritative.
+        supplies physical coordinates. Explicit source spacing takes precedence.
         """
 
         acquisition_spacing = self.source_voxel_spacing(plate_path)
@@ -636,7 +631,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         self,
         plate_path: Union[str, Path],
     ) -> MetadataComponentValueSet:
-        """Return metadata for the canonical component declaration."""
+        """Return value labels for every declared axis."""
 
         pass
 
@@ -659,8 +654,8 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         """
         Get image files exposed by this metadata handler.
 
-        Subclasses own their format's file-listing authority; the base class
-        must not infer another microscope's workspace metadata layout.
+        Subclasses list their format's files; the base class
+        must not infer another source's workspace metadata layout.
         """
         pass
 
@@ -696,7 +691,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         microscope_handler: ViewerMicroscopeHandlerABC,
     ) -> MetadataViewDocument:
         """Project this handler's metadata into the standard read-only UI document."""
-        from openhcs.microscopes.openhcs import OpenHCSMetadata
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
 
         component_values = self.component_value_set(plate_path)
         grid_dims = self.get_metadata_grid_dimensions(plate_path)
@@ -711,7 +706,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
 
         metadata = OpenHCSMetadata.from_component_value_set(
             component_values=component_values,
-            microscope_handler_name=microscope_handler.microscope_type,
+            microscope_handler_name=microscope_handler.source_name,
             source_filename_parser_name=parser.__class__.__name__,
             grid_dimensions=list(grid_dims),
             pixel_size=pixel_size,
@@ -723,12 +718,12 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
             or None,
             main=None,
         )
-        title = f"Metadata - {microscope_handler.microscope_type}"
+        title = f"Metadata - {microscope_handler.source_name}"
         return MetadataViewDocument(
             title=title,
             entries=(
                 MetadataViewEntry(
-                    name=microscope_handler.microscope_type,
+                    name=microscope_handler.source_name,
                     object_instance=metadata,
                     summary=f"Image files: {len(metadata.image_files)} (hidden)",
                 ),

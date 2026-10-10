@@ -19,6 +19,7 @@ import sys
 import time
 import traceback
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.bioformats import BioFormatsHandler
 
 SOURCE = Path(__file__).resolve().parents[2]
 PYTHON = Path('/home/ts/code/projects/openhcs/.venv/bin/python')
@@ -316,7 +317,6 @@ def run(args) -> None:
             from openhcs.core.config import (PipelineConfig, LazyPathPlanningConfig,
                                              LazyVFSConfig, MaterializationBackend,
                                              LazyStepMaterializationConfig, LazyProcessingConfig)
-            from openhcs.constants import Microscope
             from openhcs.core.pipeline_document import PipelineDocumentCodec
             from openhcs.core.steps.function_step import FunctionStep
             from openhcs.processing.custom_functions import (
@@ -333,7 +333,7 @@ def run(args) -> None:
                         step_materialization_config=LazyStepMaterializationConfig(enabled=True)))
             document = PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(num_workers=1, use_threading=True,
-                    microscope=Microscope.BIOFORMATS,
+                    dataset_source=BioFormatsHandler,
                     path_planning_config=LazyPathPlanningConfig(global_output_folder=owned/'outputs'),
                     vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.DISK)),
                 pipeline_steps=steps,

@@ -34,7 +34,12 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import AnalysisConsolidationConfig, TiffConfig, WellFilterMode
+from openhcs.core.config import TiffConfig, WellFilterMode
+from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
+from openhcs.domains.microscopy.config import (
+    AnalysisConsolidationConfig,
+    PlateMetadataConfig,
+)
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
@@ -94,9 +99,9 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.microscopes.microscope_interfaces import MetadataHandler
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.interfaces import MetadataHandler
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization.core import Output
 from openhcs.processing.materialization import (
     ImageFileOptions,
@@ -361,7 +366,7 @@ def context_stub(filemanager, parser=None):
     context.filemanager = filemanager
     context.microscope_handler = SimpleNamespace(
         parser=parser or ParserStub(),
-        microscope_type="test",
+        source_name="test",
         metadata_handler=MetadataHandlerStub(
             {"channel": {"1": "OrigDNA", "2": "OrigER", "3": "OrigRNA"}}
         ),
@@ -371,7 +376,9 @@ def context_stub(filemanager, parser=None):
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
     context.tiff_config = TiffConfig()
-    context.analysis_consolidation_config = AnalysisConsolidationConfig()
+    context.post_execute_hooks = (
+        AnalysisConsolidationHook(AnalysisConsolidationConfig(), PlateMetadataConfig()),
+    )
     context.step_axis_filters = {}
     return context
 

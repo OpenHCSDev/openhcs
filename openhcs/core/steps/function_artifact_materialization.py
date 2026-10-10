@@ -19,7 +19,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
 )
 from openhcs.core.axis_filter import step_axis_allows_config
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
@@ -1019,9 +1019,7 @@ class RuntimeArtifactMaterialization:
         context: "ProcessingContext",
     ) -> StepExecutionObservation:
         """Report historical debug destinations and read their retained CSV text."""
-        from openhcs.core.orchestrator.analysis_consolidation import (
-            RuntimeAnalysisConsolidationInputs,
-        )
+        from openhcs.core.post_execute import PostExecuteHook
 
         target = plan.runtime_artifact_materialization
         if not target.has_persistent_target:
@@ -1046,7 +1044,7 @@ class RuntimeArtifactMaterialization:
         return StepExecutionObservation(
             MappingProxyType(locations),
             paths,
-            RuntimeAnalysisConsolidationInputs.from_reused_outputs(
+            hook_observations=PostExecuteHook.observe_reused(
                 context, plan, self, outputs
             ),
         )
@@ -1246,14 +1244,12 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             if self.materialization.spec.participates_in_runtime_export_observation()
             else ()
         )
-        from openhcs.core.orchestrator.analysis_consolidation import (
-            RuntimeAnalysisConsolidationInputs,
-        )
+        from openhcs.core.post_execute import PostExecuteHook
 
         return StepExecutionObservation(
             MappingProxyType({address: locations}),
             paths,
-            RuntimeAnalysisConsolidationInputs.from_saved_outputs(context, plan, self),
+            PostExecuteHook.observe_saved(context, plan, self),
             MappingProxyType(
                 {
                     Path(output.path): output.image_numbers_by_axis

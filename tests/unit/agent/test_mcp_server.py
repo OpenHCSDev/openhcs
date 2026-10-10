@@ -310,7 +310,7 @@ def test_mcp_server_publishes_canonical_instructions():
         assert kind in built.instructions
     assert "PipelineDocument containing PipelineConfig" in built.instructions
     assert "SourceBindingsConfig" in built.instructions
-    assert "SourceBindingsHandler is the fallback ingestion owner" in built.instructions
+    assert "SourceBindingsSource is the fallback ingestion owner" in built.instructions
     assert "CZI, OME-TIFF" in built.instructions
     assert "bounded representative samples" in built.instructions
     assert "openhcs_search_capabilities" in built.instructions

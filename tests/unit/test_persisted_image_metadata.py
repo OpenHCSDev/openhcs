@@ -41,7 +41,7 @@ from openhcs.core.virtual_workspace_metadata import (
     MetadataWriteError,
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes

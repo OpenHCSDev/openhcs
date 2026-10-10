@@ -7,7 +7,6 @@ from objectstate import ObjectStateRegistry
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.config import (
@@ -23,6 +22,7 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.thresholding import threshold
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
@@ -39,7 +39,7 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
         )
 
     global_config = GlobalPipelineConfig(
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
         num_workers=1,
     )
     pipeline_start_processing = LazyProcessingConfig(

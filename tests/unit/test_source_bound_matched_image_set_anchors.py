@@ -39,13 +39,13 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjection, VirtualWorkspaceSourceProjectionAuthority,
+    VirtualWorkspaceSourceProjection, WorkspaceSourceProjections,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import (
     FunctionStepExecutor,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 SOURCE_ALIASES = (
@@ -66,7 +66,7 @@ def _anchor_executor(
         plate_path=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
-            source_admission_config=lambda: None,
+            source_bindings_still_required=lambda: None,
             metadata_handler=SimpleNamespace(
                 source_workspace_metadata_document=lambda _path: None
             ),
@@ -74,8 +74,8 @@ def _anchor_executor(
         filemanager=SimpleNamespace(exists=lambda *_args: False),
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
     )
-    executor.context.runtime_source_workspace_projection_authority = (
-        VirtualWorkspaceSourceProjectionAuthority.from_context(
+    executor.context.runtime_source_workspace_projections = (
+        WorkspaceSourceProjections.from_context(
             executor.context, cache=source_workspace_projection_cache,
         )
     )

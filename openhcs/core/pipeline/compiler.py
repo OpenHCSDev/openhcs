@@ -101,6 +101,7 @@ from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance
 from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
 from dataclasses import dataclass, replace
 from openhcs.core.axes import AxisFamily
+from openhcs.core.post_execute import PostExecuteHook
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -167,10 +168,7 @@ class AxisCompilationRequest:
             SourceImageSetIdentityPolicy.from_pipeline_config(self.global_config)
         )
         context.step_axis_filters = self.global_step_axis_filters
-        context.analysis_consolidation_config = (
-            self.global_config.analysis_consolidation_config
-        )
-        context.plate_metadata_config = self.global_config.plate_metadata_config
+        context.post_execute_hooks = PostExecuteHook.bind_all(self.global_config)
         return context
 
 
@@ -285,13 +283,13 @@ class PipelineCompiler:
         if vfs_config.materialization_backend != MaterializationBackend.ZARR:
             return
 
-        available_backends = context.microscope_handler.get_available_backends(
+        available_backends = context.microscope_handler.available_backends(
             plate_path
         )
         if Backend.ZARR in available_backends:
             return
 
-        from openhcs.microscopes.openhcs import (
+        from openhcs.core.dataset_sources.openhcs_format import (
             OpenHCSMetadataHandler,
             get_subdirectory_name,
         )
@@ -861,12 +859,12 @@ class PipelineCompiler:
                     f"Expected one of: {[b.value for b in Backend]}."
                 )
 
-        available_backends = microscope_handler.get_available_backends(
+        available_backends = microscope_handler.available_backends(
             orchestrator.input_dir or orchestrator.plate_path
         )
         if read_backend not in available_backends:
             raise ValueError(
-                f"{microscope_handler.microscope_type} does not support read_backend={read_backend.value}. "
+                f"{microscope_handler.source_name} does not support read_backend={read_backend.value}. "
                 f"Supported backends for this plate: {[b.value for b in available_backends]}. "
                 "Update vfs_config.read_backend (or set it to 'auto') and recompile."
             )

@@ -39,7 +39,7 @@ from openhcs.core.source_projection import (
 )
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, get_metadata_path
 from openhcs.core.source_metadata import SourceVoxelSpacing, source_metadata_dict
-from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
+from openhcs.core.dataset_sources.source import DatasetSource
 from polystore.constants import Backend
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
@@ -160,7 +160,7 @@ class SyntheticMicroscopyGenerator:
 
         # Decode the external format once through the registered declaration.
         handler_type = next(
-            (owner for owner in MICROSCOPE_HANDLERS.values()
+            (owner for owner in DatasetSource.__registry__.values()
              if owner.__name__ == f"{format}Handler"),
             None,
         )
@@ -1057,7 +1057,7 @@ class SyntheticMicroscopyGenerator:
             self.parser, image_extension=self.parser.DEFAULT_EXTENSION, path_prefix=sub_dir
         ).metadata_dict(
             projections,
-            microscope_handler_name=self.microscope_handler.microscope_type,
+            microscope_handler_name=self.microscope_handler.source_name,
             source_filename_parser_name=type(self.parser).__name__,
             grid_dimensions=list(self.grid_size),
             pixel_size=pixel_size,

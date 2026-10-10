@@ -9,9 +9,11 @@ import tifffile
 from openhcs.constants.constants import Backend
 from openhcs.microscopes.bioformats_adapter import (
     BioFormatsContainerOpenError,
-    BioFormatsDatasetAmbiguityError,
     BioFormatsNoScalarSourceError,
     BioFormatsPackedRgbSeriesExclusion,
+)
+from openhcs.core.dataset_sources.plane_stores import (
+    PlaneStoreAmbiguityError,
     SourcePlaneStoreAdapter,
 )
 from polystore.bioformats_java import BioFormatsOpenedReader, BioFormatsJavaContext
@@ -873,7 +875,7 @@ def test_java_adapter_rejects_conflicting_embedded_plate_ids_actionably(
     )
 
     with pytest.raises(
-        BioFormatsDatasetAmbiguityError,
+        PlaneStoreAmbiguityError,
         match=r"Plate:a.*Plate:b.*separate submitted roots",
     ):
         SourcePlaneStoreAdapter.discover_dataset(tmp_path)
@@ -907,7 +909,7 @@ def test_java_adapter_rejects_cross_container_plane_address_collision(
     )
 
     with pytest.raises(
-        BioFormatsDatasetAmbiguityError,
+        PlaneStoreAmbiguityError,
         match=r"Duplicate source plane address.*repair colliding embedded",
     ):
         SourcePlaneStoreAdapter.discover_dataset(tmp_path)

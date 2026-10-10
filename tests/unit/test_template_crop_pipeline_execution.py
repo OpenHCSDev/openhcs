@@ -9,7 +9,6 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -27,6 +26,7 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
 )
 from openhcs.processing.backends.processors.numpy_processor import crop
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 @pytest.mark.parametrize(
@@ -93,7 +93,7 @@ def test_template_crop_persists_each_source_channel(
         ensure_global_config_context(
             GlobalPipelineConfig,
             GlobalPipelineConfig(
-                microscope=Microscope.IMAGEXPRESS, num_workers=1, use_threading=True
+                dataset_source=ImageXpressHandler, num_workers=1, use_threading=True
             ),
         )
         orchestrator = PipelineOrchestrator(

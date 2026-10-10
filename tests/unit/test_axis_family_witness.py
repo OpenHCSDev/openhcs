@@ -3,12 +3,19 @@
 A remote-sensing family (scene, tile, band, date; no stack axis) is declared
 here and activated in-process. Family queries, configuration defaults and
 validation, viewer mode projection, plane filenames and the compiler's
-axis resolution all follow it without kernel edits.
+axis resolution all follow it without kernel edits. In a fresh process the
+same family opens a dataset written in the kernel's openhcsdata format and
+runs a two-step pipeline end to end.
 """
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -167,6 +174,40 @@ def test_family_declaration_enforces_role_cardinality() -> None:
     # A rejected declaration must not leak into other axes' role checks.
     assert not issubclass(Microscopy.Channel, TileAxis)
     assert not issubclass(RemoteSensing.Band, PartitionAxis)
+
+
+def test_pipeline_runs_end_to_end_through_the_kernel_dataset_source(tmp_path) -> None:
+    script = Path(__file__).with_name("remote_sensing_witness_pipeline.py")
+    repo_root = Path(__file__).resolve().parents[2]
+    completed = subprocess.run(
+        [sys.executable, str(script), str(tmp_path)],
+        capture_output=True,
+        text=True,
+        timeout=600,
+        env={**os.environ, "PYTHONPATH": str(repo_root)},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr[-4000:]
+    report = json.loads(completed.stdout.strip().splitlines()[-1])
+
+    assert report["is_kernel_source"], report["source_type"]
+    assert report["results"] == {"S01": True, "S02": True}, report["errors"]
+    assert report["outputs"] == sorted(
+        f"images/{scene}_f{int(tile):03d}_b{band}_d{int(date):03d}.tif"
+        for scene in ("S01", "S02")
+        for tile in ("1", "2")
+        for band in ("1", "2")
+        for date in ("1", "2", "3")
+    )
+    assert set(report["output_maxima"].values()) == {500}
+    written = set(report["output_subdirectories"]["images"])
+    assert {"scenes", "tiles", "bands", "dates"} <= written
+    assert not written & {"wells", "sites", "channels", "z_indexes", "timepoints"}
+    assert report["output_band_labels"] == {"1": "red", "2": "nir"}
+    assert not {"analysis_consolidation_config", "plate_metadata_config"} & set(
+        report["config_fields"]
+    )
+    assert report["loaded_domain_modules"] == []
 
 
 # ---------------------------------------------------------------------------

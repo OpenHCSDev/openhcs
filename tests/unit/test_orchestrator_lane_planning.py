@@ -15,15 +15,17 @@ from openhcs.core.config import MultiprocessingStartMethod, NapariStreamingConfi
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator import (
-    analysis_consolidation as analysis_consolidation_module,
-)
-from openhcs.core.orchestrator import (
     compiled_plate_execution as compiled_plate_execution_module,
 )
 from openhcs.core.orchestrator import orchestrator as orchestrator_module
 from openhcs.core.orchestrator import worker_execution as worker_execution_module
-from openhcs.core.orchestrator.analysis_consolidation import (
-    consolidate_analysis_outputs,
+from openhcs.domains.microscopy import (
+    analysis_consolidation as analysis_consolidation_module,
+)
+from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
+from openhcs.domains.microscopy.config import (
+    AnalysisConsolidationConfig,
+    PlateMetadataConfig,
 )
 from openhcs.core.orchestrator.cancellation import (
     ExecutionCancellationAuthority,
@@ -286,9 +288,9 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
         lambda _contexts, **_kwargs: RuntimeExecutionObservation(),
     )
     monkeypatch.setattr(
-        compiled_plate_execution_module,
-        "consolidate_analysis_outputs",
-        lambda _contexts, _results, **_kwargs: None,
+        compiled_plate_execution_module.PostExecuteHook,
+        "run_all",
+        staticmethod(lambda _contexts, _results, _observation: None),
     )
     orchestrator = SimpleNamespace(
         _execution_cancellation=ExecutionCancellationAuthority(),
@@ -1088,26 +1090,14 @@ def test_executor_shutdown_plan_swallows_broken_pool_errors(caplog):
 
 
 def test_analysis_consolidation_skips_disabled_config():
-    context = SimpleNamespace(
-        analysis_consolidation_config=SimpleNamespace(enabled=False),
-        step_plans={},
+    hook = AnalysisConsolidationHook(
+        AnalysisConsolidationConfig(enabled=False), PlateMetadataConfig()
     )
-
-    consolidate_analysis_outputs(
-        {"A01": context},
-        {},
-        plate_runtime_observation=RuntimeExecutionObservation(),
-    )
+    hook.run({"A01": SimpleNamespace(output_plate_root=None)}, object())
 
 
 def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
-    context = SimpleNamespace(
-        analysis_consolidation_config=SimpleNamespace(enabled=True),
-        plate_metadata_config=object(),
-        plate_path="/plate",
-        output_plate_root="/output",
-        filemanager=object(),
-    )
+    context = SimpleNamespace(output_plate_root="/output", filemanager=object())
     inputs = analysis_consolidation_module.RuntimeAnalysisConsolidationInputs(
         groups={},
         destination=analysis_consolidation_module.RuntimeAnalysisSummaryDestination(
@@ -1116,22 +1106,14 @@ def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
         ),
     )
     monkeypatch.setattr(
-        analysis_consolidation_module.RuntimeAnalysisConsolidationInputs,
-        "from_observations",
-        lambda *args: inputs,
-    )
-    monkeypatch.setattr(
         analysis_consolidation_module,
         "consolidate_runtime_analysis_table_output_groups",
         lambda **kwargs: ([], [("results", "invalid CSV")]),
     )
+    hook = AnalysisConsolidationHook(AnalysisConsolidationConfig(), PlateMetadataConfig())
 
     with pytest.raises(RuntimeError, match="invalid CSV"):
-        consolidate_analysis_outputs(
-            {"A01": context},
-            {},
-            plate_runtime_observation=RuntimeExecutionObservation(),
-        )
+        hook.run({"A01": context}, inputs)
 
 
 def test_execution_state_projector_maps_success_and_failure():

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.axes import AxisFamily
+
 import csv
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, is_dataclass
@@ -20,7 +22,7 @@ from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.virtual_workspace_metadata import (
     JsonScalar,
@@ -29,8 +31,8 @@ from openhcs.core.virtual_workspace_metadata import (
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator import PipelineOrchestrator
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
-    from openhcs.microscopes.microscope_interfaces import (
+    from openhcs.core.dataset_sources.source import DatasetSource
+    from openhcs.core.dataset_sources.interfaces import (
         AnalysisResultDirectory,
         FilenameParser,
         MetadataHandler,
@@ -100,7 +102,7 @@ class PlateImageInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
     ) -> "PlateImageInventory":
         """Inventory the selected metadata owner, not a different source domain.
@@ -168,7 +170,7 @@ class PlateImageInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
         backend: str,
         source_projection: VirtualWorkspaceSourceProjection | None,
@@ -213,7 +215,7 @@ class PlateImageInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
         source_dataset: "SourcePlaneDataset",
     ) -> "PlateImageInventory":
@@ -241,7 +243,7 @@ class PlateImageInventory:
         *,
         plate_path: Path,
         candidate: "SourceCandidate",
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         parser: "FilenameParser",
         filemanager: "FileManager",
     ) -> PlateImageRecord:
@@ -270,7 +272,7 @@ class PlateImageInventory:
         metadata_handler: "MetadataHandler",
         filemanager: "FileManager",
     ) -> VirtualWorkspaceSourceProjection | None:
-        return VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        return WorkspaceSourceProjections.from_plate_metadata(
             plate_path=plate_path,
             metadata_handler=metadata_handler,
             filemanager=filemanager,
@@ -281,7 +283,7 @@ class PlateImageInventory:
         *,
         plate_path: Path,
         image_file: str,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         projection: VirtualWorkspaceSourceProjection | None,
         filemanager: "FileManager",
         backend: str,
@@ -480,8 +482,10 @@ class PlateFileRecord:
             if needle not in haystack:
                 return False
         if query.well is not None:
-            well = self.metadata.get("well")
-            if well is None or str(well) != query.well:
+            partition_value = self.metadata.get(
+                AxisFamily.active().partition_axis().name
+            )
+            if partition_value is None or str(partition_value) != query.well:
                 return False
         return True
 
@@ -824,7 +828,7 @@ class PlateResultFileInventory:
         )
         if not result_path.is_dir():
             return ()
-        from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+        from openhcs.core.dataset_sources.interfaces import AnalysisResultDirectory
 
         return (
             AnalysisResultDirectory(
@@ -1040,7 +1044,7 @@ class PlateFileInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
         backend: str,
         path_config=None,

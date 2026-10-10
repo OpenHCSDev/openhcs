@@ -1295,7 +1295,7 @@ def test_metadata_cycle_requires_three_rebuilds_without_physical_drift() -> None
         return {
             "plate_state_revision": revision,
             "detected_microscope_type": "openhcsdata",
-            "handler_class": "OpenHCSMicroscopeHandler",
+            "handler_class": "OpenHCSDatasetSource",
             "metadata_handler_class": "OpenHCSMetadataHandler",
             "components": [
                 {
@@ -1601,7 +1601,7 @@ def test_source_inspection_uses_virtual_identity_and_bounded_pixels(
                                 "plate_path": str(tmp_path),
                                 "status": "ok",
                                 "detected_microscope_type": "openhcsdata",
-                                "handler_class": "OpenHCSMicroscopeHandler",
+                                "handler_class": "OpenHCSDatasetSource",
                                 "image_files": {
                                     "count": 2,
                                     "sampled_records": [

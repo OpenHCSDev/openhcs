@@ -40,7 +40,6 @@ from benchmark.contracts.validation import (
     ValidationSourceSetSelection,
     ValidationTrialSplit,
 )
-from openhcs.constants.constants import Microscope
 
 BBBC039_INDEPENDENT_VALIDATION = IndependentValidationSpec(
     record_url="https://bbbc.broadinstitute.org/BBBC039",
@@ -365,7 +364,7 @@ class BenchmarkDatasetDeclaration(ABC, metaclass=AutoRegisterMeta):
 class SourceBindingsDatasetMixin:
     """Declare ordinary image files whose ingestion comes from source bindings."""
 
-    microscope_type: ClassVar[str] = Microscope.SOURCE_BINDINGS.value
+    microscope_type: ClassVar[str] = "source_bindings"
 
 
 class ImageCountValidatedDatasetMixin:

@@ -93,7 +93,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
@@ -114,10 +114,11 @@ from openhcs.core.steps.function_output_manifest import (
     StepOutputManifestStore,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.axes import ColourAxis
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 def _anchor_executor(
@@ -130,7 +131,7 @@ def _anchor_executor(
         plate_path=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
-            source_admission_config=lambda: None,
+            source_bindings_still_required=lambda: None,
             metadata_handler=SimpleNamespace(
                 source_workspace_metadata_document=lambda _path: None
             ),
@@ -138,8 +139,8 @@ def _anchor_executor(
         filemanager=SimpleNamespace(exists=lambda *_args: False),
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
     )
-    executor.context.runtime_source_workspace_projection_authority = (
-        VirtualWorkspaceSourceProjectionAuthority.from_context(
+    executor.context.runtime_source_workspace_projections = (
+        WorkspaceSourceProjections.from_context(
             executor.context, cache=source_workspace_projection_cache,
         )
     )
@@ -601,7 +602,7 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
         RuntimeSourceBindingContextCache,
     )
     from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     source_path = tmp_path / "A01_s002_w1_z003_t004.tif"
     pixels = np.array([[0, 4095]], dtype=np.uint16)
@@ -2113,7 +2114,6 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.constants import Microscope
     from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress import set_progress_queue
@@ -2155,7 +2155,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
         step_source_bindings_config=LazyStepSourceBindingsConfig(bindings=bindings),
     )
     global_config = GlobalPipelineConfig(
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
         num_workers=1,
     )
 
@@ -3188,7 +3188,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.constants import Microscope
     from openhcs.constants.input_source import InputSource
     from openhcs.core.config import (
         LazyProcessingConfig,
@@ -3241,7 +3240,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
         )
     )
     global_config = GlobalPipelineConfig(
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
         num_workers=1,
     )
 

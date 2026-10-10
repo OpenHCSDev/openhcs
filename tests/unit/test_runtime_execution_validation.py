@@ -62,7 +62,7 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
@@ -114,7 +114,7 @@ def _streaming_context(
     )
     context.microscope_handler = SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
-        microscope_type="runtime_validation",
+        source_name="runtime_validation",
     )
     context.plate_path = Path("/tmp/plate")
     return context

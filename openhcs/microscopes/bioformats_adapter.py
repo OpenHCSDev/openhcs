@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import filecmp
 import json
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from itertools import product
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 import numpy as np
-from metaclass_registry import AutoRegisterMeta
 from polystore.bioformats_java import (
     BioFormatsJavaContext,
     BioFormatsJavaUnavailableError,
@@ -26,12 +24,10 @@ from polystore.zarr_batch import ZarrStoredBatchSemantics
 
 from openhcs.constants.constants import Backend
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.core.source_matching import (
-    merge_source_metadata,
     with_source_component_metadata,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping, SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
@@ -40,6 +36,12 @@ from openhcs.core.source_projection import (
     SourceDatasetIdentity,
     SourcePlaneDataset,
     SourcePlaneStoreIdentity,
+)
+from openhcs.core.dataset_sources.plane_stores import (
+    PlaneStoreAmbiguityError,
+    PlaneStoreUnavailableError,
+    SourcePlaneStoreAdapter,
+    candidate_source_paths,
 )
 from openhcs.microscopes.bioformats_well_key import BIOFORMATS_WELL_KEYS
 from openhcs.domains.microscopy.axes import Microscopy
@@ -51,15 +53,7 @@ if TYPE_CHECKING:
 BIOFORMATS_MANIFEST_FILENAME = "bioformats_spw.json"
 
 
-class BioFormatsAdapterUnavailableError(RuntimeError):
-    """Raised when a Bio-Formats store cannot emit exact source planes."""
-
-
-class BioFormatsDatasetAmbiguityError(BioFormatsAdapterUnavailableError):
-    """Raised when Bio-Formats declarations cannot identify one exact dataset."""
-
-
-class BioFormatsContainerOpenError(BioFormatsAdapterUnavailableError):
+class BioFormatsContainerOpenError(PlaneStoreUnavailableError):
     """Raised when Bio-Formats identifies but cannot open one container."""
 
 
@@ -133,7 +127,7 @@ class BioFormatsPackedRgbSeriesExclusion(SourceDatasetDiagnostic):
         }
 
 
-class BioFormatsNoScalarSourceError(BioFormatsAdapterUnavailableError):
+class BioFormatsNoScalarSourceError(PlaneStoreUnavailableError):
     """Raised when a store exposes only typed non-scalar source exclusions."""
 
     def __init__(
@@ -255,12 +249,12 @@ class BioFormatsStoreMetadata:
         if not self.images:
             if self.excluded_series:
                 raise BioFormatsNoScalarSourceError(self.excluded_series)
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 "Bio-Formats metadata contains no OME Images."
             )
         if len(self.plates) > 1:
             plate_ids = tuple(plate.plate_id for plate in self.plates)
-            raise BioFormatsDatasetAmbiguityError(
+            raise PlaneStoreAmbiguityError(
                 "One Bio-Formats container declares multiple OME Plate.ID values "
                 f"{plate_ids!r}. OpenHCS requires one embedded dataset identity per "
                 "submitted plate root; extract or select one plate into each root "
@@ -270,7 +264,7 @@ class BioFormatsStoreMetadata:
         image_by_id: dict[str, BioFormatsImage] = {}
         for image in self.images:
             if image.image_id in image_by_id:
-                raise BioFormatsAdapterUnavailableError(
+                raise PlaneStoreUnavailableError(
                     f"Duplicate OME Image.ID {image.image_id!r}."
                 )
             image_by_id[image.image_id] = image
@@ -314,7 +308,7 @@ class BioFormatsStoreMetadata:
         )
         pixel_sizes = {image.pixel_size for image in self.images}
         if len(pixel_sizes) != 1:
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 f"Bio-Formats stores declare conflicting pixel sizes: {pixel_sizes!r}."
             )
         return SourcePlaneDataset(
@@ -339,7 +333,7 @@ class BioFormatsStoreMetadata:
         }
         for well in plate.wells:
             if well.well_id in well_ids:
-                raise BioFormatsAdapterUnavailableError(
+                raise PlaneStoreUnavailableError(
                     f"Duplicate OME Well.ID {well.well_id!r}."
                 )
             well_ids.add(well.well_id)
@@ -349,11 +343,11 @@ class BioFormatsStoreMetadata:
             )
             for sample in well.samples:
                 if sample.sample_id in sample_ids:
-                    raise BioFormatsAdapterUnavailableError(
+                    raise PlaneStoreUnavailableError(
                         f"Duplicate OME WellSample.ID {sample.sample_id!r}."
                     )
                 if sample.image_id in referenced_images:
-                    raise BioFormatsAdapterUnavailableError(
+                    raise PlaneStoreUnavailableError(
                         f"OME Image.ID {sample.image_id!r} has multiple WellSamples."
                     )
                 try:
@@ -361,13 +355,13 @@ class BioFormatsStoreMetadata:
                 except KeyError as exc:
                     exclusion = excluded_by_image_id.get(sample.image_id)
                     if exclusion is not None:
-                        raise BioFormatsAdapterUnavailableError(
+                        raise PlaneStoreUnavailableError(
                             "OME WellSample "
                             f"{sample.sample_id!r} references a packed-RGB image that "
                             "cannot be excluded as ancillary. "
                             f"{exclusion.message}"
                         ) from exc
-                    raise BioFormatsAdapterUnavailableError(
+                    raise PlaneStoreUnavailableError(
                         f"OME WellSample references missing Image.ID {sample.image_id!r}."
                     ) from exc
                 sample_ids.add(sample.sample_id)
@@ -384,7 +378,7 @@ class BioFormatsStoreMetadata:
                 )
         unreferenced = set(image_by_id).difference(referenced_images)
         if unreferenced:
-            raise BioFormatsDatasetAmbiguityError(
+            raise PlaneStoreAmbiguityError(
                 "OME Plate leaves scalar Images without WellSamples: "
                 f"{sorted(unreferenced)!r}. Their well/site identity is undefined; "
                 "repair the embedded OME links or submit those images as a separate "
@@ -412,8 +406,8 @@ class BioFormatsStoreMetadata:
                 key=str,
             )
         )
-        canonical_source = image.source_path.resolve(strict=False)
-        backend_source = _relative_path(self.root, canonical_source)
+        normalized_source = image.source_path.resolve(strict=False)
+        backend_source = _relative_path(self.root, normalized_source)
         filter_paths = tuple(
             value
             for path in container_paths
@@ -442,7 +436,7 @@ class BioFormatsStoreMetadata:
             if image.reader == "npy":
                 source_ref = SourcePixelRef(
                     backend=Backend.DISK.value,
-                    backend_address=_relative_path(self.root, canonical_source),
+                    backend_address=_relative_path(self.root, normalized_source),
                     source_axis_indices=(plane.t - 1, plane.z - 1, plane.c - 1),
                 )
                 source_axis_shape = (
@@ -463,7 +457,7 @@ class BioFormatsStoreMetadata:
             candidates.append(
                 SourceCandidate(
                     source_ref=source_ref,
-                    relative_path=_relative_path(self.root, canonical_source),
+                    relative_path=_relative_path(self.root, normalized_source),
                     metadata=metadata,
                     source_axis_shape=source_axis_shape,
                     source_filter_paths=filter_paths,
@@ -486,129 +480,6 @@ class BioFormatsStoreMetadata:
                 )
             )
         return tuple(candidates)
-
-
-class SourcePlaneStoreAdapter(ABC, metaclass=AutoRegisterMeta):
-    """Nominal store decoder emitting generic planes for one collection."""
-
-    __registry_key__ = "registry_key"
-    __skip_if_no_key__ = True
-    registry_key: ClassVar[str | None] = None
-
-    def __init__(self, source_bindings: SourceBindingsConfig | None = None):
-        self.source_bindings = source_bindings or SourceBindingsConfig()
-
-    def selected_source_paths(self, root: Path) -> tuple[Path, ...]:
-        """Select physical entrypoints before opening unrelated containers."""
-        return tuple(
-            path
-            for path in _candidate_source_paths(root)
-            if self.source_bindings.discovery_path_matches(root, path)
-        )
-
-    def source_metadata_for_path(self, path: Path) -> SourceMetadataMapping:
-        """Enrich a filename-bound physical source without replacing its axes."""
-        del path
-        return {}
-
-    @classmethod
-    def enrich_source_candidate(
-        cls,
-        candidate: SourceCandidate,
-        physical_path: Path | None,
-    ) -> SourceCandidate:
-        """Merge embedded metadata through its nominal decoder declarations."""
-        if physical_path is None:
-            return candidate
-        metadata = dict(candidate.metadata)
-        for adapter_type in cls.__registry__.values():
-            merge_source_metadata(
-                metadata,
-                adapter_type().source_metadata_for_path(physical_path),
-                path=candidate.relative_path,
-            )
-        return replace(candidate, metadata=metadata)
-
-    @classmethod
-    def claims_collection(cls, root: Path) -> bool:
-        """Return whether this leaf exclusively owns the submitted collection."""
-        del root
-        return False
-
-    @abstractmethod
-    def discover_stores(self, root: Path) -> tuple[SourcePlaneDataset, ...]:
-        """Decode every store owned by this leaf under one collection root."""
-
-    def retain_candidate(
-        self,
-        candidate: SourceCandidate,
-        *,
-        competing_candidates: tuple[SourceCandidate, ...],
-    ) -> bool:
-        """Return whether this leaf retains a candidate after store discovery."""
-
-        del candidate, competing_candidates
-        return True
-
-    @classmethod
-    def discover_dataset(
-        cls, root: str | Path, *, source_bindings: SourceBindingsConfig | None = None
-    ) -> SourcePlaneDataset:
-        root_path = Path(root).resolve(strict=False)
-        if not root_path.exists():
-            raise BioFormatsAdapterUnavailableError(
-                f"Plane-store collection does not exist: {root_path}"
-            )
-        adapters = tuple(
-            adapter_type(source_bindings) for adapter_type in cls.__registry__.values()
-        )
-        collection_owners = tuple(
-            adapter for adapter in adapters if adapter.claims_collection(root_path)
-        )
-        if len(collection_owners) > 1:
-            raise BioFormatsAdapterUnavailableError(
-                f"Multiple plane-store adapters claim {root_path}: "
-                f"{tuple(type(adapter).__name__ for adapter in collection_owners)!r}."
-            )
-        discovered = tuple(
-            (adapter, adapter.discover_stores(root_path))
-            for adapter in (collection_owners or adapters)
-        )
-        datasets: list[SourcePlaneDataset] = []
-        for adapter, adapter_datasets in discovered:
-            competing_candidates = tuple(
-                candidate
-                for competing_adapter, competing_datasets in discovered
-                if competing_adapter is not adapter
-                for dataset in competing_datasets
-                for candidate in dataset.candidates
-            )
-            for dataset in adapter_datasets:
-                retained_candidates = tuple(
-                    candidate
-                    for candidate in dataset.candidates
-                    if adapter.retain_candidate(
-                        candidate,
-                        competing_candidates=competing_candidates,
-                    )
-                )
-                if retained_candidates:
-                    datasets.append(replace(dataset, candidates=retained_candidates))
-        if not datasets:
-            raise BioFormatsAdapterUnavailableError(
-                f"No registered plane store declared sources under {root_path}."
-            )
-        try:
-            return SourcePlaneDataset.aggregate(tuple(datasets))
-        except SourceDatasetConflictError as exc:
-            raise BioFormatsDatasetAmbiguityError(
-                f"Cannot project {root_path} as one exact OpenHCS source dataset: "
-                f"{exc} Keep distinct embedded plates in separate submitted roots, "
-                "and repair colliding embedded well/site/channel/Z/time identities "
-                "instead of namespacing them by filename."
-            ) from exc
-        except ValueError as exc:
-            raise BioFormatsAdapterUnavailableError(str(exc)) from exc
 
 
 class BioFormatsManifestAdapter(SourcePlaneStoreAdapter):
@@ -704,7 +575,7 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
             well_path = _required_text(well_record, "path", "NGFF plate well")
             expected_path = f"{rows[row_index]}/{columns[column_index]}"
             if well_path != expected_path:
-                raise BioFormatsAdapterUnavailableError(
+                raise PlaneStoreUnavailableError(
                     f"NGFF well path {well_path!r} conflicts with row/column identity "
                     f"{expected_path!r}."
                 )
@@ -729,7 +600,7 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
                 candidates.extend(image_candidates)
                 pixel_sizes.add(pixel_size)
         if len(pixel_sizes) != 1:
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 f"NGFF images declare conflicting pixel sizes: {pixel_sizes!r}."
             )
         return SourcePlaneDataset(
@@ -750,7 +621,7 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
             "NGFF multiscales",
         )
         if len(multiscales) != 1:
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 "Non-plate NGFF stores require one explicit multiscale image."
             )
         multiscale = _required_mapping(multiscales[0], "NGFF multiscale")
@@ -787,7 +658,7 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
         exclusions: list[BioFormatsPackedRgbSeriesExclusion] = []
         claimed_paths: set[Path] = set()
         container_claims: list[BioFormatsContainerClaim] = []
-        for source_path in _candidate_source_paths(root):
+        for source_path in candidate_source_paths(root):
             resolved_path = source_path.resolve(strict=False)
             if resolved_path in claimed_paths:
                 continue
@@ -839,7 +710,7 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
         try:
             return context.declares_path(path)
         except BioFormatsJavaUnavailableError as exc:
-            raise BioFormatsAdapterUnavailableError(str(exc)) from exc
+            raise PlaneStoreUnavailableError(str(exc)) from exc
 
     def _discover_container(
         self,
@@ -849,7 +720,7 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
         try:
             opened = BioFormatsJavaContext.instance().open_reader(source_path)
         except BioFormatsJavaUnavailableError as exc:
-            raise BioFormatsAdapterUnavailableError(str(exc)) from exc
+            raise PlaneStoreUnavailableError(str(exc)) from exc
         except Exception as exc:
             raise BioFormatsContainerOpenError(
                 f"Bio-Formats could not open {source_path}: {exc}"
@@ -868,13 +739,13 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
             )
             return metadata.source_dataset()
         except SourceDatasetConflictError as exc:
-            raise BioFormatsDatasetAmbiguityError(
+            raise PlaneStoreAmbiguityError(
                 f"Bio-Formats container {source_path} declares conflicting source "
                 f"identity: {exc} Repair the embedded metadata rather than assigning "
                 "filename-derived coordinates."
             ) from exc
         except (TypeError, ValueError) as exc:
-            raise BioFormatsAdapterUnavailableError(str(exc)) from exc
+            raise PlaneStoreUnavailableError(str(exc)) from exc
         finally:
             opened.close()
 
@@ -915,7 +786,7 @@ class ImageFileStoreAdapter(SourcePlaneStoreAdapter):
                 int(size) for size in np.shape(image_format.read(source_path))
             )
             if len(shape) != 2:
-                raise BioFormatsAdapterUnavailableError(
+                raise PlaneStoreUnavailableError(
                     f"Ordinary image {source_path} must expose one scalar 2D plane; "
                     f"its declared shape is {shape!r}."
                 )
@@ -981,7 +852,7 @@ def _images_from_java(
     excluded_series = []
     for image_index in range(int(metadata.getImageCount())):
         if image_index >= int(reader.getSeriesCount()):
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 "OME Image count exceeds Bio-Formats reader series count."
             )
         reader.setSeries(image_index)
@@ -1111,7 +982,7 @@ def _java_planes(
     plane_count = int(metadata.getPlaneCount(image_index))
     if plane_count:
         if plane_count != expected_count:
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 "OME Plane records do not cover the declared C/Z/T extent."
             )
         return tuple(
@@ -1256,14 +1127,14 @@ def _ngff_image_candidates(
     attrs = image_location.root_attrs
     multiscales = _required_sequence(attrs, "multiscales", "NGFF image")
     if len(multiscales) != 1:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "NGFF image requires exactly one multiscale declaration."
         )
     multiscale = _required_mapping(multiscales[0], "NGFF multiscale")
     image_id = _required_text(multiscale, "name", "NGFF multiscale")
     datasets = _required_sequence(multiscale, "datasets", "NGFF multiscale")
     if len(datasets) != 1:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "NGFF source projection requires exactly one declared resolution."
         )
     dataset = _required_mapping(datasets[0], "NGFF multiscale dataset")
@@ -1289,15 +1160,15 @@ def _ngff_image_candidates(
             fmt=image_location.fmt,
         )
     except ValueError as exc:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             f"Invalid NGFF axes for image {image_id!r}: {exc}"
         ) from exc
     if len(axes) != len(shape) or len(set(axes)) != len(axes):
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "NGFF axes must be unique and match the array rank."
         )
     if axes[-2:] != ("y", "x"):
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "NGFF source arrays must declare trailing y/x spatial axes."
         )
     leading_axes = axes[:-2]
@@ -1328,7 +1199,7 @@ def _ngff_image_candidates(
         z_index = coordinates.pop("z", 1)
         timepoint = coordinates.pop("t", 1)
         if coordinates:
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 "NGFF image declares unsupported nonspatial axes "
                 f"{tuple(coordinates)!r}."
             )
@@ -1395,7 +1266,7 @@ def _ngff_channel_labels(
     omero = _required_mapping(attrs["omero"], "NGFF omero")
     channels = _required_sequence(omero, "channels", "NGFF omero")
     if len(channels) != channel_count:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "NGFF omero channel labels do not match the c-axis extent."
         )
     return tuple(
@@ -1422,23 +1293,23 @@ def _ngff_pixel_size(
     try:
         fmt.validate_coordinate_transformations(axis_count, 1, [transforms])
     except (AssertionError, ValueError) as exc:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             f"Invalid NGFF coordinate transformations: {exc}"
         ) from exc
     scale = _required_sequence(transforms[0], "scale", "NGFF coordinate transform")
     pixel_size = float(scale[-1])
     if float(scale[-2]) != pixel_size:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "NGFF source projection requires equal y/x pixel sizes."
         )
     if pixel_size <= 0:
-        raise BioFormatsAdapterUnavailableError("NGFF pixel size must be positive.")
+        raise PlaneStoreUnavailableError("NGFF pixel size must be positive.")
     return pixel_size
 
 
 def _required_mapping(value: object, context: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
-        raise BioFormatsAdapterUnavailableError(f"{context} must be a mapping.")
+        raise PlaneStoreUnavailableError(f"{context} must be a mapping.")
     return value
 
 
@@ -1448,13 +1319,13 @@ def _required_sequence(
     context: str,
 ) -> tuple[object, ...]:
     if field not in payload:
-        raise BioFormatsAdapterUnavailableError(f"{context} missing {field}.")
+        raise PlaneStoreUnavailableError(f"{context} missing {field}.")
     return _required_sequence_value(payload[field], f"{context}.{field}")
 
 
 def _required_sequence_value(value: object, context: str) -> tuple[object, ...]:
     if not isinstance(value, (list, tuple)):
-        raise BioFormatsAdapterUnavailableError(f"{context} must be a sequence.")
+        raise PlaneStoreUnavailableError(f"{context} must be a sequence.")
     return tuple(value)
 
 
@@ -1464,10 +1335,10 @@ def _required_text(
     context: str,
 ) -> str:
     if field not in payload or not isinstance(payload[field], str):
-        raise BioFormatsAdapterUnavailableError(f"{context} missing text {field}.")
+        raise PlaneStoreUnavailableError(f"{context} missing text {field}.")
     value = str(payload[field]).strip()
     if not value:
-        raise BioFormatsAdapterUnavailableError(f"{context}.{field} cannot be empty.")
+        raise PlaneStoreUnavailableError(f"{context}.{field} cannot be empty.")
     return value
 
 
@@ -1484,30 +1355,13 @@ def _required_index(
             bool,
         )
     ):
-        raise BioFormatsAdapterUnavailableError(f"NGFF well missing integer {field}.")
+        raise PlaneStoreUnavailableError(f"NGFF well missing integer {field}.")
     value = int(payload[field])
     if value < 0 or value >= extent:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             f"NGFF well {field}={value} exceeds extent {extent}."
         )
     return value
-
-
-def _candidate_source_paths(root: Path) -> tuple[Path, ...]:
-    if root.is_file():
-        return (root,)
-    if not root.is_dir():
-        raise BioFormatsAdapterUnavailableError(
-            f"Bio-Formats path does not exist: {root}"
-        )
-    paths = sorted(
-        (path for path in root.rglob("*") if path.is_file()),
-        key=lambda path: (
-            len(path.relative_to(root).parts),
-            path.relative_to(root).as_posix(),
-        ),
-    )
-    return tuple(paths)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1552,7 +1406,7 @@ class BioFormatsContainerClaim:
                 and filecmp.cmp(self.entrypoint, candidate, shallow=False)
             )
         except OSError as exc:
-            raise BioFormatsAdapterUnavailableError(
+            raise PlaneStoreUnavailableError(
                 f"Could not compare container entry points {self.entrypoint} and "
                 f"{candidate}."
             ) from exc
@@ -1570,7 +1424,7 @@ def _series_used_files(reader: Any, source_path: Path) -> tuple[Path, ...]:
     try:
         files = reader.getSeriesUsedFiles(False)
     except Exception as exc:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             f"Bio-Formats did not declare used files for {source_path}."
         ) from exc
     paths = tuple(
@@ -1579,7 +1433,7 @@ def _series_used_files(reader: Any, source_path: Path) -> tuple[Path, ...]:
         if str(value)
     )
     if not paths:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             f"Bio-Formats declared no used files for {source_path}."
         )
     return paths
@@ -1611,14 +1465,14 @@ def _axis_size(metadata_value: Any, reader_value: Any) -> int:
     value = java_int(metadata_value)
     size = int(reader_value if value is None else value)
     if size <= 0:
-        raise BioFormatsAdapterUnavailableError("OME axis size must be positive.")
+        raise PlaneStoreUnavailableError("OME axis size must be positive.")
     return size
 
 
 def _required_int(value: Any, field_name: str) -> int:
     converted = java_int(value)
     if converted is None:
-        raise BioFormatsAdapterUnavailableError(f"OME metadata missing {field_name}.")
+        raise PlaneStoreUnavailableError(f"OME metadata missing {field_name}.")
     return converted
 
 
@@ -1632,7 +1486,7 @@ def _source_voxel_spacing_from_java(
     if x is None and y is None and z is None:
         return SourceVoxelSpacing()
     if x is None or y is None:
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "OME physical calibration requires both PhysicalSizeX and PhysicalSizeY."
         )
     target_unit = (
@@ -1643,7 +1497,7 @@ def _source_voxel_spacing_from_java(
         for length in ((y, x) if z is None else (z, y, x))
     )
     if any(value is None for value in values):
-        raise BioFormatsAdapterUnavailableError(
+        raise PlaneStoreUnavailableError(
             "OME physical sizes must be convertible to micrometers."
         )
     return SourceVoxelSpacing(values)
@@ -1652,5 +1506,5 @@ def _source_voxel_spacing_from_java(
 def _required_str(value: Any, field_name: str) -> str:
     converted = java_str(value)
     if converted is None or not converted.strip():
-        raise BioFormatsAdapterUnavailableError(f"OME metadata missing {field_name}.")
+        raise PlaneStoreUnavailableError(f"OME metadata missing {field_name}.")
     return converted

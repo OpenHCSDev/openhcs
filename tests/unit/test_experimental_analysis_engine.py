@@ -10,7 +10,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from openhcs.core.config import ExperimentalAnalysisConfig, NormalizationMethod
+from openhcs.domains.microscopy.config import (
+    ExperimentalAnalysisConfig,
+    NormalizationMethod,
+)
 from openhcs.processing.backends.experimental_analysis import (
     ExperimentalAnalysisEngine,
 )

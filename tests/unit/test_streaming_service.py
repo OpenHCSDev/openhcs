@@ -34,8 +34,8 @@ from openhcs.core.config import (
     NapariStreamingConfig,
     PipelineConfig,
     StreamingConfig,
-    get_all_streaming_ports,
 )
+from openhcs.core.streaming_config_factory import get_all_streaming_ports
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows

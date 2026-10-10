@@ -26,7 +26,7 @@ from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.source_bindings import CompiledSourceBindingPlan

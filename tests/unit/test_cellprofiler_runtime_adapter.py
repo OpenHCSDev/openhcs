@@ -588,7 +588,7 @@ class ContextStub:
         self.global_config = SimpleNamespace(zarr_config=None)
         self.microscope_handler = SimpleNamespace(
             parser=ImageXpressFilenameParser(),
-            source_admission_config=lambda: None,
+            source_bindings_still_required=lambda: None,
             get_primary_backend=lambda plate_path, filemanager: "memory",
         )
 
@@ -694,7 +694,7 @@ def _source_bound_image_adapter(output_bindings, images):
         OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
     )
     from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     filemanager = FileManagerStub()
     for alias, image in images.items():
@@ -718,7 +718,7 @@ def _source_bound_image_adapter(output_bindings, images):
     ))
     subdirectory = projections.metadata_dict(
         parser=SourceSchemaFilenameParser(),
-        microscope_handler_name='SourceBindingsHandler',
+        microscope_handler_name='SourceBindingsSource',
         source_filename_parser_name='SourceSchemaFilenameParser',
         grid_dimensions=[1, 1], pixel_size=1.,
     )

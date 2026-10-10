@@ -9,7 +9,6 @@ import tifffile
 from objectstate.lazy_factory import ensure_global_config_context
 from polystore.bioformats_java import BioFormatsJavaContext
 
-from openhcs.constants.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
@@ -35,6 +34,7 @@ from tests.unit.test_bioformats_java_adapter import (
     FakeBioFormatsMetadata,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 
 def _file_filter(name):
@@ -102,9 +102,9 @@ def test_selected_container_opens_once_and_projects_both_planes(
             tmp_path,
             storage_registry=filemanager.registry,
             pipeline_config=PipelineConfig(
-                microscope=Microscope.AUTO
+                dataset_source=AutoDetectedSource
                 if entrypoint == "auto_orchestrator"
-                else Microscope.BIOFORMATS,
+                else BioFormatsHandler,
                 source_bindings_config=LazySourceBindingsConfig(
                     source_filters=bindings.source_filters,
                     bindings=bindings.bindings,
@@ -138,7 +138,7 @@ def test_real_tiff_orchestrator_only_decodes_selected_source(tmp_path, monkeypat
         tmp_path,
         storage_registry=filemanager.registry,
         pipeline_config=PipelineConfig(
-            microscope=Microscope.AUTO,
+            dataset_source=AutoDetectedSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(
                     NamedSourceBinding(

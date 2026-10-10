@@ -31,7 +31,7 @@ from openhcs.core.source_projection import (
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
 

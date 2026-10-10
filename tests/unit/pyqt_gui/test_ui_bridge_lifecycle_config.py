@@ -114,7 +114,7 @@ def test_main_window_zmq_scan_ports_include_actual_ui_bridge_binding(
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(
-        "openhcs.core.config.get_all_streaming_ports",
+        "openhcs.core.streaming_config_factory.get_all_streaming_ports",
         lambda num_ports_per_type: [5555],
     )
     ui_config = replace(
@@ -147,7 +147,7 @@ def test_main_window_zmq_scan_ports_exclude_unstarted_configured_bridge(
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(
-        "openhcs.core.config.get_all_streaming_ports",
+        "openhcs.core.streaming_config_factory.get_all_streaming_ports",
         lambda num_ports_per_type: [5555],
     )
     ui_config = replace(

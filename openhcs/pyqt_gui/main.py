@@ -563,7 +563,7 @@ class OpenHCSMainWindow(QMainWindow):
         self,
         ui_config: UIConfig | None = None,
     ) -> list[int]:
-        from openhcs.core.config import get_all_streaming_ports
+        from openhcs.core.streaming_config_factory import get_all_streaming_ports
 
         config = self.runtime_context.ui_config if ui_config is None else ui_config
         zmq_config = config.zmq
@@ -1553,7 +1553,7 @@ class OpenHCSMainWindow(QMainWindow):
 
         from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
-        # Select the directory projected by ExperimentalAnalysisConfig below.
+        # Select the directory the experimental-analysis defaults describe.
         analysis_dir = QFileDialog.getExistingDirectory(
             self,
             "Select Experimental Analysis Directory",
@@ -1565,12 +1565,12 @@ class OpenHCSMainWindow(QMainWindow):
             return
 
         analysis_path = Path(analysis_dir)
-        from openhcs.core.config import ExperimentalAnalysisConfig
         from openhcs.processing.backends.experimental_analysis import (
             ExperimentalAnalysisEngine,
         )
 
-        analysis_config = ExperimentalAnalysisConfig()
+        engine = ExperimentalAnalysisEngine()
+        analysis_config = engine.config
         config_file = analysis_path / analysis_config.config_file_name
         results_file = analysis_path / analysis_config.results_file_name
 
@@ -1600,7 +1600,7 @@ class OpenHCSMainWindow(QMainWindow):
             raw_results = analysis_path / analysis_config.raw_results_file_name
             heatmaps = analysis_path / analysis_config.heatmap_file_name
 
-            ExperimentalAnalysisEngine(analysis_config).run_directory(analysis_path)
+            engine.run_directory(analysis_path)
 
             QMessageBox.information(
                 self,

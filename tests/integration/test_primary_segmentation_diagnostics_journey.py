@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 def _field(empty=False):
@@ -106,7 +107,6 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         CompileInspectionInput,
         InProcessCompileInspectionGateway,
     )
-    from openhcs.constants import Microscope
     from openhcs.constants.input_source import InputSource
     from openhcs.core.artifacts import (
         ArtifactInputPlan,
@@ -223,7 +223,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     )
     document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(
                     NamedSourceBinding(
@@ -379,7 +379,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         PlateFileRecord,
         PlateResultFileInventory,
     )
-    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
     result_inventory = PlateResultFileInventory.from_handler_and_configured_output_root(
         plate_path=metadata_path.parent,

@@ -9,397 +9,25 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Type, Tuple
+from typing import List, Optional, Union, Tuple
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.components.parser_metaprogramming import (
     format_filename_component,
 )
 from openhcs.microscopes.opera_phenix_xml_parser import OperaPhenixXmlParser
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
-from polystore.exceptions import MetadataNotFoundError
-from openhcs.microscopes.microscope_base import MicroscopeHandler
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.microscopes.vendor_layout import VirtualMappingSource
+from openhcs.core.dataset_sources.interfaces import (
     DiskImageFileListingMetadataHandler,
     FilenameParseResult,
     FilenameParser,
     MetadataComponentValueSet,
-    MetadataHandler,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)
-
-
-class OperaPhenixHandler(MicroscopeHandler):
-    """
-    MicroscopeHandler implementation for Opera Phenix systems.
-
-    This handler combines the OperaPhenix filename parser with its
-    corresponding metadata handler. It guarantees aligned behavior
-    for plate structure parsing, metadata extraction, and any optional
-    post-processing steps required after workspace setup.
-    """
-
-    # Explicit microscope type for proper registration
-    _microscope_type = Microscope.OPERAPHENIX.value
-
-    # Class attribute for automatic metadata handler registration (set after class definition)
-    _metadata_handler_class = None
-    # metadata handler class assigned post-definition
-
-    @classmethod
-    def supports_explicit_incomplete_export(cls) -> bool:
-        """Require Index.xml before Opera Phenix owns native plate semantics."""
-
-        return False
-
-    def __init__(self, filemanager: FileManager, pattern_format: Optional[str] = None):
-        self.parser = OperaPhenixFilenameParser(
-            filemanager, pattern_format=pattern_format
-        )
-        self.metadata_handler = OperaPhenixMetadataHandler(filemanager)
-        super().__init__(parser=self.parser, metadata_handler=self.metadata_handler)
-
-    @property
-    def root_dir(self) -> str:
-        """
-        Root directory for Opera Phenix virtual workspace preparation.
-
-        Returns "Images" because Opera Phenix field remapping is applied
-        to images in the Images/ subdirectory, and virtual paths include Images/ prefix.
-        """
-        return "Images"
-
-    @property
-    def microscope_type(self) -> str:
-        """Microscope type identifier (for interface enforcement only)."""
-        return self._microscope_type
-
-    @property
-    def metadata_handler_class(self) -> Type[MetadataHandler]:
-        """Metadata handler class (for interface enforcement only)."""
-        return OperaPhenixMetadataHandler
-
-    @property
-    def compatible_backends(self) -> List[Backend]:
-        """
-        Opera Phenix is compatible with DISK backend only.
-
-        Legacy microscope format with standard file operations.
-        """
-        return [Backend.DISK]
-
-    # Uses default workspace initialization from base class
-
-    def _build_virtual_mapping(
-        self, plate_path: Path, filemanager: FileManager
-    ) -> Path:
-        """
-        Build Opera Phenix virtual workspace mapping using plate-relative paths.
-
-        Args:
-            plate_path: Path to plate directory
-            filemanager: FileManager instance for file operations
-
-        Returns:
-            Path to image directory
-        """
-        plate_path = Path(plate_path)  # Ensure Path object
-
-        logger.info(
-            f"🔄 BUILDING VIRTUAL MAPPING: Opera Phenix field remapping for {plate_path}"
-        )
-
-        # Opera Phenix images are always in Images/ subdirectory
-        image_dir = plate_path / self.root_dir
-
-        # Default to empty field mapping (no remapping)
-        field_mapping = {}
-
-        # Try to load field mapping from Index.xml if available
-        xml_parser = None
-        try:
-            index_xml = filemanager.find_file_recursive(
-                plate_path, "Index.xml", Backend.DISK.value
-            )
-            if index_xml:
-                xml_parser = OperaPhenixXmlParser(index_xml)
-                field_mapping = xml_parser.get_field_id_mapping()
-                logger.debug("Loaded field mapping from Index.xml: %s", field_mapping)
-            else:
-                logger.debug("Index.xml not found. Using default field mapping.")
-        except Exception as e:
-            logger.error("Error loading Index.xml: %s", e)
-            logger.debug("Using default field mapping due to error.")
-
-        # Fill missing images BEFORE building virtual mapping
-        # This handles autofocus failures by creating black placeholder images
-        if xml_parser:
-            num_filled = self._fill_missing_images(image_dir, xml_parser, filemanager)
-            if num_filled > 0:
-                logger.info(
-                    f"Created {num_filled} placeholder images for autofocus failures"
-                )
-
-        # Get all image files in the directory (including newly created placeholders)
-        image_files = filemanager.list_image_files(image_dir, Backend.DISK.value)
-
-        # Initialize mapping dict (PLATE-RELATIVE paths)
-        workspace_mapping = {}
-
-        # Process each file
-        for file_path in image_files:
-            # FileManager should return strings, but handle Path objects too
-            if isinstance(file_path, str):
-                file_name = os.path.basename(file_path)
-            elif isinstance(file_path, Path):
-                file_name = file_path.name
-            else:
-                # Skip any unexpected types
-                logger.warning(
-                    "Unexpected file path type: %s", type(file_path).__name__
-                )
-                continue
-
-            # Parse file metadata
-            metadata = self.parser.parse_filename(file_name)
-            if metadata is None:
-                continue
-            original_field_id = metadata.value_for(Microscopy.Site)
-            if original_field_id is None:
-                continue
-
-            # Remap the field ID using the spatial layout
-            new_field_id = field_mapping.get(original_field_id, original_field_id)
-
-            # Construct the new filename with proper padding
-            new_name = self.parser.construct_filename(
-                metadata.with_value(
-                    Microscopy.Site,
-                    new_field_id,
-                )
-            )
-
-            # Build PLATE-RELATIVE mapping (no workspace directory)
-            # Use .as_posix() to ensure forward slashes on all platforms (Windows uses backslashes with str())
-            virtual_relative = (Path("Images") / new_name).as_posix()
-            real_relative = (Path("Images") / file_name).as_posix()
-            workspace_mapping[virtual_relative] = SourcePixelRef(
-                backend=Backend.DISK.value,
-                backend_address=real_relative,
-            )
-
-        logger.info(
-            f"Built {len(workspace_mapping)} virtual path mappings for Opera Phenix"
-        )
-
-        # Save virtual workspace mapping and all available metadata
-        self.save_virtual_workspace_metadata(plate_path, workspace_mapping)
-
-        return image_dir
-
-    def _fill_missing_images(
-        self,
-        image_dir: Path,
-        xml_parser: OperaPhenixXmlParser,
-        filemanager: FileManager,
-    ) -> int:
-        """
-        Fill in missing images with black pixels by detecting gaps in continuous sequences.
-
-        This method:
-        1. Parses all existing files to extract dimension indices
-        2. Finds all unique values for each dimension (wells, channels, sites, z-planes, timepoints)
-        3. Generates all expected combinations (cartesian product)
-        4. Creates black placeholder images for missing combinations
-
-        Args:
-            image_dir: Path to the image directory
-            xml_parser: Parsed Index.xml (unused, kept for signature compatibility)
-            filemanager: FileManager for file operations
-
-        Returns:
-            Number of missing images created
-        """
-        import numpy as np
-        from itertools import product
-
-        logger.debug(
-            "Checking for missing images in Opera Phenix workspace using continuous sequence detection"
-        )
-
-        # 1. Get actual files
-        # Clause 245: Workspace operations are disk-only by design
-        actual_file_paths = filemanager.list_image_files(image_dir, Backend.DISK.value)
-
-        if not actual_file_paths:
-            logger.debug("No existing images found, skipping missing image detection")
-            return 0
-
-        # 2. Parse all files and collect dimension values
-        wells = set()
-        channels = set()
-        sites = set()
-        z_indices = set()
-        timepoints = set()
-        actual_combinations = set()  # Store parsed component tuples, not filenames
-
-        # Track filename format from first file
-        has_timepoint = None
-        sample_metadata = None
-
-        for file_path in actual_file_paths:
-            filename = os.path.basename(file_path)
-
-            # Parse filename
-            metadata = self.parser.parse_filename(filename)
-            if not metadata:
-                logger.warning(f"Could not parse filename: {filename}")
-                continue
-
-            # Store first valid metadata as sample
-            if sample_metadata is None:
-                sample_metadata = metadata
-
-            # Collect dimension values
-            well = metadata.value_for(Microscopy.Well)
-            channel = metadata.value_for(Microscopy.Channel)
-            site = metadata.value_for(Microscopy.Site)
-            z_index = metadata.value_for(Microscopy.ZIndex)
-            timepoint = metadata.value_for(Microscopy.Timepoint)
-
-            if well:
-                wells.add(well)
-            if channel is not None:
-                channels.add(channel)
-            if site is not None:
-                sites.add(site)
-            if z_index is not None:
-                z_indices.add(z_index)
-            if timepoint is not None:
-                timepoints.add(timepoint)
-                has_timepoint = True
-            elif has_timepoint is None:
-                has_timepoint = False
-
-            # Store the actual combination tuple for comparison
-            actual_combinations.add((well, channel, site, z_index, timepoint))
-
-        if not wells or not channels or not sites:
-            logger.warning(
-                "Could not extract sufficient dimension information from filenames"
-            )
-            return 0
-
-        # Default z_index to 1 if not present in any file
-        if not z_indices:
-            z_indices.add(1)
-
-        # Handle timepoint dimension
-        if not timepoints and has_timepoint:
-            timepoints.add(1)
-
-        logger.info(
-            f"Detected dimensions: {len(wells)} wells, {len(channels)} channels, "
-            f"{len(sites)} sites, {len(z_indices)} z-planes"
-            + (f", {len(timepoints)} timepoints" if timepoints else "")
-        )
-
-        # 3. Generate all expected combinations
-        expected_combinations = set()
-        for well, channel, site, z_index in product(wells, channels, sites, z_indices):
-            if timepoints:
-                for timepoint in timepoints:
-                    expected_combinations.add((well, channel, site, z_index, timepoint))
-            else:
-                expected_combinations.add((well, channel, site, z_index, None))
-
-        logger.debug(f"Expected total images: {len(expected_combinations)}")
-        logger.debug(f"Actual images found: {len(actual_combinations)}")
-
-        # 4. Find missing combinations by comparing component tuples (not filenames)
-        missing_combinations = expected_combinations - actual_combinations
-
-        if not missing_combinations:
-            logger.debug("No missing images detected in continuous sequence")
-            return 0
-
-        logger.info(
-            f"Found {len(missing_combinations)} missing images in continuous sequence"
-        )
-
-        # 5. Construct filenames for missing combinations
-        missing_files = []
-        for combination in missing_combinations:
-            well, channel, site, z_index, timepoint = combination
-
-            # Construct filename using standardized format
-            filename = self.parser.construct_filename(
-                sample_metadata.with_values(
-                    (
-                        (Microscopy.Well, well),
-                        (Microscopy.Channel, channel),
-                        (Microscopy.Site, site),
-                        (Microscopy.ZIndex, z_index),
-                        (Microscopy.Timepoint, timepoint),
-                    )
-                ),
-                site_padding=3,  # Virtual workspace uses standardized 3-digit padding
-                z_padding=3,
-            )
-
-            missing_files.append(filename)
-
-        # 6. Get image dimensions from first existing image
-        try:
-            first_image_path = actual_file_paths[0]
-            # Clause 245: Workspace operations are disk-only by design
-            first_image = filemanager.load(first_image_path, Backend.DISK.value)
-            height, width = first_image.shape
-            dtype = first_image.dtype
-            logger.debug(
-                f"Using dimensions from existing image: {height}x{width}, dtype={dtype}"
-            )
-        except Exception as e:
-            logger.warning(f"Could not load existing image for dimensions: {e}")
-            # Default dimensions for Opera Phenix
-            height, width = 2160, 2160
-            dtype = np.uint16
-            logger.debug(f"Using default dimensions: {height}x{width}, dtype={dtype}")
-
-        # 7. Create black images for missing files
-        black_image = np.zeros((height, width), dtype=dtype)
-
-        created_count = 0
-        skipped_count = 0
-
-        for filename in missing_files:
-            output_path = image_dir / filename
-
-            # CRITICAL SAFETY CHECK: Never overwrite existing files
-            if output_path.exists():
-                # File already exists - DO NOT OVERWRITE to prevent data loss
-                logger.warning(
-                    f"Image already exists, skipping to prevent data loss: {filename}"
-                )
-                skipped_count += 1
-                continue
-
-            # Clause 245: Workspace operations are disk-only by design
-            filemanager.save(black_image, output_path, Backend.DISK.value)
-            logger.debug(f"Created missing image: {filename}")
-            created_count += 1
-
-        if skipped_count > 0:
-            logger.warning(
-                f"Skipped {skipped_count} existing files to prevent overwriting"
-            )
-        logger.info(
-            f"Successfully created {created_count} missing images with black pixels"
-        )
-        return created_count
 
 
 class OperaPhenixFilenameParser(FilenameParser):
@@ -838,8 +466,363 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
         return OperaPhenixXmlParser(xml_path)
 
 
-# Set metadata handler class after class definition for automatic registration
-from openhcs.microscopes.microscope_base import register_metadata_handler
+class OperaPhenixHandler(VirtualMappingSource):
+    """
+    DatasetSource implementation for Opera Phenix systems.
 
-OperaPhenixHandler._metadata_handler_class = OperaPhenixMetadataHandler
-register_metadata_handler(OperaPhenixHandler, OperaPhenixMetadataHandler)
+    This handler combines the OperaPhenix filename parser with its
+    corresponding metadata handler. It guarantees aligned behavior
+    for plate structure parsing, metadata extraction, and any optional
+    post-processing steps required after workspace setup.
+    """
+
+    # Explicit microscope type for proper registration
+    source_name = "opera_phenix"
+    metadata_handler_class = OperaPhenixMetadataHandler
+
+    # Class attribute for automatic metadata handler registration (set after class definition)
+    # metadata handler class assigned post-definition
+
+    @classmethod
+    def supports_explicit_incomplete_export(cls) -> bool:
+        """Require Index.xml before Opera Phenix owns native plate semantics."""
+
+        return False
+
+    def __init__(self, filemanager: FileManager, pattern_format: Optional[str] = None):
+        self.parser = OperaPhenixFilenameParser(
+            filemanager, pattern_format=pattern_format
+        )
+        self.metadata_handler = OperaPhenixMetadataHandler(filemanager)
+        super().__init__(parser=self.parser, metadata_handler=self.metadata_handler)
+
+    @property
+    def root_dir(self) -> str:
+        """
+        Root directory for Opera Phenix virtual workspace preparation.
+
+        Returns "Images" because Opera Phenix field remapping is applied
+        to images in the Images/ subdirectory, and virtual paths include Images/ prefix.
+        """
+        return "Images"
+
+
+
+    @property
+    def compatible_backends(self) -> List[Backend]:
+        """
+        Opera Phenix is compatible with DISK backend only.
+
+        Legacy microscope format with standard file operations.
+        """
+        return [Backend.DISK]
+
+    # Uses default workspace initialization from base class
+
+    def _build_virtual_mapping(
+        self, plate_path: Path, filemanager: FileManager
+    ) -> Path:
+        """
+        Build Opera Phenix virtual workspace mapping using plate-relative paths.
+
+        Args:
+            plate_path: Path to plate directory
+            filemanager: FileManager instance for file operations
+
+        Returns:
+            Path to image directory
+        """
+        plate_path = Path(plate_path)  # Ensure Path object
+
+        logger.info(
+            f"🔄 BUILDING VIRTUAL MAPPING: Opera Phenix field remapping for {plate_path}"
+        )
+
+        # Opera Phenix images are always in Images/ subdirectory
+        image_dir = plate_path / self.root_dir
+
+        # Default to empty field mapping (no remapping)
+        field_mapping = {}
+
+        # Try to load field mapping from Index.xml if available
+        xml_parser = None
+        try:
+            index_xml = filemanager.find_file_recursive(
+                plate_path, "Index.xml", Backend.DISK.value
+            )
+            if index_xml:
+                xml_parser = OperaPhenixXmlParser(index_xml)
+                field_mapping = xml_parser.get_field_id_mapping()
+                logger.debug("Loaded field mapping from Index.xml: %s", field_mapping)
+            else:
+                logger.debug("Index.xml not found. Using default field mapping.")
+        except Exception as e:
+            logger.error("Error loading Index.xml: %s", e)
+            logger.debug("Using default field mapping due to error.")
+
+        # Fill missing images BEFORE building virtual mapping
+        # This handles autofocus failures by creating black placeholder images
+        if xml_parser:
+            num_filled = self._fill_missing_images(image_dir, xml_parser, filemanager)
+            if num_filled > 0:
+                logger.info(
+                    f"Created {num_filled} placeholder images for autofocus failures"
+                )
+
+        # Get all image files in the directory (including newly created placeholders)
+        image_files = filemanager.list_image_files(image_dir, Backend.DISK.value)
+
+        # Initialize mapping dict (PLATE-RELATIVE paths)
+        workspace_mapping = {}
+
+        # Process each file
+        for file_path in image_files:
+            # FileManager should return strings, but handle Path objects too
+            if isinstance(file_path, str):
+                file_name = os.path.basename(file_path)
+            elif isinstance(file_path, Path):
+                file_name = file_path.name
+            else:
+                # Skip any unexpected types
+                logger.warning(
+                    "Unexpected file path type: %s", type(file_path).__name__
+                )
+                continue
+
+            # Parse file metadata
+            metadata = self.parser.parse_filename(file_name)
+            if metadata is None:
+                continue
+            original_field_id = metadata.value_for(Microscopy.Site)
+            if original_field_id is None:
+                continue
+
+            # Remap the field ID using the spatial layout
+            new_field_id = field_mapping.get(original_field_id, original_field_id)
+
+            # Construct the new filename with proper padding
+            new_name = self.parser.construct_filename(
+                metadata.with_value(
+                    Microscopy.Site,
+                    new_field_id,
+                )
+            )
+
+            # Build PLATE-RELATIVE mapping (no workspace directory)
+            # Use .as_posix() to ensure forward slashes on all platforms (Windows uses backslashes with str())
+            virtual_relative = (Path("Images") / new_name).as_posix()
+            real_relative = (Path("Images") / file_name).as_posix()
+            workspace_mapping[virtual_relative] = SourcePixelRef(
+                backend=Backend.DISK.value,
+                backend_address=real_relative,
+            )
+
+        logger.info(
+            f"Built {len(workspace_mapping)} virtual path mappings for Opera Phenix"
+        )
+
+        # Save virtual workspace mapping and all available metadata
+        self.save_virtual_workspace_metadata(plate_path, workspace_mapping)
+
+        return image_dir
+
+    def _fill_missing_images(
+        self,
+        image_dir: Path,
+        xml_parser: OperaPhenixXmlParser,
+        filemanager: FileManager,
+    ) -> int:
+        """
+        Fill in missing images with black pixels by detecting gaps in continuous sequences.
+
+        This method:
+        1. Parses all existing files to extract dimension indices
+        2. Finds all unique values for each dimension (wells, channels, sites, z-planes, timepoints)
+        3. Generates all expected combinations (cartesian product)
+        4. Creates black placeholder images for missing combinations
+
+        Args:
+            image_dir: Path to the image directory
+            xml_parser: Parsed Index.xml (unused, kept for signature compatibility)
+            filemanager: FileManager for file operations
+
+        Returns:
+            Number of missing images created
+        """
+        import numpy as np
+        from itertools import product
+
+        logger.debug(
+            "Checking for missing images in Opera Phenix workspace using continuous sequence detection"
+        )
+
+        # 1. Get actual files
+        # Clause 245: Workspace operations are disk-only by design
+        actual_file_paths = filemanager.list_image_files(image_dir, Backend.DISK.value)
+
+        if not actual_file_paths:
+            logger.debug("No existing images found, skipping missing image detection")
+            return 0
+
+        # 2. Parse all files and collect dimension values
+        wells = set()
+        channels = set()
+        sites = set()
+        z_indices = set()
+        timepoints = set()
+        actual_combinations = set()  # Store parsed component tuples, not filenames
+
+        # Track filename format from first file
+        has_timepoint = None
+        sample_metadata = None
+
+        for file_path in actual_file_paths:
+            filename = os.path.basename(file_path)
+
+            # Parse filename
+            metadata = self.parser.parse_filename(filename)
+            if not metadata:
+                logger.warning(f"Could not parse filename: {filename}")
+                continue
+
+            # Store first valid metadata as sample
+            if sample_metadata is None:
+                sample_metadata = metadata
+
+            # Collect dimension values
+            well = metadata.value_for(Microscopy.Well)
+            channel = metadata.value_for(Microscopy.Channel)
+            site = metadata.value_for(Microscopy.Site)
+            z_index = metadata.value_for(Microscopy.ZIndex)
+            timepoint = metadata.value_for(Microscopy.Timepoint)
+
+            if well:
+                wells.add(well)
+            if channel is not None:
+                channels.add(channel)
+            if site is not None:
+                sites.add(site)
+            if z_index is not None:
+                z_indices.add(z_index)
+            if timepoint is not None:
+                timepoints.add(timepoint)
+                has_timepoint = True
+            elif has_timepoint is None:
+                has_timepoint = False
+
+            # Store the actual combination tuple for comparison
+            actual_combinations.add((well, channel, site, z_index, timepoint))
+
+        if not wells or not channels or not sites:
+            logger.warning(
+                "Could not extract sufficient dimension information from filenames"
+            )
+            return 0
+
+        # Default z_index to 1 if not present in any file
+        if not z_indices:
+            z_indices.add(1)
+
+        # Handle timepoint dimension
+        if not timepoints and has_timepoint:
+            timepoints.add(1)
+
+        logger.info(
+            f"Detected dimensions: {len(wells)} wells, {len(channels)} channels, "
+            f"{len(sites)} sites, {len(z_indices)} z-planes"
+            + (f", {len(timepoints)} timepoints" if timepoints else "")
+        )
+
+        # 3. Generate all expected combinations
+        expected_combinations = set()
+        for well, channel, site, z_index in product(wells, channels, sites, z_indices):
+            if timepoints:
+                for timepoint in timepoints:
+                    expected_combinations.add((well, channel, site, z_index, timepoint))
+            else:
+                expected_combinations.add((well, channel, site, z_index, None))
+
+        logger.debug(f"Expected total images: {len(expected_combinations)}")
+        logger.debug(f"Actual images found: {len(actual_combinations)}")
+
+        # 4. Find missing combinations by comparing component tuples (not filenames)
+        missing_combinations = expected_combinations - actual_combinations
+
+        if not missing_combinations:
+            logger.debug("No missing images detected in continuous sequence")
+            return 0
+
+        logger.info(
+            f"Found {len(missing_combinations)} missing images in continuous sequence"
+        )
+
+        # 5. Construct filenames for missing combinations
+        missing_files = []
+        for combination in missing_combinations:
+            well, channel, site, z_index, timepoint = combination
+
+            # Construct filename using standardized format
+            filename = self.parser.construct_filename(
+                sample_metadata.with_values(
+                    (
+                        (Microscopy.Well, well),
+                        (Microscopy.Channel, channel),
+                        (Microscopy.Site, site),
+                        (Microscopy.ZIndex, z_index),
+                        (Microscopy.Timepoint, timepoint),
+                    )
+                ),
+                site_padding=3,  # Virtual workspace uses standardized 3-digit padding
+                z_padding=3,
+            )
+
+            missing_files.append(filename)
+
+        # 6. Get image dimensions from first existing image
+        try:
+            first_image_path = actual_file_paths[0]
+            # Clause 245: Workspace operations are disk-only by design
+            first_image = filemanager.load(first_image_path, Backend.DISK.value)
+            height, width = first_image.shape
+            dtype = first_image.dtype
+            logger.debug(
+                f"Using dimensions from existing image: {height}x{width}, dtype={dtype}"
+            )
+        except Exception as e:
+            logger.warning(f"Could not load existing image for dimensions: {e}")
+            # Default dimensions for Opera Phenix
+            height, width = 2160, 2160
+            dtype = np.uint16
+            logger.debug(f"Using default dimensions: {height}x{width}, dtype={dtype}")
+
+        # 7. Create black images for missing files
+        black_image = np.zeros((height, width), dtype=dtype)
+
+        created_count = 0
+        skipped_count = 0
+
+        for filename in missing_files:
+            output_path = image_dir / filename
+
+            # CRITICAL SAFETY CHECK: Never overwrite existing files
+            if output_path.exists():
+                # File already exists - DO NOT OVERWRITE to prevent data loss
+                logger.warning(
+                    f"Image already exists, skipping to prevent data loss: {filename}"
+                )
+                skipped_count += 1
+                continue
+
+            # Clause 245: Workspace operations are disk-only by design
+            filemanager.save(black_image, output_path, Backend.DISK.value)
+            logger.debug(f"Created missing image: {filename}")
+            created_count += 1
+
+        if skipped_count > 0:
+            logger.warning(
+                f"Skipped {skipped_count} existing files to prevent overwriting"
+            )
+        logger.info(
+            f"Successfully created {created_count} missing images with black pixels"
+        )
+        return created_count

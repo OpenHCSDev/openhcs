@@ -1,30 +1,29 @@
-"""Microscope handler for source-binding projected workspaces."""
+"""Dataset source for image folders described by source-binding declarations."""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Type, Union
+from typing import Union
 
 from polystore.filemanager import FileManager
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.source_bindings import (
     SourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
 from openhcs.core.virtual_workspace_metadata import FIELDS, METADATA_CONFIG
-from openhcs.microscopes.microscope_base import MicroscopeHandler
-from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
-from openhcs.microscopes.microscope_interfaces import MetadataHandler
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.dataset_sources.source import DeclaredFileSource
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
 
-class SourceBindingsHandler(MicroscopeHandler):
+class SourceBindingsSource(DeclaredFileSource, DatasetSource):
     """Handler for arbitrary image folders using source-binding declarations."""
 
-    _microscope_type = Microscope.SOURCE_BINDINGS.value
-    _metadata_handler_class = OpenHCSMetadataHandler
+    source_name = "source_bindings"
+    metadata_handler_class = OpenHCSMetadataHandler
 
     @classmethod
     def projects_declared_source_bindings(cls) -> bool:
@@ -32,11 +31,6 @@ class SourceBindingsHandler(MicroscopeHandler):
 
         return True
 
-    @classmethod
-    def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
-        """Declare source bindings as the arbitrary-file ingestion fallback."""
-
-        return MicroscopeSourceSelectionRole.DECLARED_FILE_FALLBACK
 
     @classmethod
     def source_selection_guidance(cls) -> str:
@@ -58,10 +52,10 @@ class SourceBindingsHandler(MicroscopeHandler):
         filemanager: FileManager,
         pattern_format: str | None = None,
         source_bindings_config: SourceBindingsConfig | None = None,
-    ) -> "SourceBindingsHandler":
+    ) -> "SourceBindingsSource":
         if source_bindings_config is None:
             raise ValueError(
-                "SourceBindingsHandler requires SourceBindingsConfig declarations."
+                "SourceBindingsSource requires SourceBindingsConfig declarations."
             )
         return cls(
             filemanager,
@@ -80,7 +74,7 @@ class SourceBindingsHandler(MicroscopeHandler):
         )
         if source_bindings_config.is_empty:
             raise ValueError(
-                "SourceBindingsHandler requires non-empty SourceBindingsConfig "
+                "SourceBindingsSource requires non-empty SourceBindingsConfig "
                 "declarations."
             )
         parser = SourceSchemaFilenameParser(filemanager, pattern_format)
@@ -102,13 +96,7 @@ class SourceBindingsHandler(MicroscopeHandler):
     def root_dir(self) -> str:
         return FIELDS.DEFAULT_SUBDIRECTORY
 
-    @property
-    def microscope_type(self) -> str:
-        return self._microscope_type
 
-    @property
-    def metadata_handler_class(self) -> Type[MetadataHandler]:
-        return OpenHCSMetadataHandler
 
     @property
     def compatible_backends(self) -> list[Backend]:

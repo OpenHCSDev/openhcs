@@ -33,7 +33,7 @@ from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
     StepOutputManifestStore,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -623,7 +623,7 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
     from openhcs.core.source_matching import SourceImageSetIdentityPolicy
     from openhcs.core.source_metadata import SourceFilterPathMetadata
     from openhcs.core.steps.function_output_manifest import ProducedPathRecordIndex
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     parser = SourceSchemaFilenameParser()
     plan = CompiledStepPlan(

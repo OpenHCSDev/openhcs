@@ -33,7 +33,7 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
+    DECLARED_SOURCE_METADATA_FIELD,
     DurableSourceMetadata,
     ResolvedSourceMetadataRecord,
     SourceMetadataRecord,
@@ -57,18 +57,18 @@ from openhcs.core.axes import AxisFamily
 @pytest.mark.parametrize("owner", (ResolvedSourceMetadataRecord, DurableSourceMetadata))
 def test_owned_snapshot_detaches_nested_fields_and_preserves_record_contract(owner):
     nested = {"Well": "literal"}
-    record = owner.from_mapping({"well": "A01", ORIGINAL_SOURCE_METADATA_FIELD: nested})
+    record = owner.from_mapping({"well": "A01", DECLARED_SOURCE_METADATA_FIELD: nested})
     nested["Well"] = "changed"
     assert source_metadata_value(record, "Well") == "literal"
     with pytest.raises(TypeError):
-        record[ORIGINAL_SOURCE_METADATA_FIELD]["Well"] = "changed"
+        record[DECLARED_SOURCE_METADATA_FIELD]["Well"] = "changed"
     with pytest.raises(TypeError):
         hash(record)
     declared = DeclaredSourceMetadataRecord.from_mapping(
-        {"well": "A01", ORIGINAL_SOURCE_METADATA_FIELD: {"Well": "literal"}}
+        {"well": "A01", DECLARED_SOURCE_METADATA_FIELD: {"Well": "literal"}}
     )
     reversed_record = owner.from_mapping(
-        {ORIGINAL_SOURCE_METADATA_FIELD: {"Well": "literal"}, "well": "A01"}
+        {DECLARED_SOURCE_METADATA_FIELD: {"Well": "literal"}, "well": "A01"}
     )
     if isinstance(record, SourceMetadataRecord):
         assert record == declared
@@ -166,7 +166,7 @@ def test_owned_updates_replace_aliases_and_keep_original_literals():
         {
             "channel": "1",
             "ChannelNumber": "2",
-            ORIGINAL_SOURCE_METADATA_FIELD: {"ChannelNumber": "literal"},
+            DECLARED_SOURCE_METADATA_FIELD: {"ChannelNumber": "literal"},
         }
     )
     updated = with_source_component_metadata(owner, Microscopy.Channel, "3")
@@ -203,7 +203,7 @@ def test_lazy_role_errors_are_unchanged_by_owned_construction():
             "channel": "1",
             "wellrow": "A",
             "wellcolumn": "bad",
-            ORIGINAL_SOURCE_METADATA_FIELD: 7,
+            DECLARED_SOURCE_METADATA_FIELD: 7,
         }
     )
     assert source_component_metadata_value(record, Microscopy.Channel) == "1"
@@ -257,10 +257,10 @@ def test_source_identity_mapping_equality_keeps_original_class_and_current_field
 
     nested = {"literal": "before"}
     left = SourceImageIdentity(
-        component_metadata={ORIGINAL_SOURCE_METADATA_FIELD: nested}
+        component_metadata={DECLARED_SOURCE_METADATA_FIELD: nested}
     )
     right = SourceImageIdentity(
-        component_metadata={ORIGINAL_SOURCE_METADATA_FIELD: {"literal": "before"}}
+        component_metadata={DECLARED_SOURCE_METADATA_FIELD: {"literal": "before"}}
     )
     captured = left.identity
     assert left == right
@@ -269,8 +269,8 @@ def test_source_identity_mapping_equality_keeps_original_class_and_current_field
 
 
 def test_nested_mapping_order_does_not_change_provenance_identity_or_wire_order():
-    raw = {"well": "A01", ORIGINAL_SOURCE_METADATA_FIELD: {"site": "001", "channel": "1"}}
-    reordered = {ORIGINAL_SOURCE_METADATA_FIELD: {"channel": "1", "site": "001"}, "well": "A01"}
+    raw = {"well": "A01", DECLARED_SOURCE_METADATA_FIELD: {"site": "001", "channel": "1"}}
+    reordered = {DECLARED_SOURCE_METADATA_FIELD: {"channel": "1", "site": "001"}, "well": "A01"}
     owned = DurableSourceMetadata.from_mapping(reordered)
     before = to_jsonable(owned)
     original = SourceImageProvenance(source_path="source.tif", source_component_metadata=raw)
@@ -280,9 +280,9 @@ def test_nested_mapping_order_does_not_change_provenance_identity_or_wire_order(
         assert candidate.equality_identity == original.equality_identity
     assert SourceMetadataFields.provenance_identity_items(raw) == SourceMetadataFields.provenance_identity_items(owned)
     assert to_jsonable(owned) == before
-    assert tuple(reordered) == (ORIGINAL_SOURCE_METADATA_FIELD, "well")
-    assert tuple(reordered[ORIGINAL_SOURCE_METADATA_FIELD]) == ("channel", "site")
-    reordered[ORIGINAL_SOURCE_METADATA_FIELD]["site"] = "002"
+    assert tuple(reordered) == (DECLARED_SOURCE_METADATA_FIELD, "well")
+    assert tuple(reordered[DECLARED_SOURCE_METADATA_FIELD]) == ("channel", "site")
+    reordered[DECLARED_SOURCE_METADATA_FIELD]["site"] = "002"
     changed = SourceImageProvenance(source_path="source.tif", source_component_metadata=reordered)
     assert changed.equality_identity != original.equality_identity
 
@@ -305,13 +305,13 @@ def test_identity_transport_preserves_birth_fingerprint_after_current_metadata_c
 
     RuntimeExecutionTransportSerialization.register()
     nested = {"site": "001", "channel": "1"}
-    identity = SourceImageIdentity("original.tif", {ORIGINAL_SOURCE_METADATA_FIELD: nested})
+    identity = SourceImageIdentity("original.tif", {DECLARED_SOURCE_METADATA_FIELD: nested})
     birth = identity.identity
     nested["site"] = "002"
     identity.path = "current.tif"
     restored = serializer.loads(serializer.dumps(identity))
     assert restored.path == "current.tif"
-    assert restored.component_metadata[ORIGINAL_SOURCE_METADATA_FIELD]["site"] == "002"
+    assert restored.component_metadata[DECLARED_SOURCE_METADATA_FIELD]["site"] == "002"
     assert restored.identity == birth
     assert SourceImageIdentity(restored.path, restored.component_metadata).identity != birth
 
@@ -349,7 +349,7 @@ def test_owned_transport_stores_only_authoritative_fields_and_rebuilds_local_vie
     owner, serializer
 ):
     record = owner.from_mapping(
-        {"well": "A01", ORIGINAL_SOURCE_METADATA_FIELD: {"literal": "value"}}
+        {"well": "A01", DECLARED_SOURCE_METADATA_FIELD: {"literal": "value"}}
     )
     before = SourceImageIdentity(component_metadata=record).identity
     assert source_metadata_value(record, "literal") == "value"
@@ -363,7 +363,7 @@ def test_owned_transport_stores_only_authoritative_fields_and_rebuilds_local_vie
     assert to_jsonable(restored) == to_jsonable(record)
     assert SourceImageIdentity(component_metadata=restored).identity == before
     with pytest.raises(TypeError):
-        restored[ORIGINAL_SOURCE_METADATA_FIELD]["literal"] = "changed"
+        restored[DECLARED_SOURCE_METADATA_FIELD]["literal"] = "changed"
 
 
 @pytest.mark.parametrize("owner", (ResolvedSourceMetadataRecord, DurableSourceMetadata))
@@ -373,7 +373,7 @@ def test_transport_does_not_recanonicalize_stored_absolute_values_or_validate_un
     directory = tmp_path / "original"
     directory.mkdir()
     spelling = str(directory / "image.tif")
-    record = owner.from_mapping({"path": spelling, ORIGINAL_SOURCE_METADATA_FIELD: 7})
+    record = owner.from_mapping({"path": spelling, DECLARED_SOURCE_METADATA_FIELD: 7})
     before = SourceImageIdentity(component_metadata=record).identity
     directory.rmdir()
     target = tmp_path / "replacement"
@@ -394,7 +394,7 @@ def test_ordered_component_batch_matches_sequential_raw_updates():
         "ChannelNumber": "old",
         "ZIndex": "old",
         "Timepoint": "old",
-        ORIGINAL_SOURCE_METADATA_FIELD: {"Well": "literal"},
+        DECLARED_SOURCE_METADATA_FIELD: {"Well": "literal"},
     }
     components = tuple(
         (component, str(index)) for index, component in enumerate(AxisFamily.active().axes, 1)

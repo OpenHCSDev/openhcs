@@ -171,7 +171,7 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
 )

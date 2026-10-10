@@ -706,7 +706,7 @@ def test_runtime_artifact_query_from_dynamic_output_plan_uses_runtime_group_path
     )
 
     assert isinstance(query.target, RuntimeArtifactLocationTarget)
-    assert query.target.location.path == "/memory/A01_w3_RGBImage.pkl"
+    assert query.target.location.path == "/memory/A01_s003_RGBImage.pkl"
     assert query.target.location.backend == "memory"
 
 

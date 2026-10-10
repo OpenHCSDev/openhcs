@@ -48,10 +48,10 @@ from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.microscopes.microscope_interfaces import MetadataHandler
+    from openhcs.core.dataset_sources.interfaces import MetadataHandler
     from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
-    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -689,7 +689,7 @@ class VirtualWorkspaceImagePayloadProjection:
 def source_schema_filename_metadata(path: str) -> SourceMetadataMapping | None:
     """Return component metadata encoded in a normalized virtual source filename."""
 
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     parsed = SourceSchemaFilenameParser().parse_filename(path)
     if parsed is None:
@@ -706,11 +706,11 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
     axis_filtered_projections: dict[str, VirtualWorkspaceSourceProjection] = field(
         default_factory=dict, compare=False, repr=False,
     )
-    source_admitted_entries: dict[
+    source_accepted_entries: dict[
         tuple[SourceFilterClause, ...], VirtualWorkspaceSourceProjectionCacheEntry,
     ] = field(default_factory=dict, compare=False, repr=False)
 
-    def admitted_for(
+    def accepted_for(
         self, source_bindings: SourceBindingsConfig | None,
     ) -> VirtualWorkspaceSourceProjectionCacheEntry:
         """Bind prepared-source admission to its document and declarations."""
@@ -719,17 +719,17 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
         declarations = source_bindings.source_filter_declarations
         if not declarations:
             return self
-        admitted = self.source_admitted_entries.get(declarations)
+        admitted = self.source_accepted_entries.get(declarations)
         if admitted is None:
             from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 
             admitted = VirtualWorkspaceSourceProjectionCacheEntry(
                 self.metadata,
-                SourceBindingWorkspaceProjector(source_bindings).admit_prepared_projection(
+                SourceBindingWorkspaceProjector(source_bindings).accept_prepared_projection(
                     self.projection
                 ),
             )
-            self.source_admitted_entries[declarations] = admitted
+            self.source_accepted_entries[declarations] = admitted
         return admitted
 
     def entry_for_projection(
@@ -739,7 +739,7 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
         if self.projection is projection:
             return self
         return next((
-            entry for entry in self.source_admitted_entries.values()
+            entry for entry in self.source_accepted_entries.values()
             if entry.projection is projection
         ), None)
 
@@ -788,7 +788,7 @@ class VirtualWorkspaceSourceProjectionCache:
             )
             cached = VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
             self.projections_by_plate_path[plate_key] = cached
-        return cached.admitted_for(source_bindings).projection
+        return cached.accepted_for(source_bindings).projection
 
     def filtered_by_axis(
         self,
@@ -831,7 +831,7 @@ DEFAULT_SOURCE_PROJECTION_CACHE = VirtualWorkspaceSourceProjectionCache()
 
 
 @dataclass(frozen=True, slots=True)
-class VirtualWorkspaceSourceProjectionAuthority:
+class WorkspaceSourceProjections:
     """Projection authority for source-workspace metadata owned by a plate handler."""
 
     plate_path: Path
@@ -849,14 +849,14 @@ class VirtualWorkspaceSourceProjectionAuthority:
         context: "ProcessingContext",
         *,
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
-    ) -> "VirtualWorkspaceSourceProjectionAuthority":
-        return RuntimeVirtualWorkspaceSourceProjectionAuthority(
+    ) -> "WorkspaceSourceProjections":
+        return RuntimeWorkspaceSourceProjections(
             plate_path=Path(context.plate_path),
             metadata_handler=context.microscope_handler.metadata_handler,
             filemanager=context.filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
             context=context,
-            source_bindings=context.microscope_handler.source_admission_config(),
+            source_bindings=context.microscope_handler.source_bindings_still_required(),
         )
 
     @classmethod
@@ -868,7 +868,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
         filemanager: "FileManager",
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
         source_bindings: SourceBindingsConfig | None = None,
-    ) -> "VirtualWorkspaceSourceProjectionAuthority":
+    ) -> "WorkspaceSourceProjections":
         """Build projection authority from the plate-level metadata owners."""
 
         return cls(
@@ -887,11 +887,11 @@ class VirtualWorkspaceSourceProjectionAuthority:
             and self.filemanager is context.filemanager
         ):
             return False
-        return self.source_bindings == context.microscope_handler.source_admission_config()
+        return self.source_bindings == context.microscope_handler.source_bindings_still_required()
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
         """Observe workspace eligibility live while retaining admitted providers."""
-        from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
         if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
             return (self.metadata_handler,)
@@ -946,7 +946,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
 
                     projection = SourceBindingWorkspaceProjector(
                         self.source_bindings
-                    ).admit_prepared_projection(projection)
+                    ).accept_prepared_projection(projection)
             else:
                 projection = self.cache.projection_for(
                     workspace_root, metadata, source_bindings=self.source_bindings,
@@ -966,8 +966,8 @@ class VirtualWorkspaceSourceProjectionAuthority:
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeVirtualWorkspaceSourceProjectionAuthority(
-    VirtualWorkspaceSourceProjectionAuthority
+class RuntimeWorkspaceSourceProjections(
+    WorkspaceSourceProjections
 ):
     """Read completed same-plate outputs from their execution observation owner."""
 
@@ -975,14 +975,14 @@ class RuntimeVirtualWorkspaceSourceProjectionAuthority(
 
     def is_bound_to_context(self, context: "ProcessingContext") -> bool:
         return self.context is context and super(
-            RuntimeVirtualWorkspaceSourceProjectionAuthority, self
+            RuntimeWorkspaceSourceProjections, self
         ).is_bound_to_context(context)
 
     def projection_if_available(
         self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
         projection = super(
-            RuntimeVirtualWorkspaceSourceProjectionAuthority, self
+            RuntimeWorkspaceSourceProjections, self
         ).projection_if_available()
         produced_entries = tuple(
             entries
@@ -1018,7 +1018,7 @@ class RuntimeVirtualWorkspaceSourceProjectionAuthority(
             builder.ingest_workspace_mapping(
                 VirtualWorkspaceMapping.from_subdirectory(fields)
             )
-            builder.ingest_admitted_subdirectory(fields, entries)
+            builder.ingest_accepted_subdirectory(fields, entries)
         return self._projection_for_axis(builder.projection(), axis_id=axis_id)
 
 
@@ -1038,7 +1038,7 @@ class VirtualWorkspaceSourceProjectionBuilder:
     def ingest_subdirectory(self, subdirectory: OpenHCSSubdirectoryPayload) -> None:
         workspace_mapping = VirtualWorkspaceMapping.from_subdirectory(subdirectory)
         self.ingest_workspace_mapping(workspace_mapping)
-        self.ingest_admitted_subdirectory(
+        self.ingest_accepted_subdirectory(
             subdirectory,
             VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory),
         )
@@ -1062,7 +1062,7 @@ class VirtualWorkspaceSourceProjectionBuilder:
         self.workspace_source_refs[virtual_path] = source_ref
         self.workspace_source_refs[loadable_path] = source_ref
 
-    def ingest_admitted_subdirectory(
+    def ingest_accepted_subdirectory(
         self,
         subdirectory: OpenHCSSubdirectoryPayload,
         source_projections: VirtualWorkspaceSourceProjectionEntries,

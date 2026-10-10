@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import re
-
+from openhcs.core.axes import AxisFamily
 from openhcs.core.source_projection import OpenHCSPlaneAddress
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     FilenameParseResult,
 )
@@ -33,10 +32,7 @@ class SourceSchemaFilenameParser(FilenameParser):
         )
 
     def extract_component_coordinates(self, component_value: str) -> tuple[str, str]:
-        match = re.match(r"^([A-Za-z]+)([0-9]+)$", component_value)
-        if match is not None:
-            return match.group(1), match.group(2)
-        return component_value, ""
+        return AxisFamily.active().partition_axis().grid_coordinates(component_value)
 
     def construct_filename(self, components: FilenameParseResult) -> str:
         address = OpenHCSPlaneAddress.from_component_values(
