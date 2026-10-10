@@ -8,9 +8,11 @@ from benchmark.cellprofiler_comparison import load_comparison_cases
 from benchmark.contracts.comparison_manifest import ComparisonManifest
 from benchmark.contracts.manifest_acquisition import (
     GitSparseRootAcquisitionStrategy,
+    ManifestRootAcquisitionStrategy,
+)
+from benchmark.contracts.upstream_sources import (
     ManifestRootAcquisitionKind,
     ManifestRootAcquisitionSpec,
-    ManifestRootAcquisitionStrategy,
 )
 from benchmark.datasets.cache import default_benchmark_dataset_cache_root
 
