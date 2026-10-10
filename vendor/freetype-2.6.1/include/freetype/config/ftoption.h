@@ -163,7 +163,10 @@ FT_BEGIN_HEADER
   /*   Define this macro if you want to enable this `feature'.  See also   */
   /*   the macro FT_CONFIG_OPTION_SYSTEM_ZLIB below.                       */
   /*                                                                       */
-#define FT_CONFIG_OPTION_USE_ZLIB
+/* OpenHCS: disabled, matching matplotlib's FreeType 2.6.1 build      */
+  /* (configure --with-zlib=no); the bundled zlib does not compile on      */
+  /* macOS SDKs, which define TARGET_OS_MAC without the MacTypes Byte.     */
+/* #define FT_CONFIG_OPTION_USE_ZLIB */
 
 
   /*************************************************************************/
