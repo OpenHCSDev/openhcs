@@ -10,7 +10,7 @@ package.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import MISSING, dataclass, fields
 from enum import Enum
 
 DATASET_DATA_DIRECTORY = "data"
@@ -74,15 +74,23 @@ class ManifestRootAcquisitionSpec:
             raise ValueError(
                 f"Unsupported manifest root acquisition kind {raw_kind!r}."
             ) from exc
-        raw_sparse_paths = raw_value.get("sparse_paths", ())
-        raw_dataset_ids = raw_value.get("dataset_ids", ())
-        git_url = raw_value.get("git_url")
+        # Every defaulted field is an optional manifest entry of the same name.
+        optional = (
+            declared
+            for declared in fields(cls)
+            if declared.default is not MISSING
+            and raw_value.get(declared.name) is not None
+        )
         return cls(
             kind=kind,
-            git_url=str(git_url) if git_url is not None else None,
-            git_ref=str(raw_value.get("git_ref", "HEAD")),
-            sparse_paths=_string_tuple(raw_sparse_paths, "sparse_paths"),
-            dataset_ids=_string_tuple(raw_dataset_ids, "dataset_ids"),
+            **{
+                declared.name: (
+                    _string_tuple(raw_value[declared.name], declared.name)
+                    if isinstance(declared.default, tuple)
+                    else str(raw_value[declared.name])
+                )
+                for declared in optional
+            },
         )
 
 
