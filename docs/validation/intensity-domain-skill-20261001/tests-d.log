@@ -1,8 +1,0 @@
-Running as unit: intensity-skill-validation-d-20261001.service
-........                                                                 [100%]
-8 passed in 0.28s
-          Finished with result: success
-Main processes terminated with: code=exited, status=0/SUCCESS
-               Service runtime: 454ms
-             CPU time consumed: 451ms
-                   Memory peak: 29.7M (swap: 0B)

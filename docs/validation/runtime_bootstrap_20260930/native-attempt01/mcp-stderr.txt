@@ -1,1 +1,0 @@
-MCP progress: progress=0.0 message='Search processing functions: started'

@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.685" timestamp="2026-10-01T09:37:59.242826-04:00" hostname="desktop"><testcase classname="tests.unit.test_path_planner_materialization" name="test_metadata_satisfied_artifact_input_compiles_without_runtime_plan" time="0.106" /></testsuite></testsuites>

@@ -1,5 +1,0 @@
-PASS final generated bundle: all declared outputs and active source hashes
-parent source pin 024cbee7f282cf57e82f0d77b470bdcf1e8fe731
-manuscript.md 0589bbbab0a10b2d1683de75ee84e8529cce12f82165606517c3709e6a035c70 19 declared slots ['case_count', 'execution_median', 'execution_min', 'record_name', 'source_revision', 'status', 'total_median', 'total_min']
-supplementary/README.md 07ec8032ef0199a9284dcafbf48db2698849361de2150dec5e0220681a9ce72a 0 declared slots []
-PASS source bytes remained unchanged; parent full book remains integration-owner acceptance
