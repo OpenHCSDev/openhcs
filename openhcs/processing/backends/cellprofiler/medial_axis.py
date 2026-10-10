@@ -10,10 +10,12 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 
 
-@numpy_backend(contract=ProcessingContract.PURE_2D)
+@numpy_backend(contract=Pure2DContract)
 def medialaxis(image: np.ndarray) -> np.ndarray:
     """
     Compute the medial axis (skeleton) of a binary image.

@@ -1133,60 +1133,6 @@ def test_cellprofiler_projection_enters_only_runtime_slice_projection() -> None:
     assert not violations, "\n" + "\n".join(sorted(set(violations)))
 
 
-def test_cellprofiler_image_execution_mode_dispatch_has_one_owner() -> None:
-    """Keep the closed image-mode matrix at the existing executor boundary."""
-
-    runtime_root = PROJECT_ROOT / "openhcs/interop/cellprofiler/runtime"
-    dispatches: list[tuple[str, str, str, int]] = []
-    execution_method_names = frozenset(
-        {
-            "execute",
-            "execute_pure_3d",
-            "_execute_aligned_multi_image_stack",
-        }
-    )
-    for path in runtime_root.rglob("*.py"):
-        tree = _parse_source(path)
-        for class_node in ast.walk(tree):
-            if not isinstance(class_node, ast.ClassDef):
-                continue
-            for method_node in class_node.body:
-                if not isinstance(method_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    continue
-                for branch in ast.walk(method_node):
-                    if not isinstance(branch, (ast.If, ast.Match)):
-                        continue
-                    dispatched_methods = frozenset(
-                        node.func.attr
-                        for node in ast.walk(branch)
-                        if isinstance(node, ast.Call)
-                        and isinstance(node.func, ast.Attribute)
-                        and node.func.attr in execution_method_names
-                    )
-                    if len(dispatched_methods) < 2:
-                        continue
-                    dispatches.append(
-                        (
-                            str(path.relative_to(PROJECT_ROOT)),
-                            class_node.name,
-                            method_node.name,
-                            branch.lineno,
-                        )
-                    )
-
-    assert len(dispatches) == 1, dispatches
-    path, class_name, method_name, _line = dispatches[0]
-    assert (
-        path,
-        class_name,
-        method_name,
-    ) == (
-        "openhcs/interop/cellprofiler/runtime/function_contract_execution.py",
-        "CellProfilerFunctionContractExecutor",
-        "execute",
-    )
-
-
 def test_generic_runtime_does_not_dispatch_on_module_name_literals() -> None:
     roots = (
         PROJECT_ROOT / "openhcs/core",

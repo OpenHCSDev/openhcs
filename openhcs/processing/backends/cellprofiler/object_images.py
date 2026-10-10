@@ -18,11 +18,7 @@ from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
@@ -61,10 +57,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
 )
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+)
 
 
 class ImageMode(Enum):
@@ -293,7 +293,7 @@ class Uint16ImageModeRenderer(ImageModeRenderer):
         return labels.astype(np.uint16, copy=False)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def convert_image_to_objects(
     image: ImagePayload,
     cast_to_bool: bool = False,
@@ -354,8 +354,8 @@ def convert_image_to_objects(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy_decorator(contract=Pure3DContract)
+@object_label_input_execution_mode(FullStackLabels)
 @special_inputs("labels")
 def convert_objects_to_image(
     image: np.ndarray,

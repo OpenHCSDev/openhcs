@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -60,7 +59,7 @@ from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.measurement_lookup import count_feature_object_name
 from openhcs.interop.cellprofiler.runtime.object_input_policies import (
@@ -101,9 +100,14 @@ from openhcs.interop.cellprofiler.setting_names import (
 from openhcs.processing.backends.cellprofiler.image_math import (
     ImageMathOperation as MathOperation,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
+)
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
 )
 
 if TYPE_CHECKING:
@@ -379,7 +383,7 @@ class CalculateMathInputPolicy(CellProfilerObjectInputPolicyMixin):
                     declared_slice_values
                 ).slice_aligned_value
             return MeasurementFeatureQuery(
-                feature_name, dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT
+                feature_name, dialect=CELLPROFILER_MEASUREMENT_DIALECT
             ).scalar_value(declared_measurement_tables)
         tables_started_at = time.perf_counter()
         measurement_resolution = (
@@ -404,7 +408,7 @@ class CalculateMathInputPolicy(CellProfilerObjectInputPolicyMixin):
         if slice_values is None:
             scalar_started_at = time.perf_counter()
             scalar_value = MeasurementFeatureQuery(
-                feature_name, dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT
+                feature_name, dialect=CELLPROFILER_MEASUREMENT_DIALECT
             ).scalar_value(measurement_resolution.measurement_tables)
             CellProfilerRuntimeProfileLogger.log_module_profile(
                 "calculate_math_image_operand_scalar",
@@ -889,8 +893,8 @@ class MathCalculationRequest:
         )
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.PURE_2D)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=Pure2DContract)
 @runtime_bound_parameters(
     _CalculateMathOperand1ValueRuntimeParameter,
     _CalculateMathOperand2ValueRuntimeParameter,

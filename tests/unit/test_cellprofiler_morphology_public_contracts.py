@@ -53,7 +53,9 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     split_or_merge_objects_per_parent,
     split_or_merge_objects_with_guide_image,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,7 +184,7 @@ def _compiled_contract(case: MorphologyPublicContractCase):
     )
 
     @artifact_outputs(*available)
-    @numpy(contract=ProcessingContract.PURE_3D)
+    @numpy(contract=Pure3DContract)
     def fixture_producer(image):
         return image
 

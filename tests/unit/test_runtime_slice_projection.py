@@ -7,13 +7,7 @@ import pytest
 from arraybridge.decorators import PRESERVE_INPUT_DTYPE_CONFIG
 
 import openhcs.processing.backends.cellprofiler  # noqa: F401
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ImageOutputBundle,
-    ImagePayloadComposition,
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle, ImagePayloadComposition)
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
@@ -58,6 +52,9 @@ from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.runtime_image_values import ImagePayload
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_plane_projection import RuntimeSliceProjectableValue
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+)
 
 
 def _subclasses(root: type) -> tuple[type, ...]:
@@ -449,7 +446,7 @@ def test_image_output_bundle_uses_outer_axis_without_inner_declaration() -> None
     )
     composition = ImagePayloadComposition(
         payload=bundle,
-        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        execution_mode=AlignedStackExecution,
     )
 
     assert composition.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE

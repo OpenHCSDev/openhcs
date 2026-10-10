@@ -19,7 +19,7 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
+    MaterializedImageCopy,
     ImageArtifactType,
 )
 from openhcs.core.function_patterns import (
@@ -305,7 +305,7 @@ def test_adapter_free_cellprofiler_module_keeps_raw_runtime_callable() -> None:
     assert plan.contract.trailing_return_output_specs.names() == ("SavedImage",)
     assert (
         plan.contract.trailing_return_output_specs[0].sidecar_role
-        is ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY
+        is MaterializedImageCopy
     )
 
 

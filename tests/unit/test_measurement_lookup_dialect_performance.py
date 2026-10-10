@@ -9,7 +9,7 @@ from openhcs.core.measurement_feature_queries import (
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
 )
-from openhcs.core.measurement_lookup_dialect import RuntimeMeasurementLookupDialect
+from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
@@ -19,39 +19,41 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_tabular_values import FieldSpec
 
 
-def _lookup_dialect() -> RuntimeMeasurementLookupDialect:
-    return RuntimeMeasurementLookupDialect(
-        category_prefixes=(("intensity",), ("area", "shape")),
-        alternative_feature_part_aliases={
-            ("area",): (("volume",),),
-        },
-        source_qualified_feature_families=(("mean", "intensity"),),
-    )
+class _LookupDialect(MeasurementDialect):
+    def category_prefix_declarations(self):
+        return (("intensity",), ("area", "shape"))
+
+    def alternative_feature_part_alias_declarations(self):
+        return {("area",): (("volume",),)}
+
+    def source_qualified_feature_family_declarations(self):
+        return (("mean", "intensity"),)
+
+
+def _lookup_dialect() -> MeasurementDialect:
+    return _LookupDialect()
 
 
 def test_source_family_scan_decomposes_immutable_lookup_once() -> None:
     provider_calls: Counter[str] = Counter()
 
-    def category_prefixes() -> tuple[tuple[str, ...], ...]:
-        provider_calls["category_prefixes"] += 1
-        return (("intensity",),)
+    class CountingDialect(MeasurementDialect):
+        def category_prefix_declarations(self):
+            provider_calls["category_prefixes"] += 1
+            return (("intensity",),)
 
-    def feature_part_aliases() -> dict[tuple[str, ...], tuple[str, ...]]:
-        provider_calls["feature_part_aliases"] += 1
-        return {}
+        def feature_part_alias_declarations(self):
+            provider_calls["feature_part_aliases"] += 1
+            return {}
 
-    def source_families() -> tuple[tuple[str, ...], ...]:
-        provider_calls["source_families"] += 1
-        return (
-            *((f"unrelated_{index}",) for index in range(64)),
-            ("mean", "intensity"),
-        )
+        def source_qualified_feature_family_declarations(self):
+            provider_calls["source_families"] += 1
+            return (
+                *((f"unrelated_{index}",) for index in range(64)),
+                ("mean", "intensity"),
+            )
 
-    dialect = RuntimeMeasurementLookupDialect(
-        category_prefixes_provider=category_prefixes,
-        feature_part_aliases_provider=feature_part_aliases,
-        source_qualified_feature_families_provider=source_families,
-    )
+    dialect = CountingDialect()
 
     families = dialect.feature_lookup(
         "Intensity_MeanIntensity_DNA"

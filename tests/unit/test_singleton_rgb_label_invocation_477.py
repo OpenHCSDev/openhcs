@@ -3,9 +3,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.pipeline.function_contracts import ObjectLabelInputExecutionMode
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData, object_label_dense_array
@@ -21,6 +19,13 @@ from tests.unit.test_cellprofiler_module_execution import (
 )
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    NaturalExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+)
 
 
 def _invocation_case(*, root_count=1, label_count=1):
@@ -70,7 +75,7 @@ def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
     labels_before = object_label_dense_array(labels).copy()
     invocation = _bind(case)
     selected = invocation.kwargs['object_labels'][0]
-    assert invocation.execution_mode is ImagePayloadExecutionMode.NATURAL
+    assert invocation.execution_mode is NaturalExecution
     assert invocation.plane_projection is None
     assert invocation.payload.metadata.axis_position(ColourAxis) == 2
     assert selected.plane_axis is None
@@ -96,7 +101,7 @@ def test_scalar_rgb_cannot_authorize_unknown_or_multiple_root_planes(root_count)
 
 def test_explicit_full_stack_label_contract_preserves_scalar_boundary_refusal(monkeypatch):
     raw = OverlayOutlinesModule.require_callable()
-    monkeypatch.setattr(raw, FunctionContractAttribute.object_label_input_execution_mode, ObjectLabelInputExecutionMode.FULL_STACK)
+    monkeypatch.setattr(raw, FunctionContractAttribute.object_label_input_execution_mode, FullStackLabels)
     case = _invocation_case()
     invocation = _bind(case)
     assert invocation.kwargs['object_labels'][0].plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
@@ -115,10 +120,10 @@ def test_final_module_mode_sees_full_labels_before_scalar_projection(monkeypatch
     def mode(cls, default, *, image, kwargs, variable_components):
         assert kwargs['object_labels'][0].plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
         assert object_label_dense_array(kwargs['object_labels'][0]).shape == (1, 8, 9)
-        return ImagePayloadExecutionMode.FULL_STACK
+        return FullStackExecution
     monkeypatch.setattr(OverlayOutlinesModule, 'execution_mode', classmethod(mode))
     invocation = _bind(case)
-    assert invocation.execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert invocation.execution_mode is FullStackExecution
     assert invocation.kwargs['object_labels'][0].plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 

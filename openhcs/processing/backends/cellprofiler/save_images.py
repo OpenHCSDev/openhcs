@@ -13,7 +13,7 @@ from python_introspect import set_signature_analysis_target
 
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
-    ArtifactSidecarRole,
+    MaterializedImageCopy,
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecRelation,
@@ -59,8 +59,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
 )
 from openhcs.processing.materialization import (
     ExecutionAxisMaterializationRelativePathScope,
@@ -335,7 +335,7 @@ class SaveImagesRecordedMeasurementSourceRelation(ArtifactSpecRelation):
     def measurement_subject(self) -> MeasurementSubject:
         """Declare the saved image as the owner of recorded file measurements."""
 
-        return MeasurementSubject(MeasurementScope.IMAGE, self.source.name)
+        return MeasurementSubject(MeasurementScope.SAMPLE, self.source.name)
 
 
 @dataclass(frozen=True, slots=True)
@@ -800,7 +800,7 @@ class SaveImagesModule(
             ImageArtifactType,
             selected_image,
             relations=relations,
-            sidecar_role=ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY,
+            sidecar_role=MaterializedImageCopy,
             materialization=cls._materialization_spec(
                 module,
                 output_name=output_name,
@@ -974,7 +974,7 @@ def _recorded_save_images_rows(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 @special_inputs("image_to_save")
 @runtime_context_parameter(None)
 def save_images(
@@ -1029,7 +1029,7 @@ def save_images(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 @special_inputs("image_to_save")
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 @runtime_context_parameter("context")

@@ -87,7 +87,9 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdAssignment,
     threshold_primitives,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
@@ -309,7 +311,7 @@ class MeasureImageQualityModule(
             list[float],
         ] = {}
         for table in tables:
-            if table.subject.scope is not MeasurementScope.IMAGE:
+            if table.subject.scope is not MeasurementScope.SAMPLE:
                 continue
             for field in table.rows.fields:
                 identity = cls._threshold_feature_identity(field.name)
@@ -345,7 +347,7 @@ class MeasureImageQualityModule(
                     ),
                     fields=tuple(fields),
                 ),
-                subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
+                subject=MeasurementSubject(MeasurementScope.RUN),
                 measurement_feature_owner=cls,
             ),
         )
@@ -1613,7 +1615,7 @@ def _haralick_h3_numba(image: np.ndarray, scale: int) -> float:
     return 0.0
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def measure_image_quality(
     image: ImagePayload,
     include_scaling: bool = True,

@@ -31,7 +31,9 @@ from openhcs.interop.cellprofiler.module_declarations import (
 )
 from openhcs.interop.cellprofiler.setting_names import setting_values
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+)
 from openhcs.runtime.fiji_macro_runtime import FijiMacroExecutionRequest
 
 if TYPE_CHECKING:
@@ -39,7 +41,7 @@ if TYPE_CHECKING:
 
 
 @composed_image_payload
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 def run_imagej_macro(
     image: np.ndarray,
     macro_path: PlateInputFile = "macro.ijm",

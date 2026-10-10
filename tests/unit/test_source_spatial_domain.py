@@ -1,12 +1,14 @@
 import numpy as np
 import pytest
 
+from openhcs.interop.cellprofiler.object_label_variants import (
+    UneditedLabels,
+)
 from openhcs.core.aligned_image_payload import (
     ObjectLabelPayloadSourceSpatialDomainAdapter,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelRepresentation,
-    ObjectLabelVariant,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -85,7 +87,7 @@ def test_sparse_object_label_projection_preserves_all_declared_variants():
     labels = SourceImageObjectLabelBuildRequest(
         image=source_image,
         labels=final_rows,
-        unedited_labels=unedited_rows,
+        variants={UneditedLabels: unedited_rows},
     ).label_set(
         name="Objects",
         representation=ObjectLabelRepresentation.SPARSE_IJV,
@@ -104,7 +106,7 @@ def test_sparse_object_label_projection_preserves_all_declared_variants():
     assert projected.representation is ObjectLabelRepresentation.DENSE_LABELS
     assert isinstance(projected.labels, np.ndarray)
     assert isinstance(
-        projected.variant_data.labels_for_variant(ObjectLabelVariant.UNEDITED),
+        projected.variant_data.labels_for_variant(UneditedLabels),
         np.ndarray,
     )
     np.testing.assert_array_equal(

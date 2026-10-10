@@ -49,7 +49,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     cellprofiler_setting_literal,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     ObjectMeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
@@ -2020,7 +2022,7 @@ def object_classification_backend(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 @runtime_bound_parameters(
     _ClassificationMeasurementValuesRuntimeParameter,
@@ -2176,7 +2178,7 @@ def classification_rgb_image(classified_labels: np.ndarray) -> np.ndarray:
     return color_table[labels]
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 @runtime_bound_parameters(
     _ClassificationMeasurement1ValuesRuntimeParameter,
@@ -2252,7 +2254,7 @@ def classify_objects_two_measurements(
     return (classified_labels, ClassificationResult.columnar(result))
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 def classify_objects_by_intensity_bins(
     image: np.ndarray,

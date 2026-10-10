@@ -17,11 +17,7 @@ import numpy as np
 
 from openhcs.core.axes import ColourAxis, TileAxis
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImagePayloadExecutionMode,
-    pack_aligned_image_outputs,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageStack, pack_aligned_image_outputs)
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ArtifactSpecRelation,
@@ -40,15 +36,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     ObjectMeasurementColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    composed_image_payload,
-    object_label_input_execution_mode,
-    required_axis_roles,
-    resolved_callable_parameter,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (composed_image_payload, object_label_input_execution_mode, required_axis_roles, resolved_callable_parameter, runtime_bound_parameters, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
@@ -156,11 +144,19 @@ from openhcs.processing.backends.cellprofiler.colocalization_costes import (
     thresholded_colocalization_metrics,
 )
 from openhcs.core.runtime_profile import RuntimeProfiler
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+)
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    SliceAlignedLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -419,7 +415,7 @@ class MeasureColocalizationMeasurementRowPolicy(
                 f"{expected_fields!r}, got {rows.fields!r}."
             )
         measurement_scope = (
-            MeasurementScope.OBJECT if object_scope else MeasurementScope.IMAGE
+            MeasurementScope.OBJECT if object_scope else MeasurementScope.SAMPLE
         )
         features_by_field_name = {
             feature.measurement_row_field_name: feature
@@ -2538,8 +2534,8 @@ def _colocalization_unit_interval_scale(
 
 @required_axis_roles(ColourAxis)
 @composed_image_payload
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=FlexibleContract)
 @runtime_bound_parameters(_ColocalizationThresholdMaskOutputsRuntimeParameter)
 def measure_colocalization(
     image: ImagePayload,
@@ -2801,9 +2797,9 @@ def _measure_colocalization_objects_core(
 
 @required_axis_roles(ColourAxis)
 @composed_image_payload
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 @special_inputs("labels")
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
+@object_label_input_execution_mode(SliceAlignedLabels)
 @runtime_bound_parameters(
     _ObjectColocalizationRankProviderRuntimeParameter,
     _ColocalizationThresholdMaskOutputsRuntimeParameter,
@@ -2886,7 +2882,7 @@ def measure_colocalization_objects(
         threshold_mask_outputs=threshold_mask_outputs,
         fallback_channel_index=channel_1,
     )
-    if not target_scope.includes(MeasurementScope.IMAGE):
+    if not target_scope.includes(MeasurementScope.SAMPLE):
         return (output, object_rows)
     image_row = _colocalization_measurement(
         context.image_pair.first_image,

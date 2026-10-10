@@ -37,17 +37,10 @@ from openhcs.core.measurement_row_materialization import (
     ObjectMeasurementColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.equivalence.policy import (
-    RuntimeMeasurementQualifierSuffixMatchStrategy,
-)
+from openhcs.core.measurement_dialect import RuntimeMeasurementQualifierSuffixMatchStrategy
 from metaclass_registry.strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -98,7 +91,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendProvider,
@@ -150,6 +145,9 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import ColourSampleAxisSpec
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.pipeline.function_contracts import (
+    SliceAlignedLabels,
+)
 
 
 class IntensityDistributionHeatmapMeasurement(Enum):
@@ -2443,9 +2441,9 @@ def _radial_distribution_arrays_from_bin_totals_numba(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
+@object_label_input_execution_mode(SliceAlignedLabels)
 @runtime_bound_parameters(
     SliceIndexRuntimeParameter,
     _IntensityDistributionHeatmapOutputsRuntimeParameter,

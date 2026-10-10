@@ -13,7 +13,6 @@ import inspect
 import logging
 import os
 from dataclasses import dataclass
-from enum import Enum
 from functools import lru_cache
 from types import MappingProxyType
 from typing import (
@@ -1204,9 +1203,9 @@ class FuncStepContractValidator:
                         )
                     processing_contract = invocation.contract.processing_contract
                     contract_label = (
-                        processing_contract.name
-                        if isinstance(processing_contract, Enum)
-                        else type(requirement).__name__
+                        type(requirement).__name__
+                        if processing_contract is None
+                        else processing_contract.key
                     )
                     raise ValueError(
                         f"Step '{step_name}' callable "

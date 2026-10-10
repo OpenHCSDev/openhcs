@@ -705,7 +705,7 @@ def test_sqlite_schema_retains_zero_row_declared_measurement_fields() -> None:
                     FieldSpec("Count_Nuclei", int, required=False),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     object_spec = _record_measurement_table(
@@ -749,7 +749,7 @@ def test_sqlite_schema_retains_zero_row_declared_measurement_fields() -> None:
                     FieldSpec("Threshold_Median", float, required=False),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
+            subject=MeasurementSubject(MeasurementScope.RUN),
         ),
     )
     batch = RuntimeArtifactBatch(
@@ -849,7 +849,7 @@ def test_combined_object_schema_orders_subjects_and_identifiers_exactly() -> Non
             "CPA_Per_Image",
             (),
             (),
-            MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
         object_tables=object_tables,
         relationship_tables=(),
@@ -857,7 +857,7 @@ def test_combined_object_schema_orders_subjects_and_identifiers_exactly() -> Non
             "CPA_Per_Experiment",
             (),
             (),
-            MeasurementSubject(MeasurementScope.EXPERIMENT, "Experiment"),
+            MeasurementSubject(MeasurementScope.RUN, "Experiment"),
         ),
     )
     settings = _cpa_settings(object_table_mode=CellProfilerObjectTableMode.COMBINED)
@@ -909,7 +909,7 @@ def test_projection_keeps_mixed_image_and_object_subjects_separate() -> None:
                     FieldSpec("result_value", float, required=False),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     batch = RuntimeArtifactBatch(
@@ -1154,7 +1154,7 @@ def test_object_view_uses_keyed_inner_joins_instead_of_union() -> None:
             "CPA_Per_Image",
             ({"ImageNumber": 1},),
             (FieldSpec("ImageNumber", int),),
-            MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
         object_tables=(
             CellProfilerProjectedTable(
@@ -1205,7 +1205,7 @@ def test_object_view_uses_keyed_inner_joins_instead_of_union() -> None:
             "CPA_Per_Experiment",
             (),
             (),
-            MeasurementSubject(MeasurementScope.EXPERIMENT, "Experiment"),
+            MeasurementSubject(MeasurementScope.RUN, "Experiment"),
         ),
     )
     settings = _cpa_settings(object_table_mode=CellProfilerObjectTableMode.VIEW)

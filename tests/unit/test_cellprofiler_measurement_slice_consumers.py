@@ -27,7 +27,7 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
@@ -200,7 +200,7 @@ def test_image_measurement_vector_record_lookup_has_no_replacement_cache() -> No
     )
     query = MeasurementFeatureQuery(
         feature_name,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
 
     first = MeasurementImageOperandVectorResolution.runtime_feature_tables(
@@ -230,7 +230,7 @@ def test_declared_measurement_binding_accepts_axisless_payload_domain() -> None:
                     ({"value": 11.0},),
                     fields=(FieldSpec("value", float),),
                 ),
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             ),
         )
     )

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.unit.saved_output_dialect import SAVED_OUTPUT_DIALECT
+
 import sqlite3
 from pathlib import Path
 
@@ -222,7 +224,7 @@ def test_native_shards_merge_cpa_declared_image_and_object_rows(
     _write_sharded_native_output(second, (2,))
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy()
+        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
 
     assert report.is_equivalent
@@ -263,7 +265,7 @@ def test_native_shards_merge_declared_relationship_rows_and_view(
             )
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy()
+        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
 
     assert report.is_equivalent
@@ -278,7 +280,7 @@ def test_native_shards_reject_overlapping_image_sets(tmp_path: Path) -> None:
     _write_sharded_native_output(second, (1,))
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy()
+        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
 
     assert not report.is_equivalent
@@ -303,7 +305,7 @@ def test_native_shards_reject_nonpartitionable_experiment_aggregate(
             )
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy()
+        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
 
     assert any(
@@ -322,7 +324,7 @@ def test_native_shards_reject_undeclared_side_writes(tmp_path: Path) -> None:
     (second / "unexpected.txt").write_text("side write")
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy()
+        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
 
     assert any("unexpected files" in message for message in report.failure_messages())
@@ -349,7 +351,7 @@ def test_database_export_equivalence_compares_sqlite_and_semantic_properties(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert report.is_equivalent
@@ -374,7 +376,7 @@ def test_database_export_equivalence_rejects_unequal_row_count_before_value_proj
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert not report.is_equivalent
@@ -409,7 +411,7 @@ def test_database_export_equivalence_resolves_prefixed_combined_cpa_schema(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert report.is_equivalent
@@ -445,7 +447,7 @@ def test_database_export_equivalence_uses_declared_database_and_run_metadata(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert report.is_equivalent
@@ -473,7 +475,7 @@ def test_database_export_equivalence_reports_database_rows_and_property_keys(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     messages = report.failure_messages()
@@ -504,7 +506,7 @@ def test_database_export_equivalence_reports_sqlite_nullability_drift(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert any(
@@ -632,7 +634,7 @@ def test_database_export_equivalence_applies_numeric_tolerance(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(numeric_abs_tolerance=0.001),
+        policy=RuntimeEquivalencePolicy(numeric_abs_tolerance=0.001, measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert report.is_equivalent
@@ -663,7 +665,7 @@ def test_database_export_equivalence_uses_per_object_table_owner_for_aggregate_f
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert report.is_equivalent
@@ -692,7 +694,7 @@ def test_database_export_equivalence_compares_object_columns_strictly(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert not report.is_equivalent
@@ -754,7 +756,7 @@ def test_database_export_equivalence_rejects_object_location_drift_when_value_dr
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert not report.is_equivalent
@@ -784,7 +786,7 @@ def test_database_export_equivalence_compares_aggregate_columns_strictly(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert not report.is_equivalent
@@ -805,7 +807,7 @@ def test_database_export_equivalence_compares_relationship_rows_exactly(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert not report.is_equivalent
@@ -851,7 +853,7 @@ def test_database_column_dialect_inverts_prefixed_image_and_combined_object() ->
     assert dialect.image_subject(
         "BBBC022QC_Per_Image",
         "ImageNumber",
-    ) == MeasurementSubject(MeasurementScope.IMAGE, "Image")
+    ) == MeasurementSubject(MeasurementScope.SAMPLE, "Image")
     assert (
         dialect.object_subject(
             "BBBC022QC_Per_Object",
@@ -871,7 +873,7 @@ def test_database_column_dialect_inverts_declared_image_object_aggregate() -> No
     assert external_field.name == "Mean_Cells_Children_Cytoplasm_Count"
     assert (
         dialect.source_measurement_field(
-            MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             external_field,
         )
         == external_field
@@ -949,7 +951,7 @@ def test_repeated_assignment_database_projection_preserves_complete_relationship
         candidate,
         outputs=StepExecutionObservation(
             {},
-            image_numbers_by_export_path={
+            sample_numbers_by_export_path={
                 candidate / "analysis.db": {"W001": (1,), "W002": (2,)}
             },
         ),
@@ -957,7 +959,7 @@ def test_repeated_assignment_database_projection_preserves_complete_relationship
     report = cellprofiler_database_export_equivalence(
         native,
         exports,
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
         execution_axis_id="W002",
     )
     assert report.is_equivalent, report.differences
@@ -969,6 +971,6 @@ def test_repeated_assignment_database_projection_preserves_complete_relationship
         cellprofiler_database_export_equivalence(
             native,
             exports,
-            policy=RuntimeEquivalencePolicy(),
+            policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
             execution_axis_id="W002",
         )

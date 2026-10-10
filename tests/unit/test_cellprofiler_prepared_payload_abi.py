@@ -5,7 +5,6 @@ from dataclasses import replace
 import numpy as np
 from scipy import ndimage
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.function_patterns import NormalizedFunctionGroup
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
@@ -23,9 +22,13 @@ from openhcs.processing.backends.cellprofiler.secondary import (
 )
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    NaturalExecution,
+)
 
 
-def _execute_prepared(func, source, kwargs, mode=ImagePayloadExecutionMode.NATURAL):
+def _execute_prepared(func, source, kwargs, mode=NaturalExecution):
     contract = NormalizedFunctionGroup.from_pattern("image", func).items[0].contract
     contract = replace(
         contract,
@@ -79,7 +82,7 @@ def test_prepared_medianfilter_keeps_original_intensity_scale_and_mask():
     source = ImagePayloadMetadata.for_array(pixels).payload_with(pixels, mask).normalize_intensity_payload(dtype=np.float32,)
 
     result = _execute_prepared(
-        medianfilter, source, {"window_size": 3}, ImagePayloadExecutionMode.FULL_STACK,
+        medianfilter, source, {"window_size": 3}, FullStackExecution,
     )
 
     np.testing.assert_array_equal(

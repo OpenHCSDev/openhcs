@@ -12,7 +12,6 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 
 
 from openhcs.constants.input_source import InputSource
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -79,8 +78,13 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.image_payload_execution_mode import (
+    NaturalExecution,
+)
 
 
 @pytest.mark.parametrize("shape", [(32, 32), (33, 35), (64, 97), (97, 64)])
@@ -184,7 +188,7 @@ def test_image_quality_otsu_preserves_cellprofiler_constant_edge_values() -> Non
 def test_measure_image_quality_declares_per_plane_processing_contract() -> None:
     contract = CallableContract.from_callable(measure_image_quality)
 
-    assert contract.processing_contract is ProcessingContract.PURE_2D
+    assert contract.processing_contract is Pure2DContract
 
 
 def test_measure_image_quality_executes_once_per_declared_image_input() -> None:
@@ -327,7 +331,7 @@ def test_measure_image_quality_pure_2d_contract_slices_3d_site_batch() -> None:
             "calculate_threshold": False,
             "blur_scales": (2,),
         },
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -374,7 +378,7 @@ def test_measure_image_quality_projects_named_source_axis_from_runtime_metadata(
             "calculate_intensity": True,
             "calculate_threshold": False,
         },
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=projection,
     )
     rows = MeasureImageQualityModule.MeasurementRows.for_request(
@@ -386,7 +390,7 @@ def test_measure_image_quality_projects_named_source_axis_from_runtime_metadata(
                 source_image_name=None,
                 source_aliases=source_names,
                 image_count=len(source_names),
-                execution_mode=ImagePayloadExecutionMode.NATURAL,
+                execution_mode=NaturalExecution,
                 plane_projection=projection,
             ),
         ),
@@ -450,7 +454,7 @@ def test_measure_image_quality_table_uses_row_qualified_source_inputs() -> None:
             "calculate_intensity": True,
             "calculate_threshold": False,
         },
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         plane_projection=projection,
     )
     requested_source_specs: list[tuple[ArtifactSpec, ...]] = []
@@ -470,7 +474,7 @@ def test_measure_image_quality_table_uses_row_qualified_source_inputs() -> None:
                 source_image_name=None,
                 source_aliases=source_names,
                 image_count=len(source_names),
-                execution_mode=ImagePayloadExecutionMode.NATURAL,
+                execution_mode=NaturalExecution,
                 plane_projection=projection,
             ),
             spec=contract.artifact_outputs.specs[0],
@@ -481,8 +485,8 @@ def test_measure_image_quality_table_uses_row_qualified_source_inputs() -> None:
     assert requested_source_specs == [source_specs]
     assert table.source_image_name is None
     assert table.subject == MeasurementSubject(
-        MeasurementScope.IMAGE,
-        MeasurementScope.IMAGE.value,
+        MeasurementScope.SAMPLE,
+        "image",  # CellProfiler's unqualified sample source
     )
     assert (
         tuple(table.rows.column_values(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value))
@@ -506,7 +510,7 @@ def test_quality_control_measurements_keep_distinct_site_image_identities() -> N
             ),
             source_image_name=f"Channel{channel}",
             subject=MeasurementSubject(
-                MeasurementScope.IMAGE,
+                MeasurementScope.SAMPLE,
                 f"Channel{channel}",
             ),
             measurement_feature_owner=MeasureImageQualityModule,
@@ -654,7 +658,7 @@ def test_image_quality_experiment_measurements_use_exact_columnar_schema() -> No
             {feature_name: (0.2, 0.4)},
             fields=(FieldSpec(feature_name, float, required=False),),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         measurement_feature_owner=MeasureImageQualityModule,
     )
 

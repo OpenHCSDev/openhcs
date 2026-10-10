@@ -536,10 +536,10 @@ class MeasurementScope(str, Enum):
         return obj
 
     ARTIFACT = ("artifact", False)
-    IMAGE = ("image", True)
+    SAMPLE = ("sample", True)
     OBJECT = ("object", True)
     RELATIONSHIP = ("relationship", True)
-    EXPERIMENT = ("experiment", False)
+    RUN = ("run", False)
     requires_subject_name = AliasProperty[bool]("_requires_subject_name")
 
 
@@ -1201,24 +1201,30 @@ class MeasurementRowAxisField(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class RuntimeMeasurementRowIdentityContract:
-    """Declare input identity precedence and the projected object-ID field."""
+    """Declare row identity precedence, sample numbering and the object-ID field.
 
-    primary_image_fields: frozenset[str] = frozenset({"slice_index"})
-    fallback_image_fields: frozenset[str] = frozenset({"image_number", "image_id"})
+    A dialect owns one contract: which fields identify a sample row (primary
+    fields win over fallbacks), which field carries the sample number, and
+    which fields identify an object.
+    """
+
+    primary_sample_fields: frozenset[str] = frozenset({"slice_index"})
+    fallback_sample_fields: frozenset[str] = frozenset()
+    sample_number_field: str = "sample_number"
     object_identity_fields: tuple[str, ...] = (
         MeasurementRowAxisField.object_id_field_names()
     )
     object_identity_output_field: str = MeasurementRowAxisField.OBJECT_LABEL.value
 
     def __post_init__(self) -> None:
-        primary_image_fields = frozenset(
+        primary_sample_fields = frozenset(
             normalize_runtime_identifier(field_name)
-            for field_name in self.primary_image_fields
+            for field_name in self.primary_sample_fields
             if str(field_name).strip()
         )
-        fallback_image_fields = frozenset(
+        fallback_sample_fields = frozenset(
             normalize_runtime_identifier(field_name)
-            for field_name in self.fallback_image_fields
+            for field_name in self.fallback_sample_fields
             if str(field_name).strip()
         )
         object_identity_fields = tuple(
@@ -1228,7 +1234,7 @@ class RuntimeMeasurementRowIdentityContract:
                 if str(field_name).strip()
             )
         )
-        overlap = primary_image_fields & fallback_image_fields
+        overlap = primary_sample_fields & fallback_sample_fields
         if overlap:
             raise ValueError(
                 "RuntimeMeasurementRowIdentityContract fields must be disjoint: "
@@ -1242,25 +1248,29 @@ class RuntimeMeasurementRowIdentityContract:
         output_field = normalize_runtime_identifier(self.object_identity_output_field)
         if not output_field:
             raise ValueError("Object identity output field must be non-empty.")
+        sample_number_field = normalize_runtime_identifier(self.sample_number_field)
+        if not sample_number_field:
+            raise ValueError("Sample number field must be non-empty.")
         object.__setattr__(self, "object_identity_output_field", output_field)
-        object.__setattr__(self, "primary_image_fields", primary_image_fields)
-        object.__setattr__(self, "fallback_image_fields", fallback_image_fields)
+        object.__setattr__(self, "primary_sample_fields", primary_sample_fields)
+        object.__setattr__(self, "fallback_sample_fields", fallback_sample_fields)
+        object.__setattr__(self, "sample_number_field", sample_number_field)
         object.__setattr__(self, "object_identity_fields", object_identity_fields)
 
     @property
-    def image_identity_fields(self) -> frozenset[str]:
-        """Return every field that can identify an image row."""
-        return self.primary_image_fields | self.fallback_image_fields
+    def sample_identity_fields(self) -> frozenset[str]:
+        """Return every field that can identify a sample row."""
+        return self.primary_sample_fields | self.fallback_sample_fields
 
-    def selected_image_identity_fields(
+    def selected_sample_identity_fields(
         self,
         normalized_present_fields: frozenset[str],
     ) -> frozenset[str]:
         """Return the identity fields that own a row under this contract."""
-        primary_fields = normalized_present_fields & self.primary_image_fields
+        primary_fields = normalized_present_fields & self.primary_sample_fields
         if primary_fields:
             return primary_fields
-        return normalized_present_fields & self.fallback_image_fields
+        return normalized_present_fields & self.fallback_sample_fields
 
     def selected_object_identity_field(
         self,
@@ -1276,10 +1286,45 @@ class RuntimeMeasurementRowIdentityContract:
             None,
         )
 
+    def is_sample_number_reference(self, field_name: str) -> bool:
+        """Return whether a measurement field refers to another sample's number."""
+        return _is_sample_number_reference(self, field_name)
 
-DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT = (
-    RuntimeMeasurementRowIdentityContract()
-)
+    def is_aggregate_sample_number_reference(self, field_name: str) -> bool:
+        """Return whether a measurement field averages sample-number references."""
+        return _is_aggregate_sample_number_reference(self, field_name)
+
+
+@lru_cache(maxsize=32768)
+def _is_sample_number_reference(
+    contract: RuntimeMeasurementRowIdentityContract,
+    field_name: str,
+) -> bool:
+    normalized = normalize_runtime_identifier(field_name)
+    if normalized in contract.sample_identity_fields:
+        return False
+    parts = tuple(part for part in normalized.split("_") if part)
+    number_parts = tuple(contract.sample_number_field.split("_"))
+    width = len(number_parts)
+    return any(
+        parts[index : index + width] == number_parts
+        for index in range(len(parts) - width + 1)
+    )
+
+
+@lru_cache(maxsize=32768)
+def _is_aggregate_sample_number_reference(
+    contract: RuntimeMeasurementRowIdentityContract,
+    field_name: str,
+) -> bool:
+    parts = tuple(
+        part for part in normalize_runtime_identifier(field_name).split("_") if part
+    )
+    return (
+        bool(parts)
+        and parts[0] == MeasurementStatistic.MEAN.value
+        and _is_sample_number_reference(contract, field_name)
+    )
 
 
 class MeasurementRowValueField(str, Enum):
@@ -1827,9 +1872,13 @@ class MeasurementSubject:
     @property
     def source_image_name(self) -> str | None:
         """Return the concrete source image represented by this subject, if any."""
-        if self.scope is not MeasurementScope.IMAGE or self.name is None:
+        if self.scope is not MeasurementScope.SAMPLE or self.name is None:
             return None
-        if self.name.casefold() == MeasurementScope.IMAGE.value:
+        from openhcs.core.measurement_dialect import MeasurementDialect
+
+        if normalize_runtime_identifier(self.name) in (
+            MeasurementDialect.unqualified_sample_names()
+        ):
             return None
         return self.name
 
@@ -1841,7 +1890,7 @@ class MeasurementSubject:
         names identify different row domains and cannot be combined implicitly.
         """
 
-        name = None if self.scope is MeasurementScope.IMAGE else self.name
+        name = None if self.scope is MeasurementScope.SAMPLE else self.name
         return self.scope, name, self.id_field
 
     @property
@@ -1867,31 +1916,3 @@ class MeasurementSubject:
         )
 
 
-@lru_cache(maxsize=32768)
-def aggregate_image_number_reference_measurement_field(field_name: str) -> bool:
-    parts = tuple(
-        part for part in normalize_runtime_identifier(field_name).split("_") if part
-    )
-    return (
-        bool(parts)
-        and parts[0] == MeasurementStatistic.MEAN.value
-        and image_number_reference_measurement_field(field_name)
-    )
-
-
-def image_number_reference_measurement_field(field_name: str) -> bool:
-    normalized = normalize_runtime_identifier(field_name)
-    if (
-        normalized
-        in DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT.image_identity_fields
-    ):
-        return False
-    parts = tuple(part for part in normalized.split("_") if part)
-    return parts_contain_adjacent_image_number(parts)
-
-
-def parts_contain_adjacent_image_number(parts: tuple[str, ...]) -> bool:
-    return any(
-        parts[index] == "image" and parts[index + 1] == "number"
-        for index in range(len(parts) - 1)
-    )

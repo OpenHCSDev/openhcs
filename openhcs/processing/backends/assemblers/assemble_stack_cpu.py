@@ -9,7 +9,9 @@ from typing import TYPE_CHECKING, List, Tuple, Union
 
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    VolumetricToSliceContract,
+)
 from openhcs.processing.backends.assemblers.blending import (
     TileBlendMethod,
     SubpixelTilePlacement,
@@ -171,7 +173,7 @@ def _create_dynamic_blend_mask(
 
 
 @artifact_inputs("positions")
-@numpy_func(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+@numpy_func(contract=VolumetricToSliceContract)
 def assemble_stack_cpu(
     image_tiles: "np.ndarray",
     positions: Union[List[Tuple[float, float]], "np.ndarray"],

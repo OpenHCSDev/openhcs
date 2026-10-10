@@ -13,15 +13,11 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementSubjectKey,
 )
 from openhcs.core.equivalence.measurement_rows import (
-    IMAGE_IDENTITY_FIELDS,
-    RUNTIME_AXIS_ROW_IDENTITY_FIELD,
     RuntimeMeasurementRowIdentity,
     RuntimeMeasurementRowMapping,
 )
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
 )
@@ -99,7 +95,7 @@ class RuntimeObjectMeasurementRowIdentity:
         )
         if object_instance_key.slice_index is not None:
             image_identity_fields = (
-                policy.measurement_dialect.row_identity_contract.image_identity_fields
+                policy.measurement_dialect.row_identity_contract.sample_identity_fields
             )
             row_identity = (
                 *(
@@ -133,15 +129,8 @@ class RuntimeObjectMeasurementRowIdentity:
 
     @property
     def has_image_identity(self) -> bool:
-        return any(
-            field[0] in IMAGE_IDENTITY_FIELDS
-            or field[0]
-            in (
-                RUNTIME_AXIS_ROW_IDENTITY_FIELD,
-                RUNTIME_SLICE_ROW_IDENTITY_FIELD,
-            )
-            for field in self.row_identity
-        )
+        """Rows are built from sample identity, axis and slice fields plus the label."""
+        return bool(self.image_identity)
 
     @property
     def object_label_signature(self) -> RuntimeCellSignature | None:
@@ -155,7 +144,7 @@ class RuntimeMeasurementRowSubjectProjection:
     table_subject: RuntimeMeasurementSubjectKey
     table_source_name: str | None
     row: RuntimeMeasurementRowMapping
-    dialect: RuntimeMeasurementDialect
+    dialect: MeasurementDialect
 
     def source_name(self) -> str | None:
         row_source_name = self.row.source_name()
@@ -170,8 +159,8 @@ class RuntimeMeasurementRowSubjectProjection:
             return RuntimeMeasurementSubjectKey(MeasurementScope.OBJECT, object_name)
         if self.row.source_name() is not None and object_identity is None:
             return RuntimeMeasurementSubjectKey(
-                MeasurementScope.IMAGE,
-                MeasurementScope.IMAGE.value,
+                MeasurementScope.SAMPLE,
+                MeasurementScope.SAMPLE.value,
             )
         return self.table_subject
 

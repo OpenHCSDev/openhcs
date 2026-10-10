@@ -139,7 +139,7 @@ def measurement_table_axis_values(
 
 
 if TYPE_CHECKING:
-    from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
+    from openhcs.core.measurement_dialect import MeasurementDialect
 
 
 MeasurementFeatureNameProjection: TypeAlias = Callable[
@@ -1046,7 +1046,7 @@ class WideMeasurementRowAccumulator:
     def add_declared_rows(
         self,
         rows: ColumnarRows,
-        dialect: RuntimeMeasurementDialect,
+        dialect: MeasurementDialect,
         *,
         default_subject: str,
         default_scope: MeasurementScope = MeasurementScope.ARTIFACT,
@@ -1148,7 +1148,7 @@ class WideMeasurementRowAccumulator:
     ) -> None:
         if not row_count:
             return
-        image_fields = self.row_identity_contract.selected_image_identity_fields(
+        image_fields = self.row_identity_contract.selected_sample_identity_fields(
             frozenset(normalize_runtime_identifier(name) for name in columns)
         )
         identity_columns = tuple(
@@ -1329,7 +1329,7 @@ class WideMeasurementRowAccumulator:
             if subjects is not None and subject not in subjects:
                 continue
             names = frozenset(name for value in batches for name in value.columns)
-            image_names = self.row_identity_contract.selected_image_identity_fields(
+            image_names = self.row_identity_contract.selected_sample_identity_fields(
                 frozenset(normalize_runtime_identifier(name) for name in names)
             )
             identities = tuple(
@@ -1904,7 +1904,7 @@ class MeasurementRowOwnership:
         if default is not MeasurementScope.ARTIFACT:
             return default
         if self.source_image_name is not None:
-            return MeasurementScope.IMAGE
+            return MeasurementScope.SAMPLE
         return default
 
     @staticmethod

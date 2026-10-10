@@ -22,6 +22,7 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelPlaneDomainStrategy,
 )
 from openhcs.core.runtime_object_labels import (
+    FinalLabels,
     ObjectLabelRepresentation,
     ObjectLabelVariant,
 )
@@ -180,52 +181,48 @@ class ObjectLabelPure2DSliceAggregator:
             self.representation is ObjectLabelRepresentation.DENSE_LABELS
             and MemoryType(self.memory_type) is MemoryType.NUMPY
         ):
-            final_planes = tuple(self.slice_labels(value, ObjectLabelVariant.FINAL) for value in self.values)
-            unedited_planes = (
-                tuple(self.slice_labels(value, ObjectLabelVariant.UNEDITED) for value in self.values)
-                if ObjectLabelVariantData.variant_is_present(ObjectLabelVariant.UNEDITED, self.values)
-                else (None,) * len(self.values)
-            )
-            small_removed_planes = (
-                tuple(self.slice_labels(value, ObjectLabelVariant.SMALL_REMOVED) for value in self.values)
-                if ObjectLabelVariantData.variant_is_present(ObjectLabelVariant.SMALL_REMOVED, self.values)
-                else (None,) * len(self.values)
-            )
+            declared = self.declared_variants()
+            final_planes = tuple(self.slice_labels(value, FinalLabels) for value in self.values)
+            variant_planes = {
+                variant: tuple(self.slice_labels(value, variant) for value in self.values)
+                for variant in declared
+            }
             return self.output_value(
                 PlaneStackObjectLabelVariantData(
                     tuple(
                         ObjectLabelVariantData(
-                            labels=final, unedited_labels=unedited,
-                            small_removed_labels=small_removed,
+                            labels=final,
+                            variants={
+                                variant: planes[index]
+                                for variant, planes in variant_planes.items()
+                            },
                         )
-                        for final, unedited, small_removed in zip(
-                            final_planes, unedited_planes, small_removed_planes, strict=True,
-                        )
+                        for index, final in enumerate(final_planes)
                     ),
                     self.memory_type,
                 )
             )
         return self.output_value(
             ObjectLabelVariantData(
-                labels=self.aggregate_variant(ObjectLabelVariant.FINAL),
-                unedited_labels=self.aggregate_optional_variant(
-                    ObjectLabelVariant.UNEDITED
-                ),
-                small_removed_labels=self.aggregate_optional_variant(
-                    ObjectLabelVariant.SMALL_REMOVED
-                ),
+                labels=self.aggregate_variant(FinalLabels),
+                variants={
+                    variant: self.aggregate_variant(variant)
+                    for variant in self.declared_variants()
+                },
             )
         )
 
-    def aggregate_optional_variant(
-        self,
-        variant: ObjectLabelVariant,
-    ) -> ObjectLabelData | None:
-        if ObjectLabelVariantData.variant_is_present(variant, self.values):
-            return self.aggregate_variant(variant)
-        return None
+    def declared_variants(self) -> tuple[type[ObjectLabelVariant], ...]:
+        """Return the non-final variants present on any aggregated value."""
+        return tuple(
+            dict.fromkeys(
+                variant
+                for value in self.values
+                for variant in value.variant_data.present_variants[1:]
+            )
+        )
 
-    def aggregate_variant(self, variant: ObjectLabelVariant) -> ObjectLabelData:
+    def aggregate_variant(self, variant: type[ObjectLabelVariant]) -> ObjectLabelData:
         return object_label_stack_planes(
             tuple(self.slice_labels(value, variant) for value in self.values),
             self.memory_type,
@@ -234,7 +231,7 @@ class ObjectLabelPure2DSliceAggregator:
     def slice_labels(
         self,
         value: ObjectLabelValue,
-        variant: ObjectLabelVariant,
+        variant: type[ObjectLabelVariant],
     ) -> ObjectLabelData:
         if not self.expands_to_source_domain:
             return value.variant_data.labels_for_variant(variant)
@@ -250,7 +247,7 @@ class ObjectLabelPure2DSliceAggregator:
     def domain_value_for_variant(
         self,
         value: ObjectLabelValue,
-        variant: ObjectLabelVariant,
+        variant: type[ObjectLabelVariant],
     ) -> ObjectLabelValue:
         """Return a typed label value carrying the selected variant and domain."""
         return value.with_replacement_labels(

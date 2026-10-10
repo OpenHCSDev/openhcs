@@ -41,7 +41,9 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
 )
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
 
 
@@ -63,7 +65,7 @@ class ManualObjectStats:
         parameter_name="labels_input",
     )
 )
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def identify_objects_manually(
     image: ImagePayload,
     labels_input: np.ndarray | None = None,

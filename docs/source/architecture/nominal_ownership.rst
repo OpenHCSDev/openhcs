@@ -75,8 +75,8 @@ Examples in the current architecture
 - ``RuntimeSliceProjectionStrategy`` selects behavior by nominal runtime type.
 - runtime equivalence feature profiles select the most-derived semantic owner
   for a feature context.
-- ``ProcessingContract`` enum members delegate execution to nominal contract
-  declarations.
+- ``ProcessingContract`` subclasses own how a callable executes over its
+  plane axis.
 - ``CellProfilerModule`` subclasses own module names, settings binding,
   callables, catalogue placement, artifacts, source-setup behaviour, and whether
   a parsed module may enter a headless pipeline. The CellProfiler backend

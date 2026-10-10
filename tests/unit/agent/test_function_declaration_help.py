@@ -109,15 +109,15 @@ def test_real_catalog_detail_and_json_project_the_same_parameter_document(monkey
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         OpenHCSRegistry,
     )
+    from openhcs.core.processing_contracts import FlexibleContract
     from openhcs.processing.backends.lib_registry.unified_registry import (
         FunctionMetadata,
-        ProcessingContract,
     )
 
     metadata = FunctionMetadata(
         name="independent_probe",
         func=independent_probe,
-        contract=ProcessingContract.FLEXIBLE,
+        contract=FlexibleContract,
         registry=OpenHCSRegistry(),
         module=__name__,
         doc=independent_probe.__doc__,
@@ -213,6 +213,9 @@ def test_registered_neurite_metadata_preserves_declared_field_help(
     )
     from openhcs.processing.backends.lib_registry.unified_registry import (
         FunctionMetadata,
+    )
+    from openhcs.core.processing_contracts import (
+        FlexibleContract,
     )
     from openhcs.processing.custom_functions.manager import CustomFunctionManager
     from openhcs.processing.func_registry import synchronize_custom_function_sources

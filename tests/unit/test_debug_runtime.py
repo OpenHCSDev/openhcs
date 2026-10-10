@@ -12,7 +12,6 @@ import pytest
 from openhcs.core.alias_property import AliasProperty
 
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -132,9 +131,15 @@ from openhcs.core.steps.function_runtime import (
     PatternGroupData,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 
 class DebugRuntimeTokenParameter:
@@ -250,7 +255,7 @@ class DebugRuntimeFixture:
                     callable_metadata,
                     input_memory_type=MEMORY_TYPE_NUMPY,
                     output_memory_type=MEMORY_TYPE_NUMPY,
-                    processing_contract=ProcessingContract.PURE_3D,
+                    processing_contract=Pure3DContract,
                     runtime_adapter=runtime_adapter,
                     runtime_context_parameter=runtime_context_parameter,
                 ),
@@ -1069,8 +1074,8 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
             input_memory_type=MEMORY_TYPE_NUMPY,
             output_memory_type=MEMORY_TYPE_NUMPY,
             runtime_adapter=runtime_adapter,
-            processing_contract=ProcessingContract.PURE_2D,
-            runtime_image_execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+            processing_contract=Pure2DContract,
+            runtime_image_execution_mode=FullStackExecution,
         ),
     )
     image = ImagePayloadMetadata(
@@ -1110,10 +1115,10 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
         assert "selected_runtime_plane=preserved_stack" in message
         assert "execution_axis_cardinality=3" in message
         assert (
-            "image_payload_execution_mode=ImagePayloadExecutionMode.FULL_STACK"
+            "image_payload_execution_mode=FullStackExecution"
             in message
         )
-        assert "processing_contract=ProcessingContract.PURE_2D" in message
+        assert "processing_contract=Pure2DContract" in message
         assert isinstance(exc.__cause__, RuntimeSliceProjectionDeclarationError)
         assert str(exc.__cause__) == "projection preflight mismatch"
     else:

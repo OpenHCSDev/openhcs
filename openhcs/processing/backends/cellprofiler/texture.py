@@ -77,7 +77,9 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NativeBackendProvider,
     NumbaBackendProvider,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 
 
 class MeasureTextureObjectMeasurementRowPolicy(
@@ -533,7 +535,7 @@ def _texture_measurement_rows(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def measure_texture(
     image: np.ndarray,
     scale: TextureScale = 3,
@@ -588,7 +590,7 @@ def _image_texture_measurements(
     return _texture_measurement_rows(axes, feature_vectors)
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 def measure_texture_objects(
     image: np.ndarray,
@@ -633,7 +635,7 @@ def measure_texture_objects(
             gray_levels=gray_levels,
             haralick_backend_provider=haralick_backend_provider,
         )
-        if target_scope.includes(MeasurementScope.IMAGE)
+        if target_scope.includes(MeasurementScope.SAMPLE)
         else None
     )
     if not target_scope.includes(MeasurementScope.OBJECT):

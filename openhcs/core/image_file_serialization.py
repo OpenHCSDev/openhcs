@@ -51,6 +51,11 @@ class SourceImagePixelSemantics:
                 "Source image pixel channel count must exceed one when declared."
             )
 
+    @property
+    def axes(self) -> PayloadAxes:
+        """Return the payload axes this file format declares for its pixels."""
+        return PayloadAxes.colour_samples(self.channel_axis)
+
     def validated_channel_axis(self, payload: Any) -> int | None:
         """Validate loaded pixels against this format-owned declaration."""
         axis = self.channel_axis
@@ -190,7 +195,7 @@ class ImageFileSourceMetadata:
             axes=(
                 metadata.axes
                 if values_preserved and self.pixel_semantics.channel_axis is None
-                else PayloadAxes.colour_samples(self.pixel_semantics.channel_axis)
+                else self.pixel_semantics.axes
             ),
         )
 

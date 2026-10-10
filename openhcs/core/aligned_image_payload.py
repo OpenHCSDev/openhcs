@@ -50,6 +50,11 @@ from openhcs.core.source_spatial_domain import (
     SourceSpatialDomainAdapter,
 )
 from openhcs.core.axes import ColourAxis
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+    FullStackExecution,
+    NaturalExecution,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -681,7 +686,7 @@ class ImagePayloadComposition:
     """Resolved image payload plus its execution mode."""
 
     payload: Any
-    execution_mode: ImagePayloadExecutionMode
+    execution_mode: type[ImagePayloadExecutionMode]
 
     @property
     def plane_axis(self) -> RuntimePlaneAxis | None:
@@ -1844,7 +1849,7 @@ def compose_aligned_image_payload(
                 slices=image_payloads,
                 slice_contexts=contexts,
             ),
-            execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+            execution_mode=AlignedStackExecution,
         )
     aligned_payloads = tuple(
         payload for payload in image_payloads if isinstance(payload, AlignedImageStack)
@@ -1880,7 +1885,7 @@ def compose_aligned_image_payload(
                 return ImagePayloadComposition(
                     payload=aligned_payloads[0],
                     execution_mode=(
-                        ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+                        AlignedStackExecution
                     ),
                 )
         declared_contexts = tuple(
@@ -1913,12 +1918,12 @@ def compose_aligned_image_payload(
                 ),
                 slice_contexts=(declared_contexts[0] if declared_contexts else ()),
             ),
-            execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+            execution_mode=AlignedStackExecution,
         )
     if len(image_payloads) == 1 and retain_single_input:
         return ImagePayloadComposition(
             payload=image_payloads[0],
-            execution_mode=ImagePayloadExecutionMode.NATURAL,
+            execution_mode=NaturalExecution,
         )
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
@@ -1976,14 +1981,14 @@ def compose_aligned_image_payload(
                     for slice_index in range(slice_count)
                 )
             ),
-            execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+            execution_mode=AlignedStackExecution,
         )
     return ImagePayloadComposition(
         payload=ImagePayloadBundleContext.from_payloads(
             image_payloads,
             metadata_mode=metadata_mode,
         ).compose(),
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
 
 

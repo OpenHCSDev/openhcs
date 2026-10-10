@@ -53,6 +53,9 @@ from openhcs.interop.cellprofiler.setting_names import (
     setting_values,
     split_symbol_names,
 )
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -391,7 +394,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 from numba import njit
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import special_inputs
@@ -422,7 +424,9 @@ from openhcs.processing.backends.cellprofiler.structuring_elements import (
     adapt_structuring_element_rank,
     build_structuring_element,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 
 NDIMAGE_CONSTANT_MODE = "constant"
 WATERSHED_STRATEGY_REGISTRY_KEY = "strategy_label"
@@ -1845,8 +1849,8 @@ def cellprofiler_legacy_watershed(
     )
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.PURE_2D)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=Pure2DContract)
 @special_inputs("topology_inputs")
 @callable_request(WatershedInvocationRequest)
 def watershed_library(
@@ -1866,8 +1870,8 @@ def watershed_library(
     return request.execute(WatershedRuntimeFamily.LIBRARY, topology_inputs)
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.PURE_2D)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=Pure2DContract)
 @special_inputs("topology_inputs")
 @callable_request(WatershedInvocationRequest)
 def watershed_cellprofiler4(

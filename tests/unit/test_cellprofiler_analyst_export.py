@@ -128,7 +128,7 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
         CellProfilerDatabaseColumnDialect(),
         CellProfilerImageSetNumbering(SourceImageSetIdentityPolicy()),
     )
-    subject = MeasurementSubject(MeasurementScope.EXPERIMENT)
+    subject = MeasurementSubject(MeasurementScope.RUN)
     calls: list[tuple[str, MeasurementSubject, str]] = []
     original = CPATableRowProjection._project_measurement_field
 
@@ -246,7 +246,7 @@ def test_database_field_projection_refreshes_declarations_and_live_dtype_hooks(
         rows=MeasurementProjectedColumnarRows(
             {field.name: ()}, fields=(field,),
         ),
-        subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
+        subject=MeasurementSubject(MeasurementScope.RUN),
         measurement_feature_owner=RelateObjectsModule,
     )
     _subject, actual_rows, actual_fields = next(projection.measurement_projections(table, scope=None))
@@ -300,7 +300,7 @@ def test_cpa_alias_collision_precedes_later_module_field_matching(
                 FieldSpec("Distance_Centroid_Nuclei", float),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
+        subject=MeasurementSubject(MeasurementScope.RUN),
         measurement_feature_owner=RelateObjectsModule,
     )
     projection = CPATableRowProjection(
@@ -396,7 +396,7 @@ def test_projection_uses_only_exact_batch_records_and_merges_subject_rows() -> N
                     FieldSpec("Count_Nuclei", int),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     nuclei_shape = _record_measurements(
@@ -477,7 +477,7 @@ def test_projection_uses_only_exact_batch_records_and_merges_subject_rows() -> N
                     FieldSpec("Count_Nuclei", int),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     del undeclared
@@ -514,7 +514,7 @@ def test_projection_uses_only_exact_batch_records_and_merges_subject_rows() -> N
         isinstance(field_name, str) for field_name in projection.image_table.rows[0]
     )
     assert projection.image_table.subject == MeasurementSubject(
-        MeasurementScope.IMAGE,
+        MeasurementScope.SAMPLE,
         "Image",
     )
     assert len(projection.object_tables) == 1
@@ -608,7 +608,7 @@ def test_long_measurement_schema_remains_owned_by_each_projected_subject() -> No
                     FieldSpec("Mean_Child_Area", float, required=False),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "image"),
         ),
     )
     batch = RuntimeArtifactBatch(
@@ -649,7 +649,7 @@ def test_projection_adds_common_typed_source_provenance_to_image_rows() -> None:
                     FieldSpec("Count_Nuclei", int),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     dna = _record_image(
@@ -920,7 +920,7 @@ def _borrowed_source_export_fixture(
                 FieldSpec("Count_Nuclei", int),
             ),
         ),
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             component_metadata=tuple(source_metadata[:2]),
         ),
@@ -1120,7 +1120,7 @@ def test_measurement_provenance_projects_exact_named_contributors_by_site(
                     FieldSpec("ImageQuality_FocusScore_DNA", float),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
         source_image_provenance_planes=planes,
     )
@@ -1303,7 +1303,7 @@ def test_projection_exports_normalized_identify_primary_objects_image_number() -
                     FieldSpec(MeasurementRowValueField.RESULT_VALUE.value, float),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     image_spec = ArtifactSpec.input("DNA", ImageArtifactType)
@@ -1498,7 +1498,7 @@ def test_sqlite_and_properties_render_from_projection_without_execution_context(
                     FieldSpec("Count_Nuclei", int),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     nuclei = _record_measurements(
@@ -1693,7 +1693,7 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step(
                     FieldSpec("Count", int),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
         ),
     )
     image_spec = ArtifactSpec.input("DNA", ImageArtifactType)
@@ -2125,7 +2125,7 @@ def test_produced_thumbnail_uses_named_pixels_not_measurement_source(tmp_path, m
     measurements = tuple(_record_measurements(
         store, table=MeasurementTable(
             name=f"Measurements{index}", source_image_names=("DNA",),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             rows=MeasurementSparseColumnarRows.from_rows(
                 ({RUNTIME_IMAGE_FIELD: 0, f"Value{index}": float(index)},),
                 fields=(FieldSpec(RUNTIME_IMAGE_FIELD, int), FieldSpec(f"Value{index}", float)),

@@ -245,7 +245,7 @@ def test_calculate_statistics_contract_and_exact_experiment_rows() -> None:
             "Metadata_Dose": (0.0, 0.0, 1.0, 1.0),
             "Intensity_Mean_DNA": (1.0, 2.0, 8.0, 9.0),
         },
-        MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     object_table = _table(
         "CellMeasurements",
@@ -279,7 +279,7 @@ def test_calculate_statistics_contract_and_exact_experiment_rows() -> None:
         source_image_name=None,
         source_metadata=None,
     )
-    assert table.subject.scope is MeasurementScope.EXPERIMENT
+    assert table.subject.scope is MeasurementScope.RUN
 
 
 def test_calculate_statistics_multiple_doses_qualify_only_ec50_rows() -> None:
@@ -292,7 +292,7 @@ def test_calculate_statistics_multiple_doses_qualify_only_ec50_rows() -> None:
             "Metadata_DoseB": (1.0, 2.0, 3.0, 4.0),
             "Intensity_Mean_DNA": (1.0, 2.0, 8.0, 9.0),
         },
-        MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     rows = inspect.unwrap(calculate_statistics)(
         np.zeros((4, 2, 2), dtype=np.float32),
@@ -360,7 +360,7 @@ def test_flag_image_repeated_groups_reconstruct_contract_and_runtime_rows() -> N
             "slice_index": (0,),
             "Intensity_MeanIntensity_DNA": (2.0,),
         },
-        MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
     )
     rows = inspect.unwrap(flag_image)(
         np.zeros((2, 2), dtype=np.float32),
@@ -449,7 +449,7 @@ def test_flag_image_skip_setting_fails_without_disposition_authority() -> None:
                         "slice_index": (0,),
                         "Intensity_MeanIntensity_DNA": (2.0,),
                     },
-                    MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                    MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
                 ),
             ),
         )

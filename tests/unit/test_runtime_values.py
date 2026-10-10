@@ -1,4 +1,8 @@
 import pickle
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+    UneditedLabels,
+)
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -83,7 +87,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelRepresentation,
-    ObjectLabelVariant,
+    FinalLabels,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -128,7 +132,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
 from openhcs.processing.backends.cellprofiler.zernike import (
     ShapeZernikeFeatureAuthority,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
+from openhcs.core.processing_contracts import (
     Pure2DAuxiliaryOutputAggregator,
 )
 from openhcs.domains.microscopy.axes import Microscopy
@@ -236,7 +240,7 @@ def test_object_label_set_rejects_nested_payload_and_implicit_authority_merge() 
     labels = np.array([[0, 1], [2, 0]], dtype=np.int16)
     unedited = np.array([[0, 1], [1, 0]], dtype=np.int16)
     payload = ObjectLabelPayload(
-        variant_data=ObjectLabelVariantData(labels=labels, unedited_labels=unedited),
+        variant_data=ObjectLabelVariantData(labels=labels, variants={UneditedLabels: unedited}),
         domain=ObjectLabelDomain(
             declared_object_ids=(1, 2),
         ),
@@ -397,7 +401,9 @@ def test_object_label_aggregation_preserves_variant_plane_writes_and_transport()
     planes = (np.array([[0, 1]], dtype=np.int16), np.array([[0, 2]], dtype=np.int32))
     values = tuple(
         ObjectLabelPayload(
-            variant_data=ObjectLabelVariantData(plane, plane, plane),
+            variant_data=ObjectLabelVariantData(
+                plane, {UneditedLabels: plane, SmallRemovedLabels: plane}
+            ),
             domain=ObjectLabelDomain(declared_object_ids=(index + 1,)),
         )
         for index, plane in enumerate(planes)
@@ -409,20 +415,20 @@ def test_object_label_aggregation_preserves_variant_plane_writes_and_transport()
     assert aggregate.dtype == np.dtype(np.int32)
     decoded = pickle.loads(pickle.dumps(aggregate))
     projected = decoded.project_source_plane(1)
-    projected.unedited_labels[0, 1] = 9
+    projected.variant_labels(UneditedLabels)[0, 1] = 9
     assert projected.labels[0, 1] == 2
-    assert projected.small_removed_labels[0, 1] == 2
-    assert decoded.unedited_labels[1, 0, 1] == 9
+    assert projected.variant_labels(SmallRemovedLabels)[0, 1] == 2
+    assert decoded.variant_labels(UneditedLabels)[1, 0, 1] == 9
     assert planes[1][0, 1] == 2
     decoded.labels[1, 0, 1] = 7
     assert projected.labels[0, 1] == 7
     subset = decoded.with_plane_projection((1,))
     assert subset.shape == (1, 1, 2)
-    assert subset.unedited_labels[0, 0, 1] == 9
+    assert subset.variant_labels(UneditedLabels)[0, 0, 1] == 9
     restored = pickle.loads(pickle.dumps(decoded))
     assert restored.labels[1, 0, 1] == 7
-    assert restored.unedited_labels[1, 0, 1] == 9
-    assert restored.small_removed_labels[1, 0, 1] == 2
+    assert restored.variant_labels(UneditedLabels)[1, 0, 1] == 9
+    assert restored.variant_labels(SmallRemovedLabels)[1, 0, 1] == 2
     np.testing.assert_array_equal(aggregate.labels, np.stack(planes))
 
 
@@ -920,7 +926,7 @@ def test_object_label_source_plane_projection_preserves_projected_variants() -> 
     source = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(
-            labels=labels, small_removed_labels=small_removed
+            labels=labels, variants={SmallRemovedLabels: small_removed}
         ),
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
         source_image_names=("rawDNA", "rawGFP"),
@@ -933,7 +939,7 @@ def test_object_label_source_plane_projection_preserves_projected_variants() -> 
     projected = source.project_source_plane(1, labels=labels[1])
 
     np.testing.assert_array_equal(projected.labels, labels[1])
-    np.testing.assert_array_equal(projected.small_removed_labels, small_removed[1])
+    np.testing.assert_array_equal(projected.variant_labels(SmallRemovedLabels), small_removed[1])
     assert projected.domain.scope is ObjectLabelDomainScope.PAYLOAD
     assert projected.domain.declared_object_ids == (2, 3)
     assert projected.source_image_names == ("rawGFP",)
@@ -946,14 +952,14 @@ def test_object_label_replacement_identity_preserves_planar_variants() -> None:
     source = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(
-            labels=labels, small_removed_labels=small_removed
+            labels=labels, variants={SmallRemovedLabels: small_removed}
         ),
     )
 
     projected = source.with_measurement_labels(labels)
 
     np.testing.assert_array_equal(projected.labels, labels)
-    np.testing.assert_array_equal(projected.small_removed_labels, small_removed)
+    np.testing.assert_array_equal(projected.variant_labels(SmallRemovedLabels), small_removed)
 
 
 def test_object_label_plane_projection_preserves_ordered_domains_and_variants() -> None:
@@ -970,7 +976,7 @@ def test_object_label_plane_projection_preserves_ordered_domains_and_variants() 
     source = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(
-            labels=labels, small_removed_labels=small_removed
+            labels=labels, variants={SmallRemovedLabels: small_removed}
         ),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -986,7 +992,7 @@ def test_object_label_plane_projection_preserves_ordered_domains_and_variants() 
 
     np.testing.assert_array_equal(projected.labels, labels[(2, 0), ...])
     np.testing.assert_array_equal(
-        projected.small_removed_labels,
+        projected.variant_labels(SmallRemovedLabels),
         small_removed[(2, 0), ...],
     )
     assert projected.domain.declared_object_id_domains == ((3, 4), (1,))
@@ -2521,7 +2527,7 @@ def test_object_label_payload_with_measurement_labels_preserves_domain_and_varia
     small_removed = np.full_like(labels, 2)
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
-            labels=labels, unedited_labels=unedited, small_removed_labels=small_removed
+            labels=labels, variants={UneditedLabels: unedited, SmallRemovedLabels: small_removed}
         ),
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(4, 5),
@@ -2538,8 +2544,8 @@ def test_object_label_payload_with_measurement_labels_preserves_domain_and_varia
 
     assert isinstance(rebuilt, ObjectLabelPayload)
     assert rebuilt.labels is selected
-    assert rebuilt.unedited_labels is None
-    assert rebuilt.small_removed_labels is None
+    assert rebuilt.variant_labels(UneditedLabels) is None
+    assert rebuilt.variant_labels(SmallRemovedLabels) is None
     assert rebuilt.domain.declared_object_count == 2
     assert rebuilt.domain.declared_object_ids == (1, 2)
     assert rebuilt.spatial_origin_yx == (4, 5)
@@ -4674,14 +4680,14 @@ def test_pure_2d_auxiliary_aggregator_preserves_stacked_object_labels() -> None:
     first = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
             labels=np.ones((2, 3, 4), dtype=np.int32),
-            unedited_labels=np.ones((2, 3, 4), dtype=np.int32) * 2,
+            variants={UneditedLabels: np.ones((2, 3, 4), dtype=np.int32) * 2},
         ),
         domain=ObjectLabelDomain(declared_object_ids=(1,)),
     )
     second = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
             labels=np.ones((2, 3, 4), dtype=np.int32) * 3,
-            unedited_labels=np.ones((2, 3, 4), dtype=np.int32) * 4,
+            variants={UneditedLabels: np.ones((2, 3, 4), dtype=np.int32) * 4},
         ),
         domain=ObjectLabelDomain(declared_object_ids=(3,)),
     )
@@ -4690,8 +4696,8 @@ def test_pure_2d_auxiliary_aggregator_preserves_stacked_object_labels() -> None:
 
     assert isinstance(stacked, ObjectLabelPayload)
     assert stacked.labels.shape == (2, 2, 3, 4)
-    assert stacked.unedited_labels is not None
-    assert stacked.unedited_labels.shape == (2, 2, 3, 4)
+    assert stacked.variant_labels(UneditedLabels) is not None
+    assert stacked.variant_labels(UneditedLabels).shape == (2, 2, 3, 4)
     np.testing.assert_array_equal(stacked.labels[0], first.labels)
     np.testing.assert_array_equal(stacked.labels[1], second.labels)
 
@@ -4962,8 +4968,7 @@ def test_normalize_object_label_set_preserves_dense_label_variants():
             name="Nuclei",
             variant_data=ObjectLabelVariantData(
                 labels=labels,
-                unedited_labels=unedited_labels,
-                small_removed_labels=small_removed_labels,
+                variants={UneditedLabels: unedited_labels, SmallRemovedLabels: small_removed_labels},
             ),
         ),
         axis_id="A01",
@@ -4971,13 +4976,13 @@ def test_normalize_object_label_set_preserves_dense_label_variants():
 
     restored = cast(ObjectLabelSet, value.data)
     assert restored.variant_data.present_variants == (
-        ObjectLabelVariant.FINAL,
-        ObjectLabelVariant.UNEDITED,
-        ObjectLabelVariant.SMALL_REMOVED,
+        FinalLabels,
+        SmallRemovedLabels,
+        UneditedLabels,
     )
     np.testing.assert_array_equal(restored.labels, labels)
-    np.testing.assert_array_equal(restored.unedited_labels, unedited_labels)
-    np.testing.assert_array_equal(restored.small_removed_labels, small_removed_labels)
+    np.testing.assert_array_equal(restored.variant_labels(UneditedLabels), unedited_labels)
+    np.testing.assert_array_equal(restored.variant_labels(SmallRemovedLabels), small_removed_labels)
 
 
 def test_normalize_object_label_set_accepts_sparse_ijv_representation():
@@ -5172,7 +5177,7 @@ def test_normalize_measurement_table_accepts_generic_subject():
     table = MeasurementTable(
         name="ImageMeasurements",
         rows=rows,
-        subject=MeasurementSubject(MeasurementScope.IMAGE, "DNA"),
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "DNA"),
     )
 
     value = RuntimeValue.normalize(
@@ -5183,7 +5188,7 @@ def test_normalize_measurement_table_accepts_generic_subject():
 
     assert value.data is table
     assert table.subject == MeasurementSubject(
-        MeasurementScope.IMAGE,
+        MeasurementScope.SAMPLE,
         "DNA",
     )
     assert table.subject.object_name is None

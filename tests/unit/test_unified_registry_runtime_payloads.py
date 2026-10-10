@@ -45,10 +45,16 @@ from openhcs.processing.backends.lib_registry.pyclesperanto_registry import (
 )
 from openhcs.processing.backends.lib_registry.unified_registry import (
     LibraryRegistryBase,
-    ProcessingContract,
+)
+from openhcs.core.processing_contracts import (
+    LibraryContractCall,
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
+    RawCallableView,
     RuntimeCallableInvocation,
-    RuntimeCallableView,
-    RuntimeInvocationKwargPolicy,
+    SignatureFilteredKwargs,
+    VolumetricToSliceContract,
 )
 from openhcs.processing.backends.processors.numpy_processor import (
     create_projection,
@@ -114,7 +120,7 @@ def test_contract_wrapper_exposes_enableable_but_hides_runtime_parameters() -> N
 
     wrapped = MinimalRegistry("minimal").apply_contract_wrapper(
         raw,
-        ProcessingContract.FLEXIBLE,
+        FlexibleContract,
     )
 
     enabled_field = Enableable.require_parameter_name()
@@ -147,11 +153,11 @@ def test_pyclesperanto_adapter_owns_output_buffer_and_device_parameters() -> Non
     registry = object.__new__(PyclesperantoRegistry)
     adapter = registry.create_library_adapter(
         external_filter,
-        ProcessingContract.FLEXIBLE,
+        FlexibleContract,
     )
     wrapped = registry.apply_contract_wrapper(
         adapter,
-        ProcessingContract.FLEXIBLE,
+        FlexibleContract,
     )
 
     visible_parameters = UnifiedParameterAnalyzer.analyze(wrapped)
@@ -176,7 +182,7 @@ def test_contract_wrapper_exposes_registered_lazy_runtime_config_signature() -> 
 
     wrapped = MinimalRegistry("minimal").apply_contract_wrapper(
         raw,
-        ProcessingContract.FLEXIBLE,
+        FlexibleContract,
     )
     parameter = inspect.signature(wrapped).parameters["dtype_config"]
 
@@ -206,10 +212,10 @@ def test_pure_2d_contract_slices_image_metadata_payload_nominally() -> None:
 
     add_one.output_memory_type = MEMORY_TYPE_NUMPY
 
-    result = ProcessingContract.PURE_2D.execute(
-        MinimalRegistry("minimal"),
-        add_one,
+    result = Pure2DContract.execute(
+        LibraryContractCall(add_one, ()),
         payload,
+        {},
     )
 
     assert isinstance(result, ImagePayload)
@@ -281,7 +287,7 @@ def test_flexible_runtime_argument_preserves_plane_context_until_mode_selection(
         return image + 1
 
     wrapped = MinimalRegistry("minimal").apply_contract_wrapper(
-        add_one, ProcessingContract.FLEXIBLE,
+        add_one, FlexibleContract,
     )
     contract = CallableContract.from_callable(wrapped)
     call_argument = contract.main_flow_call_argument(payload)
@@ -325,11 +331,10 @@ def test_pure_2d_contract_projects_stack_shaped_kwargs_per_slice() -> None:
 
     apply_mask.output_memory_type = MEMORY_TYPE_NUMPY
 
-    result = ProcessingContract.PURE_2D.execute(
-        MinimalRegistry("minimal"),
-        apply_mask,
+    result = Pure2DContract.execute(
+        LibraryContractCall(apply_mask, ()),
         stack,
-        mask=mask,
+        dict(mask=mask),
     )
 
     expected = stack_data.copy()
@@ -381,11 +386,10 @@ def test_pure_2d_contract_preserves_declared_source_binding_axis() -> None:
 
     consume_labels.output_memory_type = MEMORY_TYPE_NUMPY
 
-    result = ProcessingContract.PURE_2D.execute(
-        MinimalRegistry("minimal"),
-        consume_labels,
+    result = Pure2DContract.execute(
+        LibraryContractCall(consume_labels, ()),
         stack,
-        labels=labels,
+        dict(labels=labels),
     )
 
     assert seen_label_shapes == [(3, 4), (3, 4)]
@@ -405,11 +409,10 @@ def test_pure_3d_contract_preserves_metadata_for_plain_numpy_processor() -> None
         ),
     )
 
-    result = ProcessingContract.PURE_3D.execute(
-        MinimalRegistry("minimal"),
-        gaussian_blur,
+    result = Pure3DContract.execute(
+        LibraryContractCall(gaussian_blur, ()),
         payload,
-        sigma=0.5,
+        dict(sigma=0.5),
     )
 
     assert isinstance(result, ImageMetadataPayload)
@@ -431,10 +434,10 @@ def test_volumetric_projection_accepts_metadata_payload_array_methods() -> None:
         ),
     )
 
-    result = ProcessingContract.VOLUMETRIC_TO_SLICE.execute(
-        MinimalRegistry("minimal"),
-        create_projection,
+    result = VolumetricToSliceContract.execute(
+        LibraryContractCall(create_projection, ()),
         payload,
+        {},
     )
 
     assert isinstance(result, ImageMetadataPayload)
@@ -475,8 +478,8 @@ def test_runtime_callable_invocation_can_call_raw_signature_filtered_callable() 
         decorated,
         args=(source,),
         kwargs={"scale": 3, "adapter_control": object()},
-        callable_view=RuntimeCallableView.RAW,
-        kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED,
+        callable_view=RawCallableView,
+        kwarg_policy=SignatureFilteredKwargs,
     ).call()
 
     assert isinstance(result, RuntimeArrayPayload)
@@ -511,8 +514,8 @@ def test_raw_runtime_callable_preserves_request_binding_semantics() -> None:
         decorated,
         args=(source,),
         kwargs={"scale": 4, "adapter_control": object()},
-        callable_view=RuntimeCallableView.RAW,
-        kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED,
+        callable_view=RawCallableView,
+        kwarg_policy=SignatureFilteredKwargs,
     ).call()
 
     np.testing.assert_array_equal(result.data, np.full((3, 4), 4.0))

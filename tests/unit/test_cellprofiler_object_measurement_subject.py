@@ -36,10 +36,12 @@ from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def _object_subject_probe(image):
     return image
 
@@ -79,7 +81,7 @@ class _StackMeasurementOutputCapability(CellProfilerModule):
         return (*inherited, SourceStackLineageSourceRelation(source.ref()))
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def _stack_subject_probe(image):
     return image
 

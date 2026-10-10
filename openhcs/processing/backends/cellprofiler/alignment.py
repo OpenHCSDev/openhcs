@@ -84,7 +84,9 @@ from openhcs.processing.backends.cellprofiler.alignment_mutual_information_offse
     mutual_information_offset_numba,
     mutual_information_offset_unmasked_numba,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
 
 
@@ -1074,7 +1076,7 @@ def prepare_align() -> None:
 
 
 @required_axis_roles(ColourAxis)
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def align(
     image: ImagePayload,
     *,

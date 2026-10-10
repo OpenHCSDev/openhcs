@@ -9,11 +9,7 @@ from typing import ClassVar
 import numpy as np
 
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImageOutputBundle,
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageStack, ImageOutputBundle)
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 from openhcs.core.measurement_image_alignment import (
     MeasurementImageAlignmentSource,
@@ -469,13 +465,9 @@ class CellProfilerMeasurementImage(
                 "CellProfilerMeasurementImageDomain, got "
                 f"{type(self.reference_domain).__name__}."
             )
-        if (
-            self.execution_mode
-            is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
-        ):
-            object.__setattr__(
-                self, "payload", RuntimeSliceProjection.full_stack_value(self.payload)
-            )
+        object.__setattr__(
+            self, "payload", self.execution_mode.executable_payload(self.payload)
+        )
 
     @classmethod
     def source_metadata_composition_mode(

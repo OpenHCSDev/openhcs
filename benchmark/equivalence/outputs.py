@@ -12,10 +12,9 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from benchmark.equivalence.images import RuntimeImageSnapshot
-from openhcs.core.equivalence.policy import normalize_runtime_identifier
-from openhcs.core.equivalence.policy import (
-    DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
-    RuntimeMeasurementDialect,
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurement_dialect import (
+    MeasurementDialect,
 )
 from benchmark.equivalence.table_snapshots import (
     RuntimeTableSnapshot,
@@ -37,6 +36,14 @@ from openhcs.domains.microscopy.axes import Microscopy
 
 
 @dataclass(frozen=True, slots=True)
+class ExportedTableAxis:
+    """One execution axis of exported tables, numbered in a measurement dialect."""
+
+    axis_id: str
+    dialect: MeasurementDialect
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeOutputSnapshot:
     """Semantic snapshot of runtime file outputs."""
 
@@ -50,15 +57,13 @@ class RuntimeOutputSnapshot:
         *,
         source_workspaces: tuple[Path, ...] = (),
         image_set_policy: SourceImageSetIdentityPolicy = SourceImageSetIdentityPolicy(),
-        execution_axis_id: str | None = None,
-        measurement_dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        execution_axis: ExportedTableAxis | None = None,
     ) -> "RuntimeOutputSnapshot":
         """Build a semantic output snapshot from observed runtime exports."""
         return cls(
             tables=cls.exported_table_snapshots(
                 observation,
-                execution_axis_id=execution_axis_id,
-                measurement_dialect=measurement_dialect,
+                execution_axis=execution_axis,
             ),
             images=cls.image_snapshots(
                 observation.image_outputs,
@@ -72,8 +77,7 @@ class RuntimeOutputSnapshot:
         cls,
         observation: RuntimeExportObservation,
         *,
-        execution_axis_id: str | None = None,
-        measurement_dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        execution_axis: ExportedTableAxis | None = None,
         source_tables: tuple[RuntimeTableSnapshot, ...] | None = None,
     ) -> tuple[RuntimeTableSnapshot, ...]:
         """Derive each actual axis from admitted physical export tables."""
@@ -89,11 +93,12 @@ class RuntimeOutputSnapshot:
             raise ValueError(
                 "Prepared table sources differ from actual export observation."
             )
-        if execution_axis_id is not None:
+        if execution_axis is not None:
+            execution_axis_id = execution_axis.axis_id
             for path in observation.table_outputs:
-                if path not in observation.outputs.image_numbers_by_export_path:
+                if path not in observation.outputs.sample_numbers_by_export_path:
                     continue
-                numbers = observation.outputs.image_numbers_by_export_path[path][
+                numbers = observation.outputs.sample_numbers_by_export_path[path][
                     execution_axis_id
                 ]
                 if tuple(sorted(numbers)) != tuple(
@@ -105,19 +110,19 @@ class RuntimeOutputSnapshot:
             tables = tuple(
                 (
                     table.for_image_numbers(
-                        observation.outputs.image_numbers_by_export_path[table.path][
+                        observation.outputs.sample_numbers_by_export_path[table.path][
                             execution_axis_id
                         ],
-                        dialect=measurement_dialect,
+                        dialect=execution_axis.dialect,
                         image_number_domain=tuple(
                             number
-                            for numbers in observation.outputs.image_numbers_by_export_path[
+                            for numbers in observation.outputs.sample_numbers_by_export_path[
                                 table.path
                             ].values()
                             for number in numbers
                         ),
                     )
-                    if table.path in observation.outputs.image_numbers_by_export_path
+                    if table.path in observation.outputs.sample_numbers_by_export_path
                     else table
                 )
                 for table in tables

@@ -33,15 +33,11 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -75,6 +71,12 @@ from openhcs.interop.cellprofiler.runtime.object_input_policies import (
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.core.axes import Axis
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    MatchImageStackLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
@@ -128,12 +130,12 @@ class OverlayObjectsModule(
     @classmethod
     def execution_mode(
         cls,
-        default: ImagePayloadExecutionMode,
+        default: type[ImagePayloadExecutionMode],
         *,
         image: "RuntimeArrayData",
         kwargs: "RuntimeCallableKwargs",
         variable_components: tuple[type[Axis], ...],
-    ) -> ImagePayloadExecutionMode:
+    ) -> type[ImagePayloadExecutionMode]:
         """Preserve one payload-scoped object volume as one invocation."""
 
         del image, variable_components
@@ -142,7 +144,7 @@ class OverlayObjectsModule(
             isinstance(labels, ObjectLabelValue)
             and labels.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
         ):
-            return ImagePayloadExecutionMode.FULL_STACK
+            return FullStackExecution
         return default
 
 
@@ -150,7 +152,9 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
     align_binary_mask_to_shape,
     align_label_plane_to_shape,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+)
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import ColourSampleAxisSpec, PayloadAxes
 from openhcs.core.runtime_image_values import ImagePayload
@@ -868,8 +872,8 @@ class OverlayOutlineExecutionContext:
         return output.astype(np.float32)
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
+@numpy(contract=FlexibleContract)
+@object_label_input_execution_mode(MatchImageStackLabels)
 @special_inputs("object_labels")
 def overlay_outlines(
     image: ImagePayload,
@@ -909,8 +913,8 @@ def overlay_outlines(
         ),)
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
+@numpy(contract=FlexibleContract)
+@object_label_input_execution_mode(MatchImageStackLabels)
 @special_inputs("labels")
 def overlay_objects(
     image: ImagePayload,

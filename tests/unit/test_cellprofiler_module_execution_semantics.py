@@ -18,10 +18,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.aligned_image_payload import (
-    ImageOutputBundle,
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import ImageOutputBundle
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
@@ -43,17 +40,11 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode_from_callable,
-)
+from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
 )
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-from openhcs.interop.cellprofiler.runtime.object_measurement_execution import (
-    CellProfilerObjectMeasurementExecutionPolicy,
-)
 from openhcs.processing.backends.cellprofiler.colocalization import (
     MeasureColocalizationModule,
 )
@@ -68,6 +59,12 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    SliceAlignedLabels,
+)
 
 
 def _image_measurement_executor(
@@ -250,7 +247,7 @@ def test_composed_image_measurement_callable_retains_standard_execution() -> Non
 
     assert (
         object_label_input_execution_mode_from_callable(raw_func)
-        is ObjectLabelInputExecutionMode.SLICE_ALIGNED
+        is SliceAlignedLabels
     )
     assert not MeasureColocalizationModule.executes_per_image_measurements(
         raw_func,
@@ -270,9 +267,7 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
             declared_object_id_domains=((7,),),
         ),
     )
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.SLICE_ALIGNED
-    )
+    policy = SliceAlignedLabels
 
     projected = policy.semantic_label_payload(labels, labels)
 
@@ -284,9 +279,9 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
     assert (
         policy.image_execution_mode(
             projected,
-            ImagePayloadExecutionMode.FULL_STACK,
+            FullStackExecution,
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
 
 
@@ -301,9 +296,7 @@ def test_slice_aligned_object_measurement_rejects_full_stack_label_domain() -> N
             declared_object_id_domains=((1,), (1,)),
         ),
     )
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.SLICE_ALIGNED
-    )
+    policy = SliceAlignedLabels
 
     with pytest.raises(
         ValueError,
@@ -311,7 +304,7 @@ def test_slice_aligned_object_measurement_rejects_full_stack_label_domain() -> N
     ):
         policy.image_execution_mode(
             policy.semantic_label_payload(labels, labels),
-            ImagePayloadExecutionMode.FULL_STACK,
+            FullStackExecution,
         )
 
 

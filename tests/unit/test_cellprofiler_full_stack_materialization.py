@@ -5,15 +5,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ImageOutputBundle,
-    ImagePayloadExecutionMode,
-    ImagePayloadStackComposition,
-    ImagePayloadSliceStack,
-    compose_aligned_image_payload,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle, ImagePayloadStackComposition, ImagePayloadSliceStack, compose_aligned_image_payload)
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
@@ -40,8 +32,15 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 )
 from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity
 from openhcs.processing.backends.cellprofiler.morphology import remove_holes, remove_holes_3d
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    ProcessingContract,
+    Pure3DContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    NaturalExecution,
+)
 
 
 def test_real_rescale_full_stack_materializes_composed_runtime_sources():
@@ -93,7 +92,7 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     )
     assert not isinstance(literal, AlignedImageStack)
     composition = compose_aligned_image_payload("literal volume", (literal,))
-    assert composition.execution_mode is ImagePayloadExecutionMode.NATURAL
+    assert composition.execution_mode is NaturalExecution
     assert composition.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert literal._composed_payload is None
     contract = CallableContract.from_callable(function)
@@ -114,7 +113,7 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     assert ImagePayload.of(outputs[1]).metadata == ImagePayload.of(outputs[0]).metadata
 
 
-@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract.__registry__.values()))
 @pytest.mark.parametrize("slice_count", (1, 2))
 def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
     processing_contract, slice_count
@@ -143,14 +142,14 @@ def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
     )
     kwargs = {"reference": aligned, "token": opaque}
     # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
-    if processing_contract is ProcessingContract.PURE_3D:
+    if processing_contract is Pure3DContract:
         with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
             CellProfilerFunctionContractExecutor().execute(
                 contract,
                 dense_callable,
                 aligned,
                 kwargs,
-                execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                execution_mode=FullStackExecution,
             )
         assert calls == []
         kwargs["token"] = None
@@ -160,7 +159,7 @@ def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
         dense_callable,
         aligned,
         kwargs,
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
     assert len(calls) == 1
     np.testing.assert_array_equal(result.data, np.stack(planes))
@@ -385,7 +384,7 @@ def test_full_stack_preserves_nonimage_identity_domains_and_dense_images():
         assert materialized[name] is value
 
 
-@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract.__registry__.values()))
 def test_full_stack_raw_callable_keeps_opaque_nonimage_kwargs(processing_contract):
     opaque = object()
     image = np.ones((2, 3, 4), dtype=np.float32)
@@ -407,7 +406,7 @@ def test_full_stack_raw_callable_keeps_opaque_nonimage_kwargs(processing_contrac
         consume,
         image,
         {"options": opaque},
-        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        execution_mode=FullStackExecution,
     )
     assert calls == [opaque]
     assert ImagePayload.of(result).data is image

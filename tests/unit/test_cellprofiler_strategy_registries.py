@@ -49,10 +49,6 @@ from openhcs.processing.backends.cellprofiler.watershed import (
     WatershedSeedStrategy,
     WatershedRuntimeStrategy,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_execution import (
-    CellProfilerObjectMeasurementExecutionPolicy,
-)
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
 )
@@ -64,6 +60,14 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
+)
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    NaturalExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+    SliceAlignedLabels,
 )
 
 JSON_SAFE_REGISTRY_KEY_TYPES = (str, int, float, bool, type(None))
@@ -93,7 +97,7 @@ def test_cellprofiler_strategy_registry_keys_are_json_safe():
         WatershedMethodStrategy,
         WatershedSeedStrategy,
         WatershedRuntimeStrategy,
-        CellProfilerObjectMeasurementExecutionPolicy,
+        ObjectLabelInputExecutionMode,
     )
 
     for registry_class in registry_classes:
@@ -162,12 +166,8 @@ def test_grid_callable_selection_resolves_from_module_declarations() -> None:
 
 
 def test_measurement_execution_mode_follows_callable_declaration():
-    slice_aligned_policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.SLICE_ALIGNED
-    )
-    full_stack_policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.FULL_STACK
-    )
+    slice_aligned_policy = SliceAlignedLabels
+    full_stack_policy = FullStackLabels
 
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 8, 8), dtype=np.int32)),
@@ -181,16 +181,16 @@ def test_measurement_execution_mode_follows_callable_declaration():
     assert (
         slice_aligned_policy.image_execution_mode(
             labels,
-            ImagePayloadExecutionMode.NATURAL,
+            NaturalExecution,
         )
-        is ImagePayloadExecutionMode.NATURAL
+        is NaturalExecution
     )
     assert (
         full_stack_policy.image_execution_mode(
             labels,
-            ImagePayloadExecutionMode.NATURAL,
+            NaturalExecution,
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
     assert (
         full_stack_policy.image_execution_mode(
@@ -204,10 +204,10 @@ def test_measurement_execution_mode_follows_callable_declaration():
                     scope=ObjectLabelDomainScope.PLANE,
                 ),
             ),
-            ImagePayloadExecutionMode.NATURAL,
+            NaturalExecution,
             runtime_slice_count=3,
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
     assert (
         full_stack_policy.image_execution_mode(
@@ -221,10 +221,10 @@ def test_measurement_execution_mode_follows_callable_declaration():
                     scope=ObjectLabelDomainScope.PLANE,
                 ),
             ),
-            ImagePayloadExecutionMode.FULL_STACK,
+            FullStackExecution,
             runtime_slice_count=3,
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
     assert (
         full_stack_policy.image_execution_mode(
@@ -238,9 +238,9 @@ def test_measurement_execution_mode_follows_callable_declaration():
                     scope=ObjectLabelDomainScope.PLANE,
                 ),
             ),
-            ImagePayloadExecutionMode.FULL_STACK,
+            FullStackExecution,
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
 
 
@@ -257,23 +257,17 @@ def test_measurement_execution_policy_preserves_nominal_label_payloads() -> None
     )
 
     assert (
-        CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-            ObjectLabelInputExecutionMode.SLICE_ALIGNED
-        ).semantic_label_payload(source_payload, completion_payload)
+        SliceAlignedLabels.semantic_label_payload(source_payload, completion_payload)
         is completion_payload
     )
     assert (
-        CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-            ObjectLabelInputExecutionMode.FULL_STACK
-        ).semantic_label_payload(source_payload, completion_payload)
+        FullStackLabels.semantic_label_payload(source_payload, completion_payload)
         is source_payload
     )
 
 
 def test_slice_aligned_measurement_preserves_payload_scoped_volume() -> None:
-    policy = CellProfilerObjectMeasurementExecutionPolicy.for_enum_member(
-        ObjectLabelInputExecutionMode.SLICE_ALIGNED
-    )
+    policy = SliceAlignedLabels
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 8, 8), dtype=np.int32)),
         domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
@@ -282,8 +276,8 @@ def test_slice_aligned_measurement_preserves_payload_scoped_volume() -> None:
     assert (
         policy.image_execution_mode(
             labels,
-            ImagePayloadExecutionMode.NATURAL,
+            NaturalExecution,
             runtime_slice_count=3,
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )

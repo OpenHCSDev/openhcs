@@ -76,6 +76,13 @@ from openhcs.interop.cellprofiler.setting_names import (
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     cellprofiler_enum_from_literal,
 )
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+    MatchImageStackLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
@@ -671,17 +678,12 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.axes import StackAxis
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
@@ -742,9 +744,11 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
-    SliceBySliceRuntimeParameter,
+from arraybridge import SliceBySliceRuntimeParameter
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
 )
 from openhcs.core.runtime_image_values import ImagePayload
 
@@ -1459,7 +1463,7 @@ def apply_morph_operation(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def morph(
     image: np.ndarray,
     operation: MorphOperation = MorphOperation.THIN,
@@ -1517,8 +1521,8 @@ def _morph_image_payload(
         metadata=image.metadata.without_unit_interval_intensity_scale(),)
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy_decorator(contract=FlexibleContract)
 def closing(
     image: ImagePayload,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
@@ -1539,8 +1543,8 @@ def closing(
     )
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy_decorator(contract=FlexibleContract)
 def opening(
     image: ImagePayload,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
@@ -1561,8 +1565,8 @@ def opening(
     )
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy_decorator(contract=FlexibleContract)
 def dilate_image(
     image: np.ndarray,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
@@ -1582,8 +1586,8 @@ def dilate_image(
     return dilated.astype(image.dtype)
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy_decorator(contract=FlexibleContract)
 def erode_image(
     image: np.ndarray,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
@@ -1603,19 +1607,19 @@ def erode_image(
     return eroded.astype(image.dtype, copy=False)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def remove_holes(image: np.ndarray, diameter: float = 1.0) -> np.ndarray:
     """Fill binary holes smaller than the CellProfiler diameter threshold."""
     return HoleRemovalDiameterPolicy(diameter=diameter, volumetric=False).apply(image)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
+@numpy_decorator(contract=Pure3DContract)
 def remove_holes_3d(image: np.ndarray, diameter: float = 1.0) -> np.ndarray:
     """Fill volumetric holes smaller than the CellProfiler diameter threshold."""
     return HoleRemovalDiameterPolicy(diameter=diameter, volumetric=True).apply(image)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def morphological_skeleton_2d(image: np.ndarray) -> np.ndarray:
     """Compute the 2-D morphological skeleton of a binary image."""
     from skimage.morphology import skeletonize
@@ -1623,7 +1627,7 @@ def morphological_skeleton_2d(image: np.ndarray) -> np.ndarray:
     return skeletonize(image > 0).astype(np.float32)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
+@numpy_decorator(contract=Pure3DContract)
 def morphological_skeleton_3d(image: np.ndarray) -> np.ndarray:
     """Compute the 3-D morphological skeleton of a binary volume."""
     from skimage.morphology import skeletonize_3d
@@ -1631,7 +1635,7 @@ def morphological_skeleton_3d(image: np.ndarray) -> np.ndarray:
     return skeletonize_3d(image > 0).astype(np.float32)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def morphologicalskeleton(image: np.ndarray) -> np.ndarray:
     """Compute CellProfiler MorphologicalSkeleton on one image plane."""
     from skimage.morphology import skeletonize
@@ -5200,7 +5204,7 @@ def prepare_expand_or_shrink_objects() -> None:
     ExpandOrShrinkObjectsKernelPreparation().execute()
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def expand_or_shrink_objects(
     image: np.ndarray,
@@ -5526,8 +5530,8 @@ class MaskObjectsOutputLabels:
         )
 
 
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
+@numpy_decorator(contract=FlexibleContract)
+@object_label_input_execution_mode(MatchImageStackLabels)
 @special_inputs("labels", "mask")
 def mask_objects(
     image: np.ndarray,
@@ -5816,7 +5820,7 @@ class SegmentCombineObjectsStrategy(CombineObjectsStrategy):
         return watershed(-distance, markers, mask=binary_x).astype(np.int32)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("object_labels")
 def combineobjects(
     image: np.ndarray,
@@ -6154,7 +6158,7 @@ def _execute_split_or_merge_objects(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def split_or_merge_objects(
     image: np.ndarray,
@@ -6189,7 +6193,7 @@ def split_or_merge_objects(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def split_or_merge_objects_with_guide_image(
     image: np.ndarray,
@@ -6224,7 +6228,7 @@ def split_or_merge_objects_with_guide_image(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels", "parent_labels")
 def split_or_merge_objects_per_parent(
     image: np.ndarray,
@@ -6511,7 +6515,7 @@ def filter_physical_border_objects_numba(
     return (output, True)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def erode_objects(
     image: np.ndarray,
@@ -6688,7 +6692,7 @@ class SimpleDiskMidpointPreservationPolicy(MidpointPreservationPolicy):
         return eroded + labels * np.isin(labels, missing_labels)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def dilate_objects(
     image: np.ndarray,
@@ -6737,8 +6741,8 @@ def dilate_objects(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy_decorator(contract=Pure3DContract)
+@object_label_input_execution_mode(FullStackLabels)
 @special_inputs("labels")
 def dilate_objects_3d(
     image: np.ndarray,
@@ -6780,7 +6784,7 @@ def dilate_objects_3d(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def fill_objects(
     image: np.ndarray,
@@ -6815,7 +6819,7 @@ def fill_objects(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def shrink_to_object_centers(
     image: np.ndarray, labels: ObjectLabelValue
@@ -6858,8 +6862,8 @@ def shrink_to_object_centers(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy_decorator(contract=Pure3DContract)
+@object_label_input_execution_mode(FullStackLabels)
 @special_inputs("labels")
 def shrink_to_object_centers_3d(
     image: np.ndarray, labels: ObjectLabelValue
@@ -6894,7 +6898,7 @@ def shrink_to_object_centers_3d(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("labels")
 def resize_objects(
     image: np.ndarray,
@@ -7013,8 +7017,8 @@ def resize_object_labels_nearest(
     return resized.astype(np.int32, copy=False)
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy_decorator(contract=Pure3DContract)
+@object_label_input_execution_mode(FullStackLabels)
 @special_inputs("labels")
 def resize_objects_3d(
     image: np.ndarray,

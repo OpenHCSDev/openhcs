@@ -47,7 +47,7 @@ def _carriers():
             MeasurementTable,
             name="Intensity",
             rows=EmptyRows(),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "DNA"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "DNA"),
         ),
         partial(SpatialGraph, name="Graph", nodes=(), edges=()),
         partial(

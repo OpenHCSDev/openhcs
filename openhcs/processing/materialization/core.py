@@ -102,6 +102,7 @@ from openhcs.processing.materialization.options import (
     TiffStackOptions,
 )
 from openhcs.core.axes import Axis
+from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_image_values import ImagePayload
 from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
 
@@ -289,7 +290,7 @@ class Output:
     content: MaterializationValue
     metadata: ImagePayloadMetadata | None = None
     variable_components: tuple[type[Axis], ...] = ()
-    image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None
+    sample_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None
 
     def table_shape(self) -> tuple[tuple[str, ...], int] | None:
         """Return writer-known CSV header and rows after its first header."""
@@ -301,7 +302,7 @@ class Output:
             self.path == other.path
             and self.metadata == other.metadata
             and self.variable_components == other.variable_components
-            and self.image_numbers_by_axis == other.image_numbers_by_axis
+            and self.sample_numbers_by_axis == other.sample_numbers_by_axis
         )
 
     @classmethod
@@ -495,12 +496,12 @@ class Utf8TextOutput(Output):
         *,
         path: str,
         content: str,
-        image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None,
+        sample_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None,
     ) -> Utf8TextOutput:
         return cls(
             path=path,
             content=content.encode("utf-8"),
-            image_numbers_by_axis=image_numbers_by_axis,
+            sample_numbers_by_axis=sample_numbers_by_axis,
         )
 
     @property
@@ -536,7 +537,7 @@ class ColumnarCsvOutput(Output):
             table_shape_info=self.table_shape(),
             metadata=self.metadata,
             variable_components=self.variable_components,
-            image_numbers_by_axis=self.image_numbers_by_axis,
+            sample_numbers_by_axis=self.sample_numbers_by_axis,
         )
 
     def table_shape(self) -> tuple[tuple[str, ...], int]:
@@ -637,7 +638,7 @@ class ColumnarCsvOutput(Output):
             content=text.encode("utf-8"),
             metadata=self.metadata,
             variable_components=self.variable_components,
-            image_numbers_by_axis=self.image_numbers_by_axis,
+            sample_numbers_by_axis=self.sample_numbers_by_axis,
             options=self.options,
             source_fields=self.content.fields,
             rendered_columns=rendered_columns,
@@ -687,7 +688,7 @@ class ColumnarCsvOutput(Output):
                 raise ValueError(
                     "CSV partitions declare incompatible paths/schema/policy."
                 )
-            if output.image_numbers_by_axis is not None:
+            if output.sample_numbers_by_axis is not None:
                 raise ValueError(
                     "CSV source numbering must be composed by its existing owner."
                 )
@@ -954,7 +955,7 @@ class RenderedColumnarCsvOutput(
             options=self.options,
             metadata=self.metadata,
             variable_components=self.variable_components,
-            image_numbers_by_axis=self.image_numbers_by_axis,
+            sample_numbers_by_axis=self.sample_numbers_by_axis,
         )
 
     def table_shape(self) -> tuple[tuple[str, ...], int]:
@@ -980,7 +981,7 @@ class RenderedColumnarCsvOutput(
             raise ValueError(
                 "Realized CSV partitions declare incompatible output ownership."
             )
-        if any(output.image_numbers_by_axis is not None for output in values):
+        if any(output.sample_numbers_by_axis is not None for output in values):
             raise ValueError(
                 "CSV source numbering must be composed by its existing owner."
             )
@@ -2838,7 +2839,9 @@ class FieldValueAuthority:
 
 def _render_csv(data: MaterializationValue, options: CsvOptions) -> str:
     if isinstance(data, pd.DataFrame):
-        return data.to_csv(index=False)
+        return data.set_axis(
+            _csv_header(tuple(str(column) for column in data.columns)), axis=1
+        ).to_csv(index=False)
     if isinstance(data, ColumnarRows):
         return _render_csv_rows(
             data.row_mappings(),
@@ -2918,11 +2921,16 @@ def _render_csv_rows(
     output = io.StringIO()
     ordered_fieldnames = tuple(fieldnames)
     writer = csv.writer(output)
-    writer.writerow(ordered_fieldnames)
+    writer.writerow(_csv_header(ordered_fieldnames))
     writer.writerows(
         tuple(row.get(fieldname) for fieldname in ordered_fieldnames) for row in rows
     )
     return output.getvalue()
+
+
+def _csv_header(fieldnames: tuple[str, ...]) -> tuple[str, ...]:
+    """Spell written row fields in the active domain's measurement dialect."""
+    return MeasurementDialect.for_active_family().row_field_names(fieldnames)
 
 
 def _render_csv_object_rows(
@@ -2932,7 +2940,7 @@ def _render_csv_object_rows(
     output = io.StringIO()
     ordered_fieldnames = tuple(fieldnames)
     writer = csv.writer(output)
-    writer.writerow(ordered_fieldnames)
+    writer.writerow(_csv_header(ordered_fieldnames))
     writer.writerows(
         CsvObjectRowAuthority.values(row, ordered_fieldnames) for row in rows
     )
@@ -3362,8 +3370,8 @@ def _file_bundle_outputs(
             context.base_path,
             relative_path,
         )
-        image_numbers = (
-            step_outputs.image_numbers_by_export_path.get(Path(relative_value))
+        sample_numbers = (
+            step_outputs.sample_numbers_by_export_path.get(Path(relative_value))
             if step_outputs is not None
             else None
         )
@@ -3371,19 +3379,19 @@ def _file_bundle_outputs(
             output = replace(
                 content,
                 path=output_path,
-                image_numbers_by_axis=image_numbers,
+                sample_numbers_by_axis=sample_numbers,
             ).rendered()
         elif isinstance(content, str):
             output = Utf8TextOutput.from_text(
                 path=output_path,
                 content=content,
-                image_numbers_by_axis=image_numbers,
+                sample_numbers_by_axis=sample_numbers,
             )
         elif isinstance(content, bytes):
             output = Output(
                 path=output_path,
                 content=content,
-                image_numbers_by_axis=image_numbers,
+                sample_numbers_by_axis=sample_numbers,
             )
         else:
             raise TypeError("File bundle values must be text, bytes or typed outputs.")

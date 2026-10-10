@@ -688,9 +688,7 @@ class PreparedMeasurementObjectLabels:
             .with_value_name(payload_domain.value_name)
         )
         if (
-            variants.labels is source_variants.labels
-            and variants.unedited_labels is source_variants.unedited_labels
-            and variants.small_removed_labels is source_variants.small_removed_labels
+            variants.same_arrays_as(source_variants)
             and source_spatial_domain == payload_domain
         ):
             return source_payload

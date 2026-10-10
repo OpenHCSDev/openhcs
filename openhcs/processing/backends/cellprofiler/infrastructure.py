@@ -39,7 +39,7 @@ from openhcs.core.source_bindings import (
     SourceSetRole,
 )
 from openhcs.core.source_matching import source_metadata_component
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
@@ -1419,7 +1419,7 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
                 )
             )
             source_spatial_domain = VolumeSourceSpatialDomain()
-        voxel_spacing = SourceVoxelSpacing.from_cellprofiler_xyz(
+        voxel_spacing = relative_voxel_spacing(
             x=_positive_float_setting(
                 module,
                 "Relative pixel spacing in X",
@@ -1467,3 +1467,14 @@ class GroupsModule(SourceSetupCellProfilerModule):
                 setting.value for setting in module.iter_settings("Metadata category")
             ),
         )
+
+
+def relative_voxel_spacing(*, x: float, y: float, z: float) -> SourceVoxelSpacing:
+    """Return CellProfiler Image.spacing semantics from NamesAndTypes relative spacing."""
+    raw_y = float(y)
+    if raw_y <= 0:
+        raise ValueError("CellProfiler relative pixel spacing in Y must be positive.")
+    return SourceVoxelSpacing(
+        (float(z) / raw_y, 1.0, float(x) / raw_y),
+        unit=SourceVoxelSpacingUnit.RELATIVE,
+    )

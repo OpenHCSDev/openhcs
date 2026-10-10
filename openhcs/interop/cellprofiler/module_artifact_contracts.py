@@ -757,7 +757,7 @@ class CellProfilerModuleArtifactContracts:
                 if len(matching_sidecars) != 1:
                     raise ValueError(
                         f"Module {module.name} requires exactly one "
-                        f"{binding.sidecar_role.value} sidecar for {source.ref()!r}, "
+                        f"{binding.sidecar_role.name} sidecar for {source.ref()!r}, "
                         f"got {tuple(spec.ref() for spec in matching_sidecars)!r}."
                     )
                 resolved_sidecars.append(

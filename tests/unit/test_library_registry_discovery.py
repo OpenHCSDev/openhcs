@@ -379,7 +379,7 @@ def test_registry_cache_publication_uses_atomic_storage_owner(
         original_name="identity",
         module="test.functions",
         get_memory_type=lambda: "numpy",
-        contract=SimpleNamespace(name="SINGLE_ARRAY"),
+        contract=SimpleNamespace(key="single_array"),
         doc="Return the input.",
         tags=("test",),
     )

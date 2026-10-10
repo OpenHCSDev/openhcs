@@ -16,7 +16,7 @@ from openhcs.processing.backends.cellprofiler._preparation import (
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
@@ -82,9 +82,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.core.axes import Axis
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts import ArtifactSpec
@@ -333,12 +338,12 @@ class GridCycleScopeExecutionModePolicy:
     @classmethod
     def execution_mode(
         cls,
-        default: ImagePayloadExecutionMode,
+        default: type[ImagePayloadExecutionMode],
         *,
         image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
         variable_components: tuple[type[Axis], ...],
-    ) -> ImagePayloadExecutionMode:
+    ) -> type[ImagePayloadExecutionMode]:
         del cls, image, variable_components
         parameter_name = (
             DefineGridManualModule.cycle_scope_binding.require_parameter_name()
@@ -347,7 +352,7 @@ class GridCycleScopeExecutionModePolicy:
             kwargs[parameter_name] if parameter_name in kwargs else None
         )
         if cycle_scope is DefineGridCycleScope.ONCE:
-            return ImagePayloadExecutionMode.FULL_STACK
+            return FullStackExecution
         return default
 
 
@@ -1388,7 +1393,7 @@ class IdentifyObjectsInGridRequest(GridShapeContext):
         )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def define_grid_manual(
     image: np.ndarray,
     grid_rows: int = 8,
@@ -1434,7 +1439,7 @@ def define_grid_manual(
     return (image, grid)
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 def define_grid_automatic(
     image: np.ndarray,
@@ -1467,7 +1472,7 @@ def define_grid_automatic(
     return (image, grid)
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def draw_grid_overlay(
     image: np.ndarray,
     grid_rows: int = 8,
@@ -1504,7 +1509,7 @@ def draw_grid_overlay(
     return result
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("topology_inputs")
 def identify_objects_in_grid(
     image: ImagePayload,

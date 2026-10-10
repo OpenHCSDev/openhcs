@@ -33,6 +33,9 @@ from python_introspect import is_declared_public_name
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
     LibraryRegistryBase,
+)
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
     ProcessingContract,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
@@ -798,24 +801,9 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
     def _processing_contract_for_function(
         self,
         callable_contract: CallableContract,
-    ) -> ProcessingContract:
-        """Return the function's declared contract, defaulting to FLEXIBLE."""
-        declared_contract = callable_contract.processing_contract
-        if isinstance(declared_contract, ProcessingContract):
-            return declared_contract
-        if isinstance(declared_contract, str):
-            resolved = ProcessingContract.from_declared_name(declared_contract)
-            if resolved is not None:
-                return resolved
-
-        declared_name = callable_contract.declared_processing_contract
-        if isinstance(declared_name, str):
-            resolved = ProcessingContract.from_declared_name(declared_name)
-            if resolved is not None:
-                return resolved
-
-        # Most OpenHCS functions are FLEXIBLE when not explicitly declared.
-        return ProcessingContract.FLEXIBLE
+    ) -> type[ProcessingContract]:
+        """Return the function's declared contract; undeclared functions are flexible."""
+        return callable_contract.processing_contract or FlexibleContract
 
     def _generate_function_name(self, original_name: str, module_name: str) -> str:
         """Generate unique function name for OpenHCS functions."""

@@ -728,7 +728,7 @@ class CPATableRowProjection:
     ) -> Iterator[tuple[MeasurementSubject, ColumnarRows]]:
         if projected_rows is None:
             projected_rows = table.rows
-            if table.subject.scope is not MeasurementScope.EXPERIMENT:
+            if table.subject.scope is not MeasurementScope.RUN:
                 if scope is None:
                     raise ValueError(
                         f"Measurement table {table.name!r} requires an execution scope."
@@ -737,9 +737,9 @@ class CPATableRowProjection:
                     scope=scope,
                     table=table,
                 )
-        default_subject = table.subject.name or table.subject.scope.value.title()
+        default_subject = table.subject.name or CELLPROFILER_MEASUREMENT_DIALECT.scope_name(table.subject.scope)
         if (
-            table.subject.scope is MeasurementScope.EXPERIMENT
+            table.subject.scope is MeasurementScope.RUN
             and measurement_table_row_layout_from_fields(table.rows.fields)
             is MeasurementTableRowLayout.WIDE
         ):
@@ -788,7 +788,7 @@ class CPATableRowProjection:
             if subject.scope is MeasurementScope.OBJECT
             else (
                 (self.image_id_field(),)
-                if subject.scope is MeasurementScope.IMAGE
+                if subject.scope is MeasurementScope.SAMPLE
                 else ()
             )
         )
@@ -871,7 +871,7 @@ class CPATableRowProjection:
     ) -> FieldSpec | None:
         normalized_field_name = normalize_runtime_identifier(field_name)
         row_identity = CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract
-        if row_identity.selected_image_identity_fields(
+        if row_identity.selected_sample_identity_fields(
             frozenset((normalized_field_name,))
         ):
             return self.image_id_field()
@@ -1416,7 +1416,7 @@ class CellProfilerAnalystProjectionBuilder:
             ),
             self.context,
         )
-        image_subject = MeasurementSubject(MeasurementScope.IMAGE, "Image")
+        image_subject = MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE))
         image_rows_by_number: dict[
             int,
             dict[str, Any],
@@ -1516,16 +1516,16 @@ class CellProfilerAnalystProjectionBuilder:
                     (
                         (
                             scoped.table.rows
-                            if scoped.table.subject.scope is MeasurementScope.EXPERIMENT
+                            if scoped.table.subject.scope is MeasurementScope.RUN
                             else row_projection.image_set_numbering.project_measurement_rows(
                                 scope=scoped.execution_scope, table=scoped.table
                             )
                         )
                         if scoped.table.subject.scope
                         in {
-                            MeasurementScope.IMAGE,
+                            MeasurementScope.SAMPLE,
                             MeasurementScope.OBJECT,
-                            MeasurementScope.EXPERIMENT,
+                            MeasurementScope.RUN,
                         }
                         else None
                     )
@@ -1703,7 +1703,7 @@ class CellProfilerAnalystProjectionBuilder:
                 rows=tuple(experiment_rows or ({},)),
                 columns=experiment_columns,
                 subject=MeasurementSubject(
-                    MeasurementScope.EXPERIMENT,
+                    MeasurementScope.RUN,
                     "Experiment",
                 ),
             ),
@@ -1757,13 +1757,13 @@ class CellProfilerAnalystProjectionBuilder:
                 table_name=projection.dialect.image_table_name(),
                 rows=tuple(image_rows.values()),
                 columns=image_columns,
-                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE)),
             ),
             experiment_table=CellProfilerProjectedTable(
                 table_name=projection.dialect.object_table_name("Experiment"),
                 rows=tuple(experiment_rows),
                 columns=experiment_columns,
-                subject=MeasurementSubject(MeasurementScope.EXPERIMENT, "Experiment"),
+                subject=MeasurementSubject(MeasurementScope.RUN, "Experiment"),
             ),
             object_tables=CellProfilerAnalystProjectionBuilder._join_object_tables(
                 object_rows, object_columns, row_projection=projection
@@ -1924,9 +1924,9 @@ class CellProfilerAnalystProjectionBuilder:
         ) = None,
     ) -> tuple[tuple[FieldSpec, ...], tuple[FieldSpec, ...]]:
         if table.subject.scope not in {
-            MeasurementScope.IMAGE,
+            MeasurementScope.SAMPLE,
             MeasurementScope.OBJECT,
-            MeasurementScope.EXPERIMENT,
+            MeasurementScope.RUN,
         }:
             return image_columns, experiment_columns
         for subject, rows, columns in (
@@ -1934,7 +1934,7 @@ class CellProfilerAnalystProjectionBuilder:
             if projections is None
             else projections
         ):
-            if subject.scope is MeasurementScope.IMAGE:
+            if subject.scope is MeasurementScope.SAMPLE:
                 image_table_name = row_projection.dialect.image_table_name()
                 image_columns = FieldSpec.merge_exact(
                     (image_columns, columns),
@@ -1947,7 +1947,7 @@ class CellProfilerAnalystProjectionBuilder:
                     target=image_rows_by_number,
                 )
                 continue
-            if subject.scope is MeasurementScope.EXPERIMENT:
+            if subject.scope is MeasurementScope.RUN:
                 experiment_table_name = row_projection.dialect.object_table_name(
                     "Experiment"
                 )

@@ -1,4 +1,7 @@
 import importlib
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+)
 from dataclasses import replace
 import sys
 import types
@@ -8,11 +11,7 @@ import pytest
 import skimage.morphology
 import skimage.segmentation
 from python_introspect import declared_enum_type
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImagePayloadBundleContext,
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.alignment import (
@@ -169,7 +168,11 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.processing.backends.cellprofiler.morphology import (
     CellProfilerDeclumpMethod,
 )
@@ -189,6 +192,11 @@ from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
 from openhcs.core.memory.decorators import image_payload_boundary
 from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    AlignedStackExecution,
+    FullStackExecution,
+    NaturalExecution,
+)
 
 
 
@@ -247,7 +255,7 @@ def test_measure_colocalization_declares_composed_stack_execution() -> None:
         CallableContract.from_callable(
             measure_colocalization
         ).runtime_image_execution_mode
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
 
 
@@ -707,36 +715,36 @@ def test_overlay_objects_preserves_payload_scoped_volume() -> None:
     assert result.shape == (2, 4, 5, 3)
     assert (
         OverlayObjectsModule.execution_mode(
-            ImagePayloadExecutionMode.NATURAL,
+            NaturalExecution,
             image=image,
             kwargs={"labels": labels},
             variable_components=(),
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
 
 
 def test_threshold_executes_site_stacks_as_independent_planes() -> None:
     assert (
         ThresholdModule.execution_mode(
-            ImagePayloadExecutionMode.FULL_STACK,
+            FullStackExecution,
             image=np.zeros((2, 4, 5), dtype=np.float32),
             kwargs={},
             variable_components=(Microscopy.Site,),
         )
-        is ImagePayloadExecutionMode.NATURAL
+        is NaturalExecution
     )
 
 
 def test_threshold_preserves_declared_z_stack_execution() -> None:
     assert (
         ThresholdModule.execution_mode(
-            ImagePayloadExecutionMode.FULL_STACK,
+            FullStackExecution,
             image=np.zeros((2, 4, 5), dtype=np.float32),
             kwargs={},
             variable_components=(Microscopy.ZIndex,),
         )
-        is ImagePayloadExecutionMode.FULL_STACK
+        is FullStackExecution
     )
 
 
@@ -1307,7 +1315,7 @@ def test_runtime_batch_projects_singleton_aligned_axis_before_colocalization() -
             "channel_2": 1,
             "do_costes": False,
         },
-        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
+        execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=1,
@@ -1317,11 +1325,11 @@ def test_runtime_batch_projects_singleton_aligned_axis_before_colocalization() -
     )
 
     batch_request = request.batch_executor_request(
-        processing_contract=ProcessingContract.FLEXIBLE,
+        processing_contract=FlexibleContract,
     )
 
     assert batch_request is not None
-    assert batch_request.execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert batch_request.execution_mode is FullStackExecution
     assert batch_request.plane_projection is None
     assert batch_request.image.data.shape == (2, 2, 2)
     context = ColocalizationCostesThresholdBatch().image_pair_context(batch_request)
@@ -3239,7 +3247,7 @@ def test_measure_object_neighbors_counts_small_removed_discarded_neighbors():
     small_removed[3, 3] = 2
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
-            labels=labels, small_removed_labels=small_removed
+            labels=labels, variants={SmallRemovedLabels: small_removed}
         )
     )
     _, _with_discarded_relationship, with_discarded = measure_object_neighbors(
@@ -3395,7 +3403,7 @@ def test_medianfilter_declares_flexible_slice_by_slice_semantics():
     )
     image = np.arange(3 * 5 * 5, dtype=np.float32).reshape((3, 5, 5))
 
-    assert function.__processing_contract__ is ProcessingContract.FLEXIBLE
+    assert function.__processing_contract__ is FlexibleContract
     assert "slice_by_slice" in function.__signature__.parameters
 
     volumetric = function(image, window_size=3, slice_by_slice=False)
@@ -3700,9 +3708,9 @@ def test_absorbed_processing_contract_metadata_does_not_act_as_validator():
     assert result.shape == image.shape
     assert (
         correct_illumination_calculate.__processing_contract__
-        is ProcessingContract.FLEXIBLE
+        is FlexibleContract
     )
-    assert opening.__processing_contract__ is ProcessingContract.FLEXIBLE
+    assert opening.__processing_contract__ is FlexibleContract
 
 
 def test_correct_illumination_returns_retained_images_in_declared_port_order():
@@ -4308,7 +4316,7 @@ def test_smooth_gaussian_default_provider_preserves_cellprofiler_semantics():
 def test_pure_2d_contract_wrapper_aggregates_illumination_outputs_per_slice():
     registry = OpenHCSRegistry()
     wrapped = registry.apply_contract_wrapper(
-        correct_illumination_calculate, ProcessingContract.PURE_2D
+        correct_illumination_calculate, Pure2DContract
     )
     image = np.stack(
         (np.full((8, 8), 1.0, dtype=np.float32), np.full((8, 8), 2.0, dtype=np.float32))
@@ -4334,7 +4342,7 @@ def test_unified_registry_strips_semantic_controls_from_non_flexible_contracts()
         return image
 
     pure_2d.output_memory_type = "numpy"
-    wrapped = registry.apply_contract_wrapper(pure_2d, ProcessingContract.PURE_2D)
+    wrapped = registry.apply_contract_wrapper(pure_2d, Pure2DContract)
 
     assert "slice_by_slice" not in wrapped.__signature__.parameters
     result = wrapped(np.ones((2, 3, 3), dtype=np.float32), slice_by_slice=True)
@@ -4347,7 +4355,7 @@ def test_unified_registry_injects_semantic_controls_for_flexible_contracts():
     def flexible(image):
         return image
 
-    wrapped = registry.apply_contract_wrapper(flexible, ProcessingContract.FLEXIBLE)
+    wrapped = registry.apply_contract_wrapper(flexible, FlexibleContract)
 
     assert "slice_by_slice" in wrapped.__signature__.parameters
 
@@ -4367,7 +4375,7 @@ def test_unmix_colors_returns_one_output_per_stain_row():
         output.metadata.axis_position(ColourAxis) is None
         for output in outputs.slices
     )
-    assert unmix_colors.__processing_contract__ is ProcessingContract.FLEXIBLE
+    assert unmix_colors.__processing_contract__ is FlexibleContract
 
 
 def test_flip_and_rotate_preserves_declared_color_channel_axis() -> None:
@@ -4533,7 +4541,7 @@ def test_measure_image_area_occupied_runs_mixed_rows():
     ]
     assert (
         measure_image_area_occupied.__processing_contract__
-        is ProcessingContract.FLEXIBLE
+        is FlexibleContract
     )
 
 
@@ -4872,7 +4880,7 @@ def test_align_returns_two_registered_images_and_shift_measurements():
     assert measurements.rows[1].y_shift > 0
     assert type(measurements.rows[1].x_shift) is int
     assert type(measurements.rows[1].y_shift) is int
-    assert align.__processing_contract__ is ProcessingContract.PURE_3D
+    assert align.__processing_contract__ is Pure3DContract
 
 
 def test_align_declares_native_integer_shift_fields():
@@ -4943,7 +4951,7 @@ def test_overlay_outlines_runs_mixed_image_and_object_rows():
     assert output[..., 0].max() > 0
     assert output[..., 1].max() > 0
     assert output.metadata.axis_position(ColourAxis) == -1
-    assert overlay_outlines.__processing_contract__ is ProcessingContract.FLEXIBLE
+    assert overlay_outlines.__processing_contract__ is FlexibleContract
 
 
 def test_overlay_outlines_accepts_hex_color_literals():
@@ -5063,11 +5071,11 @@ def test_overlay_outlines_renders_exact_projected_empty_label_plane():
 @pytest.mark.parametrize(
     "contract,mode,slice_by_slice,admitted",
     (
-        (ProcessingContract.PURE_2D, ImagePayloadExecutionMode.NATURAL, False, False),
-        (ProcessingContract.PURE_2D, ImagePayloadExecutionMode.FULL_STACK, False, True),
-        (ProcessingContract.PURE_3D, ImagePayloadExecutionMode.NATURAL, False, True),
-        (ProcessingContract.FLEXIBLE, ImagePayloadExecutionMode.NATURAL, False, True),
-        (ProcessingContract.FLEXIBLE, ImagePayloadExecutionMode.NATURAL, True, False),
+        (Pure2DContract, NaturalExecution, False, False),
+        (Pure2DContract, FullStackExecution, False, True),
+        (Pure3DContract, NaturalExecution, False, True),
+        (FlexibleContract, NaturalExecution, False, True),
+        (FlexibleContract, NaturalExecution, True, False),
     ),
 )
 def test_measurement_batch_admission_uses_declared_processing_domain(

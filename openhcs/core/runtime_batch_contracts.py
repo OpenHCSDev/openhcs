@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from enum import Enum
 import inspect
 from types import MappingProxyType
@@ -14,20 +14,13 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.callable_contract import CallableContract, CallableMetadata, KeywordRuntimeParameter
 from openhcs.core.function_reference import FunctionReference
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImagePayloadExecutionMode,
-    aligned_image_stack_kwargs,
-)
 from openhcs.core.runtime_adapters import RuntimeImageExecutionContext
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
 if TYPE_CHECKING:
-    from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+    from openhcs.core.processing_contracts import ProcessingContract
     from openhcs.core.runtime_stores import RuntimeArtifactBatch
     from openhcs.core.context.processing_context import ProcessingContext
 
@@ -102,66 +95,20 @@ class RuntimeBatchInvocationRequest(RuntimeImageExecutionContext):
         )
 
     def batch_executor_request(
-        self, *, processing_contract: "ProcessingContract",
+        self, *, processing_contract: "type[ProcessingContract]",
     ) -> "RuntimeBatchInvocationRequest | None":
         """Return a request projected into the batch executor's image domain.
 
         A batch executor may inspect image pixels before it delegates the actual
-        call.  It must therefore see the same image domain as the callable.
-        Preserved NATURAL axes requiring 2D execution remain with the ordinary
-        slicer under the processing declaration.  A
-        singleton aligned runtime-slice axis can be consumed exactly; a larger
-        aligned axis requires per-slice execution and is left to the ordinary
-        contract executor by returning ``None``.
+        call, so it must see the same image domain as the callable. The
+        contract decides whether the request already occupies that domain; the
+        execution mode projects it there, or returns ``None`` to leave it to
+        the ordinary contract executor.
         """
 
-        if not processing_contract.declaration.supports_measurement_image_batch(self):
+        if not processing_contract.supports_measurement_image_batch(self):
             return None
-        if (
-            self.execution_mode
-            is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
-        ):
-            return self
-        if not isinstance(self.image, AlignedImageStack):
-            raise TypeError(
-                "Aligned runtime batch execution requires AlignedImageStack, got "
-                f"{type(self.image).__name__}."
-            )
-        projection = self.plane_projection
-        if projection is None or projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            raise ValueError(
-                "Aligned runtime batch execution requires a compiled runtime-slice "
-                "projection."
-            )
-        if projection.plane_index is not None:
-            raise ValueError(
-                "Aligned runtime batch execution received an image after its "
-                "runtime-slice projection was already selected."
-            )
-        if projection.axis_size != len(self.image.slices):
-            raise ValueError(
-                "Aligned runtime batch image cardinality conflicts with its "
-                f"compiled projection: {len(self.image.slices)} != "
-                f"{projection.axis_size}."
-            )
-        if projection.axis_size != 1:
-            return None
-        projected_image = RuntimeSliceProjection.value_for_slice(
-            self.image,
-            projection.selected_plane(0),
-        )
-        return replace(
-            self,
-            image=projected_image,
-            kwargs=aligned_image_stack_kwargs(
-                self.kwargs,
-                0,
-                1,
-                reference_payload=projected_image,
-            ),
-            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
-            plane_projection=None,
-        )
+        return self.execution_mode.batch_request(self)
 
 
 class RuntimeBatchExecutionDomain(str, Enum):
@@ -207,15 +154,10 @@ class RuntimeArtifactPartitionBatchRequest:
         compiler admission continues to own whether the invocation is enabled.
         """
         from python_introspect import Enableable
-        from openhcs.processing.backends.lib_registry.unified_registry import (
-            RuntimeInvocationKwargPolicy,
-            RuntimeInvocationKwargPolicyStrategy,
-        )
+        from openhcs.core.processing_contracts import SignatureFilteredKwargs
 
         raw_callable = contract.resolve_raw_runtime_callable()
-        kwargs = RuntimeInvocationKwargPolicyStrategy.for_policy(
-            RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED
-        ).accepted_kwargs(
+        kwargs = SignatureFilteredKwargs.accepted_kwargs(
             raw_callable,
             Enableable.without_parameter(kwargs),
             signature=contract.raw_runtime_signature,
