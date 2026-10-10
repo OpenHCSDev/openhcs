@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
+import threading
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -41,6 +42,7 @@ from openhcs.authoring.session.debug_runs import DebugRunRequest, DebugRuns
 from openhcs.authoring.session.events import (
     AvailabilityChanged,
     BatchFinished,
+    RunTimedOut,
     CompiledStateChanged,
     DatasetConfigChanged,
     DatasetExecutionFinished,
@@ -90,6 +92,8 @@ from openhcs.core.dataset_sources.dataset_roots import (
 from openhcs.core.dataset_sources.dataset_scopes import (
     DatasetScope,
     DatasetScopeKind,
+    DatasetScopeOffer,
+    PreparedWorkspaceScope,
 )
 from openhcs.core.dataset_sources.source import (
     PreparedWorkspaceSource,
@@ -300,6 +304,7 @@ class Session:
         self.compile_pending: set[str] = set()
         self._execution_state = ManagerExecutionState.IDLE
         self.batch = ExecutionBatchRuntime()
+        self._batch_number = 0
         self.progress_tracker = registry()
         self.debug_sessions: dict[str, DebugSession] = {}
         self.debug_snapshots: dict[str, tuple[DebugSnapshot, ...]] = {}
@@ -469,16 +474,34 @@ class Session:
             and orchestrator.state.has_completed_initialization
         )
 
-    def add_dataset_roots(self, roots: Iterable[Path | str]) -> tuple[str, ...]:
-        """Add one row per scope each root offers; return the added scope ids."""
+    def add_dataset_roots(
+        self,
+        roots: Iterable[Path | str],
+        execution_root: Path | str | None = None,
+    ) -> tuple[str, ...]:
+        """Add one row per scope each root offers; return the added scope ids.
 
-        offers = tuple(
-            offer
-            for root in roots
-            for offer in DatasetScopeKind.offers_for_root(
-                self.dataset_access.require_readable(Path(root))
+        With ``execution_root``, the single root becomes one row that executes
+        on that separately prepared root.
+        """
+
+        roots = tuple(self.dataset_access.require_readable(Path(root)) for root in roots)
+        if execution_root is not None:
+            if len(roots) != 1:
+                raise ValueError("A prepared execution root needs exactly one root.")
+            offers = (
+                DatasetScopeOffer(
+                    PreparedWorkspaceScope.scope_for(
+                        roots[0],
+                        self.dataset_access.require_readable(Path(execution_root)),
+                    ),
+                    select_by_default=True,
+                ),
             )
-        )
+        else:
+            offers = tuple(
+                offer for root in roots for offer in DatasetScopeKind.offers_for_root(root)
+            )
         added = self._add_scopes(
             tuple(offer.scope for offer in offers),
             label="add datasets",
@@ -945,7 +968,9 @@ class Session:
         ensure_global_config_context(GlobalPipelineConfig, self.global_config)
         for scope_id in scope_ids:
             self.require_work_allowed(scope_id)
-            self.dataset_access.require_initializable(DatasetScope.parse(scope_id).root)
+            self.dataset_access.require_initializable(
+                DatasetScope.parse(scope_id).initialized_root
+            )
         self.init_pending.update(scope_ids)
         self.refresh()
         self.publish(ProgressStarted(len(scope_ids)))
@@ -1044,20 +1069,57 @@ class Session:
         for scope_id in scope_ids:
             self.require_definition_mutation_allowed(scope_id)
 
-    def _begin_batch(self, scope_ids: tuple[str, ...]) -> None:
+    def _begin_batch(self, scope_ids: tuple[str, ...]) -> int:
         self.require_execution_allowed(scope_ids)
         self.batch.begin_batch(scope_ids)
         self.execution_state = ManagerExecutionState.RUNNING
+        self._batch_number += 1
+        return self._batch_number
+
+    def _arm_run_deadline(
+        self,
+        batch_number: int,
+        scope_ids: tuple[str, ...],
+        wait_timeout_ms: int,
+    ) -> None:
+        """Force-stop this batch if it is still running when the timeout passes."""
+
+        timer = threading.Timer(
+            wait_timeout_ms / 1000,
+            lambda: self.main_thread.post(
+                lambda: self._run_deadline_passed(batch_number, scope_ids, wait_timeout_ms)
+            ),
+        )
+        timer.daemon = True
+        timer.start()
+
+    def _run_deadline_passed(
+        self,
+        batch_number: int,
+        scope_ids: tuple[str, ...],
+        wait_timeout_ms: int,
+    ) -> None:
+        if batch_number != self._batch_number or not self.execution_state.busy:
+            return
+        self.publish(RunTimedOut(scope_ids, wait_timeout_ms))
+        if self.execution_state.run_button_enabled(True):
+            self.stop_execution(force=True)
 
     async def run_datasets(
         self,
         scope_ids: tuple[str, ...],
         *,
         auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
+        submit_timeout_ms: int | None = None,
+        wait_timeout_ms: int | None = None,
     ) -> None:
-        """Compile then submit every dataset in one execution batch."""
+        """Compile then submit every dataset in one execution batch.
 
-        self._begin_batch(scope_ids)
+        ``submit_timeout_ms`` bounds each submission; ``wait_timeout_ms`` bounds
+        the batch after submission, then the session force-stops it.
+        """
+
+        batch_number = self._begin_batch(scope_ids)
         try:
             self.progress.reset_for_new_batch()
             self.live_measurements.clear()
@@ -1087,7 +1149,10 @@ class Session:
                     request,
                     compile_artifact_id=artifacts[request.scope_id],
                     auxiliary_params=auxiliary_params,
+                    timeout_ms=submit_timeout_ms,
                 )
+            if wait_timeout_ms is not None:
+                self._arm_run_deadline(batch_number, scope_ids, wait_timeout_ms)
         except Exception as error:
             logger.error("Failed to execute datasets: %s", error, exc_info=True)
             self.publish(ErrorReported(f"Failed to execute: {error}"))

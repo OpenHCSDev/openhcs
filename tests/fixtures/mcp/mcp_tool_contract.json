@@ -641,6 +641,18 @@
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
+     "execution_root": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Execution Root"
+     },
      "roots": {
       "default": [],
       "items": {
@@ -4936,6 +4948,30 @@
       },
       "title": "Scope Ids",
       "type": "array"
+     },
+     "submit_timeout_ms": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Submit Timeout Ms"
+     },
+     "wait_timeout_ms": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Wait Timeout Ms"
      }
     },
     "required": [

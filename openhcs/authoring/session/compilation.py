@@ -72,7 +72,7 @@ class DatasetPipelineRequest:
         auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
     ) -> OpenHCSExecutionSubmission:
         submission = OpenHCSExecutionSubmission(
-            plate_id=self.scope_id,
+            plate_id=self.scope.plate_id,
             execution_plate_id=self.execution_root,
             selected_pipeline_path=self.pipeline_path,
             pipeline_document=PipelineDocumentCodec.from_values(

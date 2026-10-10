@@ -134,6 +134,8 @@ def test_measured_cli_rejects_existing_evidence_before_execution(
             str(output_dir),
             "--run-id",
             "test",
+            "--wait-timeout-ms",
+            "1000",
         ]
     )
 

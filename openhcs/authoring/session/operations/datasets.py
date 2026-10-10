@@ -122,17 +122,26 @@ class AddDatasets(PromptedOperation, HeadlessOperation):
 
     @classmethod
     def available(cls, session, request) -> AgentError | None:
-        missing = [root for root in request.roots if not Path(root).exists()]
+        roots = (*request.roots, *filter(None, (request.execution_root,)))
+        missing = [root for root in roots if not Path(root).exists()]
         if missing:
             return AgentError(
                 code="dataset_root_missing",
                 message=f"Dataset roots do not exist: {', '.join(missing)}.",
             )
+        if request.execution_root is not None and len(request.roots) != 1:
+            return AgentError(
+                code="execution_root_needs_one_root",
+                message="A prepared execution root pairs with exactly one root.",
+            )
         return None
 
     @classmethod
     def run(cls, session, request) -> SessionOperationResult:
-        return cls.completed(session, session.add_dataset_roots(request.roots))
+        return cls.completed(
+            session,
+            session.add_dataset_roots(request.roots, request.execution_root),
+        )
 
 
 class DeleteDatasets(IdleTargetsOperation, HeadlessOperation):
@@ -350,6 +359,8 @@ class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOpe
                 request.runtime_observation_export_path,
                 request.runtime_observation_export_scope,
             ),
+            submit_timeout_ms=request.submit_timeout_ms,
+            wait_timeout_ms=request.wait_timeout_ms,
         )
         return cls.accepted(session, request.scope_ids)
 

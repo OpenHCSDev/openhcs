@@ -117,10 +117,10 @@ def _start_run(built, plate: Path, pipeline, export_path: Path) -> tuple[str, in
     )
     _wait_for_row(built, _call(
         built, "openhcs_initialize_datasets", {"scope_ids": [scope_id]}
-    ), lambda row: row["initialized"])
+    ), lambda row: row["initialized"] and not row["init_pending"])
     _wait_for_row(built, _call(
         built, "openhcs_compile_datasets", {"scope_ids": [scope_id]}
-    ), lambda row: row["compiled"])
+    ), lambda row: row["compiled"] and not row["compile_pending"])
     started = _call(
         built,
         "openhcs_run_datasets",
@@ -551,6 +551,10 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
             "--port",
             str(22000 + os.getpid() % 20000),
             "--no-persistent",
+            "--submit-timeout-ms",
+            "120000",
+            "--wait-timeout-ms",
+            "120000",
         ]
     )
 

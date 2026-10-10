@@ -60,6 +60,7 @@ class ExecutionSubmission:
         *,
         compile_artifact_id: str,
         auxiliary_params: ZMQAuxiliaryExecutionParams | None,
+        timeout_ms: int | None = None,
     ) -> None:
         """Submit an ordinary execution and keep what was submitted, for evidence."""
 
@@ -73,7 +74,7 @@ class ExecutionSubmission:
         execution_id = await self._submit(
             request,
             compile_artifact_id=compile_artifact_id,
-            send=lambda: client.submit_prepared_pipeline(prepared),
+            send=lambda: client.submit_prepared_pipeline(prepared, timeout_ms=timeout_ms),
             label="execution",
         )
         if execution_id is not None:

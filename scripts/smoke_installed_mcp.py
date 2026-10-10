@@ -423,6 +423,10 @@ def _run_installed_measured_cli_smoke(
         "--port",
         str(30000 + os.getpid() % 20000),
         "--no-persistent",
+        "--submit-timeout-ms",
+        "120000",
+        "--wait-timeout-ms",
+        "120000",
     )
     completed = subprocess.run(
         command,

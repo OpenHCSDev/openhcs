@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
+from urllib.parse import quote, unquote
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -29,6 +30,20 @@ class DatasetScope:
     root: Path
     kind: type["DatasetScopeKind"]
     pipeline_path: Path | None = None
+    execution_root: Path | None = None
+    """A separately prepared root the dataset executes on (none: its root)."""
+
+    @property
+    def plate_id(self) -> str:
+        """The identity an execution submission names for this dataset."""
+
+        return self.kind.plate_id(self)
+
+    @property
+    def initialized_root(self) -> Path:
+        """The root initialization writes metadata into."""
+
+        return self.root if self.execution_root is None else self.execution_root
 
     @property
     def display_name(self) -> str:
@@ -90,6 +105,10 @@ class DatasetScopeKind(ABC, metaclass=AutoRegisterMeta):
         return scope.root.name
 
     @classmethod
+    def plate_id(cls, scope: DatasetScope) -> str:
+        return scope.scope_id
+
+    @classmethod
     def code_value(cls, scope: DatasetScope) -> Path | str:
         return scope.scope_id
 
@@ -133,6 +152,48 @@ class PlainDatasetScope(DatasetScopeKind):
     @classmethod
     def code_value(cls, scope: DatasetScope) -> Path | str:
         return scope.root
+
+
+class PreparedWorkspaceScope(DatasetScopeKind):
+    """A source root executed on a workspace prepared separately.
+
+    The row's identity, and the plate id its executions name, stays the source
+    root; initialization binds the prepared root as the execution root.
+    """
+
+    marker = "#openhcs-execution-root="
+
+    @classmethod
+    def scope_for(cls, root: Path | str, execution_root: Path | str) -> DatasetScope:
+        root_path = Path(root)
+        execution_path = Path(execution_root)
+        return DatasetScope(
+            scope_id=f"{root_path}{cls.marker}{quote(str(execution_path), safe='/')}",
+            root=root_path,
+            kind=cls,
+            execution_root=execution_path,
+        )
+
+    @classmethod
+    def parse(cls, scope_id: str) -> DatasetScope:
+        root_text, encoded = scope_id.rsplit(cls.marker, maxsplit=1)
+        return cls.scope_for(root_text, unquote(encoded))
+
+    @classmethod
+    def plate_id(cls, scope: DatasetScope) -> str:
+        return str(scope.root)
+
+    @classmethod
+    def prepare_input_workspace(
+        cls,
+        scope: DatasetScope,
+    ) -> "InputWorkspacePreparationResult":
+        from openhcs.core.input_workspace import InputWorkspacePreparationResult
+
+        return InputWorkspacePreparationResult(
+            original_source_root=scope.root,
+            execution_plate_path=scope.execution_root,
+        )
 
 
 SCOPE_SEGMENT_SEPARATOR = "::"

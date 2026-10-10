@@ -172,6 +172,21 @@ class BatchFinished(SessionEvent):
 
 
 @dataclass(frozen=True, slots=True)
+class RunTimedOut(SessionEvent):
+    """A run outlived its wait timeout; the session force-stopped the batch."""
+
+    scope_ids: tuple[str, ...]
+    wait_timeout_ms: int
+
+    @property
+    def message(self) -> str:
+        return (
+            f"Run of {len(self.scope_ids)} dataset(s) exceeded "
+            f"{self.wait_timeout_ms} ms; stopping."
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class InitializationFailed(DatasetScopedEvent):
     dataset_name: str
     error: str

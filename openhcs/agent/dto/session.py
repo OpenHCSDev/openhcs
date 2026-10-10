@@ -10,6 +10,9 @@ from openhcs.agent.dto.common import (
     AgentError,
     AgentWarning,
 )
+from python_introspect import validate_annotated_dataclass
+from zmqruntime.config import PositiveInteger
+
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 
 
@@ -23,6 +26,9 @@ class DatasetRootsRequest(AgentDataclassCliRequest):
     """Dataset root directories to add; each root may offer several rows."""
 
     roots: tuple[str, ...] = ()
+    execution_root: str | None = None
+    """A separately prepared execution root for a single source root: the row
+    keeps the source root as its identity and executes on the prepared root."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +52,14 @@ class DatasetRunRequest(AgentDataclassCliRequest):
     runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
         ZMQRuntimeObservationExportScope.VALUES
     )
+    submit_timeout_ms: PositiveInteger | None = None
+    """Bound on each execution submission; the transport default when unset."""
+    wait_timeout_ms: PositiveInteger | None = None
+    """Bound on the batch after submission; when it passes, the session
+    force-stops the batch and publishes RunTimedOut."""
+
+    def __post_init__(self) -> None:
+        validate_annotated_dataclass(self)
 
 
 @dataclass(frozen=True, slots=True)

@@ -106,8 +106,14 @@ def test_headless_mcp_journey_adds_compiles_and_runs_a_dataset(tmp_path: Path) -
         assert piped["status"] == "completed", piped
 
         for tool, finished in (
-            ("openhcs_initialize_datasets", lambda row: row["initialized"]),
-            ("openhcs_compile_datasets", lambda row: row["compiled"]),
+            (
+                "openhcs_initialize_datasets",
+                lambda row: row["initialized"] and not row["init_pending"],
+            ),
+            (
+                "openhcs_compile_datasets",
+                lambda row: row["compiled"] and not row["compile_pending"],
+            ),
             (
                 "openhcs_run_datasets",
                 lambda row: row["terminal_status"] is not None
@@ -189,8 +195,8 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
                 time.sleep(0.05)
 
         for operation, finished in (
-            (InitializeDatasets, lambda row: row.initialized),
-            (CompileDatasets, lambda row: row.compiled),
+            (InitializeDatasets, lambda row: row.initialized and not row.init_pending),
+            (CompileDatasets, lambda row: row.compiled and not row.compile_pending),
             (
                 RunDatasets,
                 lambda row: row.terminal_status is not None and not row.execution_active,
