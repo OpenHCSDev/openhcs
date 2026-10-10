@@ -25,7 +25,6 @@ from typing import (
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.client import EndpointShutdownResult
 
-from openhcs.agent.services.execution_session_service import ExecutionSessionService
 
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
@@ -51,19 +50,7 @@ from openhcs.agent.dto.config import (
 )
 from openhcs.agent.dto.execution import (
     ArtifactPlanInspection,
-    CompileSubmissionRequest,
-    ExecutionCancellationRequest,
-    ExecutionJobCancellationResult,
-    ExecutionJobRef,
-    ExecutionJobStatus,
-    ExecutionStatusRequest,
-    OrchestratorSession,
-    OrchestratorSessionCreationRequest,
-    OrchestratorSessionRef,
-    OrchestratorSessionRequest,
-    PipelineExecutionSubmissionRequest,
     PipelineSourceArtifactPlanInspectionRequest,
-    PipelineSourceOrchestratorSessionRequest,
     RuntimeDebugArtifactExportRequest,
     RuntimeDebugArtifactExportResult,
     RuntimeDebugCommandRequest,
@@ -83,6 +70,16 @@ from openhcs.agent.dto.execution import (
     RuntimeBootstrapCloseResult,
     SourceWorkspaceSummary,
 )
+from openhcs.agent.dto.session import (
+    DatasetListState,
+    DatasetRequest,
+    PipelineStepsState,
+    SessionEventBatch,
+    SessionEventSummary,
+    SessionEventsRequest,
+)
+from openhcs.authoring.session.operations import HeadlessOperation, SessionOperation
+from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
@@ -390,7 +387,6 @@ class CapabilityTargetContext(Enum):
     PLATE_PATH = "plate_path"
     UI_SELECTED_PLATE = "ui_selected_plate"
     HEADLESS_SESSION = "headless_session"
-    SUBMITTED_JOB = "submitted_job"
     RUNTIME_SERVER = "runtime_server"
     UI_BRIDGE = "ui_bridge"
     UI_WINDOW = "ui_window"
@@ -1684,16 +1680,6 @@ class HeadlessExecutionCapability(AgentCapabilityDeclaration):
     )
 
 
-class SubmittedJobCapability(HeadlessExecutionCapability):
-    """Capability that observes a submitted compile or execution job."""
-
-    exposition = HeadlessExecutionCapability.exposition.refine(
-        workflow_stage=CapabilityWorkflowStage.STATUS,
-        target_context=CapabilityTargetContext.SUBMITTED_JOB,
-        role=CapabilityRole.DIAGNOSTIC,
-    )
-
-
 class UiBridgeCapability(AgentCapabilityDeclaration):
     """Capability that targets the running PyQt UI bridge."""
 
@@ -2732,67 +2718,6 @@ class RenderPipelineSourceCapability(PipelineDraftCapability):
     )
 
 
-class CreateOrchestratorSessionCapability(HeadlessExecutionCapability):
-    name = "openhcs_create_orchestrator_session"
-    title = "Create orchestrator session"
-    description = (
-        "Creates an opaque headless execution session from a plate path and "
-        "the complete PipelineDocument owned by a pipeline draft. Use the UI "
-        "PlateManager code document and "
-        "selected-plate workflow instead when an open UI should show the work."
-    )
-    service = "execution_session"
-    mutating = True
-    side_effects = ("creates_in_memory_execution_session",)
-    input_contract = OrchestratorSessionCreationRequest
-    output_contract = OrchestratorSessionRef
-    invocation = AgentFromFieldsServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: service.create_session_from_request(request),
-    )
-
-
-class CreateOrchestratorSessionFromPipelineSourceCapability(
-    MainThreadProgressCapability, HeadlessExecutionCapability
-):
-    name = "openhcs_create_orchestrator_session_from_pipeline_source"
-    title = "Create source-backed orchestrator session"
-    description = (
-        "Creates an opaque headless execution session from an exact pycodified "
-        "PipelineDocument containing pipeline_steps and an optional "
-        "pipeline_config, whose omission selects PipelineConfig(), such as "
-        "Pipeline Editor code-mode content. An optional execution_plate_path "
-        "selects a prepared input workspace while plate_path retains the "
-        "original source identity. A PlateManager document is a "
-        "multi-plate aggregate, not pipeline source; use the UI selected-plate "
-        "workflow when an open UI should show rows, snapshots, and output auto-add."
-    )
-    service = "execution_session"
-    mutating = True
-    side_effects = ("creates_in_memory_execution_session",)
-    input_contract = PipelineSourceOrchestratorSessionRequest
-    output_contract = OrchestratorSessionRef
-    invocation = AgentFromFieldsServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: (
-            service.create_session_from_pipeline_source_request(request)
-        ),
-    )
-
-
-class GetOrchestratorSessionCapability(HeadlessExecutionCapability):
-    name = "openhcs_get_orchestrator_session"
-    title = "Get orchestrator session"
-    description = "Returns the stored plate, pipeline, config, and ZMQ connection identity for a session."
-    service = "execution_session"
-    input_contract = OrchestratorSessionRequest
-    output_contract = OrchestratorSession
-    invocation = AgentDataclassRequestServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: service.get_session_from_request(request),
-    )
-
-
 class InspectPipelineSourceArtifactPlanCapability(
     MainThreadProgressCapability, PipelineDraftCapability
 ):
@@ -2817,119 +2742,8 @@ class InspectPipelineSourceArtifactPlanCapability(
     input_contract = PipelineSourceArtifactPlanInspectionRequest
     output_contract = ArtifactPlanInspection
     invocation = AgentFromFieldsServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: (
-            service.inspect_pipeline_source_artifact_plan_request(request)
-        ),
-    )
-
-
-class SubmitCompileCapability(ProgressAcknowledgedCapability, HeadlessExecutionCapability):
-    name = "openhcs_submit_compile"
-    title = "Submit compile job"
-    description = (
-        "Submits a compile-only ZMQ execution job for an execution session. "
-        "Use wait=False for normal agent workflows, then poll status by job_id; "
-        "submit is bounded by submit_timeout_ms and wait=True is bounded by "
-        "wait_timeout_ms."
-    )
-    service = "execution_session"
-    mutating = True
-    side_effects = ("submits_zmq_compile_job",)
-    input_contract = CompileSubmissionRequest
-    output_contract = AgentResultFamilyContract(
-        ExecutionJobRef, ExecutionSessionService._submit_job
-    )
-    invocation = AgentDataclassRequestServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: service.submit_compile(
-            request.session_id,
-            wait=request.wait,
-            submit_timeout_ms=request.submit_timeout_ms,
-            wait_timeout_ms=request.wait_timeout_ms,
-        ),
-    )
-
-
-class SubmitPipelineExecutionCapability(
-    ProgressAcknowledgedCapability, HeadlessExecutionCapability
-):
-    name = "openhcs_submit_pipeline_execution"
-    title = "Submit pipeline execution"
-    description = (
-        "Submits a headless ZMQ pipeline execution job for an execution session. "
-        "Use wait=False for normal agent workflows, then poll status by job_id; "
-        "submit is bounded by submit_timeout_ms and wait=True is bounded by "
-        "wait_timeout_ms. An optional runtime observation export path must be "
-        "writable under the agent path policy. The optional observation scope "
-        "selects full runtime values or outcome-only evidence without retaining "
-        "array values. This path does not update the "
-        "running UI PlateManager; "
-        "use openhcs_ui_selected_plate_workflow for user-visible UI runs."
-    )
-    service = "execution_session"
-    mutating = True
-    side_effects = ("submits_zmq_execution_job",)
-    input_contract = PipelineExecutionSubmissionRequest
-    output_contract = AgentResultFamilyContract(
-        ExecutionJobRef, ExecutionSessionService._submit_job
-    )
-    invocation = AgentDataclassRequestServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: service.submit_execution(
-            request.session_id,
-            compile_artifact_id=request.compile_artifact_id,
-            runtime_observation_export_path=request.runtime_observation_export_path,
-            runtime_observation_export_scope=request.runtime_observation_export_scope,
-            wait=request.wait,
-            submit_timeout_ms=request.submit_timeout_ms,
-            wait_timeout_ms=request.wait_timeout_ms,
-        ),
-    )
-
-
-class GetExecutionStatusCapability(SubmittedJobCapability):
-    name = "openhcs_get_execution_status"
-    title = "Get execution status"
-    description = (
-        "Polls one submitted ZMQ job and returns its lifecycle status plus the "
-        "submitting client's latest exact progress observation."
-    )
-    service = "execution_session"
-    input_contract = ExecutionStatusRequest
-    output_contract = ExecutionJobStatus
-    invocation = AgentDataclassRequestServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: service.get_job_status(
-            request.job_id,
-            timeout_ms=request.timeout_ms,
-        ),
-    )
-
-
-class CancelExecutionCapability(HeadlessExecutionCapability):
-    name = "openhcs_cancel_execution"
-    title = "Cancel execution job"
-    description = (
-        "Requests cancellation of one submitted compile or pipeline job through "
-        "its ordinary execution server. Returns whether cancellation was applied "
-        "and the job status observed afterward."
-    )
-    service = "execution_session"
-    mutating = True
-    side_effects = ("requests_zmq_execution_cancellation",)
-    exposition = HeadlessExecutionCapability.exposition.refine(
-        workflow_stage=CapabilityWorkflowStage.CONTROL,
-        target_context=CapabilityTargetContext.SUBMITTED_JOB,
-    )
-    input_contract = ExecutionCancellationRequest
-    output_contract = ExecutionJobCancellationResult
-    invocation = AgentDataclassRequestServiceInvocation(
-        service=lambda context: context.execution_service,
-        method=lambda service, request: service.cancel_job(
-            request.job_id,
-            timeout_ms=request.timeout_ms,
-        ),
+        service=lambda context: context.artifact_plan_service,
+        method=lambda service, request: service.inspect(request),
     )
 
 
@@ -4223,6 +4037,132 @@ class UiWaitForOperationReceiptCapability(UiBridgeCapability):
         method=lambda service, request, connection: service.wait_for_operation_receipt(
             request,
             connection,
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Session operations: each headless session operation is one MCP tool
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SessionOperationInvocation(AgentDataclassInputMixin, AgentCapabilityInvocation):
+    """Invoke one session operation on the context's session."""
+
+    operation: type[SessionOperation]
+
+    def execute(self, context: object, *arguments: object) -> object:
+        (request,) = arguments
+        return context.session.invoke(self.operation, request)
+
+
+class SessionCapability(AgentCapabilityDeclaration):
+    """Capability served by the agent context's OpenHCS session."""
+
+    service: ClassVar[str] = "session"
+    exposition = AgentCapabilityExposition(
+        workflow_group=CapabilityWorkflowGroup.HEADLESS_EXECUTION,
+        workflow_stage=CapabilityWorkflowStage.EXECUTION,
+        target_context=CapabilityTargetContext.HEADLESS_SESSION,
+        visibility=CapabilityVisibility.STANDARD,
+    )
+
+
+def _session_operation_capability(
+    operation: type[SessionOperation],
+) -> type[SessionCapability]:
+    """The MCP tool derived from one headless session operation."""
+
+    return type(
+        f"{operation.__name__}Capability",
+        (SessionCapability,),
+        {
+            "__module__": __name__,
+            "__doc__": operation.__doc__,
+            "name": f"openhcs_{operation.operation_id}",
+            "title": operation.tooltip,
+            "description": operation.description,
+            "mutating": bool(operation.side_effects),
+            "side_effects": operation.side_effects,
+            "input_contract": operation.request,
+            "output_contract": operation.result,
+            "invocation": SessionOperationInvocation(operation),
+        },
+    )
+
+
+SESSION_OPERATION_CAPABILITIES = tuple(
+    _session_operation_capability(operation)
+    for operation in SessionOperation.all()
+    if issubclass(operation, HeadlessOperation)
+)
+
+
+class SessionDatasetsCapability(SessionCapability):
+    name = "openhcs_session_datasets"
+    title = "Session datasets"
+    description = (
+        "Returns the session's dataset rows (initialized, compiled, pending, "
+        "running, terminal status, progress) and the operations available for "
+        "the current selection."
+    )
+    exposition = SessionCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.STATUS,
+    )
+    output_contract = DatasetListState
+    invocation = AgentServiceInvocation(
+        service=lambda context: context.session,
+        method=lambda session: DatasetListView.state_of(session),
+    )
+
+
+class SessionPipelineCapability(SessionCapability):
+    name = "openhcs_session_pipeline"
+    title = "Session dataset pipeline"
+    description = "Returns one dataset's pipeline steps as the session holds them."
+    exposition = SessionCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.STATUS,
+    )
+    input_contract = DatasetRequest
+    output_contract = PipelineStepsState
+    invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.session,
+        method=lambda session, request: PipelineStepsView.state_of(
+            session, request.scope_id
+        ),
+    )
+
+
+class SessionEventsCapability(ProgressAcknowledgedCapability, SessionCapability):
+    name = "openhcs_session_events"
+    title = "Session events"
+    description = (
+        "Returns the session events published after after_sequence, waiting up "
+        "to timeout_seconds for the first one. Operations return the sequence "
+        "they started at; pass it here instead of polling dataset state."
+    )
+    exposition = SessionCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.STATUS,
+    )
+    input_contract = SessionEventsRequest
+    output_contract = SessionEventBatch
+    invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.session,
+        method=lambda session, request: SessionEventBatch(
+            events=tuple(
+                SessionEventSummary(
+                    sequence=record.sequence,
+                    kind=record.event.kind,
+                    scope_id=record.event.scope_id,
+                    message=record.event.message,
+                )
+                for record in session.events_after(
+                    request.after_sequence,
+                    timeout_seconds=request.timeout_seconds,
+                )
+            ),
+            last_sequence=session.event_log.last_sequence,
         ),
     )
 

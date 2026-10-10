@@ -6,6 +6,7 @@ Main application window using WindowManager for clean window abstraction.
 
 import logging
 from collections.abc import Callable
+from functools import singledispatchmethod
 from pathlib import Path
 from types import FunctionType
 from typing import TYPE_CHECKING
@@ -51,8 +52,30 @@ from openhcs.agent.ui_bridge_identities import (
     UiLiveOverviewStateSurfaceIdentityDeclaration,
     ZmqServerManagerWindowIdentity,
 )
+from openhcs.authoring.session.events import (
+    ExecutionStateChanged,
+    ProgressAdvanced,
+    ProgressFinished,
+    ProgressStarted,
+    RuntimeProjectionChanged,
+    ServerCompatibilityObserved,
+    ServerConnectionChanged,
+    SessionEvent,
+)
+from openhcs.authoring.session.session import DispatcherThread, Session
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.progress.projection import ExecutionRuntimeProjection
+from openhcs.core.selection import SelectedAllSelectionMode
+from openhcs.agent.dto.common import AgentError
+from openhcs.authoring.session.operations.application import (
+    CheckForUpdates,
+    ExitApplication,
+    RestartApplication,
+)
+from openhcs.pyqt_gui.session_rendering import (
+    GuiRenderer,
+    OperationPresenter,
+    QtSessionEventRelay,
+)
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
 from openhcs.desktop.restart import DesktopSessionRestart
 from openhcs.desktop.update import (
@@ -77,7 +100,6 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
     MainWindowShortcutLifecycle,
     MainWindowTimeTravelWorkflow,
     MainWindowUiBridgeLifecycle,
-    MainWindowWidgetConnector,
     build_main_window_specs,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
@@ -127,11 +149,12 @@ class MainWindowUiServices(PyQtServiceAdapter):
     def create_system_monitor_widget(self):
         return SystemMonitorWidget(config=self.widget_gui_config.performance_monitor)
 
-    def create_plate_manager_widget(self):
+    def create_plate_manager_widget(self, session: Session):
         from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 
         return PlateManagerWidget(
             self,
+            session,
             self.get_current_color_scheme(),
             gui_config=self.widget_gui_config,
         )
@@ -149,11 +172,12 @@ class MainWindowUiServices(PyQtServiceAdapter):
             progress_config=self.widget_gui_config.progress,
         )
 
-    def create_pipeline_editor_widget(self):
+    def create_pipeline_editor_widget(self, session: Session):
         from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
 
         return PipelineEditorWidget(
             self,
+            session,
             self.get_current_color_scheme(),
         )
 
@@ -219,6 +243,20 @@ class OpenHCSMainWindow(QMainWindow):
         )
         self.desktop_update_service.check_failed.connect(self._on_update_check_failed)
 
+        self.session = Session(
+            transport_config=runtime_context.ui_config.zmq,
+            global_config=self.pipeline_runtime_config,
+            main_thread=DispatcherThread(main_window_services.ui_dispatcher),
+            progress_interval_seconds=(
+                runtime_context.ui_config.progress.update_interval_ms / 1000
+            ),
+        )
+        self.session.attach_renderer(GuiRenderer(self))
+        self._session_events = QtSessionEventRelay(self.session, parent=self)
+        self._session_events.published.connect(
+            lambda record: self.on_session_event(record.event)
+        )
+
         self.embedded_widgets = MainWindowEmbeddedWidgets()
         self.dock_layout_store = MainWindowDockLayoutStore.for_current_application()
         self.floating_windows: dict[str, QWidget] = {}
@@ -238,8 +276,8 @@ class OpenHCSMainWindow(QMainWindow):
         self.setup_status_bar()
         self.zmq_version_restart_workflow = ZMQVersionRestartWorkflow(
             main_window=self,
-            client_service=self.plate_manager_widget.zmq_client_service,
-            execution_state=lambda: self.plate_manager_widget.execution_state,
+            client_service=self.session.client,
+            execution_state=lambda: self.session.execution_state,
             execute_async=self.service_adapter.execute_async_operation,
             publish_status=self.status_message.emit,
             presenter=self.zmq_version_restart_presenter,
@@ -340,7 +378,7 @@ class OpenHCSMainWindow(QMainWindow):
         import asyncio
 
         try:
-            await self.plate_manager_widget.ensure_execution_server()
+            await self.session.ensure_server()
         except EndpointConnectionCancelledError:
             logger.debug("Execution-service preparation cancelled during teardown")
             return
@@ -459,7 +497,9 @@ class OpenHCSMainWindow(QMainWindow):
             self.show_synthetic_plate_generator
         )
 
-        self.plate_manager_widget = self.service_adapter.create_plate_manager_widget()
+        self.plate_manager_widget = self.service_adapter.create_plate_manager_widget(
+            self.session
+        )
         plate_manager_pane = MainWindowDockPane.create(
             main_window=self,
             window_id=PlateManagerWidgetIdentity.require_value(),
@@ -479,7 +519,7 @@ class OpenHCSMainWindow(QMainWindow):
             ports_to_scan
         )
         self.zmq_manager_widget.log_file_opened.connect(self._open_log_file_in_viewer)
-        self.plate_manager_widget.bind_endpoint_observations(
+        self.session.bind_endpoint_observations(
             lambda: self.zmq_manager_widget.endpoint_snapshot
         )
         zmq_manager_pane = MainWindowDockPane.create(
@@ -493,7 +533,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.embedded_widgets.register(zmq_manager_pane)
 
         self.pipeline_editor_widget = (
-            self.service_adapter.create_pipeline_editor_widget()
+            self.service_adapter.create_pipeline_editor_widget(self.session)
         )
         pipeline_editor_pane = MainWindowDockPane.create(
             main_window=self,
@@ -514,11 +554,7 @@ class OpenHCSMainWindow(QMainWindow):
             Qt.Orientation.Vertical,
         )
 
-        # Connect the two manager workflow surfaces.
-        MainWindowWidgetConnector().connect(
-            self.plate_manager_widget,
-            self.pipeline_editor_widget,
-        )
+        self.session.import_initialized_pipelines()
         self._register_embedded_code_document_windows()
 
         self.resizeDocks(
@@ -836,9 +872,7 @@ class OpenHCSMainWindow(QMainWindow):
 
         time_travel_workflow = MainWindowTimeTravelWorkflow(
             refresh_time_travel_widget=lambda: self.time_travel_widget.refresh(),
-            before_restore=(
-                self.plate_manager_widget.require_pipeline_definition_mutation_allowed
-            ),
+            before_restore=self.session.require_definition_mutation_allowed,
         )
         self.time_travel_widget = TimeTravelWidget(
             color_scheme=color_scheme,
@@ -892,18 +926,6 @@ class OpenHCSMainWindow(QMainWindow):
         """Setup signal/slot connections."""
         # Connect config changes
         self.config_changed.connect(self.on_config_changed)
-        self.plate_manager_widget.progress_started.connect(
-            self._on_plate_progress_started
-        )
-        self.plate_manager_widget.progress_updated.connect(
-            self._on_plate_progress_updated
-        )
-        self.plate_manager_widget.progress_finished.connect(
-            self._on_plate_progress_finished
-        )
-        self.plate_manager_widget.runtime_progress_projection_changed.connect(
-            self._on_runtime_progress_projection_changed
-        )
         self._connect_zmq_lifecycle()
 
         # Connect service adapter to application
@@ -943,20 +965,11 @@ class OpenHCSMainWindow(QMainWindow):
     def _connect_zmq_lifecycle(self) -> None:
         """Project endpoint authority and use lifecycle events as invalidations."""
 
-        self.plate_manager_widget.zmq_connection_status_changed.connect(
-            self._observe_zmq_startup_status
-        )
-        self.plate_manager_widget.zmq_endpoint_compatibility_observed.connect(
-            self.zmq_version_restart_workflow.observe_compatibility
-        )
-        self.plate_manager_widget.manager_execution_state_changed.connect(
-            self.zmq_version_restart_workflow.observe_execution_state
-        )
         self.zmq_manager_widget.endpoint_snapshot_changed.connect(
             self._apply_zmq_endpoint_snapshot
         )
         self.zmq_manager_widget.endpoint_terminated.connect(
-            self.plate_manager_widget.zmq_client_service.endpoint_terminated
+            self.session.client.endpoint_terminated
         )
 
     def _observe_zmq_startup_status(
@@ -981,6 +994,7 @@ class OpenHCSMainWindow(QMainWindow):
         status = snapshot.status_for_port(port)
         status.present(self._zmq_status_indicator, "ZMQ")
         self.plate_manager_widget.update_button_states()
+        self.pipeline_editor_widget.update_button_states()
         self._zmq_status_indicator.setToolTip(
             f"Execution endpoint {port}: {status.message}"
         )
@@ -1057,16 +1071,12 @@ class OpenHCSMainWindow(QMainWindow):
         MainWindowPipelineActions(self, self.pipeline_editor_widget).save_pipeline()
 
     def load_orchestrator_configuration(self) -> None:
-        """Open Plate Manager code mode for loading an orchestrator document."""
-        self.plate_manager_widget.action_code_plate()
+        """Open the dataset code document for the selected datasets."""
+        self.plate_manager_widget.show_dataset_code(SelectedAllSelectionMode.SELECTED)
 
     def save_orchestrator_configuration(self) -> None:
-        """Open Plate Manager code mode with every orchestrator for export."""
-        from openhcs.core.selection import SelectedAllSelectionMode
-
-        self.plate_manager_widget.action_code_plate(
-            selection_mode=SelectedAllSelectionMode.ALL,
-        )
+        """Open the dataset code document with every dataset, for export."""
+        self.plate_manager_widget.show_dataset_code(SelectedAllSelectionMode.ALL)
 
     def show_configuration(self):
         """Open the registered application configuration window."""
@@ -1291,78 +1301,13 @@ class OpenHCSMainWindow(QMainWindow):
         generator_window.exec()
 
     def _on_synthetic_plate_generated(self, output_dir: str, pipeline_path: str):
-        """
-        Handle synthetic plate generation completion.
+        """Add the generated dataset to the session and load its test pipeline."""
 
-        Args:
-            output_dir: Path to the generated plate directory
-            pipeline_path: Path to the test pipeline to load
-        """
-        from pathlib import Path
-
-        # Ensure plate manager exists (create if needed)
         self.show_plate_manager()
-
-        # Load the test pipeline FIRST (this will create pipeline editor if needed)
-        # Pass the plate path so pipeline editor knows which plate to save the pipeline for
-        # This ensures the pipeline is saved to plate_pipelines[plate_path]
-        self._load_pipeline_file(pipeline_path, plate_path=output_dir)
-
-        # Get the plate manager widget from ServiceRegistry
-        from pyqt_reactive.services.service_registry import ServiceRegistry
-
-        from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-
-        plate_manager = ServiceRegistry.get(PlateManagerWidget)
-
-        if not plate_manager:
-            raise RuntimeError("Plate manager widget not found in ServiceRegistry")
-
-        # Add the generated plate - this triggers plate_selected signal
-        # which automatically updates pipeline editor via existing connections
-        # (pipeline editor now exists and is connected, so it will receive the signal)
-        plate_manager.add_plate_callback([Path(output_dir)])
-
-        logger.info(f"Added synthetic plate and loaded test pipeline: {output_dir}")
-
-    def _load_pipeline_file(self, pipeline_path: str, plate_path: str = None):
-        """
-        Load a pipeline file into the pipeline editor.
-
-        Args:
-            pipeline_path: Path to the pipeline file to load
-            plate_path: Optional plate path to associate the pipeline with
-        """
-        try:
-            # Ensure pipeline editor exists (create if needed)
-            self.show_pipeline_editor()
-
-            # Get the pipeline editor widget from ServiceRegistry
-            from pyqt_reactive.services.service_registry import ServiceRegistry
-
-            from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-
-            pipeline_editor = ServiceRegistry.get(PipelineEditorWidget)
-
-            if not pipeline_editor:
-                raise RuntimeError(
-                    "Pipeline editor widget not found in ServiceRegistry"
-                )
-
-            # If plate_path is provided, set it as current_plate BEFORE loading
-            # This ensures _apply_executed_code() can save to plate_pipelines[current_plate]
-            if plate_path:
-                pipeline_editor.current_plate = plate_path
-                logger.debug(
-                    f"Set current_plate to {plate_path} before loading pipeline"
-                )
-
-            pipeline_editor.load_pipeline_from_file(Path(pipeline_path))
-            logger.info(f"Loaded pipeline: {pipeline_path}")
-
-        except Exception as e:
-            logger.error(f"Failed to load pipeline: {e}", exc_info=True)
-            raise
+        self.show_pipeline_editor()
+        for scope_id in self.session.add_dataset_roots((output_dir,)):
+            self.session.load_pipeline_file(scope_id, pipeline_path)
+        logger.info("Added synthetic dataset and loaded its test pipeline: %s", output_dir)
 
     def _on_consolidate_results(self):
         """Open file dialog to select results directory and consolidate analysis results."""
@@ -1830,25 +1775,37 @@ class OpenHCSMainWindow(QMainWindow):
                     f"Failed to save theme to {Path(file_path).name}",
                 )
 
-    def _on_plate_progress_started(self, max_value: int):
-        """Handle plate manager progress started signal."""
-        self.lifecycle_workflow.progress_started(max_value)
+    @singledispatchmethod
+    def on_session_event(self, event: SessionEvent) -> None:
+        del event
 
-    def _on_plate_progress_updated(self, value: int):
-        """Handle plate manager progress updated signal."""
-        self.lifecycle_workflow.progress_updated(value)
+    @on_session_event.register
+    def _(self, event: ProgressStarted) -> None:
+        self.lifecycle_workflow.refresh_progress()
 
-    def _on_plate_progress_finished(self):
-        """Handle plate manager progress finished signal."""
-        self.lifecycle_workflow.progress_finished()
+    @on_session_event.register
+    def _(self, event: ProgressAdvanced) -> None:
+        self.lifecycle_workflow.refresh_progress()
 
-    def _on_runtime_progress_projection_changed(
-        self,
-        projection: ExecutionRuntimeProjection,
-    ) -> None:
-        """Render the current progress-registry projection in the status bar."""
+    @on_session_event.register
+    def _(self, event: ProgressFinished) -> None:
+        self.lifecycle_workflow.refresh_progress()
 
-        self.lifecycle_workflow.runtime_progress_changed(projection)
+    @on_session_event.register
+    def _(self, event: RuntimeProjectionChanged) -> None:
+        self.lifecycle_workflow.runtime_progress_changed(event.projection)
+
+    @on_session_event.register
+    def _(self, event: ServerConnectionChanged) -> None:
+        self._observe_zmq_startup_status(event.status)
+
+    @on_session_event.register
+    def _(self, event: ServerCompatibilityObserved) -> None:
+        self.zmq_version_restart_workflow.observe_compatibility(event.compatibility)
+
+    @on_session_event.register
+    def _(self, event: ExecutionStateChanged) -> None:
+        self.zmq_version_restart_workflow.observe_execution_state(event.state)
 
     def _on_create_custom_function(self):
         """Handle create custom function action."""
@@ -1897,3 +1854,62 @@ class OpenHCSMainWindow(QMainWindow):
 
         dialog = CustomFunctionManagerDialog(parent=self)
         dialog.exec()
+
+
+# ---------------------------------------------------------------------------
+# How the desktop main window presents the application operations
+# ---------------------------------------------------------------------------
+
+
+class CheckForUpdatesPresenter(OperationPresenter):
+    operation = CheckForUpdates
+
+    def present(self, renderer: GuiRenderer, request) -> None:
+        del request
+        renderer.main_window.check_for_updates()
+
+    def unavailable_reason(self, renderer: GuiRenderer, request) -> AgentError | None:
+        del request
+        if renderer.main_window.check_for_updates_action.isEnabled():
+            return None
+        return AgentError(
+            code="update_check_in_progress",
+            message="An OpenHCS update check is already in progress.",
+        )
+
+
+class RestartApplicationPresenter(OperationPresenter):
+    operation = RestartApplication
+
+    def present(self, renderer: GuiRenderer, request) -> None:
+        del request
+        renderer.main_window.restart_session()
+
+    def unavailable_reason(self, renderer: GuiRenderer, request) -> AgentError | None:
+        del request
+        if renderer.main_window.session_restart_available():
+            return None
+        return AgentError(
+            code="session_restart_unavailable",
+            message=(
+                "Finish dataset initialization, compilation and execution, and "
+                "recover any pending restart first."
+            ),
+        )
+
+
+class ExitApplicationPresenter(OperationPresenter):
+    operation = ExitApplication
+
+    def present(self, renderer: GuiRenderer, request) -> None:
+        del request
+        renderer.main_window.exit_action.trigger()
+
+    def unavailable_reason(self, renderer: GuiRenderer, request) -> AgentError | None:
+        del request
+        if renderer.main_window.exit_action.isEnabled():
+            return None
+        return AgentError(
+            code="application_exit_unavailable",
+            message="The OpenHCS Exit action is not currently available.",
+        )

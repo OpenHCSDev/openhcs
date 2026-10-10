@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from objectstate.object_state import ObjectStateRegistry
 from pyqt_reactive.protocols import register_codegen_provider
 from pyqt_reactive.services.function_pattern_code_document import (
     FunctionPatternCodeDocumentService,
@@ -21,11 +20,15 @@ from openhcs.processing.backends.processors.numpy_processor import (
 from openhcs.pyqt_gui.services.function_step_code_document import (
     FunctionStepCodeDocumentDriver,
 )
+from openhcs.pyqt_gui.services.main_window_workflows import MainWindowPipelineActions
 from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-from tests.unit.pyqt_gui.test_pipeline_editor_widget import (
-    PipelineEditorServiceStub,
-    QtApplicationHarness,
+from tests.unit.pyqt_gui.session_harness import (
+    release_widgets,
+    GuiServiceStub,
+    add_datasets,
+    caller_session,
+    qt_app,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -49,28 +52,45 @@ def _normalize(low: float) -> tuple:
 
 
 def test_pipeline_round_trips_through_python_file(tmp_path: Path) -> None:
-    QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
-    saved = PipelineEditorWidget(PipelineEditorServiceStub())
-    loaded = PipelineEditorWidget(PipelineEditorServiceStub())
+    app = qt_app()
     target = tmp_path / "pipeline.py"
-    try:
-        saved.pipeline_steps = [
-            FunctionStep(func=_normalize(2.0), name="Normalize"),
-            FunctionStep(func=cellprofiler_backend.crop, name="Crop"),
-        ]
-        saved.save_pipeline_to_file(target)
-        loaded.load_pipeline_from_file(target)
+    with caller_session() as session:
+        saved_scope, loaded_scope = add_datasets(session, tmp_path, "saved", "loaded")
+        editor = PipelineEditorWidget(GuiServiceStub(), session)
+        actions = MainWindowPipelineActions(None, editor)
+        try:
+            session.set_pipeline(
+                saved_scope,
+                [
+                    FunctionStep(func=_normalize(2.0), name="Normalize"),
+                    FunctionStep(func=cellprofiler_backend.crop, name="Crop"),
+                ],
+            )
+            session.select((saved_scope,))
+            app.processEvents()
+            actions.save_pipeline(target)
+            session.select((loaded_scope,))
+            app.processEvents()
+            actions.open_pipeline(target)
+            app.processEvents()
 
-        assert [step.name for step in loaded.pipeline_steps] == ["Normalize", "Crop"]
-        assert loaded.pipeline_steps[0].func == _normalize(2.0)
-        assert loaded.code_document_source(clean=True) == target.read_text(
-            encoding="utf-8"
-        )
-    finally:
-        saved.close()
-        loaded.close()
-        ObjectStateRegistry.clear()
+            loaded = session.pipeline_steps(loaded_scope)
+            assert [step.name for step in loaded] == ["Normalize", "Crop"]
+            assert loaded[0].func == session.pipeline_steps(saved_scope)[0].func
+            assert loaded[1].func[0] is RegistryService.registered_callable(
+                cellprofiler_backend.crop
+            )
+            function, kwargs = loaded[0].func
+            assert (function, {key: kwargs[key] for key in _normalize(2.0)[1]}) == (
+                _normalize(2.0)
+            )
+            assert [step.name for step in editor.displayed_steps] == ["Normalize", "Crop"]
+            assert editor.code_document_source(clean=True) == target.read_text(
+                encoding="utf-8"
+            )
+        finally:
+            editor.close()
+            release_widgets(qt_app(), editor)
 
 
 def test_step_settings_round_trip_through_python_file(tmp_path: Path) -> None:

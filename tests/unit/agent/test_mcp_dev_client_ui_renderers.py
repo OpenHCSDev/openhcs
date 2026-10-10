@@ -1,6 +1,7 @@
 """UI bridge presentations over typed DTO fixtures."""
 
 from __future__ import annotations
+from openhcs.agent.dto.session import DatasetRowState, PipelineStepState
 
 from dataclasses import replace
 
@@ -23,8 +24,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiDebugRuntimeFrameState,
     UiPipelineDebugSessionState,
     UiPipelineEditorState,
-    UiPipelineEditorStepState,
-    UiPlateManagerRowState,
     UiPlateManagerState,
     UiSnapshotRef,
     UiStateSurfaceCatalog,
@@ -209,12 +208,12 @@ def test_catalogs_filter_and_truncate_with_contains_and_limit():
     assert "Code documents: count=2 matched=2 shown=2" in render(documents)
 
 
-def plate_row(name: str, selected: bool, **values) -> UiPlateManagerRowState:
+def plate_row(name: str, selected: bool, **values) -> DatasetRowState:
     return replace(
-        sample_dto(UiPlateManagerRowState),
+        sample_dto(DatasetRowState),
         name=name, selected=selected, orchestrator_state="compiled",
-        status_prefix="", terminal_status=None, plate_root=f"/{name}",
-        output_plate_root=None, source_plate_root=None, **values,
+        status_prefix="", terminal_status=None, root=f"/{name}",
+        output_root=None, source_root=None, **values,
     )
 
 
@@ -252,7 +251,7 @@ def test_state_surface_documents_render_through_their_surface_state():
         selected_scope_ids=("/tmp/plate-a::functionstep_1",),
         steps=(
             replace(
-                sample_dto(UiPipelineEditorStepState),
+                sample_dto(PipelineStepState),
                 index=0, name="normalize", dirty=True, default_diff=False,
                 function_names=("normalize",), function_ids=(), debug_pause=False,
                 step_scope_id=None,
@@ -394,7 +393,7 @@ def test_action_catalog_filters_actions_and_warnings_by_widget():
         sample_dto(UiActionCatalog),
         actions=(
             ui_action(
-                "plate_manager", "compile_plate", enabled=False,
+                "plate_manager", "compile_datasets", enabled=False,
                 disabled_error=AgentError(code="no_plate", message="No plate.", hint="Add a plate."),
             ),
             ui_action("image_browser", "open_file"),
@@ -410,9 +409,9 @@ def test_action_catalog_filters_actions_and_warnings_by_widget():
 
     plate = render(catalog, UiActionCatalogRenderOptions(widget_id="plate_manager"))
     assert "UI actions: count=1 widget=plate_manager" in plate
-    assert "- plate_manager/compile_plate: " in plate
+    assert "- plate_manager/compile_datasets: " in plate
     assert " disabled=no_plate:No plate." in plate
-    assert 'Disabled hints:\n- plate_manager/compile_plate: "Add a plate."' in plate
+    assert 'Disabled hints:\n- plate_manager/compile_datasets: "Add a plate."' in plate
     assert "- plate_path_setup_uses_code_document:" in plate
     assert "unrelated" not in plate
     assert "image_browser/open_file" not in plate

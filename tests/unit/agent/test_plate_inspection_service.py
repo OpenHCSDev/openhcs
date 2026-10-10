@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from openhcs.core.component_filters import ComponentFilters
+
 import numpy as np
 import pytest
 import tifffile
@@ -182,7 +184,7 @@ def test_plate_result_preview_collapses_multishape_roi_members(tmp_path: Path):
     query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.RESULT,
             limit=5,
         )
@@ -236,7 +238,7 @@ def test_plate_inspection_auto_detects_imagexpress_without_mutating(tmp_path: Pa
     assert result.schema_version == "openhcs.agent.v1"
     assert result.errors == ()
     assert result.status is not PlateInspectionStatus.ERROR
-    assert result.detected_microscope_type == "imagexpress"
+    assert result.detected_source_format == "imagexpress"
     assert result.handler_class == "ImageXpressHandler"
     assert result.parser_class == "ImageXpressFilenameParser"
     assert result.metadata_handler_class == "ImageXpressMetadataHandler"
@@ -263,7 +265,7 @@ def test_plate_inspection_auto_detects_imagexpress_without_mutating(tmp_path: Pa
     assert result.workflow_advice.ui_code_document_id == (
         "plate_manager.orchestrator_config"
     )
-    assert result.workflow_advice.ui_operation == "init"
+    assert result.workflow_advice.ui_operation == "initialize_datasets"
     assert not (plate / "openhcs_metadata.json").exists()
 
 
@@ -288,7 +290,7 @@ def test_plate_inspection_replays_declared_bioformats_workspace_backends(
     result = service.inspect(
         PlatePathInspectionRequest.from_fields(
             plate_path=str(tmp_path),
-            microscope_type="bioformats",
+            source_format="bioformats",
         )
     )
 
@@ -318,7 +320,7 @@ def test_plate_image_sample_uses_bioformats_source_ref_before_workspace_export(
     inspection = service.inspect(
         PlatePathInspectionRequest.from_fields(
             plate_path=str(tmp_path),
-            microscope_type="bioformats",
+            source_format="bioformats",
         )
     )
     virtual_path = inspection.image_files.sampled_records[0].virtual_path
@@ -327,7 +329,7 @@ def test_plate_image_sample_uses_bioformats_source_ref_before_workspace_export(
         PlateImageSampleRequest(
             plate_path=str(tmp_path),
             image_path=virtual_path,
-            microscope_type="bioformats",
+            source_format="bioformats",
             y=1,
             x=1,
             height=2,
@@ -383,10 +385,10 @@ def test_plate_inspection_auto_surfaces_native_parser_for_incomplete_export(
         PlatePathInspectionRequest.from_fields(plate_path=str(tmp_path))
     )
 
-    assert result.detected_microscope_type == "bioformats"
+    assert result.detected_source_format == "bioformats"
     assert len(result.format_specific_handler_candidates) == 1
     candidate = result.format_specific_handler_candidates[0]
-    assert candidate.microscope_type == "opera_phenix"
+    assert candidate.source_format == "opera_phenix"
     assert candidate.parser_class == "OperaPhenixFilenameParser"
     assert candidate.root_dir == "Images"
     assert candidate.recognized_file_count == candidate.tested_file_count == 3
@@ -481,7 +483,7 @@ def test_imagexpress_loose_tiffs_do_not_advertise_native_metadata_readiness(
     candidates = tuple(
         candidate
         for candidate in result.format_specific_handler_candidates
-        if candidate.microscope_type == "imagexpress"
+        if candidate.source_format == "imagexpress"
     )
     assert len(candidates) == 1
     assert candidates[0].recognizes_all_tested_files
@@ -673,7 +675,7 @@ def test_plate_image_sample_resolves_openhcs_virtual_workspace(
         PlateImageSampleRequest(
             plate_path=str(plate),
             image_path=virtual_name,
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             y=1,
             x=1,
             height=2,
@@ -705,7 +707,7 @@ def test_plate_image_sample_resolves_openhcs_virtual_workspace(
     inspection = service.inspect(
         PlatePathInspectionRequest.from_fields(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             max_sample_files=3,
         )
     )
@@ -756,9 +758,9 @@ def test_plate_image_sample_resolves_openhcs_virtual_workspace(
     query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.IMAGE,
-            partition="A01",
+            component_filters=ComponentFilters.from_mapping({"well": "A01"}),
             limit=5,
         )
     )
@@ -777,15 +779,15 @@ def test_plate_image_sample_resolves_openhcs_virtual_workspace(
     auto_query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="auto",
+            source_format="auto",
             kind=PlateFileKind.IMAGE,
-            partition="A01",
+            component_filters=ComponentFilters.from_mapping({"well": "A01"}),
             limit=5,
         )
     )
 
     assert auto_query.errors == ()
-    assert auto_query.detected_microscope_type == "openhcsdata"
+    assert auto_query.detected_source_format == "openhcsdata"
     assert tuple(record.virtual_path for record in auto_query.records) == (
         virtual_name,
     )
@@ -793,7 +795,7 @@ def test_plate_image_sample_resolves_openhcs_virtual_workspace(
     result_query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.RESULT,
             limit=3,
         )
@@ -840,7 +842,7 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     result = service.inspect(
         PlatePathInspectionRequest.from_fields(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             max_sample_files=3,
         )
     )
@@ -848,7 +850,7 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     assert result.errors == ()
     assert result.status is PlateInspectionStatus.PARTIAL
     assert result.confidence is PlateInspectionConfidence.LOW
-    assert result.detected_microscope_type == "openhcsdata"
+    assert result.detected_source_format == "openhcsdata"
     assert result.handler_class == "OpenHCSDatasetSource"
     assert result.image_files.count == 0
     assert result.result_files.count == 3
@@ -873,7 +875,7 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.RESULT,
             limit=3,
         )
@@ -903,7 +905,7 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     )
 
     assert auto_query.errors == ()
-    assert auto_query.detected_microscope_type is None
+    assert auto_query.detected_source_format is None
     assert auto_query.handler_class is None
     assert auto_query.total_count == 3
     assert [record.relative_path for record in auto_query.records] == [
@@ -916,7 +918,7 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     all_query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=None,
             limit=3,
         )
@@ -931,7 +933,7 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     image_query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.IMAGE,
             limit=3,
         )
@@ -988,7 +990,7 @@ def test_explicit_result_directory_queries_native_previews_without_source_guesse
     assert result.truncated_count == 1
     assert result.handler_class is None
     assert result.parser_class is None
-    assert result.detected_microscope_type is None
+    assert result.detected_source_format is None
     assert result.records[0].full_path == str(csv_path)
     assert result.records[0].preview.csv_columns == ("label", "y", "x")
     assert result.records[0].preview.csv_rows == (
@@ -1028,13 +1030,17 @@ def test_explicit_result_directory_empty_and_oversized_previews(tmp_path: Path) 
 
 
 @pytest.mark.parametrize(
-    "kind,well",
-    ((PlateFileKind.IMAGE, None), (None, None), (PlateFileKind.RESULT, "A01")),
+    "kind,component_filters",
+    (
+        (PlateFileKind.IMAGE, {}),
+        (None, {}),
+        (PlateFileKind.RESULT, {"well": "A01"}),
+    ),
 )
 def test_explicit_result_directory_rejects_acquisition_selection(
     tmp_path: Path,
     kind,
-    well,
+    component_filters,
 ) -> None:
     service = PlateInspectionService(
         AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
@@ -1044,7 +1050,7 @@ def test_explicit_result_directory_rejects_acquisition_selection(
             plate_path=str(tmp_path),
             result_directory=str(tmp_path),
             kind=kind,
-            partition=well,
+            component_filters=ComponentFilters.from_mapping(component_filters),
         )
     )
     assert result.errors[0].code == "plate_result_directory_selection_invalid"
@@ -1138,7 +1144,7 @@ def test_plate_file_query_auto_image_result_only_root_skips_handler_detection(
     assert ResultOnlyService.handler_attempted is False
     assert image_query.errors == ()
     assert image_query.total_count == 0
-    assert image_query.detected_microscope_type is None
+    assert image_query.detected_source_format is None
     assert image_query.handler_class is None
     assert any(
         warning.code == PlateInspectionIssueCode.RESULT_FILES_AVAILABLE.value
@@ -1261,7 +1267,7 @@ def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
     inspection = service.inspect(
         PlatePathInspectionRequest.from_fields(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             max_sample_files=5,
             max_component_values=10,
         )
@@ -1297,7 +1303,7 @@ def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
     result_query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.RESULT,
             limit=5,
         )
@@ -1373,7 +1379,7 @@ def test_plate_file_query_reads_path_planned_results_for_openhcs_output_root_wit
     result_query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.RESULT,
             path_contains="images_results",
             limit=5,
@@ -1400,7 +1406,7 @@ def test_plate_file_query_reads_path_planned_results_for_openhcs_output_root_wit
     )
 
     assert auto_checkpoint_query.errors == ()
-    assert auto_checkpoint_query.detected_microscope_type == "openhcsdata"
+    assert auto_checkpoint_query.detected_source_format == "openhcsdata"
     assert auto_checkpoint_query.total_count == 1
     assert [record.relative_path for record in auto_checkpoint_query.records] == [
         str(old_csv_path.relative_to(plate)),
@@ -1438,7 +1444,7 @@ def test_plate_inspection_result_preview_detects_csv_table_after_preamble(
     query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.RESULT,
             limit=1,
         )
@@ -1499,7 +1505,7 @@ def test_plate_inspection_result_preview_parses_multiline_csv_record(
     query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind=PlateFileKind.RESULT,
             limit=1,
         )
@@ -1607,7 +1613,7 @@ def test_plate_file_query_resolves_source_projection_once(
     query = service.query_files(
         PlateFileQueryRequest(
             plate_path=str(plate),
-            microscope_type="imagexpress",
+            source_format="imagexpress",
             kind=PlateFileKind.IMAGE,
             limit=1,
         )

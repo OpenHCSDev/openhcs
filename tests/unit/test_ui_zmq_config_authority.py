@@ -8,7 +8,6 @@ import pytest
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.agent.services.execution_session_service import ZMQExecutionClientFactory
 from openhcs.agent.services.runtime_server_service import (
     RuntimeServerGatewayABC,
     RuntimeServerService,
@@ -54,7 +53,7 @@ class RecordingRuntimeGateway(RuntimeServerGatewayABC):
         raise AssertionError("export_debug_artifact is not used by this test")
 
 
-def test_agent_factories_pass_the_exact_zmq_config(monkeypatch) -> None:
+def test_runtime_gateway_passes_the_exact_zmq_config(monkeypatch) -> None:
     captured = []
 
     class FakeClient:
@@ -68,12 +67,10 @@ def test_agent_factories_pass_the_exact_zmq_config(monkeypatch) -> None:
     config = OpenHCSZMQConfig(default_port=8123)
     connection = ExecutionConnectionSpec(port=8124, persistent=False)
 
-    factory_client = ZMQExecutionClientFactory(config).create_client(connection)
     gateway_client = ZMQRuntimeServerGateway(config)._client(connection)
 
-    assert factory_client.client is not None
     assert gateway_client is not None
-    assert len(captured) == 2
+    assert len(captured) == 1
     assert all(request["config"] is config for request in captured)
     assert all(request["port"] == 8124 for request in captured)
 

@@ -106,7 +106,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
 
     import tifffile
 
-    from openhcs.agent.services.execution_session_service import (
+    from openhcs.agent.services.artifact_plan_inspection_service import (
         AgentProgressQueue,
         CompileInspectionInput,
         InProcessCompileInspectionGateway,

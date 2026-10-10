@@ -49,7 +49,12 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogServiceABC,
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.agent.ui_bridge_actions import MainWindowAction, PlateManagerAction
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.application import RestartApplication
+from openhcs.authoring.session.operations.datasets import (
+    DatasetWorkflowOperation,
+    ShowLiveResults,
+)
 from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PlateManagerOrchestratorCodeDocumentIdentity,
@@ -198,13 +203,13 @@ class RuntimeUiCoordinationSection(
             field.value for field in PlateManagerCodeNamespaceField
         )
         workflow_names = ", ".join(
-            action.value
-            for action in PlateManagerAction
-            if action.plate_operation is not None
+            operation.operation_id
+            for operation in SessionOperation.all()
+            if issubclass(operation, DatasetWorkflowOperation)
         )
         return f"""=== RUNTIME AND UI COORDINATION ===
 - If the OpenHCS UI is open and the user should see the work, use the UI bridge path: read/apply {code_document_id} as one complete document ({document_fields}), then dispatch {workflow_names} through {agent_capabilities.ui_selected_plate_workflow.name}.
-- Direct orchestrator sessions are headless runtime jobs: they can execute, stream to viewers, and write output plates, but they do not make PlateManager rows, ObjectState snapshots, or selected UI state visible unless the UI path is used.
+- The headless session (the openhcs_session_* and dataset tools) is a session with no renderer: it can execute, stream to viewers, and write output datasets, but its rows, ObjectState snapshots and selection belong to the MCP process, not to an open UI; use the UI path when the user should see the work.
 - A UI bridge mutation receipt and a workflow terminal state are separate evidence. Retain the returned operation_id, wait once with {agent_capabilities.ui_wait_for_operation_receipt.name} only for bridge receipt terminality, then read {state_surface_id} with {agent_capabilities.ui_get_state_surface.name} until the selected plate's compile/run state is terminal.
 - An observation timeout does not mean the job failed or stopped. Keep the operation and execution identities, inspect bridge health, then resume reading the same receipt or workflow state. If a mutation response was lost, reconcile current state before retrying; do not issue another Run to test whether the first one started.
 - After UI-owned runs, confirm source and output rows on that state surface, then inspect/query/sample the output plate and validate viewer layers from those visible paths."""
@@ -224,7 +229,7 @@ class StateCodeRoundtripSection(
 - Field markers are semantic: * means unsaved/dirty, _ means differs from defaults, inherited/resolved values show lazy/default resolution even when raw values are None.
 - Code documents are live typed bidirectional UI<->code projections over ObjectState-backed UI objects, not freeform files. Read, validate, and apply them through their declared capabilities with fresh revision tokens.
 - UI mutations can create snapshots and branches. Inspect them with {agent_capabilities.ui_list_snapshots.name} and {agent_capabilities.ui_list_branches.name}; recover an approved prior state with {agent_capabilities.ui_restore_snapshot.name}, return from historical inspection with {agent_capabilities.ui_time_travel_head.name}, and change branches only through {agent_capabilities.ui_switch_branch.name}. Retrieve the targeted code/UI knowledge document below only when this ownership boundary needs more detail.
-- A code export preserves current declarations; a snapshot catalogue lists recovery points. Neither exports the full restorable history. For a state-preserving restart, discover the running UI's {MainWindowAction.RESTART_SESSION.value!r} action through {agent_capabilities.ui_list_actions.name}, honour its availability and confirmation policy, then rediscover the new bridge and verify restored state. An older running UI may not expose that action: retain it and report the boundary instead of killing it or claiming a code export preserves its history."""
+- A code export preserves current declarations; a snapshot catalogue lists recovery points. Neither exports the full restorable history. For a state-preserving restart, discover the running UI's {RestartApplication.operation_id!r} action through {agent_capabilities.ui_list_actions.name}, honour its availability and confirmation policy, then rediscover the new bridge and verify restored state. An older running UI may not expose that action: retain it and report the boundary instead of killing it or claiming a code export preserves its history."""
 
 
 class CustomFunctionRuntimeSection(
@@ -263,7 +268,7 @@ class SourceBindingWorkflowSection(
         )
 
         handler_lines: list[str] = []
-        for microscope_type, handler_type in DatasetSource.__registry__.items():
+        for source_format, handler_type in DatasetSource.__registry__.items():
             role = handler_type.source_selection_role()
             if role is DeclaredFileSource:
                 binding_role = "bindings own ingestion and semantic naming"
@@ -272,7 +277,7 @@ class SourceBindingWorkflowSection(
             else:
                 binding_role = "handler does not project declared bindings"
             handler_lines.append(
-                f"- {microscope_type}: role={role.role_name}; {binding_role}. "
+                f"- {source_format}: role={role.role_name}; {binding_role}. "
                 f"{handler_type.source_selection_guidance()}"
             )
         registered_handlers = "\n".join(handler_lines)
@@ -520,7 +525,7 @@ class UiVisibleWorkflowStepsSection(
 - Discover or verify the UI bridge with {agent_capabilities.ui_list_bridges.name} and {agent_capabilities.ui_bridge_status.name}; when multiple bridges exist, pin the descriptor/connection rather than guessing.
 - Read {UiLiveOverviewStateSurfaceIdentityDeclaration.require_value()} first for the current ObjectState token, revision, snapshot, windows, statuses, and operations contributed by registered UI providers.
 - Read the PlateManager state surface with {agent_capabilities.ui_list_state_surfaces.name} and {agent_capabilities.ui_get_state_surface.name}; the selected/source/output rows are the UI authority for visible workflows.
-- The declared {PlateManagerAction.VIEW_RESULTS.value!r} action relates the Plate Manager state to its widget-owned quantitative-results surface through `related_state_surface_ids`. Follow that declared relation after a quantitative run, then read the returned surface_id for bounded table rows, full row counts, artifact location, object/source identity, execution/axis provenance, and truncation flags. Do not select a surface by title matching. This is retained result data, not a mirror of dialog tabs or table cells.
+- The declared {ShowLiveResults.operation_id!r} action relates the Plate Manager state to its widget-owned quantitative-results surface through `related_state_surface_ids`. Follow that declared relation after a quantitative run, then read the returned surface_id for bounded table rows, full row counts, artifact location, object/source identity, execution/axis provenance, and truncation flags. Do not select a surface by title matching. This is retained result data, not a mirror of dialog tabs or table cells.
 - Read, validate, and apply the PlateManager code document with {agent_capabilities.ui_list_code_documents.name}, {agent_capabilities.ui_get_code_document.name}, {agent_capabilities.ui_validate_code_document.name}, and {agent_capabilities.ui_apply_code_document.name}.
 - Add the containing plate directory and initialize with auto-detection. Recognized HCS layouts and CZI/OME stores keep their detected handler; use SourceBindingsConfig only for semantic selection/naming after discovery, or as the SourceBindingsSource ingestion declaration for an otherwise unrecognized arbitrary-file folder.
 - For a write within existing task authorisation: read, explain, re-read, validate, then apply using the fresh document revision and declared confirmation policy; retain the mutation receipt and snapshot facts. Follow "Task authorization" in openhcs_architecture_quick_start for actions outside that authority.
@@ -536,10 +541,10 @@ class HeadlessExecutionStepsSection(
 ):
     section_id = "headless_execution_steps"
     content = f"""=== HEADLESS EXECUTION WORKFLOW ===
-- Use {agent_capabilities.create_orchestrator_session.name} for a draft pipeline or {agent_capabilities.create_orchestrator_session_from_pipeline_source.name} for reviewed Python source. The source route requires pipeline_steps and accepts an omitted pipeline_config as PipelineConfig(); never send config through a parallel side channel.
-- Inspect first with {agent_capabilities.inspect_pipeline_source_artifact_plan.name}: it returns compiled source-workspace, step, group, artifact-output, and persistent-materialization plans, but not values that only exist during execution. Compile with {agent_capabilities.submit_compile.name} after those plans are sound.
-- Run with {agent_capabilities.submit_pipeline_execution.name}, poll with {agent_capabilities.get_execution_status.name}, then inspect/query/sample output plates before claiming success.
-- To stop a submitted compile or run, use {agent_capabilities.cancel_execution.name} with its job_id; the response reports whether the server applied cancellation and the ordinary job status observed afterward. Do not infer cancellation from a client timeout.
+- Add the dataset with {agent_capabilities.add_datasets.name} (it returns the dataset scope ids), then give it reviewed Python source with {agent_capabilities.set_dataset_pipeline.name} (render a draft with {agent_capabilities.render_pipeline_source.name}). The source requires pipeline_steps and accepts an omitted pipeline_config as PipelineConfig(); never send config through a parallel side channel.
+- Inspect first with {agent_capabilities.inspect_pipeline_source_artifact_plan.name}: it returns compiled source-workspace, step, group, artifact-output, and persistent-materialization plans, but not values that only exist during execution. Initialize with {agent_capabilities.initialize_datasets.name}, then compile with {agent_capabilities.compile_datasets.name} after those plans are sound.
+- Run with {agent_capabilities.run_datasets.name}. Every operation returns the event_sequence it started at: wait with {agent_capabilities.session_events.name}(after_sequence=...) and read {agent_capabilities.session_datasets.name} when an event arrives, instead of polling. Then inspect/query/sample output datasets before claiming success.
+- To stop a running batch, use {agent_capabilities.stop_execution.name}; the datasets' terminal status arrives as session events. Do not infer cancellation from a client timeout.
 - A normal completed-job status is lifecycle evidence, not a dump of RuntimeValueStore. Request kind="debugging" when an intermediate invocation value or artifact must be inspected, and kind="viewer_review" when image/label presentation is the evidence.
 - Headless sessions do not update PlateManager selection, snapshots, or output auto-add. Use the UI-visible workflow when those are required."""
 
@@ -556,7 +561,7 @@ class DebuggingWorkflowSection(
         debug_surface_id = (
             PipelineDebugSessionStateSurfaceIdentityDeclaration.require_value()
         )
-        results_action_id = PlateManagerAction.VIEW_RESULTS.value
+        results_action_id = ShowLiveResults.operation_id
         return f"""=== DEBUGGING WORKFLOW ===
 - Diagnose the first failing boundary. A declaration/config problem, compiled-plan problem, paused runtime-value problem, persisted-output problem, and viewer-presentation problem require different evidence; do not reconstruct one from another's filenames or logs.
 - Pin one current evidence scope before comparing results: execution_id, debug_session_id when paused, runtime/viewer connection, step/group/invocation identity, and current route keys. Compare the resolved/compiled source-binding order and zero-based callable stack positions with the physical component values on those routes; never merge persistent layers or artifacts from another submission.
@@ -580,7 +585,7 @@ class ViewerReviewStepsSection(StaticAuthoringContextSection, ViewerReviewContex
 - Apply the targeted claim-scope knowledge section below to scientific acceptance and reference disagreement; retain diagnostic errors and uncertainty without substituting perfect accuracy for the requested useful scope.
 - Viewer state, payload summaries, ROI counts, bounds, nonzero counts, and layer existence are structural evidence only. They cannot establish pixel-level segmentation or tracing completeness. Before making a completeness claim, retrieve exact native-resolution source and result values: call {agent_capabilities.sample_viewer_window_image.name} with `include_array_values=true` and an adequate `max_array_elements`, scanning tiles when necessary; or call {agent_capabilities.get_viewer_window_payloads.name} with explicit array slices and array values. Request exact shape payloads for ROI results and compare or rasterize them in the same spatial coordinates as the source signal.
 - Do not wait for the user to find a missed region by zooming. For segmentation or tracing, compare the final mask/ROI coverage against the relevant raw channel across the claimed field, rank strong unassigned residual components, and inspect representative residual tiles. Report the evidence threshold and uncertain signal; do not silently equate every nonzero source pixel with a true object.
-- When measurements are a primary biological result, follow the declared {PlateManagerAction.VIEW_RESULTS.value!r} action's `related_state_surface_ids` and read the quantitative-results surface, then invoke that Plate Manager Results action so the user can inspect the retained table. The surface supplies bounded raw rows and provenance; the table is the human view of the same data. Do not select by title substring or substitute screenshots or widget-tree cell scraping for either one.
+- When measurements are a primary biological result, follow the declared {ShowLiveResults.operation_id!r} action's `related_state_surface_ids` and read the quantitative-results surface, then invoke that Plate Manager Results action so the user can inspect the retained table. The surface supplies bounded raw rows and provenance; the table is the human view of the same data. Do not select by title substring or substitute screenshots or widget-tree cell scraping for either one.
 - When the result is a relationship, the final streamed artifact must encode that relationship directly. For example, a neuron-assignment result should give each cell body and its assigned neurites the same stable object or label identity; the viewer may derive matching display colors from that identity. Separate body-label and global-skeleton layers leave the assignment ambiguous and are not a complete user-facing visualization.
 - For neurite or other path topology, inspect the final SpatialGraph path Shapes layer rather than only its skeleton mask. Select that layer so the default feature table shows edge identity, shared neuron label, branch distances, tortuosity, and distance from the soma; selecting a row must select the exact authoritative path. SWC is the persistent morphology projection and reopens as physical 3D sample/parent layers through the OpenHCS Napari reader or Fiji SNT; `.graph.roi.zip` is the feature-rich 2D viewer projection of the same graph because standard SWC cannot retain arbitrary edge measurements.
 - Keep that final interpretation reproducible: produce it as a callable-owned typed image, label, or graph artifact and stream or materialize it through its compiled plan. Do not fabricate scientific relationships with viewer-only annotations. Inspect both useful intermediate layers and the final result, and treat the review as incomplete when the user cannot visually verify the requested conclusion.

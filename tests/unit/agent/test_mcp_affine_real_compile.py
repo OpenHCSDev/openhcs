@@ -10,11 +10,9 @@ from PyQt6.QtCore import QCoreApplication, QThread
 from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.agent.services.execution_session_service import (
-    ExecutionSessionService, InProcessCompileInspectionGateway,
+from openhcs.agent.services.artifact_plan_inspection_service import (
+    ArtifactPlanInspectionService, InProcessCompileInspectionGateway,
 )
-from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp.execution import McpTransportExecutor
 from openhcs.mcp.server import build_server
@@ -63,14 +61,13 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
             messages.append(kwargs["message"])
 
     config = ConfigService()
-    service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=(tmp_path,)),
-        pipeline_service=PipelineAuthoringService(FunctionCatalogService(), config),
         config_service=config,
         compile_inspection_gateway=AffineCompileGateway(),
     )
     executor = McpTransportExecutor()
-    built = build_server(SimpleNamespace(execution_service=service), main_thread_dispatcher=executor.dispatcher)
+    built = build_server(SimpleNamespace(artifact_plan_service=service), main_thread_dispatcher=executor.dispatcher)
     tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
 
     async def exercise():

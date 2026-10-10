@@ -72,19 +72,10 @@ def test_restart_purpose_owns_the_post_restore_message(tmp_path: Path) -> None:
 def test_version_restart_capture_omits_update_only_assets(
     monkeypatch,
     tmp_path: Path,
+    restart_session,
 ) -> None:
-    plate_manager = SimpleNamespace(
-        is_any_plate_running=lambda: False,
-        require_pipeline_definition_mutation_allowed=lambda: None,
-        selected_plate_path="",
-        orchestrator_code_document_context=lambda **_kwargs: SimpleNamespace(
-            source="plate_paths = []"
-        ),
-    )
     main_window = SimpleNamespace(
-        embedded_widgets=SimpleNamespace(
-            require_plate_manager=lambda: plate_manager,
-        ),
+        session=restart_session,
         runtime_context=SimpleNamespace(ui_config=object()),
         service_adapter=SimpleNamespace(
             get_current_color_scheme=lambda: (_ for _ in ()).throw(
@@ -117,21 +108,24 @@ def test_version_restart_capture_omits_update_only_assets(
     assert not session.progress_brand_document.exists()
 
 
-@pytest.mark.parametrize("pending", ["initialization", "compilation"])
-def test_session_restart_admission_uses_existing_declaration_work_guard(pending):
-    def require_idle():
-        raise RuntimeError(f"pending {pending}")
+@pytest.mark.parametrize("pending", ["init_pending", "compile_pending"])
+def test_session_restart_admission_uses_existing_declaration_work_guard(
+    restart_session, pending
+):
+    getattr(restart_session, pending).add("/plate")
+    window = SimpleNamespace(session=restart_session)
 
-    window = SimpleNamespace(
-        embedded_widgets=SimpleNamespace(
-            require_plate_manager=lambda: SimpleNamespace(
-                is_any_plate_running=lambda: False,
-                require_pipeline_definition_mutation_allowed=require_idle,
-            )
-        )
-    )
     assert not DesktopSessionRestart.available(window)
-    with pytest.raises(DesktopUpdateError, match=pending):
+    with pytest.raises(DesktopUpdateError, match="active initialization or compilation"):
+        DesktopRestartSession.require_capture_allowed(window)
+
+
+def test_session_restart_admission_refuses_a_running_batch(restart_session):
+    restart_session.execution_state = type(restart_session.execution_state).RUNNING
+    window = SimpleNamespace(session=restart_session)
+
+    assert not DesktopSessionRestart.available(window)
+    with pytest.raises(DesktopUpdateError, match="Stop the active plate execution"):
         DesktopRestartSession.require_capture_allowed(window)
 
 

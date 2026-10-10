@@ -9,6 +9,7 @@ payload.
 """
 
 from __future__ import annotations
+from openhcs.agent.dto.session import DatasetRowState
 
 import enum
 import types
@@ -19,7 +20,6 @@ import pytest
 from python_introspect import to_jsonable
 
 from openhcs.agent.dto.common import AgentError, AgentWarning
-from openhcs.agent.dto.ui_bridge import UiPlateManagerRowState
 from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity,
     McpDevToolBatchResponse,
@@ -81,7 +81,7 @@ def sample_value(hint, depth: int):
 # JSON fields whose content a renderer decodes through a declared model.
 JSON_FIELD_SAMPLES = {
     ("RuntimeExecutionStatus", "response"): lambda: {"status": "ok", "uptime": 1.0},
-    ("*", "selected_plate"): lambda: to_jsonable(sample_dto(UiPlateManagerRowState)),
+    ("*", "selected_plate"): lambda: to_jsonable(sample_dto(DatasetRowState)),
 }
 
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -103,3 +105,45 @@ class InputWorkspacePreparationResult:
                 "SourceBindingWorkspaceMaterialization, got "
                 f"{type(self.materialization).__name__}."
             )
+
+
+def mirror_input_workspace(source_root: Path, workspace_root: Path) -> Path:
+    """Build a fresh execution workspace over ``source_root`` without writing to it.
+
+    Directories are recreated, data files are symlinked to the source, and the
+    metadata files initialization rewrites are copied, so nothing that runs in
+    the workspace can write through to the source. ``workspace_root`` must not
+    exist yet and must not lie inside the source.
+    """
+
+    from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+
+    source = Path(source_root).resolve()
+    workspace = Path(workspace_root).resolve()
+    if workspace == source or workspace.is_relative_to(source):
+        raise ValueError(f"A workspace may not lie inside its source: {workspace}")
+    copied = {path.name for path in METADATA_CONFIG.managed_paths(source)}
+    workspace.mkdir(parents=True)
+    for path in sorted(source.rglob("*")):
+        target = workspace / path.relative_to(source)
+        if path.is_dir():
+            target.mkdir()
+        elif path.name in copied:
+            shutil.copyfile(path, target)
+        else:
+            target.symlink_to(path.resolve())
+    return workspace
+
+
+def derived_workspace_root(source_root: Path, parent: Path) -> Path:
+    """A fresh, unused workspace directory for ``source_root`` under ``parent``."""
+
+    source = Path(source_root).resolve()
+    digest = hashlib.sha256(str(source).encode("utf-8")).hexdigest()[:12]
+    stem = f"{source.name}-{digest}"
+    candidate = Path(parent) / stem
+    index = 1
+    while candidate.exists():
+        index += 1
+        candidate = Path(parent) / f"{stem}-{index}"
+    return candidate

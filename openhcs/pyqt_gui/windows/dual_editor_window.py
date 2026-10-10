@@ -43,6 +43,7 @@ from pyqt_reactive.widgets.shared import (
     ManagedWindowActionCapabilities,
 )
 
+from openhcs.authoring.session.compilation import CompiledDataset
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import PipelineConfig
 from openhcs.core.source_binding_context import SourceBindingContext
@@ -50,18 +51,15 @@ from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from python_introspect import SignatureAnalyzer
-from openhcs.pyqt_gui.services.step_scope_identity import (
+from openhcs.authoring.session.step_scopes import (
     StepEditorScope,
     build_step_scope_id,
 )
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab
-from openhcs.pyqt_gui.widgets.shared.services.compile_workflow_service import (
-    PlateCompiledState,
-)
-from openhcs.pyqt_gui.widgets.shared.services.debug_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     DebugSnapshotAvailableNotification,
 )
-from openhcs.pyqt_gui.widgets.shared.services.runtime_artifact_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
 from openhcs.pyqt_gui.windows.dual_editor_session import (
@@ -962,13 +960,13 @@ class DualEditorWindow(BaseFormDialog):
     def _on_compiled_artifact_state_changed(
         self,
         plate_path: str,
-        state: PlateCompiledState | None,
+        state: CompiledDataset | None,
     ) -> None:
         if plate_path != self.plate_scope:
             return
-        if state is not None and not isinstance(state, PlateCompiledState):
+        if state is not None and not isinstance(state, CompiledDataset):
             raise TypeError(
-                "Compiled artifact state signal requires PlateCompiledState or None, got "
+                "Compiled artifact state signal requires CompiledDataset or None, got "
                 f"{type(state).__name__}."
             )
         if self.artifact_plan_view is not None:

@@ -60,13 +60,9 @@ CELLPROFILER_SPELLING = re.compile(
     r"|^Count_|Parent_|Children_|_Count$|Zernike|zernike|Unedited|unedited"
     r"|SmallRemoved|small_removed|Experiment\b|EXPERIMENT"
 )
-# The CellProfiler scope marker of the plate manager belongs to U1 (G8 scope family).
-CELLPROFILER_SPELLINGS_ALLOWED = frozenset(
-    {
-        ("openhcs/pyqt_gui/widgets/plate_manager.py", "from_cellprofiler_pipeline"),
-        ("openhcs/ui/shared/plate_scope_identity.py", "from_cellprofiler_pipeline"),
-    }
-)
+# None: U1 moved the CellProfiler dataset scope into openhcs/interop as a
+# DatasetScopeKind, so no kernel module spells a CellProfiler name.
+CELLPROFILER_SPELLINGS_ALLOWED: frozenset[tuple[str, str]] = frozenset()
 
 
 def _python_files(*roots: str) -> list[Path]:

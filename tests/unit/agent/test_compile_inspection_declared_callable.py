@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from openhcs.agent.services.execution_session_service import (
+from openhcs.agent.services.artifact_plan_inspection_service import (
     AgentProgressQueue,
     CompileInspectionInput,
     InProcessCompileInspectionGateway,

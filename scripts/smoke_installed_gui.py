@@ -1,6 +1,7 @@
 """Operate an installed OpenHCS GUI through MCP outside the source checkout."""
 
 from __future__ import annotations
+from openhcs.authoring.session.operations.datasets import ShowDatasetCode
 
 import argparse
 import faulthandler
@@ -560,7 +561,6 @@ def run_installed_live_mcp_smoke(
         UiWindowCatalog,
     )
     from openhcs.agent.services.runtime_server_service import RuntimeServerService
-    from openhcs.agent.ui_bridge_actions import PlateManagerAction
     from openhcs.agent.ui_bridge_identities import (
         MainWindowWidgetIdentity,
         PlateManagerWidgetIdentity,
@@ -678,7 +678,7 @@ def run_installed_live_mcp_smoke(
             (
                 InvokeActionCommandSpec.command,
                 PlateManagerWidgetIdentity.require_value(),
-                PlateManagerAction.CODE_PLATE.value,
+                ShowDatasetCode.operation_id,
                 "--request-token",
                 "installed-gui-mcp-smoke",
                 "--timeout-seconds",

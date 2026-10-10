@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from pathlib import Path
 
 import pytest
 from objectstate import (
@@ -39,7 +40,7 @@ from openhcs.pyqt_gui.windows.config_window import (
     ConfigWindowTabSpec,
 )
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
+from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -70,12 +71,15 @@ def teardown_function() -> None:
 def window_authority(monkeypatch) -> OpenHCSWindowCreationAuthority:
     """Provide the application mutation authority required by window creation."""
 
-    class AllowingPlateManager:
-        def require_pipeline_definition_mutation_allowed(
+    class AllowingSession:
+        def require_definition_mutation_allowed(
             self,
-            plate_path: str | None = None,
+            scope_id: str | None = None,
         ) -> None:
-            del plate_path
+            del scope_id
+
+    class AllowingPlateManager:
+        session = AllowingSession()
 
     authority = OpenHCSWindowCreationAuthority()
     plate_manager = AllowingPlateManager()
@@ -84,9 +88,9 @@ def window_authority(monkeypatch) -> OpenHCSWindowCreationAuthority:
 
 
 def test_config_window_tab_uses_exact_caller_owned_state() -> None:
-    scope_id = PlateScopeIdentity.from_cellprofiler_pipeline(
-        "/tmp/plate",
-        "/tmp/plate/analysis.cppipe",
+    scope_id = CellProfilerPipelineScope.scope_for(
+        Path("/tmp/plate"),
+        Path("/tmp/plate/analysis.cppipe"),
     ).scope_id
     state = ObjectState(
         PipelineConfigHost(PipelineConfig()),
@@ -831,15 +835,17 @@ def test_scope_global_config_window_save_persists_cache(monkeypatch) -> None:
         def __init__(self) -> None:
             self.main_window = FakeMainWindow()
 
+    class FakeSession:
+        def require_definition_mutation_allowed(
+            self,
+            scope_id: str | None = None,
+        ) -> None:
+            del scope_id
+
     class FakePlateManager:
         def __init__(self) -> None:
             self.service_adapter = FakeServiceAdapter()
-
-        def require_pipeline_definition_mutation_allowed(
-            self,
-            plate_path: str | None = None,
-        ) -> None:
-            del plate_path
+            self.session = FakeSession()
 
     class FakeConfigWindow:
         def __init__(
@@ -960,9 +966,9 @@ def test_plate_config_window_factory_passes_exact_registered_state(
 def test_window_registry_routes_cppipe_plate_scope_to_plate_config_factory() -> None:
     register_openhcs_window_handlers()
 
-    scope_id = PlateScopeIdentity.from_cellprofiler_pipeline(
-        "/tmp/plate",
-        "/tmp/plate/analysis.cppipe",
+    scope_id = CellProfilerPipelineScope.scope_for(
+        Path("/tmp/plate"),
+        Path("/tmp/plate/analysis.cppipe"),
     ).scope_id
     handler = ScopeWindowRegistry.find_handler(scope_id)
 
@@ -973,9 +979,9 @@ def test_window_registry_routes_cppipe_plate_scope_to_plate_config_factory() -> 
 def test_window_registry_routes_cppipe_step_scope_to_step_editor_factory() -> None:
     register_openhcs_window_handlers()
 
-    plate_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-        "/tmp/plate",
-        "/tmp/plate/analysis.cppipe",
+    plate_scope = CellProfilerPipelineScope.scope_for(
+        Path("/tmp/plate"),
+        Path("/tmp/plate/analysis.cppipe"),
     ).scope_id
     handler = ScopeWindowRegistry.find_handler(f"{plate_scope}::functionstep_0")
 

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from openhcs.pyqt_gui.main import OpenHCSMainWindow
     from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-    from openhcs.pyqt_gui.widgets.shared.services.zmq_client_service import (
+    from openhcs.authoring.session.execution_client import (
         ZMQClientService,
     )
 

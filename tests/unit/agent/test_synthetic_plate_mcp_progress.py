@@ -94,7 +94,7 @@ def test_real_mcp_generation_survives_post_inspection_inactivity_window(
     generated = result.payload["results"][0]["payloads"][0]
     assert generated["errors"] == []
     assert generated["image_count"] == 2
-    assert generated["detected_microscope_type"] == "imagexpress"
+    assert generated["detected_source_format"] == "imagexpress"
     assert result.server_stderr_tail is not None
     assert "exercising delayed completion" in result.server_stderr_tail
     assert "Generate synthetic plate: still running" in result.server_stderr_tail

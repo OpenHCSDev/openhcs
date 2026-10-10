@@ -1,31 +1,18 @@
-"""
-Pipeline Editor Widget for PyQt6
+"""The current dataset's pipeline, rendered as a Qt manager widget.
 
-Pipeline step management with full feature parity to Textual TUI version.
-Uses hybrid approach: extracted business logic + clean PyQt6 UI.
+Steps live in the dataset's pipeline ObjectState (through the session). The
+widget displays the step objects it last read from the session and re-reads
+them on every pipeline event; every change goes through the session.
 """
 
 import copy
 import logging
 import os
 from dataclasses import dataclass
-from enum import Enum
-from pathlib import Path
-from types import MappingProxyType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Self,
-    Tuple,
-    TypeVar,
-    cast,
-)
+from functools import singledispatchmethod
+from typing import Any, Callable, Optional, Tuple
 
-from objectstate.object_state import ObjectState, ObjectStateRegistry
+from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QSplitter, QVBoxLayout
 from pyqt_reactive.animation import WindowFlashOverlay
@@ -59,26 +46,35 @@ from typing_extensions import override
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
-from openhcs.agent.ui_bridge_actions import ManagerButtonPresentationMixin
 from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PipelineEditorStateSurfaceIdentityDeclaration,
     PipelineEditorWidgetIdentity,
 )
-from openhcs.constants.constants import OrchestratorState
+from openhcs.authoring.session.dataset_document import authored_pipeline_config
+from openhcs.authoring.session.events import (
+    AvailabilityChanged,
+    DatasetStateChanged,
+    ExecutionStateChanged,
+    PipelineChanged,
+    PipelineImported,
+    SelectionChanged,
+    SessionEvent,
+)
+from openhcs.authoring.session.operations.pipelines import (
+    AddPipelineStep,
+    EditPipelineStep,
+    ShowPipelineCode,
+)
+from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
+from openhcs.authoring.session.session import Session
+from openhcs.authoring.session.views import PipelineStepsView
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import (
-    GlobalPipelineConfig,
-    PipelineConfig,
-    ProcessingConfig,
-)
-from openhcs.core.debug import DebugCursor, DebugSession, DebugTerminalSummary
-from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.core.config import PipelineConfig, ProcessingConfig
+from openhcs.core.debug import DebugCursor
+from openhcs.core.debug_session_projection import DebugSessionProjectionContext
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import (
-    PipelineDocument,
-    PipelineDocumentCodec,
-)
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.progress.debug_projection import DebugRuntimeProjection
 from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.source_bindings import (
@@ -86,51 +82,36 @@ from openhcs.core.source_bindings import (
     source_bindings_defaults_to_base,
 )
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
-from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
-)
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
-    PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiOwnedStateSurfaceDeclaration,
     state_surface_declaration_for_identity,
 )
+from openhcs.pyqt_gui.session_rendering import (
+    GuiRenderer,
+    OperationPresenter,
+    QtSessionEventRelay,
+    SessionOperationButtons,
+)
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.shared.openhcs_manager_mixins import (
     OpenHCSSingleRowActionManagerMixin,
 )
-from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
-    PipelineDebugPauseBoundaryState,
-    PipelineDebugSessionContext,
-    PipelineDebugTargetState,
+from openhcs.pyqt_gui.widgets.shared.services.gui_event_bus_broadcast import (
+    GuiEventBusBroadcaster,
 )
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
     PipelineEditorCodeWorkflow,
     PipelineEditorDebugWorkflow,
-    PipelineEditorDeletionWorkflow,
     PipelineEditorFunctionPresentation,
-    PipelineEditorListWorkflow,
-    PipelineStepSaveWorkflow,
-)
-from openhcs.pyqt_gui.widgets.shared.services.qt_widget_edit_commit import (
-    commit_focused_widget_edits,
-)
-from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
-    WidgetActionRoute,
-    dispatch_widget_action,
 )
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-from openhcs.ui.shared.plate_scope_identity import (
-    PipelineScopeIdentity,
-)
+from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.core.axes import Axis, GroupingDeclaration
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 
 
 StepFunctionDeclaration = FunctionSpec | dict[str, FunctionSpec] | None
@@ -162,113 +143,6 @@ def pipeline_editor_external_editor_enabled() -> bool:
         "1",
         "true",
         "yes",
-    )
-
-
-PipelineEditorActionTargetT = TypeVar("PipelineEditorActionTargetT")
-
-
-class PipelineEditorActionTargetMode(str, Enum):
-    """ObjectState target mode carrying its target-selection behavior."""
-
-    _selector: Callable[[object, object], object]
-
-    CURRENT_PIPELINE = (
-        "current_pipeline",
-        lambda current_pipeline, _selected_steps: current_pipeline,
-    )
-    SELECTED_STEPS = (
-        "selected_steps",
-        lambda _current_pipeline, selected_steps: selected_steps,
-    )
-
-    def __new__(
-        cls,
-        value: str,
-        selector: Callable[[object, object], object],
-    ) -> Self:
-        member = str.__new__(cls, value)
-        member._value_ = value
-        member._selector = selector
-        return member
-
-    def select(
-        self,
-        *,
-        current_pipeline: PipelineEditorActionTargetT,
-        selected_steps: PipelineEditorActionTargetT,
-    ) -> PipelineEditorActionTargetT:
-        """Select the action target through this member's leaf."""
-        return cast(
-            PipelineEditorActionTargetT,
-            self._selector(current_pipeline, selected_steps),
-        )
-
-
-class PipelineEditorAction(ManagerButtonPresentationMixin, str, Enum):
-    """Closed set of PipelineEditor button actions and agent-facing semantics."""
-
-    side_effects: tuple[str, ...]
-    confirmation_required: bool
-    target_mode: PipelineEditorActionTargetMode
-
-    def __new__(
-        cls,
-        value: str,
-        label: str,
-        tooltip: str,
-        side_effects: tuple[str, ...],
-        confirmation_required: bool,
-        target_mode: PipelineEditorActionTargetMode,
-    ) -> "PipelineEditorAction":
-        member = str.__new__(cls, value)
-        member._value_ = value
-        member.label = label
-        member.tooltip = tooltip
-        member.side_effects = side_effects
-        member.confirmation_required = confirmation_required
-        member.target_mode = target_mode
-        return member
-
-    ADD_STEP = (
-        "add_step",
-        "Add",
-        "Add new pipeline step",
-        ("opens_step_editor", "may_mutate_pipeline"),
-        True,
-        PipelineEditorActionTargetMode.CURRENT_PIPELINE,
-    )
-    DELETE_STEP = (
-        "del_step",
-        "Del",
-        "Delete selected steps",
-        ("mutates_pipeline",),
-        True,
-        PipelineEditorActionTargetMode.SELECTED_STEPS,
-    )
-    EDIT_STEP = (
-        "edit_step",
-        "Edit",
-        "Edit selected step",
-        ("opens_step_editor", "may_mutate_step"),
-        True,
-        PipelineEditorActionTargetMode.SELECTED_STEPS,
-    )
-    AUTO_LOAD_PIPELINE = (
-        "auto_load_pipeline",
-        "Auto",
-        "Load basic_pipeline.py",
-        ("loads_basic_pipeline", "mutates_pipeline"),
-        True,
-        PipelineEditorActionTargetMode.CURRENT_PIPELINE,
-    )
-    CODE_PIPELINE = (
-        "code_pipeline",
-        "Code",
-        "Edit pipeline as Python code",
-        ("opens_code_document_window",),
-        False,
-        PipelineEditorActionTargetMode.CURRENT_PIPELINE,
     )
 
 
@@ -355,16 +229,20 @@ class StepTooltipBuilder:
         return "\n".join(tooltip_lines)
 
 
-class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidget):
-    """Build and edit the ordered processing steps for the selected plate.
+class PipelineEditorWidget(
+    SessionOperationButtons,
+    OpenHCSSingleRowActionManagerMixin,
+    AbstractManagerWidget,
+):
+    """Build and edit the ordered processing steps for the current dataset.
 
     Add registered processing functions, edit their declaration-owned parameters,
     reorder or remove steps, and switch to Python code for whole-pipeline edits.
-    A plate must be selected and initialized before adding steps. Changes update
-    the selected plate's pipeline state and require compilation before execution.
+    A dataset must be selected and initialized before adding steps. Changes
+    update the dataset's pipeline and require compilation before execution.
     """
 
-    # Declarative UI configuration
+    SESSION_VIEW = PipelineStepsView
     TITLE = PipelineEditorWidgetIdentity.require_title()
     UI_STATE_SURFACE_DECLARATIONS = (
         UiOwnedStateSurfaceDeclaration(
@@ -372,7 +250,7 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
             title="Pipeline editor state",
             payload_schema="openhcs.ui.pipeline_editor_state.v1",
             related_action_ids=(
-                *(action.value for action in PipelineEditorAction),
+                *(operation.operation_id for operation in PipelineStepsView.operations),
                 *state_surface_declaration_for_identity(
                     DebugToolbarWidget.UI_STATE_SURFACE_DECLARATIONS,
                     PipelineDebugSessionStateSurfaceIdentityDeclaration,
@@ -390,99 +268,45 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         declaration_type=PipelineDocument,
         missing_error_message="Pipeline code must define 'pipeline_steps'.",
     )
-    BUTTON_CONFIGS = [action.button_config for action in PipelineEditorAction]
-    ACTION_ROUTES = MappingProxyType(
-        {
-            route.action: route
-            for route in (
-                WidgetActionRoute(
-                    PipelineEditorAction.ADD_STEP,
-                    lambda widget: widget.action_add,
-                ),
-                WidgetActionRoute(
-                    PipelineEditorAction.DELETE_STEP,
-                    lambda widget: widget.action_delete,
-                ),
-                WidgetActionRoute(
-                    PipelineEditorAction.EDIT_STEP,
-                    lambda widget: widget.action_edit,
-                ),
-                WidgetActionRoute(
-                    PipelineEditorAction.AUTO_LOAD_PIPELINE,
-                    lambda widget: widget.action_auto_load_pipeline,
-                ),
-                WidgetActionRoute(
-                    PipelineEditorAction.CODE_PIPELINE,
-                    lambda widget: widget.action_code_pipeline,
-                ),
-            )
-        }
-    )
     ITEM_NAME_SINGULAR = "step"
     ITEM_NAME_PLURAL = "steps"
     SELECTION_PAYLOAD_PROJECTION = ItemSelectionPayloadProjection()
     SELECTION_CLEARED_PAYLOAD = None
     SCOPE_ITEM_TYPE = ListItemType.STEP
     STATE_BINDING = ManagerStateBinding(
-        items_attr="pipeline_steps",
+        items_attr="displayed_steps",
         selection_attr="selected_step",
         selection_signal_attr="step_selected",
     )
-
     ITEM_HOOKS = ManagerItemHooks(
         id_projection=AttributeItemIdProjection("_scope_token"),
-        preserve_selection_pred=lambda self: bool(self.pipeline_steps),
+        preserve_selection_pred=lambda self: bool(self.displayed_steps),
     )
-    # Declarative list item format (replaces imperative format_item_for_display logic)
-    # Config indicators (NAP, FIJI, MAT) are auto-discovered via always_viewable_fields
     LIST_ITEM_FORMAT = ListItemFormat(
-        first_line=("func",),  # func= shown after step name
+        first_line=("func",),
         formatters={},
         append_signature_diff_fields=False,
     )
 
-    # Signals
-    pipeline_changed = pyqtSignal(list)  # List[FunctionStep]
-    step_selected = pyqtSignal(object)  # FunctionStep
-    status_message = pyqtSignal(str)  # status message
+    step_selected = pyqtSignal(object)
+    status_message = pyqtSignal(str)
 
     def __init__(
         self,
         service_adapter,
+        session: Session,
         color_scheme: Optional[ColorScheme] = None,
         parent=None,
     ):
-        """
-        Initialize the pipeline editor widget.
-
-        Args:
-            service_adapter: PyQt service adapter for dialogs and operations
-            color_scheme: Color scheme for styling (optional, uses service adapter if None)
-            parent: Parent widget
-        """
-        # Step-specific state (BEFORE super().__init__)
-        self.pipeline_steps: List[FunctionStep] = []
-        self.current_plate: str = ""
-        self.selected_step: str = ""
-        # NOTE: plate_pipelines now derived from Pipeline ObjectState (phase 3)
-        # Use _get_steps_from_pipeline_state() and update_pipeline_for_plate()
-
-        # Reference to plate manager (set externally)
-        # Note: orchestrator is looked up dynamically via _get_current_orchestrator()
-        self.plate_manager: "PlateManagerWidget | None" = None
-
-        # Clipboard for copy-paste operations (in-memory only)
-        self._clipboard_steps: List[FunctionStep] = []
+        self.session = session
+        self.displayed_steps: list[FunctionStep] = []
+        """The step objects on screen, as last read from the session."""
+        self.selected_step = ""
+        self._clipboard_steps: list[FunctionStep] = []
         self.debug_toolbar: DebugToolbarWidget | None = None
         self.debug_inspector_window: Any | None = None
-        self.debug_session_state: DebugSession | None = None
-        self.debug_terminal_summary: DebugTerminalSummary | None = None
-
-        # Initialize base class (creates event bus, item list, buttons, and status label).
-        # Also auto-processes PREVIEW_FIELD_CONFIGS declaratively
         super().__init__(service_adapter, color_scheme, parent=parent)
         self.code_execution_workflow = PipelineEditorCodeWorkflow(self)
-        self.deletion_workflow = PipelineEditorDeletionWorkflow(self)
         self.function_presentation = PipelineEditorFunctionPresentation(self)
         self.step_tooltip_builder = StepTooltipBuilder.for_function_presentation(
             self.function_presentation
@@ -492,39 +316,81 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
             first_line=self.LIST_ITEM_FORMAT.first_line,
             preview_line=self.LIST_ITEM_FORMAT.preview_line,
             detail_line_field=self.LIST_ITEM_FORMAT.detail_line_field,
-            formatters={
-                "func": self.function_presentation.format_func_preview,
-            },
+            formatters={"func": self.function_presentation.format_func_preview},
             append_signature_diff_fields=self.LIST_ITEM_FORMAT.append_signature_diff_fields,
         )
-        self._handle_debug_command = self.debug_workflow.handle_command
         self.show_debug_snapshot = self.debug_workflow.show_snapshot
-        self._handle_debug_artifact_export_request = (
-            self.debug_workflow.handle_artifact_export_request
-        )
-        self._handle_debug_artifact_open_request = (
-            self.debug_workflow.handle_artifact_open_request
-        )
-
-        # Setup UI (after base and subclass state is ready)
+        self._events = QtSessionEventRelay(session, parent=self)
+        # A bound method, not a closure over self: PyQt holds bound-method
+        # slots weakly, so the connection does not keep this widget alive.
+        self._events.published.connect(self._on_session_record)
         self.setup_ui()
         self.setup_connections()
+        self._load_current_steps()
         self.update_button_states()
 
-        logger.debug("Pipeline editor widget initialized")
+    # -- session state, read through -----------------------------------------
 
-    # UI infrastructure provided by AbstractManagerWidget base class
-    # Step-specific customizations via hooks below
+    @property
+    def current_plate(self) -> str:
+        return self.session.current_scope_id
 
-    def handle_button_action(self, action: str) -> None:
-        dispatch_widget_action(
-            widget=self,
-            action_id=action,
-            action_enum=PipelineEditorAction,
-            routes=self.ACTION_ROUTES,
-            async_runner=self.service_adapter.execute_async_operation,
-            before_dispatch=commit_focused_widget_edits,
-        )
+    def selection_scope_ids(self) -> tuple[str, ...]:
+        return self.selected_step_scope_ids()
+
+    def _load_current_steps(self) -> None:
+        scope_id = self.current_plate
+        self.displayed_steps = self.session.pipeline_steps(scope_id) if scope_id else []
+        if scope_id:
+            ScopeTokenService.seed_from_objects(scope_id, self.displayed_steps)
+
+    # -- session events -------------------------------------------------------
+
+    def _on_session_record(self, record) -> None:
+        self.on_session_event(record.event)
+
+    @singledispatchmethod
+    def on_session_event(self, event: SessionEvent) -> None:
+        del event
+
+    @on_session_event.register
+    def _(self, event: SelectionChanged) -> None:
+        self._load_current_steps()
+        self.clear_list_visual_state()
+        self.update_item_list()
+        WindowFlashOverlay.invalidate_cache_for_widget(self)
+        self.update_button_states()
+
+    @on_session_event.register
+    def _(self, event: PipelineChanged) -> None:
+        self._refresh_if_current(event.scope_id)
+
+    @on_session_event.register
+    def _(self, event: PipelineImported) -> None:
+        self._refresh_if_current(event.scope_id)
+
+    @on_session_event.register
+    def _(self, event: DatasetStateChanged) -> None:
+        if event.scope_id == self.current_plate:
+            self.update_button_states()
+
+    @on_session_event.register
+    def _(self, event: AvailabilityChanged) -> None:
+        self.update_button_states()
+
+    @on_session_event.register
+    def _(self, event: ExecutionStateChanged) -> None:
+        self.update_button_states()
+
+    def _refresh_if_current(self, scope_id: str) -> None:
+        if scope_id != self.current_plate:
+            return
+        self._load_current_steps()
+        self.update_item_list()
+        self.update_button_states()
+        GuiEventBusBroadcaster(self.event_bus).pipeline_changed(self.displayed_steps)
+
+    # -- UI -------------------------------------------------------------------
 
     def setup_ui(self):
         """Create pipeline editor UI with a debug/test-mode toolbar."""
@@ -535,23 +401,19 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
             enable_status_scrolling=self.ENABLE_STATUS_SCROLLING,
         )
         self.manager_header = header_parts
-        self.debug_toolbar = DebugToolbarWidget(
-            self,
-            color_scheme=self.color_scheme,
-        )
+        self.debug_toolbar = DebugToolbarWidget(self, color_scheme=self.color_scheme)
         self.debug_toolbar.setVisible(SHOW_PIPELINE_DEBUG_TOOLBAR)
         self.item_list = create_manager_list_widget(
             color_scheme=self.color_scheme,
             delegate_manager=self,
         )
-        button_panel = ButtonPanel(
+        self.button_panel = ButtonPanel(
             button_configs=self.BUTTON_CONFIGS,
             on_action=self.handle_button_action,
             color_scheme=self.color_scheme,
             grid_columns=self.BUTTON_GRID_COLUMNS,
             parent=self,
         )
-        self.button_panel = button_panel
         self.buttons = self.button_panel.buttons
         self.context_help_button = self.install_context_help_button(
             title_layout=self.manager_header.title_layout,
@@ -567,97 +429,58 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
 
         splitter = QSplitter(Qt.Orientation.Vertical)
         splitter.addWidget(self.item_list)
-        splitter.addWidget(button_panel)
+        splitter.addWidget(self.button_panel)
         splitter.setSizes([1000, 1])
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 0)
         main_layout.addWidget(splitter)
 
     def setup_connections(self):
-        """Setup signal/slot connections (base class + step-specific)."""
-        # Call base class connection setup (handles item list selection, double-click, reordering, status)
         self.setup_manager_connections()
-
-        # Step-specific signal
-        self.pipeline_changed.connect(self.on_pipeline_changed)
         self.debug_toolbar.runtime_inspection_requested.connect(
             self.debug_workflow.show_runtime_inspection
         )
-        self._suppress_pipeline_state_sync = False
-
-        # Keyboard shortcuts for copy-paste
         from PyQt6.QtGui import QKeySequence, QShortcut
 
         QShortcut(QKeySequence("Ctrl+C"), self, self._action_copy_steps)
         QShortcut(QKeySequence("Ctrl+V"), self, self._action_paste_steps)
+        self.debug_toolbar.command_requested.connect(self.debug_workflow.handle_command)
+
+    def update_button_states(self):
+        super().update_button_states()
         if self.debug_toolbar is not None:
-            self.debug_toolbar.command_requested.connect(self._handle_debug_command)
+            self.debug_toolbar.set_debug_session_context(self.debug_session_context())
 
-    # ========== Pipeline ObjectState Management ==========
+    # -- code document --------------------------------------------------------
 
-    def _ensure_pipeline_state(
-        self, plate_path: str, *, register: bool = True
-    ) -> ObjectState | None:
-        """Return the Pipeline ObjectState for a plate."""
+    def code_document_title(self) -> str:
+        return "Edit Pipeline"
 
-        binding = PipelineObjectStateBinding.for_plate(
-            plate_path,
-            register=register,
-        )
-        return None if binding is None else binding.state
+    def code_document_writable(self) -> bool:
+        return bool(self.current_plate)
 
-    def _get_steps_from_pipeline_state(self, plate_path: str) -> List[FunctionStep]:
-        """Derive step list from Pipeline ObjectState."""
+    def code_document_source(self, clean: bool = True) -> str:
+        """Render the current dataset's pipeline document."""
 
-        return PipelineObjectStateBinding.steps_for_plate(plate_path)
-
-    def update_pipeline_for_plate(
-        self, plate_path: str, steps: List[FunctionStep]
-    ) -> None:
-        """Update Pipeline ObjectState with a new step list."""
-
-        self.require_pipeline_definition_mutation_allowed(plate_path)
-        PipelineObjectStateBinding.update_plate_steps(plate_path, steps)
-
-    def require_pipeline_definition_mutation_allowed(
-        self,
-        plate_path: str | None = None,
-    ) -> None:
-        """Delegate every pipeline edit to the manager execution authority."""
-
-        if self.plate_manager is None:
-            return
-        self.plate_manager.require_pipeline_definition_mutation_allowed(
-            plate_path or self.current_plate
+        scope_id = self.current_plate
+        return PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_values(
+                pipeline_config=(
+                    authored_pipeline_config(scope_id) if scope_id else PipelineConfig()
+                ),
+                pipeline_steps=self.session.pipeline_steps(scope_id) if scope_id else [],
+            ),
+            clean_mode=clean,
         )
 
-    @property
-    def plate_pipelines(self) -> Dict[str, List[FunctionStep]]:
-        """Return plate pipelines from the shared Pipeline ObjectState authority."""
-
-        return PipelineObjectStateBinding.registered_plate_steps()
-
-    def notify_pipeline_definition_changed(self, plate_path: str) -> None:
-        """Notify the owning plate manager that this plate's pipeline changed."""
-        if not plate_path:
-            return
-        if self.plate_manager is None:
-            return
-        self.plate_manager.notify_pipeline_definition_changed(plate_path)
-
-    # ========== Business Logic Methods (Extracted from Textual) ==========
+    # -- display --------------------------------------------------------------
 
     def _numbered_step_display_name(
         self, step: FunctionStep, step_index: Optional[int]
     ) -> tuple[str, str]:
-        """Return UI display name and semantic step name without mutating the step."""
-        if step.name:
-            step_name = step.name
-        else:
-            step_name = "Unknown Step"
+        step_name = step.name or "Unknown Step"
         if step.debug_pause:
             step_name = f"Pause | {step_name}"
-
         if step_index is None:
             return step_name, step_name
         return f"{step_index + 1}. {step_name}", step_name
@@ -668,20 +491,7 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         live_context_snapshot=None,
         step_index: Optional[int] = None,
     ) -> Tuple[str, str]:
-        """
-        Format step for display in the list with constructor value preview.
-
-        Uses ObjectState for resolved values (no context stack rebuild).
-        Returns StyledText with segments for per-field dirty/sig-diff styling.
-
-        Args:
-            step: FunctionStep to format
-            live_context_snapshot: IGNORED - kept for API compatibility
-            step_index: Zero-based rendered row index used for UI numbering
-
-        Returns:
-            Tuple of (StyledText with segments, semantic step_name)
-        """
+        del live_context_snapshot
         display_name, step_name = self._numbered_step_display_name(step, step_index)
         item_format = self.LIST_ITEM_FORMAT
         if item_format is not None and step_index is not None:
@@ -698,8 +508,6 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
                 },
                 append_signature_diff_fields=item_format.append_signature_diff_fields,
             )
-
-        # Use declarative format from LIST_ITEM_FORMAT
         styled = self._item_display_builder.build_from_format(
             item=step,
             item_name=display_name,
@@ -707,739 +515,119 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         )
         return styled, step_name
 
-    def action_add_step(self):
-        """Handle Add Step button (adapted from Textual version)."""
-        try:
-            plate_scope = self._require_current_plate_scope()
-            self.require_pipeline_definition_mutation_allowed(plate_scope)
-        except RuntimeError as exc:
-            self.service_adapter.show_error_dialog(str(exc))
-            return
-
-        # Get orchestrator for step creation
-        orchestrator = self._get_current_orchestrator()
-
-        # Create new step
-        step_name = f"Step_{len(self.pipeline_steps) + 1}"
-        new_step = FunctionStep(
-            func=[],  # Start with empty function list
-            name=step_name,
-        )
-        # Preserve the pre-add registry as the parent of the accepted structural
-        # addition. The editor needs a registered step scope while it is open,
-        # so staging happens before the save callback.
-        ObjectStateRegistry.ensure_baseline_snapshot()
-
-        # StepParameterEditor requires the step scope before its window is built,
-        # while committed pipeline membership remains unchanged until Save.
-        staged_scope_id = PipelineObjectStateBinding.stage_step(
-            plate_scope,
-            new_step,
-        )
-        step_committed = False
-
-        def handle_save(edited_step):
-            """Handle step save from editor."""
-            nonlocal step_committed
-
-            self.require_pipeline_definition_mutation_allowed(plate_scope)
-            # Use atomic operation to coalesce all ObjectState changes into one undo step
-            is_new = edited_step not in self.pipeline_steps
-            label = (
-                f"add step {edited_step.name}"
-                if is_new
-                else f"edit step {edited_step.name}"
-            )
-
-            with ObjectStateRegistry.atomic(label):
-                # Check if step already exists in pipeline (for Shift+Click saves)
-                if is_new:
-                    ScopeTokenService.transfer_token(
-                        plate_scope,
-                        new_step,
-                        edited_step,
-                    )
-                    self.pipeline_steps.append(edited_step)
-                    self.status_message.emit(f"Added new step: {edited_step.name}")
-                else:
-                    # Step already exists, just update the display
-                    self.status_message.emit(f"Updated step: {edited_step.name}")
-
-                # Update Pipeline ObjectState with new step list
-                self.update_pipeline_for_plate(plate_scope, self.pipeline_steps)
-                self.notify_pipeline_definition_changed(plate_scope)
-                if is_new:
-                    ObjectStateRegistry.record_snapshot(
-                        label,
-                        staged_scope_id,
-                    )
-
-            step_committed = True
-            self.update_item_list()
-            self._suppress_pipeline_state_sync = True
-            try:
-                self.pipeline_changed.emit(self.pipeline_steps)
-            finally:
-                self._suppress_pipeline_state_sync = False
-
-        def discard_staged_step() -> None:
-            """Remove an unsaved Add Step scope without disturbing later edits."""
-            if step_committed:
-                return
-            branch_history = ObjectStateRegistry.get_branch_history()
-            staged_scope_was_snapshotted = bool(
-                branch_history and staged_scope_id in branch_history[-1].all_states
-            )
-            PipelineObjectStateBinding.discard_staged_step(
-                plate_scope,
-                staged_scope_id,
-            )
-            if staged_scope_was_snapshotted:
-                ObjectStateRegistry.record_snapshot(
-                    f"discard staged step {new_step.name}",
-                    staged_scope_id,
-                )
-
-        # Create and show editor dialog within the correct config context
-        orchestrator = self._get_current_orchestrator()
-
-        # SIMPLIFIED: Orchestrator context is automatically available through type-based registry
-        # No need for explicit context management - dual-axis resolver handles it automatically
-        if not orchestrator:
-            logger.info(
-                "No orchestrator found for step editor context, This should not happen."
-            )
-
-        editor = DualEditorWindow(
-            step_data=new_step,
-            is_new=True,
-            on_save_callback=handle_save,
-            orchestrator=orchestrator,
-            parent=self,
-            service_adapter=self.service_adapter,
-            plate_scope=plate_scope,
-            source_bindings=self._current_source_bindings(),
-            source_binding_context=self.current_source_binding_context(),
-            function_invocation_badge_provider=None,
-            compiled_artifact_inspection_provider=(
-                None
-                if self.plate_manager is None
-                else self.plate_manager.compiled_artifact_inspection_for_plate
-            ),
-            before_mutation=(
-                lambda: self.require_pipeline_definition_mutation_allowed(plate_scope)
-            ),
-        )
-        editor.rejected.connect(discard_staged_step)
-        # Set original step for change detection
-        editor.set_original_step_for_change_detection()
-
-        # Connect orchestrator config changes to step editor for live placeholder updates
-        # This ensures the step editor's placeholders update when pipeline config is saved
-        if self.plate_manager is not None:
-            editor.connect_orchestrator_config_signal(
-                self.plate_manager.orchestrator_config_changed
-            )
-            logger.debug("Connected orchestrator_config_changed signal to step editor")
-            editor.connect_artifact_signals(
-                compiled_artifact_signal=(
-                    self.plate_manager.compiled_artifact_inspection_changed
-                ),
-                runtime_artifact_signal=self.plate_manager.runtime_artifact_available,
-                debug_snapshot_signal=self.plate_manager.debug_snapshot_available,
-            )
-
-        editor.show()
-        editor.raise_()
-        editor.activateWindow()
-
-    def action_auto_load_pipeline(self):
-        """Handle Auto button - load basic_pipeline.py automatically."""
-        if not self.current_plate:
-            self.service_adapter.show_error_dialog("No plate selected")
-            return
-
-        try:
-            # Use module import to find basic_pipeline.py
-            import inspect
-
-            import openhcs.demo.basic_pipeline as basic_pipeline_module
-
-            # Get the source code from the module
-            python_code = inspect.getsource(basic_pipeline_module)
-
-            # Use ABC template for unified code execution (handles registration sync)
-            self._handle_edited_code(python_code)
-            self.status_message.emit(
-                f"Auto-loaded {len(self.pipeline_steps)} steps from basic_pipeline.py"
-            )
-
-        except Exception as e:
-            import traceback
-
-            logger.error(f"Failed to auto-load basic_pipeline.py: {e}")
-            logger.error(f"Full traceback:\n{traceback.format_exc()}")
-            self.service_adapter.show_error_dialog(
-                f"Failed to auto-load pipeline: {str(e)}"
-            )
-
-    def action_code_pipeline(self):
-        """Handle Code Pipeline button - edit pipeline as Python code."""
-        logger.debug("Code button pressed - opening code editor")
-
-        if not self.current_plate:
-            self.service_adapter.show_error_dialog("No plate selected")
-            return
-
-        try:
-            python_code = self.code_document_source(clean=True)
-
-            # Create simple code editor service
-            editor_service = SimpleCodeEditorService(self)
-
-            use_external = pipeline_editor_external_editor_enabled()
-
-            # Launch editor with callback - uses ABC _handle_edited_code template
-            editor_service.edit_code(
-                initial_content=python_code,
-                title=self.code_document_title(),
-                callback=self._handle_edited_code,  # ABC template method
-                use_external=use_external,
-                declaration_type=PipelineDocument,
-                code_data={"clean_mode": True},
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to open pipeline code editor: {e}")
-            self.service_adapter.show_error_dialog(
-                f"Failed to open code editor: {str(e)}"
-            )
-
-    def code_document_title(self) -> str:
-        """Return the live Pipeline Editor code-mode title."""
-        return "Edit Pipeline"
-
-    def code_document_writable(self) -> bool:
-        """Only a selected plate owns mutable pipeline state."""
-        return bool(self.current_plate)
-
-    def code_document_source(self, clean: bool = True) -> str:
-        """Render the selected plate's pipeline document."""
-        pipeline_config = PipelineConfig()
-        if self.current_plate and self.plate_manager is not None:
-            pipeline_config = (
-                self.plate_manager.authored_pipeline_config_for_code_document(
-                    self.current_plate
-                )
-            )
-        return PipelineDocumentCodec.render(
-            PipelineDocumentCodec.from_values(
-                pipeline_config=pipeline_config,
-                pipeline_steps=self._code_document_steps(),
-            ),
-            clean_mode=clean,
-        )
-
-    def _code_document_steps(self) -> list[FunctionStep]:
-        """Return live ObjectState-backed steps for code-mode rendering."""
-        if not self.current_plate:
-            return list(self.pipeline_steps)
-        pipeline_scope = PipelineScopeIdentity.from_plate_scope(
-            self.current_plate
-        ).scope_id
-        if ObjectStateRegistry.get_by_scope(pipeline_scope) is None:
-            return list(self.pipeline_steps)
-        return self._get_steps_from_pipeline_state(self.current_plate)
-
-    def load_pipeline_from_file(self, file_path: Path) -> None:
-        """Load a pipeline from its Python document (`.py`) or a CellProfiler `.cppipe`."""
-        if file_path.suffix == ".cppipe":
-            self._load_cppipe_pipeline_from_file(file_path)
-        elif file_path.suffix == ".py":
-            self._handle_edited_code(file_path.read_text(encoding="utf-8"))
-        else:
-            raise ValueError(f"Pipeline files are .py or .cppipe, got {file_path.name}.")
-
-    def _load_cppipe_pipeline_from_file(self, file_path: Path) -> None:
-        """Translate a CellProfiler `.cppipe` into public OpenHCS state."""
-        pipeline_steps, pipeline_config = import_cellprofiler_pipeline(
-            file_path,
-        )
-        self.require_pipeline_definition_mutation_allowed(self.current_plate)
-        self.pipeline_steps = pipeline_steps
-        if self.current_plate:
-            if self.plate_manager is not None:
-                from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
-                    PlateManagerCodeWorkflow,
-                )
-
-                PlateManagerCodeWorkflow(self.plate_manager).apply_per_plate_configs(
-                    {self.current_plate: pipeline_config}
-                )
-        self._normalize_step_scope_tokens(register=False)
-
-        if self.current_plate:
-            self.update_pipeline_for_plate(
-                self.current_plate,
-                self.pipeline_steps,
-            )
-            self.notify_pipeline_definition_changed(self.current_plate)
-            logger.debug(
-                "Updated Pipeline ObjectState (%d steps) from .cppipe: %s",
-                len(self.pipeline_steps),
-                file_path,
-            )
-
-        self.update_item_list()
-        self._suppress_pipeline_state_sync = True
-        try:
-            self.pipeline_changed.emit(self.pipeline_steps)
-        finally:
-            self._suppress_pipeline_state_sync = False
-        self.status_message.emit(
-            f"Imported {len(self.pipeline_steps)} steps from {file_path.name}"
-        )
-
-    def save_pipeline_to_file(self, file_path: Path) -> None:
-        """Save the pipeline as its Python document, the code editor's text."""
-        file_path.write_text(self.code_document_source(clean=True), encoding="utf-8")
-        self.status_message.emit(f"Saved pipeline to {file_path.name}")
-
-    def save_pipeline_for_plate(self, plate_path: str, pipeline: List[FunctionStep]):
-        """
-        Save pipeline for specific plate (extracted from Textual version).
-
-        Args:
-            plate_path: Path of the plate
-            pipeline: Pipeline steps to save
-        """
-        self.update_pipeline_for_plate(plate_path, pipeline)
-        logger.debug(f"Updated Pipeline ObjectState for plate: {plate_path}")
-
-    def get_pipeline_for_plate(self, plate_path: str) -> List[FunctionStep]:
-        """Return the current pipeline definition from Pipeline ObjectState."""
-        if not plate_path:
-            return []
-        return self._get_steps_from_pipeline_state(plate_path)
-
-    def set_current_plate(self, plate_path: str):
-        """
-        Set current plate and load its pipeline (extracted from Textual version).
-
-        Args:
-            plate_path: Path of the current plate
-        """
-        logger.info(f"🔔 RECEIVED set_current_plate signal: {plate_path}")
-
-        # DON'T unregister ObjectStates when switching plates - they should stay
-        # registered until the step editor is closed. Switching plates just changes
-        # the view, it doesn't delete the step editors.
-
-        if self.current_plate != plate_path:
-            self.debug_terminal_summary = None
-        self.current_plate = plate_path
-        # Load pipeline for the new plate from Pipeline ObjectState
-        if plate_path:
-            plate_pipeline = self._get_steps_from_pipeline_state(plate_path)
-            self.pipeline_steps = plate_pipeline
-            logger.info(
-                f"  → Loaded {len(plate_pipeline)} steps for plate from Pipeline ObjectState"
-            )
-        else:
-            self.pipeline_steps = []
-            logger.info("  → No plate selected, cleared pipeline")
-
-        self._normalize_step_scope_tokens(register=False)
-
-        # CRITICAL: Force cleanup of flash subscriptions when switching plates
-        # This ensures FlashElements don't point to stale QListWidgetItems
-        # from the previous plate's list widget
-        self.clear_list_visual_state()
-
-        self.update_item_list()
-
-        # CRITICAL: Invalidate flash overlay cache after rebuilding list
-        # This forces geometry recalculation for the new list items
-        WindowFlashOverlay.invalidate_cache_for_widget(self)
-
-        self.update_button_states()
-        logger.info(f"  → Pipeline editor updated for plate: {plate_path}")
-
-    def on_cellprofiler_pipeline_imported(self, plate_path: str) -> None:
-        """Refresh editor state after PlateManager imports a CellProfiler pipeline."""
-
-        if self.current_plate != plate_path:
-            return
-
-        pipeline_steps = PipelineObjectStateBinding.steps_for_plate(plate_path)
-        self.pipeline_steps = pipeline_steps
-        self.update_item_list()
-        self.update_button_states()
-        self._suppress_pipeline_state_sync = True
-        try:
-            self.pipeline_changed.emit(pipeline_steps)
-        finally:
-            self._suppress_pipeline_state_sync = False
-
-    def on_pipeline_data_changed(self) -> None:
-        """Refresh visible pipeline state after ObjectState-backed pipeline edits."""
-
-        if not self.current_plate:
-            return
-        self.pipeline_steps = PipelineObjectStateBinding.steps_for_plate(
-            self.current_plate
-        )
-        self.update_item_list()
-        self.update_button_states()
-
-    def on_orchestrator_config_changed(self, plate_path: str, effective_config):
-        """
-        Handle orchestrator configuration changes for placeholder refresh.
-
-        Args:
-            plate_path: Path of the plate whose orchestrator config changed
-            effective_config: The orchestrator's new effective configuration
-        """
-        # Only refresh if this is for the current plate
-        if plate_path == self.current_plate:
-            logger.debug(
-                f"Refreshing placeholders for orchestrator config change: {plate_path}"
-            )
-
-            # SIMPLIFIED: Orchestrator context is automatically available through type-based registry
-            # No need for explicit context management - dual-axis resolver handles it automatically
-            orchestrator = self._get_current_orchestrator()
-            if orchestrator:
-                # Trigger refresh of any open configuration windows or step forms
-                # The type-based registry ensures they resolve against the updated orchestrator config
-                logger.debug(
-                    f"Step forms will now resolve against updated orchestrator config for: {plate_path}"
-                )
-            else:
-                logger.debug(f"No orchestrator found for config refresh: {plate_path}")
-
-    def on_orchestrator_state_changed(
-        self,
-        plate_path: str,
-        state: OrchestratorState,
-    ) -> None:
-        """Refresh editor controls when the current plate state changes."""
-        if plate_path != self.current_plate:
-            return
-
-        if state is OrchestratorState.EXECUTING:
-            self.debug_terminal_summary = None
-        logger.debug(
-            "Refreshing editor controls for plate state: %s -> %s", plate_path, state
-        )
-        self.update_button_states()
-
-    def on_manager_execution_state_changed(self, state: ManagerExecutionState) -> None:
-        """Refresh debug controls when PlateManager execution state changes."""
-
-        logger.debug(
-            "Refreshing editor controls for manager execution state: %s", state
-        )
-        self.update_button_states()
-
-    # Config-attribute preview resolution is owned by the base list-format path.
-
-    def _require_current_plate_scope(self) -> str:
-        """Return the current logical plate scope or fail at the editor boundary."""
-        if not self.current_plate:
-            raise RuntimeError("No plate selected.")
-        return self.current_plate
-
-    def _build_step_scope_id(self, step: FunctionStep) -> str:
-        """Return the hierarchical scope id for a step: plate::step_N."""
-        return ScopeTokenService.build_scope_id(
-            self._require_current_plate_scope(),
-            step,
-        )
-
-    # ========== Time-Travel Hooks (ABC overrides) ==========
-
-    def get_item_insert_index(
-        self,
-        item: FunctionStep,
-        scope_key: str,
-    ) -> Optional[int]:
-        """Get correct position for step re-insertion during time-travel."""
-        # Token format is e.g. "functionstep_3" - parse index from it
-        del item
-        token = scope_key.rsplit("::", 1)[-1]
-        if token:
-            parts = token.rsplit("_", 1)
-            if len(parts) == 2 and parts[1].isdigit():
-                return min(int(parts[1]), len(self.pipeline_steps))
-        return None
-
-    def _normalize_step_scope_tokens(self, register: bool = True) -> None:
-        """Ensure all steps have tokens and are registered."""
-        if not self.current_plate:
-            return
-        plate_scope = self._require_current_plate_scope()
-        ScopeTokenService.seed_from_objects(plate_scope, self.pipeline_steps)
-        if not register:
-            return
-        self.update_pipeline_for_plate(plate_scope, self.pipeline_steps)
-
-    # Live-value merging is handled by ObjectState-backed form state.
-    # _get_step_preview_instance() DELETED - ObjectState provides resolved values directly
-
-    def _handle_full_preview_refresh(self) -> None:
-        """Refresh all step preview labels."""
-        self.update_item_list()
-
-    # ========== UI Helper Methods ==========
-
-    def update_button_states(self):
-        """Update button enabled/disabled states based on mathematical constraints (mirrors Textual TUI)."""
-        has_plate = bool(self.current_plate)
-        is_initialized = self._is_current_plate_initialized()
-        has_steps = len(self.pipeline_steps) > 0
-        has_selection = len(self.get_selected_items()) > 0
-        mutation_allowed = (
-            self.plate_manager is None
-            or not has_plate
-            or not self.plate_manager.plate_has_pending_definition_work(
-                self.current_plate
-            )
-        )
-
-        # Mathematical constraints (mirrors Textual TUI logic):
-        # - Pipeline editing requires initialization
-        # - Step operations require steps to exist
-        # - Edit requires valid selection
-        self.buttons["add_step"].setEnabled(
-            has_plate and is_initialized and mutation_allowed
-        )
-        self.buttons["auto_load_pipeline"].setEnabled(
-            has_plate and is_initialized and mutation_allowed
-        )
-        self.buttons["del_step"].setEnabled(
-            has_steps and has_selection and mutation_allowed
-        )
-        self.buttons["edit_step"].setEnabled(
-            has_steps and has_selection and mutation_allowed
-        )
-        self.buttons["code_pipeline"].setEnabled(
-            has_plate and is_initialized
-        )  # Same as add button - orchestrator init is sufficient
-        if self.debug_toolbar is not None:
-            self.debug_toolbar.set_debug_session_context(self.debug_session_context())
-
-    def _get_item_scope_id(self, item: FunctionStep, index: int) -> str:
-        """Return the ObjectState scope id represented by a pipeline step list item."""
-        del index
-        return self._build_step_scope_id(item)
+    def step_scope_id(self, step: FunctionStep) -> str:
+        return self.session.step_scope_id(self.current_plate, step)
 
     def selected_step_scope_ids(self) -> tuple[str, ...]:
-        """Return ObjectState scope ids for currently selected pipeline steps."""
-        selected_items = tuple(self.get_selected_items())
-        if not selected_items:
+        if not self.current_plate:
             return ()
+        return tuple(self.step_scope_id(step) for step in self.get_selected_items())
 
-        item_index_by_identity = {
-            id(item): index for index, item in enumerate(self.STATE_BINDING.items(self))
-        }
-        scope_ids: list[str] = []
-        for item in selected_items:
-            try:
-                item_index = item_index_by_identity[id(item)]
-            except KeyError:
-                continue
-            scope_id = self._get_item_scope_id(item, item_index)
-            if scope_id:
-                scope_ids.append(scope_id)
-        return tuple(scope_ids)
-
-    def _emit_items_changed(self) -> None:
-        """Emit the current pipeline step list."""
-        self.pipeline_changed.emit(self.pipeline_steps)
-
-    # Event handlers (update_status, on_selection_changed, on_item_double_clicked, on_steps_reordered)
-    # DELETED - provided by AbstractManagerWidget base class
-    # Step-specific behavior implemented via abstract hooks (see end of file)
-
-    def on_pipeline_changed(self, steps: List[FunctionStep]):
-        """
-        Handle pipeline changes.
-
-        Args:
-            steps: New pipeline steps
-        """
-        if self._suppress_pipeline_state_sync:
-            return
-        # Save pipeline to current plate if one is selected
-        if self.current_plate:
-            self.save_pipeline_for_plate(self.current_plate, steps)
-            self._publish_pipeline_definition_change(self.current_plate, steps)
-
-    def accept_authoritative_pipeline_steps(
-        self,
-        plate_scope: str,
-        steps: list[FunctionStep],
-    ) -> None:
-        """Project already-synchronized pipeline state into this editor."""
-
-        if self.current_plate != plate_scope:
-            raise RuntimeError(
-                "Cannot project pipeline state for a plate that is not selected."
-            )
-        self.pipeline_steps = steps
-        self.update_item_list()
-        self._suppress_pipeline_state_sync = True
-        try:
-            self.pipeline_changed.emit(steps)
-        finally:
-            self._suppress_pipeline_state_sync = False
-        self._publish_pipeline_definition_change(plate_scope, steps)
-
-    def _publish_pipeline_definition_change(
-        self,
-        plate_scope: str,
-        steps: list[FunctionStep],
-    ) -> None:
-        """Publish effects downstream of an authoritative pipeline mutation."""
-
-        self.notify_pipeline_definition_changed(plate_scope)
-        if self.debug_session_state is not None:
-            self.debug_session_state = self.debug_session_state.mark_dirty_from_cursor()
-            if self.debug_session_state.dirty_from_cursor is not None:
-                self.status_message.emit(
-                    "Debug snapshots downstream of the current cursor are dirty."
-                )
-
-        logger.debug(f"Pipeline changed: {len(steps)} steps")
-
-    def _is_current_plate_initialized(self) -> bool:
-        """Check if current plate has an initialized orchestrator (mirrors Textual TUI)."""
-        if not self.current_plate:
-            return False
-
-        orchestrator = self._get_current_orchestrator()
-        if orchestrator is None:
-            return False
-
-        is_initialized = orchestrator.state.has_completed_initialization
-        logger.debug(
-            "PipelineEditor: Plate %s orchestrator state: %s, initialized: %s",
-            self.current_plate,
-            orchestrator.state,
-            is_initialized,
-        )
-        return is_initialized
-
-    def _is_current_plate_compiled(self) -> bool:
-        """Check whether the current plate has a compiled execution artifact."""
-        if not self.current_plate or self.plate_manager is None:
-            return False
-
-        return self.current_plate in self.plate_manager.plate_compiled_data
-
-    def _current_plate_terminal_status(self) -> str | None:
-        """Return the last terminal execution status recorded for the current plate."""
-
-        if not self.current_plate or self.plate_manager is None:
-            return None
-        terminal_status = (
-            self.plate_manager.plate_terminal_activity_status.terminal_status(
-                self.current_plate
-            )
-        )
-        if terminal_status is None:
-            return None
-        return terminal_status.value
-
-    def debug_session_context(self) -> PipelineDebugSessionContext:
-        """Return the typed debug-session context projected by UI/agent surfaces."""
-
-        if self.current_plate and self.plate_manager is not None:
-            context = self.plate_manager.debug_session_context_for_plate(
-                self.current_plate
-            )
-            manager_terminal_summary = (
-                self.plate_manager.debug_terminal_summary_for_plate(self.current_plate)
-            )
-            terminal_summary = manager_terminal_summary or self.debug_terminal_summary
-            if context.session is not None:
-                session = context.session
-            elif terminal_summary is None:
-                session = self.debug_session_state
-            else:
-                session = None
-            return PipelineDebugSessionContext(
-                target=context.target,
-                session=session,
-                terminal_summary=terminal_summary,
-                pause_boundaries=PipelineDebugPauseBoundaryState(
-                    pause_step_indices=tuple(
-                        index
-                        for index, step in enumerate(self.pipeline_steps)
-                        if step.debug_pause
-                    )
-                ),
-                snapshots=context.snapshots,
-                manager_execution_state=context.manager_execution_state,
-            )
-
-        target = None
-        if self.current_plate:
-            target = PipelineDebugTargetState(
-                current_plate_scope_id=self.current_plate,
-                pipeline_scope_id=PipelineScopeIdentity.from_plate_scope(
-                    self.current_plate
-                ).scope_id,
-                initialized=self._is_current_plate_initialized(),
-                compiled=self._is_current_plate_compiled(),
-                terminal_status=self._current_plate_terminal_status(),
-            )
-        manager_execution_state = ManagerExecutionState.IDLE
-        if self.plate_manager is not None:
-            manager_execution_state = self.plate_manager.execution_state
-        return PipelineDebugSessionContext(
-            target=target,
-            session=self.debug_session_state,
-            terminal_summary=self.debug_terminal_summary,
-            pause_boundaries=PipelineDebugPauseBoundaryState(
-                pause_step_indices=tuple(
-                    index
-                    for index, step in enumerate(self.pipeline_steps)
-                    if step.debug_pause
-                )
-            ),
-            snapshots=(),
-            manager_execution_state=manager_execution_state,
-        )
-
-    def debug_runtime_projection(self) -> DebugRuntimeProjection:
-        """Return the core debug runtime projection visible to UI/agent surfaces."""
-
-        if self.plate_manager is None:
-            return DebugRuntimeProjection.empty()
-        return self.plate_manager.debug_runtime_projection
-
-    def _get_current_orchestrator(self) -> Optional[PipelineOrchestrator]:
-        """Get the orchestrator for the currently selected plate."""
-        if not self.current_plate:
-            return None
-
-        candidate = ObjectStateRegistry.get_object(self.current_plate)
-        if candidate is None:
-            return None
-        if isinstance(candidate, PipelineOrchestrator):
-            return candidate
-        logger.debug(
-            "PipelineEditor: Current plate scope %s resolved to %s, not PipelineOrchestrator",
-            self.current_plate,
-            type(candidate).__name__,
-        )
+    def get_item_insert_index(self, item: FunctionStep, scope_key: str) -> Optional[int]:
+        del item
+        token = scope_key.rsplit("::", 1)[-1]
+        parts = token.rsplit("_", 1)
+        if len(parts) == 2 and parts[1].isdigit():
+            return min(int(parts[1]), len(self.displayed_steps))
         return None
 
-    def _current_source_bindings(self) -> SourceBindingsConfig | None:
-        """Return resolved pipeline source bindings available to step editors."""
+    def _handle_full_preview_refresh(self) -> None:
+        self.update_item_list()
 
+    @override
+    def _get_item_scope_id(self, item: FunctionStep, index: int) -> str:
+        del index
+        return self.step_scope_id(item)
+
+    @override
+    def _format_item_content(self, item: FunctionStep, index: int, context: None) -> str:
+        display_text, _ = self.format_item_for_display(item, context, step_index=index)
+        return display_text
+
+    @override
+    def _get_list_item_tooltip(self, item: FunctionStep) -> str:
+        return self.step_tooltip_builder.build(item)
+
+    @override
+    def _get_list_item_extra_data(
+        self,
+        item: FunctionStep,
+        index: int,
+    ) -> dict[int, bool | ListItemLeadingMarker | None]:
+        cursor = self.debug_cursor()
+        return {
+            1: not item.enabled,
+            LEADING_MARKER_ROLE_OFFSET: (
+                ListItemLeadingMarker()
+                if cursor is not None and cursor.step_index == index
+                else None
+            ),
+        }
+
+    def debug_cursor(self) -> DebugCursor | None:
+        if not self.current_plate:
+            return None
+        displayed = self.session.displayed_debug_session(self.current_plate)
+        return None if displayed is None else displayed.cursor
+
+    @override
+    def _get_list_placeholder(self) -> tuple[str, None] | None:
+        if self._get_current_orchestrator() is None:
+            return ("No dataset selected - select a dataset to view its pipeline", None)
+        return None
+
+    @override
+    def prepare_list_update(self) -> None:
+        if self.current_plate:
+            ScopeTokenService.seed_from_objects(self.current_plate, self.displayed_steps)
+        return None
+
+    @override
+    def _on_items_reordered(self, from_index: int, to_index: int) -> None:
+        try:
+            self.session.move_step(self.current_plate, from_index, to_index)
+        except RuntimeError as exc:
+            self.status_message.emit(str(exc))
+            self.update_item_list()
+
+    @override
+    def _get_scope_for_item(self, item: FunctionStep) -> str:
+        if not self.current_plate:
+            return ""
+        return self.step_scope_id(item)
+
+    def closeEvent(self, event):
+        ObjectStateRegistry.disconnect_listener(self._on_live_context_changed)
+        self._events.close()
+        super().closeEvent(event)
+
+    def on_time_travel_complete(self, dirty_states, triggering_scope):
+        del triggering_scope
+        self._load_current_steps()
+        self.update_item_list()
+        self.update_button_states()
+        if self.current_plate and any(
+            scope_id
+            == PipelineScopeIdentity.from_plate_scope(self.current_plate).scope_id
+            for scope_id, _state in (dirty_states or ())
+        ):
+            GuiEventBusBroadcaster(self.event_bus).pipeline_changed(self.displayed_steps)
+
+    # -- context for step editors ---------------------------------------------
+
+    def _get_current_orchestrator(self) -> Optional[PipelineOrchestrator]:
+        if not self.current_plate:
+            return None
+        candidate = ObjectStateRegistry.get_object(self.current_plate)
+        return candidate if isinstance(candidate, PipelineOrchestrator) else None
+
+    def current_source_binding_context(self) -> SourceBindingContext | None:
+        orchestrator = self._get_current_orchestrator()
+        if orchestrator is None:
+            return None
+        return orchestrator.source_binding_context(self.current_plate)
+
+    def _current_source_bindings(self) -> SourceBindingsConfig | None:
         context = self.current_source_binding_context()
         if context is not None:
             return context.source_bindings
@@ -1450,275 +638,178 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
             orchestrator.pipeline_config.source_bindings_config
         )
 
-    def current_source_binding_context(self) -> SourceBindingContext | None:
-        """Return the source-binding context for the selected plate, if any."""
+    def debug_session_context(self) -> DebugSessionProjectionContext:
+        if self.current_plate:
+            return self.session.debug_context(self.current_plate)
+        return DebugSessionProjectionContext(
+            target=None,
+            session=None,
+            manager_execution_state=self.session.execution_state,
+        )
 
-        if not self.current_plate:
-            return None
-        if self.plate_manager is not None:
-            return self.plate_manager.source_binding_context_for_plate(
-                self.current_plate
-            )
-        orchestrator = self._get_current_orchestrator()
-        if orchestrator is None:
-            return None
-        return orchestrator.source_binding_context(self.current_plate)
+    def debug_runtime_projection(self) -> DebugRuntimeProjection:
+        return self.session.debug_runtime_projection
 
-    # _find_main_window() moved to AbstractManagerWidget
-
-    def on_config_changed(self, new_config: GlobalPipelineConfig):
-        """
-        Handle global configuration changes.
-
-        Args:
-            new_config: New global configuration
-        """
-        self.global_config = new_config
-
-    # ========== Abstract Hook Implementations (AbstractManagerWidget ABC) ==========
-
-    # === CRUD Hooks ===
-
-    @override
-    def action_add(self) -> None:
-        """Add steps via dialog (required abstract method)."""
-        self.action_add_step()  # Delegate to existing implementation
-
-    @override
-    def show_item_editor(self, item: FunctionStep) -> None:
-        """Show DualEditorWindow for step (required abstract method)."""
-        step_to_edit = item
-        plate_scope = self._require_current_plate_scope()
-        self.require_pipeline_definition_mutation_allowed(plate_scope)
-
-        step_index = self._pipeline_step_index(step_to_edit)
-
-        def handle_save(edited_step):
-            """Handle step save from editor."""
-            PipelineStepSaveWorkflow(self, step_to_edit, plate_scope).save(edited_step)
-
-        orchestrator = self._get_current_orchestrator()
-
+    def open_step_editor(
+        self,
+        step: FunctionStep,
+        *,
+        is_new: bool,
+        on_save: Callable[[FunctionStep], None],
+        step_index: int | None = None,
+    ) -> DualEditorWindow:
+        scope_id = self.current_plate
+        plate_manager = self.service_adapter.main_window.plate_manager_widget
         editor = DualEditorWindow(
-            step_data=step_to_edit,
-            is_new=False,
-            on_save_callback=handle_save,
-            orchestrator=orchestrator,
+            step_data=step,
+            is_new=is_new,
+            on_save_callback=on_save,
+            orchestrator=self._get_current_orchestrator(),
             parent=self,
             service_adapter=self.service_adapter,
-            step_index=step_index,  # Pass actual position for border pattern
-            plate_scope=plate_scope,
+            plate_scope=scope_id,
             source_bindings=self._current_source_bindings(),
             source_binding_context=self.current_source_binding_context(),
             function_invocation_badge_provider=(
-                self.function_presentation.badge_provider(
-                    step_to_edit,
-                    step_index=step_index,
-                )
-            ),
-            compiled_artifact_inspection_provider=(
                 None
-                if self.plate_manager is None
-                else self.plate_manager.compiled_artifact_inspection_for_plate
+                if step_index is None
+                else self.function_presentation.badge_provider(step, step_index=step_index)
             ),
+            compiled_artifact_inspection_provider=self.session.compiled_inspection,
             before_mutation=(
-                lambda: self.require_pipeline_definition_mutation_allowed(plate_scope)
+                lambda: self.session.require_definition_mutation_allowed(scope_id)
             ),
+            **({} if step_index is None else {"step_index": step_index}),
         )
-        # Set original step for change detection
         editor.set_original_step_for_change_detection()
-
-        # Connect orchestrator config changes to step editor for live placeholder updates
-        if self.plate_manager is not None:
-            editor.connect_orchestrator_config_signal(
-                self.plate_manager.orchestrator_config_changed
-            )
-            logger.debug("Connected orchestrator_config_changed signal to step editor")
-            editor.connect_artifact_signals(
-                compiled_artifact_signal=(
-                    self.plate_manager.compiled_artifact_inspection_changed
-                ),
-                runtime_artifact_signal=self.plate_manager.runtime_artifact_available,
-                debug_snapshot_signal=self.plate_manager.debug_snapshot_available,
-            )
-
+        editor.connect_orchestrator_config_signal(
+            plate_manager.orchestrator_config_changed
+        )
+        editor.connect_artifact_signals(
+            compiled_artifact_signal=plate_manager.compiled_artifact_inspection_changed,
+            runtime_artifact_signal=plate_manager.runtime_artifact_available,
+            debug_snapshot_signal=plate_manager.debug_snapshot_available,
+        )
         editor.show()
         editor.raise_()
         editor.activateWindow()
-
-    def _pipeline_step_index(self, step_to_find: FunctionStep) -> int:
-        """Return the rendered pipeline row index for an existing step."""
-        for step_index, step in enumerate(self.pipeline_steps):
-            if step is step_to_find:
-                return step_index
-        raise RuntimeError("Cannot edit a step that is not in the rendered pipeline")
-
-    # === List Update Hooks (domain-specific) ===
+        return editor
 
     @override
-    def _format_item_content(
-        self,
-        item: FunctionStep,
-        index: int,
-        context: None,
-    ) -> str:
-        """Format step for list display (dirty marker added by ABC)."""
-        display_text, _ = self.format_item_for_display(
-            item,
-            context,
-            step_index=index,
-        )
-        return display_text
+    def action_add(self) -> None:
+        self.handle_button_action(AddPipelineStep.operation_id)
 
     @override
-    def _get_list_item_tooltip(self, item: FunctionStep) -> str:
-        """Get step tooltip."""
-        return self.step_tooltip_builder.build(item)
+    def show_item_editor(self, item: FunctionStep) -> None:
+        del item
+        self.handle_button_action(EditPipelineStep.operation_id)
 
-    @override
-    def _get_list_item_extra_data(
-        self,
-        item: FunctionStep,
-        index: int,
-    ) -> dict[int, bool | ListItemLeadingMarker | None]:
-        """Get row-level presentation roles."""
-        return {
-            1: not item.enabled,
-            LEADING_MARKER_ROLE_OFFSET: self._debug_leading_marker_for_step_index(
-                index
-            ),
-        }
-
-    def _debug_leading_marker_for_step_index(
-        self,
-        step_index: int,
-    ) -> ListItemLeadingMarker | None:
-        cursor = self._active_debug_list_cursor()
-        if cursor is None or cursor.step_index != step_index:
-            return None
-        return ListItemLeadingMarker()
-
-    def _active_debug_list_cursor(self) -> DebugCursor | None:
-        session = self.debug_session_state
-        if session is not None and session.cursor is not None:
-            return session.cursor
-        return None
-
-    @override
-    def _get_list_placeholder(self) -> tuple[str, None] | None:
-        """Return placeholder when no orchestrator."""
-        orchestrator = self._get_current_orchestrator()
-        if not orchestrator:
-            return ("No plate selected - select a plate to view pipeline", None)
-        return None
-
-    @override
-    def prepare_list_update(self) -> None:
-        """Normalize scope tokens before list update.
-
-        ObjectState provides resolved values directly - no need to collect
-        LiveContextSnapshot. Just ensure scope tokens are normalized.
-        """
-        PipelineEditorListWorkflow(self).prepare_update()
-        return None  # ObjectState provides values, no context needed
-
-    @override
-    def _on_items_reordered(self, from_index: int, to_index: int) -> None:
-        """Reject drag reorder before the backing list is mutated."""
-
-        try:
-            self.require_pipeline_definition_mutation_allowed(self.current_plate)
-        except RuntimeError as exc:
-            self.status_message.emit(str(exc))
-            self.update_item_list()
-            return
-        super()._on_items_reordered(from_index, to_index)
-
-    @override
-    def _post_reorder(self) -> None:
-        """Additional cleanup after reorder - normalize tokens and emit signal."""
-        PipelineEditorListWorkflow(self).post_reorder()
-
-    # === Config Resolution Hook (domain-specific) ===
-
-    @override
-    def _get_scope_for_item(self, item: FunctionStep) -> str:
-        """PipelineEditor: scope = plate::step_token."""
-        if not self.current_plate:
-            return ""
-        scope = self._build_step_scope_id(item)
-        logger.debug(f"⚡ FLASH_DEBUG _get_scope_for_item: item={item}, scope={scope}")
-        return scope
-
-    # === CrossWindowPreviewMixin Hook ===
-    # _get_current_orchestrator() is implemented above (line ~795) - does actual lookup from plate manager
-
-    # ========== End Abstract Hook Implementations ==========
-
-    def closeEvent(self, event):
-        """Handle widget close event to disconnect signals and prevent memory leaks."""
-        # Unregister from cross-window refresh signals
-        ObjectStateRegistry.disconnect_listener(self._on_live_context_changed)
-        logger.debug("Pipeline editor: Unregistered from cross-window refresh signals")
-
-        # Call parent closeEvent
-        super().closeEvent(event)
-
-    def on_time_travel_complete(self, dirty_states, triggering_scope):
-        """Refresh pipeline list after time travel to reflect restored step order."""
-        PipelineEditorListWorkflow(self).restore_after_time_travel(
-            dirty_states,
-            triggering_scope,
-        )
+    # -- clipboard ------------------------------------------------------------
 
     def _action_copy_steps(self):
-        """Copy selected steps to clipboard (Ctrl+C)."""
-        selected_steps = self.get_selected_items()
-        if not selected_steps:
+        selected = self.get_selected_items()
+        if not selected:
             self.status_message.emit("No steps selected to copy")
             return
-
-        self._clipboard_steps = [copy.deepcopy(step) for step in selected_steps]
-        step_names = [step.name for step in selected_steps]
+        self._clipboard_steps = [copy.deepcopy(step) for step in selected]
         self.status_message.emit(
-            f"Copied {len(selected_steps)} step(s): {', '.join(step_names)}"
+            f"Copied {len(selected)} step(s): {', '.join(step.name for step in selected)}"
         )
 
     def _action_paste_steps(self):
-        """Paste steps from clipboard after selected step (Ctrl+V)."""
         if not self._clipboard_steps:
             self.status_message.emit("Clipboard is empty")
             return
-
         if not self.current_plate:
-            self.status_message.emit("No plate selected")
+            self.status_message.emit("No dataset selected")
             return
-        self.require_pipeline_definition_mutation_allowed(self.current_plate)
-
-        # Calculate insert position: after last selected index, or at end if nothing selected
-        selected_indices = self.item_list.selectedIndexes()
-        if selected_indices:
-            insert_after_index = max(idx.row() for idx in selected_indices)
-        else:
-            insert_after_index = len(self.pipeline_steps) - 1
-
-        step_names = [step.name for step in self._clipboard_steps]
-        label = f"paste {len(self._clipboard_steps)} step(s): {', '.join(step_names)}"
-
-        with ObjectStateRegistry.atomic(label):
-            # Insert steps after the selected position
-            insert_position = insert_after_index + 1
-            for i, step in enumerate(self._clipboard_steps):
-                # Ensure fresh scope token for the copied step
-                ScopeTokenService.ensure_token(self.current_plate, step)
-                # Insert into pipeline
-                self.pipeline_steps.insert(insert_position + i, step)
-
-            # Update Pipeline ObjectState
-            self.update_pipeline_for_plate(self.current_plate, self.pipeline_steps)
-
-        self.update_item_list()
-        self.pipeline_changed.emit(self.pipeline_steps)
+        selected_rows = [index.row() for index in self.item_list.selectedIndexes()]
+        insert_after = max(selected_rows) if selected_rows else len(self.displayed_steps) - 1
+        pasted = [copy.deepcopy(step) for step in self._clipboard_steps]
+        self.session.insert_steps(self.current_plate, insert_after + 1, pasted)
         self.status_message.emit(
-            f"Pasted {len(self._clipboard_steps)} step(s) after position {insert_after_index + 1}"
+            f"Pasted {len(pasted)} step(s) after position {insert_after + 1}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# How the desktop GUI presents the pipeline's renderer operations
+# ---------------------------------------------------------------------------
+
+
+class AddPipelineStepPresenter(OperationPresenter):
+    operation = AddPipelineStep
+
+    def present(self, renderer: GuiRenderer, request) -> None:
+        editor_widget = renderer.pipeline_editor
+        session = editor_widget.session
+        scope_id = request.scope_id
+        new_step = FunctionStep(
+            func=[],
+            name=f"Step_{len(session.pipeline_steps(scope_id)) + 1}",
+        )
+        # The step editor needs a registered step scope while it is open; the
+        # pipeline gains the step only when the editor saves.
+        ObjectStateRegistry.ensure_baseline_snapshot()
+        staged_scope_id = PipelineObjectStateBinding.stage_step(scope_id, new_step)
+        committed = False
+
+        def save(edited_step: FunctionStep) -> None:
+            nonlocal committed
+            if committed:
+                session.pipeline_changed(scope_id)
+                return
+            session.add_step(scope_id, new_step, edited_step, staged_scope_id)
+            committed = True
+
+        def discard() -> None:
+            if committed:
+                return
+            history = ObjectStateRegistry.get_branch_history()
+            snapshotted = bool(history and staged_scope_id in history[-1].all_states)
+            PipelineObjectStateBinding.discard_staged_step(scope_id, staged_scope_id)
+            if snapshotted:
+                ObjectStateRegistry.record_snapshot(
+                    f"discard staged step {new_step.name}",
+                    staged_scope_id,
+                )
+
+        editor = editor_widget.open_step_editor(new_step, is_new=True, on_save=save)
+        editor.rejected.connect(discard)
+
+
+class EditPipelineStepPresenter(OperationPresenter):
+    operation = EditPipelineStep
+
+    def present(self, renderer: GuiRenderer, request) -> None:
+        editor_widget = renderer.pipeline_editor
+        session = editor_widget.session
+        scope_id = request.scope_id
+        steps = editor_widget.displayed_steps
+        index, step = next(
+            (index, step)
+            for index, step in enumerate(steps)
+            if editor_widget.step_scope_id(step) in request.step_scope_ids
+        )
+        editor_widget.open_step_editor(
+            step,
+            is_new=False,
+            step_index=index,
+            on_save=lambda edited: session.replace_step(scope_id, step, edited),
+        )
+
+
+class ShowPipelineCodePresenter(OperationPresenter):
+    operation = ShowPipelineCode
+
+    def present(self, renderer: GuiRenderer, request) -> None:
+        del request
+        editor_widget = renderer.pipeline_editor
+        SimpleCodeEditorService(editor_widget).edit_code(
+            initial_content=editor_widget.code_document_source(clean=True),
+            title=editor_widget.code_document_title(),
+            callback=editor_widget._handle_edited_code,
+            use_external=pipeline_editor_external_editor_enabled(),
+            declaration_type=PipelineDocument,
+            code_data={"clean_mode": True},
         )

@@ -4,16 +4,14 @@ from pathlib import Path
 
 from openhcs.core.config import PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentCodec
+from openhcs.authoring.session.dataset_document import authored_pipeline_config
+from openhcs.authoring.session.events import PipelineChanged
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
-from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
-    PipelineEditorCodeWorkflow,
-)
 from openhcs.pyqt_gui.windows import synthetic_plate_generator_window
 from openhcs.pyqt_gui.windows.synthetic_plate_generator_window import (
     SyntheticPlateGeneratorWindow,
 )
-from pyqt_reactive.services.service_registry import ServiceRegistry
+from tests.unit.pyqt_gui.session_harness import caller_session
 
 
 class _SignalRecorder:
@@ -39,61 +37,14 @@ class _SyntheticPlateGenerationHarness:
         self.accepted = True
 
 
-class _PipelineEditorHarness:
-    load_pipeline_from_file = PipelineEditorWidget.load_pipeline_from_file
-
-    def __init__(self) -> None:
-        self.current_plate = ""
-        self.plate_manager = _PlateManagerHarness()
-        self.pipeline_steps = []
-        self.pipeline_changed = _SignalRecorder()
-        self.status_message = _SignalRecorder()
-        self.event_bus = None
-        self.updated_plate_steps: list[tuple[str, list[object]]] = []
-        self.changed_plates: list[str] = []
-        self.item_list_updates = 0
-        self.applied = False
-
-    def _handle_edited_code(self, source: str) -> None:
-        namespace: dict[str, object] = {}
-        exec(compile(source, "<synthetic-plate-pipeline>", "exec"), namespace)
-        self.applied = PipelineEditorCodeWorkflow(self).apply_namespace(namespace)
-
-    def _normalize_step_scope_tokens(self, *, register: bool) -> None:
-        assert register is False
-
-    def update_pipeline_for_plate(self, plate_path: str, steps: list[object]) -> None:
-        self.updated_plate_steps.append((plate_path, list(steps)))
-
-    def require_pipeline_definition_mutation_allowed(
-        self,
-        plate_path: str | None = None,
-    ) -> None:
-        self.plate_manager.require_pipeline_definition_mutation_allowed(plate_path)
-
-    def notify_pipeline_definition_changed(self, plate_path: str) -> None:
-        self.changed_plates.append(plate_path)
-
-    def update_item_list(self) -> None:
-        self.item_list_updates += 1
-
-
-class _PlateManagerHarness:
-    def __init__(self) -> None:
-        self.plate_configs: dict[str, PipelineConfig] = {}
-        self.event_bus = None
-        self.mutation_guard_requests: list[str | None] = []
-
-    def require_pipeline_definition_mutation_allowed(
-        self,
-        plate_path: str | None = None,
-    ) -> None:
-        self.mutation_guard_requests.append(plate_path)
-
-
 class _MainWindowHarness:
-    def __init__(self) -> None:
+    def __init__(self, session) -> None:
+        self.session = session
+        self.plate_manager_shown = 0
         self.pipeline_editor_shown = 0
+
+    def show_plate_manager(self) -> None:
+        self.plate_manager_shown += 1
 
     def show_pipeline_editor(self) -> None:
         self.pipeline_editor_shown += 1
@@ -132,37 +83,35 @@ def test_synthetic_plate_generation_emits_complete_pipeline_document(
 
 
 def test_main_window_loads_emitted_synthetic_pipeline_document(
-    monkeypatch,
     tmp_path: Path,
 ) -> None:
     from openhcs.demo import synthetic_plate_pipeline
 
-    editor = _PipelineEditorHarness()
-    monkeypatch.setattr(
-        ServiceRegistry,
-        "get",
-        classmethod(lambda cls, service_type: editor),
-    )
-    main_window = _MainWindowHarness()
-    plate_path = str(tmp_path / "plate")
+    pipeline_path = Path(synthetic_plate_pipeline.__file__)
+    document = PipelineDocumentCodec.from_source(pipeline_path.read_text())
+    assert isinstance(document.pipeline_config, PipelineConfig)
+    output_dir = tmp_path / "plate"
+    output_dir.mkdir()
+    with caller_session() as session:
+        main_window = _MainWindowHarness(session)
+        changed = []
+        session.subscribe(
+            lambda record: changed.append(record.event.scope_id)
+            if isinstance(record.event, PipelineChanged)
+            else None
+        )
 
-    OpenHCSMainWindow._load_pipeline_file(
-        main_window,
-        str(Path(synthetic_plate_pipeline.__file__)),
-        plate_path=plate_path,
-    )
+        OpenHCSMainWindow._on_synthetic_plate_generated(
+            main_window, str(output_dir), str(pipeline_path)
+        )
 
-    assert main_window.pipeline_editor_shown == 1
-    assert editor.current_plate == plate_path
-    assert editor.applied is True
-    assert isinstance(editor.plate_manager.plate_configs[plate_path], PipelineConfig)
-    assert isinstance(
-        PipelineDocumentCodec.from_source(
-            Path(synthetic_plate_pipeline.__file__).read_text()
-        ).pipeline_config,
-        PipelineConfig,
-    )
-    assert len(editor.pipeline_steps) == 8
-    assert editor.updated_plate_steps == [(plate_path, editor.pipeline_steps)]
-    assert editor.changed_plates == [plate_path]
-    assert editor.item_list_updates == 1
+        (scope_id,) = session.dataset_scope_ids()
+        assert main_window.plate_manager_shown == 1
+        assert main_window.pipeline_editor_shown == 1
+        assert session.current_scope_id == scope_id
+        assert len(session.pipeline_steps(scope_id)) == len(document.pipeline_steps) == 8
+        assert [step.name for step in session.pipeline_steps(scope_id)] == [
+            step.name for step in document.pipeline_steps
+        ]
+        assert isinstance(authored_pipeline_config(scope_id), PipelineConfig)
+        assert changed == [scope_id]

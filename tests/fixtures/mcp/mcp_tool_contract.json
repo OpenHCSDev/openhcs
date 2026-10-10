@@ -367,14 +367,16 @@
    "openhcs_validate_pipeline"
   ],
   "local_stdio/core": [
+   "openhcs_add_datasets",
    "openhcs_add_function_step",
-   "openhcs_cancel_execution",
    "openhcs_cancel_function_catalog_preparation",
    "openhcs_close_owned_runtime",
+   "openhcs_compile_datasets",
+   "openhcs_connect_server",
    "openhcs_create_config",
-   "openhcs_create_orchestrator_session",
-   "openhcs_create_orchestrator_session_from_pipeline_source",
    "openhcs_create_pipeline",
+   "openhcs_delete_datasets",
+   "openhcs_delete_steps",
    "openhcs_describe_config_schema",
    "openhcs_describe_function",
    "openhcs_describe_internal_symbol",
@@ -382,43 +384,50 @@
    "openhcs_generate_synthetic_plate",
    "openhcs_get_authoring_context",
    "openhcs_get_custom_function_registration_status",
-   "openhcs_get_execution_status",
    "openhcs_get_function_catalog_preparation_status",
    "openhcs_get_knowledge_document",
-   "openhcs_get_orchestrator_session",
    "openhcs_health_check",
+   "openhcs_initialize_datasets",
    "openhcs_inspect_pipeline_source_artifact_plan",
    "openhcs_inspect_plate_path",
    "openhcs_list_architecture_topics",
    "openhcs_list_capabilities",
    "openhcs_list_knowledge_documents",
+   "openhcs_load_example_pipeline",
+   "openhcs_load_pipeline_file",
    "openhcs_observe_owned_runtime",
    "openhcs_query_plate_files",
    "openhcs_register_custom_function",
    "openhcs_render_config_source",
    "openhcs_render_pipeline_source",
+   "openhcs_run_datasets",
    "openhcs_sample_plate_image",
    "openhcs_search_capabilities",
    "openhcs_search_functions",
    "openhcs_search_knowledge",
+   "openhcs_session_datasets",
+   "openhcs_session_events",
+   "openhcs_session_pipeline",
+   "openhcs_set_dataset_pipeline",
    "openhcs_start_function_catalog_preparation",
    "openhcs_start_owned_runtime",
-   "openhcs_submit_compile",
-   "openhcs_submit_pipeline_execution",
+   "openhcs_stop_execution",
    "openhcs_sweep_viewer_endpoints",
    "openhcs_validate_config_patch",
    "openhcs_validate_pipeline"
   ],
   "local_stdio/desktop": [
+   "openhcs_add_datasets",
    "openhcs_add_function_step",
    "openhcs_apply_viewer_intensity_window",
-   "openhcs_cancel_execution",
    "openhcs_cancel_function_catalog_preparation",
    "openhcs_close_owned_runtime",
+   "openhcs_compile_datasets",
+   "openhcs_connect_server",
    "openhcs_create_config",
-   "openhcs_create_orchestrator_session",
-   "openhcs_create_orchestrator_session_from_pipeline_source",
    "openhcs_create_pipeline",
+   "openhcs_delete_datasets",
+   "openhcs_delete_steps",
    "openhcs_describe_config_schema",
    "openhcs_describe_function",
    "openhcs_describe_internal_symbol",
@@ -426,19 +435,20 @@
    "openhcs_generate_synthetic_plate",
    "openhcs_get_authoring_context",
    "openhcs_get_custom_function_registration_status",
-   "openhcs_get_execution_status",
    "openhcs_get_function_catalog_preparation_status",
    "openhcs_get_knowledge_document",
-   "openhcs_get_orchestrator_session",
    "openhcs_get_viewer_window_payloads",
    "openhcs_get_viewer_window_state",
    "openhcs_health_check",
+   "openhcs_initialize_datasets",
    "openhcs_inspect_pipeline_source_artifact_plan",
    "openhcs_inspect_plate_path",
    "openhcs_isolate_viewer_window_layers",
    "openhcs_list_architecture_topics",
    "openhcs_list_capabilities",
    "openhcs_list_knowledge_documents",
+   "openhcs_load_example_pipeline",
+   "openhcs_load_pipeline_file",
    "openhcs_measure_viewer_polyline",
    "openhcs_measure_viewer_region",
    "openhcs_navigate_viewer_window",
@@ -449,20 +459,24 @@
    "openhcs_render_config_source",
    "openhcs_render_pipeline_source",
    "openhcs_retire_viewer_window_layers",
+   "openhcs_run_datasets",
    "openhcs_sample_plate_image",
    "openhcs_sample_viewer_window_image",
    "openhcs_search_capabilities",
    "openhcs_search_functions",
    "openhcs_search_knowledge",
+   "openhcs_session_datasets",
+   "openhcs_session_events",
+   "openhcs_session_pipeline",
+   "openhcs_set_dataset_pipeline",
    "openhcs_set_viewer_image_color",
    "openhcs_set_viewer_image_intensity",
    "openhcs_set_viewer_native_window",
    "openhcs_set_viewer_viewport",
    "openhcs_start_function_catalog_preparation",
    "openhcs_start_owned_runtime",
+   "openhcs_stop_execution",
    "openhcs_stream_plate_files_to_viewer",
-   "openhcs_submit_compile",
-   "openhcs_submit_pipeline_execution",
    "openhcs_summarize_viewer_window_rois",
    "openhcs_sweep_viewer_endpoints",
    "openhcs_ui_apply_code_document",
@@ -498,16 +512,18 @@
    "openhcs_viewer_snapshot_window"
   ],
   "local_stdio/full": [
+   "openhcs_add_datasets",
    "openhcs_add_function_step",
    "openhcs_apply_viewer_intensity_window",
-   "openhcs_cancel_execution",
    "openhcs_cancel_function_catalog_preparation",
    "openhcs_close_owned_runtime",
    "openhcs_close_viewer_window",
+   "openhcs_compile_datasets",
+   "openhcs_connect_server",
    "openhcs_create_config",
-   "openhcs_create_orchestrator_session",
-   "openhcs_create_orchestrator_session_from_pipeline_source",
    "openhcs_create_pipeline",
+   "openhcs_delete_datasets",
+   "openhcs_delete_steps",
    "openhcs_describe_config_schema",
    "openhcs_describe_function",
    "openhcs_describe_internal_symbol",
@@ -517,15 +533,14 @@
    "openhcs_generate_synthetic_plate",
    "openhcs_get_authoring_context",
    "openhcs_get_custom_function_registration_status",
-   "openhcs_get_execution_status",
    "openhcs_get_function_catalog_preparation_status",
    "openhcs_get_knowledge_document",
-   "openhcs_get_orchestrator_session",
    "openhcs_get_runtime_server_execution_status",
    "openhcs_get_runtime_server_info",
    "openhcs_get_viewer_window_payloads",
    "openhcs_get_viewer_window_state",
    "openhcs_health_check",
+   "openhcs_initialize_datasets",
    "openhcs_inspect_benchmark_run",
    "openhcs_inspect_debug_runtime_values",
    "openhcs_inspect_measured_pipeline_run",
@@ -536,6 +551,8 @@
    "openhcs_list_benchmark_cases",
    "openhcs_list_capabilities",
    "openhcs_list_knowledge_documents",
+   "openhcs_load_example_pipeline",
+   "openhcs_load_pipeline_file",
    "openhcs_measure_viewer_polyline",
    "openhcs_measure_viewer_region",
    "openhcs_navigate_viewer_window",
@@ -548,6 +565,7 @@
    "openhcs_report_benchmark_run",
    "openhcs_report_measured_pipeline_run",
    "openhcs_retire_viewer_window_layers",
+   "openhcs_run_datasets",
    "openhcs_sample_plate_image",
    "openhcs_sample_viewer_window_image",
    "openhcs_scan_runtime_servers",
@@ -555,15 +573,18 @@
    "openhcs_search_functions",
    "openhcs_search_knowledge",
    "openhcs_send_debug_command",
+   "openhcs_session_datasets",
+   "openhcs_session_events",
+   "openhcs_session_pipeline",
+   "openhcs_set_dataset_pipeline",
    "openhcs_set_viewer_image_color",
    "openhcs_set_viewer_image_intensity",
    "openhcs_set_viewer_native_window",
    "openhcs_set_viewer_viewport",
    "openhcs_start_function_catalog_preparation",
    "openhcs_start_owned_runtime",
+   "openhcs_stop_execution",
    "openhcs_stream_plate_files_to_viewer",
-   "openhcs_submit_compile",
-   "openhcs_submit_pipeline_execution",
    "openhcs_summarize_viewer_window_rois",
    "openhcs_sweep_viewer_endpoints",
    "openhcs_ui_apply_code_document",
@@ -606,6 +627,55 @@
   ]
  },
  "tools": {
+  "openhcs_add_datasets": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Add dataset directories"
+   },
+   "description": "Adds dataset root directories to the session. A root may become several rows, for example one per CellProfiler pipeline file it contains.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "execution_root": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Execution Root"
+     },
+     "roots": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "title": "Roots",
+      "type": "array"
+     }
+    },
+    "title": "openhcs_add_datasetsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_add_datasets",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_add_datasetsDictOutput",
+    "type": "object"
+   },
+   "title": "Add dataset directories"
+  },
   "openhcs_add_function_step": {
    "annotations": {
     "destructiveHint": true,
@@ -838,47 +908,6 @@
     "type": "object"
    },
    "title": "Apply viewer intensity window"
-  },
-  "openhcs_cancel_execution": {
-   "annotations": {
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": true,
-    "readOnlyHint": false,
-    "title": "Cancel execution job"
-   },
-   "description": "Requests cancellation of one submitted compile or pipeline job through its ordinary execution server. Returns whether cancellation was applied and the job status observed afterward.",
-   "execution": null,
-   "icons": null,
-   "inputSchema": {
-    "additionalProperties": false,
-    "properties": {
-     "job_id": {
-      "title": "Job Id",
-      "type": "string"
-     },
-     "timeout_ms": {
-      "default": 5000,
-      "title": "Timeout Ms",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "job_id"
-    ],
-    "title": "openhcs_cancel_executionArguments",
-    "type": "object"
-   },
-   "meta": {
-    "openhcs/outputContract": "ExecutionJobCancellationResult"
-   },
-   "name": "openhcs_cancel_execution",
-   "outputSchema": {
-    "additionalProperties": true,
-    "title": "openhcs_cancel_executionDictOutput",
-    "type": "object"
-   },
-   "title": "Cancel execution job"
   },
   "openhcs_cancel_function_catalog_preparation": {
    "annotations": {
@@ -1264,6 +1293,118 @@
    },
    "title": "Close viewer window"
   },
+  "openhcs_compile_datasets": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Compile dataset pipelines"
+   },
+   "description": "Compiles each dataset's pipeline on the execution server (connecting or starting it as needed).",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "scope_ids": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Scope Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "scope_ids"
+    ],
+    "title": "openhcs_compile_datasetsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_compile_datasets",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_compile_datasetsDictOutput",
+    "type": "object"
+   },
+   "title": "Compile dataset pipelines"
+  },
+  "openhcs_connect_server": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Connect to the execution server, starting it if needed"
+   },
+   "description": "Connects the session to an execution server, starting one if needed. A port (with host and transport mode) selects the server; without one the session's configured server is used.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "$defs": {
+     "TransportMode": {
+      "description": "Closed serialized identities resolved through transport declarations.",
+      "enum": [
+       "tcp",
+       "ipc"
+      ],
+      "title": "TransportMode",
+      "type": "string"
+     }
+    },
+    "additionalProperties": false,
+    "properties": {
+     "host": {
+      "default": "localhost",
+      "title": "Host",
+      "type": "string"
+     },
+     "persistent": {
+      "default": true,
+      "title": "Persistent",
+      "type": "boolean"
+     },
+     "port": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Port"
+     },
+     "transport_mode": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/TransportMode"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     }
+    },
+    "title": "openhcs_connect_serverArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_connect_server",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_connect_serverDictOutput",
+    "type": "object"
+   },
+   "title": "Connect to the execution server, starting it if needed"
+  },
   "openhcs_create_config": {
    "annotations": {
     "destructiveHint": true,
@@ -1313,236 +1454,6 @@
    },
    "title": "Create configuration"
   },
-  "openhcs_create_orchestrator_session": {
-   "annotations": {
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": true,
-    "readOnlyHint": false,
-    "title": "Create orchestrator session"
-   },
-   "description": "Creates an opaque headless execution session from a plate path and the complete PipelineDocument owned by a pipeline draft. Use the UI PlateManager code document and selected-plate workflow instead when an open UI should show the work.",
-   "execution": null,
-   "icons": null,
-   "inputSchema": {
-    "$defs": {
-     "TransportMode": {
-      "description": "Closed serialized identities resolved through transport declarations.",
-      "enum": [
-       "tcp",
-       "ipc"
-      ],
-      "title": "TransportMode",
-      "type": "string"
-     }
-    },
-    "additionalProperties": false,
-    "properties": {
-     "execution_plate_path": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Execution Plate Path"
-     },
-     "global_config_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Global Config Id"
-     },
-     "host": {
-      "default": "localhost",
-      "title": "Host",
-      "type": "string"
-     },
-     "persistent": {
-      "default": true,
-      "title": "Persistent",
-      "type": "boolean"
-     },
-     "pipeline_id": {
-      "title": "Pipeline Id",
-      "type": "string"
-     },
-     "plate_path": {
-      "title": "Plate Path",
-      "type": "string"
-     },
-     "port": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Port"
-     },
-     "selected_pipeline_path": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Selected Pipeline Path"
-     },
-     "transport_mode": {
-      "anyOf": [
-       {
-        "$ref": "#/$defs/TransportMode"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null
-     }
-    },
-    "required": [
-     "plate_path",
-     "pipeline_id"
-    ],
-    "title": "openhcs_create_orchestrator_sessionArguments",
-    "type": "object"
-   },
-   "meta": {
-    "openhcs/outputContract": "OrchestratorSessionRef"
-   },
-   "name": "openhcs_create_orchestrator_session",
-   "outputSchema": {
-    "additionalProperties": true,
-    "title": "openhcs_create_orchestrator_sessionDictOutput",
-    "type": "object"
-   },
-   "title": "Create orchestrator session"
-  },
-  "openhcs_create_orchestrator_session_from_pipeline_source": {
-   "annotations": {
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": true,
-    "readOnlyHint": false,
-    "title": "Create source-backed orchestrator session"
-   },
-   "description": "Creates an opaque headless execution session from an exact pycodified PipelineDocument containing pipeline_steps and an optional pipeline_config, whose omission selects PipelineConfig(), such as Pipeline Editor code-mode content. An optional execution_plate_path selects a prepared input workspace while plate_path retains the original source identity. A PlateManager document is a multi-plate aggregate, not pipeline source; use the UI selected-plate workflow when an open UI should show rows, snapshots, and output auto-add.",
-   "execution": null,
-   "icons": null,
-   "inputSchema": {
-    "$defs": {
-     "TransportMode": {
-      "description": "Closed serialized identities resolved through transport declarations.",
-      "enum": [
-       "tcp",
-       "ipc"
-      ],
-      "title": "TransportMode",
-      "type": "string"
-     }
-    },
-    "additionalProperties": false,
-    "properties": {
-     "execution_plate_path": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Execution Plate Path"
-     },
-     "global_config_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Global Config Id"
-     },
-     "host": {
-      "default": "localhost",
-      "title": "Host",
-      "type": "string"
-     },
-     "persistent": {
-      "default": true,
-      "title": "Persistent",
-      "type": "boolean"
-     },
-     "pipeline_source": {
-      "title": "Pipeline Source",
-      "type": "string"
-     },
-     "plate_path": {
-      "title": "Plate Path",
-      "type": "string"
-     },
-     "port": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Port"
-     },
-     "transport_mode": {
-      "anyOf": [
-       {
-        "$ref": "#/$defs/TransportMode"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null
-     }
-    },
-    "required": [
-     "plate_path",
-     "pipeline_source"
-    ],
-    "title": "openhcs_create_orchestrator_session_from_pipeline_sourceArguments",
-    "type": "object"
-   },
-   "meta": {
-    "openhcs/outputContract": "OrchestratorSessionRef"
-   },
-   "name": "openhcs_create_orchestrator_session_from_pipeline_source",
-   "outputSchema": {
-    "additionalProperties": true,
-    "title": "openhcs_create_orchestrator_session_from_pipeline_sourceDictOutput",
-    "type": "object"
-   },
-   "title": "Create source-backed orchestrator session"
-  },
   "openhcs_create_pipeline": {
    "annotations": {
     "destructiveHint": true,
@@ -1583,6 +1494,89 @@
     "type": "object"
    },
    "title": "Create draft pipeline"
+  },
+  "openhcs_delete_datasets": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Delete selected datasets"
+   },
+   "description": "Removes datasets and their configuration and pipeline from the session.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "scope_ids": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Scope Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "scope_ids"
+    ],
+    "title": "openhcs_delete_datasetsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_delete_datasets",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_delete_datasetsDictOutput",
+    "type": "object"
+   },
+   "title": "Delete selected datasets"
+  },
+  "openhcs_delete_steps": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Delete selected steps"
+   },
+   "description": "Deletes steps from one dataset's pipeline.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+     },
+     "step_scope_ids": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Step Scope Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "scope_id",
+     "step_scope_ids"
+    ],
+    "title": "openhcs_delete_stepsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_delete_steps",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_delete_stepsDictOutput",
+    "type": "object"
+   },
+   "title": "Delete selected steps"
   },
   "openhcs_describe_config_schema": {
    "annotations": {
@@ -1889,14 +1883,14 @@
     "readOnlyHint": false,
     "title": "Finalize measured pipeline run"
    },
-   "description": "Validate the runtime observation and retain a typed benchmark receipt for an already-completed ordinary headless execution job. Job status, submission, result and endpoint identity come from the normal execution service; this tool does not submit or poll a separate benchmark job.",
+   "description": "Validate the runtime observation and retain a typed benchmark receipt for an ordinary execution the OpenHCS session already finished (openhcs_run_datasets with a runtime observation export path). The submission, server record and endpoint identity come from the session; this tool does not submit or poll a separate benchmark job.",
    "execution": null,
    "icons": null,
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
-     "job_id": {
-      "title": "Job Id",
+     "execution_id": {
+      "title": "Execution Id",
       "type": "string"
      },
      "pipeline_name": {
@@ -1909,7 +1903,7 @@
      }
     },
     "required": [
-     "job_id",
+     "execution_id",
      "run_id",
      "pipeline_name"
     ],
@@ -1980,6 +1974,21 @@
       "title": "Overlap Percent",
       "type": "integer"
      },
+     "partition_values": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Partition Values"
+     },
      "random_seed": {
       "anyOf": [
        {
@@ -2021,21 +2030,6 @@
       "default": 2,
       "title": "Wavelengths",
       "type": "integer"
-     },
-     "wells": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Wells"
      },
      "z_stack_levels": {
       "default": 1,
@@ -2243,47 +2237,6 @@
    },
    "title": "Observe custom registration source"
   },
-  "openhcs_get_execution_status": {
-   "annotations": {
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false,
-    "readOnlyHint": true,
-    "title": "Get execution status"
-   },
-   "description": "Polls one submitted ZMQ job and returns its lifecycle status plus the submitting client's latest exact progress observation.",
-   "execution": null,
-   "icons": null,
-   "inputSchema": {
-    "additionalProperties": false,
-    "properties": {
-     "job_id": {
-      "title": "Job Id",
-      "type": "string"
-     },
-     "timeout_ms": {
-      "default": 5000,
-      "title": "Timeout Ms",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "job_id"
-    ],
-    "title": "openhcs_get_execution_statusArguments",
-    "type": "object"
-   },
-   "meta": {
-    "openhcs/outputContract": "ExecutionJobStatus"
-   },
-   "name": "openhcs_get_execution_status",
-   "outputSchema": {
-    "additionalProperties": true,
-    "title": "openhcs_get_execution_statusDictOutput",
-    "type": "object"
-   },
-   "title": "Get execution status"
-  },
   "openhcs_get_function_catalog_preparation_status": {
    "annotations": {
     "destructiveHint": false,
@@ -2446,42 +2399,6 @@
     "type": "object"
    },
    "title": "Get knowledge document"
-  },
-  "openhcs_get_orchestrator_session": {
-   "annotations": {
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false,
-    "readOnlyHint": true,
-    "title": "Get orchestrator session"
-   },
-   "description": "Returns the stored plate, pipeline, config, and ZMQ connection identity for a session.",
-   "execution": null,
-   "icons": null,
-   "inputSchema": {
-    "additionalProperties": false,
-    "properties": {
-     "session_id": {
-      "title": "Session Id",
-      "type": "string"
-     }
-    },
-    "required": [
-     "session_id"
-    ],
-    "title": "openhcs_get_orchestrator_sessionArguments",
-    "type": "object"
-   },
-   "meta": {
-    "openhcs/outputContract": "OrchestratorSession"
-   },
-   "name": "openhcs_get_orchestrator_session",
-   "outputSchema": {
-    "additionalProperties": true,
-    "title": "openhcs_get_orchestrator_sessionDictOutput",
-    "type": "object"
-   },
-   "title": "Get orchestrator session"
   },
   "openhcs_get_runtime_server_execution_status": {
    "annotations": {
@@ -3020,6 +2937,45 @@
    },
    "title": "Health check"
   },
+  "openhcs_initialize_datasets": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Initialize selected datasets"
+   },
+   "description": "Scans each dataset's source metadata (and prepares any input workspace its scope kind declares). Initialization writes dataset metadata.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "scope_ids": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Scope Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "scope_ids"
+    ],
+    "title": "openhcs_initialize_datasetsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_initialize_datasets",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_initialize_datasetsDictOutput",
+    "type": "object"
+   },
+   "title": "Initialize selected datasets"
+  },
   "openhcs_inspect_benchmark_run": {
    "annotations": {
     "destructiveHint": false,
@@ -3242,21 +3198,6 @@
      "plate_path": {
       "title": "Plate Path",
       "type": "string"
-     },
-     "well_filter": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Well Filter"
      }
     },
     "required": [
@@ -3311,11 +3252,6 @@
       "title": "Max Sample Files",
       "type": "integer"
      },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
-     },
      "pattern_format": {
       "anyOf": [
        {
@@ -3330,6 +3266,11 @@
      },
      "plate_path": {
       "title": "Plate Path",
+      "type": "string"
+     },
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
       "type": "string"
      }
     },
@@ -3590,6 +3531,83 @@
     "type": "object"
    },
    "title": "List knowledge documents"
+  },
+  "openhcs_load_example_pipeline": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Load the example pipeline (basic_pipeline.py)"
+   },
+   "description": "Replaces the dataset's pipeline with OpenHCS's example pipeline.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "scope_id"
+    ],
+    "title": "openhcs_load_example_pipelineArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_load_example_pipeline",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_load_example_pipelineDictOutput",
+    "type": "object"
+   },
+   "title": "Load the example pipeline (basic_pipeline.py)"
+  },
+  "openhcs_load_pipeline_file": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Load the dataset's pipeline from a file"
+   },
+   "description": "Replaces one dataset's pipeline with a pipeline file in any registered format (OpenHCS .py documents; CellProfiler .cppipe).",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "path": {
+      "title": "Path",
+      "type": "string"
+     },
+     "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "scope_id",
+     "path"
+    ],
+    "title": "openhcs_load_pipeline_fileArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_load_pipeline_file",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_load_pipeline_fileDictOutput",
+    "type": "object"
+   },
+   "title": "Load the dataset's pipeline from a file"
   },
   "openhcs_measure_viewer_polyline": {
    "annotations": {
@@ -4308,6 +4326,25 @@
     },
     "additionalProperties": false,
     "properties": {
+     "component_filters": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Accepted values per axis name of the active axis family, for example {\"well\": [\"A01\", \"B02\"]}; a file matches when every named axis holds one of its values.",
+      "title": "Component Filters"
+     },
      "include_previews": {
       "default": true,
       "title": "Include Previews",
@@ -4340,11 +4377,6 @@
       "default": 8,
       "title": "Max Preview Lines",
       "type": "integer"
-     },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
      },
      "offset": {
       "default": 0,
@@ -4391,17 +4423,10 @@
       "default": null,
       "title": "Result Directory"
      },
-     "well": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Well"
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
+      "type": "string"
      }
     },
     "required": [
@@ -4876,6 +4901,96 @@
    },
    "title": "Retire explicit viewer layers"
   },
+  "openhcs_run_datasets": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Run or stop dataset execution"
+   },
+   "description": "Compiles, then executes the datasets as one batch on the execution server. Follow progress through the session events.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "$defs": {
+     "ZMQRuntimeObservationExportScope": {
+      "description": "Amount of runtime evidence requested from an ordinary execution.",
+      "enum": [
+       "values",
+       "outcomes"
+      ],
+      "title": "ZMQRuntimeObservationExportScope",
+      "type": "string"
+     }
+    },
+    "additionalProperties": false,
+    "properties": {
+     "runtime_observation_export_path": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Runtime Observation Export Path"
+     },
+     "runtime_observation_export_scope": {
+      "$ref": "#/$defs/ZMQRuntimeObservationExportScope",
+      "default": "values"
+     },
+     "scope_ids": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Scope Ids",
+      "type": "array"
+     },
+     "submit_timeout_ms": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Submit Timeout Ms"
+     },
+     "wait_timeout_ms": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Wait Timeout Ms"
+     }
+    },
+    "required": [
+     "scope_ids"
+    ],
+    "title": "openhcs_run_datasetsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_run_datasets",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_run_datasetsDictOutput",
+    "type": "object"
+   },
+   "title": "Run or stop dataset execution"
+  },
   "openhcs_sample_plate_image": {
    "annotations": {
     "destructiveHint": false,
@@ -4914,11 +5029,6 @@
       "title": "Max Auto Resolution Size",
       "type": "integer"
      },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
-     },
      "pattern_format": {
       "anyOf": [
        {
@@ -4946,6 +5056,11 @@
       ],
       "default": null,
       "title": "Resolution Index"
+     },
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
+      "type": "string"
      },
      "width": {
       "default": 32,
@@ -5249,7 +5364,6 @@
        "plate_path",
        "ui_selected_plate",
        "headless_session",
-       "submitted_job",
        "runtime_server",
        "ui_bridge",
        "ui_window",
@@ -5643,6 +5757,150 @@
     "type": "object"
    },
    "title": "Send debug worker command"
+  },
+  "openhcs_session_datasets": {
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Session datasets"
+   },
+   "description": "Returns the session's dataset rows (initialized, compiled, pending, running, terminal status, progress) and the operations available for the current selection.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {},
+    "title": "openhcs_session_datasetsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "DatasetListState"
+   },
+   "name": "openhcs_session_datasets",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_session_datasetsDictOutput",
+    "type": "object"
+   },
+   "title": "Session datasets"
+  },
+  "openhcs_session_events": {
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Session events"
+   },
+   "description": "Returns the session events published after after_sequence, waiting up to timeout_seconds for the first one. Operations return the sequence they started at; pass it here instead of polling dataset state.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "after_sequence": {
+      "default": 0,
+      "title": "After Sequence",
+      "type": "integer"
+     },
+     "timeout_seconds": {
+      "default": 0.0,
+      "title": "Timeout Seconds",
+      "type": "number"
+     }
+    },
+    "title": "openhcs_session_eventsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionEventBatch"
+   },
+   "name": "openhcs_session_events",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_session_eventsDictOutput",
+    "type": "object"
+   },
+   "title": "Session events"
+  },
+  "openhcs_session_pipeline": {
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Session dataset pipeline"
+   },
+   "description": "Returns one dataset's pipeline steps as the session holds them.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "scope_id"
+    ],
+    "title": "openhcs_session_pipelineArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "PipelineStepsState"
+   },
+   "name": "openhcs_session_pipeline",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_session_pipelineDictOutput",
+    "type": "object"
+   },
+   "title": "Session dataset pipeline"
+  },
+  "openhcs_set_dataset_pipeline": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Replace the dataset's pipeline"
+   },
+   "description": "Replaces one dataset's pipeline steps and PipelineConfig with a complete pycodified PipelineDocument source (from render-pipeline-source).",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "pipeline_source": {
+      "title": "Pipeline Source",
+      "type": "string"
+     },
+     "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "scope_id",
+     "pipeline_source"
+    ],
+    "title": "openhcs_set_dataset_pipelineArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_set_dataset_pipeline",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_set_dataset_pipelineDictOutput",
+    "type": "object"
+   },
+   "title": "Replace the dataset's pipeline"
   },
   "openhcs_set_viewer_image_color": {
    "annotations": {
@@ -6273,6 +6531,40 @@
    },
    "title": "Start owned execution runtime"
   },
+  "openhcs_stop_execution": {
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Stop the running batch; a second stop kills the server"
+   },
+   "description": "Stops the running batch by shutting the execution server down gracefully; force kills it.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "force": {
+      "default": false,
+      "title": "Force",
+      "type": "boolean"
+     }
+    },
+    "title": "openhcs_stop_executionArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionOperationResult"
+   },
+   "name": "openhcs_stop_execution",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_stop_executionDictOutput",
+    "type": "object"
+   },
+   "title": "Stop the running batch; a second stop kills the server"
+  },
   "openhcs_stream_plate_files_to_viewer": {
    "annotations": {
     "destructiveHint": true,
@@ -6535,6 +6827,25 @@
     },
     "additionalProperties": false,
     "properties": {
+     "component_filters": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Accepted values per axis name of the active axis family, for example {\"well\": [\"A01\", \"B02\"]}; a file matches when every named axis holds one of its values.",
+      "title": "Component Filters"
+     },
      "connection": {
       "anyOf": [
        {
@@ -6600,11 +6911,6 @@
       "title": "Limit",
       "type": "integer"
      },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
-     },
      "path_contains": {
       "anyOf": [
        {
@@ -6662,6 +6968,11 @@
       "default": null,
       "title": "Result Directory"
      },
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
+      "type": "string"
+     },
      "source_receipt": {
       "anyOf": [
        {
@@ -6688,18 +6999,6 @@
       "default": "napari_streaming_config",
       "title": "Viewer Config Key",
       "type": "string"
-     },
-     "well": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Well"
      }
     },
     "required": [
@@ -6718,147 +7017,6 @@
     "type": "object"
    },
    "title": "Stream plate files to viewer"
-  },
-  "openhcs_submit_compile": {
-   "annotations": {
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": true,
-    "readOnlyHint": false,
-    "title": "Submit compile job"
-   },
-   "description": "Submits a compile-only ZMQ execution job for an execution session. Use wait=False for normal agent workflows, then poll status by job_id; submit is bounded by submit_timeout_ms and wait=True is bounded by wait_timeout_ms.",
-   "execution": null,
-   "icons": null,
-   "inputSchema": {
-    "additionalProperties": false,
-    "properties": {
-     "session_id": {
-      "title": "Session Id",
-      "type": "string"
-     },
-     "submit_timeout_ms": {
-      "default": 30000,
-      "title": "Submit Timeout Ms",
-      "type": "integer"
-     },
-     "wait": {
-      "default": false,
-      "title": "Wait",
-      "type": "boolean"
-     },
-     "wait_timeout_ms": {
-      "default": 5000,
-      "title": "Wait Timeout Ms",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "session_id"
-    ],
-    "title": "openhcs_submit_compileArguments",
-    "type": "object"
-   },
-   "meta": {
-    "openhcs/outputContract": "ExecutionJobRef"
-   },
-   "name": "openhcs_submit_compile",
-   "outputSchema": {
-    "additionalProperties": true,
-    "title": "openhcs_submit_compileDictOutput",
-    "type": "object"
-   },
-   "title": "Submit compile job"
-  },
-  "openhcs_submit_pipeline_execution": {
-   "annotations": {
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": true,
-    "readOnlyHint": false,
-    "title": "Submit pipeline execution"
-   },
-   "description": "Submits a headless ZMQ pipeline execution job for an execution session. Use wait=False for normal agent workflows, then poll status by job_id; submit is bounded by submit_timeout_ms and wait=True is bounded by wait_timeout_ms. An optional runtime observation export path must be writable under the agent path policy. The optional observation scope selects full runtime values or outcome-only evidence without retaining array values. This path does not update the running UI PlateManager; use openhcs_ui_selected_plate_workflow for user-visible UI runs.",
-   "execution": null,
-   "icons": null,
-   "inputSchema": {
-    "$defs": {
-     "ZMQRuntimeObservationExportScope": {
-      "description": "Amount of runtime evidence requested from an ordinary execution.",
-      "enum": [
-       "values",
-       "outcomes"
-      ],
-      "title": "ZMQRuntimeObservationExportScope",
-      "type": "string"
-     }
-    },
-    "additionalProperties": false,
-    "properties": {
-     "compile_artifact_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Compile Artifact Id"
-     },
-     "runtime_observation_export_path": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Runtime Observation Export Path"
-     },
-     "runtime_observation_export_scope": {
-      "$ref": "#/$defs/ZMQRuntimeObservationExportScope",
-      "default": "values"
-     },
-     "session_id": {
-      "title": "Session Id",
-      "type": "string"
-     },
-     "submit_timeout_ms": {
-      "default": 30000,
-      "title": "Submit Timeout Ms",
-      "type": "integer"
-     },
-     "wait": {
-      "default": false,
-      "title": "Wait",
-      "type": "boolean"
-     },
-     "wait_timeout_ms": {
-      "default": 5000,
-      "title": "Wait Timeout Ms",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "session_id"
-    ],
-    "title": "openhcs_submit_pipeline_executionArguments",
-    "type": "object"
-   },
-   "meta": {
-    "openhcs/outputContract": "ExecutionJobRef"
-   },
-   "name": "openhcs_submit_pipeline_execution",
-   "outputSchema": {
-    "additionalProperties": true,
-    "title": "openhcs_submit_pipeline_executionDictOutput",
-    "type": "object"
-   },
-   "title": "Submit pipeline execution"
   },
   "openhcs_summarize_viewer_window_rois": {
    "annotations": {
@@ -9077,11 +9235,6 @@
       "title": "Max Sample Files",
       "type": "integer"
      },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
-     },
      "pattern_format": {
       "anyOf": [
        {
@@ -9093,6 +9246,11 @@
       ],
       "default": null,
       "title": "Pattern Format"
+     },
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
+      "type": "string"
      },
      "target": {
       "default": "selected",
@@ -11298,6 +11456,25 @@
     },
     "additionalProperties": false,
     "properties": {
+     "component_filters": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Accepted values per axis name of the active axis family, for example {\"well\": [\"A01\", \"B02\"]}; a file matches when every named axis holds one of its values.",
+      "title": "Component Filters"
+     },
      "connection": {
       "anyOf": [
        {
@@ -11342,11 +11519,6 @@
       "title": "Max Preview Lines",
       "type": "integer"
      },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
-     },
      "offset": {
       "default": 0,
       "title": "Offset",
@@ -11376,22 +11548,15 @@
       "default": null,
       "title": "Pattern Format"
      },
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
+      "type": "string"
+     },
      "target": {
       "default": "selected",
       "title": "Target",
       "type": "string"
-     },
-     "well": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Well"
      }
     },
     "title": "openhcs_ui_query_selected_plate_filesArguments",
@@ -11802,11 +11967,6 @@
       "title": "Max Auto Resolution Size",
       "type": "integer"
      },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
-     },
      "pattern_format": {
       "anyOf": [
        {
@@ -11830,6 +11990,11 @@
       ],
       "default": null,
       "title": "Resolution Index"
+     },
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
+      "type": "string"
      },
      "target": {
       "default": "selected",
@@ -11998,9 +12163,9 @@
      },
      "UiSelectedPlateWorkflowKind": {
       "enum": [
-       "init_plate",
-       "compile_plate",
-       "run_plate"
+       "initialize_datasets",
+       "compile_datasets",
+       "run_datasets"
       ],
       "title": "UiSelectedPlateWorkflowKind",
       "type": "string"
@@ -12425,6 +12590,25 @@
     },
     "additionalProperties": false,
     "properties": {
+     "component_filters": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Accepted values per axis name of the active axis family, for example {\"well\": [\"A01\", \"B02\"]}; a file matches when every named axis holds one of its values.",
+      "title": "Component Filters"
+     },
      "connection": {
       "anyOf": [
        {
@@ -12479,11 +12663,6 @@
       "title": "Limit",
       "type": "integer"
      },
-     "microscope_type": {
-      "default": "auto",
-      "title": "Microscope Type",
-      "type": "string"
-     },
      "path_contains": {
       "anyOf": [
        {
@@ -12525,6 +12704,11 @@
       "default": null,
       "title": "Port"
      },
+     "source_format": {
+      "default": "auto",
+      "title": "Source Format",
+      "type": "string"
+     },
      "target": {
       "default": "selected",
       "title": "Target",
@@ -12545,18 +12729,6 @@
       "default": "napari_streaming_config",
       "title": "Viewer Config Key",
       "type": "string"
-     },
-     "well": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Well"
      }
     },
     "title": "openhcs_ui_stream_selected_plate_files_to_viewerArguments",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes import AxisFamily, GridAddressed
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
@@ -32,7 +32,12 @@ class SourceSchemaFilenameParser(FilenameParser):
         )
 
     def extract_component_coordinates(self, component_value: str) -> tuple[str, str]:
-        return AxisFamily.active().partition_axis().grid_coordinates(component_value)
+        """Row and column of a grid-addressed value; one row for any other value."""
+
+        grid_axes = AxisFamily.active().with_role(GridAddressed)
+        if grid_axes and grid_axes[0].grid_index(component_value) is not None:
+            return grid_axes[0].grid_coordinates(component_value)
+        return str(component_value), ""
 
     def construct_filename(self, components: FilenameParseResult) -> str:
         address = OpenHCSPlaneAddress.from_component_values(

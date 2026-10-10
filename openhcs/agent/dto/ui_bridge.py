@@ -40,6 +40,7 @@ from zmqruntime.config import (
     TransportMode,
 )
 
+from openhcs.agent.dto.session import DatasetRowState, PipelineStepState
 from openhcs.agent.dto.common import (
     AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
     AGENT_PARAMETER_PRODUCER_OUTPUT_CONTRACT_METADATA_KEY,
@@ -55,7 +56,8 @@ from openhcs.agent.dto.execution_connection import (
     ExecutionConnectionSpec,
 )
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.datasets import DatasetWorkflowOperation
 from openhcs.agent.ui_bridge_identities import (
     MainWindowWidgetIdentity as MainWindowWidgetIdentity,
 )
@@ -133,12 +135,12 @@ def _identity_enum(
     return Enum(enum_name, members, type=str)
 
 
-def _plate_manager_workflow_enum() -> type[Enum]:
-    """Project selected-plate workflows from PlateManager action declarations."""
+def _dataset_workflow_enum() -> type[Enum]:
+    """The dataset workflow operations, as a wire enum of operation ids."""
     members = {
-        action.plate_operation.name: action.value
-        for action in PlateManagerAction
-        if action.plate_operation is not None
+        operation.workflow_name: operation.operation_id
+        for operation in SessionOperation.all()
+        if issubclass(operation, DatasetWorkflowOperation)
     }
     return Enum("UiSelectedPlateWorkflowKind", members, type=str)
 
@@ -149,7 +151,7 @@ UiStateSurfaceId = _identity_enum(
     UiStateSurfaceIdentityDeclarationBase,
 )
 UiWidgetId = _identity_enum("UiWidgetId", UiWidgetIdentityDeclaration)
-UiSelectedPlateWorkflowKind = _plate_manager_workflow_enum()
+UiSelectedPlateWorkflowKind = _dataset_workflow_enum()
 
 
 class UiBridgeOperationStatus(str, Enum):
@@ -741,47 +743,8 @@ class UiCodeDocument(
     errors: tuple[AgentError, ...] = ()
 
 
-@dataclass(frozen=True, slots=True)
-class UiPlateManagerRowState:
-    plate_scope_id: str
-    name: str
-    plate_root: str
-    cppipe_path: str | None
-    selected: bool
-    initialized: bool
-    compiled: bool
-    init_pending: bool
-    compile_pending: bool
-    execution_active: bool
-    status_prefix: str
-    orchestrator_state: str | None
-    execution_id: str | None
-    terminal_status: str | None
-    runtime_state: str | None
-    runtime_percent: float | None
-    queue_position: int | None
-    output_plate_scope_id: str | None = None
-    output_plate_root: str | None = None
-    source_plate_scope_id: str | None = None
-    source_plate_root: str | None = None
-    debug_phase: str | None = None
-    debug_session_id: str | None = None
-    scope_accent_color: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
-class UiPipelineEditorStepState:
-    step_scope_id: str | None
-    index: int
-    name: str
-    enabled: bool
-    selected: bool
-    dirty: bool
-    default_diff: bool
-    description: str | None = None
-    debug_pause: bool = False
-    function_names: tuple[str, ...] = ()
-    function_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -801,7 +764,7 @@ class UiPlateManagerState(
 ):
     object_state_token: int
     manager_execution_state: str
-    rows: tuple[UiPlateManagerRowState, ...]
+    rows: tuple[DatasetRowState, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -844,7 +807,7 @@ class UiPipelineEditorState(
     object_state_token: int
     current_plate_scope_id: str | None
     pipeline_scope_id: str | None
-    steps: tuple[UiPipelineEditorStepState, ...]
+    steps: tuple[PipelineStepState, ...]
 
 
 @dataclass(frozen=True, slots=True)

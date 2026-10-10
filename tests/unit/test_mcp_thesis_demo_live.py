@@ -1044,14 +1044,14 @@ def test_ui_operation_wait_is_one_public_terminal_command(
 
 
 def test_plate_action_waits_for_accepted_receipt(monkeypatch) -> None:
-    action = demo.PlateManagerAction.VIEW_METADATA
+    action = demo.ShowDatasetImages
     monkeypatch.setattr(
         demo,
         "plate_action_summary",
         lambda _ctx, _action: demo.UiActionSummary(
             schema_version="openhcs.agent.v1",
             identity=demo.UiActionIdentity(
-                widget_id="plate_manager", action_id=action.value
+                widget_id="plate_manager", action_id=action.operation_id
             ),
             title="Action",
             enabled=True,
@@ -1294,7 +1294,7 @@ def test_metadata_cycle_requires_three_rebuilds_without_physical_drift() -> None
     def metadata(revision: str, channel: str = "1") -> dict[str, object]:
         return {
             "plate_state_revision": revision,
-            "detected_microscope_type": "openhcsdata",
+            "detected_source_format": "openhcsdata",
             "handler_class": "OpenHCSDatasetSource",
             "metadata_handler_class": "OpenHCSMetadataHandler",
             "components": [
@@ -1600,7 +1600,7 @@ def test_source_inspection_uses_virtual_identity_and_bounded_pixels(
                             {
                                 "plate_path": str(tmp_path),
                                 "status": "ok",
-                                "detected_microscope_type": "openhcsdata",
+                                "detected_source_format": "openhcsdata",
                                 "handler_class": "OpenHCSDatasetSource",
                                 "image_files": {
                                     "count": 2,

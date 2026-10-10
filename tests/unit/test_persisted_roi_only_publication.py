@@ -197,7 +197,7 @@ def result_paths(plate, context):
     result = service.query_files(
         PlateFileQueryRequest.from_fields(
             plate_path=str(plate),
-            microscope_type="openhcsdata",
+            source_format="openhcsdata",
             kind="result",
             include_previews=False,
         )

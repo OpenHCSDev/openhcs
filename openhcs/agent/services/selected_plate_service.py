@@ -45,7 +45,7 @@ class SelectedPlateStateResolution:
     def plate_root(self) -> str | None:
         if self.selected_plate is None:
             return None
-        plate_root = self.selected_plate.get("plate_root")
+        plate_root = self.selected_plate.get("root")
         if not isinstance(plate_root, str):
             return None
         return plate_root
@@ -54,7 +54,7 @@ class SelectedPlateStateResolution:
 @dataclass(frozen=True, slots=True)
 class SelectedPlateTargetRoot:
     plate_root: str
-    microscope_type: str
+    source_format: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +80,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateImageInspectionResult(
@@ -98,7 +98,7 @@ class SelectedPlateService:
         inspection = self.plate_inspection_service.inspect(
             request.to_plate_path_inspection_request(
                 plate_path=target_root.plate_root,
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             )
         )
         return SelectedPlateImageInspectionResult(
@@ -124,7 +124,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateFileQueryResult(
@@ -142,7 +142,7 @@ class SelectedPlateService:
         query = self.plate_inspection_service.query_files(
             request.to_plate_file_query_request(
                 plate_path=target_root.plate_root,
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             )
         )
         return SelectedPlateFileQueryResult(
@@ -169,7 +169,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateImageSampleResult(
@@ -191,7 +191,7 @@ class SelectedPlateService:
             image_path, auto_warnings, auto_errors = (
                 self.first_selected_plate_image_path(
                     plate_root=target_root.plate_root,
-                    microscope_type=target_root.microscope_type,
+                    source_format=target_root.source_format,
                     pattern_format=request.pattern_format,
                 )
             )
@@ -214,7 +214,7 @@ class SelectedPlateService:
             request.to_plate_image_sample_request(
                 plate_path=target_root.plate_root,
                 image_path=image_path,
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             )
         )
         return SelectedPlateImageSampleResult(
@@ -243,7 +243,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateFileStreamResult(
@@ -266,7 +266,7 @@ class SelectedPlateService:
                     target=request.target,
                     kind=request.kind,
                 ),
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             ),
             ui_bridge_connection=connection,
         )
@@ -318,7 +318,7 @@ class SelectedPlateService:
         selected_plate: SelectedPlateStateResolution,
         *,
         target: SelectedPlateFileQueryTarget,
-        microscope_type: str,
+        source_format: str,
     ) -> tuple[SelectedPlateTargetRoot | None, AgentError | None]:
         state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
         plate_root = selected_plate.plate_root
@@ -326,13 +326,13 @@ class SelectedPlateService:
             raise RuntimeError("Selected row plate_root was validated as a string.")
         selected_row = selected_plate.selected_plate or {}
         if target is SelectedPlateFileQueryTarget.OUTPUT:
-            output_root = selected_row.get("output_plate_root")
+            output_root = selected_row.get("output_root")
             if not isinstance(output_root, str) or not output_root:
                 return None, AgentError(
                     code="ui_selected_plate_output_root_unavailable",
                     message=(
                         "The selected PlateManager row does not expose an "
-                        "output_plate_root."
+                        "output_root."
                     ),
                     hint=(
                         "Call openhcs_ui_get_state_surface(surface_id="
@@ -342,13 +342,13 @@ class SelectedPlateService:
                 )
             plate_root = output_root
         elif target is SelectedPlateFileQueryTarget.SOURCE:
-            source_root = selected_row.get("source_plate_root")
+            source_root = selected_row.get("source_root")
             if isinstance(source_root, str) and source_root:
                 plate_root = source_root
         return (
             SelectedPlateTargetRoot(
                 plate_root=plate_root,
-                microscope_type=microscope_type,
+                source_format=source_format,
             ),
             None,
         )
@@ -389,7 +389,7 @@ class SelectedPlateService:
             row
             for row in rows_value
             if isinstance(row, Mapping)
-            and row.get("plate_scope_id") == selected_scope_id
+            and row.get("scope_id") == selected_scope_id
         )
         if len(matched_rows) != 1:
             return None, AgentError(
@@ -417,8 +417,8 @@ class SelectedPlateService:
                     "plate images."
                 ),
             )
-        if not isinstance(selected_row.get("plate_root"), str) or not selected_row.get(
-            "plate_root"
+        if not isinstance(selected_row.get("root"), str) or not selected_row.get(
+            "root"
         ):
             return None, AgentError(
                 code="ui_selected_plate_root_unavailable",
@@ -437,13 +437,13 @@ class SelectedPlateService:
         self,
         *,
         plate_root: str,
-        microscope_type: str,
+        source_format: str,
         pattern_format: str | None,
     ) -> tuple[str | None, tuple[AgentWarning, ...], tuple[AgentError, ...]]:
         inspection = self.plate_inspection_service.inspect(
             PlatePathInspectionRequest.from_fields(
                 plate_path=plate_root,
-                microscope_type=microscope_type,
+                source_format=source_format,
                 pattern_format=pattern_format,
                 max_sample_files=1,
                 max_component_values=0,
@@ -492,7 +492,7 @@ class SelectedPlateService:
         ):
             return None
         selected_row = selected_plate.selected_plate or {}
-        source_root = selected_row.get("source_plate_root")
+        source_root = selected_row.get("source_root")
         if isinstance(source_root, str) and source_root:
             return source_root
         return selected_plate.plate_root

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Final, Literal, TypeAlias
 
+from openhcs.core.component_filters import ComponentFilters
+
 
 class PlateFileKind(str, Enum):
     """Kind of file exposed by a plate inventory."""
@@ -24,7 +26,7 @@ class PlateFileInventoryQuery:
 
     kinds: tuple[PlateFileKind, ...] = ()
     path_contains: str | None = None
-    partition: str | None = None
+    component_filters: ComponentFilters = ComponentFilters()
     offset: int = 0
     limit: int = 50
 
@@ -62,7 +64,7 @@ class PlateFileInventoryQuery:
         return PlateFileInventoryQuery(
             kinds=self.kinds,
             path_contains=self.path_contains,
-            partition=self.partition,
+            component_filters=self.component_filters,
             offset=max(0, int(self.offset)),
             limit=max(0, int(self.limit)),
         )

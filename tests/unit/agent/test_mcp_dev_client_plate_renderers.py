@@ -1,6 +1,7 @@
 """Plate renderer family over typed DTO fixtures."""
 
 from __future__ import annotations
+from openhcs.agent.dto.session import DatasetRowState
 
 import sys
 from dataclasses import replace
@@ -35,7 +36,6 @@ from openhcs.agent.dto.plate import (
     SelectedPlateImageSampleResult,
     SyntheticPlateGenerationResult,
 )
-from openhcs.agent.dto.ui_bridge import UiPlateManagerRowState
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.synthetic_plate_generation import SyntheticPlateFormat
@@ -68,11 +68,11 @@ def render(value) -> str:
     return renderer.render(response)
 
 
-def row(**changes) -> UiPlateManagerRowState:
+def row(**changes) -> DatasetRowState:
     return replace(
-        UiPlateManagerRowState(
-            plate_scope_id="/plates/a", name="plate-a", plate_root="/plates/a",
-            cppipe_path=None, selected=True, initialized=True, compiled=False,
+        DatasetRowState(
+            scope_id="/plates/a", name="plate-a", root="/plates/a",
+            pipeline_path=None, selected=True, initialized=True, compiled=False,
             init_pending=False, compile_pending=False, execution_active=False,
             status_prefix="", orchestrator_state=None, execution_id=None,
             terminal_status=None, runtime_state=None, runtime_percent=None,
@@ -87,9 +87,9 @@ def inspection(**changes) -> PlatePathInspectionResult:
         PlatePathInspectionResult(
             schema_version=SCHEMA_VERSION,
             plate_path="/plates/a",
-            requested_microscope_type="auto",
+            requested_source_format="auto",
             status=PlateInspectionStatus.OK,
-            detected_microscope_type="imagexpress",
+            detected_source_format="imagexpress",
             handler_class="ImageXpressHandler",
             grid_dimensions=(2, 3),
             image_files=PlateInspectionImageFileSummary(
@@ -147,8 +147,8 @@ def query(**changes) -> PlateFileQueryResult:
         PlateFileQueryResult(
             schema_version=SCHEMA_VERSION,
             plate_path="/plates/a",
-            requested_microscope_type="auto",
-            detected_microscope_type="imagexpress",
+            requested_source_format="auto",
+            detected_source_format="imagexpress",
             total_count=3, returned_count=2, offset=0, limit=2, truncated_count=1,
             records=(
                 PlateFileQueryRecordSummary(
@@ -179,7 +179,7 @@ def stream(**changes) -> PlateFileStreamResult:
         PlateFileStreamResult(
             schema_version=SCHEMA_VERSION,
             plate_path="/plates/a_out",
-            requested_microscope_type="auto",
+            requested_source_format="auto",
             viewer_type=ViewerType.NAPARI,
             viewer_config_key="napari_streaming_config",
             connection=ExecutionConnectionSpec(port=5555, transport_mode=TransportMode.IPC),
@@ -279,7 +279,7 @@ def test_query_presents_previews_pages_staleness_roots_and_result_hint():
     assert "Records: <none>" in hinted
     assert "Next page" not in hinted
     assert (
-        "Next: query-plate-files /plates/a --microscope-type imagexpress "
+        "Next: query-plate-files /plates/a --source-format imagexpress "
         "--kind result --include-previews"
     ) in hinted
 
@@ -320,7 +320,7 @@ def test_selected_plate_images_render_the_nested_inspection(target, command):
 
 
 def test_selected_plate_files_hint_related_output_only_for_an_empty_selected_query():
-    selected_row = to_jsonable(row(output_plate_root="/plates/a_out"))
+    selected_row = to_jsonable(row(output_root="/plates/a_out"))
     empty = query(total_count=0, returned_count=0, truncated_count=0, records=())
     text = render(
         SelectedPlateFileQueryResult(

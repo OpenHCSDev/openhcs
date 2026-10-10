@@ -123,21 +123,22 @@ class FinalizeMeasuredPipelineRunCapability(BenchmarkCapability):
     title = "Finalize measured pipeline run"
     description = (
         "Validate the runtime observation and retain a typed benchmark receipt "
-        "for an already-completed ordinary headless execution job. Job status, "
-        "submission, result and endpoint identity come from the normal execution "
-        "service; this tool does not submit or poll a separate benchmark job."
+        "for an ordinary execution the OpenHCS session already finished "
+        "(openhcs_run_datasets with a runtime observation export path). The "
+        "submission, server record and endpoint identity come from the session; "
+        "this tool does not submit or poll a separate benchmark job."
     )
     mutating = True
     side_effects = ("writes_measured_run_evidence",)
     exposition = BenchmarkCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.CONTROL,
-        target_context=CapabilityTargetContext.SUBMITTED_JOB,
+        target_context=CapabilityTargetContext.HEADLESS_SESSION,
     )
     input_contract = MeasuredPipelineRunFinalizationRequest
     output_contract = MeasuredPipelineRunReceipt
     invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: BenchmarkControlService(
-            context.path_policy, context.execution_service
+            context.path_policy, context.session
         ),
         method=lambda service, request: service.finalize_measured_run(request),
     )

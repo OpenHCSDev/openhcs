@@ -26,7 +26,11 @@ from pyqt_reactive.services.system_monitor_actions import SystemMonitorAction
 from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.datasets import (
+    ShowDatasetImages,
+    ShowLiveResults,
+)
 from openhcs.agent.ui_bridge_identities import (
     GlobalConfigWindowIdentity,
     ImageBrowserWindowIdentity,
@@ -40,7 +44,7 @@ from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
 
 if TYPE_CHECKING:
-    from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope
+    from openhcs.authoring.session.step_scopes import StepEditorScope
 
 RELEASE_MEDIA_SCHEMA_VERSION = "openhcs.release-media.v7"
 RELEASE_MEDIA_RECORD_NAME = "release-media-record.json"
@@ -379,7 +383,7 @@ class ObjectStateCaptureScopeRole(str, Enum):
     def resolve(self, scope_ids: Sequence[str]) -> str:
         """Resolve one unambiguous live scope through this member's leaf rules."""
 
-        from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope
+        from openhcs.authoring.session.step_scopes import StepEditorScope
 
         parsed_scopes = []
         for scope_id in scope_ids:
@@ -419,7 +423,7 @@ class ObjectStateEditorCaptureTarget(UiContextCaptureTargetABC):
 class PlateManagerActionWindowCaptureTarget(UiContextCaptureTargetABC):
     """A window spawned by a declared Plate Manager action."""
 
-    action: PlateManagerAction
+    action: type[SessionOperation]
     tab: PlateViewerTab | None = None
     capture_widget_identity: ClassVar[type[PlateManagerWidgetIdentity]] = (
         PlateManagerWidgetIdentity
@@ -977,7 +981,7 @@ class ContextualUiReferenceGalleryDeclaration(GalleryScenarioDeclarationABC):
                     "Open the plate metadata screenshot at full resolution"
                 ),
                 capture_target=PlateManagerActionWindowCaptureTarget(
-                    action=PlateManagerAction.VIEW_METADATA,
+                    action=ShowDatasetImages,
                     tab=PlateViewerTab.METADATA,
                 ),
                 publication_targets=documentation,
@@ -1001,7 +1005,7 @@ class ContextualUiReferenceGalleryDeclaration(GalleryScenarioDeclarationABC):
                     "Open the live measurement results screenshot at full resolution"
                 ),
                 capture_target=PlateManagerActionWindowCaptureTarget(
-                    action=PlateManagerAction.VIEW_RESULTS,
+                    action=ShowLiveResults,
                 ),
                 publication_targets=documentation,
             ),

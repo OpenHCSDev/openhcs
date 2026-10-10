@@ -1,8 +1,10 @@
-"""External MCP contract: the advertised tools and resources stay exactly as on main.
+"""External MCP contract: the advertised tools and resources stay exactly as recorded.
 
-The fixture was generated once from ``main`` before the capability invocation
-family replaced the per-slot server bindings. MCP clients depend on these names,
-titles, descriptions, annotations and schemas.
+The fixture records the session-operation surface (U1): one MCP tool per headless
+SessionOperation plus the session views and events, and dataset requests that name
+a source format and per-axis component filters. MCP clients depend on these names,
+titles, descriptions, annotations and schemas; regenerate the fixture only with a
+deliberate contract change.
 """
 
 from __future__ import annotations

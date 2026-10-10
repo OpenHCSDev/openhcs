@@ -10,7 +10,7 @@ configuration can import it.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from inspect import isabstract
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
@@ -30,18 +30,26 @@ class DatasetSourceChoice(ABC):
     source_name: ClassVar[str]
 
     @staticmethod
-    def choices() -> tuple[type["DatasetSourceChoice"], ...]:
-        """Detection first, then every registered source in registry order."""
+    def iter_choices() -> Iterator[type["DatasetSourceChoice"]]:
+        """Detection first, then every registered source in registry order.
 
+        Lazy, so decoding detection's spelling discovers no registered source.
+        """
+
+        yield AutoDetectedSource
         from openhcs.core.dataset_sources.source import DatasetSource
 
-        return (AutoDetectedSource, *DatasetSource.__registry__.values())
+        yield from DatasetSource.__registry__.values()
+
+    @staticmethod
+    def choices() -> tuple[type["DatasetSourceChoice"], ...]:
+        return tuple(DatasetSourceChoice.iter_choices())
 
     @staticmethod
     def named(name: str) -> type["DatasetSourceChoice"]:
         """Decode one boundary spelling."""
 
-        for choice in DatasetSourceChoice.choices():
+        for choice in DatasetSourceChoice.iter_choices():
             if choice.source_name == name:
                 return choice
         raise ValueError(

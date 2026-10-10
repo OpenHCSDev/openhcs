@@ -1,500 +1,165 @@
+"""A folder of CellProfiler pipelines becomes one dataset row per pipeline."""
+
+from __future__ import annotations
+
 from pathlib import Path
 
+from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import Qt
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from objectstate.lazy_factory import ensure_global_config_context
-from objectstate.collection_containers import RootState
-from objectstate.object_state import ObjectState, ObjectStateRegistry
-from openhcs.pyqt_gui.config import get_default_ui_config
-from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
-from openhcs.pyqt_gui.services.plate_manager_row import PlateManagerRow
-from openhcs.pyqt_gui.widgets.plate_manager import (
-    PlateManagerWidget,
-    ROOT_SCOPE_ID,
+from openhcs.agent.dto.session import DatasetRootsRequest
+from openhcs.authoring.session.datasets import dataset_scope_ids
+from openhcs.authoring.session.operations.datasets import (
+    AddDatasets,
+    DeleteDatasets,
+    EditDatasetConfig,
 )
-from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
-    PlateManagerCodeWorkflow,
-    PlateManagerDeletionWorkflow,
-)
-from tests.unit.pyqt_gui.test_plate_manager_widget import (
-    PlateManagerServiceStub,
-    QtApplicationHarness,
-    close_widget,
-)
+from openhcs.core.config import PipelineConfig
+from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
+from tests.unit.pyqt_gui.session_harness import caller_session, session_gui
 
 
-def test_plate_manager_registers_multi_cppipe_folder_as_logical_pipeline_rows(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    monkeypatch.setattr(PlateManagerWidget, "setup_ui", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "setup_connections", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_button_states", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_item_list", lambda self: None)
-    created_orchestrators = []
-    create_orchestrator = PlateManagerWidget._create_orchestrator_for_plate
+def _pipeline_folder(tmp_path: Path, name: str, *pipelines: str) -> tuple[Path, ...]:
+    root = tmp_path / name
+    root.mkdir()
+    paths = []
+    for pipeline in pipelines:
+        path = root / pipeline
+        path.write_text("Version:5", encoding="utf-8")
+        paths.append(path)
+    return (root, *paths)
 
-    def record_orchestrator(
-        self,
-        plate_path: str,
-        *,
-        plate_root=None,
-        cppipe_path=None,
-    ):
-        created_orchestrators.append((plate_path, Path(plate_root), Path(cppipe_path)))
-        return create_orchestrator(
-            self,
-            plate_path,
-            plate_root=plate_root,
-            cppipe_path=cppipe_path,
-        )
 
-    monkeypatch.setattr(
-        PlateManagerWidget,
-        "_create_orchestrator_for_plate",
-        record_orchestrator,
+def _scope(root: Path, pipeline: Path) -> str:
+    return CellProfilerPipelineScope.scope_for(root, pipeline).scope_id
+
+
+def test_multi_pipeline_folder_adds_one_logical_row_per_pipeline(tmp_path) -> None:
+    root, first, second = _pipeline_folder(
+        tmp_path, "plate", "first.cppipe", "second.cppipe"
     )
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
+    with caller_session() as session:
+        result = session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+
+        first_scope, second_scope = _scope(root, first), _scope(root, second)
+        assert "::" not in first_scope and "::" not in second_scope
+        assert result.target_scope_ids == (first_scope, second_scope)
+        rows = {row.scope_id: row for row in session.dataset_rows()}
+        assert sorted(rows) == sorted([first_scope, second_scope])
+        assert rows[first_scope].name == "plate / first"
+        assert rows[first_scope].pipeline_path == str(first)
+        assert rows[second_scope].name == "plate / second"
+        assert rows[second_scope].pipeline_path == str(second)
+        for scope_id, pipeline in ((first_scope, first), (second_scope, second)):
+            orchestrator = session.orchestrator(scope_id)
+            assert orchestrator.plate_path == root
+            assert orchestrator.selected_pipeline_path == pipeline
+        assert session.current_scope_id == first_scope
+
+
+def test_tutorial_final_pipeline_is_selected_and_shown_in_the_list(tmp_path) -> None:
+    root, final, start = _pipeline_folder(
+        tmp_path,
+        "AdvancedSegmentation",
+        "BBBC022_Analysis_Final.cppipe",
+        "BBBC022_Analysis_Start.cppipe",
     )
-    plate_root = tmp_path / "plate"
-    plate_root.mkdir()
-    first_cppipe = plate_root / "first.cppipe"
-    second_cppipe = plate_root / "second.cppipe"
-    first_cppipe.write_text("Version:5", encoding="utf-8")
-    second_cppipe.write_text("Version:5", encoding="utf-8")
+    with session_gui() as gui:
+        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        gui.settle()
 
-    widget.add_plate_callback([plate_root])
-
-    first_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        first_cppipe,
-    ).scope_id
-    second_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        second_cppipe,
-    ).scope_id
-    assert "::" not in first_scope
-    assert "::" not in second_scope
-    added = {
-        plate.scope_id: plate
-        for plate in widget.plates
-        if plate.plate_root == str(plate_root)
-    }
-    assert created_orchestrators == [
-        (first_scope, plate_root, first_cppipe),
-        (second_scope, plate_root, second_cppipe),
-    ]
-    assert sorted(added) == [first_scope, second_scope]
-    assert added[first_scope].name == "plate / first"
-    assert added[first_scope].cppipe_path == str(first_cppipe)
-    assert added[second_scope].name == "plate / second"
-    assert added[second_scope].cppipe_path == str(second_cppipe)
-    assert widget.selected_plate_path == first_scope
-    close_widget(widget)
-
-
-def test_plate_manager_prefers_tutorial_final_pipeline_for_multi_cppipe_folder(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    monkeypatch.setattr(PlateManagerWidget, "setup_ui", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "setup_connections", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_button_states", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_item_list", lambda self: None)
-    created_orchestrators = []
-    create_orchestrator = PlateManagerWidget._create_orchestrator_for_plate
-
-    def record_orchestrator(
-        self,
-        plate_path: str,
-        *,
-        plate_root=None,
-        cppipe_path=None,
-    ):
-        created_orchestrators.append((plate_path, Path(plate_root), Path(cppipe_path)))
-        return create_orchestrator(
-            self,
-            plate_path,
-            plate_root=plate_root,
-            cppipe_path=cppipe_path,
-        )
-
-    monkeypatch.setattr(
-        PlateManagerWidget,
-        "_create_orchestrator_for_plate",
-        record_orchestrator,
-    )
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
-    )
-    plate_root = tmp_path / "AdvancedSegmentation"
-    plate_root.mkdir()
-    final_cppipe = plate_root / "BBBC022_Analysis_Final.cppipe"
-    start_cppipe = plate_root / "BBBC022_Analysis_Start.cppipe"
-    final_cppipe.write_text("Version:5", encoding="utf-8")
-    start_cppipe.write_text("Version:5", encoding="utf-8")
-
-    widget.add_plate_callback([plate_root])
-
-    start_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        start_cppipe,
-    ).scope_id
-    final_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        final_cppipe,
-    ).scope_id
-    assert created_orchestrators == [
-        (start_scope, plate_root, start_cppipe),
-        (final_scope, plate_root, final_cppipe),
-    ]
-    assert widget.selected_plate_path == final_scope
-    close_widget(widget)
-
-
-def test_plate_manager_cppipe_add_keeps_visible_selection_on_logical_scope(
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
-
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
-    )
-    plate_root = tmp_path / "AdvancedSegmentation"
-    plate_root.mkdir()
-    final_cppipe = plate_root / "BBBC022_Analysis_Final.cppipe"
-    start_cppipe = plate_root / "BBBC022_Analysis_Start.cppipe"
-    final_cppipe.write_text("Version:5", encoding="utf-8")
-    start_cppipe.write_text("Version:5", encoding="utf-8")
-
-    try:
-        widget.add_plate_callback([plate_root])
-
-        final_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-            plate_root,
-            final_cppipe,
-        ).scope_id
-        current_item = widget.item_list.currentItem()
-
-        assert widget.selected_plate_path == final_scope
+        final_scope = _scope(root, final)
+        assert gui.session.dataset_scope_ids() == [_scope(root, start), final_scope]
+        assert gui.session.current_scope_id == final_scope
+        current_item = gui.plate_manager.item_list.currentItem()
         assert current_item is not None
         assert current_item.data(Qt.ItemDataRole.UserRole) == final_scope
-    finally:
-        close_widget(widget)
-        ObjectStateRegistry.clear()
+        assert gui.pipeline_editor.current_plate == final_scope
 
 
-def test_plate_manager_refresh_preserves_selection_without_reemitting_plate_selected(
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
-
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
+def test_list_refresh_keeps_the_selection_without_reannouncing_it(tmp_path) -> None:
+    root, _final = _pipeline_folder(
+        tmp_path, "AdvancedSegmentation", "BBBC022_Analysis_Final.cppipe"
     )
-    plate_root = tmp_path / "AdvancedSegmentation"
-    plate_root.mkdir()
-    final_cppipe = plate_root / "BBBC022_Analysis_Final.cppipe"
-    final_cppipe.write_text("Version:5", encoding="utf-8")
-
-    try:
-        widget.add_plate_callback([plate_root])
+    with session_gui() as gui:
+        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        gui.settle()
         emissions = []
-        widget.plate_selected.connect(emissions.append)
+        gui.plate_manager.plate_selected.connect(emissions.append)
 
-        widget.update_item_list()
+        gui.plate_manager.update_item_list()
+        gui.settle()
 
         assert emissions == []
-    finally:
-        close_widget(widget)
-        ObjectStateRegistry.clear()
 
 
-def test_plate_manager_delete_selected_cppipe_selects_remaining_scope(
-    tmp_path: Path,
+def test_deleting_the_selected_pipeline_row_moves_both_widgets_to_the_rest(
+    tmp_path,
 ) -> None:
-    QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
-
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
+    root, start, final = _pipeline_folder(
+        tmp_path,
+        "BeginnerSegmentation",
+        "segmentation_start.cppipe",
+        "segmentation_final.cppipe",
     )
-    plate_root = tmp_path / "BeginnerSegmentation"
-    plate_root.mkdir()
-    start_cppipe = plate_root / "segmentation_start.cppipe"
-    final_cppipe = plate_root / "segmentation_final.cppipe"
-    start_cppipe.write_text("Version:5", encoding="utf-8")
-    final_cppipe.write_text("Version:5", encoding="utf-8")
-
-    try:
-        widget.add_plate_callback([plate_root])
-        start_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-            plate_root,
-            start_cppipe,
-        ).scope_id
-        final_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-            plate_root,
-            final_cppipe,
-        ).scope_id
+    with session_gui() as gui:
+        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        gui.settle()
+        start_scope, final_scope = _scope(root, start), _scope(root, final)
+        assert gui.session.current_scope_id == final_scope
+        assert gui.pipeline_editor.current_plate == final_scope
         emissions = []
-        widget.plate_selected.connect(emissions.append)
+        gui.plate_manager.plate_selected.connect(emissions.append)
 
-        widget.selected_plate_path = final_scope
-        PlateManagerDeletionWorkflow(widget).delete(
-            [PlateManagerRow.from_scope(final_scope)]
-        )
+        gui.plate_manager.handle_button_action(DeleteDatasets.operation_id)
+        gui.settle()
 
-        remaining_scope_ids = [row.scope_id for row in widget.plates]
-        assert remaining_scope_ids == [start_scope]
-        assert widget.selected_plate_path == start_scope
+        assert [row.scope_id for row in gui.plate_manager.plates] == [start_scope]
+        assert gui.session.current_scope_id == start_scope
+        assert gui.pipeline_editor.current_plate == start_scope
         assert emissions == [start_scope]
-    finally:
-        close_widget(widget)
-        ObjectStateRegistry.clear()
+        assert ObjectStateRegistry.get_by_scope(final_scope) is None
 
 
-def test_plate_manager_delete_action_moves_pipeline_editor_to_remaining_cppipe(
-    tmp_path: Path,
+def test_persisted_multi_pipeline_root_is_split_into_logical_rows(tmp_path) -> None:
+    root, final, start = _pipeline_folder(
+        tmp_path,
+        "AdvancedSegmentation",
+        "BBBC022_Analysis_Final.cppipe",
+        "BBBC022_Analysis_Start.cppipe",
+    )
+    with caller_session(persisted_scope_ids=[str(root)]) as session:
+        start_scope, final_scope = _scope(root, start), _scope(root, final)
+        assert dataset_scope_ids() == [start_scope, final_scope]
+        assert session.orchestrator(start_scope).selected_pipeline_path == start
+        assert session.orchestrator(final_scope).selected_pipeline_path == final
+
+
+def test_code_documents_naming_a_pipeline_scope_keep_its_import_request(
+    tmp_path,
 ) -> None:
-    from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-
-    QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
-
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
+    root, pipeline = _pipeline_folder(
+        tmp_path, "BeginnerSegmentation", "segmentation_final.cppipe"
     )
-    editor = PipelineEditorWidget(service_adapter)
-    widget.pipeline_editor = editor
-    widget.plate_selected.connect(editor.set_current_plate)
-    plate_root = tmp_path / "BeginnerSegmentation"
-    plate_root.mkdir()
-    start_cppipe = plate_root / "segmentation_start.cppipe"
-    final_cppipe = plate_root / "segmentation_final.cppipe"
-    start_cppipe.write_text("Version:5", encoding="utf-8")
-    final_cppipe.write_text("Version:5", encoding="utf-8")
+    scope_id = _scope(root, pipeline)
+    with caller_session() as session:
+        session.sync_datasets((scope_id,))
 
-    try:
-        widget.add_plate_callback([plate_root])
-        start_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-            plate_root,
-            start_cppipe,
-        ).scope_id
-        final_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-            plate_root,
-            final_cppipe,
-        ).scope_id
-
-        assert widget.selected_plate_path == final_scope
-        assert editor.current_plate == final_scope
-
-        widget.action_delete()
-
-        assert [row.scope_id for row in widget.plates] == [start_scope]
-        assert widget.selected_plate_path == start_scope
-        assert editor.current_plate == start_scope
-    finally:
-        editor.close()
-        close_widget(widget)
-        ObjectStateRegistry.clear()
+        orchestrator = session.orchestrator(scope_id)
+        assert orchestrator.plate_path == root
+        assert orchestrator.selected_pipeline_path == pipeline
+        assert session.current_scope_id == scope_id
 
 
-def test_plate_manager_normalizes_persisted_multi_cppipe_scope_to_logical_rows(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    monkeypatch.setattr(PlateManagerWidget, "setup_ui", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "setup_connections", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_button_states", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_item_list", lambda self: None)
-    ObjectStateRegistry.clear()
-
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    root_state = ObjectState(object_instance=RootState(), scope_id=ROOT_SCOPE_ID)
-    ObjectStateRegistry.register(root_state, _skip_snapshot=True)
-    plate_root = tmp_path / "AdvancedSegmentation"
-    plate_root.mkdir()
-    final_cppipe = plate_root / "BBBC022_Analysis_Final.cppipe"
-    start_cppipe = plate_root / "BBBC022_Analysis_Start.cppipe"
-    final_cppipe.write_text("Version:5", encoding="utf-8")
-    start_cppipe.write_text("Version:5", encoding="utf-8")
-    root_state.update_parameter("orchestrator_scope_ids", [str(plate_root)])
-
-    try:
-        widget = PlateManagerWidget(
-            service_adapter,
-            gui_config=get_default_ui_config(),
-        )
-
-        start_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-            plate_root,
-            start_cppipe,
-        ).scope_id
-        final_scope = PlateScopeIdentity.from_cellprofiler_pipeline(
-            plate_root,
-            final_cppipe,
-        ).scope_id
-        normalized_root_state = ObjectStateRegistry.get_by_scope(ROOT_SCOPE_ID)
-        assert normalized_root_state.parameters["orchestrator_scope_ids"] == [
-            start_scope,
-            final_scope,
-        ]
-        assert (
-            ObjectStateRegistry.get_object(start_scope).selected_pipeline_path
-            == start_cppipe
-        )
-        assert (
-            ObjectStateRegistry.get_object(final_scope).selected_pipeline_path
-            == final_cppipe
-        )
-        close_widget(widget)
-    finally:
-        ObjectStateRegistry.clear()
-
-
-def test_plate_manager_scoped_cppipe_orchestrator_uses_physical_plate_root(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    monkeypatch.setattr(PlateManagerWidget, "setup_ui", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "setup_connections", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_button_states", lambda self: None)
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
+def test_config_window_edits_the_logical_pipeline_scope(tmp_path, monkeypatch) -> None:
+    root, pipeline = _pipeline_folder(
+        tmp_path, "AdvancedSegmentation", "BBBC022_Analysis_Final.cppipe"
     )
-    plate_root = tmp_path / "plate"
-    plate_root.mkdir()
-    cppipe_path = plate_root / "first.cppipe"
-    scope_id = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        cppipe_path,
-    ).scope_id
-
-    widget._create_orchestrator_for_plate(scope_id, plate_root=plate_root)
-
-    orchestrator = ObjectStateRegistry.get_object(scope_id)
-    assert orchestrator is not None
-    assert orchestrator.plate_path == plate_root
-    close_widget(widget)
-
-
-def test_plate_manager_code_mode_cppipe_scope_preserves_import_request(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
-    monkeypatch.setattr(PlateManagerWidget, "setup_ui", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "setup_connections", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_button_states", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_item_list", lambda self: None)
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
-    )
-    plate_root = tmp_path / "BeginnerSegmentation"
-    plate_root.mkdir()
-    cppipe_path = plate_root / "segmentation_final.cppipe"
-    cppipe_path.write_text("Version:5", encoding="utf-8")
-    scope_id = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        cppipe_path,
-    ).scope_id
-
-    try:
-        PlateManagerCodeWorkflow(widget).sync_plate_entries((scope_id,))
-
-        orchestrator = ObjectStateRegistry.get_object(scope_id)
-        assert orchestrator is not None
-        assert orchestrator.plate_path == plate_root
-        assert orchestrator.selected_pipeline_path == cppipe_path
-    finally:
-        close_widget(widget)
-        ObjectStateRegistry.clear()
-
-
-def test_plate_manager_opens_cppipe_config_with_logical_scope(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    monkeypatch.setattr(PlateManagerWidget, "setup_ui", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "setup_connections", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_button_states", lambda self: None)
-    ObjectStateRegistry.clear()
-
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
-    )
-    plate_root = tmp_path / "AdvancedSegmentation"
-    plate_root.mkdir()
-    cppipe_path = plate_root / "BBBC022_Analysis_Final.cppipe"
-    cppipe_path.write_text("Version:5", encoding="utf-8")
-    scope_id = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        cppipe_path,
-    ).scope_id
-    widget._create_orchestrator_for_plate(
-        scope_id,
-        plate_root=plate_root,
-        cppipe_path=cppipe_path,
-    )
-    monkeypatch.setattr(
-        widget,
-        "get_selected_items",
-        lambda: [
-            PlateManagerRow.from_scope(
-                scope_id,
-                cppipe_path=str(cppipe_path),
-            )
-        ],
-    )
-
+    scope_id = _scope(root, pipeline)
     captured = {}
 
     class FakeConfigWindow:
-        def __init__(
-            self,
-            tabs,
-            color_scheme=None,
-            parent=None,
-            scope_id=None,
-        ):
+        def __init__(self, tabs, color_scheme=None, parent=None, scope_id=None):
             captured["tabs"] = tabs
             captured["scope_id"] = scope_id
 
@@ -508,68 +173,48 @@ def test_plate_manager_opens_cppipe_config_with_logical_scope(
             pass
 
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.widgets.plate_manager.ConfigWindow",
-        FakeConfigWindow,
+        "openhcs.pyqt_gui.widgets.plate_manager.ConfigWindow", FakeConfigWindow
     )
-    emissions = []
-    widget.orchestrator_config_changed.connect(
-        lambda emitted_scope, config: emissions.append((emitted_scope, config))
-    )
+    with session_gui() as gui:
+        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        orchestrator = gui.session.orchestrator(scope_id)
+        orchestrator._state = type(orchestrator.state).READY
+        gui.session.refresh()
+        gui.settle()
+        emissions = []
+        gui.plate_manager.orchestrator_config_changed.connect(
+            lambda emitted_scope, config: emissions.append((emitted_scope, config))
+        )
 
-    try:
-        widget.action_edit_config()
+        gui.plate_manager.handle_button_action(EditDatasetConfig.operation_id)
 
+        assert captured["shown"] is True
         assert captured["scope_id"] == scope_id
         assert captured["tabs"][0].state is ObjectStateRegistry.get_by_scope(scope_id)
+        captured["tabs"][0].save_participant.apply(PipelineConfig(num_workers=5))
+        gui.settle()
 
-        new_config = PipelineConfig()
-        captured["tabs"][0].save_participant.apply(new_config)
-
-        assert widget.plate_configs[scope_id] is new_config
-        assert str(plate_root) not in widget.plate_configs
-        assert emissions[-1][0] == scope_id
-    finally:
-        close_widget(widget)
-        ObjectStateRegistry.clear()
-
-
-def test_plate_manager_cppipe_row_preview_uses_logical_config_scope(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    QtApplicationHarness.app()
-    monkeypatch.setattr(PlateManagerWidget, "setup_ui", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "setup_connections", lambda self: None)
-    monkeypatch.setattr(PlateManagerWidget, "update_button_states", lambda self: None)
-    ObjectStateRegistry.clear()
-
-    service_adapter = PlateManagerServiceStub()
-    ensure_global_config_context(GlobalPipelineConfig, service_adapter.global_config)
-    widget = PlateManagerWidget(
-        service_adapter,
-        gui_config=get_default_ui_config(),
-    )
-    plate_root = tmp_path / "AdvancedSegmentation"
-    plate_root.mkdir()
-    cppipe_path = plate_root / "BBBC022_Analysis_Final.cppipe"
-    cppipe_path.write_text("Version:5", encoding="utf-8")
-    scope_id = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        cppipe_path,
-    ).scope_id
-    widget._create_orchestrator_for_plate(
-        scope_id,
-        plate_root=plate_root,
-        cppipe_path=cppipe_path,
-    )
-
-    try:
-        rendered = widget._format_plate_item_with_preview_text(
-            PlateManagerRow.from_scope(
-                scope_id,
-                cppipe_path=str(cppipe_path),
+        assert (
+            ObjectStateRegistry.get_by_scope(scope_id).get_saved_resolved_value(
+                "num_workers"
             )
+            == 5
         )
+        assert ObjectStateRegistry.get_by_scope(str(root)) is None
+        assert emissions[-1][0] == scope_id
+
+
+def test_pipeline_row_preview_reads_the_logical_config_scope(tmp_path) -> None:
+    root, pipeline = _pipeline_folder(
+        tmp_path, "AdvancedSegmentation", "BBBC022_Analysis_Final.cppipe"
+    )
+    scope_id = _scope(root, pipeline)
+    with session_gui() as gui:
+        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        gui.settle()
+        (row,) = gui.plate_manager.plates
+
+        rendered = gui.plate_manager._format_item_content(row, 0, None)
 
         preview_paths = {
             segment.field_path for segment in rendered.layout.preview_segments
@@ -577,6 +222,3 @@ def test_plate_manager_cppipe_row_preview_uses_logical_config_scope(
         assert "num_workers" in preview_paths
         assert "vfs_config.materialization_backend" in preview_paths
         assert rendered.layout.detail_line == scope_id
-    finally:
-        close_widget(widget)
-        ObjectStateRegistry.clear()

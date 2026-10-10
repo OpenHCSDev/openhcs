@@ -46,16 +46,6 @@ def _visible_leaf_paths(value: object, prefix: str = "") -> tuple[str, ...]:
 
 
 @dataclass
-class _ConfigAwareStub:
-    calls: int = 0
-    last_config: GlobalPipelineConfig | None = None
-
-    def on_config_changed(self, new_config: GlobalPipelineConfig) -> None:
-        self.calls += 1
-        self.last_config = new_config
-
-
-@dataclass
 class _ServiceAdapterStub:
     calls: int = 0
     last_config: GlobalPipelineConfig | None = None
@@ -259,9 +249,12 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
     manager_zmq = Recorder()
     preview = Recorder()
 
+    intervals: list[float] = []
     plate_manager = SimpleNamespace(
-        zmq_client_service=SimpleNamespace(set_config=plate_zmq.record),
-        _batch_workflow_service=SimpleNamespace(update_progress_config=progress.record),
+        session=SimpleNamespace(
+            set_transport_config=plate_zmq.record,
+            progress=SimpleNamespace(set_interval=intervals.append),
+        ),
     )
     plate_manager.set_ui_config = MethodType(
         PlateManagerWidget.set_ui_config,
@@ -317,6 +310,8 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
     }
     assert ui_leaf_lifecycle
     assert set(ui_leaf_lifecycle.values()) == {"live"}
+    assert plate_manager._ui_config is ui_config
+    assert intervals == [ui_config.progress.update_interval_ms / 1000]
     assert is_dataclass(ui_config.logging)
 
     global_config = GlobalPipelineConfig()
@@ -415,17 +410,16 @@ def test_set_ui_config_restores_previous_consumers_before_rejecting_update() -> 
     assert main_like.ui_config_changed.values == []
 
 
-def test_lifecycle_workflow_propagates_config_to_embedded_widgets(qapp) -> None:
-    plate_manager = _ConfigAwareStub()
-    pipeline_editor = _ConfigAwareStub()
-    progress_bar = type("ProgressBar", (), {})()
+def test_lifecycle_workflow_adopts_a_saved_global_config_into_the_session(
+    qapp,
+) -> None:
+    from tests.unit.pyqt_gui.session_harness import add_datasets, caller_session
 
+    progress_bar = type("ProgressBar", (), {})()
+    main_window = QWidget()
     workflow = MainWindowLifecycleWorkflow(
-        main_window=QWidget(),
-        embedded_widgets=SimpleNamespace(
-            require_plate_manager=lambda: plate_manager,
-            require_pipeline_editor=lambda: pipeline_editor,
-        ),
+        main_window=main_window,
+        embedded_widgets=SimpleNamespace(),
         floating_windows={},
         status_progress_bar=progress_bar,
         ui_bridge_lifecycle=MainWindowUiBridgeLifecycle(),
@@ -433,12 +427,27 @@ def test_lifecycle_workflow_propagates_config_to_embedded_widgets(qapp) -> None:
     )
 
     new_config = GlobalPipelineConfig(num_workers=3)
-    workflow.propagate_config(new_config)
+    import tempfile
+    from pathlib import Path
 
-    assert plate_manager.calls == 1
-    assert plate_manager.last_config == new_config
-    assert pipeline_editor.calls == 1
-    assert pipeline_editor.last_config == new_config
+    from openhcs.authoring.session.events import DatasetConfigChanged
+
+    with caller_session() as session:
+        main_window.session = session
+        (scope_id,) = add_datasets(session, Path(tempfile.mkdtemp()), "plate")
+        changed = []
+        session.subscribe(
+            lambda record: changed.append(
+                (record.event.scope_id, record.event.effective_config.num_workers)
+            )
+            if isinstance(record.event, DatasetConfigChanged)
+            else None
+        )
+
+        workflow.propagate_config(new_config)
+
+        assert session.global_config is new_config
+        assert changed == [(scope_id, 3)]
 
 
 def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(
@@ -447,10 +456,12 @@ def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(
     from PyQt6.QtWidgets import QProgressBar
 
     progress_bar = QProgressBar()
-    plate_manager = SimpleNamespace(plate_init_pending=set())
+    session = SimpleNamespace(init_pending=set())
+    main_window = QWidget()
+    main_window.session = session
     workflow = MainWindowLifecycleWorkflow(
-        main_window=QWidget(),
-        embedded_widgets=SimpleNamespace(require_plate_manager=lambda: plate_manager),
+        main_window=main_window,
+        embedded_widgets=SimpleNamespace(),
         floating_windows={},
         status_progress_bar=progress_bar,
         ui_bridge_lifecycle=MainWindowUiBridgeLifecycle(),
@@ -473,7 +484,7 @@ def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(
     assert progress_bar.value() == 100
     assert not progress_bar.isVisible()
 
-    plate_manager.plate_init_pending.add("/initializing-plate")
+    session.init_pending.add("/initializing-plate")
     workflow.runtime_progress_changed(
         SimpleNamespace(overall_percent=100.0, has_active_work=False)
     )
@@ -487,7 +498,7 @@ def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(
     assert progress_bar.value() == 41
     assert not progress_bar.isHidden()
 
-    plate_manager.plate_init_pending.clear()
+    session.init_pending.clear()
     workflow.runtime_progress_changed(
         SimpleNamespace(overall_percent=100.0, has_active_work=False)
     )
@@ -500,6 +511,7 @@ def test_lifecycle_workflow_cleans_embedded_resource_owners_before_qt_teardown(
 ) -> None:
     calls = []
     main_window = QWidget()
+    main_window.session = SimpleNamespace(close=lambda: calls.append("session"))
     embedded_widgets = SimpleNamespace(
         require_system_monitor=lambda: SimpleNamespace(
             stop_monitoring=lambda: calls.append("system_monitor")
@@ -532,6 +544,7 @@ def test_lifecycle_workflow_cleans_embedded_resource_owners_before_qt_teardown(
         "ui_bridge",
         "system_monitor",
         "plate_manager",
+        "session",
         "zmq_manager",
         "async_services",
     ]
@@ -543,6 +556,7 @@ def test_lifecycle_workflow_attempts_every_owner_before_reporting_failures(
 ) -> None:
     calls: list[str] = []
     main_window = QWidget()
+    main_window.session = SimpleNamespace(close=lambda: calls.append("session"))
 
     def fail(name: str) -> None:
         calls.append(name)
@@ -602,6 +616,7 @@ def test_lifecycle_workflow_attempts_every_owner_before_reporting_failures(
         "ui_bridge",
         "system_monitor",
         "plate_manager",
+        "session",
         "zmq_manager",
         "managed_window",
         "floating_window",
