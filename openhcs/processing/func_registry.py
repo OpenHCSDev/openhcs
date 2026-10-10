@@ -17,10 +17,8 @@ from collections.abc import Callable, Mapping
 from importlib.machinery import PathFinder
 from typing import Any
 
-from arraybridge.types import VALID_MEMORY_TYPES
 
 import openhcs
-from openhcs.core.callable_contract import CallableContract
 
 logger = logging.getLogger(__name__)
 
@@ -210,96 +208,11 @@ def initialize_registry() -> None:
     )
 
 
-def _auto_initialize_registry() -> None:
-    """Compatibility entry point for explicit application startup owners."""
-
-    initialize_registry()
-
-
-def get_functions_by_memory_type(memory_type: str) -> list[Callable]:
-    """Return canonical callables whose declared input role uses ``memory_type``."""
-
-    if memory_type not in VALID_MEMORY_TYPES:
-        raise ValueError(
-            f"Invalid memory type: {memory_type}. "
-            f"Valid types are: {', '.join(sorted(VALID_MEMORY_TYPES))}"
-        )
-
-    from openhcs.processing.backends.lib_registry.registry_service import (
-        RegistryService,
-    )
-
-    functions: list[Callable] = []
-    seen: set[int] = set()
-    for metadata in RegistryService.get_all_functions_with_metadata().values():
-        contract = CallableContract.from_callable(metadata.func)
-        if contract.input_memory_type != memory_type:
-            continue
-        identity = id(metadata.func)
-        if identity in seen:
-            continue
-        seen.add(identity)
-        functions.append(metadata.func)
-    return functions
-
-
-def get_function_info(func: Callable) -> dict[str, Any]:
-    """Return declaration-derived summary information for one callable."""
-
-    contract = CallableContract.from_callable(func)
-    if contract.input_memory_type is None or contract.output_memory_type is None:
-        raise ValueError(
-            f"Function {func.__name__!r} does not declare array memory boundaries"
-        )
-    return {
-        "name": func.__name__,
-        "input_memory_type": contract.input_memory_type,
-        "output_memory_type": contract.output_memory_type,
-        # Historical facade key, projected from the same input-memory declaration.
-        "backend": contract.input_memory_type,
-        "doc": func.__doc__,
-    }
-
-
 def is_registry_initialized() -> bool:
     """Return whether the application startup projection has completed."""
 
     with _registry_lock:
         return _registry_initialized
-
-
-def get_valid_memory_types() -> set[str]:
-    """Return the memory names declared by ArrayBridge."""
-
-    return set(VALID_MEMORY_TYPES)
-
-
-def get_function_by_name(
-    function_name: str,
-    memory_type: str,
-) -> Callable | None:
-    """Resolve a legacy name only when it identifies exactly one callable."""
-
-    from openhcs.processing.backends.lib_registry.registry_service import (
-        RegistryService,
-    )
-
-    matches = {
-        function_id: metadata.func
-        for function_id, metadata in RegistryService.get_all_functions_with_metadata().items()
-        if CallableContract.from_callable(metadata.func).input_memory_type
-        == memory_type
-        and function_name in {metadata.display_name, metadata.func.__name__}
-    }
-    if not matches:
-        return None
-    if len(matches) > 1:
-        raise LookupError(
-            f"Function name {function_name!r} with input memory {memory_type!r} "
-            "is ambiguous; use one of the canonical function IDs: "
-            f"{tuple(sorted(matches))!r}."
-        )
-    return next(iter(matches.values()))
 
 
 def get_function(function_id: str) -> Callable:
@@ -310,9 +223,3 @@ def get_function(function_id: str) -> Callable:
     )
 
     return RegistryService.metadata_for_canonical_key(function_id).func
-
-
-def get_all_function_names(memory_type: str) -> list[str]:
-    """Return canonical callable names for one declared input memory."""
-
-    return [func.__name__ for func in get_functions_by_memory_type(memory_type)]

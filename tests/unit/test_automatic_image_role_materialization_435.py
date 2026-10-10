@@ -297,7 +297,6 @@ def test_distinct_aliases_that_normalize_to_one_filename_still_conflict(tmp_path
 
 def test_batch_binds_actual_purpose_once_without_rewriting_plan_or_source(monkeypatch, tmp_path):
     from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec, TerminalMaterializationSpec
-    from openhcs.processing.materialization.constants import MaterializationFormat
     from openhcs.processing.materialization.core import MaterializationBatch, MaterializationContext, Output, WriterSpec, _WRITERS_BY_OPTIONS
 
     options = ImageFileOptions(filename_suffix=".tif")
@@ -319,7 +318,7 @@ def test_batch_binds_actual_purpose_once_without_rewriting_plan_or_source(monkey
         seen.append(actual_context)
         return [Output(path=str(tmp_path / "custom.tif"), content=data)]
     monkeypatch.setitem(_WRITERS_BY_OPTIONS, ImageFileOptions, WriterSpec(
-        format=MaterializationFormat.IMAGE_FILE, options_type=ImageFileOptions,
+        options_type=ImageFileOptions,
         write=custom_writer, primary_path=lambda outputs: outputs[0].path,
         candidate_paths=lambda _options, base: (base,),
     ))

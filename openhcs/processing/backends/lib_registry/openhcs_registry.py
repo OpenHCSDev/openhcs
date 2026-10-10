@@ -206,7 +206,6 @@ _MEMORY_DECORATOR_IMPORT_MODULES = frozenset(
     {
         "openhcs.core.memory",
         "openhcs.core.memory.decorators",
-        "openhcs.processing",
     }
 )
 
@@ -424,13 +423,6 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         ):
             # Skip lib_registry modules to avoid circular imports
             if "lib_registry" in module_name:
-                continue
-
-            # Skip __pycache__ and other non-module files
-            if "__pycache__" in module_name:
-                continue
-
-            if module_name.rsplit(".", maxsplit=1)[-1].startswith("test_"):
                 continue
 
             modules.append(module_name)

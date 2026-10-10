@@ -1,9 +1,6 @@
 """Materialization public API (writer-based)."""
 
-from openhcs.processing.materialization.constants import (
-    MaterializationFormat,
-    WriteMode,
-)
+from openhcs.processing.materialization.constants import WriteMode
 from openhcs.processing.materialization.core import (
     BackendSaver,
     MaterializationBatch,
@@ -55,7 +52,6 @@ from openhcs.processing.materialization.presets import (
 )
 
 __all__ = [
-    "MaterializationFormat",
     "WriteMode",
     "MaterializationSpec",
     "TerminalMaterializationSpec",
