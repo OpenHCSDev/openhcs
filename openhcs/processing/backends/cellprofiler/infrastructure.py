@@ -1149,7 +1149,7 @@ def _image_plane_source(value: str) -> ImagePlaneSource:
         uri=uri,
         series=series or None,
         index=index or None,
-        channel=channel or None,
+        colour_sample=channel or None,
     )
 
 

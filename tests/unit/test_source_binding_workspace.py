@@ -1747,7 +1747,7 @@ def test_source_binding_workspace_broadcasts_explicit_single_members(tmp_path):
         uri=str(flatfield),
         series="2",
         index="3",
-        channel="4",
+        colour_sample="4",
     )
     projector = SourceBindingWorkspaceProjector(
         SourceBindingsConfig(

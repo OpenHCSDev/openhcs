@@ -41,7 +41,6 @@ DOMAIN_MODULE_PREFIXES = (
     "openhcs/mcp/installed_demo.py",
     "openhcs/processing/backends/analysis/consolidate_analysis_results.py",
     "openhcs/processing/backends/experimental_analysis/",
-    "openhcs/formats/experimental_analysis.py",
 )
 # The product package root is the microscopy distribution's entry point.
 DOMAIN_ENTRY_POINT = "openhcs/__init__.py"
@@ -118,6 +117,100 @@ def test_kernel_modules_name_no_microscopy_member() -> None:
         if found:
             offenders[relative] = sorted(found)
     assert offenders == {}
+
+
+def _domain_member_spellings() -> frozenset[str]:
+    """Every spelling of a microscopy axis: name, collection key, multi-letter label.
+
+    One-letter labels (``Z``, ``T``) are ImageJ and NGFF dimension letters too.
+    """
+
+    spellings: set[str] = set()
+    for axis in Microscopy.axes:
+        spellings |= {axis.name, axis.metadata_collection_field}
+        if len(axis.label) > 1:
+            spellings.add(axis.label)
+    return frozenset(spellings)
+
+
+# CellProfiler's own vocabulary (its "Well"/"Plate" metadata tags) is declared
+# in the CellProfiler domain package. P moves it under openhcs/domains/.
+CELLPROFILER_DOMAIN_PREFIX = "openhcs/interop/"
+
+# ImageJ calls its hyperstack C dimension "channel", and saved configs spell
+# the slot ``FijiDimensionMode.CHANNEL``. This is the one kernel declaration
+# whose external spelling coincides with a microscopy axis name.
+EXTERNAL_SPELLINGS = frozenset(
+    {("openhcs/runtime/viewer_display.py", "FijiSlots.HyperstackChannel", "channel")}
+)
+
+
+def _member_spellings_in(tree: ast.AST, spellings: frozenset[str]) -> set[tuple[str, str]]:
+    """(enclosing class qualname, spelling) for literals, attributes and class fields."""
+
+    docstrings = {
+        id(node.body[0].value)
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.body
+        and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+    }
+    found: set[tuple[str, str]] = set()
+
+    def visit(node: ast.AST, scope: str) -> None:
+        for child in ast.iter_child_nodes(node):
+            child_scope = scope
+            if isinstance(child, ast.ClassDef):
+                child_scope = f"{scope}.{child.name}" if scope else child.name
+                for statement in child.body:
+                    targets = (
+                        [statement.target]
+                        if isinstance(statement, ast.AnnAssign)
+                        else statement.targets
+                        if isinstance(statement, ast.Assign)
+                        else []
+                    )
+                    found.update(
+                        (child_scope, f"field {target.id}")
+                        for target in targets
+                        if isinstance(target, ast.Name) and target.id in spellings
+                    )
+            elif (
+                isinstance(child, ast.Constant)
+                and isinstance(child.value, str)
+                and child.value in spellings
+                and id(child) not in docstrings
+            ):
+                found.add((scope, child.value))
+            elif isinstance(child, ast.Attribute) and child.attr in spellings:
+                found.add((scope, f".{child.attr}"))
+            visit(child, child_scope)
+
+    visit(tree, "")
+    return found
+
+
+def test_kernel_modules_spell_no_microscopy_member() -> None:
+    spellings = _domain_member_spellings()
+    found: set[tuple[str, str, str]] = set()
+    for path in _python_files("openhcs"):
+        relative = _relative(path)
+        if (
+            relative.startswith((*DOMAIN_MODULE_PREFIXES, CELLPROFILER_DOMAIN_PREFIX))
+            or relative == DOMAIN_ENTRY_POINT
+        ):
+            continue
+        found.update(
+            (relative, scope, spelling)
+            for scope, spelling in _member_spellings_in(ast.parse(path.read_text()), spellings)
+        )
+    assert found == EXTERNAL_SPELLINGS
+
+
+def test_domain_allowlist_names_existing_domain_modules() -> None:
+    for prefix in DOMAIN_MODULE_PREFIXES:
+        assert (REPO_ROOT / prefix).exists(), prefix
 
 
 def test_product_entry_point_activates_microscopy() -> None:

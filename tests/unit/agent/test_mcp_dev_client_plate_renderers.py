@@ -199,7 +199,7 @@ def test_every_plate_renderer_presents_its_declared_dto_and_failure():
         SyntheticPlateGenerationResult(
             schema_version=SCHEMA_VERSION, output_dir="/plates/synthetic",
             requested_format=SyntheticPlateFormat.IMAGE_XPRESS,
-            grid_size=(2, 2), wells=("A01", "B02"), sampled_image_files=("a.tif",),
+            grid_size=(2, 2), partition_values=("A01", "B02"), sampled_image_files=("a.tif",),
         ),
         inspection(),
         query(),
@@ -375,13 +375,13 @@ def test_synthetic_generation_suggests_inspection_and_query():
         SyntheticPlateGenerationResult(
             schema_version=SCHEMA_VERSION, output_dir="/plates/synthetic",
             requested_format=SyntheticPlateFormat.IMAGE_XPRESS,
-            grid_size=(2, 2), tile_size=(64, 64), overlap_percent=10, wells=("A01", "B02"),
+            grid_size=(2, 2), tile_size=(64, 64), overlap_percent=10, partition_values=("A01", "B02"),
             wavelengths=2, image_count=8, sampled_image_files=tuple(f"{i}.tif" for i in range(14)),
             truncated_image_count=0,
         )
     )
     assert "Geometry: grid=2x2 tile=64x64 overlap=10% stage_error_px=0" in text
-    assert "Content: wells=A01,B02 channels=2" in text
+    assert "Content: partition_values=A01,B02 channels=2" in text
     assert "Files: images=8 sampled=14 truncated=0" in text
     assert "- 11.tif" in text and "- 12.tif" not in text
     assert text.endswith(

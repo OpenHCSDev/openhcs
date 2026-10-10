@@ -101,10 +101,10 @@ class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
             "--shared-cell-fraction",
         )
         parser.add_argument(
-            "--well",
-            dest="wells",
+            "--partition-value",
+            dest="partition_values",
             action="append",
-            help="Well ID to generate. Repeat for multiple wells.",
+            help="Partition value to generate. Repeat for several.",
         )
         add_request_field_option(
             parser,
@@ -162,7 +162,7 @@ class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
             z_stack_levels=args.z_stack_levels,
             num_cells=args.num_cells,
             shared_cell_fraction=args.shared_cell_fraction,
-            wells=args.wells,
+            partition_values=args.partition_values,
             format=args.format,
             openhcs_format=args.openhcs_format,
             include_all_components=args.include_all_components,
@@ -271,7 +271,7 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
             "path_contains",
             "--path-contains",
         )
-        add_request_field_option(parser, PlateFileQueryRequest, "well", "--well")
+        add_request_field_option(parser, PlateFileQueryRequest, "partition", "--partition")
         add_request_field_option(parser, PlateFileQueryRequest, "offset", "--offset")
         add_request_field_option(parser, PlateFileQueryRequest, "limit", "--limit")
         add_request_field_option(
@@ -312,7 +312,7 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
             pattern_format=args.pattern_format,
             kind=args.kind,
             path_contains=args.path_contains,
-            well=args.well,
+            partition=args.partition,
             offset=args.offset,
             limit=args.limit,
             include_previews=args.include_previews,
@@ -481,7 +481,7 @@ class PlateFileStreamCommandOptions:
                 help="Plate root to stream from the selected PlateManager row.",
             )
         parser.add_argument("--path-contains")
-        parser.add_argument("--well")
+        parser.add_argument("--partition")
         add_request_field_option(
             parser,
             request_type,
@@ -567,7 +567,7 @@ class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
                 args.file_paths,
             ),
             path_contains=args.path_contains,
-            well=args.well,
+            partition=args.partition,
             limit=args.limit,
             viewer_config_key=args.viewer_config_key,
             host=args.viewer_host,
@@ -695,8 +695,8 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
         add_request_field_option(
             parser,
             SelectedPlateFileQueryRequest,
-            "well",
-            "--well",
+            "partition",
+            "--partition",
         )
         add_request_field_option(
             parser,
@@ -749,7 +749,7 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
             kind=args.kind,
             target=args.target,
             path_contains=args.path_contains,
-            well=args.well,
+            partition=args.partition,
             offset=args.offset,
             limit=args.limit,
             include_previews=args.include_previews,
@@ -912,7 +912,7 @@ class SelectedPlateStreamCommandSpec(SingleToolCommandSpec):
             ),
             target=args.target,
             path_contains=args.path_contains,
-            well=args.well,
+            partition=args.partition,
             limit=args.limit,
             viewer_config_key=args.viewer_config_key,
             host=args.viewer_host,

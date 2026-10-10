@@ -287,6 +287,12 @@ def _thumbnail_png_base64(pixels: np.ndarray, *, auto_scale: bool) -> str:
     return b64encode(output.getvalue()).decode()
 
 
+PLATE_METADATA_TAG = "Plate"
+"""CellProfiler's default metadata tag naming an image's plate."""
+WELL_METADATA_TAG = "Well"
+"""CellProfiler's default metadata tag naming an image's well."""
+
+
 @dataclass(frozen=True, slots=True)
 class CellProfilerDatabaseExportSettings:
     """Subset of CellProfiler ExportToDatabase settings needed for CPA projection."""
@@ -303,8 +309,8 @@ class CellProfilerDatabaseExportSettings:
     maximum_column_name_length: int = 64
     location_object: str | None = None
     plate_type: str | None = None
-    plate_metadata: str = "Plate"
-    well_metadata: str = "Well"
+    plate_metadata: str = PLATE_METADATA_TAG
+    well_metadata: str = WELL_METADATA_TAG
     image_url_prepend: str = ""
     group_fields: tuple[tuple[str, str], ...] = ()
     classification_type: Literal["object", "image"] = "object"

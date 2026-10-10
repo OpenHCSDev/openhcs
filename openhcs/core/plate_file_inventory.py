@@ -24,7 +24,7 @@ class PlateFileInventoryQuery:
 
     kinds: tuple[PlateFileKind, ...] = ()
     path_contains: str | None = None
-    well: str | None = None
+    partition: str | None = None
     offset: int = 0
     limit: int = 50
 
@@ -62,7 +62,7 @@ class PlateFileInventoryQuery:
         return PlateFileInventoryQuery(
             kinds=self.kinds,
             path_contains=self.path_contains,
-            well=self.well,
+            partition=self.partition,
             offset=max(0, int(self.offset)),
             limit=max(0, int(self.limit)),
         )

@@ -193,29 +193,20 @@ class ImagePlaneSource:
     index: str | None = None
     """Optional format-specific plane or image index within the selected series."""
 
-    channel: str | None = None
-    """Optional source-channel identifier within the selected image or plane."""
+    colour_sample: str | None = None
+    """Optional colour-sample identifier within the selected image or plane."""
 
     def __post_init__(self) -> None:
         normalized_uri = self.uri.strip()
         if not normalized_uri:
             raise ValueError("ImagePlaneSource.uri cannot be empty.")
         object.__setattr__(self, "uri", normalized_uri)
-        object.__setattr__(
-            self,
-            "series",
-            _normalized_optional_source_text(self.series),
-        )
-        object.__setattr__(
-            self,
-            "index",
-            _normalized_optional_source_text(self.index),
-        )
-        object.__setattr__(
-            self,
-            "channel",
-            _normalized_optional_source_text(self.channel),
-        )
+        for field_name in ("series", "index", "colour_sample"):
+            object.__setattr__(
+                self,
+                field_name,
+                _normalized_optional_source_text(getattr(self, field_name)),
+            )
 
     def resolved(self, source_root: Path) -> ImagePlaneSource:
         """Return this source with its URI resolved to one verified local file."""

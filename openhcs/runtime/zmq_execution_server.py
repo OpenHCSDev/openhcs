@@ -579,7 +579,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             plate_id=request_context.plate_id,
         )
 
-        wells: list[str] | None = None
+        partition_values: list[str] | None = None
         compilation_resolved = False
         try:
             self._emit_compile_started(
@@ -614,7 +614,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 execution_bundle=execution_bundle,
             )
             self._raise_if_cancelled(request_context.execution_id, "initialization")
-            wells = self._wells_for_execution(
+            partition_values = self._wells_for_execution(
                 auxiliary_params.axis_filter,
                 orchestrator,
                 debug_execution_policy,
@@ -623,13 +623,13 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             self._emit_planned_init_started(
                 progress_emitter,
                 request_context.pipeline_steps,
-                wells,
+                partition_values,
                 request_context.compile_artifact_id,
             )
             compilation = self._resolve_compilation(
                 request_context=request_context,
                 orchestrator=orchestrator,
-                wells=wells,
+                partition_values=partition_values,
                 debug_execution_config=debug_execution_config,
                 debug_execution_policy=debug_execution_policy,
                 progress_emitter=progress_emitter,
@@ -652,7 +652,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 progress_emitter=progress_emitter,
                 compile_artifact_id=request_context.compile_artifact_id,
                 compilation_resolved=compilation_resolved,
-                wells=wells,
+                partition_values=partition_values,
                 error=error,
             )
             raise
@@ -757,12 +757,12 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
     def _emit_planned_init_started(
         progress_emitter: ZMQProgressEmitter,
         pipeline_steps: Sequence[FunctionStep],
-        wells: list[str],
+        partition_values: list[str],
         compile_artifact_id: str | None,
     ) -> None:
         if compile_artifact_id is None:
             progress_emitter.planned_init_started(
-                wells=wells,
+                partition_values=partition_values,
                 step_names=[step.name for step in pipeline_steps],
             )
 
@@ -771,7 +771,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         *,
         request_context: ZMQExecutionContext,
         orchestrator,
-        wells: list[str],
+        partition_values: list[str],
         debug_execution_config,
         debug_execution_policy,
         progress_emitter: ZMQProgressEmitter,
@@ -785,7 +785,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             pipeline_steps=request_context.pipeline_steps,
             orchestrator=orchestrator,
             resolved_config=resolved_config,
-            wells=wells,
+            partition_values=partition_values,
             compile_artifact_id=request_context.compile_artifact_id,
             compilation_signature=request_context.compilation_signature,
             debug_replay_signature=request_context.debug_replay_signature,
@@ -953,7 +953,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         progress_emitter: ZMQProgressEmitter,
         compile_artifact_id: str | None,
         compilation_resolved: bool,
-        wells: list[str] | None,
+        partition_values: list[str] | None,
         error: Exception,
     ) -> None:
         if compile_artifact_id is not None:
@@ -961,7 +961,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         if compilation_resolved:
             return
         progress_emitter.compile_failed(
-            axis_ids=self._compile_failure_axis_ids(wells),
+            axis_ids=self._compile_failure_axis_ids(partition_values),
             error=str(error),
         )
 
@@ -979,10 +979,10 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         )
 
     @staticmethod
-    def _compile_failure_axis_ids(wells: list[str] | None) -> list[str]:
-        if wells is None:
+    def _compile_failure_axis_ids(partition_values: list[str] | None) -> list[str]:
+        if partition_values is None:
             return []
-        return wells
+        return partition_values
 
     def _kill_worker_processes(self) -> int:
         """OpenHCS-specific worker cleanup (graceful cancellation + kill)."""

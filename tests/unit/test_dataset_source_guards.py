@@ -25,7 +25,6 @@ DOMAIN_MODULE_PREFIXES = (
     "openhcs/mcp/installed_demo.py",
     "openhcs/processing/backends/analysis/consolidate_analysis_results.py",
     "openhcs/processing/backends/experimental_analysis/",
-    "openhcs/formats/experimental_analysis.py",
 )
 DOMAIN_ENTRY_POINT = "openhcs/__init__.py"
 DOMAIN_PACKAGES = ("openhcs.microscopes", "openhcs.domains")
