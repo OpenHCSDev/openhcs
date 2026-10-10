@@ -77,10 +77,22 @@ class Microscopy(AxisFamily):
 
 Today a new domain's source needs a `Microscope` member, a module in `openhcs/microscopes`, and cannot read or write the openhcsdata format (it fills microscopy fields by name). After: one `DatasetSource` subclass in a module listed by the family's `extension_modules`; openhcsdata works unchanged.
 
+## Corrections made while executing
+
+- Domain config sections cannot be decorated with `@global_pipeline_config` inside the domain: importing the domain module before the kernel config would inject the global config without them. Sections instead inherit the light kernel marker `GlobalConfigSection` (`core/config_sections.py`); the kernel config imports the family's `config_modules` and decorates every declared section.
+- `PostExecuteHook` lives in `core/post_execute.py`, not `core/orchestrator/`: the orchestrator package import closes a cycle with the compiler.
+- Validation of `PipelineConfig.dataset_source` runs while modules import; the choice set tests membership by inheritance so it never triggers registry discovery.
+- The base `post_workspace` rename loop (pad filenames, default Z to 1) is microscopy behaviour; it moved with the virtual-mapping workflow to `microscopes/vendor_layout.py` (`VirtualMappingSource`). The OpenHCS and Bio-Formats `post_workspace` overrides had no caller and are deleted.
+- Plate-manager auto-add is an authoring flag read by the GUI from the global config, not a worker hook; it left `ProcessingContext` and `zmq_compilation` reads it from the resolved config.
+- Grouped artifact paths now spell the group axis's own token: a step grouped by site writes `A01_s003_x.pkl`, not `A01_w3_x.pkl`.
+
 ## Handoff
 
-- **G7:** vocabulary (`plate_path`, `microscope_handler_name` JSON key, `context.microscope_handler` attribute) is renamed with the runtime vocabulary.
-- **G8:** `FilenameParser.extract_component_coordinates` (grid decoding) moves onto the grid role; MCP `microscope_type` DTO fields become `source_format` choices from the registry.
+- **G7:** vocabulary (`plate_path`, `microscope_handler_name` JSON key, `context.microscope_handler` attribute, MCP `microscope_type`) is renamed with the runtime vocabulary.
+- **G8:** `FilenameParser.extract_component_coordinates` callers (image browser, Zarr HCS writer) move onto a grid role; G4 put the `A01` split on `Microscopy.Well.grid_coordinates`. The experimental-analysis menu in `pyqt_gui/main.py` is domain authoring.
+- **G3:** `SourceVoxelSpacing.values_zyx` and the `("z", "y", "x")` calibration keys are the N-d spatial domain.
+- **L1 (metaclass-registry):** `LazyDiscoveryDict._discover` logs and swallows discovery errors and marks the registry discovered; a failing domain module then leaves a silently partial registry. Discovery failures should propagate.
+- **K2:** `grouped_artifact_path` sits in `artifacts.py`; it now takes the group axis.
 
 ## Done when
 
