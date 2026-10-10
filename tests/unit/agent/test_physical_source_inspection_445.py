@@ -77,22 +77,22 @@ def _fixture(root: Path, channels: int):
     return stack, service, factory
 
 
-def _query(service, root, *, microscope_type="bioformats"):
+def _query(service, root, *, source_format="bioformats"):
     result = service.query_files(
         PlateFileQueryRequest.from_fields(
-            plate_path=str(root), microscope_type=microscope_type, limit=10
+            plate_path=str(root), source_format=source_format, limit=10
         )
     )
     assert result.errors == ()
     return result
 
 
-def _sample(service, root, image_path, *, microscope_type="bioformats"):
+def _sample(service, root, image_path, *, source_format="bioformats"):
     result = service.sample_image(
         PlateImageSampleRequest.from_fields(
             plate_path=str(root),
             image_path=image_path,
-            microscope_type=microscope_type,
+            source_format=source_format,
             resolution_index=0,
             y=2,
             x=3,
@@ -139,11 +139,11 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
     assert {int(value["channel"]) for value in persisted["source_metadata"].values()} == {1}
     try:
         # Ordinary auto/workspace routing must keep the persisted C1 selection.
-        selected = _query(service, tmp_path, microscope_type="auto")
+        selected = _query(service, tmp_path, source_format="auto")
         assert selected.total_count == 1
         assert {int(record.metadata["channel"]) for record in selected.records} == {1}
         sample = _sample(
-            service, tmp_path, str(tmp_path / "stack.npy"), microscope_type="auto"
+            service, tmp_path, str(tmp_path / "stack.npy"), source_format="auto"
         )
         assert int(sample.source_metadata["channel"]) == 1
         assert sample.sample_values == stack[0, 0, 0, 2:4, 3:5].tolist()
@@ -187,7 +187,7 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 
         context, errors, _ = service.open_context(
-            PlatePathInspectionRequest(plate_path=str(tmp_path), microscope_type="bioformats")
+            PlatePathInspectionRequest(plate_path=str(tmp_path), source_format="bioformats")
         )
         assert errors == ()
         inventory, warnings = service.file_inventory(context, kind=PlateFileKind.IMAGE)
@@ -216,7 +216,7 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
             PlateImageSampleRequest.from_fields(
                 plate_path=str(tmp_path),
                 image_path=str(tmp_path / "stack.npy"),
-                microscope_type="bioformats",
+                source_format="bioformats",
                 resolution_index=0,
                 height=2,
                 width=2,

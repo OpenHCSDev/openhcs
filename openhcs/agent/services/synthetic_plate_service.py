@@ -7,7 +7,6 @@ from pathlib import Path
 
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.plate import (
-    PlateInspectionDefaults,
     PlatePathInspectionRequest,
     PlatePathInspectionResult,
     SyntheticPlateGenerationRequest,
@@ -113,7 +112,6 @@ class SyntheticPlateGenerationService:
         inspection = self._plate_inspection_service.inspect(
             PlatePathInspectionRequest.from_fields(
                 plate_path=str(output_dir),
-                microscope_type=PlateInspectionDefaults.MICROSCOPE_AUTO,
                 max_sample_files=request.sample_file_limit,
             )
         )
@@ -135,7 +133,7 @@ class SyntheticPlateGenerationService:
             sampled_image_files=sampled_files,
             truncated_image_count=inspection.image_files.truncated_file_count,
             metadata_file_path=inspection.metadata_file_path,
-            detected_microscope_type=inspection.detected_microscope_type,
+            detected_source_format=inspection.detected_source_format,
             handler_class=inspection.handler_class,
             include_all_components=request.include_all_components,
             errors=inspection.errors,

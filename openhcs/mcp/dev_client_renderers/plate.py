@@ -366,7 +366,7 @@ class SyntheticPlateGenerationRenderer(McpDevOutputRenderer):
             (
                 "Metadata: "
                 f"file={cls.text(payload.metadata_file_path)} "
-                f"microscope={cls.text(payload.detected_microscope_type)} "
+                f"microscope={cls.text(payload.detected_source_format)} "
                 f"handler={cls.text(payload.handler_class)}"
             ),
         ]
@@ -415,7 +415,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
             (
                 f"Status: {payload.status.value} "
                 f"confidence={payload.confidence.value} "
-                f"microscope={cls.text(payload.detected_microscope_type)}"
+                f"microscope={cls.text(payload.detected_source_format)}"
             ),
             (
                 f"Handler: {cls.text(payload.handler_class)} "
@@ -510,7 +510,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
     @classmethod
     def _handler_candidate_line(cls, candidate: PlateInspectionHandlerCandidate) -> str:
         return (
-            f"  - {candidate.microscope_type} "
+            f"  - {candidate.source_format} "
             f"parser={candidate.parser_class} "
             f"recognized={candidate.recognized_file_count}/"
             f"{candidate.tested_file_count} "
@@ -699,8 +699,8 @@ class PlateFileQueryRenderer(McpDevOutputRenderer):
         ):
             return None
         microscope_option = (
-            f" --microscope-type {payload.detected_microscope_type}"
-            if payload.detected_microscope_type
+            f" --source-format {payload.detected_source_format}"
+            if payload.detected_source_format
             else ""
         )
         return (

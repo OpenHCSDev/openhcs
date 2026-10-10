@@ -981,7 +981,7 @@ def test_explicit_result_route_rejects_acquisition_selection_before_launch(monke
             plate_path="/actual_source",
             result_directory="/retained",
             kind="result",
-            well="A01",
+            component_filters={"well": ["A01"]},
         )
     )
     assert result.errors

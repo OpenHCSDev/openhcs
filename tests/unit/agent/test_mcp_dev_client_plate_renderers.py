@@ -87,9 +87,9 @@ def inspection(**changes) -> PlatePathInspectionResult:
         PlatePathInspectionResult(
             schema_version=SCHEMA_VERSION,
             plate_path="/plates/a",
-            requested_microscope_type="auto",
+            requested_source_format="auto",
             status=PlateInspectionStatus.OK,
-            detected_microscope_type="imagexpress",
+            detected_source_format="imagexpress",
             handler_class="ImageXpressHandler",
             grid_dimensions=(2, 3),
             image_files=PlateInspectionImageFileSummary(
@@ -147,8 +147,8 @@ def query(**changes) -> PlateFileQueryResult:
         PlateFileQueryResult(
             schema_version=SCHEMA_VERSION,
             plate_path="/plates/a",
-            requested_microscope_type="auto",
-            detected_microscope_type="imagexpress",
+            requested_source_format="auto",
+            detected_source_format="imagexpress",
             total_count=3, returned_count=2, offset=0, limit=2, truncated_count=1,
             records=(
                 PlateFileQueryRecordSummary(
@@ -179,7 +179,7 @@ def stream(**changes) -> PlateFileStreamResult:
         PlateFileStreamResult(
             schema_version=SCHEMA_VERSION,
             plate_path="/plates/a_out",
-            requested_microscope_type="auto",
+            requested_source_format="auto",
             viewer_type=ViewerType.NAPARI,
             viewer_config_key="napari_streaming_config",
             connection=ExecutionConnectionSpec(port=5555, transport_mode=TransportMode.IPC),
@@ -279,7 +279,7 @@ def test_query_presents_previews_pages_staleness_roots_and_result_hint():
     assert "Records: <none>" in hinted
     assert "Next page" not in hinted
     assert (
-        "Next: query-plate-files /plates/a --microscope-type imagexpress "
+        "Next: query-plate-files /plates/a --source-format imagexpress "
         "--kind result --include-previews"
     ) in hinted
 

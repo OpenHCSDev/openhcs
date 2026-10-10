@@ -54,7 +54,7 @@ class SelectedPlateStateResolution:
 @dataclass(frozen=True, slots=True)
 class SelectedPlateTargetRoot:
     plate_root: str
-    microscope_type: str
+    source_format: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +80,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateImageInspectionResult(
@@ -98,7 +98,7 @@ class SelectedPlateService:
         inspection = self.plate_inspection_service.inspect(
             request.to_plate_path_inspection_request(
                 plate_path=target_root.plate_root,
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             )
         )
         return SelectedPlateImageInspectionResult(
@@ -124,7 +124,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateFileQueryResult(
@@ -142,7 +142,7 @@ class SelectedPlateService:
         query = self.plate_inspection_service.query_files(
             request.to_plate_file_query_request(
                 plate_path=target_root.plate_root,
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             )
         )
         return SelectedPlateFileQueryResult(
@@ -169,7 +169,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateImageSampleResult(
@@ -191,7 +191,7 @@ class SelectedPlateService:
             image_path, auto_warnings, auto_errors = (
                 self.first_selected_plate_image_path(
                     plate_root=target_root.plate_root,
-                    microscope_type=target_root.microscope_type,
+                    source_format=target_root.source_format,
                     pattern_format=request.pattern_format,
                 )
             )
@@ -214,7 +214,7 @@ class SelectedPlateService:
             request.to_plate_image_sample_request(
                 plate_path=target_root.plate_root,
                 image_path=image_path,
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             )
         )
         return SelectedPlateImageSampleResult(
@@ -243,7 +243,7 @@ class SelectedPlateService:
         target_root, target_error = self.selected_plate_target_root(
             selected_plate,
             target=request.target,
-            microscope_type=request.microscope_type,
+            source_format=request.source_format,
         )
         if target_error is not None:
             return SelectedPlateFileStreamResult(
@@ -266,7 +266,7 @@ class SelectedPlateService:
                     target=request.target,
                     kind=request.kind,
                 ),
-                microscope_type=target_root.microscope_type,
+                source_format=target_root.source_format,
             ),
             ui_bridge_connection=connection,
         )
@@ -318,7 +318,7 @@ class SelectedPlateService:
         selected_plate: SelectedPlateStateResolution,
         *,
         target: SelectedPlateFileQueryTarget,
-        microscope_type: str,
+        source_format: str,
     ) -> tuple[SelectedPlateTargetRoot | None, AgentError | None]:
         state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
         plate_root = selected_plate.plate_root
@@ -348,7 +348,7 @@ class SelectedPlateService:
         return (
             SelectedPlateTargetRoot(
                 plate_root=plate_root,
-                microscope_type=microscope_type,
+                source_format=source_format,
             ),
             None,
         )
@@ -437,13 +437,13 @@ class SelectedPlateService:
         self,
         *,
         plate_root: str,
-        microscope_type: str,
+        source_format: str,
         pattern_format: str | None,
     ) -> tuple[str | None, tuple[AgentWarning, ...], tuple[AgentError, ...]]:
         inspection = self.plate_inspection_service.inspect(
             PlatePathInspectionRequest.from_fields(
                 plate_path=plate_root,
-                microscope_type=microscope_type,
+                source_format=source_format,
                 pattern_format=pattern_format,
                 max_sample_files=1,
                 max_component_values=0,

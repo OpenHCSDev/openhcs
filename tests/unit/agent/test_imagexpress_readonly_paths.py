@@ -54,11 +54,11 @@ def service_for(plate: Path):
     )
 
 
-def inspect_plate(plate: Path, microscope_type="imagexpress", **bounds):
+def inspect_plate(plate: Path, source_format="imagexpress", **bounds):
     return service_for(plate).inspect(
         PlatePathInspectionRequest.from_fields(
             plate_path=str(plate),
-            microscope_type=microscope_type,
+            source_format=source_format,
             **bounds,
         )
     )
@@ -128,8 +128,8 @@ def test_real_inventory_query_and_initialization_agree_on_physical_identity(tmp_
     query = service_for(plate).query_files(
         PlateFileQueryRequest.from_fields(
             plate_path=str(plate),
-            microscope_type="imagexpress",
-            well="A01",
+            source_format="imagexpress",
+            component_filters={"well": ["A01"]},
             include_previews=False,
             limit=3,
         )
@@ -262,7 +262,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         site.mkdir()
         for folder in tuple(renamed.glob("ZStep*")):
             folder.rename(site / folder.name)
-        result = inspect_plate(plate, microscope_type=key, max_component_values=10)
+        result = inspect_plate(plate, source_format=key, max_component_values=10)
         assert not result.errors
         assert result.handler_class == subtype.__name__
         assert result.image_files.count == result.parse_summary.parsed_file_count == 4
@@ -273,7 +273,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         query = service_for(plate).query_files(
             PlateFileQueryRequest.from_fields(
                 plate_path=str(plate),
-                microscope_type=key,
+                source_format=key,
                 include_previews=False,
             )
         )

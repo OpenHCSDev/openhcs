@@ -913,7 +913,10 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
     assert "kind" in query_plate_files_properties
     assert "result_directory" in query_plate_files_properties
     assert "path_contains" in query_plate_files_properties
-    assert "well" in query_plate_files_properties
+    assert "component_filters" in query_plate_files_properties
+    assert "Accepted values per axis name" in str(
+        query_plate_files_properties["component_filters"]
+    )
     assert "include_previews" in query_plate_files_properties
     assert "virtual/source path" in descriptions["openhcs_sample_plate_image"]
     assert "bounded pixels" in descriptions["openhcs_sample_plate_image"]
@@ -2084,7 +2087,7 @@ def test_mcp_synthetic_plate_generation_tool_projects_request(tmp_path):
                 image_count=8,
                 sampled_image_files=("TimePoint_1/A01_s1_w1_z1_t1.tif",),
                 metadata_file_path=f"{request.output_dir}/plate.HTD",
-                detected_microscope_type="imagexpress",
+                detected_source_format="imagexpress",
                 handler_class="ImageXpressHandler",
             )
 
@@ -3010,7 +3013,7 @@ def test_mcp_selected_plate_image_inspection_composes_ui_state_and_plate_service
             return PlatePathInspectionResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 status=PlateInspectionStatus.OK,
                 confidence=PlateInspectionConfidence.HIGH,
             )
@@ -3028,7 +3031,7 @@ def test_mcp_selected_plate_image_inspection_composes_ui_state_and_plate_service
             built.call_tool(
                 "openhcs_ui_inspect_selected_plate_images",
                 {
-                    "microscope_type": "openhcsdata",
+                    "source_format": "openhcsdata",
                     "max_sample_files": 3,
                     "connection": {"timeout_ms": 1234},
                 },
@@ -3044,7 +3047,7 @@ def test_mcp_selected_plate_image_inspection_composes_ui_state_and_plate_service
     assert ui_bridge_service.state_surface_request.selection_mode == "selected"
     assert ui_bridge_service.connection_fields.timeout_ms == 1234
     assert plate_inspection_service.request.plate_path == selected_plate_root
-    assert plate_inspection_service.request.microscope_type == "openhcsdata"
+    assert plate_inspection_service.request.source_format == "openhcsdata"
     assert plate_inspection_service.request.bounds.max_sample_files == 3
     assert payload["schema_version"] == "openhcs.agent.v1"
     assert payload["selected_plate"]["plate_root"] == selected_plate_root
@@ -3101,7 +3104,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
             return PlatePathInspectionResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 status=PlateInspectionStatus.OK,
                 confidence=PlateInspectionConfidence.HIGH,
             )
@@ -3127,7 +3130,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
     payload = json.loads(_direct_tool_text(result))
 
     assert plate_inspection_service.request.plate_path == output_plate_root
-    assert plate_inspection_service.request.microscope_type == "auto"
+    assert plate_inspection_service.request.source_format == "auto"
     assert payload["target"] == "output"
     assert payload["inspection"]["plate_path"] == output_plate_root
 
@@ -3136,7 +3139,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
         result = await asyncio.wait_for(
             built.call_tool(
                 "openhcs_ui_inspect_selected_plate_images",
-                {"target": "output", "microscope_type": "imagexpress"},
+                {"target": "output", "source_format": "imagexpress"},
             ),
             timeout=2,
         )
@@ -3144,7 +3147,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
 
     asyncio.run(call_selected_plate_images_tool_with_explicit_type())
     assert plate_inspection_service.request.plate_path == output_plate_root
-    assert plate_inspection_service.request.microscope_type == "imagexpress"
+    assert plate_inspection_service.request.source_format == "imagexpress"
 
 
 def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
@@ -3200,7 +3203,7 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
             return PlateFileQueryResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 total_count=0,
             )
 
@@ -3234,7 +3237,7 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
     assert ui_bridge_service.state_surface_request.surface_id == "plate_manager.state"
     assert ui_bridge_service.state_surface_request.selection_mode == "selected"
     assert plate_inspection_service.request.plate_path == output_plate_root
-    assert plate_inspection_service.request.microscope_type == "auto"
+    assert plate_inspection_service.request.source_format == "auto"
     assert plate_inspection_service.request.kind.value == "result"
     assert plate_inspection_service.request.path_contains == "roi"
     assert plate_inspection_service.request.limit == 7
@@ -3316,7 +3319,7 @@ def test_mcp_selected_plate_result_stream_uses_output_context_for_output_target(
             return PlateFileStreamResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
             )
 
     plate_streaming_service = _PlateStreamingService()
@@ -3346,7 +3349,7 @@ def test_mcp_selected_plate_result_stream_uses_output_context_for_output_target(
 
     assert plate_streaming_service.request.plate_path == output_plate_root
     assert plate_streaming_service.request.context_plate_path == selected_plate_root
-    assert plate_streaming_service.request.microscope_type == "auto"
+    assert plate_streaming_service.request.source_format == "auto"
     assert plate_streaming_service.request.kind.value == "result"
     assert plate_streaming_service.request.path_contains == "rois"
     assert plate_streaming_service.request.limit == 2
@@ -3409,7 +3412,7 @@ def test_mcp_selected_plate_image_sample_composes_ui_state_and_plate_service():
             return PlatePathInspectionResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 status=PlateInspectionStatus.OK,
                 confidence=PlateInspectionConfidence.HIGH,
                 image_files=PlateInspectionImageFileSummary(
@@ -3459,7 +3462,7 @@ def test_mcp_selected_plate_image_sample_composes_ui_state_and_plate_service():
                 "openhcs_ui_sample_selected_plate_image",
                 {
                     "image_path": selected_image_path,
-                    "microscope_type": "openhcsdata",
+                    "source_format": "openhcsdata",
                     "height": 2,
                     "width": 2,
                     "resolution_index": 0,
@@ -3535,7 +3538,7 @@ def test_mcp_selected_plate_image_sample_auto_selects_first_inventory_record():
             return PlatePathInspectionResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 status=PlateInspectionStatus.OK,
                 confidence=PlateInspectionConfidence.HIGH,
                 image_files=PlateInspectionImageFileSummary(
@@ -3577,7 +3580,7 @@ def test_mcp_selected_plate_image_sample_auto_selects_first_inventory_record():
         result = await asyncio.wait_for(
             built.call_tool(
                 "openhcs_ui_sample_selected_plate_image",
-                {"microscope_type": "openhcsdata", "include_array_values": False},
+                {"source_format": "openhcsdata", "include_array_values": False},
             ),
             timeout=2,
         )
@@ -3676,7 +3679,7 @@ def test_mcp_selected_plate_image_sample_targets_output_plate():
     payload = json.loads(_direct_tool_text(result))
 
     assert plate_inspection_service.sample_request.plate_path == output_plate_root
-    assert plate_inspection_service.sample_request.microscope_type == "auto"
+    assert plate_inspection_service.sample_request.source_format == "auto"
     assert plate_inspection_service.sample_request.image_path == selected_image_path
     assert payload["target"] == "output"
     assert payload["sample"]["plate_path"] == output_plate_root
@@ -4096,7 +4099,7 @@ def test_mcp_dev_client_artifact_plan_command_projects_tool_arguments():
             "/tmp/example-plate",
             "--source-text",
             pipeline_source,
-            "--well-filter",
+            "--axis-filter",
             "A01,A02",
             "--global-config-id",
             "global-1",
@@ -4257,7 +4260,7 @@ def test_mcp_dev_client_inspect_plate_command_projects_tool_arguments():
         (
             "inspect-plate",
             "/tmp/example-plate",
-            "--microscope-type",
+            "--source-format",
             "imagexpress",
             "--pattern-format",
             "auto",
@@ -4277,7 +4280,7 @@ def test_mcp_dev_client_inspect_plate_command_projects_tool_arguments():
     assert call.name == "openhcs_inspect_plate_path"
     assert call.arguments == {
         "plate_path": "/tmp/example-plate",
-        "microscope_type": "imagexpress",
+        "source_format": "imagexpress",
         "pattern_format": "auto",
         "max_sample_files": 3,
         "max_component_values": 4,
@@ -4297,14 +4300,14 @@ def test_mcp_dev_client_query_plate_files_command_projects_tool_arguments():
         (
             "query-plate-files",
             "/tmp/example-plate",
-            "--microscope-type",
+            "--source-format",
             "openhcsdata",
             "--kind",
             "all",
             "--path-contains",
             "A01",
-            "--well",
-            "A01",
+            "--filter",
+            "well=A01",
             "--offset",
             "2",
             "--limit",
@@ -4322,11 +4325,11 @@ def test_mcp_dev_client_query_plate_files_command_projects_tool_arguments():
     assert call.arguments == {
         "plate_path": "/tmp/example-plate",
         "result_directory": None,
-        "microscope_type": "openhcsdata",
+        "source_format": "openhcsdata",
         "pattern_format": None,
         "kind": "all",
         "path_contains": "A01",
-        "well": "A01",
+        "component_filters": {"well": ["A01"]},
         "offset": 2,
         "limit": 3,
         "include_previews": True,
@@ -4414,7 +4417,7 @@ def test_mcp_dev_client_sample_plate_image_command_projects_tool_arguments():
             "sample-plate-image",
             "/tmp/example-plate",
             "A01_s001_w1_z001_t001.tif",
-            "--microscope-type",
+            "--source-format",
             "openhcsdata",
             "--pattern-format",
             "auto",
@@ -4442,7 +4445,7 @@ def test_mcp_dev_client_sample_plate_image_command_projects_tool_arguments():
     assert call.arguments == {
         "plate_path": "/tmp/example-plate",
         "image_path": "A01_s001_w1_z001_t001.tif",
-        "microscope_type": "openhcsdata",
+        "source_format": "openhcsdata",
         "pattern_format": "auto",
         "y": 1,
         "x": 2,
@@ -4516,11 +4519,11 @@ def test_mcp_dev_client_stream_plate_files_command_projects_tool_arguments():
             "images/A01_s001_w1_z001_t001.tif",
             "images_results/A01_w1_segmentation_masks_step0_rois.roi.zip",
         ],
-        "microscope_type": "auto",
+        "source_format": "auto",
         "pattern_format": None,
         "kind": "all",
         "path_contains": None,
-        "well": None,
+        "component_filters": {},
         "limit": 1,
         "viewer_config_key": "napari_streaming_config",
         "host": "localhost",
@@ -4588,7 +4591,7 @@ def test_mcp_dev_client_selected_plate_files_command_projects_tool_arguments():
     args = parser.parse_args(
         (
             "selected-plate-files",
-            "--microscope-type",
+            "--source-format",
             "openhcsdata",
             "--kind",
             "all",
@@ -4596,8 +4599,8 @@ def test_mcp_dev_client_selected_plate_files_command_projects_tool_arguments():
             "output",
             "--path-contains",
             "A01",
-            "--well",
-            "A01",
+            "--filter",
+            "well=A01",
             "--limit",
             "3",
             "--no-previews",
@@ -4610,12 +4613,12 @@ def test_mcp_dev_client_selected_plate_files_command_projects_tool_arguments():
 
     assert call.name == "openhcs_ui_query_selected_plate_files"
     assert call.arguments == {
-        "microscope_type": "openhcsdata",
+        "source_format": "openhcsdata",
         "pattern_format": None,
         "kind": "all",
         "target": "output",
         "path_contains": "A01",
-        "well": "A01",
+        "component_filters": {"well": ["A01"]},
         "offset": 0,
         "limit": 3,
         "include_previews": False,
@@ -4645,7 +4648,7 @@ def test_mcp_dev_client_selected_plate_images_command_projects_tool_arguments():
     args = parser.parse_args(
         (
             "selected-plate-images",
-            "--microscope-type",
+            "--source-format",
             "openhcsdata",
             "--target",
             "output",
@@ -4660,7 +4663,7 @@ def test_mcp_dev_client_selected_plate_images_command_projects_tool_arguments():
 
     assert call.name == "openhcs_ui_inspect_selected_plate_images"
     assert call.arguments == {
-        "microscope_type": "openhcsdata",
+        "source_format": "openhcsdata",
         "pattern_format": None,
         "target": "output",
         "max_sample_files": 3,
@@ -4682,7 +4685,7 @@ def test_mcp_dev_client_selected_plate_sample_command_projects_tool_arguments():
         (
             "selected-plate-sample",
             "./A01_s001_w1_z001_t001.tif",
-            "--microscope-type",
+            "--source-format",
             "openhcsdata",
             "--target",
             "output",
@@ -4701,7 +4704,7 @@ def test_mcp_dev_client_selected_plate_sample_command_projects_tool_arguments():
     assert call.name == "openhcs_ui_sample_selected_plate_image"
     assert call.arguments == {
         "image_path": "./A01_s001_w1_z001_t001.tif",
-        "microscope_type": "openhcsdata",
+        "source_format": "openhcsdata",
         "pattern_format": None,
         "target": "output",
         "y": 0,
@@ -4770,12 +4773,12 @@ def test_mcp_dev_client_selected_plate_stream_command_projects_tool_arguments():
             "images/A01_s001_w1_z001_t001.tif",
             "images_results/A01_w1_segmentation_masks_step0_rois.roi.zip",
         ],
-        "microscope_type": "auto",
+        "source_format": "auto",
         "pattern_format": None,
         "kind": "all",
         "target": "output",
         "path_contains": None,
-        "well": None,
+        "component_filters": {},
         "limit": 1,
         "viewer_config_key": "napari_streaming_config",
         "host": "localhost",

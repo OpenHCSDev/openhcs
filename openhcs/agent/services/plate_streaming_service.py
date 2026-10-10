@@ -96,7 +96,7 @@ class PlateStreamingService:
         context, errors, warnings = self._plate_inspection_service.open_context(
             PlatePathInspectionRequest(
                 plate_path=context_plate_path,
-                microscope_type=request.microscope_type,
+                source_format=request.source_format,
                 pattern_format=request.pattern_format,
             )
         )
@@ -104,7 +104,7 @@ class PlateStreamingService:
             return PlateFileStreamResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 viewer_config_key=request.viewer_config_key,
                 errors=errors,
                 warnings=warnings,
@@ -123,7 +123,7 @@ class PlateStreamingService:
                 return PlateFileStreamResult(
                     schema_version=SCHEMA_VERSION,
                     plate_path=request.plate_path,
-                    requested_microscope_type=request.microscope_type,
+                    requested_source_format=request.source_format,
                     viewer_config_key=request.viewer_config_key,
                     errors=path_errors,
                     warnings=warnings,
@@ -139,8 +139,8 @@ class PlateStreamingService:
         result = PlateFileStreamResult(
             schema_version=SCHEMA_VERSION,
             plate_path=str(inventory_plate_path),
-            requested_microscope_type=request.microscope_type,
-            detected_microscope_type=context.microscope_type,
+            requested_source_format=request.source_format,
+            detected_source_format=context.source_format,
             handler_class=type(context.handler).__name__,
             parser_class=None if context.parser is None else type(context.parser).__name__,
             viewer_config_key=request.viewer_config_key,
@@ -160,7 +160,7 @@ class PlateStreamingService:
             )
             result = replace(result, viewer_type=config.viewer_family.viewer_type(), connection=connection)
             if request.result_directory is not None:
-                if request.kind is not PlateFileKind.RESULT or request.well is not None:
+                if request.kind is not PlateFileKind.RESULT or bool(request.component_filters):
                     raise ValueError(
                         "Explicit result-directory streaming requires kind='result' "
                         "and no acquisition-component filter."
@@ -502,7 +502,7 @@ class PlateStreamingService:
         inventory_query = PlateFileInventoryQuery(
             kinds=kinds,
             path_contains=request.path_contains,
-            well=request.well,
+            component_filters=request.component_filters,
             offset=0,
             limit=requested_limit,
         )
