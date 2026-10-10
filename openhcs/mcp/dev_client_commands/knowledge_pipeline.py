@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Mapping
 from dataclasses import fields
 from pathlib import Path
 from typing import ClassVar
@@ -13,7 +12,7 @@ from openhcs.agent.authoring_contexts import (
 )
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.authoring import AuthoringContextRequest
-from python_introspect import JsonObject, JsonValue, to_jsonable
+from python_introspect import JsonValue, to_jsonable
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
@@ -25,9 +24,9 @@ from openhcs.agent.dto.pipeline import (
     PipelineValidationRequest,
 )
 from openhcs.mcp.dev_client_commanding import (
+    McpDevCommandSpec,
     SingleToolCommandSpec,
     StdinSourceCommandSpec,
-    TypedCompositeCommandSpec,
 )
 from openhcs.mcp.dev_client_core import (
     DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
@@ -35,76 +34,20 @@ from openhcs.mcp.dev_client_core import (
     McpDevStdioSession,
     McpDevToolBatchResponse,
     McpDevToolCall,
-    McpToolArgumentAuthority,
+    McpToolArguments,
     add_pipeline_source_options,
     add_request_factory_option,
     call_mcp_tool,
     execute_source_session_tool_arguments,
     execute_source_submit_timeout_seconds,
     execute_source_submit_tool_arguments,
-    optional_int,
     parse_optional_json_object,
     parse_required_axis_labels,
     pipeline_source_from_args,
     resolve_positional_option_alias,
 )
-from openhcs.mcp.dev_client_rendering import (
-    AuthoringContextRenderOptions,
-    CatalogRenderOptions,
-)
+from openhcs.mcp.dev_client_rendering import CodeDocumentRenderOptions
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-
-
-class KnowledgeCommandSpec(SingleToolCommandSpec):
-    capability = agent_capabilities.list_knowledge_documents
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("--contains")
-        parser.add_argument("--limit", type=int, default=20)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
-
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> CatalogRenderOptions:
-        return CatalogRenderOptions(contains=args.contains, limit=args.limit)
-
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        del tool_arguments
-        return argparse.Namespace(json=False, contains=None, limit=20)
-
-
-class ArchitectureCommandSpec(SingleToolCommandSpec):
-    capability = agent_capabilities.list_architecture_topics
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("--contains")
-        parser.add_argument("--limit", type=int, default=20)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
-
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> CatalogRenderOptions:
-        return CatalogRenderOptions(contains=args.contains, limit=args.limit)
-
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        del tool_arguments
-        return argparse.Namespace(json=False, contains=None, limit=20)
 
 
 class FunctionsCommandSpec(SingleToolCommandSpec):
@@ -126,11 +69,6 @@ class FunctionsCommandSpec(SingleToolCommandSpec):
             action="store_false",
             default=True,
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -143,7 +81,7 @@ class FunctionsCommandSpec(SingleToolCommandSpec):
             value_name="query",
             option_name="--query",
         )
-        return McpToolArgumentAuthority.from_payload(
+        return McpToolArguments.from_payload(
             to_jsonable(
                 FunctionSearchRequest(
                     query=query,
@@ -168,17 +106,12 @@ class FunctionCommandSpec(SingleToolCommandSpec):
             action="store_false",
             default=True,
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
         args: argparse.Namespace,
     ) -> dict[str, JsonValue]:
-        return McpToolArgumentAuthority.from_payload(
+        return McpToolArguments.from_payload(
             to_jsonable(
                 FunctionDetailRequest(
                     function_id=args.function_id,
@@ -229,11 +162,6 @@ class RegisterCustomFunctionCommandSpec(SingleToolCommandSpec):
                 field_name,
                 f"--{field_name.replace('_', '-')}",
             )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -249,7 +177,7 @@ class RegisterCustomFunctionCommandSpec(SingleToolCommandSpec):
             }
         )
         connection.require_port("Custom function registration")
-        return McpToolArgumentAuthority.from_payload(
+        return McpToolArguments.from_payload(
             {
                 "source_code": source_code,
                 "persist": not args.no_persist,
@@ -278,16 +206,6 @@ class AuthoringContextCommandSpec(SingleToolCommandSpec):
             dest="kind_option",
             choices=AuthoringContextDeclaration.allowed_values(),
         )
-        parser.add_argument(
-            "--max-chars",
-            type=int,
-            default=AuthoringContextRequest().max_chars,
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -300,7 +218,7 @@ class AuthoringContextCommandSpec(SingleToolCommandSpec):
             value_name="kind",
             option_name="--kind/--topic",
         )
-        return McpToolArgumentAuthority.from_payload(
+        return McpToolArguments.from_payload(
             to_jsonable(
                 AuthoringContextRequest(
                     kind=kind,
@@ -309,26 +227,8 @@ class AuthoringContextCommandSpec(SingleToolCommandSpec):
             )
         )
 
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> AuthoringContextRenderOptions:
-        return AuthoringContextRenderOptions(max_chars=args.max_chars)
 
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        return argparse.Namespace(
-            json=False,
-            max_chars=(
-                optional_int(tool_arguments.get("max_chars"))
-                or AuthoringContextRequest().max_chars
-            ),
-        )
-
-
-class DraftPipelineStepCommandSpec(TypedCompositeCommandSpec):
+class DraftPipelineStepCommandSpec(McpDevCommandSpec):
     command = "draft-pipeline-step"
     help = (
         "Create, add one FunctionStep, validate, and render a draft in one MCP session."
@@ -364,13 +264,7 @@ class DraftPipelineStepCommandSpec(TypedCompositeCommandSpec):
             action="store_false",
             help="Render full resolved source.",
         )
-        parser.add_argument("--no-source", action="store_true")
-        parser.add_argument("--max-source-chars", type=int, default=2_000)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
+        CodeDocumentRenderOptions.configure_cli_parser(parser)
 
     async def run_session(
         self,
@@ -442,17 +336,11 @@ class DraftPipelineStepCommandSpec(TypedCompositeCommandSpec):
                 )
         return McpDevToolBatchResponse.from_results(session.server_spec, tuple(results))
 
-    def render_response(
-        self,
-        payload: JsonObject,
-        args: argparse.Namespace,
-    ) -> str:
-        if args.json:
-            return super().render_response(payload, args)
+    def render_compact(self, response, args: argparse.Namespace) -> str:
         from openhcs.mcp.dev_client_renderers.pipeline import PipelineDraftStepRenderer
 
         return PipelineDraftStepRenderer.render(
-            payload,
+            response,
             max_source_chars=args.max_source_chars,
         )
 
@@ -477,11 +365,6 @@ class ArtifactPlanCommandSpec(StdinSourceCommandSpec, SingleToolCommandSpec):
             help="Alias for --axis-filter when axes are wells.",
         )
         parser.add_argument("--global-config-id")
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def tool_arguments(
         self,
@@ -494,7 +377,7 @@ class ArtifactPlanCommandSpec(StdinSourceCommandSpec, SingleToolCommandSpec):
                 "Cannot pass both --axis-filter and --well-filter with different values."
             )
         selected_axis_filter = axis_filter or well_filter
-        return McpToolArgumentAuthority.from_payload(
+        return McpToolArguments.from_payload(
             {
                 "plate_path": args.plate_path,
                 "pipeline_source": pipeline_source_from_args(args),
@@ -504,7 +387,7 @@ class ArtifactPlanCommandSpec(StdinSourceCommandSpec, SingleToolCommandSpec):
         )
 
 
-class ExecuteSourceCommandSpec(StdinSourceCommandSpec, TypedCompositeCommandSpec):
+class ExecuteSourceCommandSpec(StdinSourceCommandSpec):
     command = "execute-source"
     help = "Create and submit a source-backed headless execution session."
     default_timeout_seconds: ClassVar[float] = 120.0
@@ -555,11 +438,6 @@ class ExecuteSourceCommandSpec(StdinSourceCommandSpec, TypedCompositeCommandSpec
             default=OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
         )
         parser.add_argument("--wait-timeout-ms", type=int, default=60_000)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     async def run_session(
         self,
@@ -600,13 +478,8 @@ class ExecuteSourceCommandSpec(StdinSourceCommandSpec, TypedCompositeCommandSpec
             )
         return McpDevToolBatchResponse.from_results(session.server_spec, tuple(results))
 
-    def render_response(
-        self,
-        payload: JsonObject,
-        args: argparse.Namespace,
-    ) -> str:
-        if args.json:
-            return super().render_response(payload, args)
+    def render_compact(self, response, args: argparse.Namespace) -> str:
         from openhcs.mcp.dev_client_renderers.pipeline import ExecuteSourceRenderer
 
-        return ExecuteSourceRenderer.render(payload)
+        del args
+        return ExecuteSourceRenderer.render(response)

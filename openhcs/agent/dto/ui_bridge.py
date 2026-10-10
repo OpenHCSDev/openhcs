@@ -1293,6 +1293,14 @@ class UiWindowSemanticCarrier:
     managed_action_ids: tuple[str, ...] = ()
 
 
+# Wire values of ``UiWindowSummary.window_kind``, written by the GUI window
+# providers and read by agent-side presentations.
+EMBEDDED_WINDOW_KIND = "embedded"
+MANAGED_WINDOW_KIND = "managed"
+DYNAMIC_SCOPE_WINDOW_KIND = "scope"
+QT_TOP_LEVEL_WINDOW_KIND = "qt_top_level"
+
+
 @dataclass(frozen=True, slots=True)
 class UiWindowSummary(UiWindowSemanticCarrier):
     schema_version: str

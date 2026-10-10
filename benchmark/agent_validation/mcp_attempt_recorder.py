@@ -50,7 +50,7 @@ from openhcs.agent.capabilities import (
     get_agent_capability,
 )
 from openhcs.agent.dto.common import RenderedSource
-from openhcs.agent.dto.execution import ArtifactPlanInspection, ExecutionJobRef
+from openhcs.agent.dto.execution import ArtifactPlanInspection, ExecutionJobIdentity
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     FunctionDetail,
@@ -64,7 +64,6 @@ from openhcs.mcp.dev_client import McpDevClient, McpDevCommandExecution
 from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse,
     McpDevToolResult,
-    first_payload_mapping,
 )
 
 
@@ -380,10 +379,9 @@ def _rendered_sources(
         declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, RenderPipelineSourceCapability):
             continue
-        yield dataclass_from_mapping(
-            RenderedSource,
-            first_payload_mapping(result),
-        )
+        source = result.decoded_payload_as(RenderedSource)
+        if source is not None:
+            yield source
 
 
 def _artifact_plans(
@@ -396,11 +394,8 @@ def _artifact_plans(
             InspectPipelineSourceArtifactPlanCapability,
         ):
             continue
-        plan = dataclass_from_mapping(
-            ArtifactPlanInspection,
-            first_payload_mapping(result),
-        )
-        if not plan.errors:
+        plan = result.decoded_payload_as(ArtifactPlanInspection)
+        if plan is not None and not plan.errors:
             yield plan
 
 
@@ -420,10 +415,9 @@ def _registered_function_paths(results: list[McpDevToolResult]) -> set[str]:
         declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, RegisterCustomFunctionCapability):
             continue
-        registration = dataclass_from_mapping(
-            CustomFunctionRegistrationResult,
-            first_payload_mapping(result),
-        )
+        registration = result.decoded_payload_as(CustomFunctionRegistrationResult)
+        if registration is None:
+            continue
         paths.update(entry.import_path for entry in registration.functions)
     return paths
 
@@ -434,7 +428,9 @@ def _described_function_paths(results: list[McpDevToolResult]) -> set[str]:
         declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, DescribeFunctionCapability):
             continue
-        detail = dataclass_from_mapping(FunctionDetail, first_payload_mapping(result))
+        detail = result.decoded_payload_as(FunctionDetail)
+        if detail is None:
+            continue
         paths.add(detail.entry.import_path)
     return paths
 
@@ -462,15 +458,8 @@ def _completed_job_kinds(results: list[McpDevToolResult]) -> set[str]:
             ),
         ):
             continue
-        payload = first_payload_mapping(result)
-        status = dataclass_from_mapping(
-            ExecutionJobRef,
-            {
-                declared_field.name: payload[declared_field.name]
-                for declared_field in fields(ExecutionJobRef)
-            },
-        )
-        if status.status in {"complete", "completed"}:
+        status = result.decoded_payload_as(ExecutionJobIdentity)
+        if status is not None and status.status in {"complete", "completed"}:
             completed.add(status.kind)
     return completed
 
@@ -481,10 +470,9 @@ def _ui_function_paths(results: list[McpDevToolResult]) -> set[str]:
         declaration = get_agent_capability(result.tool)
         if not issubclass(declaration, UiGetCodeDocumentCapability):
             continue
-        document = dataclass_from_mapping(
-            UiCodeDocument,
-            first_payload_mapping(result),
-        )
+        document = result.decoded_payload_as(UiCodeDocument)
+        if document is None:
+            continue
         try:
             pipeline_document = PipelineDocumentAuthority.from_source(document.source)
         except (ImportError, SyntaxError, TypeError, ValueError):

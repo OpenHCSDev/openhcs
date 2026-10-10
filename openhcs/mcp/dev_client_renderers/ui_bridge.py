@@ -2,36 +2,53 @@
 
 from __future__ import annotations
 
-import json
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import ClassVar
 
-from metaclass_registry import AutoRegisterMeta
+from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.capabilities import agent_capabilities
-from python_introspect import JsonObject, JsonValue
+from openhcs.agent.dto.common import AgentWarning
+from openhcs.agent.dto.mcp import McpServerHealthResult
 from openhcs.agent.dto.ui_bridge import (
+    QT_TOP_LEVEL_WINDOW_KIND,
     UiActionCatalog,
     UiActionInvokeResult,
+    UiActionSummary,
+    UiBridgeCatalog,
     UiBridgeStatus,
     UiCodeDocument,
     UiCodeDocumentApplyResult,
     UiCodeDocumentCatalog,
+    UiCodeDocumentSummary,
     UiCodeDocumentValidationResult,
+    UiDebugActionState,
+    UiDebugRuntimeFrameState,
+    UiLiveOverviewSection,
+    UiLiveOverviewState,
+    UiPipelineDebugSessionState,
+    UiPipelineEditorState,
+    UiPipelineEditorStepState,
+    UiPlateManagerRowState,
+    UiPlateManagerState,
     UiSelectedPlateWorkflowResult,
+    UiSnapshotRef,
     UiStateSurfaceCatalog,
     UiStateSurfaceDocument,
+    UiStateSurfaceEnvelope,
+    UiStateSurfaceSummary,
     UiWidgetActionInvokeResult,
+    UiWidgetActionSummary,
+    UiWidgetTreeNode,
     UiWidgetTreeResult,
     UiWindowCatalog,
+    UiWindowSummary,
 )
 from openhcs.agent.ui_bridge_identities import (
+    MainWindowWidgetIdentity,
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PipelineEditorStateSurfaceIdentityDeclaration,
     PlateManagerStateSurfaceIdentityDeclaration,
-    UiBridgeIdentityDeclaration,
     UiLiveOverviewStateSurfaceIdentityDeclaration,
     UiStateSurfaceIdentityDeclarationBase,
 )
@@ -39,203 +56,125 @@ from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     CodeDocumentRenderOptions,
     McpDevOutputRenderer,
-    McpDevTypedOutputRenderer,
     McpDevOutputRenderOptions,
-    McpDevPayloadProjection,
-    McpDiagnosticRenderer,
     UiActionCatalogRenderOptions,
-    UiActionInvokeRenderOptions,
-    WidgetTreeOutputFormat,
     WidgetTreeRenderOptions,
 )
-from openhcs.mcp.dev_client_renderers.object_state import ObjectStateScopeRenderer
-from openhcs.mcp.dev_client_renderers.viewer import ViewerValidationRenderer
 
 
 class UiBridgeStatusRenderer(McpDevOutputRenderer):
     """Compact renderer for live UI bridge status."""
 
     output_contract = UiBridgeStatus
+    unavailable_summary = "UI bridge: unavailable"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            return "\n".join(("UI bridge: unavailable", *cls._error_lines(errors)))
-
-        descriptors = McpDevPayloadProjection.sequence_of_mappings(
-            payload.get("descriptors")
+    def render_payload(
+        cls, payload: UiBridgeStatus, options: McpDevOutputRenderOptions
+    ) -> str:
+        pid = payload.descriptors[0].pid if payload.descriptors else None
+        connection = payload.connection
+        return "\n".join(
+            (
+                f"UI bridge: reachable={payload.reachable} "
+                f"descriptor={cls.text(payload.descriptor_status)}",
+                f"Instance: {cls.text(payload.bridge_instance_id)} pid={cls.text(pid)}",
+                f"Connection: {cls.text(connection.transport_mode)} "
+                f"{connection.host}:{cls.text(connection.port)}",
+                f"Descriptor: {cls.text(payload.descriptor_file_path)}",
+                f"Capabilities: {len(payload.supported_operations)} operations, "
+                f"{len(payload.bridge_features)} features",
+            )
         )
-        descriptor = descriptors[0] if descriptors else {}
-        connection = McpDevPayloadProjection.nested_mapping(payload, "connection")
-        supported_operations = payload.get("supported_operations")
-        bridge_features = payload.get("bridge_features")
-        lines = [
-            "UI bridge: "
-            f"reachable={McpDevPayloadProjection.text(payload.get('reachable'))} "
-            f"descriptor={McpDevPayloadProjection.text(payload.get('descriptor_status'))}",
-            (
-                "Instance: "
-                f"{McpDevPayloadProjection.text(payload.get('bridge_instance_id'))} "
-                f"pid={McpDevPayloadProjection.text(descriptor.get('pid'))}"
-            ),
-            (
-                "Connection: "
-                f"{McpDevPayloadProjection.text(connection.get('transport_mode'))} "
-                f"{McpDevPayloadProjection.text(connection.get('host'))}:"
-                f"{McpDevPayloadProjection.text(connection.get('port'))}"
-            ),
-            f"Descriptor: {McpDevPayloadProjection.text(payload.get('descriptor_file_path'))}",
-            (
-                "Capabilities: "
-                f"{cls._count(supported_operations)} operations, "
-                f"{cls._count(bridge_features)} features"
-            ),
-        ]
-        return "\n".join(lines)
-
-    @staticmethod
-    def _count(value: JsonValue) -> int:
-        return len(value) if isinstance(value, list) else 0
-
-    @staticmethod
-    def _error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
-        return McpDiagnosticRenderer.error_lines(errors)
 
 
 class UiWindowCatalogRenderer(McpDevOutputRenderer):
     """Compact renderer for UI window catalogs."""
 
     output_contract = UiWindowCatalog
-
-    MAIN_WINDOW_TITLE = "OpenHCS"
-    TOP_LEVEL_WINDOW_KIND = "qt_top_level"
+    unavailable_summary = "Windows: unavailable"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            return "\n".join(("Windows: unavailable", *cls._error_lines(errors)))
-
-        windows = McpDevPayloadProjection.sequence_of_mappings(payload.get("windows"))
-        lines = [f"Windows: {len(windows)}"]
-        attention_windows = cls._attention_windows(windows)
+    def render_payload(
+        cls, payload: UiWindowCatalog, options: McpDevOutputRenderOptions
+    ) -> str:
+        lines = [f"Windows: {len(payload.windows)}"]
+        attention_windows = tuple(
+            window for window in payload.windows if cls._needs_attention(window)
+        )
         if attention_windows:
             lines.append(
-                "Attention: "
-                f"{len(attention_windows)} visible top-level window(s): "
+                f"Attention: {len(attention_windows)} visible top-level window(s): "
                 + ", ".join(
-                    cls._attention_label(window) for window in attention_windows
+                    f"{window.window_id} title={cls.quoted(window.title)}"
+                    for window in attention_windows
                 )
             )
-        for window in windows:
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(window.get('window_id'))} "
-                f"[{McpDevPayloadProjection.text(window.get('window_kind'))}] "
-                f"visible={McpDevPayloadProjection.text(window.get('visible'))} "
-                f"dirty={McpDevPayloadProjection.text(window.get('dirty'))} "
-                f"diff={McpDevPayloadProjection.text(window.get('signature_diff'))} "
-                f"title={McpDevPayloadProjection.quoted_text(window.get('title'))}"
-            )
+        lines.extend(
+            f"- {window.window_id} [{window.window_kind}] visible={window.visible} "
+            f"dirty={window.dirty} diff={window.signature_diff} "
+            f"title={cls.quoted(window.title)}"
+            for window in payload.windows
+        )
         return "\n".join(lines)
 
-    @classmethod
-    def _attention_windows(
-        cls,
-        windows: tuple[Mapping[str, JsonValue], ...],
-    ) -> tuple[Mapping[str, JsonValue], ...]:
-        return tuple(window for window in windows if cls._needs_attention(window))
-
-    @classmethod
-    def _needs_attention(cls, window: Mapping[str, JsonValue]) -> bool:
-        return (
-            window.get("visible") is True
-            and window.get("window_kind") == cls.TOP_LEVEL_WINDOW_KIND
-            and window.get("title") != cls.MAIN_WINDOW_TITLE
-        )
-
     @staticmethod
-    def _attention_label(window: Mapping[str, JsonValue]) -> str:
+    def _needs_attention(window: UiWindowSummary) -> bool:
+        """A visible stray Qt top-level window other than the main window."""
         return (
-            f"{McpDevPayloadProjection.text(window.get('window_id'))} "
-            f"title={McpDevPayloadProjection.quoted_text(window.get('title'))}"
-        )
-
-    @staticmethod
-    def _error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
-        return tuple(
-            f"- {McpDevPayloadProjection.text(error.get('code'))}: "
-            f"{McpDevPayloadProjection.text(error.get('message'))}"
-            for error in errors[:3]
+            window.visible
+            and window.window_kind == QT_TOP_LEVEL_WINDOW_KIND
+            and window.title != MainWindowWidgetIdentity.require_title()
         )
 
 
 class UiSmokeRenderer:
-    """Compact renderer for the multi-tool UI smoke command."""
-
-    HEALTH_TOOL = agent_capabilities.health_check.name
-    STATUS_TOOL = agent_capabilities.ui_bridge_status.name
-    BRIDGES_TOOL = agent_capabilities.ui_list_bridges.name
-    WINDOWS_TOOL = agent_capabilities.ui_list_windows.name
+    """Compact presentation of the multi-tool ``ui-smoke`` command."""
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        errors = McpDevPayloadProjection.sequence_of_mappings(response.get("errors"))
-        if errors:
+    def render(cls, response) -> str:
+        from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
+        from openhcs.mcp.dev_client_rendering import diagnostic_lines
+
+        decoded = McpDevToolBatchResponse.for_rendering(response)
+        if decoded.errors:
             return "\n".join(
-                ("UI smoke: unavailable", *McpDiagnosticRenderer.error_lines(errors))
+                ("UI smoke: unavailable", *diagnostic_lines(decoded.errors))
             )
-
-        results = McpDevPayloadProjection.sequence_of_mappings(response.get("results"))
-        mcp_errors = sum(1 for result in results if result.get("mcp_error") is True)
-        lines = [f"UI smoke: results={len(results)} mcp_errors={mcp_errors}"]
-        lines.append(cls._health_line(response))
-        lines.extend(
-            UiBridgeStatusRenderer.render(
-                McpDevPayloadProjection.tool_response(response, cls.STATUS_TOOL)
-            ).splitlines()
+        mcp_errors = sum(1 for result in decoded.results if result.mcp_error)
+        health: McpServerHealthResult | None = decoded.payload_for(
+            agent_capabilities.health_check
         )
-        lines.append(cls._bridge_catalog_line(response))
-        lines.extend(
-            UiWindowCatalogRenderer.render(
-                McpDevPayloadProjection.tool_response(response, cls.WINDOWS_TOOL)
-            ).splitlines()
+        status: UiBridgeStatus | None = decoded.payload_for(
+            agent_capabilities.ui_bridge_status
         )
-        return "\n".join(lines)
-
-    @classmethod
-    def _health_line(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(
-            McpDevPayloadProjection.tool_response(response, cls.HEALTH_TOOL)
+        bridges: UiBridgeCatalog | None = decoded.payload_for(
+            agent_capabilities.ui_list_bridges
         )
-        if payload is None:
-            return "Health: missing"
-        stale_paths = payload.get("stale_source_paths")
-        stale_path_count = len(stale_paths) if isinstance(stale_paths, list) else 0
-        return (
-            "Health: "
-            f"status={McpDevPayloadProjection.text(payload.get('status'))} "
-            f"restart_required={McpDevPayloadProjection.text(payload.get('restart_required'))} "
-            f"stale_paths={stale_path_count}"
+        windows: UiWindowCatalog | None = decoded.payload_for(
+            agent_capabilities.ui_list_windows
         )
-
-    @classmethod
-    def _bridge_catalog_line(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(
-            McpDevPayloadProjection.tool_response(response, cls.BRIDGES_TOOL)
+        options = McpDevOutputRenderOptions()
+        return "\n".join(
+            (
+                f"UI smoke: results={len(decoded.results)} mcp_errors={mcp_errors}",
+                "Health: missing"
+                if health is None
+                else f"Health: status={health.status} "
+                f"restart_required={health.restart_required} "
+                f"stale_paths={len(health.stale_source_paths)}",
+                UiBridgeStatusRenderer.unavailable_summary
+                if status is None
+                else McpDevOutputRenderer.render_payload_value(status, options),
+                "Bridges: missing"
+                if bridges is None
+                else f"Bridges: live={len(bridges.bridges)} errors={len(bridges.errors)}",
+                UiWindowCatalogRenderer.unavailable_summary
+                if windows is None
+                else McpDevOutputRenderer.render_payload_value(windows, options),
+                *McpDevOutputRenderer.diagnostic_lines(decoded.diagnostic_errors()),
+            )
         )
-        if payload is None:
-            return "Bridges: missing"
-        bridges = McpDevPayloadProjection.sequence_of_mappings(payload.get("bridges"))
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        return f"Bridges: live={len(bridges)} errors={len(errors)}"
 
 
 class UiStateSurfaceCatalogRenderer(McpDevOutputRenderer):
@@ -245,862 +184,450 @@ class UiStateSurfaceCatalogRenderer(McpDevOutputRenderer):
     render_options_type = CatalogRenderOptions
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: CatalogRenderOptions,
+    def render_payload(
+        cls, payload: UiStateSurfaceCatalog, options: CatalogRenderOptions
     ) -> str:
-        return cls.render(
-            response,
-            contains=options.contains,
-            limit=options.limit,
-        )
-
-    @classmethod
-    def render(
-        cls,
-        response: JsonObject,
-        *,
-        contains: str | None = None,
-        limit: int = 20,
-    ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
-        all_surfaces = McpDevPayloadProjection.sequence_of_mappings(
-            payload.get("surfaces")
-        )
-        surfaces = cls._matching_surfaces(all_surfaces, contains)
-        visible_surfaces = surfaces[: max(limit, 0)]
+        surfaces, visible = options.select(payload.surfaces, cls._surface_line)
         lines = [
-            "State surfaces: "
-            f"count={len(all_surfaces)} matched={len(surfaces)} "
-            f"shown={len(visible_surfaces)}"
+            f"State surfaces: count={len(payload.surfaces)} matched={len(surfaces)} "
+            f"shown={len(visible)}",
+            *options.filter_lines(),
         ]
-        if contains:
-            lines.append(f"Filter: contains={contains}")
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        if visible_surfaces:
+        if visible:
             lines.append("Surfaces:")
-            lines.extend(cls._surface_lines(visible_surfaces))
-        if len(visible_surfaces) < len(surfaces):
-            lines.append(
-                f"...<truncated {len(surfaces) - len(visible_surfaces)} surfaces>"
-            )
+            lines.extend(cls._surface_line(surface) for surface in visible)
+        if len(visible) < len(surfaces):
+            lines.append(f"...<truncated {len(surfaces) - len(visible)} surfaces>")
         return "\n".join(lines)
 
     @classmethod
-    def _matching_surfaces(
-        cls,
-        surfaces: tuple[Mapping[str, JsonValue], ...],
-        contains: str | None,
-    ) -> tuple[Mapping[str, JsonValue], ...]:
-        if not contains:
-            return surfaces
-        needle = contains.casefold()
-        return tuple(
-            surface
-            for surface in surfaces
-            if needle in cls._surface_line(surface).casefold()
-        )
-
-    @classmethod
-    def _surface_lines(
-        cls,
-        surfaces: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
-        return [cls._surface_line(surface) for surface in surfaces]
-
-    @staticmethod
-    def _surface_line(surface: Mapping[str, JsonValue]) -> str:
+    def _surface_line(cls, surface: UiStateSurfaceSummary) -> str:
         return (
-            "- "
-            f"{UiStateSurfaceCatalogRenderer.surface_id(surface)}: "
-            f"widget={McpDevPayloadProjection.text(surface.get('widget_id'))} "
-            f"readable={McpDevPayloadProjection.text(surface.get('readable'))} "
-            "selection="
-            f"{McpDevPayloadProjection.text(surface.get('current_selection_count'))}/"
-            f"{McpDevPayloadProjection.text(surface.get('total_scope_count'))} "
-            f"modes={ViewerValidationRenderer._sequence_text(surface.get('supported_selection_modes'))} "
-            f"title={McpDevPayloadProjection.quoted_text(surface.get('title'))}"
+            f"- {surface.surface_id}: widget={surface.widget_id} "
+            f"readable={surface.readable} "
+            f"selection={surface.current_selection_count}/{surface.total_scope_count} "
+            f"modes={cls.sequence_text(surface.supported_selection_modes)} "
+            f"title={cls.quoted(surface.title)}"
         )
 
-    @staticmethod
-    def surface_id(surface: Mapping[str, JsonValue]) -> str:
-        surface_id = surface.get("surface_id")
-        if isinstance(surface_id, str):
-            return surface_id
-        identity = McpDevPayloadProjection.nested_mapping(surface, "identity")
-        identity_surface_id = identity.get("surface_id")
-        if isinstance(identity_surface_id, str):
-            return identity_surface_id
-        return "<none>"
 
+class UiStateSurfaceStateRenderer(McpDevOutputRenderer):
+    """Presentation of one state surface's declared state record.
 
-class UiStateSurfacePayloadRenderer(ABC, metaclass=AutoRegisterMeta):
-    """Renderer declaration for one UI state-surface identity."""
+    A member declares the surface identity it presents and, as its
+    ``output_contract``, the state DTO that surface's document carries.
+    """
 
-    __registry__: ClassVar[
-        dict[
-            type[UiStateSurfaceIdentityDeclarationBase],
-            type["UiStateSurfacePayloadRenderer"],
-        ]
-    ] = {}
-    __registry_key__ = "surface_identity"
-    __skip_if_no_key__ = True
-
-    surface_identity: ClassVar[type[UiStateSurfaceIdentityDeclarationBase] | None] = (
-        None
-    )
+    surface_identity: ClassVar[type[UiStateSurfaceIdentityDeclarationBase]]
 
     @classmethod
-    def for_payload(
-        cls,
-        payload: Mapping[str, JsonValue],
-    ) -> type["UiStateSurfacePayloadRenderer"] | None:
-        surface_id = cls.surface_id(payload)
-        if surface_id is None:
-            return None
-        identity_type = UiBridgeIdentityDeclaration.__registry__.get(surface_id)
-        if identity_type is None:
-            return None
-        if not issubclass(identity_type, UiStateSurfaceIdentityDeclarationBase):
-            return None
-        return cls.__registry__.get(identity_type)
-
-    @staticmethod
-    def surface_id(payload: Mapping[str, JsonValue]) -> str | None:
-        summary = McpDevPayloadProjection.nested_mapping(payload, "summary")
-        identity = McpDevPayloadProjection.nested_mapping(summary, "identity")
-        surface_id = identity.get("surface_id")
-        if isinstance(surface_id, str):
-            return surface_id
-        return None
+    def for_surface_id(cls, surface_id: str) -> type["UiStateSurfaceStateRenderer"] | None:
+        return next(
+            (
+                renderer
+                for renderer in McpDevOutputRenderer.__registry__.values()
+                if issubclass(renderer, cls)
+                and renderer.surface_identity.value == surface_id
+            ),
+            None,
+        )
 
     @classmethod
-    @abstractmethod
-    def render(cls, response: JsonObject) -> str:
-        """Render a state-surface response for this surface identity."""
+    def state_from_document(cls, document: UiStateSurfaceDocument):
+        return dataclass_from_mapping(cls.output_contract, document.payload)
+
+    @classmethod
+    def revision_lines(cls, state: UiStateSurfaceEnvelope) -> tuple[str, ...]:
+        lines = [f"Revision: {cls.text(state.current_revision_token)}"]
+        lines.extend(
+            cls.optional_lines(
+                state.current_snapshot,
+                lambda snapshot: (
+                    f"Snapshot: {snapshot.index} {cls.quoted(snapshot.label)}",
+                ),
+            )
+        )
+        return tuple(lines)
 
 
 class UiStateSurfaceRenderer(McpDevOutputRenderer):
-    """Compact fallback renderer for non-PlateManager state surfaces."""
+    """State-surface documents, presented by the surface's state renderer."""
 
     output_contract = UiStateSurfaceDocument
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        renderer_type = UiStateSurfacePayloadRenderer.for_payload(payload)
-        if renderer_type is not None:
-            return renderer_type.render(response)
-        summary = McpDevPayloadProjection.nested_mapping(payload, "summary")
-        identity = McpDevPayloadProjection.nested_mapping(summary, "identity")
+    def render_payload(
+        cls, payload: UiStateSurfaceDocument, options: McpDevOutputRenderOptions
+    ) -> str:
+        summary = payload.summary
+        state_renderer = UiStateSurfaceStateRenderer.for_surface_id(summary.surface_id)
+        if state_renderer is not None:
+            return state_renderer.render_payload(
+                state_renderer.state_from_document(payload), options
+            )
         lines = [
-            f"Surface: {McpDevPayloadProjection.text(identity.get('surface_id'))}",
-            f"Title: {McpDevPayloadProjection.text(summary.get('title'))}",
-            f"Readable: {McpDevPayloadProjection.text(summary.get('readable'))}",
-            f"Selection: {McpDevPayloadProjection.text(payload.get('selection_mode'))}",
-            f"Revision: {McpDevPayloadProjection.text(payload.get('current_revision_token'))}",
+            f"Surface: {summary.surface_id}",
+            f"Title: {summary.title}",
+            f"Readable: {summary.readable}",
+            f"Selection: {cls.text(payload.selection_mode)}",
+            f"Revision: {cls.text(payload.current_revision_token)}",
         ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        if summary.get("readable") is False:
+        if not summary.readable:
             lines.append("Next: state-surfaces")
         return "\n".join(lines)
 
 
-class UiLiveOverviewStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
+class UiLiveOverviewStateSurfaceRenderer(UiStateSurfaceStateRenderer):
     """Compact renderer for the live UI overview surface."""
 
     surface_identity = UiLiveOverviewStateSurfaceIdentityDeclaration
+    output_contract = UiLiveOverviewState
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            return "\n".join(
-                ("UI live overview: unavailable", *cls._error_lines(errors))
-            )
-        state_payload = McpDevPayloadProjection.nested_mapping(payload, "payload")
-        sections = McpDevPayloadProjection.sequence_of_mappings(
-            state_payload.get("sections")
-        )
+    def render_payload(
+        cls, payload: UiLiveOverviewState, options: McpDevOutputRenderOptions
+    ) -> str:
         lines = [
-            f"UI live overview: sections={len(sections)}",
-            f"Revision: {McpDevPayloadProjection.text(state_payload.get('current_revision_token'))}",
+            f"UI live overview: sections={len(payload.sections)}",
+            f"Revision: {cls.text(payload.current_revision_token)}",
         ]
-        for section in sections:
+        for section in payload.sections:
             lines.extend(cls._section_lines(section))
         return "\n".join(lines)
 
     @classmethod
-    def _section_lines(cls, section: Mapping[str, JsonValue]) -> list[str]:
-        metrics = McpDevPayloadProjection.sequence_of_mappings(section.get("metrics"))
-        items = McpDevPayloadProjection.sequence_of_mappings(section.get("items"))
+    def _section_lines(cls, section: UiLiveOverviewSection) -> list[str]:
         metric_text = " ".join(
-            f"{McpDevPayloadProjection.text(metric.get('label'))}="
-            f"{McpDevPayloadProjection.text(metric.get('value'))}"
-            for metric in metrics
+            f"{metric.label}={metric.value}" for metric in section.metrics
         )
-        title = McpDevPayloadProjection.text(section.get("title"))
-        summary = McpDevPayloadProjection.text(section.get("summary"))
-        lines = [f"{title}: {summary} {metric_text}".rstrip()]
-        lines.extend(cls._item_lines(items))
+        lines = [f"{section.title}: {section.summary} {metric_text}".rstrip()]
+        for item in section.items:
+            parts = [f"severity={item.severity}"]
+            for label, value in (
+                ("status", item.status),
+                ("detail", item.detail),
+                ("surface", item.source_surface_id),
+                ("window", item.source_window_id),
+            ):
+                parts.extend(cls.optional_lines(value, lambda text: (f"{label}={text}",)))
+            lines.append(f"- {item.label}: " + " ".join(parts))
         return lines
 
-    @staticmethod
-    def _item_lines(items: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
-        lines: list[str] = []
-        for item in items:
-            parts = [
-                f"severity={McpDevPayloadProjection.text(item.get('severity'))}",
-            ]
-            if item.get("status") is not None:
-                parts.append(
-                    f"status={McpDevPayloadProjection.text(item.get('status'))}"
-                )
-            if item.get("detail") is not None:
-                parts.append(
-                    f"detail={McpDevPayloadProjection.text(item.get('detail'))}"
-                )
-            if item.get("source_surface_id") is not None:
-                parts.append(
-                    "surface="
-                    f"{McpDevPayloadProjection.text(item.get('source_surface_id'))}"
-                )
-            if item.get("source_window_id") is not None:
-                parts.append(
-                    "window="
-                    f"{McpDevPayloadProjection.text(item.get('source_window_id'))}"
-                )
-            lines.append(
-                f"- {McpDevPayloadProjection.text(item.get('label'))}: "
-                + " ".join(parts)
-            )
-        return lines
 
-    @staticmethod
-    def _error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
-        return tuple(
-            f"- {McpDevPayloadProjection.text(error.get('code'))}: "
-            f"{McpDevPayloadProjection.text(error.get('message'))}"
-            for error in errors[:3]
-        )
-
-
-class PlateManagerStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
+class PlateManagerStateSurfaceRenderer(UiStateSurfaceStateRenderer):
     """Compact renderer for PlateManager state-surface rows."""
 
     surface_identity = PlateManagerStateSurfaceIdentityDeclaration
+    output_contract = UiPlateManagerState
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            return "\n".join(("Plate manager: unavailable", *cls._error_lines(errors)))
-        state_payload = McpDevPayloadProjection.nested_mapping(payload, "payload")
-        summary = McpDevPayloadProjection.nested_mapping(state_payload, "summary")
-        rows = McpDevPayloadProjection.sequence_of_mappings(state_payload.get("rows"))
+    def render_payload(
+        cls, payload: UiPlateManagerState, options: McpDevOutputRenderOptions
+    ) -> str:
         lines = [
-            (
-                "Plate manager: "
-                f"rows={len(rows)} "
-                f"selected={McpDevPayloadProjection.text(summary.get('current_selection_count'))} "
-                f"manager={McpDevPayloadProjection.text(state_payload.get('manager_execution_state'))}"
-            ),
-            f"Revision: {McpDevPayloadProjection.text(state_payload.get('current_revision_token'))}",
+            f"Plate manager: rows={len(payload.rows)} "
+            f"selected={payload.summary.current_selection_count} "
+            f"manager={payload.manager_execution_state}",
+            *cls.revision_lines(payload),
         ]
-        snapshot = McpDevPayloadProjection.nested_mapping(
-            state_payload,
-            "current_snapshot",
-        )
-        if snapshot:
-            lines.append(
-                "Snapshot: "
-                f"{McpDevPayloadProjection.text(snapshot.get('index'))} "
-                f"{McpDevPayloadProjection.quoted_text(snapshot.get('label'))}"
-            )
-        if rows:
+        if payload.rows:
             lines.append("Rows:")
-            lines.extend(cls._row_lines(rows))
+            lines.extend(cls.row_lines(payload.rows))
         return "\n".join(lines)
 
     @classmethod
-    def _row_lines(cls, rows: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
+    def row_lines(cls, rows: tuple[UiPlateManagerRowState, ...]) -> list[str]:
+        """The one presentation of a plate-manager row, shared by workflow waits."""
         lines: list[str] = []
         for row in rows:
-            status = McpDevPayloadProjection.text(row.get("status_prefix"))
-            if not status:
-                status = "<none>"
-            row_parts = [
-                f"state={McpDevPayloadProjection.text(row.get('orchestrator_state'))}",
-                f"status={status}",
-                f"init={McpDevPayloadProjection.text(row.get('initialized'))}",
-                f"compiled={McpDevPayloadProjection.text(row.get('compiled'))}",
-                f"active={McpDevPayloadProjection.text(row.get('execution_active'))}",
-                f"terminal={McpDevPayloadProjection.text(row.get('terminal_status'))}",
-                f"selected={McpDevPayloadProjection.text(row.get('selected'))}",
+            parts = [
+                f"state={cls.text(row.orchestrator_state)}",
+                f"status={cls.text(row.status_prefix or None)}",
+                f"init={row.initialized}",
+                f"compiled={row.compiled}",
+                f"active={row.execution_active}",
+                f"terminal={cls.text(row.terminal_status)}",
+                f"selected={row.selected}",
             ]
-            if row.get("plate_root") is not None:
-                row_parts.append(
-                    f"root={McpDevPayloadProjection.text(row.get('plate_root'))}"
-                )
-            if row.get("output_plate_root") is not None:
-                row_parts.append(
-                    "output="
-                    f"{McpDevPayloadProjection.text(row.get('output_plate_root'))}"
-                )
-            if row.get("source_plate_root") is not None:
-                row_parts.append(
-                    "source="
-                    f"{McpDevPayloadProjection.text(row.get('source_plate_root'))}"
-                )
-            lines.append(
-                f"- {McpDevPayloadProjection.text(row.get('name'))}: "
-                + ", ".join(row_parts)
-            )
+            for label, value in (
+                ("root", row.plate_root),
+                ("output", row.output_plate_root),
+                ("source", row.source_plate_root),
+            ):
+                parts.extend(cls.optional_lines(value, lambda text: (f"{label}={text}",)))
+            lines.append(f"- {row.name}: " + ", ".join(parts))
         return lines
 
-    @staticmethod
-    def _error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
-        return tuple(
-            f"- {McpDevPayloadProjection.text(error.get('code'))}: "
-            f"{McpDevPayloadProjection.text(error.get('message'))}"
-            for error in errors[:3]
-        )
 
-
-class PipelineEditorStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
+class PipelineEditorStateSurfaceRenderer(UiStateSurfaceStateRenderer):
     """Compact renderer for PipelineEditor state-surface step rows."""
 
     surface_identity = PipelineEditorStateSurfaceIdentityDeclaration
+    output_contract = UiPipelineEditorState
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            return "\n".join(
-                ("Pipeline editor: unavailable", *cls._error_lines(errors))
-            )
-        state_payload = McpDevPayloadProjection.nested_mapping(payload, "payload")
-        summary = McpDevPayloadProjection.nested_mapping(state_payload, "summary")
-        steps = McpDevPayloadProjection.sequence_of_mappings(state_payload.get("steps"))
+    def render_payload(
+        cls, payload: UiPipelineEditorState, options: McpDevOutputRenderOptions
+    ) -> str:
+        summary = payload.summary
         lines = [
-            (
-                "Pipeline editor: "
-                f"steps={len(steps)} "
-                f"selected={McpDevPayloadProjection.text(summary.get('current_selection_count'))}/"
-                f"{McpDevPayloadProjection.text(summary.get('total_scope_count'))} "
-                f"plate={McpDevPayloadProjection.text(state_payload.get('current_plate_scope_id'))} "
-                f"pipeline={McpDevPayloadProjection.text(state_payload.get('pipeline_scope_id'))}"
-            ),
-            f"Revision: {McpDevPayloadProjection.text(state_payload.get('current_revision_token'))}",
+            f"Pipeline editor: steps={len(payload.steps)} "
+            f"selected={summary.current_selection_count}/{summary.total_scope_count} "
+            f"plate={cls.text(payload.current_plate_scope_id)} "
+            f"pipeline={cls.text(payload.pipeline_scope_id)}",
+            *cls.revision_lines(payload),
         ]
-        snapshot = McpDevPayloadProjection.nested_mapping(
-            state_payload,
-            "current_snapshot",
-        )
-        if snapshot:
+        if payload.selected_scope_ids:
             lines.append(
-                "Snapshot: "
-                f"{McpDevPayloadProjection.text(snapshot.get('index'))} "
-                f"{McpDevPayloadProjection.quoted_text(snapshot.get('label'))}"
+                f"Selected scopes: {cls.sequence_text(payload.selected_scope_ids)}"
             )
-        selected_scope_ids = state_payload.get("selected_scope_ids")
-        if selected_scope_ids:
-            lines.append(
-                "Selected scopes: "
-                f"{ViewerValidationRenderer._sequence_text(selected_scope_ids)}"
-            )
-        if steps:
+        if payload.steps:
             lines.append("Steps:")
-            lines.extend(cls._step_lines(steps))
+            lines.extend(cls._step_line(step) for step in payload.steps)
         return "\n".join(lines)
 
     @classmethod
-    def _step_lines(cls, steps: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
-        lines: list[str] = []
-        for step in steps:
-            markers = cls._markers(step)
-            function_names = ViewerValidationRenderer._sequence_text(
-                step.get("function_names")
-            )
-            if not function_names:
-                function_names = "<none>"
-            step_parts = [
-                f"enabled={McpDevPayloadProjection.text(step.get('enabled'))}",
-                f"selected={McpDevPayloadProjection.text(step.get('selected'))}",
-                f"funcs={function_names}",
-            ]
-            function_ids = cls._function_ids_text(step.get("function_ids"))
-            if function_ids:
-                step_parts.append(f"ids={function_ids}")
-            if step.get("debug_pause"):
-                step_parts.append("debug_pause=True")
-            if step.get("step_scope_id") is not None:
-                step_parts.append(
-                    f"scope={McpDevPayloadProjection.text(step.get('step_scope_id'))}"
-                )
-            lines.append(
-                f"- {McpDevPayloadProjection.text(step.get('index'))}. "
-                f"{markers}{McpDevPayloadProjection.text(step.get('name'))}: "
-                + ", ".join(step_parts)
-            )
-        return lines
-
-    @staticmethod
-    def _function_ids_text(value: JsonValue) -> str:
-        if not isinstance(value, list) or not value:
-            return ""
-        return ",".join(str(item) for item in value if isinstance(item, str))
-
-    @staticmethod
-    def _markers(step: Mapping[str, JsonValue]) -> str:
-        markers = ""
-        if step.get("dirty"):
-            markers += "*"
-        if step.get("default_diff"):
-            markers += "_"
-        if markers:
-            return f"[{markers}] "
-        return ""
-
-    @staticmethod
-    def _error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
-        return tuple(
-            f"- {McpDevPayloadProjection.text(error.get('code'))}: "
-            f"{McpDevPayloadProjection.text(error.get('message'))}"
-            for error in errors[:3]
+    def _step_line(cls, step: UiPipelineEditorStepState) -> str:
+        parts = [
+            f"enabled={step.enabled}",
+            f"selected={step.selected}",
+            f"funcs={cls.sequence_text(step.function_names)}",
+        ]
+        if step.function_ids:
+            parts.append(f"ids={','.join(step.function_ids)}")
+        if step.debug_pause:
+            parts.append("debug_pause=True")
+        parts.extend(
+            cls.optional_lines(step.step_scope_id, lambda scope: (f"scope={scope}",))
         )
+        markers = ("*" if step.dirty else "") + ("_" if step.default_diff else "")
+        marker_text = f"[{markers}] " if markers else ""
+        return f"- {step.index}. {marker_text}{step.name}: " + ", ".join(parts)
 
 
-class PipelineDebugSessionStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
+class PipelineDebugSessionStateSurfaceRenderer(UiStateSurfaceStateRenderer):
     """Compact renderer for PipelineEditor debug-session state."""
 
     surface_identity = PipelineDebugSessionStateSurfaceIdentityDeclaration
+    output_contract = UiPipelineDebugSessionState
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            return "\n".join(("Pipeline debug: unavailable", *cls._error_lines(errors)))
-        state_payload = McpDevPayloadProjection.nested_mapping(payload, "payload")
-        actions = McpDevPayloadProjection.sequence_of_mappings(
-            state_payload.get("actions")
-        )
-        cursor = McpDevPayloadProjection.nested_mapping(state_payload, "cursor")
+    def render_payload(
+        cls, payload: UiPipelineDebugSessionState, options: McpDevOutputRenderOptions
+    ) -> str:
+        text = cls.text
         lines = [
-            (
-                "Pipeline debug: "
-                f"phase={McpDevPayloadProjection.text(state_payload.get('phase'))} "
-                f"plate={McpDevPayloadProjection.text(state_payload.get('current_plate_scope_id'))} "
-                f"pipeline={McpDevPayloadProjection.text(state_payload.get('pipeline_scope_id'))} "
-                f"manager={McpDevPayloadProjection.text(state_payload.get('manager_execution_state'))}"
-            ),
-            (
-                "Target: "
-                f"initialized={McpDevPayloadProjection.text(state_payload.get('initialized'))} "
-                f"compiled={McpDevPayloadProjection.text(state_payload.get('compiled'))} "
-                f"terminal={McpDevPayloadProjection.text(state_payload.get('terminal_status'))}"
-            ),
-            (
-                "Session: "
-                f"id={McpDevPayloadProjection.text(state_payload.get('active_session_id'))} "
-                f"execution={McpDevPayloadProjection.text(state_payload.get('execution_id'))} "
-                f"axis={McpDevPayloadProjection.text(state_payload.get('axis_id'))} "
-                f"source_group={McpDevPayloadProjection.text(state_payload.get('selected_source_group'))}"
-            ),
-            f"Revision: {McpDevPayloadProjection.text(state_payload.get('current_revision_token'))}",
+            f"Pipeline debug: phase={payload.phase} "
+            f"plate={text(payload.current_plate_scope_id)} "
+            f"pipeline={text(payload.pipeline_scope_id)} "
+            f"manager={payload.manager_execution_state}",
+            f"Target: initialized={payload.initialized} compiled={payload.compiled} "
+            f"terminal={text(payload.terminal_status)}",
+            f"Session: id={text(payload.active_session_id)} "
+            f"execution={text(payload.execution_id)} axis={text(payload.axis_id)} "
+            f"source_group={text(payload.selected_source_group)}",
+            f"Revision: {text(payload.current_revision_token)}",
         ]
-        if cursor:
-            lines.append(
-                "Cursor: "
-                f"step={McpDevPayloadProjection.text(cursor.get('step_index'))} "
-                f"scope={McpDevPayloadProjection.text(cursor.get('step_scope_id'))} "
-                f"group={McpDevPayloadProjection.text(cursor.get('group_key'))} "
-                f"invocation={McpDevPayloadProjection.text(cursor.get('invocation_key'))} "
-                f"dirty={McpDevPayloadProjection.text(cursor.get('dirty'))}"
+        lines.extend(
+            cls.optional_lines(
+                payload.cursor,
+                lambda cursor: (
+                    f"Cursor: step={cursor.step_index} "
+                    f"scope={text(cursor.step_scope_id)} group={text(cursor.group_key)} "
+                    f"invocation={text(cursor.invocation_key)} dirty={cursor.dirty}",
+                ),
             )
-        current_frame = McpDevPayloadProjection.nested_mapping(
-            state_payload,
-            "current_frame",
         )
-        last_frame = McpDevPayloadProjection.nested_mapping(
-            state_payload,
-            "last_frame",
+        lines.extend(
+            cls.optional_lines(
+                payload.current_frame,
+                lambda frame: (cls._frame_line("Current frame", frame),),
+            )
         )
-        if current_frame:
-            lines.append(cls._frame_line("Current frame", current_frame))
-        if last_frame and last_frame != current_frame:
-            lines.append(cls._frame_line("Last frame", last_frame))
-        if actions:
+        if payload.last_frame != payload.current_frame:
+            lines.extend(
+                cls.optional_lines(
+                    payload.last_frame,
+                    lambda frame: (cls._frame_line("Last frame", frame),),
+                )
+            )
+        if payload.actions:
             lines.append("Actions:")
-            lines.extend(cls._action_lines(actions))
+            lines.extend(cls._action_line(action) for action in payload.actions)
         return "\n".join(lines)
 
     @classmethod
-    def _frame_line(
-        cls,
-        label: str,
-        frame: Mapping[str, JsonValue],
-    ) -> str:
-        progress_identity = McpDevPayloadProjection.nested_mapping(
-            frame,
-            "progress_identity",
-        )
-        cursor = McpDevPayloadProjection.nested_mapping(frame, "cursor")
+    def _frame_line(cls, label: str, frame: UiDebugRuntimeFrameState) -> str:
         return (
-            f"{label}: "
-            f"event={McpDevPayloadProjection.text(frame.get('event_type'))} "
-            f"step={McpDevPayloadProjection.text(frame.get('step_name'))} "
-            f"callable={McpDevPayloadProjection.text(frame.get('callable_name'))} "
-            f"axis={McpDevPayloadProjection.text(progress_identity.get('axis_id'))} "
-            f"snapshot={McpDevPayloadProjection.text(frame.get('snapshot_id'))} "
-            f"invocation={McpDevPayloadProjection.text(cursor.get('invocation_key'))}"
+            f"{label}: event={frame.event_type} step={frame.step_name} "
+            f"callable={cls.text(frame.callable_name)} "
+            f"axis={frame.progress_identity.axis_id} "
+            f"snapshot={cls.text(frame.snapshot_id)} "
+            f"invocation={cls.text(frame.cursor.invocation_key)}"
         )
 
     @classmethod
-    def _action_lines(
-        cls,
-        actions: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
-        lines: list[str] = []
-        for action in actions:
-            disabled = McpDevPayloadProjection.nested_mapping(action, "disabled_error")
-            suffix = ""
-            if disabled:
-                suffix = (
-                    f" disabled={McpDevPayloadProjection.text(disabled.get('code'))}"
-                )
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(action.get('action_id'))}: "
-                f"enabled={McpDevPayloadProjection.text(action.get('enabled'))} "
-                f"placement={McpDevPayloadProjection.text(action.get('placement'))} "
-                f"title={McpDevPayloadProjection.quoted_text(action.get('label'))}"
-                f"{suffix}"
-            )
-        return lines
-
-    @staticmethod
-    def _error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
-        return tuple(
-            f"- {McpDevPayloadProjection.text(error.get('code'))}: "
-            f"{McpDevPayloadProjection.text(error.get('message'))}"
-            for error in errors[:3]
+    def _action_line(cls, action: UiDebugActionState) -> str:
+        disabled = (
+            ""
+            if action.disabled_error is None
+            else f" disabled={action.disabled_error.code}"
         )
-
-
-@dataclass(frozen=True, slots=True)
-class WidgetTreeOutlineOptions:
-    """Controls for human-readable widget-tree outlines."""
-
-    root_class: str | None = None
-    include_technical_widgets: bool = False
+        return (
+            f"- {action.action_id}: enabled={action.enabled} "
+            f"placement={action.placement} title={cls.quoted(action.label)}{disabled}"
+        )
 
 
 class WidgetTreeOutlineRenderer(McpDevOutputRenderer):
-    """Human-readable outline for a widget-tree MCP payload."""
+    """Human-readable outline of a widget tree."""
 
     output_contract = UiWidgetTreeResult
-
+    render_options_type = WidgetTreeRenderOptions
     MAX_LABEL_CHARS = 96
+    TECHNICAL_WIDGET_CLASSES = frozenset({"QHeaderView", "QScrollBar", "QSplitterHandle"})
+    TECHNICAL_OBJECT_NAME_PREFIX = "qt_scrollarea_"
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: WidgetTreeRenderOptions,
+    def render_payload(
+        cls, payload: UiWidgetTreeResult, options: WidgetTreeRenderOptions
     ) -> str:
-        if options.output is WidgetTreeOutputFormat.JSON:
-            return json.dumps(response, indent=2, sort_keys=True)
-        return cls.render(
-            response,
-            WidgetTreeOutlineOptions(
-                root_class=options.outline_root_class,
-                include_technical_widgets=options.include_technical_widgets,
-            ),
-        )
-
-    @classmethod
-    def render(
-        cls,
-        response: Mapping[str, JsonValue],
-        options: WidgetTreeOutlineOptions = WidgetTreeOutlineOptions(),
-    ) -> str:
-        payload = cls._widget_tree_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
         lines: list[str] = []
-        summary = payload.get("summary")
-        if isinstance(summary, Mapping):
-            lines.extend(cls._summary_lines(summary))
-
-        root = payload.get("root")
-        if isinstance(root, Mapping):
-            action_summaries = cls._action_summaries_by_path(payload)
-            if options.root_class is not None:
-                selected_root = cls._first_node_with_class(root, options.root_class)
-                if selected_root is None:
-                    lines.append(f'Tree: <no node with class "{options.root_class}">')
+        lines.extend(cls.optional_lines(payload.summary, cls._summary_lines))
+        root = payload.root
+        if root is None:
+            lines.append("Tree: <not returned; use --include-tree or outline mode>")
+        else:
+            if options.outline_root_class is not None:
+                root = cls._first_node_with_class(root, options.outline_root_class)
+                if root is None:
+                    lines.append(
+                        f'Tree: <no node with class "{options.outline_root_class}">'
+                    )
                     return "\n".join(lines)
-                root = selected_root
             if lines:
                 lines.append("")
             lines.append("Tree:")
-            lines.extend(cls._node_lines(root, "  ", options, action_summaries))
-        else:
-            lines.append("Tree: <not returned; use --include-tree or outline mode>")
-
-        if payload.get("tree_truncated") is True:
-            lines.append("")
-            lines.append("Tree truncated by max depth/node limits.")
-        if payload.get("actionable_widgets_truncated") is True:
+            actions = {action.path_id: action for action in payload.actionable_widgets}
+            lines.extend(cls._node_lines(root, "  ", options, actions))
+        if payload.tree_truncated:
+            lines.extend(("", "Tree truncated by max depth/node limits."))
+        if payload.actionable_widgets_truncated:
             lines.append("Actionable widget list truncated by max node limits.")
         return "\n".join(lines)
 
     @classmethod
-    def _widget_tree_payload(
-        cls,
-        response: Mapping[str, JsonValue],
-    ) -> Mapping[str, JsonValue] | None:
-        results = response.get("results")
-        if not isinstance(results, list):
-            return None
-        for result in results:
-            if not isinstance(result, Mapping):
-                continue
-            if result.get("tool") != agent_capabilities.ui_get_widget_tree.name:
-                continue
-            payloads = result.get("payloads")
-            if not isinstance(payloads, list):
-                continue
-            for payload in payloads:
-                if isinstance(payload, Mapping):
-                    return payload
-        return None
-
-    @staticmethod
-    def _action_summaries_by_path(
-        payload: Mapping[str, JsonValue],
-    ) -> dict[str, Mapping[str, JsonValue]]:
-        actions = payload.get("actionable_widgets")
-        if not isinstance(actions, list):
-            return {}
-        summaries: dict[str, Mapping[str, JsonValue]] = {}
-        for action in actions:
-            if not isinstance(action, Mapping):
-                continue
-            path_id = WidgetTreeOutlineRenderer._value_text(action.get("path_id"))
-            if path_id:
-                summaries[path_id] = action
-        return summaries
-
-    @classmethod
     def _first_node_with_class(
-        cls,
-        node: Mapping[str, JsonValue],
-        class_name: str,
-    ) -> Mapping[str, JsonValue] | None:
-        if node.get("class_name") == class_name:
+        cls, node: UiWidgetTreeNode, class_name: str
+    ) -> UiWidgetTreeNode | None:
+        if node.class_name == class_name:
             return node
-        children = node.get("children")
-        if not isinstance(children, list):
-            return None
-        for child in children:
-            if not isinstance(child, Mapping):
-                continue
-            match = cls._first_node_with_class(child, class_name)
-            if match is not None:
-                return match
-        return None
+        return next(
+            (
+                match
+                for child in node.children
+                if (match := cls._first_node_with_class(child, class_name)) is not None
+            ),
+            None,
+        )
 
     @classmethod
-    def _summary_lines(cls, summary: Mapping[str, JsonValue]) -> list[str]:
-        lines = [f"Window: {cls._value_text(summary.get('title'))}"]
+    def _summary_lines(cls, summary: UiWindowSummary) -> list[str]:
         status_parts = [
-            f"dirty={cls._value_text(summary.get('dirty'))}",
-            f"dirty_fields={cls._value_text(summary.get('dirty_field_count'))}",
-            f"default_diff={cls._value_text(summary.get('signature_diff'))}",
-            "default_diff_fields="
-            f"{cls._value_text(summary.get('signature_diff_field_count'))}",
+            f"dirty={summary.dirty}",
+            f"dirty_fields={summary.dirty_field_count}",
+            f"default_diff={summary.signature_diff}",
+            f"default_diff_fields={summary.signature_diff_field_count}",
         ]
-        markers = summary.get("semantic_markers")
-        if isinstance(markers, list) and markers:
-            status_parts.append(
-                "markers=" + ",".join(cls._value_text(marker) for marker in markers)
-            )
-        lines.append("Status: " + " ".join(status_parts))
-        return lines
+        if summary.semantic_markers:
+            status_parts.append("markers=" + ",".join(summary.semantic_markers))
+        return [f"Window: {summary.title}", "Status: " + " ".join(status_parts)]
 
     @classmethod
     def _node_lines(
         cls,
-        node: Mapping[str, JsonValue],
+        node: UiWidgetTreeNode,
         prefix: str,
-        options: WidgetTreeOutlineOptions = WidgetTreeOutlineOptions(),
-        action_summaries: Mapping[str, Mapping[str, JsonValue]] | None = None,
+        options: WidgetTreeRenderOptions,
+        actions: dict[str, UiWidgetActionSummary],
     ) -> list[str]:
-        if action_summaries is None:
-            action_summaries = {}
-        lines = [f"{prefix}{cls._node_label(node, action_summaries)}"]
-        children = node.get("children")
-        if isinstance(children, list):
-            for child in children:
-                if isinstance(child, Mapping):
-                    if cls._should_skip_node(child, options):
-                        continue
-                    lines.extend(
-                        cls._node_lines(
-                            child,
-                            f"{prefix}  ",
-                            options,
-                            action_summaries,
-                        )
-                    )
+        lines = [f"{prefix}{cls._node_label(node, actions)}"]
+        for child in node.children:
+            if not cls._is_hidden_technical_node(child, options):
+                lines.extend(cls._node_lines(child, f"{prefix}  ", options, actions))
         return lines
 
     @classmethod
-    def _should_skip_node(
-        cls,
-        node: Mapping[str, JsonValue],
-        options: WidgetTreeOutlineOptions,
+    def _is_hidden_technical_node(
+        cls, node: UiWidgetTreeNode, options: WidgetTreeRenderOptions
     ) -> bool:
         if options.include_technical_widgets:
             return False
-        class_name = cls._value_text(node.get("class_name"))
-        object_name = cls._value_text(node.get("object_name"))
-        if class_name in {"QHeaderView", "QScrollBar", "QSplitterHandle"}:
-            return True
-        if node.get("visible") is False:
-            return True
-        return object_name.startswith("qt_scrollarea_")
+        return (
+            node.class_name in cls.TECHNICAL_WIDGET_CLASSES
+            or not node.visible
+            or node.object_name.startswith(cls.TECHNICAL_OBJECT_NAME_PREFIX)
+        )
 
     @classmethod
     def _node_label(
-        cls,
-        node: Mapping[str, JsonValue],
-        action_summaries: Mapping[str, Mapping[str, JsonValue]],
+        cls, node: UiWidgetTreeNode, actions: dict[str, UiWidgetActionSummary]
     ) -> str:
-        parts: list[str] = []
-        class_name = cls._value_text(node.get("class_name"))
-        if class_name:
-            parts.append(class_name)
-
-        object_name = cls._value_text(node.get("object_name"))
-        if object_name:
-            parts.append(f"#{object_name}")
-
-        path_id = ""
-        action_summary: Mapping[str, JsonValue] | None = None
-        if node.get("actionable") is True or (
-            node.get("visible") is not False and cls._has_action_kinds(node)
-        ):
-            path_id = cls._value_text(node.get("path_id"))
-            if path_id:
-                action_summary = action_summaries.get(path_id)
-        semantic_parts = (
-            cls._semantic_parts(action_summary) if action_summary is not None else []
+        parts = [part for part in (node.class_name,) if part]
+        if node.object_name:
+            parts.append(f"#{node.object_name}")
+        addressable = node.actionable or (
+            node.visible and any(node.action_kinds)
         )
-
+        path_id = node.path_id if addressable else ""
+        action = actions[path_id] if path_id in actions else None
+        semantic_parts = [] if action is None else cls._semantic_parts(action)
         if not semantic_parts:
-            for field in ("label", "text", "title"):
-                text = cls._value_text(node.get(field))
-                if text:
-                    parts.append(f'"{cls._compact_text(text)}"')
-                    break
-
-            current_text = cls._value_text(node.get("current_text"))
-            if current_text:
-                parts.append(f'current="{cls._compact_text(current_text)}"')
-
+            label = next((text for text in (node.text, node.title) if text), None)
+            if label:
+                parts.append(f'"{cls._compact_text(label)}"')
+            if node.current_text:
+                parts.append(f'current="{cls._compact_text(node.current_text)}"')
         if path_id:
             parts.append(f"path={path_id}")
             parts.extend(semantic_parts)
             parts.extend(cls._interaction_state_parts(node))
         return " ".join(parts)
 
-    @classmethod
-    def _has_action_kinds(cls, node: Mapping[str, JsonValue]) -> bool:
-        action_kinds = node.get("action_kinds")
-        if not isinstance(action_kinds, list):
-            return False
-        return any(cls._value_text(action_kind) for action_kind in action_kinds)
-
     @staticmethod
-    def _interaction_state_parts(node: Mapping[str, JsonValue]) -> list[str]:
-        if node.get("actionable") is True:
+    def _interaction_state_parts(node: UiWidgetTreeNode) -> list[str]:
+        if node.actionable:
             return []
         parts: list[str] = []
-        if node.get("visible") is False:
+        if not node.visible:
             parts.append("hidden")
-        if node.get("enabled") is False:
+        if not node.enabled:
             parts.append("disabled")
-        if node.get("clickable") is False and node.get("enabled") is not False:
+        elif not node.clickable:
             parts.append("not-clickable")
         return parts
 
     @classmethod
-    def _semantic_parts(cls, action_summary: Mapping[str, JsonValue]) -> list[str]:
-        scope_id = cls._value_text(action_summary.get("object_state_scope_id"))
-        markers = cls._semantic_marker_text(action_summary)
+    def _semantic_parts(cls, action: UiWidgetActionSummary) -> list[str]:
+        scope_id = action.object_state_scope_id
+        markers = "".join(action.semantic_markers) or (
+            ("*" if action.dirty else "") + ("_" if action.signature_diff else "")
+        )
         if not scope_id and not markers:
             return []
         parts = [f"[{markers or '-'}]"]
         if scope_id:
             parts.append(f"scope={cls._compact_text(scope_id)}")
-        field_path = cls._value_text(action_summary.get("field_path"))
-        if field_path:
-            parts.append(f"field={cls._compact_text(field_path)}")
+        if action.field_path:
+            parts.append(f"field={cls._compact_text(action.field_path)}")
         return parts
 
     @classmethod
-    def _semantic_marker_text(cls, action_summary: Mapping[str, JsonValue]) -> str:
-        markers = action_summary.get("semantic_markers")
-        if isinstance(markers, list):
-            marker_text = "".join(
-                cls._value_text(marker) for marker in markers if cls._value_text(marker)
-            )
-            if marker_text:
-                return marker_text
-        marker_text = ""
-        if action_summary.get("dirty") is True:
-            marker_text += "*"
-        if action_summary.get("signature_diff") is True:
-            marker_text += "_"
-        return marker_text
-
-    @staticmethod
-    def _value_text(value: JsonValue) -> str:
-        if value is None:
-            return ""
-        if isinstance(value, (dict, list)):
-            return ""
-        return str(value)
-
-    @staticmethod
-    def _compact_text(text: str) -> str:
+    def _compact_text(cls, text: str) -> str:
         compact = " ".join(text.split())
-        if len(compact) <= WidgetTreeOutlineRenderer.MAX_LABEL_CHARS:
+        if len(compact) <= cls.MAX_LABEL_CHARS:
             return compact
-        keep = WidgetTreeOutlineRenderer.MAX_LABEL_CHARS - 3
-        return f"{compact[:keep]}..."
+        return f"{compact[: cls.MAX_LABEL_CHARS - 3]}..."
 
 
 class CodeDocumentCatalogRenderer(McpDevOutputRenderer):
@@ -1110,154 +637,61 @@ class CodeDocumentCatalogRenderer(McpDevOutputRenderer):
     render_options_type = CatalogRenderOptions
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: CatalogRenderOptions,
+    def render_payload(
+        cls, payload: UiCodeDocumentCatalog, options: CatalogRenderOptions
     ) -> str:
-        return cls.render(
-            response,
-            contains=options.contains,
-            limit=options.limit,
-        )
-
-    @classmethod
-    def render(
-        cls,
-        response: JsonObject,
-        *,
-        contains: str | None = None,
-        limit: int = 20,
-    ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
-        all_documents = McpDevPayloadProjection.sequence_of_mappings(
-            payload.get("documents")
-        )
-        documents = cls._matching_documents(all_documents, contains)
-        visible_documents = documents[: max(limit, 0)]
+        documents, visible = options.select(payload.documents, cls._document_line)
         lines = [
-            "Code documents: "
-            f"count={len(all_documents)} matched={len(documents)} "
-            f"shown={len(visible_documents)}"
+            f"Code documents: count={len(payload.documents)} "
+            f"matched={len(documents)} shown={len(visible)}",
+            *options.filter_lines(),
         ]
-        if contains:
-            lines.append(f"Filter: contains={contains}")
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        if visible_documents:
+        if visible:
             lines.append("Documents:")
-            for document in visible_documents:
-                lines.append(cls._document_line(document))
-        if len(visible_documents) < len(documents):
-            lines.append(
-                f"...<truncated {len(documents) - len(visible_documents)} documents>"
-            )
+            lines.extend(cls._document_line(document) for document in visible)
+        if len(visible) < len(documents):
+            lines.append(f"...<truncated {len(documents) - len(visible)} documents>")
         return "\n".join(lines)
 
     @classmethod
-    def _matching_documents(
-        cls,
-        documents: tuple[Mapping[str, JsonValue], ...],
-        contains: str | None,
-    ) -> tuple[Mapping[str, JsonValue], ...]:
-        if not contains:
-            return documents
-        needle = contains.casefold()
-        return tuple(
-            document
-            for document in documents
-            if needle in cls._document_line(document).casefold()
-        )
-
-    @classmethod
-    def _document_line(cls, document: Mapping[str, JsonValue]) -> str:
+    def _document_line(cls, document: UiCodeDocumentSummary) -> str:
         return (
-            "- "
-            f"{cls.document_id(document)}: "
-            f"widget={McpDevPayloadProjection.text(document.get('widget_id'))} "
-            f"readable={McpDevPayloadProjection.text(document.get('readable'))} "
-            f"writable={McpDevPayloadProjection.text(document.get('writable'))} "
-            "selection="
-            f"{McpDevPayloadProjection.text(document.get('current_selection_count'))}/"
-            f"{McpDevPayloadProjection.text(document.get('total_scope_count'))} "
-            f"modes={ViewerValidationRenderer._sequence_text(document.get('supported_selection_modes'))} "
-            f"title={McpDevPayloadProjection.quoted_text(document.get('title'))}"
+            f"- {document.document_id}: widget={document.widget_id} "
+            f"readable={document.readable} writable={document.writable} "
+            f"selection={document.current_selection_count}/{document.total_scope_count} "
+            f"modes={cls.sequence_text(document.supported_selection_modes)} "
+            f"title={cls.quoted(document.title)}"
         )
-
-    @staticmethod
-    def document_id(document: Mapping[str, JsonValue]) -> str:
-        document_id = document.get("document_id")
-        if isinstance(document_id, str):
-            return document_id
-        identity = McpDevPayloadProjection.nested_mapping(document, "identity")
-        identity_document_id = identity.get("document_id")
-        if isinstance(identity_document_id, str):
-            return identity_document_id
-        return "<none>"
 
 
 class CodeDocumentRenderer(McpDevOutputRenderer):
     """Compact renderer for one UI code document."""
 
     output_contract = UiCodeDocument
+    render_options_type = CodeDocumentRenderOptions
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: CodeDocumentRenderOptions,
+    def render_payload(
+        cls, payload: UiCodeDocument, options: CodeDocumentRenderOptions
     ) -> str:
-        return cls.render(
-            response,
-            include_source=options.include_source,
-            max_source_chars=options.max_source_chars,
+        summary = payload.summary
+        snapshot = payload.current_snapshot
+        snapshot_text = (
+            "<none>@<none> head=<none>"
+            if snapshot is None
+            else f"{snapshot.branch}@{snapshot.index} head={snapshot.is_head}"
         )
-
-    @classmethod
-    def render(
-        cls,
-        response: JsonObject,
-        *,
-        include_source: bool = True,
-        max_source_chars: int = 12_000,
-    ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
-        summary = McpDevPayloadProjection.nested_mapping(payload, "summary")
-        snapshot = McpDevPayloadProjection.nested_mapping(payload, "current_snapshot")
         lines = [
-            (
-                "Code document: "
-                f"id={CodeDocumentCatalogRenderer.document_id(summary)} "
-                f"title={McpDevPayloadProjection.quoted_text(summary.get('title'))} "
-                f"widget={McpDevPayloadProjection.text(summary.get('widget_id'))} "
-                f"writable={McpDevPayloadProjection.text(summary.get('writable'))} "
-                f"mode={McpDevPayloadProjection.text(payload.get('selection_mode'))} "
-                f"scopes={ViewerValidationRenderer._sequence_text(payload.get('selected_scope_ids'))}"
-            ),
-            (
-                "Revision: "
-                f"token={McpDevPayloadProjection.text(payload.get('current_revision_token'))} "
-                f"sha256={McpDevPayloadProjection.text(payload.get('sha256'))} "
-                f"bytes={McpDevPayloadProjection.text(payload.get('size_bytes'))} "
-                f"snapshot={McpDevPayloadProjection.text(snapshot.get('branch'))}@"
-                f"{McpDevPayloadProjection.text(snapshot.get('index'))} "
-                f"head={McpDevPayloadProjection.text(snapshot.get('is_head'))}"
-            ),
+            f"Code document: id={summary.document_id} title={cls.quoted(summary.title)} "
+            f"widget={summary.widget_id} writable={summary.writable} "
+            f"mode={cls.text(payload.selection_mode)} "
+            f"scopes={cls.sequence_text(payload.selected_scope_ids)}",
+            f"Revision: token={cls.text(payload.current_revision_token)} "
+            f"sha256={payload.sha256} bytes={payload.size_bytes} "
+            f"snapshot={snapshot_text}",
         ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        source = payload.get("source")
-        if include_source and isinstance(source, str):
-            lines.append("Source:")
-            lines.append(
-                CodeDocumentRenderOptions(
-                    max_source_chars=max_source_chars
-                ).source_text(source)
-            )
+        if options.include_source:
+            lines.extend(("Source:", options.source_text(payload.source)))
         return "\n".join(lines)
 
 
@@ -1267,263 +701,155 @@ class CodeDocumentValidationRenderer(McpDevOutputRenderer):
     output_contract = UiCodeDocumentValidationResult
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
-        lines = [
-            (
-                "Code document validation: "
-                f"id={McpDevPayloadProjection.text(payload.get('document_id'))} "
-                f"valid={McpDevPayloadProjection.text(payload.get('valid'))} "
-                "normalized_scopes="
-                f"{ViewerValidationRenderer._sequence_text(payload.get('normalized_scope_ids'))}"
-            )
-        ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        return "\n".join(lines)
+    def render_payload(
+        cls, payload: UiCodeDocumentValidationResult, options: McpDevOutputRenderOptions
+    ) -> str:
+        return (
+            f"Code document validation: id={payload.document_id} valid={payload.valid} "
+            f"normalized_scopes={cls.sequence_text(payload.normalized_scope_ids)}"
+        )
 
 
-class CodeDocumentApplyRenderer(McpDevOutputRenderer):
+class UiMutationRenderer(McpDevOutputRenderer):
+    """Shared presentation of a bridge mutation's request acknowledgement."""
+
+    @classmethod
+    def acknowledgement_line(cls, acknowledgement) -> str:
+        return (
+            f"Receipt: accepted={acknowledgement.accepted} "
+            f"request_token={cls.text(acknowledgement.request_token.value)} "
+            f"bridge_operation={cls.text(acknowledgement.bridge_operation_id)}"
+        )
+
+
+class CodeDocumentApplyRenderer(UiMutationRenderer):
     """Compact renderer for UI code-document apply results."""
 
     output_contract = UiCodeDocumentApplyResult
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
-        receipt = McpDevPayloadProjection.nested_mapping(payload, "receipt")
-        current_snapshot = McpDevPayloadProjection.nested_mapping(
-            payload,
-            "current_snapshot",
+    def render_payload(
+        cls, payload: UiCodeDocumentApplyResult, options: McpDevOutputRenderOptions
+    ) -> str:
+        return "\n".join(
+            (
+                f"Code document apply: id={payload.document_id} "
+                f"applied={payload.applied} outcome={payload.outcome} "
+                f"operation={cls.text(payload.operation_id)}",
+                f"Revision: base={payload.base_revision_token} "
+                f"current={cls.text(payload.current_revision_token)} "
+                f"new={cls.text(payload.new_revision_token)}",
+                cls.acknowledgement_line(payload.receipt),
+                f"Snapshots: current={cls._snapshot_text(payload.current_snapshot)} "
+                f"undo={cls._snapshot_text(payload.undo_snapshot)}",
+            )
         )
-        undo_snapshot = McpDevPayloadProjection.nested_mapping(
-            payload,
-            "undo_snapshot",
-        )
-        lines = [
-            (
-                "Code document apply: "
-                f"id={McpDevPayloadProjection.text(payload.get('document_id'))} "
-                f"applied={McpDevPayloadProjection.text(payload.get('applied'))} "
-                f"outcome={McpDevPayloadProjection.text(payload.get('outcome'))} "
-                f"operation={McpDevPayloadProjection.text(payload.get('operation_id'))}"
-            ),
-            (
-                "Revision: "
-                f"base={McpDevPayloadProjection.text(payload.get('base_revision_token'))} "
-                f"current={McpDevPayloadProjection.text(payload.get('current_revision_token'))} "
-                f"new={McpDevPayloadProjection.text(payload.get('new_revision_token'))}"
-            ),
-            (
-                "Receipt: "
-                f"accepted={McpDevPayloadProjection.text(receipt.get('accepted'))} "
-                "request_token="
-                f"{cls._request_token_text(receipt.get('request_token'))} "
-                "bridge_operation="
-                f"{McpDevPayloadProjection.text(receipt.get('bridge_operation_id'))}"
-            ),
-            (
-                "Snapshots: "
-                f"current={cls._snapshot_text(current_snapshot)} "
-                f"undo={cls._snapshot_text(undo_snapshot)}"
-            ),
-        ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        return "\n".join(lines)
 
     @staticmethod
-    def _request_token_text(value: JsonValue) -> str:
-        if isinstance(value, Mapping):
-            return McpDevPayloadProjection.text(value.get("value"))
-        return McpDevPayloadProjection.text(value)
-
-    @staticmethod
-    def _snapshot_text(snapshot: Mapping[str, JsonValue]) -> str:
-        if not snapshot:
+    def _snapshot_text(snapshot: UiSnapshotRef | None) -> str:
+        if snapshot is None:
             return "<none>"
-        branch = McpDevPayloadProjection.text(snapshot.get("branch"))
-        index = McpDevPayloadProjection.text(snapshot.get("index"))
-        snapshot_id = McpDevPayloadProjection.text(snapshot.get("snapshot_id"))
-        return f"{branch}@{index}:{snapshot_id}"
+        return f"{snapshot.branch}@{snapshot.index}:{snapshot.snapshot_id}"
 
 
 class UiActionCatalogRenderer(McpDevOutputRenderer):
     """Compact renderer for semantic UI action catalogs."""
 
     output_contract = UiActionCatalog
+    render_options_type = UiActionCatalogRenderOptions
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: UiActionCatalogRenderOptions,
+    def render_payload(
+        cls, payload: UiActionCatalog, options: UiActionCatalogRenderOptions
     ) -> str:
-        return cls.render(response, widget_id=options.widget_id)
-
-    @classmethod
-    def render(cls, response: JsonObject, *, widget_id: str | None = None) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
-        actions = McpDevPayloadProjection.sequence_of_mappings(payload.get("actions"))
-        if widget_id is not None:
-            actions = tuple(
-                action for action in actions if action.get("widget_id") == widget_id
-            )
+        actions = cls._selected_actions(payload, options)
         header = f"UI actions: count={len(actions)}"
-        if widget_id is not None:
-            header = f"{header} widget={widget_id}"
+        if options.widget_id is not None:
+            header = f"{header} widget={options.widget_id}"
         lines = [header]
-        cls._append_messages(lines, payload, widget_id=widget_id, actions=actions)
         if actions:
             lines.append("Actions:")
-            lines.extend(cls._action_lines(actions))
-            disabled_hint_lines = cls._disabled_hint_lines(actions)
-            if disabled_hint_lines:
+            lines.extend(cls._action_line(action) for action in actions)
+            hint_lines = cls._disabled_hint_lines(actions)
+            if hint_lines:
                 lines.append("Disabled hints:")
-                lines.extend(disabled_hint_lines)
-        elif widget_id is not None:
+                lines.extend(hint_lines)
+        elif options.widget_id is not None:
             lines.append(
                 "No semantic actions matched this widget. "
-                f"Use widget-tree {widget_id} for generic widget action paths."
+                f"Use widget-tree {options.widget_id} for generic widget action paths."
             )
         return "\n".join(lines)
 
-    @classmethod
-    def _append_messages(
-        cls,
-        lines: list[str],
-        payload: Mapping[str, JsonValue],
-        *,
-        widget_id: str | None,
-        actions: tuple[Mapping[str, JsonValue], ...],
-    ) -> None:
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            lines.append("Errors:")
-            lines.extend(ViewerValidationRenderer._error_lines(errors))
-        warnings = McpDevPayloadProjection.sequence_of_mappings(payload.get("warnings"))
-        warnings = cls._contextual_warnings(
-            warnings,
-            widget_id=widget_id,
-            actions=actions,
-        )
-        if warnings:
-            lines.append("Warnings:")
-            lines.extend(ViewerValidationRenderer._error_lines(warnings))
-
     @staticmethod
-    def _contextual_warnings(
-        warnings: tuple[Mapping[str, JsonValue], ...],
-        *,
-        widget_id: str | None,
-        actions: tuple[Mapping[str, JsonValue], ...],
-    ) -> tuple[Mapping[str, JsonValue], ...]:
-        if widget_id is None or not warnings:
-            return warnings
-        terms = {widget_id}
-        terms.update(
-            str(value)
-            for action in actions
-            for value in (action.get("widget_id"), action.get("action_id"))
-            if value not in (None, "")
+    def _selected_actions(
+        payload: UiActionCatalog, options: UiActionCatalogRenderOptions
+    ) -> tuple[UiActionSummary, ...]:
+        if options.widget_id is None:
+            return payload.actions
+        return tuple(
+            action
+            for action in payload.actions
+            if action.identity.widget_id == options.widget_id
         )
-        normalized_terms = tuple(term.lower() for term in terms if term)
-        if not normalized_terms:
-            return ()
+
+    @classmethod
+    def presented_warnings(
+        cls, payload: UiActionCatalog, options: UiActionCatalogRenderOptions
+    ) -> tuple[AgentWarning, ...]:
+        """For one widget, only the warnings that mention it or its actions."""
+        warnings = super().presented_warnings(payload, options)
+        if options.widget_id is None:
+            return warnings
+        terms = {options.widget_id.lower()}
+        for action in cls._selected_actions(payload, options):
+            terms.update(
+                (action.identity.widget_id.lower(), action.identity.action_id.lower())
+            )
+        terms.discard("")
         return tuple(
             warning
             for warning in warnings
             if any(
-                term in UiActionCatalogRenderer._warning_text(warning)
-                for term in normalized_terms
+                term in f"{warning.code} {warning.message} {warning.hint or ''}".lower()
+                for term in terms
             )
-        )
-
-    @staticmethod
-    def _warning_text(warning: Mapping[str, JsonValue]) -> str:
-        return " ".join(
-            McpDevPayloadProjection.text(warning.get(key)).lower()
-            for key in ("code", "message", "hint")
         )
 
     @classmethod
-    def _action_lines(
-        cls,
-        actions: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
-        return [cls._action_line(action) for action in actions]
-
-    @staticmethod
-    def _disabled_hint_lines(
-        actions: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
+    def _disabled_hint_lines(cls, actions: tuple[UiActionSummary, ...]) -> list[str]:
         action_keys_by_hint: dict[str, list[str]] = {}
         for action in actions:
-            disabled_error = McpDevPayloadProjection.nested_mapping(
-                action,
-                "disabled_error",
-            )
-            if not disabled_error:
-                continue
-            hint_value = disabled_error.get("hint")
-            if hint_value in (None, ""):
-                continue
-            hint = McpDevPayloadProjection.text(hint_value)
-            action_keys_by_hint.setdefault(hint, []).append(
-                (
-                    f"{McpDevPayloadProjection.text(action.get('widget_id'))}/"
-                    f"{McpDevPayloadProjection.text(action.get('action_id'))}"
+            if action.disabled_error is not None and action.disabled_error.hint:
+                action_keys_by_hint.setdefault(action.disabled_error.hint, []).append(
+                    f"{action.identity.widget_id}/{action.identity.action_id}"
                 )
-            )
         return [
-            f"- {','.join(action_keys)}: {McpDevPayloadProjection.quoted_text(hint)}"
+            f"- {','.join(action_keys)}: {cls.quoted(hint)}"
             for hint, action_keys in action_keys_by_hint.items()
         ]
 
-    @staticmethod
-    def _action_line(action: Mapping[str, JsonValue]) -> str:
-        disabled_error = McpDevPayloadProjection.nested_mapping(
-            action,
-            "disabled_error",
+    @classmethod
+    def _action_line(cls, action: UiActionSummary) -> str:
+        disabled = action.disabled_error
+        disabled_text = (
+            "" if disabled is None else f" disabled={disabled.code}:{disabled.message}"
         )
-        disabled_text = ""
-        if disabled_error:
-            disabled_text = (
-                " disabled="
-                f"{McpDevPayloadProjection.text(disabled_error.get('code'))}:"
-                f"{McpDevPayloadProjection.text(disabled_error.get('message'))}"
-            )
         return (
-            "- "
-            f"{McpDevPayloadProjection.text(action.get('widget_id'))}/"
-            f"{McpDevPayloadProjection.text(action.get('action_id'))}: "
-            f"title={McpDevPayloadProjection.quoted_text(action.get('title'))} "
-            f"enabled={McpDevPayloadProjection.text(action.get('enabled'))} "
-            f"confirm={McpDevPayloadProjection.text(action.get('confirmation_required'))} "
-            f"mode={McpDevPayloadProjection.text(action.get('invocation_mode'))} "
-            "selection="
-            f"{McpDevPayloadProjection.text(action.get('current_selection_count'))} "
-            "targets="
-            f"{ViewerValidationRenderer._sequence_text(action.get('target_scope_ids'))} "
-            "selection_rev="
-            f"{McpDevPayloadProjection.text(action.get('selection_revision_token'))} "
-            f"effects={ViewerValidationRenderer._sequence_text(action.get('side_effects'))}"
-            " selection_mode="
-            f"{McpDevPayloadProjection.text(action.get('selection_mode'))} "
-            "surfaces="
-            f"{ViewerValidationRenderer._sequence_text(action.get('related_state_surface_ids'))}"
+            f"- {action.identity.widget_id}/{action.identity.action_id}: "
+            f"title={cls.quoted(action.title)} enabled={action.enabled} "
+            f"confirm={action.confirmation_required} mode={action.invocation_mode} "
+            f"selection={action.current_selection_count} "
+            f"targets={cls.sequence_text(action.target_scope_ids)} "
+            f"selection_rev={cls.text(action.selection_revision_token)} "
+            f"effects={cls.sequence_text(action.side_effects)} "
+            f"selection_mode={cls.text(action.selection_mode)} "
+            f"surfaces={cls.sequence_text(action.related_state_surface_ids)}"
             f"{disabled_text}"
         )
 
 
-class UiActionResultRenderer(McpDevTypedOutputRenderer, ABC):
+class UiActionResultRenderer(UiMutationRenderer, ABC):
     """Shared presentation of the action owned by each declared result."""
 
     unavailable_summary = "UI action: <unavailable>"
@@ -1540,45 +866,25 @@ class UiActionResultRenderer(McpDevTypedOutputRenderer, ABC):
     @classmethod
     def render_payload(cls, payload, options: McpDevOutputRenderOptions) -> str:
         action = cls.action_result(payload)
-        receipt = action.receipt
-        lines = [
-            *cls.introduction_lines(payload),
+        return "\n".join(
             (
-                "UI action invoke: "
+                *cls.introduction_lines(payload),
+                f"UI action invoke: "
                 f"action={action.identity.widget_id}/{action.identity.action_id} "
-                f"status={action.status}"
-            ),
-            (
-                "Receipt: "
-                f"accepted={receipt.accepted} "
-                "request_token="
-                f"{McpDevPayloadProjection.text(receipt.request_token.value)} "
-                "bridge_operation="
-                f"{McpDevPayloadProjection.text(receipt.bridge_operation_id)}"
-            ),
-            (
-                "Selection: "
-                "targets="
-                f"{','.join(action.target_scope_ids) or '<none>'} "
-                "selection_rev="
-                f"{McpDevPayloadProjection.text(action.selection_revision_token)}"
-            ),
-            (
-                "Polling: "
-                "surfaces="
-                f"{','.join(action.workflow_status_surface_ids) or '<none>'} "
-                "interval_ms="
-                f"{action.recommended_poll_interval_ms}"
-            ),
-        ]
-        return "\n".join(lines)
+                f"status={action.status}",
+                cls.acknowledgement_line(action.receipt),
+                f"Selection: targets={cls.sequence_text(action.target_scope_ids)} "
+                f"selection_rev={cls.text(action.selection_revision_token)}",
+                f"Polling: surfaces={cls.sequence_text(action.workflow_status_surface_ids)} "
+                f"interval_ms={action.recommended_poll_interval_ms}",
+            )
+        )
 
 
 class UiActionInvokeRenderer(UiActionResultRenderer):
     """The direct action is already the declared invocation result."""
 
     output_contract = UiActionInvokeResult
-    render_options_type = UiActionInvokeRenderOptions
 
     @classmethod
     def action_result(cls, payload: UiActionInvokeResult) -> UiActionInvokeResult:
@@ -1601,49 +907,32 @@ class UiSelectedPlateWorkflowRenderer(UiActionResultRenderer):
         cls, payload: UiSelectedPlateWorkflowResult
     ) -> tuple[str, ...]:
         return (
-            *super().introduction_lines(payload),
             f"Workflow: {payload.workflow.value} state_surface={payload.state_surface_id}",
         )
 
 
-class UiWidgetActionInvokeRenderer(McpDevOutputRenderer):
+class UiWidgetActionInvokeRenderer(UiMutationRenderer):
     """Compact renderer for generic widget action invocation results."""
 
     output_contract = UiWidgetActionInvokeResult
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-
-        receipt = McpDevPayloadProjection.nested_mapping(payload, "receipt")
-        summary = McpDevPayloadProjection.nested_mapping(payload, "summary")
+    def render_payload(
+        cls, payload: UiWidgetActionInvokeResult, options: McpDevOutputRenderOptions
+    ) -> str:
         lines = [
-            (
-                "Widget action invoke: "
-                f"window={McpDevPayloadProjection.text(payload.get('window_id'))} "
-                f"path={McpDevPayloadProjection.text(payload.get('path_id'))} "
-                f"kind={McpDevPayloadProjection.text(payload.get('action_kind'))} "
-                f"invoked={McpDevPayloadProjection.text(payload.get('invoked'))}"
-            ),
-            (
-                "Receipt: "
-                f"accepted={McpDevPayloadProjection.text(receipt.get('accepted'))} "
-                "request_token="
-                f"{CodeDocumentApplyRenderer._request_token_text(receipt.get('request_token'))} "
-                "bridge_operation="
-                f"{McpDevPayloadProjection.text(receipt.get('bridge_operation_id'))}"
-            ),
+            f"Widget action invoke: window={payload.window_id} path={payload.path_id} "
+            f"kind={payload.action_kind} invoked={payload.invoked}",
+            cls.acknowledgement_line(payload.receipt),
         ]
-        if summary:
-            lines.append(
-                "Widget: "
-                f"label={McpDevPayloadProjection.quoted_text(summary.get('label'))} "
-                f"enabled={McpDevPayloadProjection.text(summary.get('enabled'))} "
-                f"clickable={McpDevPayloadProjection.text(summary.get('clickable'))} "
-                "actions="
-                f"{ViewerValidationRenderer._sequence_text(summary.get('action_kinds'))}"
+        lines.extend(
+            cls.optional_lines(
+                payload.summary,
+                lambda summary: (
+                    f"Widget: label={cls.quoted(summary.label)} "
+                    f"enabled={summary.enabled} clickable={summary.clickable} "
+                    f"actions={cls.sequence_text(summary.action_kinds)}",
+                ),
             )
-        ObjectStateScopeRenderer._append_messages(lines, payload)
+        )
         return "\n".join(lines)
