@@ -1,6 +1,8 @@
 """Nominal source declarations for the public OpenHCS application gallery."""
 
 from __future__ import annotations
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.datasets import ShowDatasetImages, ShowLiveResults
 
 import argparse
 import hashlib
@@ -26,7 +28,6 @@ from pyqt_reactive.services.system_monitor_actions import SystemMonitorAction
 from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     GlobalConfigWindowIdentity,
     ImageBrowserWindowIdentity,
@@ -419,7 +420,7 @@ class ObjectStateEditorCaptureTarget(UiContextCaptureTargetABC):
 class PlateManagerActionWindowCaptureTarget(UiContextCaptureTargetABC):
     """A window spawned by a declared Plate Manager action."""
 
-    action: PlateManagerAction
+    action: type[SessionOperation]
     tab: PlateViewerTab | None = None
     capture_widget_identity: ClassVar[type[PlateManagerWidgetIdentity]] = (
         PlateManagerWidgetIdentity
@@ -977,7 +978,7 @@ class ContextualUiReferenceGalleryDeclaration(GalleryScenarioDeclarationABC):
                     "Open the plate metadata screenshot at full resolution"
                 ),
                 capture_target=PlateManagerActionWindowCaptureTarget(
-                    action=PlateManagerAction.VIEW_METADATA,
+                    action=ShowDatasetImages,
                     tab=PlateViewerTab.METADATA,
                 ),
                 publication_targets=documentation,
@@ -1001,7 +1002,7 @@ class ContextualUiReferenceGalleryDeclaration(GalleryScenarioDeclarationABC):
                     "Open the live measurement results screenshot at full resolution"
                 ),
                 capture_target=PlateManagerActionWindowCaptureTarget(
-                    action=PlateManagerAction.VIEW_RESULTS,
+                    action=ShowLiveResults,
                 ),
                 publication_targets=documentation,
             ),

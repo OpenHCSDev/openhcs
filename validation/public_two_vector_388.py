@@ -162,6 +162,26 @@ class PublicJourney:
         require(payload is not None, f"Missing declared output for {name}")
         return payload
 
+    def execute_source(self, source_request, connection):
+        """Add, compile and run the dataset through one headless session."""
+        from openhcs.agent.capabilities import agent_capabilities
+        from openhcs.agent.dto.session import DatasetListState
+        from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
+        result = self.client.execute([
+            "--timeout-seconds", "1800", "execute-source", source_request["plate_path"],
+            "--source-text", source_request["pipeline_source"],
+            "--host", connection["host"], "--port", str(connection["port"]),
+            "--transport-mode", connection["transport_mode"], "--wait", "--json",
+        ])
+        self.sequence += 1
+        self.save(f"{self.sequence:03d}-execute-source-response.json", result.payload)
+        response = McpDevToolBatchResponse.for_rendering(result.payload)
+        require(result.returncode == 0 and not response.has_errors(),
+                "execute-source failed/uncertain; retained response; NEVER replay")
+        state = response.payload_for(agent_capabilities.session_datasets)
+        require(isinstance(state, DatasetListState), "Missing final dataset list")
+        return state
+
     def observe_until(self, name, arguments, ready, terminal, *, seconds=60, on_observation=None):
         deadline = None if seconds is None else time.monotonic() + seconds
         while True:
@@ -238,7 +258,6 @@ def run(args):
     from openhcs.processing.custom_functions.manager import CustomFunctionManager
     from python_introspect import to_jsonable
     from python_introspect import dataclass_from_mapping
-    from zmqruntime.messages import ExecutionStatus
 
     require(args.parent_serialized_slot_authorized, "Parent must authorize the released serialized slot")
     require(args.receipt_dir is not None and args.receipt_dir.is_absolute(), "Explicit persistent receipt-dir required")
@@ -389,19 +408,11 @@ def run(args):
                     "callable_return_1": final.artifact_outputs[0],
                     "fixture_rows": "engineering_object_rows", "final_main_flow": final.main_flow_materialization,
                 })
-                session = journey.call("openhcs_create_orchestrator_session_from_pipeline_source", {**source_request, **connection})
-                compile_job = journey.call("openhcs_submit_compile", {"session_id": session.session_id, "wait": False})
-                journey.save("original-compile-job.json", compile_job)
-                compile_status = journey.observe_until("openhcs_get_execution_status", {"job_id": compile_job.job_id},
-                    lambda value: value.is_terminal, lambda value: False)
-                require(ExecutionStatus.from_wire(compile_status.status) in (ExecutionStatus.COMPLETE, ExecutionStatus.COMPLETED),
-                        "Original native compile failed")
-                execute_job = journey.call("openhcs_submit_pipeline_execution", {"session_id": session.session_id, "wait": False})
-                journey.save("original-execution-job.json", execute_job)
-                status = journey.observe_until("openhcs_get_execution_status", {"job_id": execute_job.job_id},
-                    lambda value: value.is_terminal, lambda value: False)
-                require(ExecutionStatus.from_wire(status.status) in (ExecutionStatus.COMPLETE, ExecutionStatus.COMPLETED),
-                        "Original native execution failed")
+                run = journey.execute_source(source_request, connection)
+                journey.save("original-session-run.json", run)
+                (row,) = (row for row in run.rows if row.root == str(PLATE))
+                require(row.compiled and row.terminal_status == "complete",
+                        "Original native compile or execution failed")
                 results = journey.call("openhcs_query_plate_files", {
                     "plate_path": str(output_plate), "kind": "result", "limit": 50,
                     "include_previews": True, "max_preview_lines": 10,
@@ -462,10 +473,9 @@ def run(args):
                     require(closed_runtime.handle == original_handle and closed_runtime.outcome.process_exited is True,
                             "Original runtime process exit unproven")
                 journey.save("ACCEPTANCE.json", {"engineering_journey_passed": True,
-                    "native_compile_job": compile_job.job_id,
-                    "native_compile_status": compile_status.status,
-                    "native_execution_job": execute_job.job_id,
-                    "native_execution_status": status.status,
+                    "native_compiled": row.compiled,
+                    "native_execution_id": row.finished_execution_id,
+                    "native_execution_status": row.terminal_status,
                     "scope": "public paired engineering only; not installed biology/global FULL",
                     "processes_exited": True if closed_by_driver else None,
                     "lifecycle_owner": "driver exact owned close" if closed_by_driver else "parent retains handed-off runtime/viewer; no close attempted"})

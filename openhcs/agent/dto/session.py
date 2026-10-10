@@ -127,6 +127,8 @@ class DatasetRowState:
     source_root: str | None = None
     debug_phase: str | None = None
     debug_session_id: str | None = None
+    finished_execution_id: str | None = None
+    """The dataset's latest finished ordinary execution (its evidence id)."""
     scope_accent_color: str | None = None
 
 

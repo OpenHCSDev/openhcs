@@ -6,6 +6,8 @@ compiler/executor path. It is not a headless substitute for the demo.
 """
 
 from __future__ import annotations
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.datasets import ShowDatasetImages, ShowLiveResults
 
 import argparse
 import fcntl
@@ -58,7 +60,6 @@ from openhcs.agent.capabilities import (
     UiSnapshotWindowCapability,
     ValidateViewerWindowStateCapability,
 )
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.dto.ui_bridge import (
     UiActionIdentity,
     UiActionSummary,
@@ -2750,11 +2751,11 @@ def window_ids_from_catalog(windows: list[Any]) -> frozenset[str]:
 
 
 def plate_action_summary(
-    ctx: RunContext, action: PlateManagerAction
+    ctx: RunContext, action: type[SessionOperation]
 ) -> UiActionSummary:
     response = command_json(
         ctx,
-        f"list_{action.value}_action",
+        f"list_{action.operation_id}_action",
         mcp_cmd(
             UiListActionsCapability.cli_command,
             PlateManagerWidgetIdentity.require_value(),
@@ -2772,27 +2773,27 @@ def plate_action_summary(
         row
         for row in summaries
         if row.identity.widget_id == PlateManagerWidgetIdentity.require_value()
-        and row.identity.action_id == action.value
+        and row.identity.action_id == action.operation_id
     ]
     if len(matches) != 1:
         raise RehearsalFailure(
-            f"Expected one exact PlateManager action {action.value!r}, got {len(matches)}."
+            f"Expected one exact PlateManager action {action.operation_id!r}, got {len(matches)}."
         )
     if not matches[0].enabled:
-        raise RehearsalFailure(f"PlateManager action {action.value!r} is disabled.")
+        raise RehearsalFailure(f"PlateManager action {action.operation_id!r} is disabled.")
     return matches[0]
 
 
-def invoke_plate_action(ctx: RunContext, action: PlateManagerAction) -> dict[str, Any]:
+def invoke_plate_action(ctx: RunContext, action: type[SessionOperation]) -> dict[str, Any]:
     summary = plate_action_summary(ctx, action)
     response = command_json(
         ctx,
-        f"invoke_{action.value}_action",
+        f"invoke_{action.operation_id}_action",
         mcp_call_tool_cmd(
             UiInvokeActionCapability.name,
             {
                 "widget_id": PlateManagerWidgetIdentity.require_value(),
-                "action_id": action.value,
+                "action_id": action.operation_id,
                 "target_scope_ids": list(summary.target_scope_ids),
                 "observed_selection_revision_token": summary.selection_revision_token,
                 "require_confirmation": False,
@@ -2804,12 +2805,12 @@ def invoke_plate_action(ctx: RunContext, action: PlateManagerAction) -> dict[str
     result = first_payload(response, UiInvokeActionCapability.name)
     if result.get("status") != "accepted":
         raise RehearsalFailure(
-            f"PlateManager action {action.value!r} was not accepted."
+            f"PlateManager action {action.operation_id!r} was not accepted."
         )
     require_ui_mutation_completed(
         ctx,
         result,
-        action_label=f"PlateManager action {action.value!r}",
+        action_label=f"PlateManager action {action.operation_id!r}",
         completed=False,
         expected_outcome=result["status"],
     )
@@ -2857,17 +2858,17 @@ def close_window(ctx: RunContext, window_id: str, *, label: str) -> None:
 
 def invoke_action_created_window(
     ctx: RunContext,
-    action: PlateManagerAction,
+    action: type[SessionOperation],
     *,
     phase: str,
 ) -> str:
-    before = visible_window_ids(ctx, label=f"{phase}_{action.value}_windows_before")
+    before = visible_window_ids(ctx, label=f"{phase}_{action.operation_id}_windows_before")
     invoke_plate_action(ctx, action)
-    after = visible_window_ids(ctx, label=f"{phase}_{action.value}_windows_after")
+    after = visible_window_ids(ctx, label=f"{phase}_{action.operation_id}_windows_after")
     created = after - before
     if len(created) != 1:
         raise RehearsalFailure(
-            f"Exact action {action.value!r} created {len(created)} windows, expected one."
+            f"Exact action {action.operation_id!r} created {len(created)} windows, expected one."
         )
     return next(iter(created))
 
@@ -3238,7 +3239,7 @@ def validate_rebuilt_metadata_views(
 
     metadata_window_id = invoke_action_created_window(
         ctx,
-        PlateManagerAction.VIEW_METADATA,
+        ShowDatasetImages,
         phase=phase,
     )
     plate_viewer = snapshot_plate_viewer_consumers(
@@ -3273,7 +3274,7 @@ def validate_rebuilt_metadata_views(
                 "selected_plate": plate_viewer["image_browser"],
             },
             "metadata_browser": {
-                "action_id": PlateManagerAction.VIEW_METADATA.value,
+                "action_id": ShowDatasetImages.operation_id,
                 "window_id": metadata_window_id,
                 "tab_path_id": plate_viewer["tab_path_id"],
                 **plate_viewer["metadata_browser"],
@@ -3435,7 +3436,7 @@ def validate_results_window(
 ) -> dict[str, Any]:
     window_id = invoke_action_created_window(
         ctx,
-        PlateManagerAction.VIEW_RESULTS,
+        ShowLiveResults,
         phase="runtime_measurements",
     )
     tree = tree_for_window(
@@ -4332,7 +4333,7 @@ def run_one(
             ctx,
             BASELINE_SOURCE_BINDING,
         )
-        baseline_init = selected_workflow(ctx, "init_plate", args.workflow_timeout)
+        baseline_init = selected_workflow(ctx, "initialize_datasets", args.workflow_timeout)
         baseline_metadata = canonical_component_metadata(
             ctx,
             phase="baseline",
@@ -4343,7 +4344,7 @@ def run_one(
             ctx,
             EDITED_SOURCE_BINDING,
         )
-        edited_init = selected_workflow(ctx, "init_plate", args.workflow_timeout)
+        edited_init = selected_workflow(ctx, "initialize_datasets", args.workflow_timeout)
         edited_metadata = canonical_component_metadata(
             ctx,
             phase="edited",
@@ -4359,7 +4360,7 @@ def run_one(
             ctx,
             REVERTED_SOURCE_BINDING,
         )
-        reverted_init = selected_workflow(ctx, "init_plate", args.workflow_timeout)
+        reverted_init = selected_workflow(ctx, "initialize_datasets", args.workflow_timeout)
         reverted_metadata = canonical_component_metadata(
             ctx,
             phase="reverted",
@@ -4394,7 +4395,7 @@ def run_one(
         )
         compile_workflow = selected_workflow(
             ctx,
-            "compile_plate",
+            "compile_datasets",
             args.workflow_timeout,
         )
         compile_state_revision = final_workflow_state_revision(compile_workflow)
@@ -4404,7 +4405,7 @@ def run_one(
             require_runtime_provenance=False,
         )
         ctx.owns_napari_viewer = True
-        run_workflow = selected_workflow(ctx, "run_plate", args.workflow_timeout)
+        run_workflow = selected_workflow(ctx, "run_datasets", args.workflow_timeout)
         execution_state_revision = final_workflow_state_revision(run_workflow)
         row = selected_plate_state(ctx)
         measurements = validate_measurement_snapshot(ctx, contracts)

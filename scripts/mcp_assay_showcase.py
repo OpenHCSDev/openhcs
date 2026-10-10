@@ -9,6 +9,7 @@ the registered live-measurements state surface, and inspect materialized results
 """
 
 from __future__ import annotations
+from openhcs.authoring.session.operations.datasets import ShowLiveResults
 
 import argparse
 import json
@@ -25,8 +26,6 @@ import openhcs  # noqa: F401  # Activate recorded source dependencies before ext
 # isort: split
 
 from polystore.streaming.identity import StreamProducerIdentity
-
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerOrchestratorCodeDocumentIdentity,
     PlateManagerStateSurfaceIdentityDeclaration,
@@ -1154,7 +1153,7 @@ def discover_live_measurement_surface_id(
         action_id = action.get("action_id")
         if (
             widget_id == PlateManagerWidgetIdentity.require_value()
-            and action_id == PlateManagerAction.VIEW_RESULTS.value
+            and action_id == ShowLiveResults.operation_id
         ):
             raw_related = action.get("related_state_surface_ids")
             if isinstance(raw_related, list):
@@ -1486,7 +1485,7 @@ def complete_human_results_table_action(
     if terminal.get("status") != "completed":
         raise ShowcaseFailure(f"Results action did not complete: {terminal}.")
     return {
-        "action_id": PlateManagerAction.VIEW_RESULTS.value,
+        "action_id": ShowLiveResults.operation_id,
         "operation_id": operation_id,
         "outcome": terminal.get("outcome"),
         "status": terminal.get("status"),
@@ -1506,7 +1505,7 @@ def open_human_results_table(
         [
             "invoke-action",
             PlateManagerWidgetIdentity.require_value(),
-            PlateManagerAction.VIEW_RESULTS.value,
+            ShowLiveResults.operation_id,
             "--json",
             *_ui_args(ctx),
         ],
@@ -1620,9 +1619,9 @@ def _run_scenario(
             )
         _run_stage(ctx, "apply_ui_source", lambda: _apply_source(client, ctx))
         for stage_name, workflow_name in (
-            ("initialize_plate", "init_plate"),
-            ("compile_plate", "compile_plate"),
-            ("run_plate", "run_plate"),
+            ("initialize_plate", "initialize_datasets"),
+            ("compile_plate", "compile_datasets"),
+            ("run_plate", "run_datasets"),
         ):
             budget = blueprint.stage_budgets[stage_name].scaled(budget_scale)
             _run_stage(

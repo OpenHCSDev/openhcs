@@ -290,6 +290,16 @@ class DatasetListView(SessionView):
             source_root=relation.source_root,
             debug_phase=None if debug_phase is None else debug_phase.value,
             debug_session_id=activity.debug_session_id,
+            finished_execution_id=next(
+                (
+                    execution_id
+                    for execution_id, finished in reversed(
+                        session.finished_executions.items()
+                    )
+                    if finished.scope_id == row.scope_id
+                ),
+                None,
+            ),
         )
 
 
