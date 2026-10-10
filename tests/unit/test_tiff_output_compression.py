@@ -28,7 +28,7 @@ def test_configured_main_flow_tiff_output_is_lossless(tmp_path) -> None:
     pixels[0, 40:60, 80:100] = 5
     path = tmp_path / "labels.tif"
     context = SimpleNamespace(
-        microscope_handler=SimpleNamespace(parser=object(), microscope_type="test"),
+        microscope_handler=SimpleNamespace(parser=object(), source_name="test"),
         tiff_config=config,
     )
 

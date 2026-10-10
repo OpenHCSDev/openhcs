@@ -10,17 +10,17 @@ from openhcs.constants.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
     VirtualWorkspaceSourceProjectionCache,
 )
-from openhcs.microscopes import create_microscope_handler
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.microscopes.bioformats import BioFormatsHandler, BioFormatsMetadataHandler
 from openhcs.microscopes.bioformats_adapter import (
     BioFormatsPackedRgbSeriesExclusion,
 )
-from openhcs.microscopes.openhcs import (
+from openhcs.core.dataset_sources.openhcs_format import (
     OpenHCSMetadataHandler,
-    OpenHCSMicroscopeHandler,
+    OpenHCSDatasetSource,
 )
 from tests.unit.bioformats_fixture import (
     bioformats_filemanager,
@@ -162,7 +162,7 @@ def test_bioformats_structured_refs_project_inside_pattern_runtime(
         tmp_path,
         filemanager,
     )
-    authority = VirtualWorkspaceSourceProjectionAuthority(
+    authority = WorkspaceSourceProjections(
         plate_path=tmp_path,
         metadata_handler=OpenHCSMetadataHandler(filemanager),
         filemanager=filemanager,
@@ -217,15 +217,11 @@ def test_openhcs_replay_registers_declared_source_handler_backends(
     reopened_filemanager = bioformats_filemanager()
     assert Backend.BIOFORMATS.value not in reopened_filemanager.registry
 
-    handler = create_microscope_handler(
-        "auto",
-        plate_folder=tmp_path,
-        filemanager=reopened_filemanager,
-    )
+    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=reopened_filemanager)
     assert handler.plate_folder == tmp_path
     handler.initialize_workspace(tmp_path, reopened_filemanager)
 
-    assert isinstance(handler, OpenHCSMicroscopeHandler)
+    assert isinstance(handler, OpenHCSDatasetSource)
     assert Backend.BIOFORMATS.value in reopened_filemanager.registry
     assert Backend.VIRTUAL_WORKSPACE.value in reopened_filemanager.registry
     assert (
@@ -256,11 +252,7 @@ def test_bioformats_auto_detection_is_late_fallback(tmp_path: Path) -> None:
     write_bioformats_manifest_fixture(tmp_path)
     filemanager = bioformats_filemanager()
 
-    handler = create_microscope_handler(
-        "auto",
-        plate_folder=tmp_path,
-        filemanager=filemanager,
-    )
+    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=filemanager)
 
     assert isinstance(handler, BioFormatsHandler)
 
@@ -303,24 +295,16 @@ def test_openhcs_output_subdirectory_initializes_from_metadata_root(
     )
     filemanager = bioformats_filemanager()
 
-    handler = create_microscope_handler(
-        "auto",
-        plate_folder=results,
-        filemanager=filemanager,
-    )
+    handler = DatasetSourceChoice.named("auto").open(results, filemanager=filemanager)
     input_dir = handler.initialize_workspace(results, filemanager)
 
-    assert isinstance(handler, OpenHCSMicroscopeHandler)
+    assert isinstance(handler, OpenHCSDatasetSource)
     assert handler.plate_folder == plate
     assert input_dir == images
 
 
 def test_create_microscope_handler_supports_explicit_bioformats(tmp_path: Path) -> None:
-    handler = create_microscope_handler(
-        "bioformats",
-        plate_folder=tmp_path,
-        filemanager=bioformats_filemanager(),
-    )
+    handler = DatasetSourceChoice.named("bioformats").open(tmp_path, filemanager=bioformats_filemanager())
 
     assert isinstance(handler, BioFormatsHandler)
 

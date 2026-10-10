@@ -3,7 +3,6 @@
 from openhcs.constants.constants import (
     AllComponents,
     GroupBy,
-    Microscope,
     VariableComponents,
 )
 from openhcs.constants.input_source import InputSource
@@ -57,11 +56,12 @@ from openhcs.processing.backends.cellprofiler.save_images import (
 from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerOtsuMethod
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
+from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 pipeline_config = PipelineConfig(
     materialization_results_path=Path('results'),
     materialize_runtime_artifacts=False,
-    microscope=Microscope.AUTO,
+    dataset_source=AutoDetectedSource,
     auto_add_output_plate_to_plate_manager=False,
     napari_display_config=LazyNapariDisplayConfig(),
     fiji_display_config=LazyFijiDisplayConfig(),

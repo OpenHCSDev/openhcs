@@ -1,7 +1,7 @@
 """
-OpenHCS microscope handler implementation for openhcs.
+The openhcsdata format: the kernel's own dataset source, reader and writer.
 
-This module provides the OpenHCSMicroscopeHandler, which reads plates
+This module provides the OpenHCSDatasetSource, which reads datasets
 that have been pre-processed and standardized into the OpenHCS format.
 The metadata for such plates is defined in an 'openhcs_metadata.json' file.
 """
@@ -20,13 +20,11 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    Type,
     cast,
 )
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.source_metadata import (
-    SourceComponentProjectionStrategy,
     SourceVoxelSpacing,
 )
 from openhcs.core.source_workspace_projection import (
@@ -45,10 +43,9 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories,
     VirtualWorkspaceMapping,
     VirtualWorkspaceSourceProjectionEntries,
-    component_metadata_field,
     get_metadata_path,
 )
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     AnalysisResultDirectory,
     MetadataComponentValueSet,
     MetadataHandler,
@@ -56,7 +53,6 @@ from openhcs.microscopes.microscope_interfaces import (
     MetadataViewEntry,
 )
 from openhcs.core.axes import Axis, AxisFamily
-from openhcs.domains.microscopy.axes import Microscopy
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -81,7 +77,7 @@ def resolve_subdirectory_path(subdir_name: str, plate_path: Union[str, Path]) ->
 
 def _get_available_filename_parsers():
     """Return registered source filename parsers keyed by nominal class name."""
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
     return {
         parser_type.__name__: parser_type
@@ -90,7 +86,7 @@ def _get_available_filename_parsers():
 
 
 class OpenHCSMetadataBase(ABC, metaclass=AutoRegisterMeta):
-    """Shared OpenHCS metadata I/O authorities."""
+    """Shared OpenHCS metadata reading and writing."""
 
     __registry_key__ = "__name__"
     __skip_if_no_key__ = True
@@ -401,11 +397,11 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
     def reconciliation_directories(
         self, plate_path: Union[str, Path], backend: str
     ) -> tuple[Path, ...]:
-        """Derive artifact and result destinations from one admitted document.
+        """Derive artifact and result destinations from one accepted document.
 
-        Projection records are admitted before workspace fields, as required by
-        completed-plate reconciliation. The same admitted records then populate
-        the result-directory source authority; they are not decoded a second time.
+        Projection records are read before workspace fields, as required by
+        completed-plate reconciliation. The same records then populate the
+        result directories' source bindings; they are not decoded a second time.
         """
         plate_root = Path(plate_path)
         metadata_path = METADATA_CONFIG.metadata_path(plate_root)
@@ -415,12 +411,12 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 for directory in self.analysis_result_directories(plate_root)
             )
         document = OpenHCSMetadataSubdirectories.from_path(metadata_path)
-        admitted_entries = {
+        accepted_entries = {
             name: VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
             for name, subdirectory in document.items()
         }
         return self.reconciliation_directories_from_document(
-            plate_root, backend, document, admitted_entries
+            plate_root, backend, document, accepted_entries
         )
 
     def reconciliation_directories_from_document(
@@ -428,20 +424,20 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         plate_path: Union[str, Path],
         backend: str,
         document: OpenHCSMetadataSubdirectories,
-        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries],
+        accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries],
     ) -> tuple[Path, ...]:
-        """Select destinations from the current transaction's admitted entries."""
+        """Select destinations from the current transaction's accepted entries."""
         plate_root = Path(plate_path)
-        admitted = tuple(
+        accepted = tuple(
             (
                 subdirectory,
-                admitted_entries[name],
+                accepted_entries[name],
             )
             for name, subdirectory in document.items()
         )
         directories = tuple(
             plate_root / directory
-            for _subdirectory, entries in admitted
+            for _subdirectory, entries in accepted
             for path, projection in entries.entries.items()
             if (directory := projection.artifact_result_directory(path, backend))
             is not None
@@ -452,11 +448,11 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         source_projection = None
         if document.has_workspace_mapping():
             builder = VirtualWorkspaceSourceProjectionBuilder(plate_root)
-            for subdirectory, entries in admitted:
+            for subdirectory, entries in accepted:
                 builder.ingest_workspace_mapping(
                     VirtualWorkspaceMapping.from_subdirectory(subdirectory)
                 )
-                builder.ingest_admitted_subdirectory(subdirectory, entries)
+                builder.ingest_accepted_subdirectory(subdirectory, entries)
             source_projection = builder.projection()
         results = self._analysis_result_directories(
             plate_root, subdirectories, source_projection
@@ -471,7 +467,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         subdirectories: Mapping[str, Mapping[str, Any]],
         source_projection: VirtualWorkspaceSourceProjection | None,
     ) -> tuple[AnalysisResultDirectory, ...]:
-        """Admit declared result paths against their document's source authority."""
+        """Keep declared result paths that their document's sources cover."""
         result_directories = []
         for subdirectory_name, subdirectory_data in subdirectories.items():
             result_dir_name = _optional_metadata_field(subdirectory_data, "results_dir")
@@ -510,7 +506,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         subdirectories: Mapping[str, Mapping[str, Any]],
         plate_path: Union[str, Path],
     ) -> Dict[str, Any]:
-        """Project no-main output metadata when subdirectories share authority."""
+        """Merge no-main output metadata when every subdirectory agrees."""
         metadata_by_subdirectory = {
             subdirectory_name: _openhcs_metadata_from_subdirectory(
                 subdirectory_name,
@@ -536,22 +532,17 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 plate_path,
                 "source_filename_parser_name",
             ),
-            **OpenHCSMetadata.component_kwargs(
-                {
-                    component: self._merge_subdirectory_mapping(
-                        {
-                            subdirectory_name: getattr(
-                                metadata,
-                                OpenHCSMetadata.component_collection_field(component),
-                            )
-                            for subdirectory_name, metadata in metadata_by_subdirectory.items()
-                        },
-                        plate_path,
-                        OpenHCSMetadata.component_collection_field(component),
-                    )
-                    for component in AxisFamily.active().axes
-                }
-            ),
+            **{
+                field: self._merge_subdirectory_mapping(
+                    {
+                        subdirectory_name: metadata.axis_value_labels[field]
+                        for subdirectory_name, metadata in metadata_by_subdirectory.items()
+                    },
+                    plate_path,
+                    field,
+                )
+                for field in OpenHCSMetadata.collection_fields()
+            },
             FIELDS.AVAILABLE_BACKENDS: self._merge_subdirectory_mapping(
                 {
                     subdirectory_name: metadata.available_backends
@@ -731,7 +722,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self,
         plate_path: Union[str, Path],
     ) -> MetadataComponentValueSet:
-        """Read every canonical component through the persisted schema declaration."""
+        """Read every declared axis's value labels from the persisted record."""
 
         return MetadataComponentValueSet(
             (
@@ -739,7 +730,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                     component,
                     self._get_optional_metadata_dict(
                         plate_path,
-                        component_metadata_field(component),
+                        component.metadata_collection_field,
                     ),
                 )
                 for component in AxisFamily.active().axes
@@ -769,7 +760,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         value = self._metadata_field(plate_path, field)
         return value if isinstance(value, str) and value else None
 
-    def get_available_backends(self, input_dir: Union[str, Path]) -> Dict[str, bool]:
+    def backend_availability(self, input_dir: Union[str, Path]) -> Dict[str, bool]:
         """
         Get available storage backends for the input directory.
 
@@ -858,11 +849,8 @@ class OpenHCSMetadata:
     grid_dimensions: List[int]
     pixel_size: float
     image_files: List[str]
-    channels: Optional[Dict[str, Optional[str]]]
-    wells: Optional[Dict[str, Optional[str]]]
-    sites: Optional[Dict[str, Optional[str]]]
-    z_indexes: Optional[Dict[str, Optional[str]]]
-    timepoints: Optional[Dict[str, Optional[str]]]
+    axis_value_labels: Dict[str, Optional[Dict[str, Optional[str]]]]
+    """Value labels per declared axis, keyed by its ``metadata_collection_field``."""
     available_backends: Dict[str, bool]
     workspace_mapping: Optional[Dict[str, Any]] = (
         None  # Virtual path -> path string or structured backend ref
@@ -883,36 +871,32 @@ class OpenHCSMetadata:
         None  # Sibling directory containing analysis results for this subdirectory
     )
 
-    def __post_init__(self) -> None:
-        pass
+    @staticmethod
+    def collection_fields() -> tuple[str, ...]:
+        """Persisted value-label keys, one per declared axis."""
+
+        return tuple(axis.metadata_collection_field for axis in AxisFamily.active().axes)
 
     @staticmethod
-    def component_collection_field(component: type[Axis]) -> str:
-        """Project one nominal component to its persisted collection field."""
-
-        return SourceComponentProjectionStrategy.for_axis(
-            component
-        ).metadata_collection_field
-
-    @classmethod
-    def component_fields(cls) -> tuple[str, ...]:
-        """Derive the component collection fields from their nominal owners."""
-
-        return tuple(
-            cls.component_collection_field(component) for component in AxisFamily.active().axes
-        )
-
-    @classmethod
-    def component_kwargs(
-        cls,
-        values_by_component: Mapping[type[Axis], Any],
+    def labels_by_field(
+        values_by_axis: Mapping[type[Axis], Any],
     ) -> Dict[str, Any]:
-        """Build component collection kwargs from one component-keyed mapping."""
+        """Key one axis-keyed mapping by persisted collection field."""
 
         return {
-            cls.component_collection_field(component): values_by_component[component]
-            for component in AxisFamily.active().axes
+            axis.metadata_collection_field: values_by_axis[axis]
+            for axis in AxisFamily.active().axes
         }
+
+    def labels_for(self, axis: type[Axis]) -> Optional[Dict[str, Optional[str]]]:
+        return self.axis_value_labels[axis.metadata_collection_field]
+
+    def to_document(self) -> Dict[str, Any]:
+        """The persisted subdirectory record: value labels sit at top level."""
+
+        document = asdict(self)
+        document.update(document.pop("axis_value_labels"))
+        return document
 
     @classmethod
     def from_component_value_set(
@@ -928,7 +912,7 @@ class OpenHCSMetadata:
         source_diagnostics: Optional[List[Dict[str, Any]]] = None,
         main: Optional[bool] = None,
     ) -> "OpenHCSMetadata":
-        """Construct persisted metadata from the nominal component authority."""
+        """Construct persisted metadata from per-axis value labels."""
 
         def serialized_values(
             component: type[Axis],
@@ -942,7 +926,7 @@ class OpenHCSMetadata:
             grid_dimensions=grid_dimensions,
             pixel_size=pixel_size,
             image_files=image_files,
-            **cls.component_kwargs(
+            axis_value_labels=cls.labels_by_field(
                 {component: serialized_values(component) for component in AxisFamily.active().axes}
             ),
             available_backends=available_backends,
@@ -957,7 +941,6 @@ _OPENHCS_METADATA_REQUIRED_FIELDS = (
     FIELDS.GRID_DIMENSIONS,
     FIELDS.PIXEL_SIZE,
     FIELDS.IMAGE_FILES,
-    *OpenHCSMetadata.component_fields(),
     FIELDS.AVAILABLE_BACKENDS,
 )
 
@@ -968,7 +951,7 @@ def _openhcs_metadata_from_subdirectory(
 ) -> OpenHCSMetadata:
     missing_fields = tuple(
         field
-        for field in _OPENHCS_METADATA_REQUIRED_FIELDS
+        for field in (*_OPENHCS_METADATA_REQUIRED_FIELDS, *OpenHCSMetadata.collection_fields())
         if field not in subdirectory_data
     )
     if missing_fields:
@@ -985,14 +968,10 @@ def _openhcs_metadata_from_subdirectory(
         grid_dimensions=list(subdirectory_data[FIELDS.GRID_DIMENSIONS]),
         pixel_size=float(subdirectory_data[FIELDS.PIXEL_SIZE]),
         image_files=list(subdirectory_data[FIELDS.IMAGE_FILES]),
-        **OpenHCSMetadata.component_kwargs(
-            {
-                component: subdirectory_data[
-                    OpenHCSMetadata.component_collection_field(component)
-                ]
-                for component in AxisFamily.active().axes
-            }
-        ),
+        axis_value_labels={
+            field: subdirectory_data[field]
+            for field in OpenHCSMetadata.collection_fields()
+        },
         available_backends=dict(subdirectory_data[FIELDS.AVAILABLE_BACKENDS]),
         workspace_mapping=_optional_metadata_field(
             subdirectory_data, FIELDS.WORKSPACE_MAPPING
@@ -1075,7 +1054,7 @@ def _optional_metadata_field(
 
 @dataclass(frozen=True)
 class OpenHCSMetadataGenerationRequest:
-    """Authoritative request for writing one OpenHCS metadata subdirectory."""
+    """Request for writing one OpenHCS metadata subdirectory."""
 
     context: "ProcessingContext"
     output_dir: str
@@ -1125,7 +1104,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
         """Create or update subdirectory-keyed OpenHCS metadata file.
 
         Args:
-            skip_if_complete: If True, skip update if metadata already complete (has channels)
+            skip_if_complete: If True, skip update if the record already has every axis's value labels
             allow_none_override: If True, None values override existing fields;
                                if False (default), None values are filtered out to preserve existing fields
         """
@@ -1144,8 +1123,10 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             with open(metadata_path, "r") as f:
                 existing = json.load(f)
 
-            subdir_data = existing.get("subdirectories", {}).get(sub_dir, {})
-            if subdir_data.get("channels"):
+            subdir_data = existing.get(FIELDS.SUBDIRECTORIES, {}).get(sub_dir, {})
+            if all(
+                field in subdir_data for field in OpenHCSMetadata.collection_fields()
+            ):
                 self.logger.debug(f"Metadata for {sub_dir} already complete, skipping")
                 return
 
@@ -1162,7 +1143,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
                 pixel_size=pixel_size,
             )
         )
-        metadata_dict = asdict(current_metadata)
+        metadata_dict = current_metadata.to_document()
 
         # Filter None values unless override allowed
         if not allow_none_override:
@@ -1178,7 +1159,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
     ) -> OpenHCSMetadata:
         """Extract metadata reflecting current disk state after processing.
 
-        CRITICAL: Extracts component metadata (channels, wells, sites, z_indexes, timepoints)
+        CRITICAL: Extracts axis value labels
         by parsing actual filenames in output_dir, NOT from the original input metadata cache.
         This ensures metadata accurately reflects what was actually written, not what was in the input.
 
@@ -1231,16 +1212,12 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
         )
 
         return OpenHCSMetadata(
-            microscope_handler_name=handler.microscope_type,
+            microscope_handler_name=handler.source_name,
             source_filename_parser_name=handler.parser.__class__.__name__,
             grid_dimensions=grid_dimensions,
             pixel_size=pixel_size,
             image_files=relative_files,
-            channels=merged_metadata.get(Microscopy.Channel),
-            wells=merged_metadata.get(Microscopy.Well),
-            sites=merged_metadata.get(Microscopy.Site),
-            z_indexes=merged_metadata.get(Microscopy.ZIndex),
-            timepoints=merged_metadata.get(Microscopy.Timepoint),
+            axis_value_labels=OpenHCSMetadata.labels_by_field(merged_metadata),
             available_backends={request.write_backend: True},
             workspace_mapping=None,  # Preserve existing - filtered out by create_metadata()
             main=request.is_main if request.is_main else None,
@@ -1323,16 +1300,16 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
         return result
 
 
-from openhcs.microscopes.microscope_base import (
-    MicroscopeHandler,
-    MicroscopeSourceSelectionRole,
+from openhcs.core.dataset_sources.source import (
+    DatasetSource,
+    PreparedWorkspaceSource,
 )
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
-class OpenHCSMicroscopeHandler(MicroscopeHandler):
+class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
     """
-    MicroscopeHandler for OpenHCS pre-processed format.
+    DatasetSource for OpenHCS pre-processed format.
 
     This handler reads plates that have been standardized, with metadata
     provided in an 'openhcs_metadata.json' file. It dynamically loads the
@@ -1340,15 +1317,15 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
     """
 
     # Class attributes for automatic registration
-    _microscope_type = Microscope.OPENHCS.value
-    _metadata_handler_class = None  # Set explicitly after class definition
+    source_name = "openhcsdata"
+    metadata_handler_class = OpenHCSMetadataHandler
 
     @classmethod
     def create(
         cls, *, filemanager: FileManager, pattern_format: Optional[str] = None,
         source_bindings_config=None,
-    ) -> "OpenHCSMicroscopeHandler":
-        """Keep prepared source ownership while consuming declared admission."""
+    ) -> "OpenHCSDatasetSource":
+        """Keep the prepared source while applying the declared source bindings."""
         from openhcs.core.source_bindings import source_bindings_defaults_to_base
 
         handler = super().create(
@@ -1361,19 +1338,14 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         )
         return handler
 
-    def source_admission_config(self):
+    def source_bindings_still_required(self):
         """Expose the original prepared-workspace declaration to runtime readers."""
         return self._source_bindings_config
 
-    @classmethod
-    def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
-        """Declare OpenHCS data as an already prepared workspace format."""
-
-        return MicroscopeSourceSelectionRole.PREPARED_WORKSPACE
 
     @classmethod
     def source_selection_guidance(cls) -> str:
-        """Explain when OpenHCS workspace metadata is authoritative."""
+        """Explain when OpenHCS workspace metadata describes the dataset."""
 
         return (
             "Use for a workspace already prepared by OpenHCS and carrying its "
@@ -1383,7 +1355,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
 
     def __init__(self, filemanager: FileManager, pattern_format: Optional[str] = None):
         """
-        Initialize the OpenHCSMicroscopeHandler.
+        Initialize the OpenHCSDatasetSource.
 
         Args:
             filemanager: FileManager instance for file operations.
@@ -1480,7 +1452,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         # If a specific parser is passed, it will be set.
         if value is not None:
             logger.debug(
-                "OpenHCSMicroscopeHandler.parser being explicitly set to: "
+                "OpenHCSDatasetSource.parser being explicitly set to: "
                 f"{type(value).__name__}"
             )
         self._parser = value
@@ -1498,15 +1470,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         # Return empty string as placeholder (not used for virtual workspace)
         return ""
 
-    @property
-    def microscope_type(self) -> str:
-        """Microscope type identifier (for interface enforcement only)."""
-        return self._microscope_type
 
-    @property
-    def metadata_handler_class(self) -> Type[MetadataHandler]:
-        """Metadata handler class (for interface enforcement only)."""
-        return OpenHCSMetadataHandler
 
     @property
     def compatible_backends(self) -> List[Backend]:
@@ -1518,7 +1482,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         """
         return [Backend.ZARR, Backend.DISK]
 
-    def get_available_backends(self, plate_path: Union[str, Path]) -> List[Backend]:
+    def available_backends(self, plate_path: Union[str, Path]) -> List[Backend]:
         """
         Get available storage backends for OpenHCS plates.
 
@@ -1527,7 +1491,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         """
         try:
             # Get available backends from metadata as Dict[str, bool]
-            available_backends_dict = self.metadata_handler.get_available_backends(
+            available_backends_dict = self.metadata_handler.backend_availability(
                 plate_path
             )
 
@@ -1576,7 +1540,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
                 "Call determine_input_dir() or post_workspace() first."
             )
 
-        available_backends_dict = self.metadata_handler.get_available_backends(
+        available_backends_dict = self.metadata_handler.backend_availability(
             self.plate_folder
         )
 
@@ -1585,7 +1549,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         if "zarr" in available_backends_dict and available_backends_dict["zarr"]:
             return "zarr"
 
-        # 2. A declared workspace mapping is itself the virtual-workspace authority.
+        # 2. A declared workspace mapping means the virtual workspace serves reads.
         subdir_metadata = self.metadata_handler.workspace_mapping_metadata(
             self.plate_folder
         )
@@ -1621,9 +1585,9 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         # The caller's declared projection selects facts; storage stays root-relative.
         self.plate_folder = plate_path
         if self._source_bindings_config is not None:
-            from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
+            from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 
-            projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+            projection = WorkspaceSourceProjections.from_plate_metadata(
                 plate_path=plate_path,
                 metadata_handler=self.metadata_handler,
                 filemanager=filemanager,
@@ -1687,7 +1651,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         filemanager: FileManager,
     ) -> None:
         source_handler_name = str(subdir_metadata[FIELDS.MICROSCOPE_HANDLER_NAME])
-        source_handler_type = MicroscopeHandler.__registry__.get(source_handler_name)
+        source_handler_type = DatasetSource.__registry__.get(source_handler_name)
         if source_handler_type is None:
             raise ValueError(
                 "OpenHCS metadata declares unknown workspace handler "
@@ -1742,7 +1706,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         )
         return super().post_workspace(plate_path, filemanager, skip_preparation)
 
-    # The following methods from MicroscopeHandler delegate to `self.parser`.
+    # The following methods from DatasetSource delegate to `self.parser`.
     # The `parser` property will ensure the correct, dynamically loaded parser is used.
     # No explicit override is needed for them unless special behavior for OpenHCS is required
     # beyond what the dynamically loaded original parser provides.
@@ -1756,10 +1720,3 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
     # - get_grid_dimensions(self, plate_path: Union[str, Path])
     # - get_pixel_size(self, plate_path: Union[str, Path])
     # These will use our OpenHCSMetadataHandler correctly.
-
-
-# Set metadata handler class after class definition for automatic registration
-from openhcs.microscopes.microscope_base import register_metadata_handler
-
-OpenHCSMicroscopeHandler._metadata_handler_class = OpenHCSMetadataHandler
-register_metadata_handler(OpenHCSMicroscopeHandler, OpenHCSMetadataHandler)

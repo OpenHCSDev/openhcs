@@ -27,7 +27,7 @@ from openhcs.core.source_matching import (
     source_component_metadata_items,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.axes import Axis, AxisFamily
 
 ParsedFilenameValue: TypeAlias = str | int | float | bool | None

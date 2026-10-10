@@ -5,7 +5,7 @@ import pytest
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_metadata import ORIGINAL_SOURCE_METADATA_FIELD
+from openhcs.core.source_metadata import DECLARED_SOURCE_METADATA_FIELD
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.stream_component_semantics import (
@@ -81,7 +81,7 @@ def test_stream_viewer_component_metadata_projector_keeps_only_declared_axes():
             "ChannelNumber": "5",
             "extension": ".tif",
             "UndeclaredField": "ignored",
-            ORIGINAL_SOURCE_METADATA_FIELD: MappingProxyType({"FrameNumber": "0011"}),
+            DECLARED_SOURCE_METADATA_FIELD: MappingProxyType({"FrameNumber": "0011"}),
         }
     )
 
@@ -99,7 +99,7 @@ def test_stream_source_component_metadata_items_project_viewer_metadata_by_index
                 "well": "A01",
                 "site": "1",
                 "channel": "2",
-                ORIGINAL_SOURCE_METADATA_FIELD: MappingProxyType(
+                DECLARED_SOURCE_METADATA_FIELD: MappingProxyType(
                     {"FrameNumber": "0011"}
                 ),
             },

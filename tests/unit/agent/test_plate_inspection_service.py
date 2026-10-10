@@ -30,11 +30,11 @@ from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.plate_image_inventory import PlateFileKind
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
-from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
+from openhcs.core.dataset_sources.source import BroadStoreSource, DeclaredFileSource
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from tests.unit.bioformats_fixture import (
     bioformats_filemanager,
     write_bioformats_manifest_fixture,
@@ -429,17 +429,17 @@ def test_registered_handler_selection_roles_are_owned_polymorphically() -> None:
 
     assert (
         BioFormatsHandler.source_selection_role()
-        is MicroscopeSourceSelectionRole.BROAD_STRUCTURED_STORE
+        is BroadStoreSource
     )
     assert (
-        SourceBindingsHandler.source_selection_role()
-        is MicroscopeSourceSelectionRole.DECLARED_FILE_FALLBACK
+        SourceBindingsSource.source_selection_role()
+        is DeclaredFileSource
     )
     assert "structured or rich container" in (
         BioFormatsHandler.source_selection_guidance()
     )
     assert "arbitrary ordinary image files" in (
-        SourceBindingsHandler.source_selection_guidance()
+        SourceBindingsSource.source_selection_guidance()
     )
     assert OperaPhenixHandler.supports_explicit_incomplete_export() is False
     assert "not a valid native dataset" in (
@@ -849,7 +849,7 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     assert result.status is PlateInspectionStatus.PARTIAL
     assert result.confidence is PlateInspectionConfidence.LOW
     assert result.detected_microscope_type == "openhcsdata"
-    assert result.handler_class == "OpenHCSMicroscopeHandler"
+    assert result.handler_class == "OpenHCSDatasetSource"
     assert result.image_files.count == 0
     assert result.result_files.count == 3
     assert result.result_files.scanned_file_count == 3
@@ -1584,7 +1584,7 @@ def test_plate_file_query_resolves_source_projection_once(
     plate = ImageXpressPlateFixture.write(tmp_path)
     source_projection_resolution_count = 0
     original_from_plate_metadata = (
-        VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata.__func__
+        WorkspaceSourceProjections.from_plate_metadata.__func__
     )
 
     def counted_from_plate_metadata(cls, **kwargs):
@@ -1593,7 +1593,7 @@ def test_plate_file_query_resolves_source_projection_once(
         return original_from_plate_metadata(cls, **kwargs)
 
     monkeypatch.setattr(
-        VirtualWorkspaceSourceProjectionAuthority,
+        WorkspaceSourceProjections,
         "from_plate_metadata",
         classmethod(counted_from_plate_metadata),
     )

@@ -7,9 +7,9 @@ import numpy as np
 import tifffile
 
 from openhcs.constants import Backend
-from openhcs.microscopes import create_microscope_handler
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
@@ -114,12 +114,8 @@ def test_synthetic_openhcs_zstack_uses_structured_source_refs(
 
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
-    handler = create_microscope_handler(
-        "auto",
-        plate_folder=plate,
-        filemanager=filemanager,
-    )
-    assert isinstance(handler, OpenHCSMicroscopeHandler)
+    handler = DatasetSourceChoice.named("auto").open(plate, filemanager=filemanager)
+    assert isinstance(handler, OpenHCSDatasetSource)
 
     input_dir = handler.initialize_workspace(plate, filemanager)
     backend = handler.get_primary_backend(plate, filemanager)
@@ -146,11 +142,7 @@ def test_imagexpress_handler_normalizes_bioformats_compatible_plate_prefix(
     plate = tmp_path / "plate"
     IMAGE_XPRESS_PLATE_FACTORY.create(plate)
     filemanager = FileManager(dict(storage_registry))
-    handler = create_microscope_handler(
-        "imagexpress",
-        plate_folder=plate,
-        filemanager=filemanager,
-    )
+    handler = DatasetSourceChoice.named("imagexpress").open(plate, filemanager=filemanager)
 
     handler.initialize_workspace(plate, filemanager)
 
@@ -188,11 +180,7 @@ def test_imagexpress_handler_defaults_flat_bioformats_plate_to_z_one(
         ).generate_dataset()
 
     filemanager = FileManager(dict(storage_registry))
-    handler = create_microscope_handler(
-        "imagexpress",
-        plate_folder=plate,
-        filemanager=filemanager,
-    )
+    handler = DatasetSourceChoice.named("imagexpress").open(plate, filemanager=filemanager)
 
     handler.initialize_workspace(plate, filemanager)
 

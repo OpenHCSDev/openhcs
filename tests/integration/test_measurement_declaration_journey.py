@@ -15,7 +15,6 @@ from openhcs.agent.services.execution_session_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -92,6 +91,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 @dataclass(frozen=True)
@@ -245,7 +245,7 @@ def _document(*, selected=True, two_producers=True, same_source=False):
     measure = _step(measure_object_intensity, "Measure cells", kwargs)
     return PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(_source("DNA", "1"),) if same_source else (
                     _source("DNA", "1"), _source("Actin", "2"),
@@ -570,7 +570,7 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
     _write_plate(tmp_path)
     document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(_source("DNA", "1"),),
             ),

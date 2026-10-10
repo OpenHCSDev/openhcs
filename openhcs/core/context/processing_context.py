@@ -12,18 +12,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypeVar, cast
 
 if TYPE_CHECKING:
+    from openhcs.core.post_execute import PostExecuteHook
     from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
     from openhcs.core.steps.abstract import StepExecutionObservation
 
 from polystore.filemanager import FileManager
 from zmqruntime.config import ZMQConfig
 
-from openhcs.core.config import (
-    AnalysisConsolidationConfig,
-    PlateMetadataConfig,
-    StreamingConfig,
-    TiffConfig,
-)
+from openhcs.core.config import StreamingConfig, TiffConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import (
     DebugEventSink,
@@ -35,7 +31,7 @@ from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -79,9 +75,7 @@ class ProcessingContext:
         step_plans: Dictionary mapping step indices to compiled execution plans.
         axis_id: Identifier of the multiprocessing axis value being processed.
         filemanager: Instance of FileManager for VFS operations.
-        analysis_consolidation_config: Runtime analysis consolidation settings.
-        plate_metadata_config: Runtime plate metadata settings.
-        auto_add_output_plate_to_plate_manager: Runtime output-plate registration flag.
+        post_execute_hooks: Domain hooks bound for this compilation.
         output_plate_root: Planned runtime output plate root.
         pipeline_sequential_mode: Flag indicating pipeline-wide vs step-wide sequential processing.
         pipeline_sequential_combinations: Pre-computed sequential combinations for pipeline-wide mode.
@@ -101,10 +95,8 @@ class ProcessingContext:
         step_plans: dict[int, CompiledStepPlan] | None = None,
         axis_id: str | None = None,
         filemanager: FileManager | None = None,
-        analysis_consolidation_config: AnalysisConsolidationConfig | None = None,
-        plate_metadata_config: PlateMetadataConfig | None = None,
         tiff_config: TiffConfig | None = None,
-        auto_add_output_plate_to_plate_manager: bool = False,
+        post_execute_hooks: "tuple[PostExecuteHook, ...]" = (),
         output_plate_root: str | None = None,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
@@ -115,9 +107,7 @@ class ProcessingContext:
             step_plans: Dictionary mapping step indices to compiled execution plans.
             axis_id: Identifier of the multiprocessing axis value being processed.
             filemanager: FileManager instance for VFS operations.
-            analysis_consolidation_config: Analysis consolidation runtime settings.
-            plate_metadata_config: Plate metadata runtime settings.
-            auto_add_output_plate_to_plate_manager: Output-plate registration flag.
+            post_execute_hooks: Domain hooks bound for this compilation.
             output_plate_root: Planned runtime output plate root.
         """
         self._is_frozen = False
@@ -135,8 +125,8 @@ class ProcessingContext:
         from openhcs.core.steps.abstract import StepExecutionObservation
 
         self.completed_step_outputs = StepExecutionObservation.empty()
-        self._runtime_source_workspace_projection_authority: (
-            VirtualWorkspaceSourceProjectionAuthority | None
+        self._runtime_source_workspace_projections: (
+            WorkspaceSourceProjections | None
         ) = None
         self.source_image_set_identity_policy = SourceImageSetIdentityPolicy()
         self.axis_id = axis_id
@@ -148,20 +138,8 @@ class ProcessingContext:
         self.required_visualizers: list[RequiredVisualizer] = []
         self.step_axis_filters: StepAxisFilterMap = {}
         self.metadata_cache: dict[str, dict[str, str | None]] | None = None
-        self.analysis_consolidation_config = (
-            analysis_consolidation_config
-            if analysis_consolidation_config is not None
-            else AnalysisConsolidationConfig()
-        )
-        self.plate_metadata_config = (
-            plate_metadata_config
-            if plate_metadata_config is not None
-            else PlateMetadataConfig()
-        )
         self.tiff_config = tiff_config if tiff_config is not None else TiffConfig()
-        self.auto_add_output_plate_to_plate_manager = (
-            auto_add_output_plate_to_plate_manager
-        )
+        self.post_execute_hooks = tuple(post_execute_hooks)
         self.output_plate_root = output_plate_root
         self.transport_config = transport_config
 
@@ -173,16 +151,16 @@ class ProcessingContext:
         self.current_sequential_combination = None
 
     @property
-    def runtime_source_workspace_projection_authority(
+    def runtime_source_workspace_projections(
         self,
-    ) -> VirtualWorkspaceSourceProjectionAuthority:
+    ) -> WorkspaceSourceProjections:
         """Hold the context's metadata owners; projection documents remain live."""
-        authority = self._runtime_source_workspace_projection_authority
+        authority = self._runtime_source_workspace_projections
         if authority is None or not authority.is_bound_to_context(self):
-            authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+            authority = WorkspaceSourceProjections.from_context(
                 self,
             )
-            self._runtime_source_workspace_projection_authority = authority
+            self._runtime_source_workspace_projections = authority
         return authority
 
     def bind_execution_runtime(

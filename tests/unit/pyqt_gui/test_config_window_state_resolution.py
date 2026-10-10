@@ -259,7 +259,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         "materialization_results_path",
         "materialize_runtime_artifacts",
         "num_workers",
-        "microscope",
+        "dataset_source",
         "use_threading",
         "multiprocessing_start_method",
         "auto_add_output_plate_to_plate_manager",

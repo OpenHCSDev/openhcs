@@ -71,7 +71,6 @@ from benchmark.well_throughput_scaling import (
     well_throughput_start_method_from_manifest,
 )
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyWellFilterConfig,
@@ -82,6 +81,7 @@ from openhcs.core.config import (
     VFSConfig,
     WellFilterConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from benchmark.equivalence.comparison import runtime_image_differences
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from benchmark.equivalence.table_snapshots import (

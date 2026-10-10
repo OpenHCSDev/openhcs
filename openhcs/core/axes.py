@@ -13,6 +13,8 @@ MCP), spelled by ``Axis.name`` and decoded by ``AxisFamily.named``.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import ClassVar, TypeGuard
 
 from metaclass_registry import AutoRegisterMeta
@@ -177,6 +179,73 @@ class OrdinalValued(AxisValueKind):
 
 
 # ---------------------------------------------------------------------------
+# Source-metadata fallbacks: the value an axis takes when metadata lacks it
+# ---------------------------------------------------------------------------
+
+
+MetadataLookup = Callable[[str], "str | None"]
+"""Return the source-metadata value stored under one alias, if any."""
+
+
+class AxisValueFallback(ABC):
+    """How an axis gets a value when no source-metadata alias carries one."""
+
+    @abstractmethod
+    def value(
+        self,
+        *,
+        image_set_index: int,
+        has_value: Callable[[type[Axis]], bool],
+    ) -> str:
+        """Fallback value for one source image set."""
+
+
+@dataclass(frozen=True)
+class FirstOrdinal(AxisValueFallback):
+    """The axis is singleton: every image set takes ``"1"``."""
+
+    def value(self, *, image_set_index, has_value) -> str:
+        del image_set_index, has_value
+        return "1"
+
+
+@dataclass(frozen=True)
+class ImageSetOrdinal(AxisValueFallback):
+    """Each image set is its own value, numbered from 1."""
+
+    def value(self, *, image_set_index, has_value) -> str:
+        del has_value
+        return str(image_set_index + 1)
+
+
+@dataclass(frozen=True)
+class ImageSetOrdinalUnlessIndexedBy(AxisValueFallback):
+    """Image-set ordinal, unless an axis with one of ``roles`` indexes the set."""
+
+    roles: tuple[type[AxisRole], ...]
+
+    def value(self, *, image_set_index, has_value) -> str:
+        if any(
+            has_value(axis)
+            for role in self.roles
+            for axis in AxisFamily.active().with_role(role)
+        ):
+            return "1"
+        return str(image_set_index + 1)
+
+
+@dataclass(frozen=True)
+class ConstantValue(AxisValueFallback):
+    """Every image set takes one declared value."""
+
+    constant: str
+
+    def value(self, *, image_set_index, has_value) -> str:
+        del image_set_index, has_value
+        return self.constant
+
+
+# ---------------------------------------------------------------------------
 # Grouping declarations: an axis, or the explicit absence of grouping
 # ---------------------------------------------------------------------------
 
@@ -210,6 +279,12 @@ class Axis(GroupingDeclaration):
     """Token before this axis's value in plane filenames (variable axes)."""
     filename_padding: ClassVar[int] = 0
     """Zero padding for ordinal values in plane filenames."""
+    metadata_aliases: ClassVar[tuple[str, ...]]
+    """Source-metadata field spellings that carry this axis (default: its name)."""
+    metadata_collection_field: ClassVar[str]
+    """Key of this axis's value-label collection in dataset metadata (default: plural name)."""
+    metadata_fallback: ClassVar[AxisValueFallback] = FirstOrdinal()
+    """Value an image set takes when its metadata carries none of the aliases."""
 
     sort_key: ClassVar  # supplied by the axis's AxisValueKind
     normalize_value: ClassVar  # supplied by the axis's AxisValueKind
@@ -226,6 +301,10 @@ class Axis(GroupingDeclaration):
                 f"Axis {cls.__qualname__} must carry exactly one AxisValueKind; "
                 f"found {[kind.__name__ for kind in kinds]}."
             )
+        if "metadata_aliases" not in cls.__dict__:
+            cls.metadata_aliases = (cls.name,)
+        if "metadata_collection_field" not in cls.__dict__:
+            cls.metadata_collection_field = f"{cls.name}s"
 
     def __new__(cls, *args: object, **kwargs: object):
         raise TypeError(f"{cls.__qualname__} is an axis declaration, not a value type.")
@@ -237,6 +316,22 @@ class Axis(GroupingDeclaration):
     @classmethod
     def has_role(cls, role: type[AxisRole]) -> bool:
         return issubclass(cls, role)
+
+    @classmethod
+    def metadata_value(cls, lookup: MetadataLookup) -> str | None:
+        """This axis's value from source metadata: the first alias present."""
+
+        for alias in cls.metadata_aliases:
+            value = lookup(alias)
+            if value is not None:
+                return value
+        return None
+
+    @classmethod
+    def grid_coordinates(cls, value: object) -> tuple[str, str]:
+        """(row, column) of one value in a two-dimensional layout (default: one row)."""
+
+        return str(value), ""
 
     @classmethod
     def filename_token(cls, value: object) -> str:
@@ -294,6 +389,19 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
 
     family_name: ClassVar[str | None] = None
     axes: ClassVar[tuple[type[Axis], ...]] = ()
+    config_modules: ClassVar[tuple[str, ...]] = ()
+    """Modules declaring this domain's global-config sections.
+
+    Imported by the kernel config module before its fields are injected, so
+    they must import nothing beyond the config decorator they use.
+    """
+    extension_modules: ClassVar[tuple[str, ...]] = ()
+    """Modules that register this domain's members of kernel families.
+
+    Kernel families that domains extend (dataset sources, filename parsers,
+    post-execute hooks, dataset root rules) import these on first registry
+    access, so activation itself stays free of domain imports.
+    """
 
     _active: ClassVar[type[AxisFamily] | None] = None
 
@@ -527,6 +635,12 @@ def _declared_roles(axes: tuple[type[Axis], ...]) -> tuple[type[AxisRole], ...]:
 
 __all__ = [
     "AtMostOne",
+    "AxisValueFallback",
+    "ConstantValue",
+    "FirstOrdinal",
+    "ImageSetOrdinal",
+    "ImageSetOrdinalUnlessIndexedBy",
+    "MetadataLookup",
     "Axis",
     "AxisDeclarationMeta",
     "AxisFamily",

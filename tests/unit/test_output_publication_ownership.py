@@ -21,7 +21,7 @@ from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
 from openhcs.core.steps.function_output_manifest import step_output_manifest
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
 
 SOURCE = "/source/A01_s001_w1_z001_t001.tif"

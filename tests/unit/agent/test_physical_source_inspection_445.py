@@ -28,7 +28,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
+from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats import BioFormatsMetadataHandler
 from tests.unit.bioformats_fixture import write_bioformats_manifest_fixture
@@ -165,7 +165,7 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         # The original generic (pipeline/Image Browser) constructor still gives
         # the selected projection precedence even over an exact acquisition owner.
         physical_handler = BioFormatsHandler(filemanager)
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        projection = WorkspaceSourceProjections.from_plate_metadata(
             plate_path=tmp_path,
             metadata_handler=physical_handler.metadata_handler,
             filemanager=filemanager,

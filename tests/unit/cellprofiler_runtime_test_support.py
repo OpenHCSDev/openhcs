@@ -29,7 +29,7 @@ from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
+from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -61,8 +61,8 @@ class CellProfilerRuntimeTestContext:
     _runtime_step_values: dict[type[object], object] = field(default_factory=dict)
 
     @property
-    def runtime_source_workspace_projection_authority(self):
-        return VirtualWorkspaceSourceProjectionAuthority.from_context(self)
+    def runtime_source_workspace_projections(self):
+        return WorkspaceSourceProjections.from_context(self)
 
     def runtime_step_value(self, value_type: type[Any]) -> Any:
         """Provide one runtime-only value per type for a test step."""

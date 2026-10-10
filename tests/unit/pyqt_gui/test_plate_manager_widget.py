@@ -29,7 +29,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceRequest,
 )
 from openhcs.agent.ui_bridge_identities import PipelineEditorWidgetIdentity
-from openhcs.constants import Microscope
 from openhcs.constants.constants import OrchestratorState
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -112,6 +111,8 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
 from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 class QtApplicationHarness:
@@ -519,7 +520,7 @@ class TestPlateManagerWidget:
         payload = PlateManagerCodeDocumentAuthority.from_values(
             plate_paths=(scope_id,),
             global_pipeline_config=GlobalPipelineConfig(),
-            per_plate_configs={scope_id: PipelineConfig(microscope=Microscope.OPENHCS)},
+            per_plate_configs={scope_id: PipelineConfig(dataset_source=OpenHCSDatasetSource)},
             pipeline_data={scope_id: []},
         )
         session.session_document.write_text(
@@ -581,7 +582,7 @@ class TestPlateManagerWidget:
         payload = PlateManagerCodeDocumentAuthority.from_values(
             plate_paths=(scope_id,),
             global_pipeline_config=widget.global_config,
-            per_plate_configs={scope_id: PipelineConfig(microscope=Microscope.OPENHCS)},
+            per_plate_configs={scope_id: PipelineConfig(dataset_source=OpenHCSDatasetSource)},
             pipeline_data={scope_id: []},
         )
 
@@ -2484,20 +2485,19 @@ def test_new_produced_row_selects_prepared_replay_without_overwriting_saved_or_l
     from objectstate import DataclassFieldAccess
     from objectstate.lazy_factory import replace_raw
 
-    from openhcs.constants.constants import Microscope
     from openhcs.core.execution_state import (
         ExecutionCompletionPayload,
         ExecutionOutputPlateSummary,
     )
-    from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
+    from openhcs.core.dataset_sources.source import PreparedWorkspaceSource
 
     ObjectStateRegistry.clear()
     widget = PlateManagerWidgetTestHarness.widget(monkeypatch)
     monkeypatch.setattr(widget, "update_item_list", lambda: None)
-    widget.global_config = GlobalPipelineConfig(microscope=Microscope.SOURCE_BINDINGS)
+    widget.global_config = GlobalPipelineConfig(dataset_source=SourceBindingsSource)
     ensure_global_config_context(GlobalPipelineConfig, widget.global_config)
     output_root = str(tmp_path / "produced")
-    saved = PipelineConfig(microscope=Microscope.SOURCE_BINDINGS, num_workers=7)
+    saved = PipelineConfig(dataset_source=SourceBindingsSource, num_workers=7)
     widget.plate_configs[output_root] = saved
     completion = ExecutionCompletionPayload(
         status=TerminalExecutionStatus.COMPLETE,
@@ -2518,29 +2518,29 @@ def test_new_produced_row_selects_prepared_replay_without_overwriting_saved_or_l
         orchestrator = state.object_instance
         selected = DataclassFieldAccess.raw_init_values(orchestrator.pipeline_config)
         original = DataclassFieldAccess.raw_init_values(saved)
-        assert selected == {**original, "microscope": Microscope.OPENHCS}
-        assert orchestrator.get_effective_config().microscope is Microscope.OPENHCS
+        assert selected == {**original, "dataset_source": OpenHCSDatasetSource}
+        assert orchestrator.get_effective_config().dataset_source is OpenHCSDatasetSource
         assert output_root in root_orchestrator_scope_ids(widget._ensure_root_state())
 
         # Later explicit user source selection is not a sticky output-role policy.
         orchestrator.apply_pipeline_config(
             replace_raw(
-                orchestrator.pipeline_config, microscope=Microscope.SOURCE_BINDINGS
+                orchestrator.pipeline_config, dataset_source=SourceBindingsSource
             )
         )
         reused = widget._create_orchestrator_for_plate(
-            output_root, source_role=MicroscopeSourceSelectionRole.PREPARED_WORKSPACE
+            output_root, source_role=PreparedWorkspaceSource
         )
         assert reused is state
         assert (
-            orchestrator.get_effective_config().microscope is Microscope.SOURCE_BINDINGS
+            orchestrator.get_effective_config().dataset_source is SourceBindingsSource
         )
         widget._maybe_auto_add_output_plate_orchestrator(
             "/synthetic-source", completion
         )
         assert ObjectStateRegistry.get_by_scope(output_root) is state
         assert (
-            orchestrator.get_effective_config().microscope is Microscope.SOURCE_BINDINGS
+            orchestrator.get_effective_config().dataset_source is SourceBindingsSource
         )
     finally:
         close_widget(widget)

@@ -71,7 +71,7 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingsConfig,
 )
-from openhcs.core.source_metadata import ORIGINAL_SOURCE_METADATA_FIELD
+from openhcs.core.source_metadata import DECLARED_SOURCE_METADATA_FIELD
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -326,7 +326,7 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
                 {
                     "site": "1",
                     "source_alias": "OrigColor",
-                    ORIGINAL_SOURCE_METADATA_FIELD: {
+                    DECLARED_SOURCE_METADATA_FIELD: {
                         "Run": "Run1",
                         "FrameNumber": "0",
                     },
@@ -427,7 +427,7 @@ def test_spreadsheet_projects_source_identity_without_upstream_image_features(
         RuntimeSourceImageProvenancePlane(
             SourceImageIdentity('/acquisition/body.tif', {
                 'well': 'A01', 'site': '2', 'channel': '3', 'z_index': '4',
-                'timepoint': '5', ORIGINAL_SOURCE_METADATA_FIELD: {'Treatment': 'control'},
+                'timepoint': '5', DECLARED_SOURCE_METADATA_FIELD: {'Treatment': 'control'},
             }),
             source_image_name='Body',
         ),
@@ -511,7 +511,7 @@ def test_requested_source_columns_preserve_original_extraction_path_template() -
         subject=MeasurementSubject(MeasurementScope.IMAGE, 'Image'),
         rows=({'slice_index': 0, 'Count_Cells': 1},),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            component_metadata=({'site': '1', ORIGINAL_SOURCE_METADATA_FIELD: {'Run': 'run1'}},),
+            component_metadata=({'site': '1', DECLARED_SOURCE_METADATA_FIELD: {'Run': 'run1'}},),
         ),
     )
     cells = _measurement_record(
@@ -937,7 +937,7 @@ def test_export_to_spreadsheet_nulls_metadata_that_differs_between_image_planes(
                     {
                         "site": "1",
                         "channel": channel,
-                        ORIGINAL_SOURCE_METADATA_FIELD: {
+                        DECLARED_SOURCE_METADATA_FIELD: {
                             "ChannelNumber": channel,
                             "Site": "1",
                         },

@@ -38,7 +38,6 @@ from benchmark.openhcs_measured_run import (
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyVFSConfig,
@@ -47,6 +46,7 @@ from openhcs.core.config import (
     MultiprocessingStartMethod,
     WellFilterConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -67,7 +67,7 @@ from openhcs.core.virtual_workspace_metadata import (
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
@@ -80,7 +80,6 @@ from openhcs.runtime.zmq_execution_signature import (
 )
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.virtual_workspace_metadata import component_metadata_field
 
 WELL_THROUGHPUT_ROWS_CSV = "well_throughput.csv"
 WELL_THROUGHPUT_EVENTS_CSV = "well_throughput_progress_events.csv"
@@ -3243,7 +3242,7 @@ def _replicate_source_binding_workspace_wells(
         )
     )
     main_metadata[FIELDS.IMAGE_FILES] = expanded_image_files
-    main_metadata[component_metadata_field(Microscopy.Well)] = {well_id: None for well_id in target_wells}
+    main_metadata[Microscopy.Well.metadata_collection_field] = {well_id: None for well_id in target_wells}
     AtomicMetadataWriter().replace_subdirectory_metadata(
         metadata_path, FIELDS.DEFAULT_SUBDIRECTORY, main_metadata
     )

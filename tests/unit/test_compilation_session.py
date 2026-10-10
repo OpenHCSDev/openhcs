@@ -12,6 +12,7 @@ from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.config import (
     GlobalPipelineConfig,
     MaterializationBackend,
@@ -321,16 +322,15 @@ def _compile_source_plans_for_contract(
 
 class _EffectiveConfigContextOrchestrator:
     def create_context(self, axis_id: str, *, resolved_config) -> ProcessingContext:
-        return ProcessingContext(
-            axis_id=axis_id,
-            auto_add_output_plate_to_plate_manager=resolved_config.auto_add_output_plate_to_plate_manager,
-        )
+        del resolved_config
+        return ProcessingContext(axis_id=axis_id)
 
 
-def test_axis_compilation_request_preserves_effective_auto_add_flag():
+def test_axis_compilation_request_binds_post_execute_hooks_from_effective_config():
+    consolidation = AnalysisConsolidationConfig(enabled=False)
     request = AxisCompilationRequest(
         orchestrator=_EffectiveConfigContextOrchestrator(),
-        global_config=GlobalPipelineConfig(auto_add_output_plate_to_plate_manager=True),
+        global_config=GlobalPipelineConfig(analysis_consolidation_config=consolidation),
         pipeline=SimpleNamespace(),
         path_resolver=SimpleNamespace(),
         global_step_axis_filters={},
@@ -342,7 +342,8 @@ def test_axis_compilation_request_preserves_effective_auto_add_flag():
 
     context = request.context_for("A01")
 
-    assert context.auto_add_output_plate_to_plate_manager is True
+    (hook,) = context.post_execute_hooks
+    assert hook.analysis_consolidation_config is consolidation
     assert context.source_image_set_identity_policy.plane_member_components == (
         frozenset((Microscopy.Channel,))
     )
@@ -378,7 +379,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
     assert session.plan(0).step_name == "step"
 
     from openhcs.core.source_metadata import (
-        ORIGINAL_SOURCE_METADATA_FIELD,
+        DECLARED_SOURCE_METADATA_FIELD,
         DurableSourceMetadata,
         SourceMetadataFields,
     )
@@ -413,7 +414,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
                 source_refs_by_virtual_path={},
                 source_metadata_by_path={
                     "image": DurableSourceMetadata.from_mapping({
-                        ORIGINAL_SOURCE_METADATA_FIELD: {"Dose": value}
+                        DECLARED_SOURCE_METADATA_FIELD: {"Dose": value}
                     }),
                 },
             ),

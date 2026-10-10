@@ -5,7 +5,7 @@ from arraybridge import SliceBySliceRuntimeParameter
 from openhcs.agent.services.architecture_projection_service import (
     ArchitectureTopicProjection,
 )
-from openhcs.microscopes.microscope_interfaces import MetadataArtifactProvider
+from openhcs.core.dataset_sources.interfaces import MetadataArtifactProvider
 from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )

@@ -21,7 +21,12 @@ from openhcs.core.compiled_step_plan import (
     FrameworkDeviceAssignment,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.config import AnalysisConsolidationConfig, MultiprocessingStartMethod
+from openhcs.core.config import MultiprocessingStartMethod
+from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
+from openhcs.domains.microscopy.config import (
+    AnalysisConsolidationConfig,
+    PlateMetadataConfig,
+)
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.measurement_row_materialization import (
@@ -169,8 +174,11 @@ def test_consolidation_does_not_require_parent_payload_records(
     )
     context = ProcessingContext(
         axis_id="A01",
-        analysis_consolidation_config=AnalysisConsolidationConfig(
-            enabled=consolidation_enabled
+        post_execute_hooks=(
+            AnalysisConsolidationHook(
+                AnalysisConsolidationConfig(enabled=consolidation_enabled),
+                PlateMetadataConfig(),
+            ),
         ),
         step_plans={
             0: SimpleNamespace(

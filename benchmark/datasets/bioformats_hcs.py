@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from openhcs.constants.constants import Microscope
 
 from benchmark.contracts.dataset import (
     BenchmarkDatasetTag,
@@ -20,7 +19,7 @@ from benchmark.datasets.registry import (
 class BioFormatsHcsValidationDatasetMixin(ImageCountValidatedDatasetMixin):
     """Dataset declaration mixin for public Bio-Formats HCS validation samples."""
 
-    microscope_type: ClassVar[str] = Microscope.BIOFORMATS.value
+    microscope_type: ClassVar[str] = "bioformats"
     tags: ClassVar[frozenset[BenchmarkDatasetTag]] = frozenset(
         {BenchmarkDatasetTag.BIOFORMATS_HCS_VALIDATION}
     )

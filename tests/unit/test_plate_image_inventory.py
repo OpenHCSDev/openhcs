@@ -22,8 +22,8 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileInventory,
     PlateResultFilePreviewReader,
 )
-from openhcs.microscopes import create_microscope_handler
-from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+from openhcs.core.dataset_sources.interfaces import AnalysisResultDirectory
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
@@ -76,11 +76,7 @@ def test_image_browser_inventory_uses_declared_virtual_workspace_address(
 
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
-    handler = create_microscope_handler(
-        "imagexpress",
-        plate_folder=plate,
-        filemanager=filemanager,
-    )
+    handler = DatasetSourceChoice.named("imagexpress").open(plate, filemanager=filemanager)
     handler.initialize_workspace(plate, filemanager)
     assert (
         handler.get_primary_backend(plate, filemanager)

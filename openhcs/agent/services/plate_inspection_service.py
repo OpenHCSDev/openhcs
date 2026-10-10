@@ -48,7 +48,7 @@ from openhcs.agent.ui_bridge_actions import PlateOperation
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerOrchestratorCodeDocumentIdentity,
 )
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.plate_image_inventory import (
     PlateFileKind,
@@ -67,12 +67,12 @@ if TYPE_CHECKING:
         FilenameParseResult,
         FilenameParseValue,
     )
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
-    from openhcs.microscopes.microscope_interfaces import (
+    from openhcs.core.dataset_sources.source import DatasetSource
+    from openhcs.core.dataset_sources.interfaces import (
         FilenameParser,
         MetadataComponentValueSet,
         MetadataHandler,
-        MicroscopeImagePathParser,
+        FilenameParserCapability,
     )
     from polystore.filemanager import FileManager
 
@@ -129,13 +129,13 @@ class PlateInspectionContext:
 
     plate_path: Path
     filemanager: "FileManager"
-    handler: "MicroscopeHandler"
+    handler: "DatasetSource"
     parser: "FilenameParser | None"
     warnings: tuple[AgentWarning, ...] = ()
 
     @property
     def microscope_type(self) -> str:
-        return self.handler.microscope_type
+        return self.handler.source_name
 
 
 class PlateInspectionBackendProjection:
@@ -154,21 +154,22 @@ class PlateInspectionHandlerCandidateProjection:
         cls,
         *,
         requested_microscope_type: str,
-        selected_handler: "MicroscopeHandler",
+        selected_handler: "DatasetSource",
         plate_path: Path,
         filemanager: "FileManager",
         max_files_to_parse: int,
     ) -> tuple[PlateInspectionHandlerCandidate, ...]:
-        from openhcs.microscopes.microscope_base import (
-            MicroscopeHandler,
-            MicroscopeSourceSelectionRole,
+        from openhcs.core.dataset_sources.source import (
+            BroadStoreSource,
+            DatasetSource,
+            FormatSpecificSource,
         )
 
         if requested_microscope_type != PlateInspectionDefaults.MICROSCOPE_AUTO:
             return ()
         if (
             type(selected_handler).source_selection_role()
-            is not MicroscopeSourceSelectionRole.BROAD_STRUCTURED_STORE
+            is not BroadStoreSource
         ):
             return ()
 
@@ -185,10 +186,10 @@ class PlateInspectionHandlerCandidateProjection:
             return ()
 
         candidates: list[PlateInspectionHandlerCandidate] = []
-        for handler_type in MicroscopeHandler.__registry__.values():
+        for handler_type in DatasetSource.__registry__.values():
             if (
                 handler_type.source_selection_role()
-                is not MicroscopeSourceSelectionRole.FORMAT_SPECIFIC
+                is not FormatSpecificSource
             ):
                 continue
             candidate = cls._candidate(
@@ -207,16 +208,16 @@ class PlateInspectionHandlerCandidateProjection:
     ) -> bool:
         """Project the candidate handler's declaration-owned subset policy."""
 
-        from openhcs.microscopes.microscope_base import MicroscopeHandler
+        from openhcs.core.dataset_sources.source import DatasetSource
 
-        return MicroscopeHandler.__registry__[
+        return DatasetSource.__registry__[
             candidate.microscope_type
         ].supports_explicit_incomplete_export()
 
     @staticmethod
     def _candidate(
         *,
-        handler_type: type["MicroscopeHandler"],
+        handler_type: type["DatasetSource"],
         source_paths: tuple[str, ...],
         plate_path: Path,
         filemanager: "FileManager",
@@ -261,7 +262,7 @@ class PlateInspectionHandlerCandidateProjection:
                 metadata_diagnostic = str(exc)
 
         return PlateInspectionHandlerCandidate(
-            microscope_type=handler.microscope_type,
+            microscope_type=handler.source_name,
             handler_class=type(handler).__name__,
             parser_class=type(parser).__name__,
             root_dir=root_dir,
@@ -521,7 +522,7 @@ class PlateInspectionFilenameParser:
     def parse(
         self,
         *,
-        parser: "MicroscopeImagePathParser | None",
+        parser: "FilenameParserCapability | None",
         image_files: tuple[str, ...],
         bounds: PlateInspectionBounds,
     ) -> PlateInspectionParsedFileSet:
@@ -727,13 +728,16 @@ class PlateInspectionStatusPolicy:
 class PlateInspectionWorkspacePreparationPolicy:
     """Describe mutating workspace preparation without performing it."""
 
-    PREPARED_MICROSCOPE_TYPE = Microscope.OPENHCS.value
-
     def for_microscope(
         self,
         microscope_type: str | None,
     ) -> PlateInspectionWorkspacePreparation:
-        if microscope_type == self.PREPARED_MICROSCOPE_TYPE:
+        from openhcs.core.dataset_sources.source import PreparedWorkspaceSource
+
+        if (
+            microscope_type
+            == PreparedWorkspaceSource.require_registered_source().source_name
+        ):
             return PlateInspectionWorkspacePreparation(
                 read_only_inspection=True,
                 required_before_execution=False,
@@ -764,16 +768,14 @@ class PlateInspectionWorkflowAdvicePolicy:
     @classmethod
     def for_handler(
         cls,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         *,
         format_specific_candidates: tuple[PlateInspectionHandlerCandidate, ...] = (),
         requested_microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
     ) -> PlateInspectionWorkflowAdvice:
-        from openhcs.microscopes.microscope_base import (
-            MicroscopeSourceSelectionRole,
-        )
+        from openhcs.core.dataset_sources.source import DeclaredFileSource
 
-        ingestion_owner = handler.microscope_type
+        ingestion_owner = handler.source_name
         projects_bindings = type(handler).projects_declared_source_bindings()
         selection_role = type(handler).source_selection_role()
         supported_partial_candidates = tuple(
@@ -793,7 +795,7 @@ class PlateInspectionWorkflowAdvicePolicy:
         )
         if unsupported_partial_candidates and not supported_partial_candidates:
             ingestion_route = PlateInspectionIngestionRoute.SOURCE_BINDINGS_HANDLER
-            ingestion_owner = Microscope.SOURCE_BINDINGS.value
+            ingestion_owner = DeclaredFileSource.require_registered_source().source_name
             source_binding_role = PlateInspectionSourceBindingRole.INGESTION_OWNER
             evidence = "; ".join(
                 cls._candidate_evidence(candidate)
@@ -806,7 +808,7 @@ class PlateInspectionWorkflowAdvicePolicy:
                 "required metadata is absent. Obtain the complete vendor export for "
                 "native plate semantics. If these are intentionally loose, ordinary "
                 "image files, declare their file selection and Well/Site/Channel/Z/Time "
-                "identity in SourceBindingsConfig so SourceBindingsHandler owns "
+                "identity in SourceBindingsConfig so SourceBindingsSource owns "
                 "ingestion instead of accepting the broad decoder's inferred sample "
                 "layout."
             )
@@ -846,11 +848,11 @@ class PlateInspectionWorkflowAdvicePolicy:
                 "projects them, and are not a replacement vendor decoder."
                 f"{unsupported_note}"
             )
-        elif selection_role is MicroscopeSourceSelectionRole.DECLARED_FILE_FALLBACK:
+        elif selection_role is DeclaredFileSource:
             ingestion_route = PlateInspectionIngestionRoute.SOURCE_BINDINGS_HANDLER
             source_binding_role = PlateInspectionSourceBindingRole.INGESTION_OWNER
             message = (
-                "The SourceBindingsHandler owns ingestion for this arbitrary image "
+                "The SourceBindingsSource owns ingestion for this arbitrary image "
                 "folder. Keep file selection, metadata extraction, and semantic "
                 "aliases in SourceBindingsConfig."
             )
@@ -914,7 +916,7 @@ class PlateInspectionWorkflowAdvicePolicy:
             message=(
                 "No ingestion owner was selected. For an arbitrary TIFF, PNG, or "
                 "similar folder, declare a non-empty SourceBindingsConfig so the "
-                "SourceBindingsHandler can own ingestion. For CZI, OME, or another "
+                "SourceBindingsSource can own ingestion. For CZI, OME, or another "
                 "structured microscopy store, repair or enable its decoder instead "
                 "of routing it through the arbitrary-file fallback."
             ),
@@ -1218,7 +1220,7 @@ class PlateInspectionService:
             request=request,
             plate_path=plate_path,
             file_inventory=file_inventory,
-            detected_microscope_type=handler.microscope_type,
+            detected_microscope_type=handler.source_name,
             handler_class=type(handler).__name__,
             parser_class=None if parser is None else type(parser).__name__,
             warnings=tuple(warnings),
@@ -1277,7 +1279,7 @@ class PlateInspectionService:
 
     def result_directory_inventory(self, directory: Path) -> PlateFileInventory:
         """Admit persisted files once for both inspection and viewer reopening."""
-        from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+        from openhcs.core.dataset_sources.interfaces import AnalysisResultDirectory
 
         result_path = self._path_policy.assert_readable(directory)
         if not result_path.is_dir():
@@ -1754,7 +1756,7 @@ class PlateInspectionService:
             )
         errors: tuple[AgentError, ...] = ()
         warnings_tuple = tuple(warnings)
-        detected_type = handler.microscope_type
+        detected_type = handler.source_name
         status = self._status_policy.status(
             errors=errors,
             warnings=warnings_tuple,
@@ -1858,25 +1860,24 @@ class PlateInspectionService:
 
     @staticmethod
     def _available_handler_types() -> tuple[str, ...]:
-        from openhcs.microscopes import get_all_handler_types
+        from openhcs.core.dataset_sources.source import DatasetSource
 
-        return tuple(sorted(get_all_handler_types()))
+        return tuple(sorted(DatasetSource.__registry__))
 
     @staticmethod
     def _create_handler(
         request: PlatePathInspectionRequest,
         plate_path: Path,
         filemanager: "FileManager",
-    ) -> "MicroscopeHandler":
-        from openhcs.microscopes import create_microscope_handler
+    ) -> "DatasetSource":
+        from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 
         EndpointStartupStatus(
             EndpointStartupPhase.PREPARING_CAPABILITIES,
             "Preparing physical microscope handler and reader runtime",
         ).publish()
-        handler = create_microscope_handler(
-            microscope_type=request.microscope_type,
-            plate_folder=plate_path,
+        handler = DatasetSourceChoice.named(request.microscope_type).open(
+            plate_path,
             filemanager=filemanager,
             pattern_format=request.pattern_format,
         )
@@ -1888,7 +1889,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _metadata_file_path(
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> str | None:
@@ -1906,7 +1907,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _grid_dimensions(
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> tuple[int, int] | None:
@@ -1924,7 +1925,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _pixel_size(
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> float | None:
@@ -1941,13 +1942,13 @@ class PlateInspectionService:
 
     @staticmethod
     def _available_backends(
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> tuple[str, ...]:
         try:
             return PlateInspectionBackendProjection.names(
-                handler.get_available_backends(plate_path)
+                handler.available_backends(plate_path)
             )
         except Exception as exc:
             warnings.append(
@@ -1960,7 +1961,7 @@ class PlateInspectionService:
 
     def _plate_file_inventory_for_query(
         self,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         parser: "FilenameParser | None",
         filemanager: "FileManager",
@@ -2033,7 +2034,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _image_inventory(
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         filemanager: "FileManager",
         warnings: list[AgentWarning],
@@ -2056,7 +2057,7 @@ class PlateInspectionService:
 
     def _result_file_inventory(
         self,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         parser: "FilenameParser | None",
         warnings: list[AgentWarning],
@@ -2174,7 +2175,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _parser(
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         warnings: list[AgentWarning],
         *,
         warn: bool = True,
@@ -2194,7 +2195,7 @@ class PlateInspectionService:
 
     def _metadata_values(
         self,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> PlateInspectionComponentCollection:
@@ -2211,7 +2212,7 @@ class PlateInspectionService:
 
     @staticmethod
     def _source_diagnostics(
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         plate_path: Path,
         warnings: list[AgentWarning],
     ) -> tuple[JsonObject, ...]:

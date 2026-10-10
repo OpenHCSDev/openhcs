@@ -439,7 +439,7 @@ class CellProfilerDatabaseColumnDialect:
         """Project original extraction fields and the declared source path."""
         values: dict[str, object] = {}
         if metadata is not None:
-            values.update(SourceMetadataFields.original_items(metadata))
+            values.update(SourceMetadataFields.declared_items(metadata))
         if source_path is not None:
             values.setdefault(
                 CellProfilerSourceMetadataField.FILE_LOCATION.field_name,
