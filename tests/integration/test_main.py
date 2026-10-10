@@ -389,6 +389,11 @@ def _get_materialization_subdir() -> str:
 def _validate_subdirectory_fields(metadata: Dict) -> None:
     """Validate required fields in each subdirectory metadata."""
     materialization_subdir = _get_materialization_subdir()
+    # A saved-result destination is published with an empty raster inventory.
+    result_subdirs = {
+        subdir_metadata.get("results_dir")
+        for subdir_metadata in metadata[CONSTANTS.SUBDIRECTORIES_FIELD].values()
+    }
 
     for subdir_name, subdir_metadata in metadata[
         CONSTANTS.SUBDIRECTORIES_FIELD
@@ -401,10 +406,11 @@ def _validate_subdirectory_fields(metadata: Dict) -> None:
                 f"Subdirectory '{subdir_name}' missing fields: {missing_fields}"
             )
 
-        # Validate image_files (allow empty for materialization subdirectory)
+        # Validate image_files (allow empty for materialization and result subdirectories)
         if (
             not subdir_metadata.get("image_files")
             and subdir_name != materialization_subdir
+            and subdir_name not in result_subdirs
         ):
             raise ValueError(f"Subdirectory '{subdir_name}' has empty image_files list")
 
