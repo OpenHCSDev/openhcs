@@ -426,6 +426,26 @@ class ImagePayloadStackComposition(ABC):
             )
 
     @staticmethod
+    def keeps_single_member_whole(
+        payload: RuntimeArrayData,
+        *,
+        declared_plane_axis: RuntimePlaneAxis | None,
+    ) -> bool:
+        """Whether a one-member cohort is passed on without a new leading axis.
+
+        Only a member that already spans the cohort axis stays whole: a
+        persisted whole image (volume), or a member saved with its declared
+        plane axis. A member that declares no plane axis is composed on the
+        runtime-slice axis exactly as it is in a cohort of several, so the
+        rank a callable receives never depends on how many files matched.
+        """
+        metadata = image_payload_metadata(payload)
+        return metadata.persists_whole_image() or (
+            declared_plane_axis is not None
+            and declared_plane_axis is metadata.plane_axis
+        )
+
+    @staticmethod
     def from_loaded_images(
         payloads: Sequence[RuntimeArrayData],
         *,
@@ -435,14 +455,13 @@ class ImagePayloadStackComposition(ABC):
         workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
     ) -> RuntimeArrayData:
         """Compose a selected admissible input cohort in its declared image domain."""
-        if len(payloads) == 1 and (
-            image_payload_metadata(payloads[0]).persists_whole_image()
-            or (
-                producer_records
-                and len(producer_records) == 1
-                and producer_records[0].main_flow_plane_axis
-                is image_payload_metadata(payloads[0]).plane_axis
-            )
+        if len(payloads) == 1 and ImagePayloadStackComposition.keeps_single_member_whole(
+            payloads[0],
+            declared_plane_axis=(
+                producer_records[0].main_flow_plane_axis
+                if producer_records and len(producer_records) == 1
+                else None
+            ),
         ):
             main_data_stack = ImagePayloadStackComposition.copy_whole_image(
                 payloads[0],
@@ -529,8 +548,16 @@ class ImagePayloadStackComposition(ABC):
             and single_output_plane_axis is metadata[0].plane_axis
             and np.shape(data) == np.shape(image_payload_data(payloads[0]))
         ):
-            return metadata[0].with_current_intensity_from(current_intensity).payload_with(
+            member = metadata[0].with_current_intensity_from(current_intensity).payload_with(
                 data, image_payload_mask(stack_payload),
+            )
+            if ImagePayloadStackComposition.keeps_single_member_whole(
+                member, declared_plane_axis=single_output_plane_axis,
+            ):
+                return member
+            # Cache the cohort the next step composes from this one saved member.
+            return stack_image_payloads(
+                (member,), metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
             )
         if np.shape(data)[:1] != (len(payloads),):
             raise ValueError(
