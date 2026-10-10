@@ -29,9 +29,11 @@ from openhcs.interop.cellprofiler.module_settings import (
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     SourceFileSettingBinding,
-    coerce_cellprofiler_enum,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.backends.cellprofiler._backend import (
+    OpencvBackendProvider,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -305,12 +307,11 @@ class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
         footprint = _structuring_element(request.radius)
         masked = request.mask_context.masked_original
         if request.speckle_accuracy is SpeckleAccuracy.FAST and request.radius > 3:
-            from ._backend import CellProfilerBackendProvider
             from .morphology import MorphologyBackendStrategy
 
             opened = MorphologyBackendStrategy.for_callable(
                 enhance_or_suppress_features,
-                backend_provider=CellProfilerBackendProvider.OPENCV,
+                backend_provider=OpencvBackendProvider,
             ).grayscale_opening(
                 masked, footprint,
             )

@@ -95,11 +95,12 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     BackendProviderInput,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
+    CentrosomeBackendProvider,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
@@ -153,7 +154,6 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 CELLPROFILER_BASIC_THRESHOLD_SMOOTHING_SCALE = 1.3488
-THRESHOLD_BACKEND_REGISTRY_KEY = "backend_key"
 SCIPY_CONSTANT_BOUNDARY_MODE = "constant"
 CELLPROFILER_THRESHOLD_SMOOTHING_TRUNCATE_SIGMAS = 4.0
 CELLPROFILER_THRESHOLD_SMOOTHING_HALF_MASS_FACTOR = 0.6744
@@ -755,8 +755,6 @@ class ThresholdSmoothingBackendStrategy(
 ):
     """Memory-backend-specific threshold smoothing."""
 
-    __registry_key__ = THRESHOLD_BACKEND_REGISTRY_KEY
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def smooth_threshold_image(
@@ -773,11 +771,8 @@ class ThresholdSmoothingBackendStrategy(
 class NumbaNumpyThresholdSmoothingBackendStrategy(ThresholdSmoothingBackendStrategy):
     """NumPy-memory threshold smoothing with Numba convolution."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -869,8 +864,6 @@ class ThresholdDiagnosticsBackendStrategy(
 ):
     """Memory-backend-specific threshold diagnostic measurements."""
 
-    __registry_key__ = THRESHOLD_BACKEND_REGISTRY_KEY
-    __skip_if_no_key__ = True
 
     def diagnostics(
         self,
@@ -902,8 +895,8 @@ class ThresholdDiagnosticsBackendStrategy(
 class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrategy):
     """Independent NumPy implementation of CellProfiler threshold diagnostics."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY)
     memory_type = MemoryType.NUMPY
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
     def weighted_variance(
@@ -1013,11 +1006,8 @@ class NumbaNumpyThresholdDiagnosticsBackendStrategy(
 ):
     """Numba-accelerated NumPy implementation of threshold diagnostics."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -1282,8 +1272,6 @@ class ThresholdPrimitiveBackendStrategy(
 ):
     """Small threshold helper primitives supplied by an explicit provider."""
 
-    __registry_key__ = THRESHOLD_BACKEND_REGISTRY_KEY
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def log_transform(self, values: np.ndarray) -> tuple[np.ndarray, object]:
@@ -1368,11 +1356,8 @@ class NumbaLogTransformConversion:
 class NumbaNumpyThresholdPrimitiveBackendStrategy(ThresholdPrimitiveBackendStrategy):
     """Numba-backed threshold primitives for NumPy-memory images."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -1537,11 +1522,8 @@ class CentrosomeNumpyThresholdPrimitiveBackendStrategy(
 ):
     """Compatibility provider backed by absorbed threshold primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CENTROSOME
+    backend_provider = CentrosomeBackendProvider
     is_default_backend = False
 
 

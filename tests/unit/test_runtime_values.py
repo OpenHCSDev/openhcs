@@ -125,9 +125,6 @@ from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.projected_image_output import (
     DefaultImageOutputSourceContextStrategy,
 )
-from openhcs.processing.backends.analysis.region_properties import (
-    AnalysisBackendProvider,
-)
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
 )
@@ -1297,9 +1294,9 @@ def test_sparse_shape_measurement_preserves_high_object_id_feature_domain() -> N
         labels=labels,
         calculate_advanced=False,
         calculate_zernikes=True,
-        shape_backend_provider=CellProfilerBackendProvider.LEGACY_FAST,
+        shape_backend_provider=CellProfilerBackendProvider.NUMBA,
         zernike_backend_provider=CellProfilerBackendProvider.LEGACY_FAST,
-        regionprops_backend_provider=AnalysisBackendProvider.NUMBA,
+        regionprops_backend_provider=CellProfilerBackendProvider.NUMBA,
     ).measurement_rows()
 
     assert len(rows) == 1

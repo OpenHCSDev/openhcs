@@ -735,10 +735,13 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    CentrosomeBackendProvider,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
+    OpencvBackendProvider,
 )
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
@@ -1878,8 +1881,6 @@ class MorphologyBackendStrategy(
 ):
     """Nominal morphology operations keyed by OpenHCS memory type."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @classmethod
     def for_memory_type(
@@ -2067,8 +2068,8 @@ class MorphologyBackendStrategy(
 class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
     """Independent NumPy/SciPy/skimage morphology backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY)
     memory_type = MemoryType.NUMPY
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
     def connected_components(
@@ -2306,22 +2307,16 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
 class CentrosomeNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     """Compatibility provider backed by absorbed NumPy morphology semantics."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CENTROSOME
+    backend_provider = CentrosomeBackendProvider
     is_default_backend = False
 
 
 class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     """Numba-accelerated NumPy morphology backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -2791,11 +2786,8 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
 class OpenCVNumpyMorphologyBackendStrategy(NumbaNumpyMorphologyBackendStrategy):
     """OpenCV-accelerated NumPy morphology backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.OPENCV
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.OPENCV
+    backend_provider = OpencvBackendProvider
     is_default_backend = False
 
     def grayscale_closing(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:

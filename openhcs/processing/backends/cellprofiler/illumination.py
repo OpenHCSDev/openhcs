@@ -62,11 +62,14 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     BackendProviderInput,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
+    BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
+    CentrosomeBackendProvider,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    LegacyFastBackendProvider,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
@@ -694,8 +697,8 @@ class IlluminationCalculationRequest:
     spline_convergence: float
     calculation_scope: CalculationScope
     morphology: MorphologyBackendStrategy
-    convex_hull_backend_provider: CellProfilerBackendProvider | None
-    rank_median_backend_provider: CellProfilerBackendProvider | None
+    convex_hull_backend_provider: BackendProviderSelectionInput
+    rank_median_backend_provider: BackendProviderSelectionInput
     retain_average: bool = False
     retain_dilated: bool = False
     slice_index: int = 0
@@ -1403,8 +1406,6 @@ class ConvexHullSmoothingBackendStrategy(
 ):
     """Convex-hull illumination smoothing keyed by OpenHCS memory/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def smooth_background_plane(
@@ -1423,8 +1424,6 @@ class RankMedianSmoothingBackendStrategy(
 ):
     """Rank-median illumination smoothing keyed by OpenHCS memory/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @staticmethod
     def disk_rows(footprint: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -1476,11 +1475,8 @@ class RankMedianProfilerPhase:
 class NumbaNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStrategy):
     """NumPy-memory rank median matching skimage rank median border semantics."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = False
 
     def prepare_backend(self) -> None:
@@ -1563,11 +1559,8 @@ class NumbaNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStr
 class NativeNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStrategy):
     """Compact-domain skimage rank-median backend for NumPy planes."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -1720,44 +1713,13 @@ class NativeNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendSt
         return values[result_codes].astype(np.float32) / 65535.0
 
 
-class CentrosomeNumpyConvexHullSmoothingBackendStrategy(
-    ConvexHullSmoothingBackendStrategy
-):
-    """Compatibility provider backed by absorbed convex-hull smoothing."""
-
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
-    )
-    memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CENTROSOME
-    is_default_backend = False
-
-    def smooth_background_plane(
-        self,
-        pixel_data: np.ndarray,
-        *,
-        mask: np.ndarray | None,
-        filter_size: float,
-        morphology: MorphologyBackendStrategy,
-    ) -> np.ndarray:
-        del filter_size
-        return _native_exact_level_set_convex_hull_smoothing(
-            np.asarray(pixel_data, dtype=np.float32),
-            None if mask is None else np.asarray(mask, dtype=bool),
-            morphology,
-        )
-
-
 class LegacyFastNumpyConvexHullSmoothingBackendStrategy(
     ConvexHullSmoothingBackendStrategy
 ):
     """Fast CP3-compatible convex-hull smoothing for NumPy planes."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.LEGACY_FAST
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.LEGACY_FAST
+    backend_provider = LegacyFastBackendProvider
     is_default_backend = False
 
     def smooth_background_plane(
@@ -1791,11 +1753,8 @@ class ExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
 ):
     """Numba-accelerated level-set convex-hull reconstruction."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = False
 
     def prepare_backend(self) -> None:
@@ -1834,11 +1793,8 @@ class NativeExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
 ):
     """Reference exact level-set convex-hull reconstruction for NumPy planes."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def smooth_background_plane(

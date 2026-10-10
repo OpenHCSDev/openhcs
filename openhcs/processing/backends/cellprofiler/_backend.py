@@ -1,7 +1,14 @@
-"""Shared backend-selection helpers for CellProfiler-compatible processing."""
+"""Backend providers and backend selection for OpenHCS processing kernels.
+
+Providers form one nominal family: each provider is a class, and the class owns
+how an explicit request for it resolves to an implementation. The string choice
+list that function signatures, forms and MCP schemas expose is derived from the
+family's registry.
+"""
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
 from dataclasses import dataclass
@@ -15,35 +22,26 @@ from openhcs.constants.constants import MemoryType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
 from openhcs.core.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
-from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 
-
-class CellProfilerBackendProvider(str, Enum):
-    """Typed CellProfiler-compatible backend provider identifiers."""
-
-    NATIVE = "native"
-    NUMBA = "numba"
-    CPP = "cpp"
-    CENTROSOME = "centrosome"
-    OPENCV = "opencv"
-    LEGACY_FAST = "legacy_fast"
-    CUCIM = "cucim"
-    PYCLESPERANTO = "pyclesperanto"
-
-    @property
-    def requires_compiler_prewarm(self) -> bool:
-        """Return whether this provider compiles runtime-specialized kernels."""
-        return self is CellProfilerBackendProvider.NUMBA
-
-
-DEFAULT_CELLPROFILER_BACKEND_PROVIDER = CellProfilerBackendProvider.NATIVE
 _BACKEND_KEY_SEPARATOR = ":"
+_SELECTION_SUFFIXES = ("BackendProvider", "BackendSelection")
 BackendProviderSelectionIdentity: TypeAlias = tuple[tuple[str, Hashable], ...]
 
 BackendStrategyT = TypeVar(
     "BackendStrategyT",
     bound="CellProfilerBackendStrategyMixin",
 )
+
+
+def _selection_name(name: str, cls: type) -> str | None:
+    """Derive a selection's name from its class name; family roots have none."""
+    if ABC in cls.__bases__:
+        return None
+    for suffix in _SELECTION_SUFFIXES:
+        if name.endswith(suffix):
+            name = name[: -len(suffix)]
+            break
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,65 +67,70 @@ class CellProfilerBackendRegistrySnapshot:
             dict[str, type[BackendStrategyT]], self.strategy_family.__registry__
         )
 
-    def available_backend_providers(self) -> tuple[CellProfilerBackendProvider, ...]:
-        providers = (
-            CellProfilerBackendAuthority.provider(strategy_cls.backend_provider)
-            for strategy_cls in self.registry.values()
-            if strategy_cls.memory_type is self.memory_type
-        )
-        return tuple(sorted(set(providers), key=lambda provider: provider.value))
+    def available_backend_providers(self) -> tuple[type["BackendProvider"], ...]:
+        return self.strategy_family.available_backend_providers(self.memory_type)
 
 
-class CellProfilerBackendProviderSelection(
-    RuntimeSliceInvariantValue,
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Nominal provider-selection policy for CellProfiler backend families."""
+class CellProfilerBackendSelection(ABC, metaclass=AutoRegisterMeta):
+    """How a backend family chooses its implementation for one memory type.
 
-    __registry_key__ = "registry_key"
+    Members are classes and are used as values: the default selection, or one
+    explicit provider.
+    """
+
+    __registry__: ClassVar[dict[str, type["CellProfilerBackendSelection"]]] = {}
+    __registry_key__ = "selection_name"
+    __key_extractor__ = staticmethod(_selection_name)
     __skip_if_no_key__ = True
-    registry_key: ClassVar[str | None] = None
+    selection_name: ClassVar[str | None] = None
 
+    @classmethod
     @abstractmethod
     def backend_class(
-        self,
+        cls,
         snapshot: CellProfilerBackendRegistrySnapshot,
     ) -> type[BackendStrategyT]:
-        """Return the backend implementation selected by this policy."""
+        """Return the backend implementation this selection resolves to."""
 
+    @classmethod
     @abstractmethod
     def provider_or(
-        self,
-        default_provider: CellProfilerBackendProvider,
-    ) -> CellProfilerBackendProvider:
+        cls,
+        default_provider: type["BackendProvider"],
+    ) -> type["BackendProvider"]:
         """Return the explicit provider or a caller-owned contextual default."""
 
-    def semantic_identity(self) -> BackendProviderSelectionIdentity:
+    @classmethod
+    def semantic_identity(cls) -> BackendProviderSelectionIdentity:
         """Return a stable identity for equivalent backend-selection semantics."""
-        if self.registry_key is None:
-            raise TypeError(
-                f"{type(self).__name__} must declare registry_key before it can "
-                "participate in backend-selection identity."
-            )
-        return (
-            ("selection", self.registry_key),
-            *self.identity_fields(),
+        return (("selection", cls.selection_name),)
+
+    @classmethod
+    def from_input(
+        cls,
+        backend_provider: "BackendProviderSelectionInput" = None,
+    ) -> type["CellProfilerBackendSelection"]:
+        """Resolve a function argument: a choice, a selection class, or None."""
+        if backend_provider is None:
+            return DefaultBackendSelection
+        if isinstance(backend_provider, CellProfilerBackendProvider):
+            return backend_provider.provider
+        if isinstance(backend_provider, type) and issubclass(
+            backend_provider, CellProfilerBackendSelection
+        ):
+            return backend_provider
+        raise TypeError(
+            "Backend provider must be a CellProfilerBackendProvider choice, a "
+            f"backend selection class, or None; got {backend_provider!r}."
         )
 
-    def identity_fields(self) -> BackendProviderSelectionIdentity:
-        """Return subclass-owned identity fields beyond the registered policy."""
-        return ()
 
-
-@dataclass(frozen=True, slots=True)
-class DefaultCellProfilerBackendProviderSelection(CellProfilerBackendProviderSelection):
+class DefaultBackendSelection(CellProfilerBackendSelection):
     """Select the single declared default backend for the requested memory type."""
 
-    registry_key = "default"
-
+    @classmethod
     def backend_class(
-        self,
+        cls,
         snapshot: CellProfilerBackendRegistrySnapshot,
     ) -> type[BackendStrategyT]:
         matches = [
@@ -141,60 +144,125 @@ class DefaultCellProfilerBackendProviderSelection(CellProfilerBackendProviderSel
         if not matches:
             raise NotImplementedError(
                 f"No default CellProfiler {snapshot.strategy_family.__name__} backend "
-                f"is registered for memory type {snapshot.memory_type.value!r}. "
+                f"is "
+                f"registered for memory type {snapshot.memory_type.value!r}. "
                 f"Registered providers for this memory type: "
                 f"{snapshot.available_backend_providers()!r}."
             )
         raise RuntimeError(
             f"Multiple default CellProfiler {snapshot.strategy_family.__name__} "
-            f"backends are registered for memory type {snapshot.memory_type.value!r}: "
+            f"backends are "
+            f"registered for memory type {snapshot.memory_type.value!r}: "
             f"{tuple(strategy.__name__ for strategy in matches)!r}."
         )
 
+    @classmethod
     def provider_or(
-        self,
-        default_provider: CellProfilerBackendProvider,
-    ) -> CellProfilerBackendProvider:
-        return CellProfilerBackendAuthority.provider(default_provider)
+        cls,
+        default_provider: type["BackendProvider"],
+    ) -> type["BackendProvider"]:
+        return default_provider
 
 
-@dataclass(frozen=True, slots=True)
-class ExplicitCellProfilerBackendProviderSelection(
-    CellProfilerBackendProviderSelection
-):
-    """Select one explicit CellProfiler backend provider without fallback."""
+class BackendProvider(CellProfilerBackendSelection, ABC):
+    """One implementation provider; selecting it never falls back to another."""
 
-    registry_key = "explicit"
-    provider: CellProfilerBackendProvider
+    requires_compiler_prewarm: ClassVar[bool] = False
 
+    @classmethod
+    def backend_key(cls, memory_type: MemoryType) -> str:
+        """Return the registry key of this provider's backend for a memory type."""
+        if not isinstance(memory_type, MemoryType):
+            raise TypeError("Backend memory type must be a MemoryType enum value")
+        return memory_type.value + _BACKEND_KEY_SEPARATOR + cls.selection_name
+
+    @classmethod
     def backend_class(
-        self,
+        cls,
         snapshot: CellProfilerBackendRegistrySnapshot,
     ) -> type[BackendStrategyT]:
-        key = CellProfilerBackendAuthority.backend_key(
-            snapshot.memory_type,
-            self.provider,
-        )
+        key = cls.backend_key(snapshot.memory_type)
         try:
             return snapshot.registry[key]
         except KeyError as exc:
             raise NotImplementedError(
                 f"No CellProfiler {snapshot.strategy_family.__name__} backend is "
-                f"registered for memory type {snapshot.memory_type.value!r} and "
-                f"provider {self.provider.value!r}. Registered providers for this "
-                f"memory type: {snapshot.available_backend_providers()!r}."
+                f"registered for "
+                f"memory type {snapshot.memory_type.value!r} and provider "
+                f"{cls.selection_name!r}. Registered providers for this memory "
+                f"type: {snapshot.available_backend_providers()!r}."
             ) from exc
 
+    @classmethod
     def provider_or(
-        self,
-        default_provider: CellProfilerBackendProvider,
-    ) -> CellProfilerBackendProvider:
+        cls,
+        default_provider: type["BackendProvider"],
+    ) -> type["BackendProvider"]:
         del default_provider
-        return self.provider
+        return cls
 
-    def identity_fields(self) -> BackendProviderSelectionIdentity:
-        return (("provider", self.provider.value),)
 
+class NativeBackendProvider(BackendProvider):
+    """Python/NumPy implementation following the native CellProfiler code path."""
+
+
+class NumbaBackendProvider(BackendProvider):
+    """Numba kernels specialized at compile time."""
+
+    requires_compiler_prewarm = True
+
+
+class CppBackendProvider(BackendProvider):
+    """Compiled C++ extension kernels."""
+
+
+class CentrosomeBackendProvider(BackendProvider):
+    """Algorithms absorbed from CellProfiler's centrosome library."""
+
+
+class OpencvBackendProvider(BackendProvider):
+    """OpenCV kernels."""
+
+
+class LegacyFastBackendProvider(BackendProvider):
+    """Fast approximations of CellProfiler 3 behaviour."""
+
+
+class CucimBackendProvider(BackendProvider):
+    """cuCIM GPU kernels."""
+
+
+class PyclesperantoBackendProvider(BackendProvider):
+    """pyclesperanto GPU kernels."""
+
+
+class SkimageBackendProvider(BackendProvider):
+    """scikit-image implementations."""
+
+
+class _BackendProviderChoice(str):
+    """Choice-list member that names one provider class."""
+
+    @property
+    def provider(self) -> type[BackendProvider]:
+        return cast(
+            type[BackendProvider],
+            CellProfilerBackendSelection.__registry__[self.value],
+        )
+
+
+CellProfilerBackendProvider = Enum(
+    "CellProfilerBackendProvider",
+    {
+        name.upper(): name
+        for name, selection in CellProfilerBackendSelection.__registry__.items()
+        if issubclass(selection, BackendProvider)
+    },
+    type=_BackendProviderChoice,
+    module=__name__,
+    qualname="CellProfilerBackendProvider",
+)
+"""Provider choice list for function signatures, derived from the provider family."""
 
 BackendProviderInput: TypeAlias = Annotated[
     CellProfilerBackendProvider | None,
@@ -202,95 +270,53 @@ BackendProviderInput: TypeAlias = Annotated[
     "CellProfiler operation; leave the default to use its registered implementation.",
 ]
 BackendProviderSelectionInput: TypeAlias = (
-    CellProfilerBackendProvider | CellProfilerBackendProviderSelection | None
+    CellProfilerBackendProvider | type[CellProfilerBackendSelection] | None
 )
 DEFAULT_CELLPROFILER_BACKEND_SELECTION: BackendProviderInput = None
-_DEFAULT_CELLPROFILER_BACKEND_POLICY = DefaultCellProfilerBackendProviderSelection()
 
 
-class CellProfilerBackendAuthority:
-    """Nominal authority for CellProfiler backend identity and selection."""
-
-    @classmethod
-    def memory_type(cls, memory_type: MemoryType = MemoryType.NUMPY) -> MemoryType:
-        """Validate one memory type against OpenHCS' canonical enum."""
-        if not isinstance(memory_type, MemoryType):
-            raise TypeError(
-                "CellProfiler backend memory type must be a MemoryType enum value"
-            )
-        return memory_type
-
-    @classmethod
-    def provider(
-        cls,
-        backend_provider: CellProfilerBackendProvider = (
-            DEFAULT_CELLPROFILER_BACKEND_PROVIDER
-        ),
-    ) -> CellProfilerBackendProvider:
-        """Resolve a backend provider using the closed typed provider enum."""
-        if not isinstance(backend_provider, CellProfilerBackendProvider):
-            raise TypeError(
-                "CellProfiler backend provider must be a "
-                "CellProfilerBackendProvider enum value"
-            )
-        return backend_provider
-
-    @classmethod
-    def provider_selection(
-        cls,
-        backend_provider: BackendProviderSelectionInput = (
-            DEFAULT_CELLPROFILER_BACKEND_SELECTION
-        ),
-    ) -> CellProfilerBackendProviderSelection:
-        """Return the nominal backend-provider selection policy."""
-        if backend_provider is None:
-            return _DEFAULT_CELLPROFILER_BACKEND_POLICY
-        if isinstance(backend_provider, CellProfilerBackendProviderSelection):
-            return backend_provider
-        return ExplicitCellProfilerBackendProviderSelection(
-            cls.provider(backend_provider)
+def _backend_key(name: str, cls: type) -> str | None:
+    """Derive a backend's registry key from its declared memory type and provider."""
+    del name
+    memory_type = cls.memory_type
+    if memory_type is None:
+        return None
+    key = cls.backend_provider.backend_key(memory_type)
+    registered = dict.get(cls.__registry__, key)
+    if registered is not None and (
+        registered.__module__,
+        registered.__qualname__,
+    ) != (cls.__module__, cls.__qualname__):
+        raise TypeError(
+            f"{cls.__module__}.{cls.__qualname__} and "
+            f"{registered.__module__}.{registered.__qualname__} both declare "
+            f"memory type {memory_type.value!r} and provider "
+            f"{cls.backend_provider.selection_name!r}."
         )
-
-    @classmethod
-    def selection_identity(
-        cls,
-        backend_provider: BackendProviderSelectionInput = (
-            DEFAULT_CELLPROFILER_BACKEND_SELECTION
-        ),
-    ) -> BackendProviderSelectionIdentity:
-        """Return the semantic identity for a backend-provider selection input."""
-        return cls.provider_selection(backend_provider).semantic_identity()
-
-    @classmethod
-    def backend_key(
-        cls,
-        memory_type: MemoryType = MemoryType.NUMPY,
-        backend_provider: CellProfilerBackendProvider = (
-            DEFAULT_CELLPROFILER_BACKEND_PROVIDER
-        ),
-    ) -> str:
-        """Return the registry key for one memory/provider backend implementation."""
-        provider = cls.provider(backend_provider)
-        return (
-            cls.memory_type(memory_type).value + _BACKEND_KEY_SEPARATOR + provider.value
-        )
+    return key
 
 
 class CellProfilerBackendStrategyMixin(PersistentNumbaKernelPreparation):
-    """Mixin for backend strategies keyed by OpenHCS memory type and provider.
+    """Backend strategies keyed by their declared memory type and provider.
 
-    Concrete strategy families keep their own AutoRegisterMeta registry; this
-    mixin only standardizes lookup semantics so adding providers does not copy
-    boilerplate across morphology, thresholding, watershed, and future modules.
+    A family root combines this mixin with ``metaclass=AutoRegisterMeta``. A
+    backend declares ``memory_type`` and ``backend_provider``; its registry key
+    is derived from them.
     """
 
-    backend_key: ClassVar[str | None] = None
+    __registry_key__ = "backend_key"
+    __key_extractor__ = staticmethod(_backend_key)
+    __skip_if_no_key__ = True
     __registry__: ClassVar[dict[str, type["CellProfilerBackendStrategyMixin"]]]
+    backend_key: ClassVar[str | None] = None
     memory_type: ClassVar[MemoryType | None] = None
-    backend_provider: ClassVar[CellProfilerBackendProvider] = (
-        DEFAULT_CELLPROFILER_BACKEND_PROVIDER
-    )
+    backend_provider: ClassVar[type[BackendProvider]]
     is_default_backend: ClassVar[bool] = False
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        super().__init_subclass__(**kwargs)
+        # The key is always derived from this class's own declarations.
+        cls.backend_key = None
 
     @classmethod
     def requires_persistent_kernel_cache(cls) -> bool:
@@ -364,21 +390,16 @@ class CellProfilerBackendStrategyMixin(PersistentNumbaKernelPreparation):
     def available_backend_providers(
         cls,
         memory_type: MemoryType | None = None,
-    ) -> tuple[CellProfilerBackendProvider, ...]:
+    ) -> tuple[type[BackendProvider], ...]:
         """Return registered providers, optionally filtered by memory type."""
-        resolved = (
-            None
-            if memory_type is None
-            else CellProfilerBackendAuthority.memory_type(memory_type)
-        )
-        providers: list[CellProfilerBackendProvider] = []
-        for strategy_cls in cls.__registry__.values():
-            if resolved is not None and strategy_cls.memory_type is not resolved:
-                continue
-            providers.append(
-                CellProfilerBackendAuthority.provider(strategy_cls.backend_provider)
-            )
-        return tuple(sorted(set(providers), key=lambda provider: provider.value))
+        if memory_type is not None and not isinstance(memory_type, MemoryType):
+            raise TypeError("Backend memory type must be a MemoryType enum value")
+        providers = {
+            strategy_cls.backend_provider
+            for strategy_cls in cls.__registry__.values()
+            if memory_type is None or strategy_cls.memory_type is memory_type
+        }
+        return tuple(sorted(providers, key=lambda provider: provider.selection_name))
 
     @classmethod
     def _resolve_backend_class(
@@ -386,18 +407,17 @@ class CellProfilerBackendStrategyMixin(PersistentNumbaKernelPreparation):
         memory_type: MemoryType,
         backend_provider: BackendProviderSelectionInput,
     ) -> type[BackendStrategyT]:
-        snapshot = CellProfilerBackendRegistrySnapshot.for_family(
-            cls,
-            CellProfilerBackendAuthority.memory_type(memory_type),
-        )
-        selection = CellProfilerBackendAuthority.provider_selection(backend_provider)
+        if not isinstance(memory_type, MemoryType):
+            raise TypeError("Backend memory type must be a MemoryType enum value")
+        snapshot = CellProfilerBackendRegistrySnapshot.for_family(cls, memory_type)
+        selection = CellProfilerBackendSelection.from_input(backend_provider)
         return _resolve_backend_class_cached(snapshot, selection)
 
 
 @lru_cache(maxsize=None)
 def _resolve_backend_class_cached(
     snapshot: CellProfilerBackendRegistrySnapshot,
-    selection: CellProfilerBackendProviderSelection,
+    selection: type[CellProfilerBackendSelection],
 ) -> type[BackendStrategyT]:
     return selection.backend_class(snapshot)
 
@@ -414,7 +434,7 @@ def _prepare_cellprofiler_backend_family_cached(
         ):
             raise RuntimeError(
                 f"{strategy_cls.__module__}.{strategy_cls.__name__} uses the "
-                "NUMBA CellProfiler backend provider but does not implement "
+                "Numba backend provider but does not implement "
                 "prepare_backend(). Numba specializations must be compiled "
                 "during OpenHCS compiler preparation, not first timed execution."
             )
@@ -422,15 +442,22 @@ def _prepare_cellprofiler_backend_family_cached(
 
 
 __all__ = [
-    "DEFAULT_CELLPROFILER_BACKEND_PROVIDER",
     "DEFAULT_CELLPROFILER_BACKEND_SELECTION",
+    "BackendProvider",
     "BackendProviderInput",
     "BackendProviderSelectionInput",
     "BackendProviderSelectionIdentity",
-    "CellProfilerBackendAuthority",
     "CellProfilerBackendProvider",
-    "CellProfilerBackendProviderSelection",
+    "CellProfilerBackendSelection",
     "CellProfilerBackendStrategyMixin",
-    "DefaultCellProfilerBackendProviderSelection",
-    "ExplicitCellProfilerBackendProviderSelection",
+    "CentrosomeBackendProvider",
+    "CppBackendProvider",
+    "CucimBackendProvider",
+    "DefaultBackendSelection",
+    "LegacyFastBackendProvider",
+    "NativeBackendProvider",
+    "NumbaBackendProvider",
+    "OpencvBackendProvider",
+    "PyclesperantoBackendProvider",
+    "SkimageBackendProvider",
 ]
