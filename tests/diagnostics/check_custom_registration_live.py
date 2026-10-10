@@ -236,7 +236,7 @@ def run(args) -> None:
     from openhcs.processing.custom_functions.manager import CustomFunctionManager
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
     from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
 
     imports = {"openhcs": openhcs.__file__, "polystore": polystore.__file__}
     assert Path(openhcs.__file__).resolve() == SOURCE / "openhcs/__init__.py"

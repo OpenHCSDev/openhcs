@@ -33,7 +33,7 @@ from openhcs.processing.materialization.core import (
     ParserBackedSourceStemAuthority,
     materialization_outputs,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 COMPONENTS = {
     "well": "image.ome.tif",

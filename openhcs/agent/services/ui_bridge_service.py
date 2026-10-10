@@ -18,6 +18,7 @@ from typing import Annotated, ClassVar, Generic, TypeAlias, TypeVar
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
     EnvironmentVariable,
+    JsonObject,
     dataclass_from_mapping,
     overlay_dataclass_from_environment,
     project_dataclass,
@@ -29,7 +30,7 @@ from zmqruntime.config import (
     TransportMode,
 )
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, JsonObject
+from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.ui_bridge import (
     UI_BRIDGE_UNKNOWN_WIDGET,
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
@@ -269,12 +270,7 @@ class UiBridgeNoPayloadOperationContract(
         return cls.gateway_method.invoke(gateway, connection)
 
     @classmethod
-    def decode_request_payload(
-        cls,
-        payload: JsonObject,
-        decoder: Callable[[type[UiBridgeRequestT], JsonObject], UiBridgeRequestT],
-    ) -> None:
-        del decoder
+    def decode_request_payload(cls, payload: JsonObject) -> None:
         if payload:
             raise ValueError(
                 f"UI bridge operation {cls.name!r} does not accept a payload."
@@ -310,12 +306,8 @@ class UiBridgePayloadOperationContract(
         return cls.gateway_method.invoke(gateway, connection, payload)
 
     @classmethod
-    def decode_request_payload(
-        cls,
-        payload: JsonObject,
-        decoder: Callable[[type[UiBridgeRequestT], JsonObject], UiBridgeRequestT],
-    ) -> UiBridgeRequestT:
-        return decoder(cls.request_type, payload)
+    def decode_request_payload(cls, payload: JsonObject) -> UiBridgeRequestT:
+        return dataclass_from_mapping(cls.request_type, payload)
 
     @classmethod
     def validate_request_payload(cls, payload: UiBridgeRequestT) -> None:

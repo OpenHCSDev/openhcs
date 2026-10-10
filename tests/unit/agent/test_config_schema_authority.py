@@ -19,7 +19,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.source_bindings import NamedSourceBinding
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def _field_by_path(schema, path: str):

@@ -31,7 +31,7 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,

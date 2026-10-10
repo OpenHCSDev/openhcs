@@ -21,10 +21,13 @@ from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_arg
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
+    JsonObject,
+    JsonValue,
     dataclass_from_mapping,
     is_enum_type,
     optional_member_type,
     signature_analysis_target,
+    to_jsonable,
 )
 from zmqruntime.config import TransportMode
 
@@ -35,13 +38,7 @@ from openhcs.agent.capabilities import (
     LocalCapabilitySurfaceProfile,
     get_agent_capability,
 )
-from openhcs.agent.dto.common import (
-    AgentCliRequest,
-    AgentError,
-    AgentResultEnvelope,
-    JsonObject,
-    JsonValue,
-)
+from openhcs.agent.dto.common import AgentCliRequest, AgentError, AgentResultEnvelope
 from openhcs.agent.dto.execution import PipelineExecutionSubmissionRequest
 from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
 from openhcs.agent.dto.ui_bridge import (
@@ -74,7 +71,6 @@ from openhcs.mcp.control_timeout import (
 )
 from openhcs.agent.ui_bridge_environment import UIConfigCacheEnvironment
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.serialization.json import to_jsonable
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.axes import AxisFamily
 

@@ -41,7 +41,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerStateSurfaceIdentityDeclaration,
     PlateManagerWidgetIdentity,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from objectstate.object_state import ObjectStateRegistry
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (

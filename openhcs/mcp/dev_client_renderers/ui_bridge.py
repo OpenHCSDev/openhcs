@@ -11,7 +11,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import JsonObject, JsonValue
+from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.ui_bridge import (
     UiActionCatalog,
     UiActionInvokeResult,

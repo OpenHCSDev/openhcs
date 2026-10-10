@@ -21,12 +21,8 @@ from zmqruntime.messages import (
     ResponseType,
 )
 
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
-    AgentError,
-    AgentWarning,
-    JsonObject,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from python_introspect import JsonObject, to_jsonable
 from openhcs.agent.dto.execution import (
     ArtifactInputPlanSummary,
     ArtifactMaterializationPathSummary,
@@ -84,7 +80,6 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQExecutionIdentity,
     ZMQRuntimeObservationExportScope,
 )
-from openhcs.serialization.json import to_jsonable
 
 MAX_INSPECTION_AXES = 8
 MAX_INSPECTION_STEPS = 24

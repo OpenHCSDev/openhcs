@@ -9,13 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
 
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 
 from benchmark.contracts.run_artifacts import write_new_measured_artifact
 from benchmark.timing import PhaseTimingRecord
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
-from openhcs.serialization.json import to_jsonable
 
 MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = "openhcs.benchmark.measured-pipeline.v2"
 _ARCHIVED_MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = (

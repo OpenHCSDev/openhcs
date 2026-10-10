@@ -12,7 +12,7 @@ from openhcs.agent.dto.architecture import (
     InternalApiSymbol,
 )
 from openhcs.agent.dto.authoring import AuthoringContext
-from openhcs.agent.dto.common import JsonObject, JsonValue
+from python_introspect import JsonObject, JsonValue, to_jsonable
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     FunctionCatalogPage,
@@ -32,7 +32,6 @@ from openhcs.mcp.dev_client_rendering import (
     McpDevOutputRenderOptions,
     McpDevPayloadProjection,
 )
-from openhcs.serialization.json import to_jsonable
 from openhcs.mcp.dev_client_renderers.object_state import ObjectStateScopeRenderer
 from openhcs.mcp.dev_client_renderers.viewer import (
     RuntimeServerRenderer,

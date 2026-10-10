@@ -22,7 +22,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import tifffile
 
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 class Channel(Enum):

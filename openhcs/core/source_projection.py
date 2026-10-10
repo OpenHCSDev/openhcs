@@ -41,7 +41,7 @@ from openhcs.core.source_metadata import (
     source_metadata_dict,
     source_metadata_scalar,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, StackAxis, TileAxis
 
 

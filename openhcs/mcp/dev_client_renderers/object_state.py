@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 
-from openhcs.agent.dto.common import JsonObject, JsonValue
+from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldFilter,
     UiObjectStateFieldHelpResult,

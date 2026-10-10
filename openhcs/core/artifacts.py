@@ -1715,7 +1715,7 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
     def materialization_payload(cls, value: "RuntimeValue") -> object:
         from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
         from openhcs.core.runtime_spatial_grid import SpatialGrid
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         grids = (
             tuple(

@@ -52,7 +52,7 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceMetadataEntries,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import AxisFamily
 

@@ -65,7 +65,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSummary,
     UiWindowSummary,
 )
-from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+from python_introspect import dataclass_from_mapping
 from openhcs.agent.ui_bridge_identities import (
     ManagedWindowWidgetIdentity,
     PipelineEditorStateSurfaceIdentityDeclaration,
@@ -968,7 +968,7 @@ def managed_window_action_target(
     if not isinstance(actions, list):
         raise RehearsalFailure("Managed-window action catalog is unavailable.")
     summaries = (
-        AgentDtoJsonCodec.dataclass_from_json(UiActionSummary, row) for row in actions
+        dataclass_from_mapping(UiActionSummary, row) for row in actions
     )
     matches = [
         row
@@ -1100,7 +1100,7 @@ def exact_config_document_source(
     if not isinstance(documents, list):
         raise RehearsalFailure("Code-document catalog is unavailable.")
     summaries = (
-        AgentDtoJsonCodec.dataclass_from_json(UiCodeDocumentSummary, row)
+        dataclass_from_mapping(UiCodeDocumentSummary, row)
         for row in documents
     )
     matches = [
@@ -1840,7 +1840,7 @@ def inspect_and_apply_code_document(
         timeout=30,
     )
     documents = (
-        AgentDtoJsonCodec.dataclass_from_json(UiCodeDocumentSummary, row)
+        dataclass_from_mapping(UiCodeDocumentSummary, row)
         for row in first_payload(docs)["documents"]
     )
     if not any(
@@ -2744,7 +2744,7 @@ def visible_window_ids(ctx: RunContext, *, label: str) -> frozenset[str]:
 
 def window_ids_from_catalog(windows: list[Any]) -> frozenset[str]:
     return frozenset(
-        AgentDtoJsonCodec.dataclass_from_json(UiWindowSummary, window).window_id
+        dataclass_from_mapping(UiWindowSummary, window).window_id
         for window in windows
     )
 
@@ -2766,7 +2766,7 @@ def plate_action_summary(
     if not isinstance(actions, list):
         raise RehearsalFailure("PlateManager action catalog is unavailable.")
     summaries = (
-        AgentDtoJsonCodec.dataclass_from_json(UiActionSummary, row) for row in actions
+        dataclass_from_mapping(UiActionSummary, row) for row in actions
     )
     matches = [
         row

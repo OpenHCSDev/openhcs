@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, replace
 from functools import wraps
 from typing import Self
 
-from python_introspect import validate_annotated_dataclass
+from python_introspect import JsonObject, JsonValue, validate_annotated_dataclass
 from zmqruntime.config import (
     NonBlankString,
     PositiveInteger,
@@ -34,8 +34,6 @@ from openhcs.agent.dto.common import (
     AgentError,
     AgentResultEnvelope,
     AgentWarning,
-    JsonObject,
-    JsonValue,
 )
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.ui_bridge_identities import (

@@ -23,7 +23,7 @@ from pyqt_reactive.services.function_list_editor_actions import (
 )
 from pyqt_reactive.services.function_navigation import FUNCTION_FIELD_ROOT
 from pyqt_reactive.services.system_monitor_actions import SystemMonitorAction
-from python_introspect import dataclass_from_mapping
+from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.ui_bridge_actions import PlateManagerAction
@@ -38,7 +38,6 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
-from openhcs.serialization.json import JsonValue, to_jsonable
 
 if TYPE_CHECKING:
     from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope

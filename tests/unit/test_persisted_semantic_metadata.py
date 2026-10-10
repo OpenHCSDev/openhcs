@@ -34,7 +34,7 @@ from openhcs.core.source_workspace_projection import (
 )
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
 
 VIRTUAL_PATH = "A01_s001_w1_z001_t001.tif"

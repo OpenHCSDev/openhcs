@@ -9,8 +9,7 @@ from pathlib import Path
 from typing import ClassVar
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import JsonObject, JsonValue
-from openhcs.core.axes import AxisFamily
+from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.plate import (
     PlateFileQueryResult,
     PlateFileStreamResult,
@@ -32,6 +31,7 @@ from openhcs.mcp.dev_client_rendering import (
     McpDevPayloadProjection,
     McpDiagnosticRenderer,
 )
+from openhcs.core.axes import AxisFamily
 
 
 class PlateImageSampleRenderer(McpDevTypedOutputRenderer):

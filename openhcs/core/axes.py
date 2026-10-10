@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar, TypeGuard
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import AnnotationChoices
+from python_introspect import AnnotationChoices, to_jsonable
 
 
 class AxisDeclarationMeta(AutoRegisterMeta):
@@ -549,6 +549,13 @@ class GroupingChoices(_AxisDeclarationChoices):
 
     def choices(self) -> tuple[object, ...]:
         return AxisFamily.active().grouping_choices()
+
+
+@to_jsonable.register(AxisDeclarationMeta)
+def _jsonable_axis_declaration(value: AxisDeclarationMeta) -> str:
+    """Axes and grouping declarations cross JSON boundaries by declared name."""
+
+    return value.name
 
 
 def _declared_roles(axes: tuple[type[Axis], ...]) -> tuple[type[AxisRole], ...]:

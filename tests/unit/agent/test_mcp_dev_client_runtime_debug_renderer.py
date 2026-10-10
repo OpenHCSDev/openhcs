@@ -17,7 +17,7 @@ from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     McpDevOutputRenderer,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 DEBUG_SESSION_ID = "debug-session-renderer"
 

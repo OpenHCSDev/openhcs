@@ -44,7 +44,7 @@ that needs the behavior.
    * - Python serialization
      - pycodify
    * - JSON transport projection
-     - OpenHCS ``serialization.json.to_jsonable``
+     - python-introspect ``to_jsonable`` / ``dataclass_from_mapping``
    * - Benchmark command or report entry point
      - ``BenchmarkCliCommand`` registered declaration family
    * - Comparison-run provenance or lifecycle

@@ -29,7 +29,7 @@ from openhcs.core.viewer_streaming_service import (
     ImageStreamingRequest,
     ViewerStreamingSource,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def image_with_declaration(axis, count=1, *, color=False, masked=False):

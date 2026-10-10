@@ -26,7 +26,7 @@ from openhcs.core.debug_views import (
     DebugViewTable,
     DebugViewTableProjection,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 DEBUG_SESSION_ID = "debug-session-1"
 

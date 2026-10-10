@@ -5,7 +5,7 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Callable, ClassVar, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import set_signature_analysis_target
+from python_introspect import public_names_from_objects, set_signature_analysis_target
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
@@ -395,7 +395,6 @@ from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.image_shapes import trailing_spatial_factors
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_object_label_domains import (

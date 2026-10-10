@@ -43,7 +43,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import runtime_bound_parameters
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (

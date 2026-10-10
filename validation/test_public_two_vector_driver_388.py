@@ -138,7 +138,7 @@ def test_original_decoder_recovers_real_public_pipeline_response(driver):
     from openhcs.agent.dto.common import SCHEMA_VERSION
     from openhcs.agent.dto.pipeline import PipelineRef
     from openhcs.mcp.dev_client_core import McpDevToolBatchResponse, McpDevToolResult, McpDevServerIdentity
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
     batch = McpDevToolBatchResponse(server=McpDevServerIdentity(command="source-proof-no-spawn", module="openhcs.mcp.server"), results=(McpDevToolResult(
         tool="openhcs_create_pipeline", mcp_error=False,
         payloads=(to_jsonable(PipelineRef("pipeline-proof", "openhcs://pipelines/pipeline-proof")),)),))
@@ -160,7 +160,7 @@ def test_same_handle_warm_and_cold_readiness_has_no_elapsed_terminal_cutoff(driv
     )
     from zmqruntime.messages import ProcessIdentity
     from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
 
     identity = ProcessIdentity.current()  # This source test process, NOT native.
     handle = FunctionCatalogPreparationHandle(ExecutionConnectionSpec(port=5993), identity)

@@ -15,12 +15,8 @@ from polystore.streaming.identity import (
 )
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
-    AgentError,
-    AgentWarning,
-    JsonObject,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from python_introspect import JsonObject
 from openhcs.agent.dto.plate import (
     PlateFileStreamRequest,
     PlateFileStreamResult,

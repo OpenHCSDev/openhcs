@@ -221,7 +221,7 @@ from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementTableModel
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )

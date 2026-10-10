@@ -55,7 +55,7 @@ from openhcs.mcp.dev_client_rendering import (
     McpDevTypedOutputRenderer,
 )
 from openhcs.mcp.dev_client_renderers.pipeline import PipelineArtifactPlanRenderer
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 class ControlledWireSession:
@@ -693,7 +693,7 @@ def test_actual_cli_main_renders_without_runtime(monkeypatch, capsys, json_outpu
 def test_generic_call_cli_uses_nominal_typed_contract_without_json_roundtrip(
     monkeypatch, capsys
 ):
-    import openhcs.serialization.json as serialization
+    import python_introspect.jsonable as serialization
 
     response = batch(
         agent_capabilities.inspect_pipeline_source_artifact_plan, plan_fixture()

@@ -13,7 +13,7 @@ from zmqruntime.viewer_protocol import ViewerWireValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.source_image_provenance import SourceComponentMetadata
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.core.axes import AxisFamily
 
 

@@ -17,7 +17,7 @@ from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     runtime_measurement_projection_cache_identity,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def _policy_identity(value):

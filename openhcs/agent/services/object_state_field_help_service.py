@@ -13,9 +13,9 @@ from pyqt_reactive.services.parameter_help_service import (
     parameter_help_content,
     resolved_parameter_description,
 )
-from python_introspect import UnifiedParameterAnalyzer, enum_input_values
+from python_introspect import JsonValue, UnifiedParameterAnalyzer, enum_input_values
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning, JsonValue
+from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
 from openhcs.agent.dto.functions import (
     FunctionArtifactSpec,
     FunctionDetail,

@@ -19,7 +19,7 @@ from openhcs.core.orchestrator.compiled_plate_execution import (
     CompiledPlateExecutionExtras,
 )
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryParamField
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 logger = logging.getLogger(__name__)
 

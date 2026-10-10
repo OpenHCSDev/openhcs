@@ -140,7 +140,7 @@ def run(args) -> None:
         from openhcs.pyqt_gui.config import UIConfig, save_ui_config_sync
         from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
         from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         modules = (openhcs, polystore, zmqruntime, metaclass_registry,
                    importlib.import_module('openhcs.core._tabular_native'),

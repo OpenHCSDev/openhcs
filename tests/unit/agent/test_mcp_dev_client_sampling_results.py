@@ -25,7 +25,7 @@ from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer, McpDevTypedOu
 from openhcs.mcp.dev_client_renderers.plate import PlateImageSampleRenderer, SelectedPlateSampleRenderer
 from openhcs.mcp.dev_client_renderers.viewer import ViewerImageSampleRenderer
 from openhcs.runtime.viewer_protocol import ViewerArrayValueSummary
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 @pytest.fixture(autouse=True)
@@ -109,7 +109,7 @@ def test_generated_commands_retain_decoded_sampling_facts(monkeypatch, selected_
     def forbidden(value):
         raise AssertionError("Typed sampling must not flatten an owned result to JSON")
     monkeypatch.setattr(dev_client, "to_jsonable", forbidden)
-    monkeypatch.setattr("openhcs.serialization.json.to_jsonable", forbidden)
+    monkeypatch.setattr("python_introspect.jsonable.to_jsonable", forbidden)
     argv = ("call", capability.name, "--arguments", "{}") if generic_call else (
         ("selected-plate-sample",) if selected_case else ("sample-plate-image", "source-plate", "image.tif")
     )

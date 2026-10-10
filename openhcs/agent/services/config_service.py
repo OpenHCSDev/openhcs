@@ -30,19 +30,14 @@ from pyqt_reactive.services.parameter_help_service import (
     parameter_description_from_target,
 )
 from python_introspect import (
+    JsonValue,
     coerce_enum_member,
     declared_enum_type,
     enum_input_values,
     resolve_optional,
 )
 
-from openhcs.core.axes import AxisFamily, GroupingDeclaration
-from openhcs.agent.dto.common import (
-    AgentError,
-    JsonValue,
-    RenderedSource,
-    SCHEMA_VERSION,
-)
+from openhcs.agent.dto.common import AgentError, RenderedSource, SCHEMA_VERSION
 from openhcs.agent.dto.config import (
     ConfigFieldSchema,
     ConfigPatch,
@@ -64,6 +59,7 @@ from openhcs.core.config import (
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.core.axes import AxisFamily, GroupingDeclaration
 
 AgentConfig: TypeAlias = GlobalPipelineConfig | PipelineConfig
 

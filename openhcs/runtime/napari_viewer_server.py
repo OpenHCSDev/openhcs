@@ -159,7 +159,7 @@ from openhcs.runtime.viewer_controls import (
 from openhcs.runtime.viewer_measurements import (
     NativeImageMeasurement,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
     NapariViewerServerRequest,

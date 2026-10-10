@@ -14,7 +14,7 @@ from zmqruntime.messages import ControlErrorResponse
 
 from openhcs.agent.dto.common import AgentResourceRef
 from openhcs.agent.dto.viewer import ViewerWindowDescriptor
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 @dataclass(frozen=True, kw_only=True)

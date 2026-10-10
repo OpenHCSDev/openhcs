@@ -14,7 +14,7 @@ from test_mcp_dev_client_pipeline_results import ControlledWireSession
 from openhcs.agent.dto.functions import CustomFunctionRegistrationObservation
 from openhcs.mcp import dev_client
 from openhcs.mcp.dev_client_core import McpDevPayloadFailure, McpDevToolBatchResponse
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 ROOT = Path('/home/ts/wt/openhcs-issue-batch-20260929/engineering567/public94-attempt01')

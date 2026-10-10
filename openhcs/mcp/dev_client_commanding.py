@@ -21,12 +21,8 @@ from openhcs.agent.capabilities import (
     get_capability_registry,
     require_agent_type_contract,
 )
-from openhcs.agent.dto.common import (
-    AgentCliArgumentSpec,
-    AgentCliRequest,
-    JsonObject,
-    JsonValue,
-)
+from openhcs.agent.dto.common import AgentCliArgumentSpec, AgentCliRequest
+from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.execution import (
     RuntimeServerConnectionToolRequest,
 )
@@ -220,7 +216,7 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
 
     def render_result(self, response, args: argparse.Namespace) -> str:
         """Render a framed production result without requiring a JSON round trip."""
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         return self.render_response(to_jsonable(response), args)
 
@@ -250,7 +246,7 @@ class TypedCompositeCommandSpec(McpDevCommandSpec):
 
     def render_result(self, response, args: argparse.Namespace) -> str:
         if self.requests_json_output(args):
-            from openhcs.serialization.json import to_jsonable
+            from python_introspect import to_jsonable
 
             return super().render_response(to_jsonable(response), args)
         return self.render_response(response, args)

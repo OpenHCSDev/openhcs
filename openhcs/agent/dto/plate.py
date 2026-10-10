@@ -12,9 +12,8 @@ from openhcs.agent.dto.common import (
     AgentResultEnvelope,
     AgentResourceRef,
     AgentWarning,
-    JsonObject,
-    JsonValue,
 )
+from python_introspect import JsonObject, JsonValue, to_jsonable
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.plate_file_inventory import (
@@ -27,7 +26,6 @@ from openhcs.core.synthetic_plate_generation import (
     SYNTHETIC_PLATE_GENERATION_PROFILE,
     SyntheticPlateFormat,
 )
-from openhcs.serialization.json import to_jsonable
 
 
 class PlateInspectionStatus(str, Enum):

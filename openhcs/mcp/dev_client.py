@@ -14,8 +14,7 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass
 from typing import TextIO
 
-from openhcs.serialization.json import to_jsonable as to_jsonable
-from openhcs.agent.dto.common import JsonObject
+from python_introspect import JsonObject, to_jsonable
 from openhcs.agent.capabilities import (
     FullLocalCapabilitySurfaceProfile,
     LocalCapabilitySurfaceProfile,
@@ -74,7 +73,6 @@ __all__ = (
     "main",
     "parse_json_object",
     "state_surface_tool_arguments",
-    "to_jsonable",
     "workflow_poll_has_reached_terminal_state",
     "workflow_poll_summary_result",
     "workflow_poll_terminal_status",

@@ -52,7 +52,7 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
     running_variance_numba,
 )
 from openhcs.core.memory.decorators import numpy as numpy_decorator
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,

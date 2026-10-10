@@ -2062,7 +2062,7 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     def declaration_identity(self) -> str:
         """Return a stable identity for this complete source declaration."""
 
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         declaration = to_jsonable(self)
         if not isinstance(declaration, Mapping):

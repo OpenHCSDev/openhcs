@@ -2,8 +2,7 @@ from dataclasses import replace
 from unittest.mock import Mock
 
 import pytest
-from python_introspect import dataclass_from_mapping
-from openhcs.serialization.json import to_jsonable
+from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import ProcessIdentity, PongResponse, ServerRole
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus

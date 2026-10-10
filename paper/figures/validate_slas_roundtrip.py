@@ -14,7 +14,7 @@ import time
 
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.agent.dto.ui_bridge import UiWindowCatalog
-from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+from python_introspect import dataclass_from_mapping
 from pyqt_reactive.services.function_list_editor_actions import FunctionListEditorAction
 
 
@@ -182,7 +182,7 @@ def main():
             action_kind="button",
         )
         for _ in range(30):
-            windows = AgentDtoJsonCodec.dataclass_from_json(
+            windows = dataclass_from_mapping(
                 UiWindowCatalog, call("openhcs_ui_list_windows")
             )
             code_windows = [

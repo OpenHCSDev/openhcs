@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Iterator
 
-from openhcs.core.public_api import declared_public_names
+from python_introspect import declared_public_names
 from metaclass_registry.caches import ProcessLocalBoundedCache
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 

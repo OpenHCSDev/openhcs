@@ -215,7 +215,7 @@ class ViewerEndpointDiscoveryService:
 
     def sweep(self) -> "ViewerEndpointDiscoveryResult":
         from openhcs.agent.dto.viewer import ViewerEndpointDiscoveryResult
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         endpoints = tuple(record.as_dict() for record in discover_viewer_endpoints())
         return ViewerEndpointDiscoveryResult(

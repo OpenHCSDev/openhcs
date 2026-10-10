@@ -10,14 +10,14 @@ from enum import Enum
 from typing import ClassVar, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping
+from python_introspect import JsonObject, JsonValue, dataclass_from_mapping
 
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     CapabilityWorkflowGroup,
     get_agent_capability,
 )
-from openhcs.agent.dto.common import AgentError, JsonObject, JsonValue
+from openhcs.agent.dto.common import AgentError
 
 DEFAULT_CODE_DOCUMENT_MAX_CHARS = 2_000
 PresentationValue = TypeVar("PresentationValue")
@@ -222,7 +222,7 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
 
     @classmethod
     def render_result(cls, response, options: McpDevOutputRenderOptions) -> str:
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         return cls.render_with_options(to_jsonable(response), options)
 
@@ -250,7 +250,7 @@ class McpDevOutputRendererBinding:
 
     def render_result(self, response, options: McpDevOutputRenderOptions) -> str:
         if self.render_function is not None:
-            from openhcs.serialization.json import to_jsonable
+            from python_introspect import to_jsonable
 
             return self.render_function(to_jsonable(response))
         return self.renderer_type.render_result(response, options)

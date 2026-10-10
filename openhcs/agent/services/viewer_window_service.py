@@ -12,7 +12,12 @@ from typing import ClassVar, Generic, TypeVar, cast
 
 import zmq
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping, project_dataclass
+from python_introspect import (
+    JsonObject,
+    JsonValue,
+    dataclass_from_mapping,
+    project_dataclass,
+)
 from python_introspect.validation import validate_annotation_value
 from polystore.streaming.identity import StreamProducerIdentity
 from pyqt_reactive.services.window_snapshot import (
@@ -36,8 +41,6 @@ from openhcs.agent.dto.common import (
     AgentError,
     AgentResourceRef,
     AgentWarning,
-    JsonObject,
-    JsonValue,
 )
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (

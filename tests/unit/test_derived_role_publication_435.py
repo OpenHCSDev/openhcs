@@ -38,7 +38,7 @@ from openhcs.core.steps.function_outputs import (
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.processing.materialization import (
     ImageFileOptions, MaterializationSpec, MaterializedFilenameIdentity,
 )

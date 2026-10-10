@@ -8,10 +8,9 @@ from PyQt6.QtWidgets import QDialog, QVBoxLayout
 
 from openhcs.agent.dto.ui_bridge import UiWindowSnapshotRequest, UiWindowSnapshotResult
 from openhcs.agent.services.ui_bridge_service import UiBridgeOperationContractABC
-from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+from python_introspect import dataclass_from_mapping, to_jsonable
 from openhcs.pyqt_gui.services.ui_agent_bridge import UiAgentBridgeService
 from openhcs.pyqt_gui.services.ui_bridge_windows import QtTopLevelWindowProjection
-from openhcs.serialization.json import to_jsonable
 from pyqt_reactive.services.window_snapshot import WindowSnapshotFrameCondition
 
 
@@ -98,7 +97,7 @@ def test_async_snapshot_uses_existing_operation_and_registered_response_contract
     operation = bridge.get_operation_status(accepted.operation_id)
     assert operation.status == "completed"
     contract = UiBridgeOperationContractABC.for_name(operation.identity.operation_name)
-    result = AgentDtoJsonCodec.dataclass_from_json(
+    result = dataclass_from_mapping(
         contract.response_type, operation.result_payload
     )
     assert isinstance(result, UiWindowSnapshotResult)
@@ -106,11 +105,11 @@ def test_async_snapshot_uses_existing_operation_and_registered_response_contract
     assert result.frame_condition is request.frame_condition
     assert result.observation.frame.has_maximum_alpha
     assert result.resource.path.endswith(".png")
-    wire_operation = AgentDtoJsonCodec.dataclass_from_json(
+    wire_operation = dataclass_from_mapping(
         type(operation), to_jsonable(operation)
     )
     assert wire_operation == operation
-    wire_result = AgentDtoJsonCodec.dataclass_from_json(
+    wire_result = dataclass_from_mapping(
         contract.response_type,
         wire_operation.result_payload,
     )
@@ -174,7 +173,7 @@ def test_noop_reset_quiet_operation_preserves_actual_interval_receipt(
     )
     operation = bridge.get_operation_status(accepted.operation_id)
     contract = UiBridgeOperationContractABC.for_name(operation.identity.operation_name)
-    result = AgentDtoJsonCodec.dataclass_from_json(
+    result = dataclass_from_mapping(
         contract.response_type, operation.result_payload
     )
     assert result.captured
@@ -216,7 +215,7 @@ def test_failed_observation_frame_and_existing_trace_decode_through_registered_o
     operation = bridge.get_operation_status(accepted.operation_id)
     assert operation.status == "failed"
     contract = UiBridgeOperationContractABC.for_name(operation.identity.operation_name)
-    result = AgentDtoJsonCodec.dataclass_from_json(
+    result = dataclass_from_mapping(
         contract.response_type, operation.result_payload
     )
     assert not result.captured and result.resource is None
@@ -226,7 +225,7 @@ def test_failed_observation_frame_and_existing_trace_decode_through_registered_o
         isinstance(record, FlashTraceRecord) for record in result.observation.trace
     )
     assert (
-        AgentDtoJsonCodec.dataclass_from_json(type(result), to_jsonable(result))
+        dataclass_from_mapping(type(result), to_jsonable(result))
         == result
     )
 
@@ -307,7 +306,7 @@ def test_navigation_uses_existing_operation_with_terminal_native_driver_receipt(
         contract = UiBridgeOperationContractABC.for_name(
             operation.identity.operation_name
         )
-        result = AgentDtoJsonCodec.dataclass_from_json(
+        result = dataclass_from_mapping(
             contract.response_type, operation.result_payload
         )
         assert isinstance(result, UiWindowNavigateResult)

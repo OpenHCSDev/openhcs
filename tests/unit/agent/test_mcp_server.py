@@ -14,6 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from python_introspect import to_jsonable
 from zmqruntime.client import EndpointShutdownResult
 from zmqruntime.config import TransportMode
 
@@ -279,7 +280,8 @@ def test_agent_dto_package_exports_mcp_debugging_contracts():
     )
 
     for exported_name in exported_names:
-        assert exported_name in vars(dto)
+        assert exported_name in dto.__all__
+        assert getattr(dto, exported_name).__name__ == exported_name
 
 
 def test_mcp_server_builds_when_optional_dependency_is_installed():
@@ -658,7 +660,7 @@ def test_mcp_dev_client_prefers_structured_content_and_preserves_tool_metadata()
     import openhcs.mcp.dev_client as dev_client
     from openhcs.mcp.dev_client_core import mcp_tool_metadata_from_wire
 
-    result = server.to_jsonable(
+    result = to_jsonable(
         server.McpToolErrorResult(
             schema_version=SCHEMA_VERSION,
             ok=False,
@@ -1075,9 +1077,9 @@ def test_mcp_widget_tree_projection_preserves_required_empty_action_fields():
     }
     assert action["label"] == "Compile"
     assert action["geometry"] == {"x": 8, "y": 160, "width": 72, "height": 24}
-    from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+    from python_introspect import dataclass_from_mapping
 
-    decoded = AgentDtoJsonCodec.dataclass_from_json(UiWidgetTreeResult, payload)
+    decoded = dataclass_from_mapping(UiWidgetTreeResult, payload)
     assert decoded == result
 
 
@@ -1250,18 +1252,18 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
 def test_mcp_ui_catalog_invocations_preserve_declared_identity(
     capability, method, catalog
 ):
-    from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+    from python_introspect import dataclass_from_mapping
 
     context = SimpleNamespace(
         ui_bridge_service=SimpleNamespace(**{method: lambda connection: catalog})
     )
-    payload = server.to_jsonable(
+    payload = to_jsonable(
         capability.invocation.execute(context, DEFAULT_UI_BRIDGE_CONNECTION_SPEC)
     )
 
-    assert payload == server.to_jsonable(catalog)
+    assert payload == to_jsonable(catalog)
     assert (
-        AgentDtoJsonCodec.dataclass_from_json(capability.output_contract, payload)
+        dataclass_from_mapping(capability.output_contract, payload)
         == catalog
     )
 
@@ -4804,7 +4806,6 @@ def test_mcp_dev_client_authoring_context_renders_bounded_content():
 
 def _dev_client_server_fixture():
     from openhcs.mcp.dev_client_core import McpDevServerIdentity, McpDevServerSpec
-    from openhcs.serialization.json import to_jsonable
 
     return to_jsonable(McpDevServerIdentity.from_spec(McpDevServerSpec(sys.executable)))
 
@@ -5397,7 +5398,7 @@ def test_mcp_dev_client_execute_source_composes_session_and_submit(monkeypatch):
     assert timeouts[1] >= 22
 
     rendered = dev_client.McpDevCommandSpec.for_name("execute-source").render_response(
-        dev_client.to_jsonable(response),
+        to_jsonable(response),
         args,
     )
 
@@ -11204,7 +11205,7 @@ def test_mcp_dev_client_workflow_poll_terminal_state_policy():
 
 def _state_surface_dev_wire(dev_client):
     """Declare the complete wire envelope; each poll test supplies its body."""
-    return dev_client.to_jsonable(UiStateSurfaceDocument(
+    return to_jsonable(UiStateSurfaceDocument(
         schema_version=SCHEMA_VERSION,
         summary=UiStateSurfaceSummary(
             SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
@@ -11469,7 +11470,7 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is False
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11556,7 +11557,7 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
     if receipt_status is not None:
         expected_call_names.append("openhcs_ui_wait_for_operation_receipt")
     assert [call.name for call in calls] == expected_call_names
-    assert dev_client.to_jsonable(response.results[-1].payloads[0]) == {
+    assert to_jsonable(response.results[-1].payloads[0]) == {
         "poll_status": expected_poll_status,
         "poll_requested": True,
         "poll_completed": False,
@@ -11882,7 +11883,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
     )
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11988,7 +11989,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
     )
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -12081,7 +12082,7 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
     assert response.results[-2].has_errors()
     summary = response.results[-1]
     assert summary.mcp_error is True
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "timeout",
         "poll_requested": True,
         "poll_completed": False,
@@ -12170,7 +12171,7 @@ def test_mcp_dev_client_selected_workflow_poll_summary_reports_failure(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "failed",
         "poll_requested": True,
         "poll_completed": False,
@@ -12263,7 +12264,7 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "failed",
         "poll_requested": True,
         "poll_completed": False,
@@ -12318,7 +12319,7 @@ def test_mcp_dev_client_selected_workflow_poll_renders_compact_summary():
         schema_version="test",
         summary=surface_summary,
         payload_schema="openhcs.ui.plate_manager_state.v1",
-        payload=dev_client.to_jsonable(native_state),
+        payload=to_jsonable(native_state),
     )
     response = dev_client.McpDevToolBatchResponse.from_results(
         dev_client.McpDevServerSpec(sys.executable),
@@ -12326,7 +12327,7 @@ def test_mcp_dev_client_selected_workflow_poll_renders_compact_summary():
             _accepted_workflow_dev_result(dev_client, workflow="run_plate"),
             dev_client.McpDevToolResult(
                 tool="openhcs_ui_get_state_surface", mcp_error=False,
-                payloads=(dev_client.to_jsonable(state),),
+                payloads=(to_jsonable(state),),
             ),
             dev_client.workflow_poll_summary_result(
                 workflow="run_plate", status=dev_client.WorkflowPollSummaryStatus.COMPLETED,
@@ -12380,7 +12381,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
     baseline_document = UiStateSurfaceDocument(
         schema_version="test", summary=surface_summary,
         payload_schema="openhcs.ui.plate_manager_state.v1",
-        payload=dev_client.to_jsonable(baseline), current_revision_token="rev-1",
+        payload=to_jsonable(baseline), current_revision_token="rev-1",
     )
 
     calls: list[dev_client.McpDevToolCall] = []
@@ -12391,7 +12392,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
             return dev_client.McpDevToolResult(
                 tool=call.name,
                 mcp_error=False,
-                payloads=(dev_client.to_jsonable(baseline_document),),
+                payloads=(to_jsonable(baseline_document),),
             )
         return _rejected_workflow_dev_result(
             dev_client,
@@ -12425,7 +12426,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "skipped",
         "poll_requested": True,
         "poll_completed": False,
@@ -12461,7 +12462,7 @@ def test_mcp_dev_client_workflow_poll_timeout_summary_is_error():
 
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert dev_client.to_jsonable(summary.payloads[0]) == {
+    assert to_jsonable(summary.payloads[0]) == {
         "poll_status": "timeout",
         "poll_requested": True,
         "poll_completed": False,
@@ -15034,7 +15035,7 @@ def test_mcp_dev_client_launches_fresh_current_source_server():
         )
 
     payload = asyncio.run(call_health_through_dev_client())
-    payload = dev_client.to_jsonable(payload)
+    payload = to_jsonable(payload)
     result = payload["results"][0]
     health_payload = result["payloads"][0]
 
@@ -15190,7 +15191,7 @@ def test_mcp_dev_client_reports_startup_transport_failure():
         )
 
     payload = asyncio.run(call_missing_server_module())
-    payload = dev_client.to_jsonable(payload)
+    payload = to_jsonable(payload)
     error = payload["errors"][0]
 
     assert payload["server"]["module"] == "openhcs.mcp_missing"
@@ -15211,7 +15212,7 @@ def test_mcp_dev_client_transport_failure_projects_leaf_causes():
         server_stderr_tail="captured server log",
     )
 
-    error = dev_client.to_jsonable(failure)
+    error = to_jsonable(failure)
 
     assert error["exception_type"] == "ExceptionGroup"
     assert error["causes"] == [

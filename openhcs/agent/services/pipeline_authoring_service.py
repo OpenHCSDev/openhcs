@@ -14,10 +14,9 @@ from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
     AgentError,
     AgentWarning,
-    JsonObject,
-    JsonValue,
     RenderedSource,
 )
+from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.pipeline import (
     CreatePipelineRequest,

@@ -19,7 +19,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,

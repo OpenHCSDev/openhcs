@@ -14,7 +14,7 @@ from polystore.streaming.identity import (
     StreamProducerIdentity,
 )
 from polystore.streaming_constants import StreamingDataType
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.agent.capabilities import (
@@ -55,7 +55,6 @@ from openhcs.runtime.viewer_controls import (
 )
 from openhcs.runtime.viewer_measurements import NativeImageMeasurement
 from openhcs.runtime.viewer_protocol import OpenHCSViewerControlMessageType
-from openhcs.serialization.json import to_jsonable
 
 
 def native_route():

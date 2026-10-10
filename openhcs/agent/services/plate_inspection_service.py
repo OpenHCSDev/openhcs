@@ -10,12 +10,8 @@ from typing import TYPE_CHECKING
 from polystore.base import ImageSamplingRequest
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
-from openhcs.agent.dto.common import (
-    AgentError,
-    AgentWarning,
-    JsonObject,
-    SCHEMA_VERSION,
-)
+from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
+from python_introspect import JsonObject
 from openhcs.agent.dto.plate import (
     PlateFileQueryRecordSummary,
     PlateFileQueryRequest,

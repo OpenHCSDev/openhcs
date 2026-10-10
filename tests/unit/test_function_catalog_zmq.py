@@ -139,7 +139,7 @@ def test_real_mcp_context_composes_typed_preparation_and_catalog_authority(
     from openhcs.mcp.context import OpenHCSAgentContext, create_agent_context
     from openhcs.mcp.server import build_server
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
 
     connection = ExecutionConnectionSpec(port=22319)
     endpoint = replace(OPENHCS_ZMQ_CONFIG, default_port=connection.port)

@@ -31,7 +31,7 @@ from benchmark.agent_validation.declarations import ValidationTaskDeclaration
 from benchmark.agent_validation.perturbations import DiagnosticPerturbationDeclaration
 from benchmark.agent_validation.scoring import AttemptJournalScorer
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 @dataclass(frozen=True, slots=True)

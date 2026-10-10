@@ -9,8 +9,8 @@ from openhcs.agent.dto.common import (
     AgentCliArgumentSpec,
     AgentCliRequest,
     AgentResultEnvelope,
-    JsonObject,
 )
+from python_introspect import JsonObject
 
 
 @dataclass(frozen=True, slots=True)
