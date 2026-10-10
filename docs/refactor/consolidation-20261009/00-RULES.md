@@ -14,6 +14,10 @@ The standard is the owner's correct-maintenance model. A required answer (which 
 - **Our formats change freely.** That includes pipeline and step declarations, compiled plans, progress events, ZMQ messages between the execution server, workers, GUI and viewers, MCP request and result DTOs, debug snapshots, cached function registries, and every Python API inside `openhcs/` and the first-party submodules (ObjectState, PolyStore, arraybridge, pycodify, pyqt-reactive, python-introspect, zmqruntime, metaclass-registry). When one changes, every caller changes in the same PR; submodules change in lockstep PRs.
 - **External contracts are honored exactly:** CellProfiler `.cppipe` syntax and CellProfiler's output column and file conventions, the Model Context Protocol, OME-Zarr and OME-TIFF, Bio-Formats, napari and Fiji/ImageJ APIs, the ImageXpress and Opera Phenix acquisition layouts, NumPy, CuPy, PyTorch, TensorFlow, JAX and pyclesperanto APIs, SQLite. Matching a format someone else owns is correctness, not compatibility.
 
+## 1a. Families, not enums
+
+**An enum is a closed, behaviourless roster: its members carry no capabilities, other packages cannot add members, and every consumer re-decides each member's meaning at the call site (IMPL-2).** Declare a kind as an ABC family instead (`metaclass=AutoRegisterMeta`): each case is a subclass, identity is nominal, membership is by inheritance, behaviour lives on the subclass, and overlapping capabilities compose by mixins. A string or enum-like view exists only at an external boundary (a wire field, a file format, a form choice list) and is derived from the family's registry, never written by hand. Converting an existing enum means moving every `match`/`if`/side table on its members onto the subclasses and deleting the enum.
+
 ## 2. Persisted state: hard cutover, no converters
 
 - *Runtime or derived state* (function registry caches, compiled plans, ZMQ sessions, viewer state, metadata caches) **is reset** when the new version is installed.

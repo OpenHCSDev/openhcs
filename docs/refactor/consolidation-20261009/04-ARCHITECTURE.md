@@ -68,7 +68,7 @@ class Microscopy(AxisFamily):
 ```
 
 - **Derived views:** component order, the parallel axis, the defaults, `AllComponents` and its subset views, the Zarr axis descriptors, the viewer default modes, the viewer config `axis_modes`, and the partition-filter target.
-- **The only way the kernel asks:** `family.with_role(StackAxis)`. The five enums become one member type plus subset views. `_ComponentTemplate` and the per-call enum construction are deleted.
+- **The only way the kernel asks:** `family.with_role(StackAxis)`. The axis classes are the identity: `AllComponents`, `VariableComponents`, `SequentialComponents`, `StreamingComponents` and `GroupBy` are deleted as types (rule 1a); subsets are queries on the family, and `GroupBy.NONE` is the absence of a grouping axis expressed by the step's type, not a sentinel member. `_ComponentTemplate` and the per-call enum construction are deleted.
 - **Activation:** one active family per process, selected by the domain entry point before the kernel is imported. Workers are process-isolated, so this is enough. Several families in one process wait until config typing is generic over the family.
 - **"Plate" is not an axis.** It is the dataset scope: `dataset_root`, `DatasetScope`, and the `GLOBAL` reduction scope that replaces `FunctionStepExecutionScope.PLATE` (`callable_contract.py:192`).
 
