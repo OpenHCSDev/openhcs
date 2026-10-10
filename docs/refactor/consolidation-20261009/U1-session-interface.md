@@ -80,3 +80,19 @@ The guards pass with zero exceptions; `agent/ui_bridge_actions.py` is deleted; t
 ## Dispatch
 
 > **`U1`:** Build `openhcs/authoring/session`, move the plate-manager and pipeline-editor semantics and the workflow engine into it, make widgets and headless MCP clients of it, and land G8. Traps: the workflow engine calls back into the widget through 26 `host` members; the headless execution tools are used by the benchmark CLI and demos.
+
+## Outcome and corrections
+
+Measured against `66a0b30a0` (Python only): production −12471 +8607, tests −12263 +7573 (the MCP contract fixture is 589 −/725 + of the test figure). Guards 11/11 (7 U1, 4 G8).
+
+Corrections to the plan above:
+
+- **MCP tools are derived, not subclassed.** `SessionOperation` does not subclass `AgentCapabilityDeclaration` (that import cycles through the DTOs); `capabilities.py` derives one `openhcs_<operation_id>` capability per `HeadlessOperation`. The guard checks the derivation is total.
+- **The headless journey runs a real execution server**, not a fake client; it and the GUI journey live in `tests/integration/test_session_journey.py`.
+- **The pipeline editor keeps `displayed_steps`**, a render projection of `PipelineStepsView`, never written back; the guard allows it.
+- **500 ms polling advice remains on the UI bridge** (`recommended_poll_interval_ms`): bridge events belong to U2. The session's own event stream is push (`openhcs_session_events`).
+- **The session package loads PyQt6 transitively** through `pyqt_reactive.protocols`; the guard checks direct imports. Owner: U4 (library moves).
+- **`cellprofiler_benchmark_cli run-measured`** now runs through the session client and lost its Ctrl-C cancel and timeout options; restore cancel as a `StopExecution` invocation if needed.
+- **Not done here, reassigned:** the container noun (`ITEM_NAME` is "dataset", the window title is still "Plate Manager") and the bridge descriptor vocabulary go to U2; `ManagerExecutionState`, `StartupWindowPresentation` and `ManagedWindowAction` enums stay (outside the session).
+
+Pre-existing failures seen in the touched areas (identical at `66a0b30a0`): the two official30 knowledge selected-source discovery tests, the two `test_mcp_plate_stream_progress` ROI-metadata tests (previously uncollectable; the import is fixed here), and `test_code_document_catalog_imports` (`get_function` source policy).
