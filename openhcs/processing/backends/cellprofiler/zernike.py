@@ -33,10 +33,8 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementIndexedDescriptorDeclaration,
 )
 from openhcs.core.equivalence.measurement_features import (
-    RuntimeMeasurementIndexedDescriptorEquivalence,
-)
-from openhcs.core.runtime_equivalence import (
     MeasurementFeatureStabilityPolicy,
+    RuntimeMeasurementIndexedDescriptorEquivalence,
     ShapeDescriptorSparseNumericTolerance,
     SparseNumericCounterToleranceProfile,
 )
@@ -351,8 +349,8 @@ class ShapeObjectZernikeDescriptorDeclaration(ObjectZernikeDescriptorDeclaration
             return False
         return MeasurementFeatureStabilityPolicy(
             key,
-            reference,
-            candidate,
+            reference.measurement_fact_counts,
+            candidate.measurement_fact_counts,
             policy,
         ).shape_descriptor_geometry_is_stable()
 
@@ -452,8 +450,8 @@ class IntensityMagnitudeObjectZernikeDescriptorDeclaration(
             return False
         return MeasurementFeatureStabilityPolicy(
             key,
-            reference,
-            candidate,
+            reference.measurement_fact_counts,
+            candidate.measurement_fact_counts,
             policy,
         ).object_count_values_stable()
 

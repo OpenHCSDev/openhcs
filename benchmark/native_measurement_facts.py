@@ -11,9 +11,9 @@ from dataclasses import fields, is_dataclass
 from pathlib import Path
 
 from benchmark.file_digest import sha256_file
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     runtime_measurement_projection_cache_identity,
 )

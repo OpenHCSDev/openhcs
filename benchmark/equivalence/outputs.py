@@ -11,13 +11,15 @@ from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.equivalence.images import RuntimeImageSnapshot
+from benchmark.equivalence.images import RuntimeImageSnapshot
 from openhcs.core.equivalence.policy import normalize_runtime_identifier
 from openhcs.core.equivalence.policy import (
     DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
     RuntimeMeasurementDialect,
 )
-from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from benchmark.equivalence.table_snapshots import (
+    RuntimeTableSnapshot,
+)
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,

@@ -7,7 +7,7 @@ from enum import Enum
 from functools import lru_cache
 from types import MappingProxyType
 
-from openhcs.core.equivalence import (
+from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
     RuntimeMeasurementDialect,
     RuntimeMeasurementSourceNameEncoding,

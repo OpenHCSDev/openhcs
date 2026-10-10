@@ -27,17 +27,6 @@ class RuntimeEquivalenceDifference:
     kind: RuntimeEquivalenceDifferenceKind
     message: str
 
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "kind",
-            (
-                self.kind
-                if isinstance(self.kind, RuntimeEquivalenceDifferenceKind)
-                else RuntimeEquivalenceDifferenceKind(self.kind)
-            ),
-        )
-
 
 @dataclass(frozen=True, slots=True)
 class RuntimeEquivalenceReport:

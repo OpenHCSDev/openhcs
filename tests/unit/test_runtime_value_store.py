@@ -35,9 +35,9 @@ from openhcs.core.runtime_stores import (
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.equivalence import RuntimeMeasurementDialect
+from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     RuntimeMeasurementObservationAxis,
 )
 from openhcs.core.equivalence.policy import RuntimeMeasurementDialect

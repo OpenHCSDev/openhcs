@@ -10,16 +10,17 @@ from openhcs.core.equivalence.cells import (
     RuntimeCellSignature,
     runtime_cell_signature_counters_equivalent,
 )
-from openhcs.core.equivalence.images import RuntimeImageSnapshot
+from benchmark.equivalence.images import RuntimeImageSnapshot
 from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
-    normalize_runtime_identifier,
 )
-from openhcs.core.equivalence.report import (
+from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
 )
-from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from benchmark.equivalence.table_snapshots import (
+    RuntimeTableSnapshot,
+)
 
 
 def runtime_table_differences(

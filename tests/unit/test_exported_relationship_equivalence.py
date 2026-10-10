@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     runtime_measurement_equivalence,
 )

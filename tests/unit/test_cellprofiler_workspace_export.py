@@ -235,7 +235,7 @@ def test_workspace_reader_rejects_malformed_version_and_reordered_fields():
 
 def test_workspace_comparison_coverage_is_physical_and_separate_from_science(tmp_path):
     from benchmark.matched_cellprofiler_batch import _require_compared_output_inventory
-    from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+    from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 
     reference, candidate = tmp_path / "reference", tmp_path / "candidate"
     reference.mkdir()

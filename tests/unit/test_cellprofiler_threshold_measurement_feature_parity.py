@@ -14,13 +14,13 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
-from openhcs.core.runtime_equivalence import runtime_reference_artifact_equivalence
+from benchmark.equivalence.runtime import runtime_reference_artifact_equivalence
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )

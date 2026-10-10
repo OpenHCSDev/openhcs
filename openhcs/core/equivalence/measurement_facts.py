@@ -24,9 +24,6 @@ from openhcs.core.equivalence.policy import (
     RuntimeMeasurementDialect,
     normalize_runtime_identifier,
 )
-from openhcs.core.runtime_measurements import (
-    MeasurementScope,
-)
 
 RuntimeMeasurementFact = tuple[
     RuntimeMeasurementFeatureKey,
@@ -34,15 +31,10 @@ RuntimeMeasurementFact = tuple[
 ]
 RuntimeMeasurementFacts = tuple[RuntimeMeasurementFact, ...]
 RuntimeMeasurementFactList = list[RuntimeMeasurementFact]
-RuntimeMeasurementFactCounterMap = dict[
-    RuntimeMeasurementFeatureKey,
-    Counter[RuntimeCellSignature],
-]
 RuntimeMeasurementFactCounterMapping = Mapping[
     RuntimeMeasurementFeatureKey,
     Counter[RuntimeCellSignature],
 ]
-RuntimeMeasurementKeySet = frozenset[RuntimeMeasurementFeatureKey]
 RuntimeRequiredMeasurementKeys = frozenset[RuntimeMeasurementFeatureKey] | None
 RuntimeRowProjectionValueT = TypeVar("RuntimeRowProjectionValueT")
 RuntimeMeasurementPaddingGroup = tuple[
@@ -67,56 +59,6 @@ RuntimeRowProjectionRecords = tuple[
     RuntimeRowProjectionRecord[RuntimeRowProjectionValueT],
     ...,
 ]
-
-
-def runtime_measurement_fact_counter(
-    measurement_fact_counts: RuntimeMeasurementFactCounterMap,
-    key: RuntimeMeasurementFeatureKey,
-) -> Counter[RuntimeCellSignature]:
-    """Return the mutable counter for one measurement feature key."""
-    counter = measurement_fact_counts.get(key)
-    if counter is None:
-        counter = Counter()
-        measurement_fact_counts[key] = counter
-    return counter
-
-
-@dataclass(frozen=True, slots=True)
-class RuntimeExpectedMeasurementFactCompletion:
-    """Materialize expected facts missing from explicit runtime measurements."""
-
-    expected_by_key: RuntimeMeasurementFactCounterMap
-    measurement_fact_counts: RuntimeMeasurementFactCounterMapping
-
-    def missing_facts(self) -> RuntimeMeasurementFacts:
-        facts: RuntimeMeasurementFactList = []
-        for key, expected_counter in self.expected_by_key.items():
-            if key in self.measurement_fact_counts:
-                explicit_counter = self.measurement_fact_counts[key]
-                for signature, expected_count in expected_counter.items():
-                    missing_count = expected_count - explicit_counter[signature]
-                    if missing_count <= 0:
-                        continue
-                    facts.extend((key, signature) for _index in range(missing_count))
-                continue
-            for signature, expected_count in expected_counter.items():
-                missing_count = expected_count
-                if missing_count <= 0:
-                    continue
-                facts.extend((key, signature) for _index in range(missing_count))
-        return tuple(facts)
-
-
-def record_measurement_facts(
-    measurement_fact_counts: RuntimeMeasurementFactCounterMap,
-    facts: Iterable[RuntimeMeasurementFact],
-    *,
-    required_keys: RuntimeRequiredMeasurementKeys = None,
-) -> None:
-    for key, value in facts:
-        if required_keys is not None and key not in required_keys:
-            continue
-        runtime_measurement_fact_counter(measurement_fact_counts, key)[value] += 1
 
 
 def _reverse_regression_slope(

@@ -2,17 +2,24 @@
 
 from __future__ import annotations
 
+import math
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections import Counter
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING, ClassVar
 
-from metaclass_registry import RegistryFamily, RegistryKeyAttribute
+from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 
+from openhcs.core.equivalence.cells import (
+    RuntimeCellSignature,
+    RuntimeCellValueKind,
+    finite_signature_number,
+    runtime_cell_signature_counters_equivalent,
+    sparse_numeric_counters_equivalent,
+)
 from openhcs.core.equivalence.keys import (
     RuntimeMeasurementFeatureKey,
-    RuntimeMeasurementSubjectKey,
 )
 from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
@@ -21,7 +28,13 @@ from openhcs.core.equivalence.policy import (
     runtime_measurement_dialect_cache_id,
     runtime_measurement_dialect_for_cache_id,
 )
-from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
+from openhcs.core.equivalence.measurement_facts import (
+    RuntimeMeasurementFactCounterMapping,
+)
+from openhcs.core.registry_strategies import (
+    EnumKeyedStrategyMixin,
+    MostDerivedContextStrategyMixin,
+)
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
@@ -29,8 +42,10 @@ from openhcs.core.runtime_measurements import (
     ObjectCalculatedFeatureMarker,
     ObjectCountFeatureMarker,
     ObjectIdentifierFeatureMarker,
+    ObjectIntensityFeatureMarker,
     ObjectLocationCoordinateProjectionStrategy,
     ObjectLocationFeatureMarker,
+    ObjectShapeDescriptorFeatureMarker,
     RuntimeMeasurementFeatureRelation,
     RuntimeMeasurementFeatureSemanticMarker,
     RuntimeMeasurementFeature,
@@ -516,14 +531,513 @@ def object_measurement_feature_requires_sparse_boundary_object_count_stability(
     return profile.requires_sparse_boundary_object_count_stability(key, policy)
 
 
-def object_measurement_subjects_matching_marker(
-    measurement_feature_map: Mapping[RuntimeMeasurementFeatureKey, object],
-    marker_type: type[RuntimeMeasurementFeatureSemanticMarker],
+class SparseNumericCounterToleranceProfile(ABC, metaclass=AutoRegisterMeta):
+    """Registered sparse numeric comparison tolerance profile."""
+
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.STRATEGY_LABEL)
+    __registry_key__ = "profile_key"
+    __skip_if_no_key__ = True
+
+    profile_key: ClassVar[str | None] = None
+
+    @classmethod
+    def profile_type(
+        cls, profile_key: str
+    ) -> type["SparseNumericCounterToleranceProfile"]:
+        """Return the registered sparse numeric profile for ``profile_key``."""
+        try:
+            return cls.__registry__[profile_key]
+        except KeyError as exc:
+            registered = tuple(cls.__registry__)
+            raise ValueError(
+                f"Unknown sparse numeric tolerance profile {profile_key!r}; "
+                f"registered profiles: {registered!r}."
+            ) from exc
+
+    @classmethod
+    def profile_type_for_descriptor(
+        cls,
+        descriptor: object,
+    ) -> type["SparseNumericCounterToleranceProfile"]:
+        """Return the registered sparse numeric profile that owns ``descriptor``."""
+        matches = tuple(
+            profile_type
+            for profile_type in cls.__registry__.values()
+            if profile_type.matches_descriptor(descriptor)
+        )
+        if len(matches) != 1:
+            names = tuple(profile_type.__name__ for profile_type in matches)
+            raise ValueError(
+                "Sparse numeric descriptor tolerance requires exactly one "
+                f"matching profile for {descriptor!r}, got {names!r}."
+            )
+        return matches[0]
+
+    @classmethod
+    def matches_descriptor(cls, descriptor: object) -> bool:
+        """Return whether this profile owns sparse tolerance for ``descriptor``."""
+        del descriptor
+        return False
+
+    @classmethod
+    def equivalent(
+        cls,
+        reference_values: Counter[RuntimeCellSignature],
+        candidate_values: Counter[RuntimeCellSignature],
+        policy: RuntimeEquivalencePolicy,
+        *,
+        descriptor: object | None = None,
+    ) -> bool:
+        """Return whether sparse numeric counters match under this profile."""
+        tolerance = cls().tolerance(policy, descriptor=descriptor)
+        return sparse_numeric_counters_equivalent(
+            reference_values,
+            candidate_values,
+            policy,
+            abs_tolerance=tolerance[0],
+            rel_tolerance=tolerance[1],
+            max_unstable_values=tolerance[2],
+            max_unstable_fraction=tolerance[3],
+        )
+
+    @abstractmethod
+    def tolerance(
+        self,
+        policy: RuntimeEquivalencePolicy,
+        *,
+        descriptor: object | None,
+    ) -> tuple[float, float, int, float]:
+        """Return sparse numeric tolerance settings."""
+
+
+class ObjectBoundarySparseNumericTolerance(SparseNumericCounterToleranceProfile):
+    """Object-boundary sparse jitter tolerance."""
+
+    profile_key = "object_boundary"
+
+    def tolerance(
+        self,
+        policy: RuntimeEquivalencePolicy,
+        *,
+        descriptor: object | None,
+    ) -> tuple[float, float, int, float]:
+        del descriptor
+        return (
+            policy.object_boundary_jitter_abs_tolerance,
+            policy.object_boundary_jitter_rel_tolerance,
+            policy.object_boundary_jitter_max_unstable_values,
+            policy.object_boundary_jitter_max_unstable_fraction,
+        )
+
+
+class ShapeDescriptorSparseNumericTolerance(SparseNumericCounterToleranceProfile):
+    """Shape-descriptor sparse tolerance."""
+
+    profile_key = "shape_descriptor"
+
+    def tolerance(
+        self,
+        policy: RuntimeEquivalencePolicy,
+        *,
+        descriptor: object | None,
+    ) -> tuple[float, float, int, float]:
+        del descriptor
+        return (
+            policy.shape_descriptor_abs_tolerance,
+            policy.shape_descriptor_rel_tolerance,
+            policy.shape_descriptor_max_unstable_values,
+            policy.shape_descriptor_max_unstable_fraction,
+        )
+
+
+class BinarySparseNumericTolerance(SparseNumericCounterToleranceProfile):
+    """Binary numeric sparse tolerance."""
+
+    profile_key = "binary_numeric"
+
+    def tolerance(
+        self,
+        policy: RuntimeEquivalencePolicy,
+        *,
+        descriptor: object | None,
+    ) -> tuple[float, float, int, float]:
+        del descriptor
+        return (
+            policy.numeric_abs_tolerance,
+            policy.numeric_rel_tolerance,
+            policy.object_boundary_jitter_max_unstable_values,
+            policy.object_boundary_jitter_max_unstable_fraction,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class SparseObjectBoundaryEquivalence:
+    """Sparse object-boundary equivalence for object measurement features."""
+
+    feature: RuntimeMeasurementFeatureKey
+    reference: RuntimeMeasurementFactCounterMapping
+    candidate: RuntimeMeasurementFactCounterMapping
+    policy: RuntimeEquivalencePolicy
+
+    def values_equivalent(self) -> bool:
+        if not self.policy.allow_sparse_object_boundary_jitter:
+            return False
+        if self.feature.subject.scope is not MeasurementScope.OBJECT:
+            return False
+        if self.feature.statistic not in MeasurementStatistic._value2member_map_:
+            return False
+        statistic = MeasurementStatistic(self.feature.statistic)
+        return SparseObjectBoundaryStatisticEquivalence.for_enum_member(
+            statistic
+        ).values_equivalent(self)
+
+    def boundary_numeric_counters_equivalent(self) -> bool:
+        return ObjectBoundarySparseNumericTolerance.equivalent(
+            self.reference[self.feature],
+            self.candidate[self.feature],
+            self.policy,
+        )
+
+    def shape_descriptor_values_equivalent(self) -> bool:
+        if _numeric_counters_are_binary(
+            self.reference[self.feature],
+            self.candidate[self.feature],
+        ):
+            return BinarySparseNumericTolerance.equivalent(
+                self.reference[self.feature],
+                self.candidate[self.feature],
+                self.policy,
+            )
+        return self.boundary_numeric_counters_equivalent()
+
+    def identifier_counters_equivalent(
+        self,
+        reference: Counter[RuntimeCellSignature],
+        candidate: Counter[RuntimeCellSignature],
+    ) -> bool:
+        if reference == candidate:
+            return True
+        if any(
+            signature.kind is not RuntimeCellValueKind.NUMBER for signature in reference
+        ):
+            return False
+        if any(
+            signature.kind is not RuntimeCellValueKind.NUMBER for signature in candidate
+        ):
+            return False
+
+        unstable_cap = max(
+            self.policy.object_boundary_jitter_max_unstable_values,
+            math.ceil(
+                sum(reference.values())
+                * self.policy.object_boundary_jitter_max_unstable_fraction
+            ),
+        )
+        missing = sum((reference - candidate).values())
+        extra = sum((candidate - reference).values())
+        return max(missing, extra) <= unstable_cap
+
+
+class SparseObjectBoundaryStatisticEquivalence(
+    EnumKeyedStrategyMixin[MeasurementStatistic],
+    ABC,
+    metaclass=AutoRegisterMeta,
+):
+    """Statistic-specific sparse object-boundary equivalence."""
+
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.STRATEGY_LABEL)
+    __enum_member_attr__ = "statistic"
+
+    statistic: ClassVar[MeasurementStatistic]
+    strategy_label: ClassVar[str | None] = None
+
+    @abstractmethod
+    def values_equivalent(
+        self,
+        context: SparseObjectBoundaryEquivalence,
+    ) -> bool:
+        """Return whether the statistic-specific sparse boundary values match."""
+
+
+class SparseObjectBoundaryCountEquivalence(SparseObjectBoundaryStatisticEquivalence):
+    """Sparse boundary equivalence for object count facts."""
+
+    statistic = MeasurementStatistic.COUNT
+
+    def values_equivalent(
+        self,
+        context: SparseObjectBoundaryEquivalence,
+    ) -> bool:
+        return object_measurement_feature_matches_marker(
+            context.feature,
+            ObjectCountFeatureMarker,
+            context.policy,
+        ) and _object_count_counters_sparse_equivalent(
+            context.reference[context.feature],
+            context.candidate[context.feature],
+            context.policy,
+        )
+
+
+class SparseObjectBoundaryValueEquivalence(SparseObjectBoundaryStatisticEquivalence):
+    """Sparse boundary equivalence for object value facts."""
+
+    statistic = MeasurementStatistic.VALUE
+
+    def values_equivalent(
+        self,
+        context: SparseObjectBoundaryEquivalence,
+    ) -> bool:
+        if (
+            object_measurement_feature_requires_sparse_boundary_object_count_stability(
+                context.feature,
+                context.policy,
+            )
+            and not MeasurementFeatureStabilityPolicy(
+                context.feature,
+                context.reference,
+                context.candidate,
+                context.policy,
+            ).object_count_values_stable()
+        ):
+            return False
+        if object_measurement_feature_matches_marker(
+            context.feature,
+            ObjectIdentifierFeatureMarker,
+            context.policy,
+        ):
+            return context.identifier_counters_equivalent(
+                context.reference[context.feature],
+                context.candidate[context.feature],
+            )
+        if any(
+            object_measurement_feature_matches_marker(
+                context.feature,
+                marker_type,
+                context.policy,
+            )
+            for marker_type in (
+                ObjectLocationFeatureMarker,
+                ObjectIntensityFeatureMarker,
+                ObjectCalculatedFeatureMarker,
+            )
+        ):
+            return context.boundary_numeric_counters_equivalent()
+        if not object_measurement_feature_matches_marker(
+            context.feature,
+            ObjectShapeDescriptorFeatureMarker,
+            context.policy,
+        ):
+            return False
+        return context.shape_descriptor_values_equivalent()
+
+
+class SparseObjectBoundaryMeanEquivalence(SparseObjectBoundaryStatisticEquivalence):
+    """Sparse boundary equivalence for object mean facts."""
+
+    statistic = MeasurementStatistic.MEAN
+
+    def values_equivalent(
+        self,
+        context: SparseObjectBoundaryEquivalence,
+    ) -> bool:
+        value_feature = RuntimeMeasurementFeatureKey(
+            subject=context.feature.subject,
+            feature_name=context.feature.feature_name,
+            statistic=MeasurementStatistic.VALUE.value,
+            source_name=context.feature.source_name,
+        )
+        if value_feature not in context.reference:
+            return False
+        if value_feature not in context.candidate:
+            return False
+        if not SparseObjectBoundaryStatisticEquivalence.for_enum_member(
+            MeasurementStatistic.VALUE
+        ).values_equivalent(
+            SparseObjectBoundaryEquivalence(
+                value_feature,
+                context.reference,
+                context.candidate,
+                context.policy,
+            )
+        ):
+            return False
+
+        mean_policy = RuntimeEquivalencePolicy(
+            numeric_decimal_places=context.policy.numeric_decimal_places,
+            numeric_abs_tolerance=context.policy.object_boundary_jitter_aggregate_abs_tolerance,
+            numeric_rel_tolerance=context.policy.object_boundary_jitter_aggregate_rel_tolerance,
+            measurement_feature_name_mode=context.policy.measurement_feature_name_mode,
+        )
+        return runtime_cell_signature_counters_equivalent(
+            context.reference[context.feature],
+            context.candidate[context.feature],
+            mean_policy,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class MeasurementFeatureStabilityPolicy:
+    """Evaluate supporting measurement stability for feature equivalence."""
+
+    feature: RuntimeMeasurementFeatureKey
+    reference: RuntimeMeasurementFactCounterMapping
+    candidate: RuntimeMeasurementFactCounterMapping
+    policy: RuntimeEquivalencePolicy
+
+    def object_count_values_stable(self) -> bool:
+        count_feature = RuntimeMeasurementFeatureKey(
+            subject=self.feature.subject,
+            feature_name=ObjectCoreMeasurementFeature.OBJECT_COUNT.value,
+            statistic=MeasurementStatistic.COUNT.value,
+        )
+        shared_keys = self.reference.keys() & self.candidate.keys()
+        if count_feature not in shared_keys:
+            return self.feature in shared_keys and sum(
+                self.reference[self.feature].values()
+            ) == sum(self.candidate[self.feature].values())
+        return runtime_cell_signature_counters_equivalent(
+            self.reference[count_feature],
+            self.candidate[count_feature],
+            self.policy,
+        )
+
+    def shape_descriptor_geometry_is_stable(self) -> bool:
+        stable_features = self.object_measurement_marker_stable_features(
+            ObjectLocationFeatureMarker,
+        ) | self.object_measurement_marker_exactly_stable_features(
+            ObjectShapeDescriptorFeatureMarker,
+        )
+        return len(stable_features) >= 3
+
+    def object_measurement_marker_stable_features(
+        self,
+        marker_type: type[RuntimeMeasurementFeatureSemanticMarker],
+    ) -> frozenset[RuntimeMeasurementFeatureKey]:
+        stable_features: set[RuntimeMeasurementFeatureKey] = set()
+        candidate_keys = self.reference.keys() & self.candidate.keys()
+        for candidate_key in candidate_keys:
+            if not self._candidate_key_matches_marker(candidate_key, marker_type):
+                continue
+            reference_values = self.reference[candidate_key]
+            candidate_values = self.candidate[candidate_key]
+            if not self._feature_values_stable(
+                candidate_key,
+                reference_values,
+                candidate_values,
+            ):
+                continue
+            stable_features.add(candidate_key)
+        return frozenset(stable_features)
+
+    def object_measurement_marker_exactly_stable_features(
+        self,
+        marker_type: type[RuntimeMeasurementFeatureSemanticMarker],
+    ) -> frozenset[RuntimeMeasurementFeatureKey]:
+        stable_features: set[RuntimeMeasurementFeatureKey] = set()
+        candidate_keys = self.reference.keys() & self.candidate.keys()
+        for candidate_key in candidate_keys:
+            if candidate_key == self.feature:
+                continue
+            if not self._candidate_key_matches_marker(candidate_key, marker_type):
+                continue
+            reference_values = self.reference[candidate_key]
+            candidate_values = self.candidate[candidate_key]
+            if not runtime_cell_signature_counters_equivalent(
+                reference_values,
+                candidate_values,
+                self.policy,
+            ):
+                continue
+            stable_features.add(candidate_key)
+        return frozenset(stable_features)
+
+    def _feature_values_stable(
+        self,
+        feature: RuntimeMeasurementFeatureKey | None,
+        reference_values: Counter[RuntimeCellSignature],
+        candidate_values: Counter[RuntimeCellSignature],
+    ) -> bool:
+        if runtime_cell_signature_counters_equivalent(
+            reference_values,
+            candidate_values,
+            self.policy,
+        ):
+            return True
+        if feature is None:
+            return False
+        if not self.policy.allow_sparse_object_boundary_jitter:
+            return False
+        if feature.subject.scope is not MeasurementScope.OBJECT:
+            return False
+        if feature.statistic not in MeasurementStatistic._value2member_map_:
+            return False
+        return SparseObjectBoundaryStatisticEquivalence.for_enum_member(
+            MeasurementStatistic(feature.statistic)
+        ).values_equivalent(
+            SparseObjectBoundaryEquivalence(
+                feature,
+                self.reference,
+                self.candidate,
+                self.policy,
+            )
+        )
+
+    def _candidate_key_matches_marker(
+        self,
+        candidate_key: RuntimeMeasurementFeatureKey,
+        marker_type: type[RuntimeMeasurementFeatureSemanticMarker],
+    ) -> bool:
+        if candidate_key.subject != self.feature.subject:
+            return False
+        if candidate_key.source_name is not None:
+            return False
+        if candidate_key.statistic != MeasurementStatistic.VALUE.value:
+            return False
+        return object_measurement_feature_matches_marker(
+            candidate_key,
+            marker_type,
+            self.policy,
+        )
+
+
+def _object_count_counters_sparse_equivalent(
+    reference: Counter[RuntimeCellSignature],
+    candidate: Counter[RuntimeCellSignature],
     policy: RuntimeEquivalencePolicy,
-) -> frozenset[RuntimeMeasurementSubjectKey]:
-    """Return measurement subjects with at least one feature carrying ``marker_type``."""
-    return frozenset(
-        key.subject
-        for key in measurement_feature_map
-        if object_measurement_feature_matches_marker(key, marker_type, policy)
+) -> bool:
+    if reference == candidate:
+        return True
+    if any(
+        signature.kind is not RuntimeCellValueKind.NUMBER for signature in reference
+    ):
+        return False
+    if any(
+        signature.kind is not RuntimeCellValueKind.NUMBER for signature in candidate
+    ):
+        return False
+
+    unstable_cap = max(
+        policy.object_boundary_jitter_max_unstable_values,
+        math.ceil(
+            sum(reference.values())
+            * policy.object_boundary_jitter_max_unstable_fraction
+        ),
     )
+    missing = sum((reference - candidate).values())
+    extra = sum((candidate - reference).values())
+    return max(missing, extra) <= unstable_cap
+
+
+def _numeric_counters_are_binary(
+    reference: Counter[RuntimeCellSignature],
+    candidate: Counter[RuntimeCellSignature],
+) -> bool:
+    numbers: set[float] = set()
+    for counter in (reference, candidate):
+        for signature in counter:
+            numeric = finite_signature_number(signature)
+            if numeric is None:
+                return False
+            numbers.add(numeric)
+    return numbers.issubset({0.0, 1.0})

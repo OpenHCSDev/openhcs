@@ -13,9 +13,9 @@ from benchmark.matched_cellprofiler_batch import _require_compared_output_invent
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.equivalence.comparison import runtime_image_differences
-from openhcs.core.equivalence.images import RuntimeImageSnapshot
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.comparison import runtime_image_differences
+from benchmark.equivalence.images import RuntimeImageSnapshot
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,

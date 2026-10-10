@@ -36,8 +36,8 @@ from openhcs.core.config import (
     VFSConfig,
     WellFilterConfig,
 )
-from openhcs.core.equivalence.comparison import runtime_image_differences
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.comparison import runtime_image_differences
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.runtime_execution_validation import (
     runtime_artifact_execution_failures,

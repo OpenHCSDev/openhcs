@@ -39,7 +39,7 @@ from benchmark.runner import (
 )
 from benchmark.timing import BenchmarkPhase, additive_phase_total_seconds
 from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
-from openhcs.core.equivalence.outputs import image_paths, table_paths
+from benchmark.equivalence.outputs import image_paths, table_paths
 
 if TYPE_CHECKING:
     from benchmark.converter.compatibility_matrix import CellProfilerCompatibilityReport

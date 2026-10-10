@@ -7,28 +7,29 @@ from unittest.mock import patch
 
 import numpy as np
 
-from openhcs.core import runtime_equivalence
-from openhcs.core.equivalence import (
+from openhcs.core.equivalence.cells import (
     RuntimeCellSignature,
     RuntimeCellValueKind,
-    RuntimeEquivalenceDifference,
-    RuntimeEquivalenceDifferenceKind,
-    RuntimeEquivalencePolicy,
-    RuntimeEquivalenceReport,
-    RuntimeImageSnapshot,
-    RuntimeMeasurementDialect,
-    RuntimeMeasurementFeatureKey,
-    RuntimeMeasurementFeatureNumericTolerance,
-    RuntimeMeasurementSubjectKey,
-    RuntimeOutputSnapshot,
-    RuntimeTableSnapshot,
     finite_signature_number,
-    normalize_runtime_identifier,
-    normalize_runtime_source_name,
-    runtime_table_differences,
     runtime_cell_signature,
     runtime_cell_signature_counters_equivalent,
 )
+from openhcs.core.equivalence.policy import (
+    RuntimeEquivalencePolicy,
+    RuntimeMeasurementDialect,
+    RuntimeMeasurementFeatureNumericTolerance,
+    normalize_runtime_identifier,
+    normalize_runtime_source_name,
+)
+from openhcs.core.equivalence.keys import (
+    RuntimeMeasurementFeatureKey,
+    RuntimeMeasurementSubjectKey,
+)
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.table_snapshots import (
+    RuntimeTableSnapshot,
+)
+from benchmark.equivalence.comparison import runtime_table_differences
 from openhcs.core.equivalence.arrays import semantic_array_payload
 from openhcs.core.equivalence.cells import (
     measurement_table_cell_payload,
@@ -42,20 +43,11 @@ from openhcs.core.runtime_measurements import MeasurementScope
 PROJECT_ROOT = Path(__file__).parents[2]
 
 
-def test_runtime_equivalence_report_types_have_package_owner() -> None:
-    assert runtime_equivalence.RuntimeEquivalenceDifference is (
-        RuntimeEquivalenceDifference
-    )
-    assert runtime_equivalence.RuntimeEquivalenceDifferenceKind is (
-        RuntimeEquivalenceDifferenceKind
-    )
-    assert runtime_equivalence.RuntimeEquivalenceReport is RuntimeEquivalenceReport
 
 
 def test_runtime_equivalence_policy_types_have_package_owner() -> None:
     policy = RuntimeEquivalencePolicy(measurement_dialect=RuntimeMeasurementDialect())
 
-    assert runtime_equivalence.RuntimeEquivalencePolicy is RuntimeEquivalencePolicy
     assert policy.measurement_dialect is not None
     assert normalize_runtime_identifier("MeanIntensity_OrigBlue") == (
         "mean_intensity_orig_blue"
@@ -78,7 +70,7 @@ def test_default_measurement_dialect_renders_backend_neutral_spatial_grid_names(
 def test_generic_equivalence_sources_do_not_own_cellprofiler_leaf_semantics() -> None:
     source_paths = (
         *(PROJECT_ROOT / "openhcs/core/equivalence").glob("*.py"),
-        PROJECT_ROOT / "openhcs/core/runtime_equivalence.py",
+        *(PROJECT_ROOT / "benchmark/equivalence").glob("*.py"),
     )
     forbidden_literals = {
         "cellprofiler",
@@ -142,12 +134,6 @@ def test_runtime_equivalence_measurement_keys_have_package_owner() -> None:
         source_name="OrigBlue__CorrGray",
     )
 
-    assert runtime_equivalence.RuntimeMeasurementSubjectKey is (
-        RuntimeMeasurementSubjectKey
-    )
-    assert runtime_equivalence.RuntimeMeasurementFeatureKey is (
-        RuntimeMeasurementFeatureKey
-    )
     assert feature.subject.name == "orig_blue"
     assert feature.source_name == "orig_blue__corr_gray"
 
@@ -162,8 +148,6 @@ def test_runtime_measurement_source_pair_requires_canonical_separator() -> None:
 def test_runtime_equivalence_cell_signatures_have_package_owner() -> None:
     signature = RuntimeCellSignature(RuntimeCellValueKind.NUMBER, "1.0")
 
-    assert runtime_equivalence.RuntimeCellSignature is RuntimeCellSignature
-    assert runtime_equivalence.RuntimeCellValueKind is RuntimeCellValueKind
     assert signature.to_cache_payload() == ("number", "1.0")
     assert runtime_cell_signature("1.23456", RuntimeEquivalencePolicy()).kind is (
         RuntimeCellValueKind.NUMBER
@@ -194,8 +178,6 @@ def test_runtime_equivalence_cell_counter_comparison_has_package_owner() -> None
     )
 
 
-def test_runtime_equivalence_image_snapshot_has_package_owner() -> None:
-    assert runtime_equivalence.RuntimeImageSnapshot is RuntimeImageSnapshot
 
 
 def test_runtime_equivalence_array_payloads_use_canonical_equivalence_surface() -> None:
@@ -309,14 +291,12 @@ def test_runtime_equivalence_table_snapshot_has_package_owner() -> None:
         rows=(("1", "2.0"),),
     )
 
-    assert runtime_equivalence.RuntimeTableSnapshot is RuntimeTableSnapshot
     assert table.schema_key == ("ImageNumber", "MeanIntensity")
 
 
 def test_runtime_equivalence_output_snapshot_has_package_owner() -> None:
     snapshot = RuntimeOutputSnapshot(tables=(), images=())
 
-    assert runtime_equivalence.RuntimeOutputSnapshot is RuntimeOutputSnapshot
     assert snapshot.tables == ()
 
 

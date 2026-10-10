@@ -47,16 +47,17 @@ from openhcs.core.config import (
     MaterializationBackend,
     PipelineConfig,
 )
-from openhcs.core.equivalence import RuntimeEquivalencePolicy, RuntimeEquivalenceReport
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
-from openhcs.core.equivalence.report import (
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from benchmark.equivalence.report import RuntimeEquivalenceReport
+from benchmark.equivalence.outputs import RuntimeOutputSnapshot
+from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
 )
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
-from openhcs.core.runtime_equivalence import (
+from benchmark.equivalence.runtime import (
     runtime_reference_artifact_equivalence,
 )
 from openhcs.core.steps.abstract import AbstractStep
