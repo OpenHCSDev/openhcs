@@ -20,6 +20,7 @@
 - **Cell editors are an `AutoRegisterMeta` family keyed by the field type:** text scalars, booleans (check box), choices (an `Enum` type's members or an `AutoRegisterMeta` family's registry, e.g. `type[ArtifactType]`; never hand-listed), and tuples of records (a typed dialog whose columns are derived from the element dataclass, recursively). Cells hold typed values; no text codec.
 - **Editing replaces the typed value.** The bindings table keeps the `NamedSourceBinding` values and applies `dataclasses.replace` along the column's field path; `bindings()` returns them. Isomorphic tables (`SourceFilterClause`, `MetadataExtractionRule`, the pairing row) construct the row type from all its fields, and `IsomorphicDataclassRowPathPolicy` asserts every field has a column.
 - **Deleted:** `EditableTableColumn` and the four column enums, `EnumCellSpec`, `FreeFormCellEditorKind`, `FreeFormCellSpec`, `StructuredSelectorEditorSpec` and its spec table, the four dialog row parse/format functions, `SelectorListCodec`, the four `Editable*Row` models, `StepBindingsTableEditor`'s duplicated cell code, and every `*View` class plus `SourceBindingsViewModel`. The remaining preview code (`SourceInventory`, `SourceBindingsPreview`) moves to `core/source_bindings_preview.py`.
+- Visible consequences: `load_as_monochrome`, `load_as_mask` and `source_channel_axis` gain rows because their types have editors; booleans are check boxes; record-list cells are edited through the typed picker only (no free-text `k=v;…` entry); field docstrings carry the tooltip text the column enums used to hold.
 - `ComponentSelector.component` is annotated `AllComponents` (what `__post_init__` already coerces to), so its editor derives from the type.
 
 **L4 boundary (left in place, not extended):** `EditableTableProgrammaticUpdateGuard`, `EditableTableItem`, `EditableTableController` (Qt mechanics, ObjectState semantic chrome, placeholder styling), `EditableTableLayout`, `StructuredSelectorCellWidget`/`StructuredSelectorDialog`, and the cell-editor family with `DataclassFieldColumn`. C3 changes their cell protocol from `str` to typed values; L4 moves the block to pyqt-reactive unchanged.
@@ -29,9 +30,10 @@
 ## Guards
 
 `tests/unit/pyqt_gui/test_source_bindings_editor_guards.py`:
-- AST: `source_bindings_editor.py` defines no `Enum` subclass, no class named `*Codec`, no `from_cells`, and no string literal containing `;`/`=`/`:` separators used for selector encoding.
-- AST: `core/source_bindings_preview.py` defines no class ending in `View`; `core/source_bindings_view.py` does not exist.
-- Every `NamedSourceBinding` field is either a derived column or has no registered cell editor (so a new editable field cannot be forgotten, and a new non-editable field cannot be lost).
+- AST: `source_bindings_editor.py` defines no `Enum` subclass, no class named `*Codec`, no `from_cells`/`cells`/`row_from_cells`/`row_cells`, and calls no `split`/`partition` (cells are never parsed from text).
+- AST: the editor never iterates an `Enum` class directly; choice lists come from `ChoiceCellEditor` over the field type (rule 1a).
+- `core/source_bindings_view.py` does not exist; `core/source_bindings_preview.py` defines no `*View`/`*ViewModel` class.
+- Every `NamedSourceBinding` leaf field has a derived column exactly when a cell editor accepts its type (a new editable field cannot be forgotten; a non-editable one is preserved by the round-trip test).
 
 ## Tests
 

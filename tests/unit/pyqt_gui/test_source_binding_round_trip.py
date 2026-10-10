@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from PyQt6.QtWidgets import QCheckBox
+
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -35,17 +37,31 @@ def test_bindings_table_round_trip_preserves_every_binding_field(qapp) -> None:
         StepSourceBindingsConfig(enabled=True, bindings=(binding,))
     )
     dialog = widget._create_step_bindings_dialog()
+    editor = dialog.editor
     try:
         assert dialog.bindings() == (binding,)
 
-        alias_row = next(
-            row
-            for row in range(dialog.editor.table.rowCount())
-            if dialog.editor.table.verticalHeaderItem(row).text() == "Alias"
+        editor.table.item(*editor.cell_position(0, "alias")).setText("Nuclei")
+        editor.table.cellWidget(*editor.cell_position(0, "components")).set_value(
+            (ComponentSelector(AllComponents.CHANNEL, "2"),)
         )
-        dialog.editor.table.item(alias_row, 0).setText("Nuclei")
+        mask_checkbox = editor.table.cellWidget(*editor.cell_position(0, "load_as_mask"))
+        assert isinstance(mask_checkbox, QCheckBox)
+        mask_checkbox.setChecked(False)
 
-        assert dialog.bindings() == (replace(binding, alias="Nuclei"),)
+        expected = replace(
+            binding,
+            alias="Nuclei",
+            selector=replace(
+                binding.selector,
+                components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+            ),
+            load_as_mask=False,
+        )
+        assert dialog.bindings() == (expected,)
+
+        widget._apply_step_bindings(dialog.bindings())
+        assert widget.get_value().bindings == (expected,)
     finally:
         dialog.deleteLater()
         widget.deleteLater()

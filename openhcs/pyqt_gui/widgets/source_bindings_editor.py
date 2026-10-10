@@ -1,17 +1,33 @@
-"""PyQt source-bindings editor over the typed source-binding view model."""
+"""PyQt source-bindings editor whose tables derive from the binding dataclasses."""
 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
+from dataclasses import MISSING, dataclass, field, fields, is_dataclass, replace
 from enum import Enum
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Callable, Generic, Mapping, TypeVar, cast
+from functools import cache
+from types import MappingProxyType, UnionType
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+    Callable,
+    Generic,
+    Mapping,
+    TypeVar,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
+from metaclass_registry import AutoRegisterMeta
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (
     QAbstractItemView,
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -21,6 +37,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QPushButton,
     QSizePolicy,
     QStyle,
@@ -69,9 +86,9 @@ from pyqt_reactive.widgets.shared.clickable_help_components import (
     InlineDataclassGroupBox,
 )
 from pyqt_reactive.widgets.no_scroll_spinbox import NoScrollComboBox, NoneAwareCheckBox
-from python_introspect import Enableable, is_enableable
+from python_introspect import Enableable, SignatureAnalyzer, is_enableable
 
-from openhcs.constants.constants import AllComponents
+from openhcs.core.field_label import FieldLabel
 from openhcs.core.source_bindings import (
     ComponentSelector,
     EMPTY_SOURCE_BINDINGS,
@@ -83,20 +100,14 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchField,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
-    SourceBindingOrigin,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
-    SourceProjectionRole,
-    SourceSelector,
     SourceBindingsConfig,
-    SourceSetRole,
     StepSourceBindingsConfig,
 )
-from openhcs.core.artifacts import ArtifactType, ImageArtifactType
-from openhcs.core.source_bindings_view import (
+from openhcs.core.source_bindings_preview import (
     SourceBindingsPreview,
-    SourceBindingsViewModel,
     SourceInventory,
 )
 from objectstate import (
@@ -118,318 +129,536 @@ if TYPE_CHECKING:
 
 EditableRowT = TypeVar("EditableRowT")
 SourceBindingsEditorRawValue = SourceBindingsConfig | LazyDataclass
-EditableChoiceValue = Enum | type[ArtifactType]
-EditableChoiceSource = type[Enum] | type[ArtifactType]
+INVALID_CELL_VALUE_ERRORS = (ValueError, TypeError, re.error)
+"""Errors a row constructor raises for a value the user has not finished editing."""
 
-
-class EditableTableColumn(Enum):
-    """Qt table column declaration with optional enum-editor authority."""
-
-    def __new__(
-        cls,
-        index: int,
-        enum_type: EditableChoiceSource | None = None,
-        header_label: str | None = None,
-        header_tooltip: str | None = None,
-    ) -> "EditableTableColumn":
-        member = object.__new__(cls)
-        member._value_ = index
-        member.index = index
-        member.enum_type = enum_type
-        member.header_label = header_label
-        member.header_tooltip = header_tooltip
-        return member
-
-    def __int__(self) -> int:
-        return self.index
-
-    def __index__(self) -> int:
-        return self.index
-
-    def enum_cell_spec(self) -> "EnumCellSpec | None":
-        if self.enum_type is None:
-            return None
-        return EnumCellSpec(self.enum_type)
-
-    @property
-    def table_header_label(self) -> str:
-        return self.header_label if self.header_label is not None else self.name.title()
-
-    @property
-    def table_header_tooltip(self) -> str | None:
-        return self.header_tooltip
-
-
-class SourceBindingColumn(EditableTableColumn):
-    """Editable table columns for one named source binding."""
-
-    ALIAS = (0, None, "Alias", "Name consumed by the function artifact contract.")
-    KIND = (1, ArtifactType, "Kind", "Artifact kind bound by this alias.")
-    ORIGIN = (2, SourceBindingOrigin, "Origin", "Source space used for matching.")
-    REQUIRED = (3, None, "Required", "Whether missing matches fail compilation.")
-    COMPONENTS = (
-        4,
-        None,
-        "Select Axes",
-        (
-            "Input component constraints used to choose sources for this alias, "
-            "for example channel=1. This filters candidates; it does not assign "
-            "the output identity."
-        ),
-    )
-    METADATA = (
-        5,
-        None,
-        "Select Metadata",
-        (
-            "Metadata constraints used to choose sources for this alias, for "
-            "example Well=A01. This filters candidates; source-set pairing uses "
-            "the separate Source Set Pairing table."
-        ),
-    )
-    FILTERS = (
-        6,
-        None,
-        "Select Files",
-        "Path and filename filters used to choose candidate source files.",
-    )
-    INHERIT = (
-        7,
-        None,
-        "Inherit Scope",
-        "Whether matching also inherits the current execution scope.",
-    )
-    IDENTITY = (
-        8,
-        None,
-        "Assign Axes",
-        (
-            "Semantic component identity attached after selection, for example "
-            "channel=1. Outputs use this when they cannot inherit identity from "
-            "a concrete input path."
-        ),
-    )
-    SET_ROLE = (
-        9,
-        SourceSetRole,
-        "Set Role",
-        "Whether this binding is matched into source sets or broadcast to each set.",
-    )
-    PROJECTION_ROLE = (
-        10,
-        SourceProjectionRole,
-        "Projection Role",
-        "Whether this binding projects a primary plane or a typed source artifact.",
-    )
-
-
-class MetadataRuleColumn(EditableTableColumn):
-    """Editable table columns for one metadata extraction rule."""
-
-    SOURCE = (0, MetadataSource)
-    PATTERN = (1, None)
-    FILTERS = (2, None)
-
-
-class SourceFilterColumn(EditableTableColumn):
-    """Editable table columns for one source-universe filter clause."""
-
-    SUBJECT = (0, SourceFilterSubject)
-    MATCH_TYPE = (1, SourceFilterMatchType)
-    VALUE = (2, None)
-    ANY_GROUP = (3, None, "Any Group")
-
-
-class MatchPlanColumn(EditableTableColumn):
-    """Editable table columns for one match-plan dimension."""
-
-    METHOD = (
-        0,
-        SourceBindingMatchMethod,
-        "Pairing Method",
-        (
-            "How selected aliases are grouped into one source set: by source "
-            "order, or by declared metadata keys."
-        ),
-    )
-    FIELDS = (
-        1,
-        None,
-        "Pairing Keys",
-        (
-            "Alias-to-metadata-field pairs used when the method is metadata, "
-            "for example DNA=Well;GFP=Well. Each row is one shared source-set key."
-        ),
-    )
+# --- Dataclass-derived table columns and typed cell editors -----------------
+# Generic editable-table block owned by L4 (moves to pyqt-reactive): from here
+# to ``EditableTableLayout`` inclusive.
 
 
 @dataclass(frozen=True, slots=True)
-class EnumCellSpec:
-    """Typed enum editor specification for one editable table column."""
+class RowSuggestion:
+    """Prefilled field values offered for a new record row in a picker dialog."""
 
-    enum_type: EditableChoiceSource
+    values: tuple[tuple[str, object], ...]
+    label: str
 
-    @property
-    def values(self) -> tuple[EditableChoiceValue, ...]:
-        if issubclass(self.enum_type, ArtifactType):
-            return tuple(self.enum_type.__registry__.values())
-        return tuple(self.enum_type)
-
-    def text_for_value(self, value: EditableChoiceValue) -> str:
-        if isinstance(value, type) and issubclass(value, ArtifactType):
-            return value.require_value()
-        if isinstance(value, Enum):
-            return str(value.value)
-        raise TypeError(
-            "Editable choice cell stores values from its declared choice source, "
-            f"got {type(value).__name__}."
+    @classmethod
+    def of(cls, row_type: type, **values: object) -> "RowSuggestion":
+        columns = DataclassFieldColumns.of(row_type)
+        return cls(
+            values=tuple(values.items()),
+            label=":".join(
+                columns.named(name).editor.display(value)
+                for name, value in values.items()
+            ),
         )
 
 
-class FreeFormCellEditorKind(Enum):
-    """Semantic dialog family for structured free-form source-binding cells."""
-
-    SELECTOR_LIST = "selector_list"
-    COMPONENT_SELECTORS = "component_selectors"
-    METADATA_SELECTORS = "metadata_selectors"
-    FILTER_CLAUSES = "filter_clauses"
-    MATCH_DIMENSIONS = "match_dimensions"
-
-
-SelectorDialogRowParser = Callable[[str], tuple[str | None, ...]]
-SelectorDialogRowFormatter = Callable[[tuple[str, ...]], str]
-
-
-def parse_key_value_dialog_row(item: str) -> tuple[str, str]:
-    return SelectorListCodec.key_value_parts(item)
-
-
-def parse_filter_dialog_row(item: str) -> tuple[str, str, str | None]:
-    return SelectorListCodec.filter_parts(item)
-
-
-def format_key_value_dialog_row(values: tuple[str, ...]) -> str:
-    key, value = values
-    if not key or not value:
-        return ""
-    return SelectorListCodec.KEY_VALUE_SEPARATOR.join((key, value))
-
-
-def format_filter_dialog_row(values: tuple[str, ...]) -> str:
-    subject, match_type, value = values
-    if not subject or not match_type:
-        return ""
-    return SelectorListCodec.FILTER_SEPARATOR.join((subject, match_type, value))
+RowSuggestionMap = Mapping[type, tuple[RowSuggestion, ...]]
 
 
 @dataclass(frozen=True, slots=True)
-class StructuredSelectorEditorSpec:
-    """Authoritative behavior for one structured source-binding cell editor."""
+class CellEditContext:
+    """What a cell editor needs from its table besides the cell value."""
 
-    editor_kind: FreeFormCellEditorKind
-    title: str
-    columns: tuple[str, ...]
-    hint: str
-    row_parser: SelectorDialogRowParser
-    row_formatter: SelectorDialogRowFormatter
-    column_options: Mapping[int, tuple[str, ...]] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
+    on_change: Callable[[], None]
+    suggestions: RowSuggestionMap = field(default_factory=lambda: MappingProxyType({}))
 
 
-STRUCTURED_SELECTOR_EDITOR_SPEC_ITEMS: tuple[StructuredSelectorEditorSpec, ...] = (
-    StructuredSelectorEditorSpec(
-        editor_kind=FreeFormCellEditorKind.SELECTOR_LIST,
-        title="Edit selector list",
-        columns=("Key", "Value"),
-        hint="Use key=value entries separated by semicolons.",
-        row_parser=parse_key_value_dialog_row,
-        row_formatter=format_key_value_dialog_row,
-    ),
-    StructuredSelectorEditorSpec(
-        editor_kind=FreeFormCellEditorKind.COMPONENT_SELECTORS,
-        title="Edit component selectors",
-        columns=("Component", "Value"),
-        hint="Use key=value entries separated by semicolons.",
-        row_parser=parse_key_value_dialog_row,
-        row_formatter=format_key_value_dialog_row,
-        column_options=MappingProxyType(
-            {0: tuple(component.value for component in AllComponents)}
-        ),
-    ),
-    StructuredSelectorEditorSpec(
-        editor_kind=FreeFormCellEditorKind.METADATA_SELECTORS,
-        title="Edit metadata selectors",
-        columns=("Metadata field", "Value"),
-        hint="Use key=value entries separated by semicolons.",
-        row_parser=parse_key_value_dialog_row,
-        row_formatter=format_key_value_dialog_row,
-    ),
-    StructuredSelectorEditorSpec(
-        editor_kind=FreeFormCellEditorKind.FILTER_CLAUSES,
-        title="Edit source filters",
-        columns=("Subject", "Match type", "Value"),
-        hint="Use subject:match_type:value entries separated by semicolons.",
-        row_parser=parse_filter_dialog_row,
-        row_formatter=format_filter_dialog_row,
-        column_options=MappingProxyType(
-            {
-                0: tuple(subject.value for subject in SourceFilterSubject),
-                1: tuple(match_type.value for match_type in SourceFilterMatchType),
-            }
-        ),
-    ),
-    StructuredSelectorEditorSpec(
-        editor_kind=FreeFormCellEditorKind.MATCH_DIMENSIONS,
-        title="Edit match dimensions",
-        columns=("Alias", "Metadata field"),
-        hint="Use alias=metadata_field entries separated by semicolons.",
-        row_parser=parse_key_value_dialog_row,
-        row_formatter=format_key_value_dialog_row,
-    ),
-)
-STRUCTURED_SELECTOR_EDITOR_SPECS: Mapping[
-    FreeFormCellEditorKind,
-    StructuredSelectorEditorSpec,
-] = MappingProxyType(
-    {spec.editor_kind: spec for spec in STRUCTURED_SELECTOR_EDITOR_SPEC_ITEMS}
-)
+def cell_editor_key(name: str, cls: type) -> str:
+    return name
+
+
+class CellEditor(ABC, metaclass=AutoRegisterMeta):
+    """Cell editor family keyed by the field annotation it edits.
+
+    A cell holds a *raw* value (the widget's own state, e.g. item text); the
+    editor converts it to the field's typed value. No raw value is ever a
+    serialized encoding of several fields.
+    """
+
+    __registry_key__ = "editor_key"
+    __key_extractor__ = cell_editor_key
+    __skip_if_no_key__ = True
+
+    def __init__(self, annotation: object) -> None:
+        self.annotation = annotation
+
+    @classmethod
+    def for_annotation(cls, annotation: object) -> "CellEditor | None":
+        for editor_type in cls.__registry__.values():
+            if editor_type.accepts(annotation):
+                return editor_type(annotation)
+        return None
+
+    @classmethod
+    @abstractmethod
+    def accepts(cls, annotation: object) -> bool: ...
+
+    @abstractmethod
+    def raw_for(self, value: object) -> object:
+        """Return the raw cell state that renders ``value``."""
+
+    @abstractmethod
+    def empty_raw(self) -> object:
+        """Raw state of a new cell whose field has no default."""
+
+    @abstractmethod
+    def value_from_raw(self, raw: object) -> object:
+        """Return the typed field value; raise ``ValueError`` while incomplete."""
+
+    @abstractmethod
+    def display(self, value: object) -> str: ...
+
+    @abstractmethod
+    def create(
+        self,
+        table: QTableWidget,
+        row: int,
+        column: int,
+        raw: object,
+        context: CellEditContext,
+    ) -> None: ...
+
+    @abstractmethod
+    def update(self, table: QTableWidget, row: int, column: int, raw: object) -> bool:
+        """Update an existing cell in place; return False when it must be rebuilt."""
+
+    @abstractmethod
+    def raw(self, table: QTableWidget, row: int, column: int) -> object: ...
+
+    @staticmethod
+    def union_members(annotation: object) -> tuple[object, ...]:
+        if get_origin(annotation) in (Union, UnionType):
+            return get_args(annotation)
+        return (annotation,)
+
+
+class ScalarTextCellEditor(CellEditor):
+    """Text item for ``str``/``int``/``float`` scalars, optionally ``None``."""
+
+    SCALAR_TYPES = (str, int, float, bool)
+
+    @classmethod
+    def accepts(cls, annotation: object) -> bool:
+        if annotation is bool:
+            return False
+        members = tuple(
+            member
+            for member in cls.union_members(annotation)
+            if member is not type(None)
+        )
+        return bool(members) and all(member in cls.SCALAR_TYPES for member in members)
+
+    @property
+    def optional(self) -> bool:
+        return type(None) in self.union_members(self.annotation)
+
+    @property
+    def scalar_type(self) -> type:
+        members = tuple(
+            member
+            for member in self.union_members(self.annotation)
+            if member is not type(None)
+        )
+        return members[0] if len(members) == 1 else str
+
+    def raw_for(self, value: object) -> str:
+        return "" if value is None else str(value)
+
+    def empty_raw(self) -> str:
+        return ""
+
+    def value_from_raw(self, raw: object) -> object:
+        text = str(raw).strip()
+        if not text and self.optional:
+            return None
+        return self.scalar_type(text)
+
+    def display(self, value: object) -> str:
+        return self.raw_for(value)
+
+    def create(self, table, row, column, raw, context) -> None:
+        table.setItem(row, column, EditableTableItem(str(raw)))
+
+    def update(self, table, row, column, raw) -> bool:
+        item = table.item(row, column)
+        if not isinstance(item, EditableTableItem):
+            return False
+        item.set_logical_text(str(raw))
+        return True
+
+    def raw(self, table, row, column) -> str:
+        item = table.item(row, column)
+        if item is None:
+            return ""
+        return EditableTableController._editable_item(item).data(
+            EditableTableItem.LOGICAL_VALUE_ROLE
+        )
+
+
+class BooleanCellEditor(CellEditor):
+    """Check box for ``bool`` fields."""
+
+    @classmethod
+    def accepts(cls, annotation: object) -> bool:
+        return annotation is bool
+
+    def raw_for(self, value: object) -> bool:
+        return bool(value)
+
+    def empty_raw(self) -> bool:
+        return False
+
+    def value_from_raw(self, raw: object) -> bool:
+        return bool(raw)
+
+    def display(self, value: object) -> str:
+        return str(bool(value))
+
+    def create(self, table, row, column, raw, context) -> None:
+        checkbox = QCheckBox(table)
+        checkbox.setChecked(bool(raw))
+        checkbox.toggled.connect(lambda _checked: context.on_change())
+        table.setCellWidget(row, column, checkbox)
+
+    def update(self, table, row, column, raw) -> bool:
+        checkbox = table.cellWidget(row, column)
+        if not isinstance(checkbox, QCheckBox):
+            return False
+        blocked = checkbox.blockSignals(True)
+        try:
+            checkbox.setChecked(bool(raw))
+        finally:
+            checkbox.blockSignals(blocked)
+        return True
+
+    def raw(self, table, row, column) -> bool:
+        checkbox = table.cellWidget(row, column)
+        return isinstance(checkbox, QCheckBox) and checkbox.isChecked()
+
+
+class ChoiceCellEditor(CellEditor):
+    """Combo box whose choices are the field type's members.
+
+    An ``Enum`` type supplies its members; ``type[F]`` for an ``AutoRegisterMeta``
+    family supplies the family registry, labelled by each member's registry key.
+    """
+
+    COMBO_LOGICAL_TEXT_ROLE = Qt.ItemDataRole.UserRole + 1
+
+    @classmethod
+    def accepts(cls, annotation: object) -> bool:
+        return cls.family(annotation) is not None or (
+            isinstance(annotation, type) and issubclass(annotation, Enum)
+        )
+
+    @staticmethod
+    def family(annotation: object) -> type | None:
+        if get_origin(annotation) is not type:
+            return None
+        (member_type,) = get_args(annotation)
+        return member_type if isinstance(member_type, AutoRegisterMeta) else None
+
+    @property
+    def choices(self) -> tuple[object, ...]:
+        family = self.family(self.annotation)
+        if family is not None:
+            return tuple(family.__registry__.values())
+        return tuple(cast(type[Enum], self.annotation))
+
+    def raw_for(self, value: object) -> object:
+        return value
+
+    def empty_raw(self) -> object:
+        return self.choices[0]
+
+    def value_from_raw(self, raw: object) -> object:
+        return raw
+
+    def display(self, value: object) -> str:
+        family = self.family(self.annotation)
+        if family is not None:
+            return str(getattr(value, family.__registry_key__))
+        return str(cast(Enum, value).value)
+
+    def create(self, table, row, column, raw, context) -> None:
+        combo = NoScrollComboBox(table)
+        for choice in self.choices:
+            text = self.display(choice)
+            combo.addItem(text, choice)
+            combo.setItemData(combo.count() - 1, text, self.COMBO_LOGICAL_TEXT_ROLE)
+        combo.setCurrentIndex(self.index_of(combo, raw))
+        combo.currentIndexChanged.connect(lambda _: context.on_change())
+        combo.activated.connect(lambda _: context.on_change())
+        table.setCellWidget(row, column, combo)
+
+    def update(self, table, row, column, raw) -> bool:
+        combo = table.cellWidget(row, column)
+        if not isinstance(combo, QComboBox):
+            return False
+        index = self.index_of(combo, raw)
+        if index < 0:
+            return False
+        blocked = combo.blockSignals(True)
+        try:
+            combo.setCurrentIndex(index)
+        finally:
+            combo.blockSignals(blocked)
+        return True
+
+    def raw(self, table, row, column) -> object:
+        combo = table.cellWidget(row, column)
+        if not isinstance(combo, QComboBox):
+            raise TypeError("Choice cells are rendered as combo boxes.")
+        return combo.currentData()
+
+    @staticmethod
+    def index_of(combo: QComboBox, value: object) -> int:
+        for index in range(combo.count()):
+            if combo.itemData(index) == value:
+                return index
+        return -1
+
+
+class RecordTupleCellEditor(CellEditor):
+    """Picker cell for ``tuple[Record, ...]`` with columns derived from ``Record``."""
+
+    @classmethod
+    def accepts(cls, annotation: object) -> bool:
+        if get_origin(annotation) is not tuple:
+            return False
+        arguments = get_args(annotation)
+        return (
+            len(arguments) == 2
+            and arguments[1] is Ellipsis
+            and isinstance(arguments[0], type)
+            and is_dataclass(arguments[0])
+        )
+
+    @property
+    def element_type(self) -> type:
+        return get_args(self.annotation)[0]
+
+    def raw_for(self, value: object) -> tuple[object, ...]:
+        return tuple(cast(tuple, value))
+
+    def empty_raw(self) -> tuple[object, ...]:
+        return ()
+
+    def value_from_raw(self, raw: object) -> tuple[object, ...]:
+        return tuple(cast(tuple, raw))
+
+    def display(self, value: object) -> str:
+        columns = DataclassFieldColumns.of(self.element_type)
+        return "; ".join(
+            ":".join(
+                text
+                for column in columns.columns
+                if (text := column.editor.display(column.value_of(element)))
+            )
+            for element in cast(tuple, value)
+        )
+
+    def create(self, table, row, column, raw, context) -> None:
+        table.setCellWidget(
+            row,
+            column,
+            StructuredSelectorCellWidget(
+                editor=self,
+                value=self.value_from_raw(raw),
+                suggestions=context.suggestions.get(self.element_type, ()),
+                apply_changes=context.on_change,
+                parent=table,
+            ),
+        )
+
+    def update(self, table, row, column, raw) -> bool:
+        widget = table.cellWidget(row, column)
+        if not isinstance(widget, StructuredSelectorCellWidget):
+            return False
+        widget.set_value_silently(self.value_from_raw(raw))
+        return True
+
+    def raw(self, table, row, column) -> tuple[object, ...]:
+        widget = table.cellWidget(row, column)
+        if not isinstance(widget, StructuredSelectorCellWidget):
+            raise TypeError("Record-list cells are rendered as selector widgets.")
+        return widget.value()
 
 
 @dataclass(frozen=True, slots=True)
-class FreeFormCellSpec:
-    """Editable suggestions and semantic dialog type for selector cells."""
+class DataclassFieldColumn:
+    """One editable leaf field of a row dataclass, at ``path`` from the row."""
 
-    values: tuple[str, ...]
-    editor_kind: FreeFormCellEditorKind = FreeFormCellEditorKind.SELECTOR_LIST
+    index: int
+    path: tuple[str, ...]
+    declaring_type: type
+    editor: CellEditor
+    label: str
+    tooltip: str | None
+    default: object = MISSING
+
+    @property
+    def name(self) -> str:
+        return self.path[-1]
+
+    def value_of(self, row: object) -> object:
+        value = row
+        for name in self.path:
+            value = getattr(value, name)
+        return value
+
+    def replaced(self, row: object, value: object) -> object:
+        """Return ``row`` with this field replaced; every other field is kept."""
+
+        return self._replaced(row, self.path, value)
+
+    @classmethod
+    def _replaced(cls, row: object, path: tuple[str, ...], value: object) -> object:
+        name, *rest = path
+        if rest:
+            value = cls._replaced(getattr(row, name), tuple(rest), value)
+        return replace(row, **{name: value})
 
 
-FreeFormCellSpecMap = Mapping[
-    tuple[type[EditableTableColumn], EditableTableColumn],
-    FreeFormCellSpec,
-]
+@dataclass(frozen=True, slots=True)
+class DataclassFieldColumns:
+    """Columns derived from a row dataclass: one per field a cell editor accepts.
+
+    Nested dataclass fields contribute their own fields. Fields no editor accepts
+    have no column; editing a row through ``replaced`` keeps them unchanged.
+    """
+
+    row_type: type
+    columns: tuple[DataclassFieldColumn, ...]
+
+    @classmethod
+    @cache
+    def of(cls, row_type: type) -> "DataclassFieldColumns":
+        columns: list[DataclassFieldColumn] = []
+        cls._collect(row_type, (), columns)
+        return cls(row_type=row_type, columns=tuple(columns))
+
+    @classmethod
+    def _collect(
+        cls,
+        row_type: type,
+        prefix: tuple[str, ...],
+        columns: list[DataclassFieldColumn],
+    ) -> None:
+        hints = get_type_hints(row_type, include_extras=True)
+        for row_field in fields(row_type):
+            annotation, metadata = cls._split_annotated(hints[row_field.name])
+            path = (*prefix, row_field.name)
+            if isinstance(annotation, type) and is_dataclass(annotation):
+                cls._collect(annotation, path, columns)
+                continue
+            editor = CellEditor.for_annotation(annotation)
+            if editor is None:
+                continue
+            columns.append(
+                DataclassFieldColumn(
+                    index=len(columns),
+                    path=path,
+                    declaring_type=row_type,
+                    editor=editor,
+                    label=next(
+                        (
+                            item.text
+                            for item in metadata
+                            if isinstance(item, FieldLabel)
+                        ),
+                        row_field.name.replace("_", " ").title(),
+                    ),
+                    tooltip=SignatureAnalyzer.extract_field_documentation(
+                        row_type,
+                        row_field.name,
+                    ),
+                    default=row_field.default,
+                )
+            )
+
+    @staticmethod
+    def _split_annotated(annotation: object) -> tuple[object, tuple[object, ...]]:
+        if get_origin(annotation) is Annotated:
+            base, *metadata = get_args(annotation)
+            return base, tuple(metadata)
+        return annotation, ()
+
+    def __len__(self) -> int:
+        return len(self.columns)
+
+    def __iter__(self):
+        return iter(self.columns)
+
+    def named(self, *path: str) -> DataclassFieldColumn:
+        for column in self.columns:
+            if column.path[-len(path) :] == path:
+                return column
+        raise KeyError(f"{self.row_type.__name__} has no column {'.'.join(path)}.")
+
+    @property
+    def labels(self) -> tuple[str, ...]:
+        return tuple(column.label for column in self.columns)
+
+    def apply_header_items(self, header_item: Callable[[int], QTableWidgetItem | None]):
+        for column in self.columns:
+            item = header_item(column.index)
+            if item is not None and column.tooltip is not None:
+                item.setToolTip(column.tooltip)
+
+    @property
+    def is_isomorphic(self) -> bool:
+        return len(self.columns) == len(fields(self.row_type)) and all(
+            len(column.path) == 1 for column in self.columns
+        )
+
+    def construct(self, values: tuple[object, ...]) -> object:
+        """Build an isomorphic row from one typed value per field."""
+
+        return self.row_type(
+            **{column.name: value for column, value in zip(self.columns, values)}
+        )
+
+    def draft_raw(self, values: Mapping[str, object]) -> tuple[object, ...]:
+        """Raw cells for a new row: given values, then field defaults, then empty."""
+
+        return tuple(
+            column.editor.raw_for(values[column.name])
+            if column.name in values
+            else (
+                column.editor.raw_for(column.default)
+                if column.default is not MISSING
+                else column.editor.empty_raw()
+            )
+            for column in self.columns
+        )
 
 
 class StructuredSelectorCellWidget(QWidget):
-    """Mini-editor for structured selector cells with suggestions and free text."""
+    """Read-only summary of a record list with a typed picker dialog."""
 
     def __init__(
         self,
         *,
-        values: tuple[str, ...],
-        value: str,
-        editor_kind: FreeFormCellEditorKind,
+        editor: RecordTupleCellEditor,
+        value: tuple[object, ...],
+        suggestions: tuple[RowSuggestion, ...],
         apply_changes: Callable[[], None],
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.values = values
-        self.editor_kind = editor_kind
+        self.editor = editor
+        self.suggestions = suggestions
+        self._value = value
         self._apply_changes = apply_changes
         self.semantic_marker_label = QLabel("", self)
         self.semantic_marker_label.setVisible(False)
-        self.line_edit = QLineEdit(value, self)
-        self.line_edit.editingFinished.connect(self._apply_changes)
+        self.line_edit = QLineEdit(editor.display(value), self)
+        self.line_edit.setReadOnly(True)
         picker_button = QPushButton("...", self)
         picker_button.setFixedWidth(28)
         picker_button.clicked.connect(self._open_picker)
@@ -441,12 +670,16 @@ class StructuredSelectorCellWidget(QWidget):
         layout.addWidget(self.line_edit, 1)
         layout.addWidget(picker_button)
 
-    def text(self) -> str:
-        return self.line_edit.text().strip()
+    def value(self) -> tuple[object, ...]:
+        return self._value
 
-    def set_text(self, value: str) -> None:
-        self.line_edit.setText(value)
+    def set_value(self, value: tuple[object, ...]) -> None:
+        self.set_value_silently(value)
         self._apply_changes()
+
+    def set_value_silently(self, value: tuple[object, ...]) -> None:
+        self._value = tuple(value)
+        self.line_edit.setText(self.editor.display(self._value))
 
     def set_semantic_markers(self, markers: tuple[str, ...]) -> None:
         """Render ObjectState-owned markers without changing the edit value."""
@@ -454,51 +687,61 @@ class StructuredSelectorCellWidget(QWidget):
         self.semantic_marker_label.setText("".join(markers))
         self.semantic_marker_label.setVisible(bool(markers))
 
-    def _open_picker(self) -> None:
-        dialog = StructuredSelectorDialog(
-            editor_kind=self.editor_kind,
-            suggestions=self.values,
-            value=self.text(),
+    def create_dialog(self) -> "StructuredSelectorDialog":
+        return StructuredSelectorDialog(
+            element_type=self.editor.element_type,
+            suggestions=self.suggestions,
+            value=self._value,
             parent=self,
         )
-        accepted = dialog.exec() == QDialog.DialogCode.Accepted
-        if not accepted:
+
+    def _open_picker(self) -> None:
+        dialog = self.create_dialog()
+        if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self.set_text(dialog.value())
+        self.set_value(dialog.value())
 
 
 class StructuredSelectorDialog(QDialog):
-    """Semantic source-binding picker for selector/filter/match list cells."""
+    """Typed editor for a record list; its columns derive from the record type."""
 
     def __init__(
         self,
         *,
-        editor_kind: FreeFormCellEditorKind,
-        suggestions: tuple[str, ...],
-        value: str,
+        element_type: type,
+        suggestions: tuple[RowSuggestion, ...],
+        value: tuple[object, ...],
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.editor_spec = STRUCTURED_SELECTOR_EDITOR_SPECS[editor_kind]
-        self.setWindowTitle(self.editor_spec.title)
-        self.table = QTableWidget(self)
-        self.table.setColumnCount(len(self.editor_spec.columns))
-        self.table.setHorizontalHeaderLabels(self.editor_spec.columns)
+        columns = DataclassFieldColumns.of(element_type)
+        self.setWindowTitle(f"Edit {element_type.__name__} list")
+        self.table = QTableWidget(0, len(columns), self)
+        self.table.setHorizontalHeaderLabels(columns.labels)
+        columns.apply_header_items(self.table.horizontalHeaderItem)
         self.validation_label = QLabel(self)
-        self.table.itemChanged.connect(lambda _item: self._update_validation_hint())
-        for item in SelectorListCodec.items(value):
-            self._append_structured_item(item)
+        self.controller: EditableTableController[object] = EditableTableController(
+            table=self.table,
+            columns=columns,
+            apply_changes=self._update_validation_hint,
+        )
+        for element in value:
+            self.controller.append(element)
+        self.table.itemChanged.connect(
+            lambda _item: self.controller.request_apply_changes()
+        )
         self.suggestions = QListWidget(self)
-        self.suggestions.addItems(list(suggestions))
+        for suggestion in suggestions:
+            item = QListWidgetItem(suggestion.label)
+            item.setData(Qt.ItemDataRole.UserRole, suggestion)
+            self.suggestions.addItem(item)
         self.suggestions.itemDoubleClicked.connect(
-            lambda item: self._append_suggestion(item.text())
+            lambda item: self._append_suggestion(item.data(Qt.ItemDataRole.UserRole))
         )
         add_button = QPushButton("Add selected", self)
         add_button.clicked.connect(self._append_selected)
         add_row_button = QPushButton("Add row", self)
-        add_row_button.clicked.connect(
-            lambda: self._append_row(("",) * self.table.columnCount())
-        )
+        add_row_button.clicked.connect(lambda: self.append_draft({}))
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             self,
@@ -507,7 +750,6 @@ class StructuredSelectorDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel(self.editor_spec.hint, self))
         layout.addWidget(self.table)
         layout.addWidget(self.validation_label)
         layout.addWidget(add_row_button)
@@ -517,145 +759,30 @@ class StructuredSelectorDialog(QDialog):
         layout.addWidget(buttons)
         self._update_validation_hint()
 
-    def value(self) -> str:
-        items = tuple(
-            self._item_from_row(row_index) for row_index in range(self.table.rowCount())
-        )
-        return SelectorListCodec.ITEM_SEPARATOR.join(item for item in items if item)
+    def value(self) -> tuple[object, ...]:
+        return self.controller.rows()
+
+    def append_draft(self, values: Mapping[str, object]) -> None:
+        self.controller.append_draft(values)
+        self._update_validation_hint()
 
     def _append_selected(self) -> None:
         for item in self.suggestions.selectedItems():
-            self._append_suggestion(item.text())
+            self._append_suggestion(item.data(Qt.ItemDataRole.UserRole))
 
-    def _append_suggestion(self, text: str) -> None:
-        self._append_structured_item(text)
-
-    def _append_structured_item(self, text: str) -> None:
-        self._append_row(self.editor_spec.row_parser(text))
-
-    def _append_row(self, values: tuple[str | None, ...]) -> None:
-        row_index = self.table.rowCount()
-        self.table.insertRow(row_index)
-        for column_index in range(self.table.columnCount()):
-            value = "" if column_index >= len(values) else values[column_index] or ""
-            options = self.editor_spec.column_options.get(column_index)
-            if options is not None:
-                combo = NoScrollComboBox(self.table)
-                combo.setEditable(True)
-                combo.addItems(list(options))
-                combo.setCurrentText(value)
-                combo.currentTextChanged.connect(
-                    lambda _text: self._update_validation_hint()
-                )
-                self.table.setCellWidget(row_index, column_index, combo)
-                continue
-            self.table.setItem(row_index, column_index, QTableWidgetItem(value))
-
-    def _item_from_row(self, row_index: int) -> str:
-        values = tuple(
-            self._cell_text(row_index, column_index)
-            for column_index in range(self.table.columnCount())
-        )
-        if not any(values):
-            return ""
-        return self.editor_spec.row_formatter(values)
-
-    def _cell_text(self, row_index: int, column_index: int) -> str:
-        widget = self.table.cellWidget(row_index, column_index)
-        if isinstance(widget, QComboBox):
-            return widget.currentText().strip()
-        item = self.table.item(row_index, column_index)
-        return "" if item is None else item.text().strip()
+    def _append_suggestion(self, suggestion: RowSuggestion) -> None:
+        self.append_draft(dict(suggestion.values))
 
     def _update_validation_hint(self) -> None:
-        invalid_rows = tuple(
-            row_index + 1
-            for row_index in range(self.table.rowCount())
-            if self._row_is_incomplete(row_index)
-        )
+        invalid_rows = self.controller.incomplete_row_numbers()
         if invalid_rows:
             joined_rows = ", ".join(str(row) for row in invalid_rows)
             self.validation_label.setText(f"Incomplete rows ignored: {joined_rows}")
             return
         self.validation_label.setText("All rows are structurally valid.")
 
-    def _row_is_incomplete(self, row_index: int) -> bool:
-        values = tuple(
-            self._cell_text(row_index, column_index)
-            for column_index in range(self.table.columnCount())
-        )
-        return any(values) and not self.editor_spec.row_formatter(values)
 
-
-@dataclass(frozen=True, slots=True)
-class SourceBindingSuggestionSet:
-    """Nominal source-binding editor suggestions derived from config/inventory."""
-
-    component_selectors: tuple[str, ...] = ()
-    metadata_selectors: tuple[str, ...] = ()
-    filter_clauses: tuple[str, ...] = ()
-    match_fields: tuple[str, ...] = ()
-
-    @classmethod
-    def from_context(
-        cls,
-        *,
-        source_bindings: SourceBindingsConfig,
-        inventory: SourceInventory | None,
-    ) -> "SourceBindingSuggestionSet":
-        metadata_fields = cls.metadata_fields(
-            source_bindings=source_bindings,
-            inventory=inventory,
-        )
-        aliases = tuple(
-            sorted(binding.alias for binding in source_bindings.binding_declarations)
-        )
-        return cls(
-            component_selectors=tuple(
-                f"{component.value}=" for component in AllComponents
-            ),
-            metadata_selectors=tuple(f"{field}=" for field in metadata_fields)
-            + cls.inventory_metadata_selectors(inventory),
-            filter_clauses=tuple(
-                f"{subject.value}:{match_type.value}:"
-                for subject in SourceFilterSubject
-                for match_type in SourceFilterMatchType
-            ),
-            match_fields=tuple(
-                f"{alias}{SelectorListCodec.KEY_VALUE_SEPARATOR}{field}"
-                for alias in aliases
-                for field in metadata_fields
-            ),
-        )
-
-    @staticmethod
-    def metadata_fields(
-        *,
-        source_bindings: SourceBindingsConfig,
-        inventory: SourceInventory | None,
-    ) -> tuple[str, ...]:
-        fields: set[str] = set()
-        fields.update(source_bindings.grouping_metadata_fields)
-        for rule in source_bindings.metadata_rule_declarations:
-            fields.update(re.compile(rule.pattern).groupindex)
-        if inventory is not None:
-            for candidate in inventory.candidates:
-                fields.update(candidate.metadata)
-        return tuple(sorted(fields))
-
-    @staticmethod
-    def inventory_metadata_selectors(
-        inventory: SourceInventory | None,
-    ) -> tuple[str, ...]:
-        if inventory is None:
-            return ()
-        selectors: set[str] = set()
-        for candidate in inventory.candidates:
-            for field_name, value in candidate.metadata.items():
-                selectors.add(
-                    f"{field_name}{SelectorListCodec.KEY_VALUE_SEPARATOR}{value}"
-                )
-        return tuple(sorted(selectors))
+RawRow = tuple[object, ...]
 
 
 @dataclass(slots=True, weakref_slot=True)
@@ -664,7 +791,7 @@ class EditableTableProgrammaticUpdateGuard:
 
     depth: int = 0
     pending_release: bool = False
-    programmatic_row_values: tuple[tuple[str, ...], ...] | None = None
+    programmatic_row_values: tuple[RawRow, ...] | None = None
 
     def __enter__(self) -> "EditableTableProgrammaticUpdateGuard":
         self.depth += 1
@@ -682,14 +809,14 @@ class EditableTableProgrammaticUpdateGuard:
     def active(self) -> bool:
         return self.depth > 0
 
-    def remember_rows(self, row_values: tuple[tuple[str, ...], ...]) -> None:
+    def remember_rows(self, row_values: tuple[RawRow, ...]) -> None:
         """Record the table rows produced by the current programmatic update."""
 
         self.programmatic_row_values = row_values
 
     def suppress_pending_rows(
         self,
-        row_values: tuple[tuple[str, ...], ...],
+        row_values: tuple[RawRow, ...],
     ) -> None:
         """Suppress delayed callbacks that still reflect programmatic rows."""
 
@@ -699,7 +826,7 @@ class EditableTableProgrammaticUpdateGuard:
 
     def should_suppress_pending_rows(
         self,
-        row_values: tuple[tuple[str, ...], ...],
+        row_values: tuple[RawRow, ...],
     ) -> bool:
         """Whether a pending callback still reflects the programmatic rows."""
 
@@ -772,34 +899,59 @@ class EditableTableItem(QTableWidgetItem):
 
 @dataclass(frozen=True)
 class EditableTableController(Generic[EditableRowT]):
-    """Own editable Qt table mechanics for one typed row model."""
+    """Own editable Qt table mechanics for one isomorphic row dataclass.
+
+    Every field of the row type has a column, so a row is constructed from its
+    typed cell values without losing anything.
+    """
 
     LOGICAL_VALUE_ROLE = EditableTableItem.LOGICAL_VALUE_ROLE
     RENDERED_TEXT_ROLE = EditableTableItem.RENDERED_TEXT_ROLE
-    COMBO_LOGICAL_TEXT_ROLE = Qt.ItemDataRole.UserRole + 1
+    COMBO_LOGICAL_TEXT_ROLE = ChoiceCellEditor.COMBO_LOGICAL_TEXT_ROLE
 
     table: QTableWidget
-    columns: tuple[EditableTableColumn, ...]
-    free_form_cell_specs: FreeFormCellSpecMap
-    row_cells: Callable[[EditableRowT], tuple[str, ...]]
-    row_from_cells: Callable[[tuple[str, ...]], EditableRowT | None]
+    columns: DataclassFieldColumns
     apply_changes: Callable[[], None]
+    suggestions: RowSuggestionMap = field(default_factory=lambda: MappingProxyType({}))
     semantic_binding: EditableTableSemanticBinding | None = None
     update_guard: EditableTableProgrammaticUpdateGuard = field(
         default_factory=EditableTableProgrammaticUpdateGuard,
     )
 
+    def __post_init__(self) -> None:
+        if not self.columns.is_isomorphic:
+            raise TypeError(
+                f"{self.columns.row_type.__name__} has fields without an editable "
+                "column; edit it through replace-based typed rows instead."
+            )
+
+    @property
+    def cell_context(self) -> CellEditContext:
+        return CellEditContext(
+            on_change=self.request_apply_changes,
+            suggestions=self.suggestions,
+        )
+
     def append(self, row_model: EditableRowT) -> None:
+        self._append_raw(
+            tuple(
+                column.editor.raw_for(column.value_of(row_model))
+                for column in self.columns
+            )
+        )
+
+    def append_draft(self, values: Mapping[str, object]) -> None:
+        """Append a row prefilled with ``values`` that may not be complete yet."""
+
+        self._append_raw(self.columns.draft_raw(values))
+
+    def _append_raw(self, raw_row: RawRow) -> None:
         table_signals_blocked = self.table.blockSignals(True)
         try:
             row_index = self.table.rowCount()
             self.table.insertRow(row_index)
-            for column, value in zip(
-                self.columns,
-                self.row_cells(row_model),
-                strict=True,
-            ):
-                self._set_cell(row_index, column, value)
+            for column, raw in zip(self.columns, raw_row, strict=True):
+                self._set_cell(row_index, column, raw)
         finally:
             self.table.blockSignals(table_signals_blocked)
 
@@ -811,12 +963,12 @@ class EditableTableController(Generic[EditableRowT]):
             try:
                 if self.table.rowCount() == len(row_models):
                     for row_index, row_model in enumerate(row_models):
-                        for column, value in zip(
-                            self.columns,
-                            self.row_cells(row_model),
-                            strict=True,
-                        ):
-                            self._update_cell(row_index, column, value)
+                        for column in self.columns:
+                            raw = column.editor.raw_for(column.value_of(row_model))
+                            if not column.editor.update(
+                                self.table, row_index, column.index, raw
+                            ):
+                                self._set_cell(row_index, column, raw)
                     return False
 
                 self.table.setRowCount(0)
@@ -840,36 +992,55 @@ class EditableTableController(Generic[EditableRowT]):
         self.apply_changes()
 
     def rows(self) -> tuple[EditableRowT, ...]:
-        rows: list[EditableRowT] = []
-        for values in self.row_values():
-            row_model = self.row_from_cells(values)
-            if row_model is not None:
-                rows.append(row_model)
-        return tuple(rows)
-
-    def row_values(self) -> tuple[tuple[str, ...], ...]:
-        """Return current table cell text values for every row."""
+        """Return the complete rows; incomplete rows are reported separately."""
 
         return tuple(
-            tuple(self._cell_text(row_index, column) for column in self.columns)
+            row
+            for row in (self._row_or_none(values) for values in self.row_values())
+            if row is not None
+        )
+
+    def row_values(self) -> tuple[RawRow, ...]:
+        """Return the current raw cell state for every row."""
+
+        return tuple(
+            tuple(
+                column.editor.raw(self.table, row_index, column.index)
+                for column in self.columns
+            )
             for row_index in range(self.table.rowCount())
         )
+
+    def incomplete_row_numbers(self) -> tuple[int, ...]:
+        """One-based numbers of rows whose cells do not yet form a valid row."""
+
+        return tuple(
+            row_index + 1
+            for row_index, values in enumerate(self.row_values())
+            if self._row_or_none(values) is None
+        )
+
+    def has_incomplete_rows(self) -> bool:
+        return bool(self.incomplete_row_numbers())
+
+    def _row_or_none(self, raw_row: RawRow) -> EditableRowT | None:
+        try:
+            return cast(
+                EditableRowT,
+                self.columns.construct(
+                    tuple(
+                        column.editor.value_from_raw(raw)
+                        for column, raw in zip(self.columns, raw_row, strict=True)
+                    )
+                ),
+            )
+        except INVALID_CELL_VALUE_ERRORS:
+            return None
 
     def suppress_current_rows_until_idle(self) -> None:
         """Suppress delayed callbacks for the currently rendered row values."""
 
         self.update_guard.suppress_pending_rows(self.row_values())
-
-    def has_incomplete_rows(self) -> bool:
-        """Whether any non-empty row is not yet valid for the row model."""
-
-        for values in self.row_values():
-            if (
-                any(value.strip() for value in values)
-                and self.row_from_cells(values) is None
-            ):
-                return True
-        return False
 
     def _sync_item_logical_values_from_edit_role(self) -> None:
         """Update item backing values for a real table edit without re-emitting."""
@@ -878,10 +1049,9 @@ class EditableTableController(Generic[EditableRowT]):
         try:
             for row_index in range(self.table.rowCount()):
                 for column in self.columns:
-                    column_index = int(column)
-                    if self.table.cellWidget(row_index, column_index) is not None:
+                    if self.table.cellWidget(row_index, column.index) is not None:
                         continue
-                    item = self.table.item(row_index, column_index)
+                    item = self.table.item(row_index, column.index)
                     if item is None:
                         continue
                     edit_value = item.data(Qt.ItemDataRole.EditRole)
@@ -905,115 +1075,20 @@ class EditableTableController(Generic[EditableRowT]):
             self.table.blockSignals(table_signals_blocked)
         return True
 
-    def _cell_text(self, row_index: int, column: EditableTableColumn) -> str:
-        widget = self.table.cellWidget(row_index, int(column))
-        if isinstance(widget, StructuredSelectorCellWidget):
-            return widget.text()
-        if isinstance(widget, QComboBox):
-            value = widget.currentData()
-            if value is None:
-                return widget.currentText().strip()
-            spec = column.enum_cell_spec()
-            if spec is None:
-                raise TypeError(
-                    f"Editable choice cell has no choice source for {column.name}."
-                )
-            return spec.text_for_value(value)
-        item = self.table.item(row_index, int(column))
-        if item is None:
-            return ""
-        return self._editable_item(item).data(self.LOGICAL_VALUE_ROLE)
-
     def _set_cell(
         self,
         row_index: int,
-        column: EditableTableColumn,
-        value: str,
+        column: DataclassFieldColumn,
+        raw: object,
     ) -> None:
-        spec = column.enum_cell_spec()
-        free_form_spec = self.free_form_cell_specs.get((type(column), column))
-        if spec is None and free_form_spec is None:
-            item = EditableTableItem(value)
-            self.table.setItem(row_index, int(column), item)
-            self._apply_current_placeholder_text_style_to_cell(row_index, column)
-            return
-        if free_form_spec is not None:
-            widget = StructuredSelectorCellWidget(
-                values=free_form_spec.values,
-                value=value,
-                editor_kind=free_form_spec.editor_kind,
-                apply_changes=self.request_apply_changes,
-                parent=self.table,
-            )
-            self.table.setCellWidget(
-                row_index,
-                int(column),
-                widget,
-            )
-            self._apply_current_placeholder_text_style_to_cell(row_index, column)
-            return
-        combo = NoScrollComboBox(self.table)
-        for enum_value in spec.values:
-            logical_text = spec.text_for_value(enum_value)
-            combo.addItem(logical_text, enum_value)
-            combo.setItemData(
-                combo.count() - 1,
-                logical_text,
-                self.COMBO_LOGICAL_TEXT_ROLE,
-            )
-        index = combo.findText(value)
-        if index >= 0:
-            combo.setCurrentIndex(index)
-        combo.currentIndexChanged.connect(lambda _: self.request_apply_changes())
-        combo.activated.connect(lambda _: self.request_apply_changes())
-        self.table.setCellWidget(row_index, int(column), combo)
+        column.editor.create(
+            self.table,
+            row_index,
+            column.index,
+            raw,
+            self.cell_context,
+        )
         self._apply_current_placeholder_text_style_to_cell(row_index, column)
-
-    def _update_cell(
-        self,
-        row_index: int,
-        column: EditableTableColumn,
-        value: str,
-    ) -> None:
-        """Update an existing cell in place, rebuilding only on shape mismatch."""
-
-        spec = column.enum_cell_spec()
-        free_form_spec = self.free_form_cell_specs.get((type(column), column))
-        column_index = int(column)
-
-        if free_form_spec is not None:
-            widget = self.table.cellWidget(row_index, column_index)
-            if isinstance(widget, StructuredSelectorCellWidget):
-                line_edit_signals_blocked = widget.line_edit.blockSignals(True)
-                try:
-                    widget.line_edit.setText(value)
-                finally:
-                    widget.line_edit.blockSignals(line_edit_signals_blocked)
-                return
-            self._set_cell(row_index, column, value)
-            return
-
-        if spec is not None:
-            widget = self.table.cellWidget(row_index, column_index)
-            if isinstance(widget, QComboBox):
-                index = self._combo_index_for_cell_value(widget, value)
-                combo_signals_blocked = widget.blockSignals(True)
-                try:
-                    if index >= 0:
-                        widget.setCurrentIndex(index)
-                    else:
-                        self._set_cell(row_index, column, value)
-                finally:
-                    widget.blockSignals(combo_signals_blocked)
-                return
-            self._set_cell(row_index, column, value)
-            return
-
-        item = self.table.item(row_index, column_index)
-        if item is None:
-            self._set_cell(row_index, column, value)
-            return
-        self._set_item_logical_text(item, value)
 
     @classmethod
     def _set_item_logical_text(cls, item: EditableTableItem, value: str) -> None:
@@ -1032,37 +1107,18 @@ class EditableTableController(Generic[EditableRowT]):
     def _apply_current_placeholder_text_style_to_cell(
         self,
         row_index: int,
-        column: EditableTableColumn,
+        column: DataclassFieldColumn,
     ) -> None:
         """Apply the table's current inherited-preview style to a newly built cell."""
 
         active = self.table.property("placeholder_text_style_active") is True
-        column_index = int(column)
-        widget = self.table.cellWidget(row_index, column_index)
+        widget = self.table.cellWidget(row_index, column.index)
         if widget is not None:
             self._apply_widget_placeholder_text_style(widget, active)
             return
-        item = self.table.item(row_index, column_index)
+        item = self.table.item(row_index, column.index)
         if item is not None:
             self._apply_item_placeholder_text_style(item, active)
-
-    @classmethod
-    def _combo_index_for_cell_value(
-        cls,
-        combo: QComboBox,
-        value: str,
-    ) -> int:
-        """Return the row whose logical enum/text value matches ``value``."""
-
-        for index in range(combo.count()):
-            payload = combo.itemData(index)
-            if isinstance(payload, Enum):
-                if str(payload.value) == value:
-                    return index
-                continue
-            if combo.itemData(index, cls.COMBO_LOGICAL_TEXT_ROLE) == value:
-                return index
-        return -1
 
     def apply_semantic_index(
         self,
@@ -1135,12 +1191,12 @@ class EditableTableController(Generic[EditableRowT]):
             return MappingProxyType({})
         return MappingProxyType(
             {
-                (row_index, int(column)): self.semantic_binding.relative_path_for_cell(
+                (row_index, column.index): self.semantic_binding.relative_path_for_cell(
                     row_index,
-                    column_index,
+                    column.index,
                 )
                 for row_index in range(self.table.rowCount())
-                for column_index, column in enumerate(self.columns)
+                for column in self.columns
             }
         )
 
@@ -1372,8 +1428,121 @@ class EditableTableLayout:
         )
 
 
+# --- Source-binding tables ---------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SourceSetPairingRow:
+    """One row of the source-set pairing table: a match method and one shared key."""
+
+    method: Annotated[SourceBindingMatchMethod, FieldLabel("Pairing Method")]
+    """How selected aliases are grouped into one source set: by source order, or by declared metadata keys."""
+
+    fields: Annotated[
+        tuple[SourceBindingMatchField, ...], FieldLabel("Pairing Keys")
+    ] = ()
+    """Alias-to-metadata-field pairs forming one shared source-set key when the method is metadata."""
+
+    @classmethod
+    def from_plan(
+        cls,
+        plan: SourceBindingMatchPlan | None,
+    ) -> tuple["SourceSetPairingRow", ...]:
+        if plan is None:
+            return ()
+        if not plan.dimensions:
+            return (cls(method=plan.method),)
+        return tuple(
+            cls(method=plan.method, fields=dimension.fields)
+            for dimension in plan.dimensions
+        )
+
+    @staticmethod
+    def to_plan(
+        rows: tuple["SourceSetPairingRow", ...],
+    ) -> SourceBindingMatchPlan | None:
+        if not rows:
+            return None
+        return SourceBindingMatchPlan(
+            method=rows[0].method,
+            dimensions=tuple(
+                SourceBindingMatchDimension(fields=row.fields)
+                for row in rows
+                if row.fields
+            ),
+        )
+
+
+def source_binding_suggestions(
+    *,
+    source_bindings: SourceBindingsConfig,
+    inventory: SourceInventory | None,
+) -> RowSuggestionMap:
+    """Picker suggestions per record type, from field choices, config and inventory."""
+
+    metadata_fields: set[str] = set(source_bindings.grouping_metadata_fields)
+    for rule in source_bindings.metadata_rule_declarations:
+        metadata_fields.update(re.compile(rule.pattern).groupindex)
+    inventory_metadata: set[tuple[str, str]] = set()
+    if inventory is not None:
+        for candidate in inventory.candidates:
+            metadata_fields.update(candidate.metadata)
+            inventory_metadata.update(
+                (name, str(value)) for name, value in candidate.metadata.items()
+            )
+    sorted_fields = tuple(sorted(metadata_fields))
+    component_choices = DataclassFieldColumns.of(ComponentSelector).named("component")
+    filter_columns = DataclassFieldColumns.of(SourceFilterClause)
+    return MappingProxyType(
+        {
+            ComponentSelector: tuple(
+                RowSuggestion.of(ComponentSelector, component=component)
+                for component in cast(
+                    ChoiceCellEditor, component_choices.editor
+                ).choices
+            ),
+            MetadataSelector: tuple(
+                RowSuggestion.of(MetadataSelector, field=name) for name in sorted_fields
+            )
+            + tuple(
+                RowSuggestion.of(MetadataSelector, field=name, value=value)
+                for name, value in sorted(inventory_metadata)
+            ),
+            SourceFilterClause: tuple(
+                RowSuggestion.of(
+                    SourceFilterClause,
+                    subject=subject,
+                    match_type=match_type,
+                )
+                for subject in cast(
+                    ChoiceCellEditor, filter_columns.named("subject").editor
+                ).choices
+                for match_type in cast(
+                    ChoiceCellEditor, filter_columns.named("match_type").editor
+                ).choices
+            ),
+            SourceBindingMatchField: tuple(
+                RowSuggestion.of(
+                    SourceBindingMatchField,
+                    alias=alias,
+                    metadata_field=name,
+                )
+                for alias in sorted(
+                    binding.alias for binding in source_bindings.binding_declarations
+                )
+                for name in sorted_fields
+            ),
+        }
+    )
+
+
 class StepBindingsTableEditor(QWidget):
-    """Typed transposed table editor for step-local source bindings."""
+    """Transposed table over typed ``NamedSourceBinding`` values.
+
+    Each binding is one table column and each derived binding field one table
+    row. An edit replaces exactly the edited field of the stored binding, so
+    fields without a row (``explicit_source``, ``source_channel_counts``) are kept.
+    """
 
     changed = pyqtSignal()
 
@@ -1381,25 +1550,28 @@ class StepBindingsTableEditor(QWidget):
         self,
         *,
         bindings: tuple[NamedSourceBinding, ...],
-        free_form_cell_specs: FreeFormCellSpecMap,
+        suggestions: RowSuggestionMap,
         scope_color_scheme: object | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._updating_ui = False
-        self.columns = tuple(SourceBindingColumn)
-        self.free_form_cell_specs = free_form_cell_specs
+        self.columns = DataclassFieldColumns.of(NamedSourceBinding)
+        self.cell_context = CellEditContext(
+            on_change=self._request_apply_changes,
+            suggestions=suggestions,
+        )
+        self._bindings: list[NamedSourceBinding] = []
         self.table = ScopedTableWidget(len(self.columns), 0, self)
         self.table.set_scope_color_scheme(scope_color_scheme)
-        self.table.setVerticalHeaderLabels(
-            tuple(column.table_header_label for column in self.columns)
-        )
-        for column in self.columns:
-            header_item = self.table.verticalHeaderItem(int(column))
-            if header_item is not None and column.table_header_tooltip is not None:
-                header_item.setToolTip(column.table_header_tooltip)
-        for binding in bindings:
-            self._append_column(EditableSourceBindingRow.from_binding(binding))
+        self.table.setVerticalHeaderLabels(self.columns.labels)
+        self.columns.apply_header_items(self.table.verticalHeaderItem)
+        self._updating_ui = True
+        try:
+            for binding in bindings:
+                self._append_column(binding)
+        finally:
+            self._updating_ui = False
         self.table.itemChanged.connect(lambda _: self._request_apply_changes())
         self._configure_table()
         self._sync_header_labels()
@@ -1407,7 +1579,7 @@ class StepBindingsTableEditor(QWidget):
 
         buttons = QHBoxLayout()
         add_button = QPushButton("Add binding", self)
-        add_button.clicked.connect(self.add_binding_row)
+        add_button.clicked.connect(lambda: self.add_binding_row())
         remove_button = QPushButton("Remove selected", self)
         remove_button.clicked.connect(self.remove_selected_binding_rows)
         buttons.addWidget(add_button)
@@ -1419,12 +1591,9 @@ class StepBindingsTableEditor(QWidget):
         layout.addLayout(buttons)
 
     def add_binding_row(self, binding: NamedSourceBinding | None = None) -> None:
-        row_model = EditableSourceBindingRow.from_binding(
-            binding or NamedSourceBinding(alias="NewSource"),
-        )
         self._updating_ui = True
         try:
-            self._append_column(row_model)
+            self._append_column(binding or NamedSourceBinding(alias="NewSource"))
         finally:
             self._updating_ui = False
         self._sync_header_labels()
@@ -1437,8 +1606,9 @@ class StepBindingsTableEditor(QWidget):
             return
         table_signals_blocked = self.table.blockSignals(True)
         try:
-            for column_index in sorted(selected_columns, reverse=True):
-                self.table.removeColumn(column_index)
+            for binding_index in sorted(selected_columns, reverse=True):
+                self.table.removeColumn(binding_index)
+                del self._bindings[binding_index]
         finally:
             self.table.blockSignals(table_signals_blocked)
         self._sync_header_labels()
@@ -1446,117 +1616,77 @@ class StepBindingsTableEditor(QWidget):
         self.changed.emit()
 
     def bindings(self) -> tuple[NamedSourceBinding, ...]:
-        bindings: list[NamedSourceBinding] = []
-        for binding_index in range(self.table.columnCount()):
-            row = EditableSourceBindingRow.from_cells(
-                tuple(self._cell_text(binding_index, column) for column in self.columns)
-            )
-            if row is not None:
-                bindings.append(row.binding)
-        return tuple(bindings)
+        return tuple(self._bindings)
 
-    def _append_column(self, row_model: EditableSourceBindingRow) -> None:
+    def cell_position(
+        self,
+        binding_index: int,
+        *path: str,
+    ) -> tuple[int, int]:
+        """Table (row, column) of one binding field."""
+
+        return self.columns.named(*path).index, binding_index
+
+    def _append_column(self, binding: NamedSourceBinding) -> None:
         binding_index = self.table.columnCount()
         self.table.insertColumn(binding_index)
-        for column, value in zip(self.columns, row_model.cells(), strict=True):
-            self._set_cell(binding_index, column, value)
-
-    def _emit_changed(self) -> None:
-        if self._updating_ui:
-            return
-        self._sync_header_labels()
-        self.changed.emit()
+        self._bindings.append(binding)
+        for column in self.columns:
+            column.editor.create(
+                self.table,
+                column.index,
+                binding_index,
+                column.editor.raw_for(column.value_of(binding)),
+                self.cell_context,
+            )
 
     def _request_apply_changes(self) -> None:
         if self._updating_ui:
             return
-        self._emit_changed()
+        self._apply_cell_edits()
+        self._sync_header_labels()
+        self.changed.emit()
 
-    def _cell_text(self, binding_index: int, column: SourceBindingColumn) -> str:
-        row_index = int(column)
-        widget = self.table.cellWidget(row_index, binding_index)
-        if isinstance(widget, StructuredSelectorCellWidget):
-            return widget.text()
-        if isinstance(widget, QComboBox):
-            value = widget.currentData()
-            if value is None:
-                return widget.currentText().strip()
-            spec = column.enum_cell_spec()
-            if spec is None:
-                raise TypeError(
-                    f"Editable choice cell has no choice source for {column.name}."
-                )
-            return spec.text_for_value(value)
-        item = self.table.item(row_index, binding_index)
-        if item is None:
-            return ""
-        return EditableTableController._editable_item(item).data(
-            EditableTableController.LOGICAL_VALUE_ROLE
-        )
+    def _apply_cell_edits(self) -> None:
+        """Replace each binding field whose cell holds a new, valid value.
 
-    def _set_cell(
-        self,
-        binding_index: int,
-        column: SourceBindingColumn,
-        value: str,
-    ) -> None:
-        row_index = int(column)
-        spec = column.enum_cell_spec()
-        free_form_spec = self.free_form_cell_specs.get((type(column), column))
-        if spec is None and free_form_spec is None:
-            self.table.setItem(row_index, binding_index, EditableTableItem(value))
-            return
-        if free_form_spec is not None:
-            self.table.setCellWidget(
-                row_index,
-                binding_index,
-                StructuredSelectorCellWidget(
-                    values=free_form_spec.values,
-                    value=value,
-                    editor_kind=free_form_spec.editor_kind,
-                    apply_changes=self._request_apply_changes,
-                    parent=self.table,
-                ),
-            )
-            return
-        combo = NoScrollComboBox(self.table)
-        for enum_value in spec.values:
-            combo.addItem(spec.text_for_value(enum_value), enum_value)
-        index = combo.findText(value)
-        if index >= 0:
-            combo.setCurrentIndex(index)
-        combo.currentIndexChanged.connect(lambda _: self._request_apply_changes())
-        combo.activated.connect(lambda _: self._request_apply_changes())
-        self.table.setCellWidget(row_index, binding_index, combo)
+        Passes repeat until nothing applies, so an edit that is only valid
+        together with another pending edit (e.g. a non-image kind and a
+        source-artifact projection) lands once both cells are set.
+        """
+
+        for binding_index, binding in enumerate(self._bindings):
+            applied = True
+            while applied:
+                applied = False
+                for column in self.columns:
+                    try:
+                        value = column.editor.value_from_raw(
+                            column.editor.raw(self.table, column.index, binding_index)
+                        )
+                        if value == column.value_of(binding):
+                            continue
+                        binding = cast(
+                            NamedSourceBinding, column.replaced(binding, value)
+                        )
+                        applied = True
+                    except INVALID_CELL_VALUE_ERRORS:
+                        continue
+            self._bindings[binding_index] = binding
 
     def _sync_header_labels(self) -> None:
-        for binding_index in range(self.table.columnCount()):
-            label = (
-                self._cell_text(binding_index, SourceBindingColumn.ALIAS)
-                or f"Binding {binding_index + 1}"
-            )
-            item = QTableWidgetItem(label)
-            item.setToolTip(label)
+        for binding_index, binding in enumerate(self._bindings):
+            item = QTableWidgetItem(binding.alias)
+            item.setToolTip(binding.alias)
             self.table.setHorizontalHeaderItem(binding_index, item)
 
     def _configure_table(self) -> None:
-        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.table.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Fixed,
-        )
+        EditableTableLayout.configure(self.table)
         self.table.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectColumns
         )
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.verticalHeader().setVisible(True)
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.table.verticalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
 
     def _fit_table(self) -> None:
         EditableTableLayout.fit_to_rows(self.table)
@@ -1569,7 +1699,7 @@ class StepBindingsDialog(QDialog):
         self,
         *,
         bindings: tuple[NamedSourceBinding, ...],
-        free_form_cell_specs: FreeFormCellSpecMap,
+        suggestions: RowSuggestionMap,
         scope_color_scheme: object | None = None,
         parent: QWidget | None = None,
     ) -> None:
@@ -1577,7 +1707,7 @@ class StepBindingsDialog(QDialog):
         self.setWindowTitle("Edit step source bindings")
         self.editor = StepBindingsTableEditor(
             bindings=bindings,
-            free_form_cell_specs=free_form_cell_specs,
+            suggestions=suggestions,
             scope_color_scheme=scope_color_scheme,
             parent=self,
         )
@@ -1595,323 +1725,6 @@ class StepBindingsDialog(QDialog):
 
     def bindings(self) -> tuple[NamedSourceBinding, ...]:
         return self.editor.bindings()
-
-
-class SelectorListCodec:
-    """Compact table-cell codec for typed source selectors."""
-
-    ITEM_SEPARATOR = ";"
-    KEY_VALUE_SEPARATOR = "="
-    FILTER_SEPARATOR = ":"
-
-    @classmethod
-    def component_cells(cls, selector: SourceSelector) -> str:
-        return cls.component_selector_cells(selector.components)
-
-    @classmethod
-    def component_selector_cells(
-        cls,
-        selectors: tuple[ComponentSelector, ...],
-    ) -> str:
-        return cls.ITEM_SEPARATOR.join(
-            f"{component_selector.component.value}{cls.KEY_VALUE_SEPARATOR}{component_selector.value}"
-            for component_selector in selectors
-        )
-
-    @classmethod
-    def metadata_cells(cls, selector: SourceSelector) -> str:
-        return cls.ITEM_SEPARATOR.join(
-            f"{metadata_selector.field}{cls.KEY_VALUE_SEPARATOR}{metadata_selector.value}"
-            for metadata_selector in selector.metadata
-        )
-
-    @classmethod
-    def filter_cells(cls, selector: SourceSelector) -> str:
-        if any(clause.any_group is not None for clause in selector.filters):
-            raise ValueError(
-                "Grouped source filters must be edited in the source-filter table."
-            )
-        return cls.ITEM_SEPARATOR.join(
-            cls.FILTER_SEPARATOR.join(
-                (
-                    clause.subject.value,
-                    clause.match_type.value,
-                    clause.value or "",
-                )
-            )
-            for clause in selector.filters
-        )
-
-    @classmethod
-    def parse_components(cls, text: str) -> tuple[ComponentSelector, ...]:
-        selectors: list[ComponentSelector] = []
-        for item in cls.items(text):
-            key, value = cls.key_value_parts(item)
-            selectors.append(
-                ComponentSelector(
-                    component=AllComponents(key),
-                    value=value,
-                )
-            )
-        return tuple(selectors)
-
-    @classmethod
-    def parse_metadata(cls, text: str) -> tuple[MetadataSelector, ...]:
-        selectors: list[MetadataSelector] = []
-        for item in cls.items(text):
-            key, value = cls.key_value_parts(item)
-            selectors.append(MetadataSelector(field=key, value=value))
-        return tuple(selectors)
-
-    @classmethod
-    def parse_filters(cls, text: str) -> tuple[SourceFilterClause, ...]:
-        filters: list[SourceFilterClause] = []
-        for item in cls.items(text):
-            subject, match_type, value = cls.filter_parts(item)
-            filters.append(
-                SourceFilterClause(
-                    subject=SourceFilterSubject(subject),
-                    match_type=SourceFilterMatchType(match_type),
-                    value=value or None,
-                )
-            )
-        return tuple(filters)
-
-    @classmethod
-    def match_field_cells(cls, dimension: SourceBindingMatchDimension) -> str:
-        return cls.ITEM_SEPARATOR.join(
-            f"{field.alias}{cls.KEY_VALUE_SEPARATOR}{field.metadata_field}"
-            for field in dimension.fields
-        )
-
-    @classmethod
-    def parse_match_fields(cls, text: str) -> tuple[SourceBindingMatchField, ...]:
-        fields: list[SourceBindingMatchField] = []
-        for item in cls.items(text):
-            alias, metadata_field = cls.key_value_parts(item)
-            fields.append(
-                SourceBindingMatchField(
-                    alias=alias,
-                    metadata_field=metadata_field,
-                )
-            )
-        return tuple(fields)
-
-    @classmethod
-    def items(cls, text: str) -> tuple[str, ...]:
-        return tuple(
-            item.strip() for item in text.split(cls.ITEM_SEPARATOR) if item.strip()
-        )
-
-    @classmethod
-    def key_value_parts(cls, item: str) -> tuple[str, str]:
-        key, separator, value = item.partition(cls.KEY_VALUE_SEPARATOR)
-        if not separator or not key.strip() or not value.strip():
-            raise ValueError(f"Expected selector item as key=value, got {item!r}.")
-        return key.strip(), value.strip()
-
-    @classmethod
-    def filter_parts(cls, item: str) -> tuple[str, str, str | None]:
-        parts = tuple(part.strip() for part in item.split(cls.FILTER_SEPARATOR, 2))
-        if len(parts) < 2 or not parts[0] or not parts[1]:
-            raise ValueError(
-                "Expected filter item as subject:match_type[:value], " f"got {item!r}."
-            )
-        return parts[0], parts[1], parts[2] if len(parts) == 3 else None
-
-
-@dataclass(frozen=True, slots=True)
-class EditableSourceBindingRow:
-    """Nominal row model for editing one source-binding declaration."""
-
-    binding: NamedSourceBinding
-
-    @classmethod
-    def from_cells(cls, values: tuple[str, ...]) -> "EditableSourceBindingRow | None":
-        (
-            alias,
-            artifact_kind,
-            origin,
-            required,
-            components,
-            metadata,
-            filters,
-            inherit_current_scope,
-            identity,
-            source_set_role,
-            projection_role,
-        ) = (value.strip() for value in values)
-        if not alias:
-            return None
-        selector = SourceSelector(
-            components=SelectorListCodec.parse_components(components),
-            metadata=SelectorListCodec.parse_metadata(metadata),
-            filters=SelectorListCodec.parse_filters(filters),
-            inherit_current_scope=inherit_current_scope.lower()
-            not in {"false", "0", "no", "n"},
-        )
-        return cls(
-            binding=NamedSourceBinding(
-                alias=alias,
-                artifact_kind=ArtifactType.coerce(
-                    artifact_kind or ImageArtifactType.value
-                ),
-                selector=selector,
-                origin=SourceBindingOrigin(
-                    origin or SourceBindingOrigin.STEP_INPUT.value
-                ),
-                component_identity=SelectorListCodec.parse_components(identity),
-                required=required.lower() not in {"false", "0", "no", "n"},
-                source_set_role=SourceSetRole(
-                    source_set_role or SourceSetRole.MATCHED.value
-                ),
-                projection_role=SourceProjectionRole(
-                    projection_role or SourceProjectionRole.PRIMARY_PLANE.value
-                ),
-            ),
-        )
-
-    @classmethod
-    def from_binding(
-        cls,
-        binding: NamedSourceBinding,
-    ) -> "EditableSourceBindingRow":
-        return cls(binding=binding)
-
-    def cells(self) -> tuple[str, ...]:
-        return (
-            self.binding.alias,
-            self.binding.artifact_kind.value,
-            self.binding.origin.value,
-            str(self.binding.required),
-            SelectorListCodec.component_cells(self.binding.selector),
-            SelectorListCodec.metadata_cells(self.binding.selector),
-            SelectorListCodec.filter_cells(self.binding.selector),
-            str(self.binding.selector.inherit_current_scope),
-            SelectorListCodec.component_selector_cells(self.binding.component_identity),
-            self.binding.source_set_role.value,
-            self.binding.projection_role.value,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class EditableMetadataRuleRow:
-    """Nominal row model for editing one metadata extraction rule."""
-
-    rule: MetadataExtractionRule
-
-    @classmethod
-    def from_cells(cls, values: tuple[str, ...]) -> "EditableMetadataRuleRow | None":
-        source, pattern, filters = (value.strip() for value in values)
-        if not pattern:
-            return None
-        return cls(
-            rule=MetadataExtractionRule(
-                source=MetadataSource(source or MetadataSource.FILE_NAME.value),
-                pattern=pattern,
-                filters=SelectorListCodec.parse_filters(filters),
-            ),
-        )
-
-    @classmethod
-    def from_rule(cls, rule: MetadataExtractionRule) -> "EditableMetadataRuleRow":
-        return cls(rule=rule)
-
-    def cells(self) -> tuple[str, ...]:
-        return (
-            self.rule.source.value,
-            self.rule.pattern,
-            SelectorListCodec.filter_cells(SourceSelector(filters=self.rule.filters)),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class EditableSourceFilterRow:
-    """Nominal row model for editing one source filter clause."""
-
-    clause: SourceFilterClause
-
-    @classmethod
-    def from_cells(cls, values: tuple[str, ...]) -> "EditableSourceFilterRow | None":
-        subject, match_type, value, any_group = (cell.strip() for cell in values)
-        if not subject and not match_type and not value and not any_group:
-            return None
-        match_type_value = SourceFilterMatchType(
-            match_type or SourceFilterMatchType.IS_IMAGE.value
-        )
-        value_or_none = value or None
-        if match_type_value.requires_value and value_or_none is None:
-            return None
-        return cls(
-            clause=SourceFilterClause(
-                subject=SourceFilterSubject(subject or SourceFilterSubject.FILE.value),
-                match_type=match_type_value,
-                value=value_or_none,
-                any_group=int(any_group) if any_group else None,
-            )
-        )
-
-    @classmethod
-    def from_clause(cls, clause: SourceFilterClause) -> "EditableSourceFilterRow":
-        return cls(clause=clause)
-
-    def cells(self) -> tuple[str, ...]:
-        return (
-            self.clause.subject.value,
-            self.clause.match_type.value,
-            self.clause.value or "",
-            "" if self.clause.any_group is None else str(self.clause.any_group),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class EditableMatchPlanRow:
-    """Nominal row model for editing one match-plan dimension."""
-
-    method: SourceBindingMatchMethod
-    dimension: SourceBindingMatchDimension | None = None
-
-    @classmethod
-    def from_cells(cls, values: tuple[str, ...]) -> "EditableMatchPlanRow | None":
-        method, fields = (value.strip() for value in values)
-        if not method and not fields:
-            return None
-        return cls(
-            method=SourceBindingMatchMethod(
-                method or SourceBindingMatchMethod.ORDER.value
-            ),
-            dimension=(
-                SourceBindingMatchDimension(
-                    fields=SelectorListCodec.parse_match_fields(fields),
-                )
-                if fields
-                else None
-            ),
-        )
-
-    @classmethod
-    def from_plan(
-        cls,
-        plan: SourceBindingMatchPlan | None,
-    ) -> tuple["EditableMatchPlanRow", ...]:
-        if plan is None:
-            return ()
-        if not plan.dimensions:
-            return (cls(method=plan.method),)
-        return tuple(
-            cls(method=plan.method, dimension=dimension)
-            for dimension in plan.dimensions
-        )
-
-    def cells(self) -> tuple[str, ...]:
-        return (
-            self.method.value,
-            (
-                ""
-                if self.dimension is None
-                else SelectorListCodec.match_field_cells(self.dimension)
-            ),
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1986,7 +1799,7 @@ class SourceBindingsEditorValue:
         self,
         pipeline_source_bindings: SourceBindingsConfig,
     ) -> tuple[SourceBindingsConfig, StepSourceBindingsConfig]:
-        """Return nominal pipeline and step values for the shared view model."""
+        """Return nominal pipeline and step values rendered by the editor."""
         concrete = self.concrete_view()
         if isinstance(concrete, StepSourceBindingsConfig):
             return pipeline_source_bindings, concrete
@@ -2016,7 +1829,6 @@ class SourceBindingsEditorWidget(
 
     def __init__(
         self,
-        view_model: SourceBindingsViewModel | None = None,
         *,
         source_bindings: SourceBindingsConfig = SourceBindingsConfig(),
         bindings: SourceBindingsEditorRawValue | None = None,
@@ -2056,13 +1868,13 @@ class SourceBindingsEditorWidget(
         self._enabled_provenance_button: QWidget | None = None
         self._updating_enableable_chrome = False
         self.source_filters_controller: (
-            EditableTableController[EditableSourceFilterRow] | None
+            EditableTableController[SourceFilterClause] | None
         ) = None
         self.metadata_rules_controller: (
-            EditableTableController[EditableMetadataRuleRow] | None
+            EditableTableController[MetadataExtractionRule] | None
         ) = None
         self.match_plan_controller: (
-            EditableTableController[EditableMatchPlanRow] | None
+            EditableTableController[SourceSetPairingRow] | None
         ) = None
         self._editable_table_controllers: list[EditableTableController] = []
         self._structural_table_controllers: list[EditableTableController] = []
@@ -2071,10 +1883,7 @@ class SourceBindingsEditorWidget(
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
-        self.empty_label = QLabel("No source bindings loaded")
-        self.layout.addWidget(self.empty_label)
-        if view_model is not None:
-            self.set_view_model(view_model)
+        self.refresh()
 
     @classmethod
     def from_bindings(
@@ -2089,18 +1898,10 @@ class SourceBindingsEditorWidget(
     ) -> "SourceBindingsEditorWidget":
         """Create an editor from typed source bindings and pipeline defaults."""
 
-        table_bindings = display_bindings if display_bindings is not None else bindings
-        view_source_bindings, view_step_bindings = SourceBindingsEditorValue(
-            table_bindings
-        ).view_inputs(source_bindings)
         return cls(
-            SourceBindingsViewModel.from_config_and_step_bindings(
-                source_bindings=view_source_bindings,
-                step_bindings=view_step_bindings,
-            ),
             source_bindings=source_bindings,
             bindings=bindings,
-            display_bindings=table_bindings,
+            display_bindings=display_bindings,
             inventory=inventory,
             form_context=form_context,
             parent=parent,
@@ -2293,10 +2094,7 @@ class SourceBindingsEditorWidget(
             self._updating_ui = True
             try:
                 structure_changed = self.source_filters_controller.replace_all(
-                    tuple(
-                        EditableSourceFilterRow.from_clause(clause)
-                        for clause in incoming.source_filter_declarations
-                    )
+                    incoming.source_filter_declarations
                 )
             finally:
                 self._updating_ui = False
@@ -2481,14 +2279,7 @@ class SourceBindingsEditorWidget(
         """Rebuild the rendered view from current bindings and preview context."""
 
         source_bindings, step_bindings = self.resolved_view_inputs()
-        self.set_view_model(
-            SourceBindingsViewModel.from_config_and_step_bindings(
-                source_bindings=source_bindings,
-                step_bindings=step_bindings,
-            )
-        )
-
-    def set_view_model(self, view_model: SourceBindingsViewModel) -> None:
+        binding_columns = DataclassFieldColumns.of(NamedSourceBinding)
         self._updating_ui = True
         self.clear()
         self.layout.addWidget(
@@ -2498,11 +2289,11 @@ class SourceBindingsEditorWidget(
                 (
                     (
                         "image-plane sources",
-                        str(view_model.pipeline_sources.image_plane_source_count),
+                        str(len(source_bindings.image_plane_sources)),
                     ),
                     (
                         "imported metadata tables",
-                        str(len(view_model.pipeline_sources.imported_metadata_tables)),
+                        str(len(source_bindings.imported_metadata_tables)),
                     ),
                 ),
             ),
@@ -2510,37 +2301,45 @@ class SourceBindingsEditorWidget(
         self.layout.addWidget(
             self._table_group(
                 "Pipeline Bindings",
-                ("Alias", "Kind", "Origin"),
                 tuple(
-                    (
-                        row.alias,
-                        row.artifact_kind,
-                        row.origin,
+                    binding_columns.named(name).label
+                    for name in ("alias", "artifact_kind", "origin")
+                ),
+                tuple(
+                    tuple(
+                        binding_columns.named(name).editor.display(
+                            getattr(binding, name)
+                        )
+                        for name in ("alias", "artifact_kind", "origin")
                     )
-                    for row in view_model.pipeline_bindings
+                    for binding in source_bindings.binding_declarations
                 ),
             ),
         )
-        self.layout.addWidget(self._step_bindings_group(view_model))
+        self.layout.addWidget(self._step_bindings_group(step_bindings))
         self.layout.addWidget(self._source_filters_group())
         self.layout.addWidget(self._metadata_rules_group())
         self.layout.addWidget(self._match_plan_group())
+        pairing_columns = DataclassFieldColumns.of(SourceSetPairingRow)
         self.layout.addWidget(
             self._table_group(
                 "Resolved Source Set Pairing",
                 ("Scope", "Method", "Dimensions"),
                 tuple(
                     (
-                        plan.declaration_scope,
-                        plan.method,
+                        scope,
+                        pairing_columns.named("method").editor.display(plan.method),
                         str(len(plan.dimensions)),
                     )
-                    for plan in view_model.match_plans
+                    for scope, plan in (
+                        ("pipeline", source_bindings.match_plan),
+                        ("step", step_bindings.match_plan),
+                    )
+                    if plan is not None
                 ),
             )
         )
         if self._inventory is not None:
-            source_bindings, step_bindings = self.resolved_view_inputs()
             preview = SourceBindingsPreview.from_config_and_step_bindings(
                 source_bindings=source_bindings,
                 step_bindings=step_bindings,
@@ -2780,12 +2579,10 @@ class SourceBindingsEditorWidget(
         self._updating_ui = True
         try:
             self.source_filters_controller.append(
-                EditableSourceFilterRow.from_clause(
-                    clause
-                    or SourceFilterClause(
-                        SourceFilterSubject.FILE,
-                        SourceFilterMatchType.IS_IMAGE,
-                    )
+                clause
+                or SourceFilterClause(
+                    SourceFilterSubject.FILE,
+                    SourceFilterMatchType.IS_IMAGE,
                 )
             )
         finally:
@@ -2826,12 +2623,10 @@ class SourceBindingsEditorWidget(
         self._updating_ui = True
         try:
             self.metadata_rules_controller.append(
-                EditableMetadataRuleRow.from_rule(
-                    rule
-                    or MetadataExtractionRule(
-                        source=MetadataSource.FILE_NAME,
-                        pattern=r"(?P<field>.+)",
-                    )
+                rule
+                or MetadataExtractionRule(
+                    source=MetadataSource.FILE_NAME,
+                    pattern=r"(?P<field>.+)",
                 )
             )
         finally:
@@ -2853,7 +2648,7 @@ class SourceBindingsEditorWidget(
 
     def add_match_plan_row(
         self,
-        row: EditableMatchPlanRow | None = None,
+        row: SourceSetPairingRow | None = None,
     ) -> None:
         """Append one editable match-plan dimension row."""
 
@@ -2864,7 +2659,7 @@ class SourceBindingsEditorWidget(
         self._updating_ui = True
         try:
             self.match_plan_controller.append(
-                row or EditableMatchPlanRow(method=SourceBindingMatchMethod.METADATA)
+                row or SourceSetPairingRow(method=SourceBindingMatchMethod.METADATA)
             )
         finally:
             self._updating_ui = False
@@ -2954,51 +2749,26 @@ class SourceBindingsEditorWidget(
                 return controller
         return None
 
-    def _free_form_cell_specs(
-        self,
-    ) -> FreeFormCellSpecMap:
-        suggestions = SourceBindingSuggestionSet.from_context(
+    def _suggestions(self) -> RowSuggestionMap:
+        return source_binding_suggestions(
             source_bindings=self._source_bindings,
             inventory=self._inventory,
         )
-        return {
-            (SourceBindingColumn, SourceBindingColumn.COMPONENTS): FreeFormCellSpec(
-                suggestions.component_selectors,
-                FreeFormCellEditorKind.COMPONENT_SELECTORS,
-            ),
-            (SourceBindingColumn, SourceBindingColumn.IDENTITY): FreeFormCellSpec(
-                suggestions.component_selectors,
-                FreeFormCellEditorKind.COMPONENT_SELECTORS,
-            ),
-            (SourceBindingColumn, SourceBindingColumn.METADATA): FreeFormCellSpec(
-                suggestions.metadata_selectors,
-                FreeFormCellEditorKind.METADATA_SELECTORS,
-            ),
-            (SourceBindingColumn, SourceBindingColumn.FILTERS): FreeFormCellSpec(
-                suggestions.filter_clauses,
-                FreeFormCellEditorKind.FILTER_CLAUSES,
-            ),
-            (MetadataRuleColumn, MetadataRuleColumn.FILTERS): FreeFormCellSpec(
-                suggestions.filter_clauses,
-                FreeFormCellEditorKind.FILTER_CLAUSES,
-            ),
-            (MatchPlanColumn, MatchPlanColumn.FIELDS): FreeFormCellSpec(
-                suggestions.match_fields,
-                FreeFormCellEditorKind.MATCH_DIMENSIONS,
-            ),
-        }
 
     @staticmethod
     def _compact_button(button: QPushButton) -> QPushButton:
         button.setFixedHeight(min(CURRENT_LAYOUT.button_height, 24))
         return button
 
-    def _step_bindings_group(self, view_model: SourceBindingsViewModel) -> QGroupBox:
+    def _step_bindings_group(
+        self,
+        step_bindings: StepSourceBindingsConfig,
+    ) -> QGroupBox:
         group, layout = self._section_group("Bindings", "bindings")
         summary_table = self._create_table(0, 3)
         self.step_bindings_summary_table = summary_table
         summary_table.setHorizontalHeaderLabels(("Bindings", "Aliases", "Origins"))
-        for row_index, row in enumerate(self._binding_summary_rows(view_model)):
+        for row_index, row in enumerate(self._binding_summary_rows(step_bindings)):
             summary_table.insertRow(row_index)
             for column_index, value in enumerate(row):
                 summary_table.setItem(row_index, column_index, QTableWidgetItem(value))
@@ -3025,7 +2795,7 @@ class SourceBindingsEditorWidget(
             bindings=SourceBindingsEditorValue(
                 self._display_bindings
             ).binding_declarations,
-            free_form_cell_specs=self._free_form_cell_specs(),
+            suggestions=self._suggestions(),
             scope_color_scheme=self._scope_color_scheme,
             parent=self,
         )
@@ -3046,52 +2816,45 @@ class SourceBindingsEditorWidget(
             + (binding,)
         )
 
+    @staticmethod
     def _binding_summary_rows(
-        self,
-        view_model: SourceBindingsViewModel,
+        step_bindings: StepSourceBindingsConfig,
     ) -> tuple[tuple[str, str, str], ...]:
-        if not view_model.step_bindings:
+        bindings = step_bindings.binding_declarations
+        if not bindings:
             return ()
+        origin_column = DataclassFieldColumns.of(NamedSourceBinding).named("origin")
         return (
             (
-                str(len(view_model.step_bindings)),
-                ", ".join(binding.alias for binding in view_model.step_bindings),
+                str(len(bindings)),
+                ", ".join(binding.alias for binding in bindings),
                 ", ".join(
-                    sorted({binding.origin for binding in view_model.step_bindings})
+                    sorted(
+                        {
+                            origin_column.editor.display(binding.origin)
+                            for binding in bindings
+                        }
+                    )
                 ),
             ),
         )
 
     def _source_filters_group(self) -> QGroupBox:
         group, layout = self._section_group("Source Filters", "source_filters")
-        table = self._create_table(0, len(SourceFilterColumn))
-        table.setHorizontalHeaderLabels(
-            tuple(column.name.title() for column in SourceFilterColumn)
-        )
+        table = self._create_row_table(SourceFilterClause)
         self.source_filters_table = table
         self.source_filters_controller = self._register_structural_table_controller(
-            EditableTableController(
-                table=table,
-                columns=tuple(SourceFilterColumn),
-                free_form_cell_specs=self._free_form_cell_specs(),
-                row_cells=EditableSourceFilterRow.cells,
-                row_from_cells=EditableSourceFilterRow.from_cells,
-                apply_changes=self._apply_source_filters_table,
-                semantic_binding=EditableTableSemanticBinding(
-                    owner_field_name="source_filters",
-                    row_path_policy=IsomorphicDataclassRowPathPolicy(
-                        row_value_type=SourceFilterClause,
-                        column_count=len(SourceFilterColumn),
-                    ),
-                ),
+            self._row_table_controller(
+                table,
+                SourceFilterClause,
+                self._apply_source_filters_table,
+                owner_field_name="source_filters",
             ),
         )
         for clause in SourceBindingsEditorValue(
             self._display_bindings
         ).source_filter_declarations:
-            self.source_filters_controller.append(
-                EditableSourceFilterRow.from_clause(clause)
-            )
+            self.source_filters_controller.append(clause)
         table.itemChanged.connect(
             lambda _: self.source_filters_controller.request_apply_changes()
         )
@@ -3115,34 +2878,20 @@ class SourceBindingsEditorWidget(
 
     def _metadata_rules_group(self) -> QGroupBox:
         group, layout = self._section_group("Metadata Rules", "metadata_rules")
-        table = self._create_table(0, len(MetadataRuleColumn))
-        table.setHorizontalHeaderLabels(
-            tuple(column.name.title() for column in MetadataRuleColumn)
-        )
+        table = self._create_row_table(MetadataExtractionRule)
         self.metadata_rules_table = table
         self.metadata_rules_controller = self._register_structural_table_controller(
-            EditableTableController(
-                table=table,
-                columns=tuple(MetadataRuleColumn),
-                free_form_cell_specs=self._free_form_cell_specs(),
-                row_cells=EditableMetadataRuleRow.cells,
-                row_from_cells=EditableMetadataRuleRow.from_cells,
-                apply_changes=self._apply_metadata_rules_table,
-                semantic_binding=EditableTableSemanticBinding(
-                    owner_field_name="metadata_rules",
-                    row_path_policy=IsomorphicDataclassRowPathPolicy(
-                        row_value_type=MetadataExtractionRule,
-                        column_count=len(MetadataRuleColumn),
-                    ),
-                ),
+            self._row_table_controller(
+                table,
+                MetadataExtractionRule,
+                self._apply_metadata_rules_table,
+                owner_field_name="metadata_rules",
             )
         )
         for rule in SourceBindingsEditorValue(
             self._display_bindings
         ).metadata_rule_declarations:
-            self.metadata_rules_controller.append(
-                EditableMetadataRuleRow.from_rule(rule)
-            )
+            self.metadata_rules_controller.append(rule)
         table.itemChanged.connect(
             lambda _: self.metadata_rules_controller.request_apply_changes()
         )
@@ -3166,26 +2915,16 @@ class SourceBindingsEditorWidget(
 
     def _match_plan_group(self) -> QGroupBox:
         group, layout = self._section_group("Source Set Pairing", "match_plan")
-        table = self._create_table(0, len(MatchPlanColumn))
-        table.setHorizontalHeaderLabels(
-            tuple(column.table_header_label for column in MatchPlanColumn)
-        )
-        for column in MatchPlanColumn:
-            header_item = table.horizontalHeaderItem(int(column))
-            if header_item is not None and column.table_header_tooltip is not None:
-                header_item.setToolTip(column.table_header_tooltip)
+        table = self._create_row_table(SourceSetPairingRow)
         self.match_plan_table = table
         self.match_plan_controller = self._register_editable_table_controller(
-            EditableTableController(
-                table=table,
-                columns=tuple(MatchPlanColumn),
-                free_form_cell_specs=self._free_form_cell_specs(),
-                row_cells=EditableMatchPlanRow.cells,
-                row_from_cells=EditableMatchPlanRow.from_cells,
-                apply_changes=self._apply_match_plan_table,
+            self._row_table_controller(
+                table,
+                SourceSetPairingRow,
+                self._apply_match_plan_table,
             )
         )
-        for row in EditableMatchPlanRow.from_plan(
+        for row in SourceSetPairingRow.from_plan(
             SourceBindingsEditorValue(self._display_bindings).match_plan
         ):
             self.match_plan_controller.append(row)
@@ -3228,9 +2967,7 @@ class SourceBindingsEditorWidget(
             raise RuntimeError("Source filters table controller is not initialized.")
         if self.source_filters_controller.has_incomplete_rows():
             return
-        source_filters = tuple(
-            row.clause for row in self.source_filters_controller.rows()
-        )
+        source_filters = self.source_filters_controller.rows()
         self._bindings = replace_raw(
             self._bindings,
             source_filters=source_filters,
@@ -3246,9 +2983,9 @@ class SourceBindingsEditorWidget(
             return
         if self.metadata_rules_controller is None:
             raise RuntimeError("Metadata rules table controller is not initialized.")
-        metadata_rules = tuple(
-            row.rule for row in self.metadata_rules_controller.rows()
-        )
+        if self.metadata_rules_controller.has_incomplete_rows():
+            return
+        metadata_rules = self.metadata_rules_controller.rows()
         self._bindings = replace_raw(
             self._bindings,
             metadata_rules=metadata_rules,
@@ -3266,10 +3003,10 @@ class SourceBindingsEditorWidget(
             raise RuntimeError("Match plan table controller is not initialized.")
         if self.match_plan_controller.has_incomplete_rows():
             return
-        if self._match_plan_table_has_incomplete_dimension_rows():
-            return
         rows = self.match_plan_controller.rows()
-        match_plan = self._match_plan_from_rows(rows)
+        if any(row.fields for row in rows) and not all(row.fields for row in rows):
+            return
+        match_plan = SourceSetPairingRow.to_plan(rows)
         self._bindings = replace_raw(
             self._bindings,
             match_plan=match_plan,
@@ -3279,31 +3016,6 @@ class SourceBindingsEditorWidget(
             match_plan=match_plan,
         )
         self.changed.emit()
-
-    def _match_plan_table_has_incomplete_dimension_rows(self) -> bool:
-        if self.match_plan_controller is None:
-            return False
-        row_values = self.match_plan_controller.row_values()
-        rows_with_fields = 0
-        rows_without_fields = 0
-        for method, fields in row_values:
-            if not method.strip() and not fields.strip():
-                continue
-            if fields.strip():
-                rows_with_fields += 1
-            else:
-                rows_without_fields += 1
-        return rows_with_fields > 0 and rows_without_fields > 0
-
-    @staticmethod
-    def _match_plan_from_rows(
-        rows: tuple[EditableMatchPlanRow, ...],
-    ) -> SourceBindingMatchPlan | None:
-        if not rows:
-            return None
-        method = rows[0].method
-        dimensions = tuple(row.dimension for row in rows if row.dimension is not None)
-        return SourceBindingMatchPlan(method=method, dimensions=dimensions)
 
     def _table_group(
         self,
@@ -3322,6 +3034,40 @@ class SourceBindingsEditorWidget(
         self._fit_table_to_rows(table)
         layout.addWidget(table)
         return group
+
+    def _create_row_table(self, row_type: type) -> ScopedTableWidget:
+        columns = DataclassFieldColumns.of(row_type)
+        table = self._create_table(0, len(columns))
+        table.setHorizontalHeaderLabels(columns.labels)
+        columns.apply_header_items(table.horizontalHeaderItem)
+        return table
+
+    def _row_table_controller(
+        self,
+        table: QTableWidget,
+        row_type: type,
+        apply_changes: Callable[[], None],
+        *,
+        owner_field_name: str | None = None,
+    ) -> EditableTableController:
+        columns = DataclassFieldColumns.of(row_type)
+        return EditableTableController(
+            table=table,
+            columns=columns,
+            apply_changes=apply_changes,
+            suggestions=self._suggestions(),
+            semantic_binding=(
+                None
+                if owner_field_name is None
+                else EditableTableSemanticBinding(
+                    owner_field_name=owner_field_name,
+                    row_path_policy=IsomorphicDataclassRowPathPolicy(
+                        row_value_type=row_type,
+                        column_count=len(columns),
+                    ),
+                )
+            ),
+        )
 
     def _create_table(self, rows: int, columns: int) -> ScopedTableWidget:
         table = ScopedTableWidget(rows, columns)
@@ -3547,7 +3293,6 @@ register_source_bindings_editor_widget()
 
 __all__ = (
     "SourceBindingsEditorWidget",
-    "SourceFilterColumn",
     "create_source_bindings_editor_widget",
     "resolved_source_bindings_value",
     "register_source_bindings_editor_widget",
