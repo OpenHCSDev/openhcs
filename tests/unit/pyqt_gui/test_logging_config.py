@@ -190,7 +190,7 @@ def test_server_log_discovery_preserves_heartbeat_process_identity(
                     running_executions=(
                         RunningExecutionInfo(
                             execution_id=execution_id,
-                            plate_id="plate-1",
+                            subject_id="plate-1",
                             start_time=1.0,
                             elapsed=2.0,
                         ),

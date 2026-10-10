@@ -97,7 +97,7 @@ def test_phase_timing_rejects_invalid_duration(seconds: float) -> None:
 def test_completed_server_duration_uses_exact_ordinary_job() -> None:
     record = ExecutionRecord(
         execution_id="execution-1",
-        plate_id="plate",
+        subject_id="plate",
         client_address=None,
         status="complete",
         start_time=10.0,
@@ -120,7 +120,7 @@ def test_completed_server_duration_rejects_invalid_bounds(
 ) -> None:
     record = ExecutionRecord(
         execution_id="execution-1",
-        plate_id="plate",
+        subject_id="plate",
         client_address=None,
         status="complete",
         start_time=start_time,

@@ -104,7 +104,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     server = ZMQExecutionServer(port=5555)
     record = ExecutionRecord(
         execution_id="axis-outcome-check",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         client_address=None,
         status=ExecutionStatus.QUEUED.value,
     )
@@ -151,7 +151,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     monkeypatch.setattr(server, "_kill_worker_processes", lambda: 0)
     server.run_execution(
         record.execution_id,
-        ExecuteRequest(plate_id=record.plate_id, pipeline_code="pass"),
+        ExecuteRequest(subject_id=record.subject_id, pipeline_code="pass"),
         record,
     )
     terminal = server.progress_queue.get_nowait()[MessageFields.EXECUTION]
@@ -163,7 +163,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     if failed:
         assert "A02: error: producer lineage missing" in terminal[MessageFields.ERROR]
     else:
-        assert terminal[MessageFields.RESULTS_SUMMARY][MessageFields.WELLS] == [
+        assert terminal[MessageFields.RESULTS_SUMMARY][MessageFields.PARTITION_VALUES] == [
             "A01",
             "A02",
         ]
@@ -180,7 +180,7 @@ def test_terminal_notification_contains_openhcs_summary_before_cleanup(
     monkeypatch.setattr(server, "_kill_worker_processes", lambda: 0)
     record = ExecutionRecord(
         execution_id="exec-finalized",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         client_address=None,
         status=ExecutionStatus.QUEUED.value,
     )
@@ -199,7 +199,7 @@ def test_terminal_notification_contains_openhcs_summary_before_cleanup(
 
     server.run_execution(
         record.execution_id,
-        ExecuteRequest(plate_id=record.plate_id, pipeline_code="pass"),
+        ExecuteRequest(subject_id=record.subject_id, pipeline_code="pass"),
         record,
     )
 
@@ -208,8 +208,8 @@ def test_terminal_notification_contains_openhcs_summary_before_cleanup(
     assert terminal[MessageFields.START_TIME] is not None
     assert terminal[MessageFields.END_TIME] is not None
     summary = terminal[MessageFields.RESULTS_SUMMARY]
-    assert summary[MessageFields.WELL_COUNT] == 1
-    assert summary[MessageFields.WELLS] == ["W001"]
+    assert summary[MessageFields.PARTITION_COUNT] == 1
+    assert summary[MessageFields.PARTITION_VALUES] == ["W001"]
     if invalid_output_metadata:
         assert "Failed to attach output_plate_root" in caplog.text
         assert "output_plate_root" not in summary
@@ -295,7 +295,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
     server._server_environment = None
     record = ExecutionRecord(
         execution_id="execution-1",
-        plate_id="plate-1",
+        subject_id="plate-1",
         client_address=None,
         status=ExecutionStatus.RUNNING.value,
     )
@@ -524,7 +524,7 @@ def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> 
     from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
     server = ZMQExecutionServer()
-    record = ExecutionRecord("execution-1", "plate-1", None, ExecutionStatus.RUNNING.value)
+    record = ExecutionRecord("execution-1", "plate-1", ExecutionStatus.RUNNING.value)
     server.active_executions[record.execution_id] = record
     server._worker_assignments_by_execution = {
         "execution-1": {"worker_0": ["A01", "B01"]}
@@ -532,7 +532,7 @@ def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> 
     worker_queue = SimpleQueue()
     progress_context = ProgressExecutionContext(
         execution_id=record.execution_id,
-        plate_id=record.plate_id,
+        plate_id=record.subject_id,
     )
     parent = create_event(
         ProgressEventPayload(
@@ -587,7 +587,7 @@ def test_zmq_server_records_the_compilation_output_plate_value_without_rebuildin
     server._worker_assignments_by_execution = {}
     record = ExecutionRecord(
         execution_id="execution-1",
-        plate_id="plate-1",
+        subject_id="plate-1",
         client_address=None,
         status=ExecutionStatus.QUEUED.value,
     )
@@ -603,7 +603,7 @@ def test_zmq_server_records_the_compilation_output_plate_value_without_rebuildin
 
     server._record_compilation_outputs(record.execution_id, compilation)
 
-    assert record.metadata == {
+    assert record.extras == {
         ExecutionOutputPlateSummary.EXECUTION_RECORD_KEY: output_plate
     }
     assert (
@@ -799,7 +799,7 @@ def test_compiled_request_keeps_config_scope_without_resolving_configuration(mon
     )
     server.active_executions[context.execution_id] = ExecutionRecord(
         execution_id=context.execution_id,
-        plate_id=context.plate_id,
+        subject_id=context.plate_id,
         client_address=None,
         status=ExecutionStatus.RUNNING.value,
     )

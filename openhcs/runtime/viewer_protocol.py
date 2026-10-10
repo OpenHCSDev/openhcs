@@ -31,7 +31,7 @@ from python_introspect.validation import validate_annotated_dataclass
 from pydantic import StrictInt
 from polystore.backend_registry import register_cleanup_callback
 from polystore.streaming_constants import StreamingDataType
-from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import NonBlankString, TransportMode, ZMQConfig
 from zmqruntime.messages import (

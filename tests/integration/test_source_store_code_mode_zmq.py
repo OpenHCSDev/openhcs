@@ -15,7 +15,6 @@ from zmqruntime.execution.responses import (
     ExecutionSubmissionResponse,
     ExecutionWaitResult,
 )
-from zmqruntime.messages import MessageFields
 
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import InputSource
@@ -251,12 +250,12 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
         observation_path=tmp_path / "non_live_observation.pkl",
     )
     wire = ZMQExecutionClient().serialize_task(submission.compile_request())
-    wire_pipeline = _exec_pipeline_source(wire[MessageFields.PIPELINE_CODE])
+    wire_pipeline = _exec_pipeline_source(wire.pipeline_code)
     wire_pipeline_document = PipelineDocumentCodec.from_namespace(wire_pipeline)
-    wire_global_config = _exec_config_source(wire[MessageFields.CONFIG_CODE])
+    wire_global_config = _exec_config_source(wire.config_code)
 
-    assert wire[MessageFields.COMPILE_ONLY] is True
-    assert MessageFields.PIPELINE_CONFIG_CODE not in wire
+    assert wire.compile_only is True
+    assert wire.pipeline_config_code is None
     assert (
         FunctionStepTransportAuthority.source_from_pipeline(
             wire_pipeline["pipeline_steps"]

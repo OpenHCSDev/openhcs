@@ -674,7 +674,7 @@ class _FakeRuntimeServerGateway:
             running_executions=(
                 RunningExecutionInfo(
                     execution_id=_ExecutionTestId.EXECUTE,
-                    plate_id="plate-1",
+                    subject_id="plate-1",
                     start_time=0.0,
                     elapsed=0.0,
                 ),
@@ -3961,7 +3961,7 @@ def test_completed_pipeline_job_retains_exact_submission_and_server_result(
                 "status": "ok",
                 "execution": {
                     "execution_id": execution_id,
-                    "plate_id": str(tmp_path),
+                    "subject_id": str(tmp_path),
                     "client_address": None,
                     "status": "complete",
                     "start_time": 10.0,

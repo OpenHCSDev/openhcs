@@ -24,7 +24,7 @@ from PyQt6.QtCore import QByteArray, QObject, QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox
-from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from pyqt_reactive.services.window_navigation import (
     RegisteredWindowNavigationRequest,
 )

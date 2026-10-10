@@ -51,7 +51,7 @@ def test_original_progress_codec_is_the_only_event_store_and_rejects_bad_enum():
         invalid["phase"] = "not-a-declared-phase"
         with pytest.raises(ValueError, match="Invalid phase"):
             queue.put(invalid)
-        with pytest.raises(KeyError):
+        with pytest.raises(ValueError, match="missing required field"):
             queue.put({"phase": "compile", "status": "running"})
     assert queue.events == [event]
     assert len(statuses) == 1

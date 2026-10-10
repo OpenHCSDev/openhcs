@@ -464,7 +464,7 @@ def test_execution_poll_observes_progress_until_complete(monkeypatch) -> None:
 
 def _progress(sequence: int, *, percent: float) -> ExecutionProgressObservation:
     event = TaskProgress(
-        task_id="execution-1",
+        execution_id="execution-1",
         phase="execute",
         status="running",
         percent=percent,

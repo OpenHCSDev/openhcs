@@ -79,7 +79,7 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
 
     record = ExecutionRecord(
         execution_id="exec",
-        plate_id="plate",
+        subject_id="plate",
         client_address=None,
         status=ExecutionStatus.RUNNING.value,
     )

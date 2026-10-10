@@ -8,7 +8,7 @@ import os
 import sys
 import time
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import ModuleType
 
 from polystore import cleanup_backend_connections
@@ -31,7 +31,7 @@ from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
@@ -54,7 +54,6 @@ from openhcs.runtime.zmq_orchestrator_environment import (
 )
 from openhcs.runtime.zmq_progress import ZMQCompilerProgressQueue, ZMQProgressEmitter
 from openhcs.runtime.zmq_server_hooks import (
-    ZMQPongResponseEnricher,
     ZMQResultsSummaryEnricher,
     ZMQWorkerCleanup,
 )
@@ -124,8 +123,9 @@ class ZMQExecutionContext:
 
     def progress_context(self) -> dict:
         return {
-            MessageFields.EXECUTION_ID: self.execution_id,
-            MessageFields.PLATE_ID: self.plate_id,
+            **ProgressExecutionContext(
+                execution_id=self.execution_id, plate_id=self.plate_id
+            ).to_transport_fields(),
             MessageFields.AXIS_ID: "",
         }
 
@@ -303,10 +303,12 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
 
     def _create_pong_response(self):
         self._cleanup_compiled_artifacts()
-        return ZMQPongResponseEnricher(
-            active_executions=self.active_executions,
-            compile_status=self._get_compile_status,
-        ).enrich(super()._create_pong_response())
+        compile_status, compile_message = self._get_compile_status()
+        return replace(
+            super()._create_pong_response(),
+            compile_status=compile_status,
+            compile_message=compile_message,
+        )
 
     def _enqueue_progress(self, progress_update: dict) -> None:
         event = ProgressEvent.from_dict(progress_update)

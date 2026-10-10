@@ -29,8 +29,6 @@ TransportValue = (
     | tuple["TransportValue", ...]
 )
 TransportRequestItems = tuple[tuple[str, TransportValue], ...]
-EXECUTION_PLATE_ID_FIELD = "execution_plate_id"
-SELECTED_PIPELINE_PATH_FIELD = "selected_pipeline_path"
 
 
 class ZMQAuxiliaryParamField(Enum):
@@ -218,21 +216,11 @@ class ZMQExecutionIdentity:
     execution_plate_id: str | None = None
     selected_pipeline_path: str | None = None
 
-    def request_items(self) -> TransportRequestItems:
-        items: list[tuple[str, TransportValue]] = [
-            (MessageFields.PLATE_ID, self.plate_id),
-        ]
-        if self.execution_plate_id is not None:
-            items.append((EXECUTION_PLATE_ID_FIELD, self.execution_plate_id))
-        if self.selected_pipeline_path is not None:
-            items.append((SELECTED_PIPELINE_PATH_FIELD, self.selected_pipeline_path))
-        return tuple(items)
-
     def signature_items(self) -> TransportRequestItems:
         return (
-            (MessageFields.PLATE_ID, self.plate_id),
-            (EXECUTION_PLATE_ID_FIELD, self.execution_plate_id),
-            (SELECTED_PIPELINE_PATH_FIELD, self.selected_pipeline_path),
+            (MessageFields.SUBJECT_ID, self.plate_id),
+            (MessageFields.EXECUTION_SUBJECT_ID, self.execution_plate_id),
+            (MessageFields.SELECTED_PIPELINE_PATH, self.selected_pipeline_path),
         )
 
 
@@ -269,14 +257,6 @@ class ZMQExecutionCompileControl:
     def validate(self) -> None:
         if self.compile_only and self.compile_artifact_id:
             raise ValueError("compile_only and compile_artifact_id cannot both be set")
-
-    def request_items(self) -> TransportRequestItems:
-        items: list[tuple[str, TransportValue]] = []
-        if self.compile_only:
-            items.append((MessageFields.COMPILE_ONLY, True))
-        if self.compile_artifact_id is not None:
-            items.append((MessageFields.COMPILE_ARTIFACT_ID, self.compile_artifact_id))
-        return tuple(items)
 
 
 @dataclass(frozen=True, slots=True)
@@ -320,8 +300,8 @@ class ZMQExecutionRequestPayload:
     ) -> "ZMQExecutionRequestPayload":
         return cls(
             identity=ZMQExecutionIdentity(
-                plate_id=request.plate_id,
-                execution_plate_id=request.execution_plate_id,
+                plate_id=request.subject_id,
+                execution_plate_id=request.execution_subject_id,
                 selected_pipeline_path=request.selected_pipeline_path,
             ),
             pipeline_code=request.pipeline_code,

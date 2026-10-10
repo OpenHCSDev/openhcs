@@ -28,12 +28,14 @@ def test_execution_server_payload_parses_to_typed_info():
         "running_executions": [
             {
                 "execution_id": "exec-1",
-                "plate_id": "/tmp/p1",
+                "subject_id": "/tmp/p1",
+                "start_time": 1.0,
+                "elapsed": 2.0,
                 "compile_only": True,
             },
         ],
         "queued_executions": [
-            {"execution_id": "exec-2", "plate_id": "/tmp/p2", "queue_position": 1},
+            {"execution_id": "exec-2", "subject_id": "/tmp/p2", "queue_position": 1},
         ],
         "compile_status": "compiled success",
         "compile_message": "ok",
@@ -47,7 +49,7 @@ def test_execution_server_payload_parses_to_typed_info():
     assert len(info.workers) == 1
     assert info.running_executions == ("exec-1",)
     assert info.queued_executions == ("exec-2",)
-    assert info.running_execution_entries[0].plate_id == "/tmp/p1"
+    assert info.running_execution_entries[0].subject_id == "/tmp/p1"
     assert info.running_execution_entries[0].compile_only is True
     assert info.queued_execution_entries[0].queue_position == 1
     assert info.response.compile_status == "compiled success"
@@ -64,8 +66,7 @@ def test_viewer_server_payload_parses_to_typed_info():
         "server_type": "napari",
         "server_role": "viewer",
         "log_file_path": "/tmp/napari.log",
-        "memory_mb": 1024.5,
-        "cpu_percent": 8.25,
+        "process_usage": {"memory_mb": 1024.5, "cpu_percent": 8.25},
     }
 
     info = BaseServerInfo.from_response(PongResponse.from_dict(payload))
