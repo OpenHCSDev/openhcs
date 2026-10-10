@@ -8,14 +8,12 @@ via PyImageJ. Inherits from ZMQServer ABC for ping/pong handshake and dual-chann
 import logging
 import threading
 import time
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from zmqruntime.messages import ImageTransferIdentity
 from typing import ClassVar, TypeAlias
 
 import numpy as np
-from metaclass_registry import AutoRegisterMeta
 from polystore.imagej_runtime import FIJI_IMAGEJ_RUNTIME
 from polystore.streaming import StreamingSharedMemoryAuthority
 from polystore.streaming.receivers.core import (
@@ -25,12 +23,10 @@ from polystore.streaming.receivers.core import (
 )
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.config import TransportMode, ZMQConfig
-from zmqruntime.streaming import StreamingVisualizerServer
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.config import FijiDisplayConfig
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import FijiViewer
 from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
@@ -44,24 +40,25 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentMetadataPayload,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
-    ViewerDimensionValueAuthority,
+    ViewerDimensionValues,
     ViewerDisplayBatchContext,
     ViewerMappingDisplayConfigInput,
     ViewerStreamingDataTypeHandler,
     ViewerStreamingDataTypeHandlerMeta,
 )
+from openhcs.runtime.viewer_control_actions import (
+    ViewerControlAction,
+    ViewerServerPort,
+    control_reply,
+)
+from openhcs.runtime.viewer_display import DeclaredAxes, FijiDisplaySettings, FijiSlots
 from openhcs.runtime.viewer_protocol import (
     FijiPayloadKind,
     OpenHCSViewerServerABC,
-    OpenHCSViewerControlMessageType,
     ViewerBatchContextWireField,
     ViewerBatchMessageType,
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
-    ViewerControlMessageType,
-    ViewerControlField,
-    ViewerControlReplyHeader,
-    ViewerControlReplyPayload,
     ViewerControlResponseField,
     ViewerProtocolStatus,
     ViewerServerLaunchRequest,
@@ -86,7 +83,7 @@ FijiFixedLabels: TypeAlias = tuple[tuple[str, ComponentValue], ...]
 
 
 @dataclass(frozen=True, slots=True)
-class FijiDisplayItemContext(ViewerDisplayBatchContext[FijiDisplayConfig]):
+class FijiDisplayItemContext(ViewerDisplayBatchContext[FijiDisplaySettings]):
     """Shared Fiji display context for item batches and deferred processing."""
 
 
@@ -363,19 +360,20 @@ class FijiWireItem(WindowProjectionPayloadProvider):
         return str(value)
 
 
+@dataclass(frozen=True, slots=True)
 class FijiPayloadLocalPlaneExpander:
     """Project one ordered payload-local plane axis into scalar Fiji items."""
 
-    @classmethod
+    declared_axes: DeclaredAxes
+
     def expand_items(
-        cls,
+        self,
         items: Sequence[FijiWireItem],
     ) -> list[FijiWireItem]:
-        return [projected for item in items for projected in cls.expand_item(item)]
+        return [projected for item in items for projected in self.expand_item(item)]
 
-    @classmethod
-    def expand_item(cls, item: FijiWireItem) -> tuple[FijiWireItem, ...]:
-        domain = cls._plane_component_domain(item)
+    def expand_item(self, item: FijiWireItem) -> tuple[FijiWireItem, ...]:
+        domain = self._plane_component_domain(item)
         if not domain.entries:
             return (item,)
         if len(domain.entries) != 1:
@@ -383,14 +381,14 @@ class FijiPayloadLocalPlaneExpander:
                 "Fiji payload-local plane projection requires exactly one "
                 "component declaration."
             )
-        cls._require_plane_axis(item)
+        self._require_plane_axis(item)
         entry = domain.entries[0]
         if not entry.values:
             raise ValueError(
                 "Fiji payload-local plane projection requires at least one "
                 f"coordinate for component {entry.component!r}."
             )
-        cls._require_consistent_scalar_metadata(item, entry.component, entry.values)
+        self._require_consistent_scalar_metadata(item, entry.component, entry.values)
 
         if ViewerWireField.DATA.value not in item.payload:
             if len(entry.values) != 1:
@@ -399,7 +397,7 @@ class FijiPayloadLocalPlaneExpander:
                     "without an image payload."
                 )
             return (
-                cls._project_item(
+                self._project_item(
                     item,
                     component=entry.component,
                     value=entry.values[0],
@@ -419,7 +417,7 @@ class FijiPayloadLocalPlaneExpander:
                 f"leading image axis: {len(entry.values)} != {data.shape[0]}."
             )
         return tuple(
-            cls._project_item(
+            self._project_item(
                 item,
                 component=entry.component,
                 value=value,
@@ -428,9 +426,8 @@ class FijiPayloadLocalPlaneExpander:
             for index, value in enumerate(entry.values)
         )
 
-    @staticmethod
     def _plane_component_domain(
-        item: FijiWireItem,
+        self, item: FijiWireItem
     ) -> ViewerComponentValueDomainPayload:
         raw_domain = item.payload.get(ViewerWireField.PLANE_COMPONENT_VALUES.value)
         if raw_domain is None:
@@ -439,6 +436,7 @@ class FijiPayloadLocalPlaneExpander:
             raise TypeError("Fiji item plane_component_values field must be a mapping.")
         return ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             raw_domain,
+            declared_axes=self.declared_axes,
             context="Fiji image plane component values",
         )
 
@@ -456,15 +454,15 @@ class FijiPayloadLocalPlaneExpander:
                 f"Unsupported Fiji payload-local plane axis {raw_axis!r}."
             ) from error
 
-    @staticmethod
     def _require_consistent_scalar_metadata(
+        self,
         item: FijiWireItem,
         component: str,
         values: Sequence[ComponentValue],
     ) -> None:
         if component not in item.metadata:
             return
-        normalized = ViewerComponentMetadataNormalizer().normalize_value(
+        normalized = ViewerComponentMetadataNormalizer(self.declared_axes).normalize_value(
             component,
             item.metadata[component],
         )
@@ -545,7 +543,7 @@ class FijiImagePlaneLookup:
 
 
 class FijiPlaneGeometry:
-    """Canonical 2D plane extraction and spatial padding for Fiji stacks."""
+    """2D plane extraction and spatial padding for Fiji stacks."""
 
     @staticmethod
     def extract_2d_plane(np_data: np.ndarray) -> np.ndarray:
@@ -774,7 +772,7 @@ class FijiDimensionAxis:
         if not components:
             return cls(name=name, components=components, values=[()])
         values = {
-            ViewerDimensionValueAuthority.value_tuple(item.metadata, components)
+            ViewerDimensionValues.value_tuple(item.metadata, components)
             for item in items
         }
         return cls(
@@ -794,7 +792,7 @@ class FijiDimensionAxis:
         if not components:
             return cls(name=name, components=components, values=[()])
         values = {
-            ViewerDimensionValueAuthority.value_tuple(image.metadata, components)
+            ViewerDimensionValues.value_tuple(image.metadata, components)
             for image in images
         }
         return cls(
@@ -812,17 +810,17 @@ class FijiDimensionAxis:
 
     def merge_values(self, values: FijiDimensionValues) -> "FijiDimensionAxis":
         return self.with_values(
-            ViewerDimensionValueAuthority.merge(
+            ViewerDimensionValues.merge(
                 self.values,
                 values,
             )
         )
 
     def value_tuple(self, metadata: Mapping[str, ComponentValue]) -> tuple:
-        return ViewerDimensionValueAuthority.value_tuple(metadata, self.components)
+        return ViewerDimensionValues.value_tuple(metadata, self.components)
 
     def index(self, metadata: Mapping[str, ComponentValue]) -> int:
-        return ViewerDimensionValueAuthority.index(
+        return ViewerDimensionValues.index(
             metadata,
             self.components,
             self.values,
@@ -1207,294 +1205,29 @@ class FijiWindowProcessingRequest(FijiDisplayItemContext):
         return self.projection.fixed_window_labels[self.window_key]
 
 
-@dataclass(frozen=True, slots=True)
-class FijiControlMessageResponse(ViewerControlReplyPayload):
-    """Result of handling one Fiji control message."""
-
-    shutdown_requested: bool = False
+class FijiControlAction(ViewerControlAction, family_root=True):
+    """Fiji control actions, answered on the server's control thread."""
 
 
-@dataclass(frozen=True, slots=True)
-class FijiControlRequestContext:
-    """Managed ImageJ runtime state available to nominal control plans."""
-
-    windows: FijiWindowRegistry
-    imagej_runtime: object
-    settlement: FijiBatchSettlementState
-    process_launch: ViewerProcessLaunchConfig = field(
-        default_factory=ViewerProcessLaunchConfig
-    )
-
-
-class FijiControlMessagePlan(ABC, metaclass=AutoRegisterMeta):
-    """Executable behavior for one Fiji control message type."""
-
-    __registry__: ClassVar[dict[str, type["FijiControlMessagePlan"]]] = {}
-    __registry_key__ = "wire_value"
-    __skip_if_no_key__ = True
-
-    wire_value: ClassVar[str | None] = None
-
-    @classmethod
-    def for_message_type(
-        cls, message_type: str | None
-    ) -> "FijiControlMessagePlan | None":
-        if message_type is None:
-            return None
-        plan_type = cls.__registry__.get(message_type)
-        if plan_type is None:
-            return None
-        return plan_type()
-
-    @abstractmethod
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
-        """Return the response for one Fiji viewer control request."""
-
-
-class FijiShutdownControlPlan(FijiControlMessagePlan):
-    """Acknowledge shutdown and ask the server loop to stop."""
-
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
-        del context, payload
-        logger.info(
-            "🔬 FIJI SERVER: %s requested, will close after sending acknowledgment",
-            self.wire_value,
-        )
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.SUCCESS,
-                response_type="shutdown_ack",
-                message="Fiji viewer shutting down",
-            ),
-            shutdown_requested=True,
-        )
-
-
-class FijiGracefulShutdownControlPlan(FijiShutdownControlPlan):
-    """Registered graceful Fiji shutdown control plan."""
-
-    wire_value = "shutdown"
-
-
-class FijiForceShutdownControlPlan(FijiShutdownControlPlan):
-    """Registered force Fiji shutdown control plan."""
-
-    wire_value = "force_shutdown"
-
-
-class FijiClearStateControlPlan(FijiControlMessagePlan):
-    """Clear Fiji dimension/window metadata without shutting down."""
-
-    wire_value = "clear_state"
-
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
-        del payload
-        windows = context.windows
-        logger.info(
-            "🔬 FIJI SERVER: Clearing dimension values (had %d windows)",
-            windows.count_with_dimensions(),
-        )
-        context.settlement.reset()
-        windows.clear_dimensions_and_labels()
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.SUCCESS,
-                response_type="clear_state_ack",
-                message="Dimension values cleared",
-            ),
-        )
-
-
-class FijiProcessLaunchControlPlan(FijiControlMessagePlan):
-    """Project the server-owned launch declaration through the common boundary."""
-
-    wire_value = OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value
-
-    def response(
-        self, context: FijiControlRequestContext, payload: object | None
-    ) -> FijiControlMessageResponse:
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.SUCCESS, response_type="process_launch_ack"
-            ),
-            fields={
-                ViewerControlField.PROCESS_LAUNCH.value:
-                    context.process_launch.to_wire_mapping(),
-            },
-        )
-
-
-class FijiSettleControlPlan(FijiControlMessagePlan):
-    """Report exact queued and active Fiji display-batch progress."""
-
-    wire_value = ViewerControlMessageType.SETTLE.value
-
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
-        del payload
-        progress = context.settlement.progress()
-        failed = progress.phase is ViewerSettlePhase.FAILED
-        failure = context.settlement.failure_message()
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.ERROR if failed else ViewerProtocolStatus.SUCCESS,
-                response_type="settle_ack",
-                message=(
-                    f"Fiji viewer settlement failed: {failure}"
-                    if failed
-                    else (
-                        "Fiji viewer settlement progress: "
-                        f"{progress.completed_update_count}/"
-                        f"{progress.total_update_count}."
-                    )
-                ),
-            ),
-            fields=progress.to_wire_mapping(),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class FijiUnsupportedStateControlPlan(FijiControlMessagePlan):
-    """Fail loudly for viewer-state polling until Fiji has a state projector."""
-
-    wire_value = ViewerControlMessageType.STATE.value
-
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
-        del context, payload
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.ERROR,
-                response_type="state_ack",
-                message=(
-                    "Fiji live viewer state polling is not implemented. "
-                    "Use Napari state polling or add a Fiji state projection "
-                    "before requesting layers, axes, labels, or payload summaries."
-                ),
-            ),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class FijiUnsupportedPayloadsControlPlan(FijiControlMessagePlan):
-    """Fail loudly for live payload extraction until Fiji has a state projector."""
-
-    wire_value = ViewerControlMessageType.PAYLOADS.value
-
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
-        del context, payload
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.ERROR,
-                response_type="payloads_ack",
-                message=(
-                    "Fiji live viewer payload extraction is not implemented. "
-                    "Add a Fiji state and payload projection before requesting "
-                    "per-layer images, labels, shapes, or axis-coordinate payloads."
-                ),
-            ),
-        )
-
-
-class FijiUnsupportedIntensityWindowControlPlan(FijiControlMessagePlan):
-    """Fail closed because Fiji lacks routed native layer contrast authority."""
-
-    wire_value = ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
-
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
-        del context, payload
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.ERROR,
-                response_type="intensity_window_ack",
-                message=(
-                    "Viewer intensity-window control is supported only by Napari; "
-                    "Fiji has no routed native image-layer contrast authority."
-                ),
-            ),
-        )
-
-
-class FijiRunMacroControlPlan(FijiControlMessagePlan):
+class FijiRunMacroControlAction(FijiControlAction):
     """Execute an ImageJ macro inside the managed PyImageJ process."""
 
-    wire_value = FijiMacroExecutionRequest.message_type
+    message_type = FijiMacroExecutionRequest.message_type
 
-    def response(
-        self,
-        context: FijiControlRequestContext,
-        payload: object | None,
-    ) -> FijiControlMessageResponse:
+    def handle(self, server, message: Mapping[str, FijiWireValue]) -> dict[str, object]:
+        payload = message.get(ViewerControlResponseField.PAYLOAD.value)
         try:
             if not isinstance(payload, FijiMacroExecutionRequest):
                 raise TypeError(
                     "Fiji macro control payload must be a FijiMacroExecutionRequest."
                 )
-            outputs = payload.execute(context.imagej_runtime)
+            outputs = payload.execute(server.ij)
         except Exception as error:
             logger.exception("Managed Fiji macro execution failed")
-            return FijiControlMessageResponse(
-                ViewerControlReplyHeader(
-                    ViewerProtocolStatus.ERROR,
-                    message=str(error),
-                )
-            )
-        return FijiControlMessageResponse(
-            ViewerControlReplyHeader(
-                ViewerProtocolStatus.SUCCESS,
-            ),
+            return control_reply(ViewerProtocolStatus.ERROR, message=str(error))
+        return control_reply(
+            ViewerProtocolStatus.SUCCESS,
             payload=FijiMacroExecutionResponse(outputs),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class FijiControlMessageAuthority:
-    """Handle Fiji control messages without leaking control literals into server."""
-
-    context: FijiControlRequestContext
-
-    def response_for(
-        self,
-        message: Mapping[str, FijiWireValue],
-    ) -> FijiControlMessageResponse:
-        plan = FijiControlMessagePlan.for_message_type(
-            None
-            if ViewerControlResponseField.TYPE.value not in message
-            else str(message[ViewerControlResponseField.TYPE.value])
-        )
-        if plan is None:
-            return FijiControlMessageResponse(
-                ViewerControlReplyHeader(ViewerProtocolStatus.SUCCESS)
-            )
-        return plan.response(
-            self.context,
-            message.get(ViewerControlResponseField.PAYLOAD.value),
         )
 
 
@@ -1541,12 +1274,13 @@ class FijiBatchWireParser:
         display_config_payload = fields.required_mapping(
             ViewerBatchWireField.DISPLAY_CONFIG
         )
-        display_config = FijiDisplayConfig.from_display_payload(display_config_payload)
+        display_config = FijiDisplaySettings.from_display_payload(display_config_payload)
         component_axis_semantics = fields.component_axis_semantics(
             ViewerMappingDisplayConfigInput(display_config_payload),
             context="Fiji component value domain",
         )
         component_names_metadata = fields.required_component_names_metadata(
+            declared_axes=component_axis_semantics.layout.declared_axes,
             context="Fiji batch component-name metadata",
         )
         return FijiBatchMessage(
@@ -1556,6 +1290,7 @@ class FijiBatchWireParser:
                 ViewerBatchContextWireField.IMAGES_DIR
             ),
             store=component_names_metadata.store,
+            declared_axes=component_names_metadata.declared_axes,
             entries=component_axis_semantics.entries,
             layout=component_axis_semantics.layout,
         )
@@ -1572,6 +1307,7 @@ class FijiBatchMessage(FijiItemBatch):
             viewer_display_config=self.viewer_display_config,
             images_dir=self.images_dir,
             store=self.store,
+            declared_axes=self.declared_axes,
             entries=self.entries,
             layout=self.layout,
         )
@@ -1654,6 +1390,7 @@ class FijiPayloadKindGroups:
                     viewer_display_config=request.viewer_display_config,
                     coordinates=coordinates,
                     store=request.store,
+                    declared_axes=request.declared_axes,
                     entries=request.entries,
                     layout=request.layout,
                     work_unit_completed=work_unit_completed,
@@ -1674,19 +1411,17 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
         items: Sequence[FijiWireItem],
         component_axis_semantics: ViewerComponentAxisSemantics,
     ) -> "FijiWindowItemProjection":
-        projected_items = FijiPayloadLocalPlaneExpander.expand_items(items)
-        projection = component_axis_semantics.layout.group_window_payload_providers(
-            projected_items
-        )
+        projected_items = FijiPayloadLocalPlaneExpander(
+            component_axis_semantics.layout.declared_axes
+        ).expand_items(items)
+        layout = component_axis_semantics.layout
+        projection = layout.group_window_payload_providers(projected_items)
         return cls(
             window_components=projection.window_components,
-            channel_components=projection.channel_components,
-            slice_components=projection.slice_components,
-            frame_components=projection.frame_components,
             coordinate_components=FijiHyperstackCoordinateComponents(
-                channel=projection.channel_components,
-                z_axis_components=projection.slice_components,
-                frame=projection.frame_components,
+                channel=layout.components_in(FijiSlots.Channel),
+                z_axis_components=layout.components_in(FijiSlots.Slice),
+                frame=layout.components_in(FijiSlots.Frame),
             ),
             windows=projection.windows,
             fixed_window_labels=projection.fixed_window_labels,
@@ -1708,7 +1443,7 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
 
 
 @dataclass(slots=True)
-class FijiBatchProcessingAuthority:
+class FijiBatchDispatcher:
     """Own Fiji batch ingestion, debouncing, and window dispatch."""
 
     server: "FijiViewerServer"
@@ -1760,7 +1495,7 @@ class FijiBatchProcessingAuthority:
         items: list[FijiWireItem],
         context: Mapping[str, FijiBatchProcessingContext],
     ) -> None:
-        """Batch-engine callback that unpacks context into canonical arguments."""
+        """Batch-engine callback that unpacks context into arguments."""
         if not items:
             return
         logger.info(f"🔄 FIJI SERVER: Processing debounced batch of {len(items)} items")
@@ -1843,6 +1578,7 @@ class FijiBatchProcessingAuthority:
                     viewer_display_config=batch_context.viewer_display_config,
                     projection=projection,
                     store=batch_context.store,
+                    declared_axes=batch_context.declared_axes,
                     entries=batch_context.entries,
                     layout=batch_context.layout,
                 ),
@@ -1937,7 +1673,7 @@ class FijiViewerServerLaunchConfig(ViewerServerLaunchRequest):
     """Nominal launch configuration for a Fiji viewer server process."""
 
     fiji_viewer_title: str
-    fiji_display_config: FijiDisplayConfig | None
+    fiji_display_config: FijiDisplaySettings | None
     display_enabled: bool = True
     zmq_config: ZMQConfig | None = None
 
@@ -1963,7 +1699,7 @@ class FijiInteractiveModeFailure:
         )
 
 
-class FijiViewerServer(OpenHCSViewerServerABC):
+class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
     """
     ZMQ server for Fiji viewer that receives images from clients.
 
@@ -1972,7 +1708,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
     Displays images via PyImageJ.
     """
 
-    _server_type = ViewerType.FIJI.wire_value
+    _server_type = FijiViewer.wire_value
 
     # Debouncing configuration
     DEBOUNCE_DELAY_MS = 500  # Collect items for 500ms before processing
@@ -1995,7 +1731,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         # REP socket forces workers to wait for acknowledgment before closing shared memory
         super().__init__(
             launch_config.port,
-            viewer_type=ViewerType.FIJI.wire_value,
+            viewer_type=FijiViewer.wire_value,
             host=launch_config.process_launch.listen_host,
             log_file_path=launch_config.log_file_path,
             data_socket_type=zmq.REP,
@@ -2008,7 +1744,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         self.ij = None  # PyImageJ instance
         self._shutdown_requested = False
         self.windows = FijiWindowRegistry()
-        self.batch_processor = FijiBatchProcessingAuthority(self)
+        self.batch_processor = FijiBatchDispatcher(self)
 
     def _wait_for_swing_ui_ready(self, timeout: float = 5.0) -> bool:
         """Wait for Java Swing UI to be fully initialized.
@@ -2131,22 +1867,30 @@ class FijiViewerServer(OpenHCSViewerServerABC):
 
                 FIJI_IMAGEJ_RUNTIME.shutdown(gateway, sj)
 
-    def handle_control_message(
-        self,
-        message: Mapping[str, FijiWireValue],
-    ) -> dict[str, FijiWireScalar]:
-        """Handle control messages beyond ping/pong."""
-        response = FijiControlMessageAuthority(
-            FijiControlRequestContext(
-                self.windows,
-                self.ij,
-                self.batch_processor.settlement,
-                self.launch_config.process_launch,
-            )
-        ).response_for(message)
-        if response.shutdown_requested:
-            self._shutdown_requested = True
-        return response.to_wire_mapping()
+    control_actions = FijiControlAction
+    viewer_display_name = "Fiji"
+
+    @property
+    def process_launch(self) -> ViewerProcessLaunchConfig:
+        return self.launch_config.process_launch
+
+    def shut_down_after_reply(self) -> None:
+        logger.info("🔬 FIJI SERVER: shutdown requested, closing after acknowledgement")
+        self._shutdown_requested = True
+
+    def clear_stream_state(self) -> None:
+        logger.info(
+            "🔬 FIJI SERVER: Clearing dimension values (had %d windows)",
+            self.windows.count_with_dimensions(),
+        )
+        self.batch_processor.settlement.reset()
+        self.windows.clear_dimensions_and_labels()
+
+    def settle_progress(self) -> ViewerSettleProgress:
+        return self.batch_processor.settlement.progress()
+
+    def settle_failure_message(self) -> str | None:
+        return self.batch_processor.settlement.failure_message()
 
     def handle_data_message(self, message: Mapping[str, FijiWireValue]):
         """Handle incoming image data - called by process_messages()."""
@@ -2162,7 +1906,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         new_images: list[FijiImagePayload],
         window_key: str,
         coordinates: FijiHyperstackCoordinates,
-        display_config: FijiDisplayConfig,
+        display_config: FijiDisplaySettings,
         component_names_metadata: ViewerComponentNameMetadata,
         work_unit_completed: Callable[[], None] | None = None,
     ):
@@ -2331,7 +2075,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         self,
         window_key: str,
         images: list[FijiImagePayload],
-        display_config: FijiDisplayConfig,
+        display_config: FijiDisplaySettings,
         coordinates: FijiHyperstackCoordinates,
         component_names_metadata: ViewerComponentNameMetadata | None = None,
         work_unit_completed: Callable[[], None] | None = None,
@@ -2811,7 +2555,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         all_images: list[FijiImagePayload],
         window_key: str,
         coordinates: FijiHyperstackCoordinates,
-        display_config: FijiDisplayConfig,
+        display_config: FijiDisplaySettings,
         is_new: bool,
         preserved_display_ranges: FijiDisplayRanges = None,
         component_names_metadata: ViewerComponentNameMetadata | None = None,
@@ -3145,7 +2889,7 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
 def fiji_viewer_server_process(
     port: int,
     viewer_title: str,
-    display_config: FijiDisplayConfig | None,
+    display_config: FijiDisplaySettings | None,
     log_file_path: str = None,
     display_enabled: bool = True,
     transport_mode: TransportMode = TransportMode.IPC,
@@ -3160,7 +2904,7 @@ def fiji_viewer_server_process(
     Args:
         port: ZMQ port to listen on
         viewer_title: Title for the Fiji viewer window
-        display_config: FijiDisplayConfig instance
+        display_config: FijiDisplaySettings instance
         log_file_path: Path to log file (for client discovery via ping/pong)
         transport_mode: ZMQ transport mode (IPC or TCP)
         zmq_config: ZMQ configuration object (optional, uses default if None)

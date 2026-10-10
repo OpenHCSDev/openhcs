@@ -158,7 +158,7 @@ class PlateStreamingService:
                 transport_mode=config.transport_mode,
                 persistent=config.persistent,
             )
-            result = replace(result, viewer_type=config.viewer_type, connection=connection)
+            result = replace(result, viewer_type=config.viewer_family.viewer_type(), connection=connection)
             if request.result_directory is not None:
                 if request.kind is not PlateFileKind.RESULT or request.well is not None:
                     raise ValueError(
@@ -302,7 +302,7 @@ class PlateStreamingService:
         except Exception as exc:
             return replace(
                 result,
-                viewer_type=None if config is None else config.viewer_type,
+                viewer_type=None if config is None else config.viewer_family.viewer_type(),
                 connection=connection,
                 errors=(self._stream_error(exc, plate_path=request.plate_path),),
             )

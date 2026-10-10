@@ -128,6 +128,7 @@ from openhcs.processing.materialization.core import (
 )
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 def _memory_materialize(spec, data, path, filemanager):
@@ -347,7 +348,7 @@ class _TestViewerDisplayConfig(ViewerDisplayConfigABC):
         return {}
 
     def display_payload_extra(self):
-        return {}
+        return {"declared_axes": STREAM_AXES.to_wire()}
 
 
 class _TestViewerFilenameParser(ViewerFilenameParserABC):
@@ -856,9 +857,10 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
         image_metadata=metadata,
         plane_component_domain=ViewerComponentValueDomainPayload.from_wire_mapping(
             {"z_index": z_values}, context="materialized point source domain",
+            declared_axes=STREAM_AXES,
         ),
     )
-    points, properties = viewer_server._build_nd_points([item], projection)
+    points, properties = viewer_server._build_nd_points([item], projection, ("z_index",))
     assert points.tolist() == [[2.375, 1.25, 3.5]]
     assert properties["label"] == [7]
     assert properties["object_label"] == [7]
@@ -926,6 +928,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     from polystore.streaming_constants import StreamingDataType
     plane_domain = ViewerComponentValueDomainPayload.from_wire_mapping(
         fields[ViewerWireField.PLANE_COMPONENT_VALUES.value], context="saved label ROI",
+        declared_axes=STREAM_AXES,
     )
     assert plane_domain.to_wire_mapping() == {"z_index": list(z_values)}
 

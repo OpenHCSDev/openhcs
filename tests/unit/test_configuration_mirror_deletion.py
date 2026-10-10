@@ -417,45 +417,14 @@ def test_viewer_identity_is_owned_by_the_streaming_declaration_type() -> None:
     for path in _python_files():
         tree = ast.parse(path.read_text(), filename=str(path))
         for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef) and node.name == "ViewerType":
+            if isinstance(node, ast.ClassDef) and node.name == "ViewerFamily":
                 definitions.append(str(path.relative_to(PROJECT_ROOT)))
             if (
                 isinstance(node, ast.ImportFrom)
                 and node.module == "openhcs.runtime.viewer_protocol"
-                and any(alias.name == "ViewerType" for alias in node.names)
+                and any(alias.name in {"ViewerType", "ViewerFamily"} for alias in node.names)
             ):
                 stale_imports.append(f"{path.relative_to(PROJECT_ROOT)}:{node.lineno}")
 
     assert definitions == ["openhcs/core/streaming_config_declarations.py"]
     assert stale_imports == []
-
-    declarations_path = PROJECT_ROOT / "openhcs/core/streaming_config_declarations.py"
-    declarations_tree = ast.parse(
-        declarations_path.read_text(),
-        filename=str(declarations_path),
-    )
-    assert not any(
-        isinstance(node, ast.ClassDef) and node.name == "StreamingViewerConfigSpec"
-        for node in declarations_tree.body
-    )
-    viewer_type = next(
-        node
-        for node in declarations_tree.body
-        if isinstance(node, ast.ClassDef) and node.name == "ViewerType"
-    )
-    members = {
-        node.targets[0].id: node.value
-        for node in viewer_type.body
-        if isinstance(node, ast.Assign)
-        and len(node.targets) == 1
-        and isinstance(node.targets[0], ast.Name)
-        and node.targets[0].id in {"FIJI", "NAPARI"}
-    }
-    assert set(members) == {"FIJI", "NAPARI"}
-    assert all(
-        isinstance(value, ast.Tuple)
-        and len(value.elts) == 2
-        and isinstance(value.elts[1], ast.Name)
-        and value.elts[1].id.endswith("ViewerDeclaration")
-        for value in members.values()
-    )

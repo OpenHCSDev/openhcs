@@ -25,15 +25,18 @@ class Microscopy(AxisFamily):
 
     class Channel(Axis, ColourAxis, DefaultGroupBy, OrdinalValued):
         name = "channel"
+        label = "Ch"
         filename_prefix = "w"
 
     class ZIndex(Axis, StackAxis, OrdinalValued):
         name = "z_index"
+        label = "Z"
         filename_prefix = "z"
         filename_padding = 3
 
     class Timepoint(Axis, TimeAxis, OrdinalValued):
         name = "timepoint"
+        label = "T"
         filename_prefix = "t"
         filename_padding = 3
 

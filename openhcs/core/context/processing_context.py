@@ -38,7 +38,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionAuthority,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import ViewerFamily
 from openhcs.core.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
@@ -54,13 +54,13 @@ class RequiredVisualizer:
     config: StreamingConfig
 
     @property
-    def key(self) -> tuple[ViewerType, int]:
-        return (self.config.viewer_type, self.config.port)
+    def key(self) -> tuple[type[ViewerFamily], int]:
+        return (self.config.viewer_family, self.config.port)
 
     @property
     def launch_message(self) -> str:
         return (
-            f"Launching {self.config.viewer_type.display_name} viewer "
+            f"Launching {self.config.viewer_family.display_name} viewer "
             f"on port {self.config.port}"
         )
 

@@ -15,7 +15,6 @@ from polystore.streaming.identity import (
 )
 from polystore.streaming_constants import StreamingDataType
 from python_introspect import dataclass_from_mapping, to_jsonable
-from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.agent.capabilities import (
     AgentCapabilitySearchRequest,
@@ -42,9 +41,9 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.napari_viewer_server import NapariControlMessageAction
+from openhcs.runtime.napari_viewer_server import NapariControlAction
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
@@ -55,6 +54,8 @@ from openhcs.runtime.viewer_controls import (
 )
 from openhcs.runtime.viewer_measurements import NativeImageMeasurement
 from openhcs.runtime.viewer_protocol import OpenHCSViewerControlMessageType
+from openhcs.runtime.viewer_display import NapariSlots
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 def native_route():
@@ -81,10 +82,11 @@ def native_route():
     presentation = NapariAxisPresentation(
         route_key="source",
         projection=projection,
-        entries=ViewerComponentAxisSemanticsAuthority.empty().entries,
+        entries=ViewerComponentAxisSemanticsFactory.empty().entries,
         layout=ViewerComponentLayout.from_parts(
-            component_modes={"channel": ViewerComponentMode.STACK},
+            component_modes={"channel": NapariSlots.Stack.wire_value},
             component_order=("channel",),
+            declared_axes=STREAM_AXES,
         ),
     )
     routes = NapariLayerRouteStateStore.empty()
@@ -131,7 +133,7 @@ def native_route():
 def dispatch(server, kind, request):
     # Same pickle boundary and registered action used by the Qt control ingress.
     message = pickle.loads(pickle.dumps({"type": kind.value, "payload": request}))
-    return NapariControlMessageAction.for_message_type(kind.value).handle(
+    return NapariControlAction.for_message_type(kind.value).handle(
         server, message
     )
 
@@ -443,7 +445,7 @@ class InProcessMeasurementGateway(ZMQViewerWindowGateway):
         self.server = server
 
     def _send_control_message(self, request, message):
-        return NapariControlMessageAction.for_message_type(message["type"]).handle(
+        return NapariControlAction.for_message_type(message["type"]).handle(
             self.server, pickle.loads(pickle.dumps(message))
         )
 

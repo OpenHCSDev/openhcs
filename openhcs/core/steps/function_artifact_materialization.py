@@ -225,7 +225,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         )
         return (
             {
-                config.backend.value: config.streaming_viewer_surface(context)
+                config.viewer_family.backend.value: config.streaming_viewer_surface(context)
                 for config in plan.streaming_configs.values()
                 if step_axis_allows_config(
                     context.step_axis_filters,

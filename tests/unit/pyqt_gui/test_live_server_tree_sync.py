@@ -163,7 +163,7 @@ def test_launching_viewer_row_keeps_nominal_viewer_identity(monkeypatch):
         list_viewers=lambda: (
             SimpleNamespace(
                 port=5555,
-                viewer_type=ViewerType.NAPARI.wire_value,
+                viewer_type=ViewerType.NAPARI.value,
                 queued_images=3,
                 state=live_tree_sync.ViewerState.LAUNCHING,
             ),
@@ -188,7 +188,7 @@ def test_launching_viewer_row_keeps_nominal_viewer_identity(monkeypatch):
 def test_launching_viewer_row_tracks_current_viewer_snapshot(monkeypatch):
     viewer = SimpleNamespace(
         port=5555,
-        viewer_type=ViewerType.NAPARI.wire_value,
+        viewer_type=ViewerType.NAPARI.value,
         queued_images=3,
         state=live_tree_sync.ViewerState.LAUNCHING,
     )

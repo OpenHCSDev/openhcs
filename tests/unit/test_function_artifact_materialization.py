@@ -134,7 +134,6 @@ from openhcs.core.steps.function_output_identity import (
     IncompleteFunctionOutputFilenameIdentityError,
 )
 
-from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
@@ -158,8 +157,6 @@ from openhcs.processing.materialization import (
 )
 from openhcs.processing.materialization.core import (
     MaterializationSpec,
-    Output,
-    SavedMaterializationOutputs,
     materialization_outputs,
 )
 from openhcs.processing.materialization.options import (
@@ -168,10 +165,12 @@ from openhcs.processing.materialization.options import (
 )
 from openhcs.core.axes import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.streaming_config_declarations import NapariViewer
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
-    backend = SimpleNamespace(value="napari_stream")
+    viewer_family = NapariViewer
     COMPONENT_ORDER = AxisFamily.active().names()
     host = "127.0.0.1"
     transport_mode = "tcp"
@@ -186,6 +185,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
 
     def display_payload_extra(self):
         return {
+            "declared_axes": STREAM_AXES.to_wire(),
             "colormap": self.colormap.value,
             "variable_size_handling": self.variable_size_handling.value,
         }
@@ -199,7 +199,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
                     transport_mode=self.transport_mode,
                 ),
                 persistent=False,
-                viewer_type=ViewerType.NAPARI,
+                viewer_family=NapariViewer,
             ),
             display_config=self,
             source=self.viewer_source(_context),
@@ -2926,6 +2926,7 @@ def test_materialize_artifact_outputs_streams_aggregate_artifact_with_incomplete
         streaming_config.component_modes()
     )
     assert stream_request.display_config.display_payload_extra() == {
+        "declared_axes": STREAM_AXES.to_wire(),
         "colormap": "gray",
         "variable_size_handling": "pad_to_max",
     }

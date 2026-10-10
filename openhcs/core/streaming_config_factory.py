@@ -24,8 +24,7 @@ from polystore.streaming.viewer_transport import (
 from zmqruntime.config import TransportMode, ZMQConfig
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
-from openhcs.constants.constants import Backend
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import ViewerFamily
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
@@ -148,7 +147,7 @@ class StreamingViewerRuntimeConfig:
 
     transport_endpoint: ViewerTransportEndpoint
     persistent: bool
-    viewer_type: ViewerType
+    viewer_family: type[ViewerFamily]
     transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG
     display_enabled: bool = True
     scope_accent_color: str | None = None
@@ -160,7 +159,7 @@ class StreamingViewerRuntimeConfig:
 class StreamingConfigBehaviorMixin:
     """Shared implementation for concrete viewer streaming configs."""
 
-    viewer_type_declaration: ClassVar[ViewerType]
+    viewer_family: ClassVar[type[ViewerFamily]]
     transport_mode: TransportMode
 
     def with_display_config(self, display: ViewerDisplayConfigABC | None):
@@ -175,35 +174,11 @@ class StreamingConfigBehaviorMixin:
     def port_from_config(cls, config) -> int | None:
         streaming_config = DataclassFieldAccess.raw_value(
             config,
-            cls.viewer_type_declaration.config_key,
+            cls.viewer_family.config_key,
         )
         if streaming_config is None:
             return None
         return streaming_config.port
-
-    @property
-    def backend(self) -> Backend:
-        return self.viewer_type.backend
-
-    @property
-    def viewer_type(self) -> ViewerType:
-        return type(self).viewer_type_declaration
-
-    @property
-    def streaming_config_key(self) -> str:
-        return self.viewer_type.config_key
-
-    @property
-    def display_name(self) -> str:
-        return self.viewer_type.display_name
-
-    @property
-    def step_plan_output_key(self) -> str:
-        return self.viewer_type.step_plan_output_key
-
-    @property
-    def viewer_title(self) -> str:
-        return self.viewer_type.title
 
     def viewer_runtime_config(
         self,
@@ -218,7 +193,7 @@ class StreamingConfigBehaviorMixin:
             transport_config=transport_config,
             persistent=self.persistent,
             display_enabled=self.enabled,
-            viewer_type=self.viewer_type,
+            viewer_family=self.viewer_family,
             scope_accent_color=self.scope_accent_color,
             process_launch=self.viewer_process_launch_config(),
         )
@@ -257,7 +232,7 @@ class StreamingConfigBehaviorMixin:
         visualizer_config=None,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
-        return self.viewer_type.create_visualizer(
+        return self.viewer_family.create_visualizer(
             filemanager=filemanager,
             runtime_config=self.viewer_runtime_config(transport_config),
         )

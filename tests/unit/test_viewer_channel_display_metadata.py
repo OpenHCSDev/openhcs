@@ -4,7 +4,6 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.viewer_protocol import (
     ViewerComponentMetadataPayload,
-    ViewerComponentMode,
 )
 
 from openhcs.core.source_binding_workspace import PrimaryPlaneBindingProjection
@@ -23,12 +22,14 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariLayerRouteStateStore,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerComponentNameMetadata,
     ViewerLayerAxisProjection,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.runtime.viewer_display import NapariSlots
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 def _address(channel: str = "1") -> OpenHCSPlaneAddress:
@@ -44,6 +45,7 @@ def _component_name_metadata() -> ViewerComponentNameMetadata:
     return ViewerComponentNameMetadata.from_wire_mapping(
         round_trip.component_names_metadata,
         context="source-binding channel labels",
+        declared_axes=STREAM_AXES,
     )
 
 
@@ -90,12 +92,12 @@ def test_channel_display_metadata_round_trips_without_replacing_numeric_coordina
 
     assert names.to_wire_mapping() == {"channel": {"1": "DNA"}}
     assert names.display_name("channel", 1) == "DNA"
-    assert names.axis_label("channel", 1) == "Ch1: DNA"
+    assert names.axis_label("channel", 1) == "Ch 1: DNA"
 
 
 def test_napari_viewer_state_keeps_numeric_channel_and_declared_display_label():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    semantics = ViewerComponentAxisSemanticsFactory.empty()
     route_key = "source-dna"
     server = SimpleNamespace(
         component_name_metadata=_component_name_metadata(),
@@ -104,8 +106,9 @@ def test_napari_viewer_state_keeps_numeric_channel_and_declared_display_label():
     presentation = NapariAxisPresentation(
         entries=semantics.entries,
         layout=ViewerComponentLayout.from_parts(
-            component_modes={"site": ViewerComponentMode.STACK},
+            component_modes={"site": NapariSlots.Stack.wire_value},
             component_order=("site",),
+            declared_axes=STREAM_AXES,
         ),
         route_key=route_key,
         projection=ViewerLayerAxisProjection(
@@ -124,7 +127,7 @@ def test_napari_viewer_state_keeps_numeric_channel_and_declared_display_label():
     state = server.layer_route_state.dimension_state_for(route_key)
     assert state.presentation is not None
     assert state.presentation.projection.scalar_component_values["channel"] == [1]
-    assert state.scalar_labels == ("Ch1: DNA",)
+    assert state.scalar_labels == ("Ch 1: DNA",)
 
 
 def test_collapsed_metadata_keeps_unnamed_coordinates_and_binding_label():
@@ -137,7 +140,7 @@ def test_collapsed_metadata_keeps_unnamed_coordinates_and_binding_label():
         "custom_coordinate": ["condition-b"],
     }
     assert names.scalar_labels(coordinates) == (
-        "Ch1: DNA",
+        "Ch 1: DNA",
         "Site 7",
         "Z 2",
         "T 3",

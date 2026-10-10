@@ -26,8 +26,8 @@ from openhcs.core.config import (
     VFSConfig,
     Backend,
     ZarrConfig,
-    NapariVariableSizeHandling,
 )
+from openhcs.runtime.viewer_display import NapariVariableSizeHandling
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.core.config import (
     LazyStepMaterializationConfig,

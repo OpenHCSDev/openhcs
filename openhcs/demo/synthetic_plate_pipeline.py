@@ -11,9 +11,9 @@ from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
-    NapariVariableSizeHandling,
     PipelineConfig,
 )
+from openhcs.runtime.viewer_display import NapariVariableSizeHandling
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,

@@ -71,7 +71,7 @@ from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerProtocolStatus,
     ViewerImageColorControlOptions, ViewerNativeImageColorPresentation,
     ViewerNativeWindowControlOptions, ViewerNativeWindowState,
-    ViewerLayerRetirementReceipt,
+    ViewerLayerRetirementResult,
 )
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
@@ -92,7 +92,7 @@ class ViewerWindowDescriptor:
         title: str,
     ) -> Self:
         return cls(
-            viewer_type=ViewerType.from_wire_value(viewer_wire_value),
+            viewer_type=ViewerType(viewer_wire_value),
             title=title,
         )
 
@@ -1446,11 +1446,11 @@ class ViewerWindowLayerVisibilityRecord:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerWindowLayerRetirementResult(
     ViewerWindowPresentationResult,
-    ViewerLayerRetirementReceipt,
+    ViewerLayerRetirementResult,
 ):
     registry_key: ClassVar[str] = "layer_retirement"
     response_field = ViewerControlField.RETIREMENT
-    snapshot_type = ViewerLayerRetirementReceipt
+    snapshot_type = ViewerLayerRetirementResult
     observed: bool = field(kw_only=True)
 
     @classmethod

@@ -8,7 +8,6 @@ Configuration is intended to be immutable and provided as Python objects.
 
 import logging
 import inspect
-from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Optional, Union, List, Annotated, ClassVar, Callable
@@ -42,11 +41,26 @@ from zmqruntime.config import (
     TcpPort,
     TransportMode,
 )
-from zmqruntime.viewer_protocol import ViewerDisplayConfigWireField, ViewerWireValue
+from zmqruntime.viewer_protocol import ViewerWireValue
 from zmqruntime.transport import get_default_transport_mode
 
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import (
+    FijiViewer,
+    NapariViewer,
+    ViewerFamily,
+    ViewerType,
+)
+from openhcs.runtime.viewer_display import (
+    DECLARED_AXES_FIELD,
+    DeclaredAxes,
+    DeclaredAxis,
+    FijiDisplaySettings,
+    FijiSlots,
+    NapariDisplaySettings,
+    NapariSlots,
+    ViewerSlotFamily,
+)
 from openhcs.core.vfs_protocol import PlateOutputDirectory, PlateOutputFile
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -239,12 +253,13 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
 # (GlobalPipelineConfig → PipelineConfig by removing "Global" prefix)
 
 
-class AxisRoleModeDisplayConfig:
-    """Viewer display config whose mode fields are declared per axis role.
+class AxisRoleModeDisplayConfig(ViewerDisplayConfigABC):
+    """Viewer display config with one slot field per axis role.
 
     Each mode field names its role in ``metadata["axis_role"]``. An axis takes
-    the mode of the first mode field whose role it carries, so the wire
-    projection covers whichever family is active.
+    the slot of the first mode field whose role it carries, else the slot its
+    viewer's slot family gives its roles. The config streams the active
+    family's axis declarations, so the viewer never consults its own family.
     """
 
     @classmethod
@@ -259,320 +274,96 @@ class AxisRoleModeDisplayConfig:
     def COMPONENT_ORDER(self) -> tuple[str, ...]:
         return AxisFamily.active().names()
 
-    @classmethod
-    def mode_field_for_axis(cls, axis: type[Axis]) -> str:
-        for role, field_name in cls.role_mode_fields():
+    def slot_for_axis(self, axis: type[Axis]) -> str:
+        for role, field_name in self.role_mode_fields():
             if issubclass(axis, role):
-                return field_name
-        raise TypeError(
-            f"Axis {axis!r} carries none of the viewer roles of {cls.__name__}: "
-            f"{[role.__name__ for role, _ in cls.role_mode_fields()]}."
-        )
+                return getattr(self, field_name).value
+        return self.slot_family.slot_for(DeclaredAxis.of(axis)).wire_value
 
     def component_modes(self) -> dict[str, str]:
-        """Project role mode fields onto the active family's axis names."""
+        """The slot of every axis of the active family, by axis name."""
+
+        return {axis.name: self.slot_for_axis(axis) for axis in AxisFamily.active().axes}
+
+    def display_payload_extra(self) -> dict[str, ViewerWireValue]:
+        """Stream the axis declarations and this viewer's settings."""
 
         return {
-            axis.name: getattr(self, self.mode_field_for_axis(axis)).value
-            for axis in AxisFamily.active().axes
+            DECLARED_AXES_FIELD: DeclaredAxes.of(AxisFamily.active().axes).to_wire(),
+            **self.settings_wire_mapping(),
         }
 
-    @classmethod
-    def role_modes_from_wire(
-        cls,
-        component_modes: Mapping[str, ViewerWireValue],
-        mode_type: type[Enum],
-        viewer_label: str,
-    ) -> dict[str, Enum]:
-        """Decode wire modes by axis name back onto the role mode fields."""
 
-        if not isinstance(component_modes, Mapping):
-            raise TypeError(f"{viewer_label} component_modes must be a mapping.")
-        family = AxisFamily.active()
-        if set(component_modes) != set(family.names()):
-            raise ValueError(
-                f"{viewer_label} component_modes must exactly match "
-                f"{family.names()!r}; got {tuple(component_modes)!r}."
-            )
-        modes_by_field: dict[str, Enum] = {}
-        for axis in family.axes:
-            field_name = cls.mode_field_for_axis(axis)
-            mode = mode_type(str(component_modes[axis.name]))
-            if modes_by_field.setdefault(field_name, mode) is not mode:
-                raise ValueError(
-                    f"{viewer_label} axes sharing {field_name} must share one mode; "
-                    f"{axis.name} has {mode.value}."
-                )
-        return modes_by_field
+def role_slot_field(
+    slot_family: type[ViewerSlotFamily],
+    slot_choices: type[Enum],
+    role: type[AxisRole],
+    description: str,
+):
+    """One per-role slot field whose default is the slot family's slot for the role."""
 
-
-class NapariDimensionMode(Enum):
-    """How component values are placed in Napari image layers."""
-
-    LAYER = "layer"  # Create a separate Napari layer for each value
-    STACK = "stack"  # Stack values along an axis in one Napari layer
-
-
-class NapariVariableSizeHandling(Enum):
-    """How to handle images with different sizes in the same layer."""
-
-    SEPARATE_LAYERS = (
-        "separate_layers"  # Create separate layers per well (preserves exact data)
+    return field(
+        default=slot_choices(slot_family.slot_for_roles((role,)).wire_value),
+        metadata={"axis_role": role, "description": description},
     )
-    PAD_TO_MAX = "pad_to_max"  # Pad smaller images to match largest (enables stacking)
+
+
+NapariDimensionMode = NapariSlots.choice_enum("NapariDimensionMode", __name__)
+"""Form choices for Napari slots (layer or stack), derived from ``NapariSlots``."""
+
+
+def _napari_slot_field(role: type[AxisRole], noun: str):
+    return role_slot_field(
+        NapariSlots,
+        NapariDimensionMode,
+        role,
+        f"Whether {noun}-axis values are stacked or use separate layers.",
+    )
 
 
 @dataclass(frozen=True)
-class NapariDisplayConfig(
-    AxisRoleModeDisplayConfig,
-    ViewerDisplayConfigABC,
-    AnnotatedDataclassValidationMixin,
-):
+class NapariDisplayConfig(AxisRoleModeDisplayConfig, NapariDisplaySettings):
     """Map streamed axes and intensity data onto Napari layers."""
 
-    colormap: NonBlankString = field(
-        default="gray",
-        metadata={
-            "description": (
-                "Name of a colormap registered in the installed Napari viewer. "
-                "Napari validates this extensible registry name when displaying "
-                "the layer."
-            )
-        },
-    )
-    variable_size_handling: NapariVariableSizeHandling = field(
-        default=NapariVariableSizeHandling.PAD_TO_MAX,
-        metadata={
-            "description": (
-                "How Napari handles streamed images with different spatial "
-                "dimensions: preserve each shape in separate layers or pad "
-                "smaller images to the largest shape before stacking."
-            )
-        },
-    )
-    partition_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
-            "axis_role": PartitionAxis,
-            "description": (
-                "Whether parallel-axis values are stacked or use separate layers."
-            ),
-        },
-    )
-    tile_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
-            "axis_role": TileAxis,
-            "description": (
-                "Whether tile-axis values are stacked or use separate layers."
-            ),
-        },
-    )
-    colour_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
-            "axis_role": ColourAxis,
-            "description": (
-                "Whether colour-axis values are stacked or use separate layers."
-            ),
-        },
-    )
-    stack_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
-            "axis_role": StackAxis,
-            "description": (
-                "Whether stack-axis values are stacked or use separate layers."
-            ),
-        },
-    )
-    time_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
-            "axis_role": TimeAxis,
-            "description": (
-                "Whether time-axis values are stacked or use separate layers."
-            ),
-        },
-    )
-
-    def display_payload_extra(self) -> dict[str, str]:
-        """Project Napari-specific display settings onto the wire payload."""
-
-        from polystore.napari_stream import NapariDisplayWireField
-
-        return {
-            NapariDisplayWireField.COLORMAP.value: self.colormap,
-            NapariDisplayWireField.VARIABLE_SIZE_HANDLING.value: (
-                self.variable_size_handling.value
-            ),
-        }
-
-    @classmethod
-    def from_display_payload(
-        cls,
-        payload: Mapping[str, ViewerWireValue],
-    ) -> "NapariDisplayConfig":
-        """Rehydrate the typed config at the Napari viewer wire boundary."""
-
-        from polystore.napari_stream import NapariDisplayWireField
-
-        role_modes = cls.role_modes_from_wire(
-            payload[ViewerDisplayConfigWireField.COMPONENT_MODES.value],
-            NapariDimensionMode,
-            "Napari",
-        )
-        colormap = str(payload[NapariDisplayWireField.COLORMAP.value]).strip()
-        if not colormap:
-            raise ValueError("Napari colormap name must not be blank.")
-        return cls(
-            colormap=colormap,
-            variable_size_handling=NapariVariableSizeHandling(
-                str(payload[NapariDisplayWireField.VARIABLE_SIZE_HANDLING.value])
-            ),
-            **role_modes,
-        )
+    partition_mode: NapariDimensionMode = _napari_slot_field(PartitionAxis, "parallel")
+    tile_mode: NapariDimensionMode = _napari_slot_field(TileAxis, "tile")
+    colour_mode: NapariDimensionMode = _napari_slot_field(ColourAxis, "colour")
+    stack_mode: NapariDimensionMode = _napari_slot_field(StackAxis, "stack")
+    time_mode: NapariDimensionMode = _napari_slot_field(TimeAxis, "time")
 
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by NapariStreamingConfig, so hide it from UI
-NapariDisplayConfig = global_pipeline_config(ui_hidden=True)(NapariDisplayConfig)
+NapariDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(NapariDisplayConfig)
 
 
-# ============================================================================
-# Fiji Display Configuration
-# ============================================================================
+FijiDimensionMode = FijiSlots.choice_enum("FijiDimensionMode", __name__)
+"""Form choices for ImageJ hyperstack slots (C, Z, T or a window), derived from ``FijiSlots``."""
 
 
-class FijiDimensionMode(Enum):
-    """
-    How to map OpenHCS dimensions to ImageJ hyperstack dimensions.
-
-    ImageJ hyperstacks have 3 dimensions: Channels (C), Slices (Z), Frames (T).
-    Each axis role (tile, colour, stack, time, partition) maps to one of these.
-
-    - WINDOW: Create separate windows for each value (like Napari LAYER mode)
-    - CHANNEL: Map to ImageJ Channel dimension (C)
-    - SLICE: Map to ImageJ Slice dimension (Z)
-    - FRAME: Map to ImageJ Frame dimension (T)
-    """
-
-    WINDOW = "window"  # Separate windows (like Napari LAYER mode)
-    CHANNEL = "channel"  # ImageJ Channel dimension (C)
-    SLICE = "slice"  # ImageJ Slice dimension (Z)
-    FRAME = "frame"  # ImageJ Frame dimension (T)
+def _fiji_slot_field(role: type[AxisRole], noun: str):
+    return role_slot_field(
+        FijiSlots,
+        FijiDimensionMode,
+        role,
+        f"ImageJ dimension used for {noun}-axis values, or WINDOW for separate windows.",
+    )
 
 
 @dataclass(frozen=True)
-class FijiDisplayConfig(
-    AxisRoleModeDisplayConfig,
-    ViewerDisplayConfigABC,
-    AnnotatedDataclassValidationMixin,
-):
+class FijiDisplayConfig(AxisRoleModeDisplayConfig, FijiDisplaySettings):
     """Map streamed axes and intensity data onto Fiji hyperstacks."""
 
-    lut: NonBlankString = field(
-        default="Grays",
-        metadata={
-            "description": (
-                "Name of a lookup table available to the installed Fiji/ImageJ "
-                "runtime, including plugin-provided LUTs."
-            )
-        },
-    )
-    auto_contrast: bool = field(
-        default=True,
-        metadata={
-            "description": (
-                "Automatically set Fiji display limits from the streamed image data."
-            )
-        },
-    )
-    partition_mode: FijiDimensionMode = field(
-        default=FijiDimensionMode.FRAME,
-        metadata={
-            "axis_role": PartitionAxis,
-            "description": (
-                "ImageJ dimension used for parallel-axis values, or WINDOW for separate windows."
-            ),
-        },
-    )
-    tile_mode: FijiDimensionMode = field(
-        default=FijiDimensionMode.FRAME,
-        metadata={
-            "axis_role": TileAxis,
-            "description": (
-                "ImageJ dimension used for tile-axis values, or WINDOW for separate windows."
-            ),
-        },
-    )
-    colour_mode: FijiDimensionMode = field(
-        default=FijiDimensionMode.CHANNEL,
-        metadata={
-            "axis_role": ColourAxis,
-            "description": (
-                "ImageJ dimension used for colour-axis values, or WINDOW for separate windows."
-            ),
-        },
-    )
-    stack_mode: FijiDimensionMode = field(
-        default=FijiDimensionMode.SLICE,
-        metadata={
-            "axis_role": StackAxis,
-            "description": (
-                "ImageJ dimension used for stack-axis values, or WINDOW for separate windows."
-            ),
-        },
-    )
-    time_mode: FijiDimensionMode = field(
-        default=FijiDimensionMode.FRAME,
-        metadata={
-            "axis_role": TimeAxis,
-            "description": (
-                "ImageJ dimension used for time-axis values, or WINDOW for separate windows."
-            ),
-        },
-    )
-
-    def display_payload_extra(self) -> dict[str, str | bool]:
-        """Project Fiji-specific display settings onto the wire payload."""
-
-        from polystore.fiji_stream import FijiDisplayWireField
-
-        return {
-            FijiDisplayWireField.LUT.value: self.lut,
-            FijiDisplayWireField.AUTO_CONTRAST.value: self.auto_contrast,
-        }
-
-    @classmethod
-    def from_display_payload(
-        cls,
-        payload: Mapping[str, ViewerWireValue],
-    ) -> "FijiDisplayConfig":
-        """Rehydrate the typed config at the Fiji viewer wire boundary."""
-
-        from polystore.fiji_stream import FijiDisplayWireField
-
-        role_modes = cls.role_modes_from_wire(
-            payload[ViewerDisplayConfigWireField.COMPONENT_MODES.value],
-            FijiDimensionMode,
-            "Fiji",
-        )
-        lut = str(payload[FijiDisplayWireField.LUT.value]).strip()
-        if not lut:
-            raise ValueError("Fiji LUT name must not be blank.")
-        auto_contrast = payload[FijiDisplayWireField.AUTO_CONTRAST.value]
-        if not isinstance(auto_contrast, bool):
-            raise TypeError(
-                "Fiji auto_contrast must be bool, "
-                f"got {type(auto_contrast).__name__}."
-            )
-        return cls(lut=lut, auto_contrast=auto_contrast, **role_modes)
+    partition_mode: FijiDimensionMode = _fiji_slot_field(PartitionAxis, "parallel")
+    tile_mode: FijiDimensionMode = _fiji_slot_field(TileAxis, "tile")
+    colour_mode: FijiDimensionMode = _fiji_slot_field(ColourAxis, "colour")
+    stack_mode: FijiDimensionMode = _fiji_slot_field(StackAxis, "stack")
+    time_mode: FijiDimensionMode = _fiji_slot_field(TimeAxis, "time")
 
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by FijiStreamingConfig, so hide it from UI
-FijiDisplayConfig = global_pipeline_config(ui_hidden=True)(FijiDisplayConfig)
+FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(FijiDisplayConfig)
 
 
 @abbreviation("wfc")
@@ -1072,8 +863,9 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     type-specific attribute names.
     """
 
-    __registry__: ClassVar[dict[ViewerType, type["StreamingConfig"]]]
-    __registry_key__ = "viewer_type_declaration"
+    __registry__: ClassVar[dict[type[ViewerFamily], type["StreamingConfig"]]]
+    __registry_key__ = "viewer_family"
+    viewer_family: ClassVar[type[ViewerFamily]]
     show_preview_without_well_filter: ClassVar[bool] = True
 
     @property
@@ -1082,35 +874,10 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
         """Port for streaming communication. Each streamer type has its own default."""
         pass
 
-    @property
-    @abstractmethod
-    def backend(self) -> Backend:
-        """Backend enum for this streaming type."""
-        pass
 
-    @property
-    @abstractmethod
-    def viewer_type(self) -> ViewerType:
-        """Nominal viewer identity for queue tracking and lifecycle behavior."""
-        pass
 
-    @property
-    @abstractmethod
-    def streaming_config_key(self) -> str:
-        """ObjectState/registry field key for this streaming config."""
-        pass
 
-    @property
-    @abstractmethod
-    def step_plan_output_key(self) -> str:
-        """Key to use in step_plan for this config's output paths."""
-        pass
 
-    @property
-    @abstractmethod
-    def viewer_title(self) -> str:
-        """Title shown by this streaming viewer."""
-        pass
 
     @classmethod
     @abstractmethod
@@ -1142,15 +909,18 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     def supported_config_keys(cls) -> tuple[str, ...]:
         """Registered ObjectState field keys for streaming configs."""
         return tuple(
-            viewer_type.config_key for viewer_type in cls.supported_viewer_types()
+            ViewerFamily.named(viewer_type).config_key
+            for viewer_type in cls.supported_viewer_types()
         )
 
     @classmethod
     def supported_viewer_types(cls) -> tuple[ViewerType, ...]:
-        """Return registered viewer identities from their enum owner."""
+        """Boundary names of the viewers that have a streaming config."""
 
         return tuple(
-            viewer_type for viewer_type in ViewerType if viewer_type in cls.__registry__
+            viewer_type
+            for viewer_type in ViewerType
+            if ViewerFamily.named(viewer_type) in cls.__registry__
         )
 
     @classmethod
@@ -1158,19 +928,19 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
         cls,
         viewer_type: ViewerType,
     ) -> type["StreamingConfig"]:
-        """Return the registered config declaration for one viewer identity."""
+        """Return the registered config declaration for one viewer."""
 
-        return cls.__registry__[viewer_type]
+        return cls.__registry__[ViewerFamily.named(viewer_type)]
 
     @classmethod
     def config_type_for_key(cls, config_key: str) -> type["StreamingConfig"]:
         """Return the registered streaming config type for an ObjectState field key."""
-        return cls.config_type_for_viewer(ViewerType.from_config_key(config_key))
+        return cls.__registry__[ViewerFamily.for_config_key(config_key)]
 
     @classmethod
     def display_name_for_config_key(cls, config_key: str) -> str:
         """Return viewer display text for an ObjectState streaming config field key."""
-        return cls.config_type_for_key(config_key)().display_name
+        return ViewerFamily.for_config_key(config_key).display_name
 
 
 from openhcs.core.streaming_config_factory import (
@@ -1189,7 +959,7 @@ class NapariStreamingConfig(
 ):
     """Per-step Napari transport, scope filter, lifetime, and display policy."""
 
-    viewer_type_declaration: ClassVar[ViewerType] = ViewerType.NAPARI
+    viewer_family = NapariViewer
     port: TcpPort = 5555
     """Napari viewer transport port; choose a free local port when streaming is enabled."""
 
@@ -1221,7 +991,7 @@ class FijiStreamingConfig(
 ):
     """Per-step Fiji transport, scope filter, lifetime, and display policy."""
 
-    viewer_type_declaration: ClassVar[ViewerType] = ViewerType.FIJI
+    viewer_family = FijiViewer
     port: TcpPort = 5565
     """Fiji viewer transport port; choose a free local port when streaming is enabled."""
 
@@ -1287,7 +1057,6 @@ LazyStepSourceBindingsConfig = source_binding_configs.LazyStepSourceBindingsConf
 # ============================================================================
 
 # Import streaming port utility from factory module
-from openhcs.core.streaming_config_factory import get_all_streaming_ports
 
 # ============================================================================
 # Configuration Framework Initialization

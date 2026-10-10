@@ -18,11 +18,11 @@ from napari.layers.shapes._shapes_constants import ShapeType
 from napari.utils.transforms import Affine
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
-from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
+from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.axes import AxisFamily, StackAxis
+from openhcs.core.axes import StackAxis
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
-from openhcs.core.config import NapariDisplayConfig
+from openhcs.runtime.viewer_display import NapariDisplaySettings, NapariSlots
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -34,7 +34,7 @@ from openhcs.runtime.viewer_component_system import (
     ComponentValues,
     ViewerComponentAxisSemantics,
     ViewerComponentLayout,
-    ViewerComponentCoordinateAuthority,
+    ViewerComponentCoordinates,
     ViewerComponentValueDomainPayload,
     ViewerRouteComponentValueTracker,
     ViewerLayerAxisProjection,
@@ -266,7 +266,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
 
     timer: NapariTimerHandle
     data_type: StreamingDataType
-    display_config: NapariDisplayConfig
+    display_config: NapariDisplaySettings
     items: list[NapariStreamLayerItem] = field(default_factory=list)
 
     @classmethod
@@ -276,7 +276,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
         timer: NapariTimerHandle,
         data_type: StreamingDataType,
         semantics: ViewerComponentAxisSemantics,
-        display_config: NapariDisplayConfig,
+        display_config: NapariDisplaySettings,
         items: list[NapariStreamLayerItem] | None = None,
     ) -> "NapariPendingLayerUpdate":
         return cls(
@@ -311,7 +311,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
 class NapariLayerSettlementState:
     """Own one incremental drain of queued Napari layer updates."""
 
-    # None is an admitted cycle awaiting the Qt intake barrier. An empty tuple
+    # None is an accepted cycle awaiting the Qt intake barrier. An empty tuple
     # is different: Qt has bound the cycle and found no pending route updates.
     updates: tuple[tuple[str, NapariPendingLayerUpdate], ...] | None
     requested: bool = True
@@ -705,7 +705,7 @@ class NapariAggregateAxisBindingSet:
         return self.item_component_values(item, plane_indices)
 
 
-class NapariAggregateAxisBindingAuthority:
+class NapariAggregateAxisBindingBuilder:
     """Bind payload-local axes through their exact declared component domains."""
 
     @classmethod
@@ -716,9 +716,7 @@ class NapariAggregateAxisBindingAuthority:
     ) -> NapariAggregateAxisBindingSet:
         if not items:
             return NapariAggregateAxisBindingSet()
-        axis_components = component_axis_semantics.layout.components_for_mode(
-            ViewerComponentMode.STACK
-        )
+        axis_components = component_axis_semantics.layout.components_in(NapariSlots.Stack)
         declared_component_values = component_axis_semantics.required_component_values(
             axis_components
         )
@@ -1051,7 +1049,7 @@ class NapariLayerSelectionSnapshot:
     replacing_active_layer: bool
 
 
-class NapariLayerSelectionAuthority:
+class NapariLayerSelection:
     """Preserve user layer selection across automatic streaming updates."""
 
     @classmethod
@@ -1096,7 +1094,7 @@ class NapariLayerSelectionAuthority:
         viewer.layers.selection.active = layer
 
 
-class NapariLayerUpdateAuthority:
+class NapariLayerUpdates:
     """Owns create-or-replace mechanics for Napari streaming layers."""
 
     def create_or_update(
@@ -1110,7 +1108,7 @@ class NapariLayerUpdateAuthority:
         data: LayerData,
         layer_kwargs: Mapping[str, LayerKwargValue],
     ) -> NapariLayerHandle:
-        selection = NapariLayerSelectionAuthority.capture(
+        selection = NapariLayerSelection.capture(
             viewer,
             self._existing_layer(viewer=viewer, layers=layers, route_key=route_key),
         )
@@ -1146,14 +1144,14 @@ class NapariLayerUpdateAuthority:
             route_key=route_key,
         )
         if selection is None:
-            selection = NapariLayerSelectionAuthority.capture(viewer, existing_layer)
+            selection = NapariLayerSelection.capture(viewer, existing_layer)
         if existing_layer is not None:
             viewer.layers.remove(existing_layer)
             layers.pop(route_key, None)
         layers[route_key] = layer
         if layer not in viewer.layers:
             viewer.add_layer(layer)
-        NapariLayerSelectionAuthority.restore(
+        NapariLayerSelection.restore(
             viewer,
             selection,
             layer,
@@ -1181,7 +1179,7 @@ class NapariDimensionLayerState:
     labels: DimensionLabelMap
     scalar_labels: tuple[str, ...] = ()
     presentation: "NapariAxisPresentation | None" = None
-    display_config: NapariDisplayConfig = field(default_factory=NapariDisplayConfig)
+    display_config: NapariDisplaySettings = field(default_factory=NapariDisplaySettings)
 
     @classmethod
     def empty(cls) -> "NapariDimensionLayerState":
@@ -1292,7 +1290,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
     def display_axis_components(self) -> tuple[str, ...]:
         """Return the declaration-owned shared stack slots for this presentation."""
 
-        return self.layout.components_for_mode(ViewerComponentMode.STACK)
+        return self.layout.components_in(NapariSlots.Stack)
 
     @property
     def projected_display_axis_indices(self) -> tuple[int, ...]:
@@ -1423,7 +1421,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         return tuple(
             axis
             for axis in (
-                *(stack.name for stack in AxisFamily.active().with_role(StackAxis)),
+                *self.layout.names_with_role(StackAxis),
                 "y",
                 "x",
             )
@@ -1482,7 +1480,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             source_value = values[source_index]
             if source_value not in replacement_values[name]:
                 continue
-            index = ViewerComponentCoordinateAuthority.value_index(
+            index = ViewerComponentCoordinates.value_index(
                 value=source_value, component_values=replacement_values,
                 component=name, context="rematerialized native source frame",
             )
@@ -1778,7 +1776,7 @@ class NapariLayerRouteStateStore:
               for route, state in self.mounted_dimension_states()
               if route != replacement_route and state.presentation is not None),
         )
-        axes = layout.components_for_mode(ViewerComponentMode.STACK)
+        axes = layout.components_in(NapariSlots.Stack)
         return tracker.shared_values_for(
             axes,
             replacement_route=replacement_route,
@@ -1859,12 +1857,12 @@ class NapariLayerRouteStateStore:
         """Bind queued updates on Qt after the accepted intake barrier."""
 
         with self._settlement_lock:
-            settlement = self.admit_settlement()
+            settlement = self.request_settlement()
             if settlement.awaiting_updates:
                 settlement.bind_updates(self.drain_pending_updates())
             return settlement
 
-    def admit_settlement(
+    def request_settlement(
         self, *, requested: bool = True
     ) -> NapariLayerSettlementState:
         """Track intake or request its settlement, without touching Qt timers."""
@@ -1900,7 +1898,7 @@ class NapariLayerRouteStateStore:
                 and self.layer_settlement is not None
                 and self.layer_settlement.awaiting_updates
             ):
-                return  # Intake continues until Qt binds this admitted cycle.
+                return  # Intake continues until Qt binds this accepted cycle.
             if self.layer_settlement is not None:
                 self.layer_settlement.require_retirement_boundary()
                 self.layer_update_errors.pop(None, None)
@@ -2070,7 +2068,7 @@ class NapariBatchProcessorStore:
             return self.processors[layer_key]
 
 
-class NapariShapeLabelAuthority:
+class NapariShapeLabels:
     """Own validation and allocation of streamed ROI object identities."""
 
     MAX_LABEL: ClassVar[int] = int(np.iinfo(np.uint32).max)
@@ -2090,7 +2088,7 @@ class NapariShapeLabelAuthority:
                 "Napari ROI shape metadata label must be a positive integer, "
                 f"got {label!r}."
             )
-        if label > NapariShapeLabelAuthority.MAX_LABEL:
+        if label > NapariShapeLabels.MAX_LABEL:
             raise ValueError(
                 "Napari ROI shape metadata label exceeds the uint32 ROI-label "
                 f"domain: {label!r}."
@@ -2122,10 +2120,10 @@ class NapariShapeLabelAllocator:
         cls,
         layer_items: Sequence[NapariStreamLayerItem],
     ) -> "NapariShapeLabelAllocator":
-        return cls(NapariShapeLabelAuthority.declared_labels(layer_items))
+        return cls(NapariShapeLabels.declared_labels(layer_items))
 
     def label_for(self, shape_dict: ShapePayloadMap) -> int:
-        declared_label = NapariShapeLabelAuthority.declared_label(shape_dict)
+        declared_label = NapariShapeLabels.declared_label(shape_dict)
         if declared_label is not None:
             return declared_label
         while self.next_fallback_label in self.reserved_labels:

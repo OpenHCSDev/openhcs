@@ -65,7 +65,7 @@ class ViewerShapePayloadProjection(str, Enum):
         )
 
 
-class ViewerResultElementCoordinateAuthority:
+class ViewerResultElementCoordinates:
     """Derive a selected element's slice from its native N-D coordinates."""
 
     @classmethod
@@ -211,7 +211,7 @@ class ViewerResultElementCoordinateAuthority:
         return numeric_value
 
 
-class ViewerPointCoordinateAuthority(ViewerResultElementCoordinateAuthority):
+class ViewerPointCoordinates(ViewerResultElementCoordinates):
     """Navigate to the nearest spatial slice without rounding stored geometry."""
 
     @classmethod
@@ -662,7 +662,7 @@ class ViewerRegionControlOptions(ViewerFeatureMeasurementControlOptions):
 
 @dataclass(frozen=True, slots=True)
 class ViewerMeasurementCoordinates:
-    """Audit projection from the admitted item and native coordinate owners."""
+    """Audit projection from the accepted item and native coordinate owners."""
 
     route_key: str
     source_path: str
@@ -733,7 +733,7 @@ class ViewerPolylineMeasurement:
     reduction: str = "mean across centred perpendicular band"
     sampling: str = (
         "ceil(segment length+1) endpoint-inclusive; repeated junction uses preceding segment; "
-        "nearest(0)/bilinear(1), constant exterior=0 with full band admitted inside source"
+        "nearest(0)/bilinear(1), constant exterior=0 with full band accepted inside source"
     )
     data_length_unit: str = "pixel"
     intensity_unit: str = "raw source value"

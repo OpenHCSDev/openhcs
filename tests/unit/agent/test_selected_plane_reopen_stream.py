@@ -35,7 +35,7 @@ from openhcs.core.viewer_streaming_service import (
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.napari_streaming_handlers import (
-    NapariAggregateAxisBindingAuthority,
+    NapariAggregateAxisBindingBuilder,
     NapariImagePayloadAxisLabelPolicy,
     NapariStreamLayerItem,
 )
@@ -93,7 +93,7 @@ def receiver_transport(monkeypatch, viewer_ack_return_route):
                 image_metadata=payload.image_metadata,
                 plane_component_domain=payload.plane_component_domain,
             )
-            bindings = NapariAggregateAxisBindingAuthority.bindings((item,), semantics)
+            bindings = NapariAggregateAxisBindingBuilder.bindings((item,), semantics)
             NapariImagePayloadAxisLabelPolicy.axis_labels(
                 pixels, item.image_metadata, bindings.payload_axes
             )

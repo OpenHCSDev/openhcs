@@ -28,7 +28,7 @@ from zmqruntime.viewer_protocol import (
     ViewerWireValue,
 )
 
-from openhcs.core.config import FijiDimensionMode, NapariDimensionMode
+from openhcs.runtime.viewer_display import DeclaredAxes, ViewerSlotFamily
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
@@ -56,7 +56,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentMetadataNormalizer,
     ViewerComponentValueParser,
     ViewerComponentAxisSemantics,
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerObjectDisplayConfigInput,
@@ -86,10 +86,7 @@ class StreamImagePayloadMetadataProjector:
         component_values = item_fields.get(
             ViewerWireField.PLANE_COMPONENT_VALUES.value, {}
         )
-        scalar_modes = (
-            NapariDimensionMode.LAYER.value,
-            FijiDimensionMode.WINDOW.value,
-        )
+        scalar_modes = ViewerSlotFamily.separating_wire_values()
         if not any(
             mode in scalar_modes
             for component, mode in component_modes.items()
@@ -368,7 +365,9 @@ class StreamViewerComponentMetadataProjector:
             value = self.component_value(metadata, component)
             if value is not None:
                 projected[component] = value
-        return ViewerComponentMetadataNormalizer().normalize(projected)
+        return ViewerComponentMetadataNormalizer(
+            DeclaredAxes.of(AxisFamily.active().axes)
+        ).normalize(projected)
 
     def component_value(
         self,
@@ -887,7 +886,7 @@ class StreamComponentMessageExtraAuthority:
 
     @property
     def component_axis_semantics(self) -> ViewerComponentAxisSemantics:
-        return ViewerComponentAxisSemanticsAuthority.from_display_config(
+        return ViewerComponentAxisSemanticsFactory.from_display_config(
             display_config=self.display_input,
             value_domain=ViewerComponentValueDomainPayload.from_component_metadata(
                 component_layout=self.layout,

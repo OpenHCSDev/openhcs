@@ -23,13 +23,10 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 def test_napari_settlement_surfaces_terminal_transport_failure() -> None:
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    server = type(
-        "FailedTransportServer",
-        (),
-        {"transport_failure": RuntimeError("receiver copy failed")},
-    )()
+    server = object.__new__(napari_viewer_server.NapariViewerServer)
+    server.transport_failure = RuntimeError("receiver copy failed")
 
-    response = napari_viewer_server.NapariSettleControlMessageAction().handle(
+    response = napari_viewer_server.NapariControlAction.for_message_type("settle").handle(
         server,
         {},
     )
@@ -154,7 +151,7 @@ def test_napari_control_pump_reports_active_settlement_without_qt_dispatch() -> 
 
     from openhcs.runtime.napari_streaming_handlers import NapariPendingLayerUpdate
     from openhcs.runtime.viewer_component_system import (
-        ViewerComponentAxisSemanticsAuthority,
+        ViewerComponentAxisSemanticsFactory,
     )
     from openhcs.runtime.viewer_protocol import (
         ViewerControlResponse,
@@ -182,7 +179,7 @@ def test_napari_control_pump_reports_active_settlement_without_qt_dispatch() -> 
     update = NapariPendingLayerUpdate.from_semantics(
         timer=FakeTimer(),
         data_type=StreamingDataType.SHAPES,
-        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        semantics=ViewerComponentAxisSemanticsFactory.empty(),
         display_config=NapariDisplayConfig(),
     )
     server.layer_route_state.set_pending_update("large-shapes", update)

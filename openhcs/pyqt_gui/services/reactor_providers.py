@@ -146,7 +146,7 @@ class OpenHCSServerScanProvider(ServerScanProviderABC):
         )
         from zmqruntime.execution.logs import ExecutionWorkerLogObservation
 
-        from openhcs.core.config import get_all_streaming_ports
+        from openhcs.core.streaming_config_factory import get_all_streaming_ports
         from openhcs.core.log_utils import classify_log_file
 
         config = self._config_provider()

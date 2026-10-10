@@ -77,7 +77,7 @@ class NativeMeasurementWindow:
 
 @dataclass(frozen=True, slots=True)
 class NativeImageMeasurement:
-    """One admitted original 2D payload plus native transform; never display padding."""
+    """One accepted original 2D payload plus native transform; never display padding."""
 
     data: np.ndarray
     origin_yx: tuple[int, int]
@@ -190,7 +190,7 @@ class NativeImageMeasurement:
             )
             if len(profile) != counts[i] or not np.isfinite(profile).all():
                 raise ValueError(
-                    "Profile interpolation did not retain the admitted finite source support."
+                    "Profile interpolation did not retain the accepted finite source support."
                 )
             drop = 0 if i == 0 else 1
             profiles.extend(float(v) for v in profile[drop:])

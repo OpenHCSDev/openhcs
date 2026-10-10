@@ -34,7 +34,7 @@ from openhcs.core.native_threading import configure_native_thread_environment
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import NapariViewer
 from openhcs.mcp.bootstrap import MCP_VERBOSE_ENVIRONMENT_VARIABLE
 from openhcs.mcp.dev_client import McpDevClient, McpDevCommandExecution
 from openhcs.mcp.dev_client_commands.knowledge_pipeline import (
@@ -667,7 +667,7 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
         or payload["mounted_layer_count"] < 1
         or not isinstance(payload.get("nonzero_payload_count"), int)
         or payload["nonzero_payload_count"] < 1
-        or viewer_type != ViewerType.NAPARI.wire_value
+        or viewer_type != NapariViewer.wire_value
     ):
         raise InstalledDemoFailure(
             f"Installed Napari viewer validation did not pass: {payload}"

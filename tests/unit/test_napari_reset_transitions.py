@@ -20,8 +20,8 @@ from qtpy.QtWidgets import QApplication
 from openhcs.core.config import (
     NapariDimensionMode,
     NapariDisplayConfig,
-    NapariVariableSizeHandling,
 )
+from openhcs.runtime.viewer_display import NapariVariableSizeHandling
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.runtime.napari_streaming_handlers import (
@@ -33,7 +33,7 @@ from openhcs.runtime.napari_streaming_handlers import (
 )
 from openhcs.runtime.napari_viewer_server import (
     NapariAcceptedControlRequest,
-    NapariControlMessageAction,
+    NapariControlAction,
     NapariComponentAwareDisplayCoordinator,
     NapariImagePayloadLayoutRole,
     NapariLayerDisplayPipeline,
@@ -42,7 +42,7 @@ from openhcs.runtime.napari_viewer_server import (
     NapariShapesLayerDisplayHandler,
     NapariPointsLayerDisplayHandler,
     NapariSelectablePresentationRetention,
-    NapariNavigationControlMessageAction,
+    NapariNavigationControlAction,
     NapariResultSelectionController,
     NapariResultSelectionGroupBinding,
     NapariStreamLayerContext,
@@ -57,19 +57,20 @@ from openhcs.agent.services.viewer_window_service import (
 )
 from openhcs.runtime.viewer_controls import (
     ViewerLayerRetirementControlOptions, ViewerNavigationControlOptions,
-    ViewerPointCoordinateAuthority,
+    ViewerPointCoordinates,
 )
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerSettlePhase,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
     ViewerMappingDisplayConfigInput,
     ViewerRouteComponentValueTracker,
 )
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 @pytest.fixture
@@ -130,17 +131,19 @@ def enqueue(
         time_mode=NapariDimensionMode.LAYER,
         variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
     )
-    semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(
             {
                 "component_modes": config.component_modes(),
                 "component_order": config.COMPONENT_ORDER,
+                "declared_axes": STREAM_AXES.to_wire(),
             }
         ),
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             {"well": domain or [well], "channel": channels or [channel],
              "site": [1], "z_index": z_domain or [z_index], "timepoint": [1]},
-            context="synthetic transition"
+            context="synthetic transition",
+            declared_axes=STREAM_AXES,
         ),
     )
     context = NapariStreamLayerContext(
@@ -205,7 +208,7 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
     receiver, result_first, data_type, replace_layers,
 ):
     """Four earlier 5D raw routes promote as one nonrecursive native batch."""
-    from openhcs.runtime.napari_viewer_server import NapariNavigationControlMessageAction
+    from openhcs.runtime.napari_viewer_server import NapariNavigationControlAction
     from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
 
     receiver.replace_layers = replace_layers
@@ -245,10 +248,10 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
     if result_first:
         result_route = result()
         native = receiver.layer_route_state.layer(result_route)
-        prepared = NapariNavigationControlMessageAction().prepare(
+        prepared = NapariNavigationControlAction().prepare(
             receiver, ViewerNavigationControlOptions(route_key=result_route, data_index=0),
         )
-        NapariNavigationControlMessageAction().apply_prepared(receiver, prepared)
+        NapariNavigationControlAction().apply_prepared(receiver, prepared)
         identities = set(native.features.iloc[list(native.selected_data)][NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE])
         raw()
         current = receiver.layer_route_state.layer(result_route)
@@ -271,7 +274,7 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
         state = receiver.layer_route_state.dimension_state_for(route)
         assert state.axis_labels == ("site", "channel", "z_index", "timepoint", "well", "y", "x")
         assert tuple(layer.contrast_limits) == (0, 500) and layer.gamma == 0.8 and layer.opacity == 0.4
-        target = NapariNavigationControlMessageAction().prepare(
+        target = NapariNavigationControlAction().prepare(
             receiver, ViewerNavigationControlOptions(
                 route_key=route, axis_indices=state.presentation.route_local_component_indices(
                     state.presentation.projection.coordinate_index(
@@ -283,7 +286,7 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
             ),
         )
         result_layer.visible = False
-        NapariNavigationControlMessageAction().apply_prepared(receiver, target)
+        NapariNavigationControlAction().apply_prepared(receiver, target)
         assert receiver.viewer.dims.current_step[1] == channel - 1
         assert receiver.viewer.dims.current_step[4] == wells.index(well)
         assert np.max(layer._data_view) == 10 * wells.index(well) + channel
@@ -315,7 +318,7 @@ def test_clear_before_replacement_keeps_settled_pixels_inventory_and_calibration
         domain=["A01", "A14"],
     )
     assert route_b == route
-    receiver.clear_accumulated_stream_state()
+    receiver.clear_stream_state()
     assert receiver.layer_route_state.layer(route) is native_a
     assert receiver.component_groups.existing_items_for(route)[0].data is a
     assert receiver.component_groups.existing_items_for(route) is items_a
@@ -356,7 +359,7 @@ def test_clear_between_replacement_shapes_chunks_preserves_settled_native_layer(
         domain=["A01", "A14"],
     )
     assert route_b == route
-    advance_in_qt(receiver, route, update_b, receiver.clear_accumulated_stream_state)
+    advance_in_qt(receiver, route, update_b, receiver.clear_stream_state)
     assert receiver.layer_route_state.layer(route) is native_a
     assert receiver.component_groups.existing_items_for(route) is items_a
     assert native_a.visible and len(native_a.data) == 1
@@ -394,7 +397,7 @@ def test_completed_shapes_publish_full_inventory_and_declared_domain(
     layer = receiver.layer_route_state.layer(route)
     assert layer.visible and len(layer.data) == len(layer.features) == 3
     assert receiver.component_groups.existing_items_for(route)[0].data is shapes
-    receiver.clear_accumulated_stream_state()
+    receiver.clear_stream_state()
     assert receiver.layer_route_state.layer(route) is layer
     assert receiver.component_values.shared_values_for(["well"]) == {
         "well": ["A01", "A02"]
@@ -416,7 +419,7 @@ def test_clear_between_shapes_chunks_does_not_retain_partial_native_payload(
     route, update = enqueue(
         receiver, shapes, producer="roi", data_type=StreamingDataType.SHAPES
     )
-    advance_in_qt(receiver, route, update, receiver.clear_accumulated_stream_state)
+    advance_in_qt(receiver, route, update, receiver.clear_stream_state)
     assert not receiver.viewer.layers
     assert not receiver.layer_route_state.layers
     assert not receiver.component_groups.groups
@@ -434,7 +437,7 @@ def test_native_deletion_then_clear_reprojects_surviving_shared_axis(receiver):
     assert native_b.translate[0] == 1
     receiver.viewer.layers.selection.active = native_b
     receiver.viewer.layers.remove(receiver.layer_route_state.layer(route_a))
-    receiver.clear_accumulated_stream_state()
+    receiver.clear_stream_state()
     assert receiver.component_values.shared_values_for(["well"]) == {"well": ["A02"]}
     assert native_b.translate[0] == 0
     presentation = receiver.layer_route_state.dimension_state_for(route_b).presentation
@@ -466,7 +469,7 @@ def test_pruning_interior_shared_value_rematerializes_from_settled_items(receive
     assert old_native.data.shape == (3, 2, 2)
     receiver.viewer.layers.selection.active = old_native
     receiver.viewer.layers.remove(receiver.layer_route_state.layer(middle))
-    receiver.clear_accumulated_stream_state()
+    receiver.clear_stream_state()
     native = receiver.layer_route_state.layer(sparse)
     assert native is not old_native and old_native not in receiver.viewer.layers
     assert receiver.component_groups.existing_items_for(sparse) is original_items
@@ -482,7 +485,7 @@ def test_pruning_interior_shared_value_rematerializes_from_settled_items(receive
     assert receiver.component_values.shared_values_for(["well"]) == {
         "well": ["A01", "A03"]
     }
-    receiver.clear_accumulated_stream_state()
+    receiver.clear_stream_state()
     assert receiver.layer_route_state.layer(sparse) is native
 
 
@@ -491,7 +494,7 @@ def test_native_deletion_with_queued_replacement_clear_cannot_resurrect_route(re
     advance_in_qt(receiver, route, update_a)
     _, update_b = enqueue(receiver, np.full((2, 2), 9))
     receiver.viewer.layers.remove(receiver.layer_route_state.layer(route))
-    receiver.clear_accumulated_stream_state()
+    receiver.clear_stream_state()
     advance_in_qt(receiver, route, update_b)
     assert not receiver.viewer.layers
     assert not receiver.layer_route_state.layers
@@ -664,7 +667,7 @@ def test_retirement_prevalidates_entire_set_without_collateral_mutation(receiver
         request = replace(request, operation_deadline=OperationDeadline("expired", 5000, 0))
     layers = tuple(receiver.viewer.layers)
     groups = dict(receiver.component_groups.groups)
-    response = NapariControlMessageAction.for_message_type(
+    response = NapariControlAction.for_message_type(
         OpenHCSViewerControlMessageType.RETIRE_LAYERS.value,
     ).handle(receiver, {"payload": request})
     assert response["status"] == "error"
@@ -775,7 +778,7 @@ def test_retirement_retains_survivor_source_members_without_late_navigation(
     if selected:
         # Domain expansion now retains the actual source frame. This fixture
         # explicitly selects A01 members, so choose A01 before native assignment.
-        prepared = NapariNavigationControlMessageAction().prepare(
+        prepared = NapariNavigationControlAction().prepare(
             receiver, ViewerNavigationControlOptions(route_key=route, data_index=0),
         )
         receiver.viewer.dims.current_step = prepared.viewer_step
@@ -839,7 +842,7 @@ def test_new_selectable_capability_executes_cooperative_retention_hooks(receiver
     old = receiver.layer_route_state.layer(route)
     # Select the declared A03 source frame before retaining its member. Native
     # selected_data alone can contain an off-slice Points row.
-    prepared = NapariNavigationControlMessageAction().prepare(
+    prepared = NapariNavigationControlAction().prepare(
         receiver, ViewerNavigationControlOptions(route_key=route, data_index=1,
                                                visible=True, selected=True),
     )
@@ -1105,7 +1108,7 @@ def test_fractional_spatial_selection_survives_real_qt_rematerialization(receive
     )
     original_coordinates = old.data[1, spatial_dimensions].copy()
     sources = receiver.component_groups.existing_items_for(route)
-    navigation = NapariNavigationControlMessageAction()
+    navigation = NapariNavigationControlAction()
 
     def select_and_check(layer):
         member = tuple(layer.features[feature]).index(identity)
@@ -1156,7 +1159,7 @@ def test_declared_point_coordinate_capability_executes_cooperative_hooks(receive
             admitted.append(axis_label)
             return super()._coordinate_value(value, axis_label=axis_label)
 
-    class RecordedPointCoordinates(CoordinateAdmissionRecording, ViewerPointCoordinateAuthority):
+    class RecordedPointCoordinates(CoordinateAdmissionRecording, ViewerPointCoordinates):
         pass
 
     class RecordedPointsHandler(NapariPointsLayerDisplayHandler):
@@ -1170,7 +1173,7 @@ def test_declared_point_coordinate_capability_executes_cooperative_hooks(receive
     advance_in_qt(receiver, route, update)
     layer = receiver.layer_route_state.layer(route)
     presentation = receiver.layer_route_state.dimension_state_for(route).presentation
-    action = NapariNavigationControlMessageAction()
+    action = NapariNavigationControlAction()
     for pair in (("y", "x"), ("z_index", "x"), ("z_index", "y")):
         action.result_element_axis_indices(
             receiver, layer, route, 0,

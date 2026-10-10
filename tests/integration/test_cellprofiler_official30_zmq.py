@@ -585,11 +585,11 @@ def test_official30_fiji_variants_project_registered_viewer_configs() -> None:
             if field.name not in registered_keys
         )
         assert {
-            config.viewer_type for config in configs.values() if config.enabled
+            config.viewer_family.viewer_type() for config in configs.values() if config.enabled
         } == set(viewer_types)
         assert all(config.persistent is config.enabled for config in configs.values())
         assert {
-            config.viewer_type: config.port
+            config.viewer_family.viewer_type(): config.port
             for config in configs.values()
             if config.enabled
         } == ports_by_viewer
