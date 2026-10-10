@@ -5,8 +5,7 @@ import threading
 from pathlib import Path
 from typing import Dict, Optional
 
-from openhcs.core.components.validation import convert_enum_by_value
-from openhcs.constants.constants import AllComponents
+from openhcs.core.axes import Axis, AxisFamily
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ class MetadataCache:
     """Stores component key→name mappings with basic invalidation and thread safety."""
 
     def __init__(self):
-        self._cache: Dict["AllComponents", Dict[str, Optional[str]]] = {}
+        self._cache: Dict[type[Axis], Dict[str, Optional[str]]] = {}
         self._metadata_file_mtimes: Dict[Path, float] = {}
         self._lock = threading.Lock()
 
@@ -29,13 +28,13 @@ class MetadataCache:
             logger.info(f"🔍 METADATA_CACHE: parse_metadata returned: {metadata}")
 
             # Initialize all components with keys mapped to None
-            for component in AllComponents:
+            for component in AxisFamily.active().axes:
                 component_keys = component_keys_cache.get(component, [])
                 self._cache[component] = {key: None for key in component_keys}
 
             # Update with actual metadata where available
             for component_name, mapping in metadata.items():
-                component = AllComponents(component_name)
+                component = AxisFamily.active().named(component_name)
                 logger.info(
                     f"🔍 METADATA_CACHE: Caching {component_name} -> {component}: {mapping}"
                 )
@@ -61,16 +60,15 @@ class MetadataCache:
                 )
 
     def get_component_metadata(self, component, key: str) -> Optional[str]:
-        """Get metadata display name for a component key. Accepts GroupBy or VariableComponents."""
+        """Get metadata display name for one axis value."""
         with self._lock:
             if not self._is_cache_valid():
                 logger.warning(f"🔍 METADATA_CACHE: Cache invalid, clearing")
                 self._cache.clear()
                 return None
 
-            # Convert GroupBy to AllComponents using OpenHCS generic utility
-            component = convert_enum_by_value(component, AllComponents) or component
             component_cache = self._cache.get(component)
+
             if component_cache is None:
                 logger.debug("🔍 METADATA_CACHE: component %s not cached", component)
                 return None
@@ -84,7 +82,7 @@ class MetadataCache:
             return component_cache.get(key)
 
     def get_cached_metadata(
-        self, component: "AllComponents"
+        self, component: "type[Axis]"
     ) -> Optional[Dict[str, Optional[str]]]:
         """Get all cached metadata for a component."""
         with self._lock:

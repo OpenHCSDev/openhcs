@@ -7,7 +7,6 @@ from pathlib import Path
 
 import numpy as np
 
-from openhcs.constants import AllComponents
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
@@ -18,6 +17,7 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 
 from tests.diagnostics.basicpy_observation_fixture import shaded_observations
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def create_acquisition(destination: Path) -> dict:
@@ -34,11 +34,11 @@ def create_acquisition(destination: Path) -> dict:
     for site, pixels in enumerate(observations, start=1):
         components = FilenameParseResult(
             (
-                (AllComponents.WELL, "A01"),
-                (AllComponents.SITE, site),
-                (AllComponents.CHANNEL, 1),
-                (AllComponents.Z_INDEX, 1),
-                (AllComponents.TIMEPOINT, 1),
+                (Microscopy.Well, "A01"),
+                (Microscopy.Site, site),
+                (Microscopy.Channel, 1),
+                (Microscopy.ZIndex, 1),
+                (Microscopy.Timepoint, 1),
             ),
             extension=".tif",
         )
@@ -54,7 +54,7 @@ def create_acquisition(destination: Path) -> dict:
         "plate_path": str(destination),
         "shape_nyx": list(observations.shape),
         "dtype": str(observations.dtype),
-        "independent_component": AllComponents.SITE.value,
+        "independent_component": Microscopy.Site.name,
         "source_xy_spacing_um": 0.65,
         "files": paths,
     }

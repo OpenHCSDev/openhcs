@@ -31,7 +31,7 @@ from polystore.base import (
 from polystore.filemanager import FileManager
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactSpec
 from openhcs.core.config import (
@@ -70,6 +70,8 @@ from openhcs.processing.backends.analysis.skan_axon_analysis import (
 )
 from openhcs.processing.backends.processors.numpy_processor import tophat
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,19 +132,19 @@ def build_czi_brain_axon_cellbody_demo(
                 NamedSourceBinding(
                     alias="Axon",
                     selector=SourceSelector(
-                        components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                        components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
                 ),
                 NamedSourceBinding(
                     alias="NeuronalSoma",
                     selector=SourceSelector(
-                        components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                        components=(ComponentSelector(Microscopy.Channel, "2"),),
                     ),
                 ),
                 NamedSourceBinding(
                     alias="Nuclei",
                     selector=SourceSelector(
-                        components=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                        components=(ComponentSelector(Microscopy.Channel, "3"),),
                     ),
                 ),
             ),
@@ -168,8 +170,8 @@ def build_czi_brain_axon_cellbody_demo(
                 },
             ),
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.CHANNEL],
-                group_by=GroupBy.NONE,
+                variable_components=[Microscopy.Channel],
+                group_by=Ungrouped,
                 input_source=InputSource.PIPELINE_START,
             ),
         ),
@@ -194,8 +196,8 @@ def build_czi_brain_axon_cellbody_demo(
                 },
             ),
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.CHANNEL],
-                group_by=GroupBy.NONE,
+                variable_components=[Microscopy.Channel],
+                group_by=Ungrouped,
                 input_source=InputSource.PREVIOUS_STEP,
             ),
             napari_streaming_config=_analysis_stream(
@@ -215,8 +217,8 @@ def build_czi_brain_axon_cellbody_demo(
                 },
             ),
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.CHANNEL],
-                group_by=GroupBy.NONE,
+                variable_components=[Microscopy.Channel],
+                group_by=Ungrouped,
                 input_source=InputSource.PIPELINE_START,
             ),
             source_bindings=LazyStepSourceBindingsConfig(
@@ -243,8 +245,8 @@ def build_czi_brain_axon_cellbody_demo(
                 },
             ),
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.CHANNEL],
-                group_by=GroupBy.NONE,
+                variable_components=[Microscopy.Channel],
+                group_by=Ungrouped,
                 input_source=InputSource.PREVIOUS_STEP,
             ),
             napari_streaming_config=_analysis_stream(
@@ -284,13 +286,13 @@ def _declared_crop_candidates(
         matches = tuple(
             candidate
             for candidate in dataset.candidates
-            if candidate.component_labels.get(AllComponents.SITE.value)
+            if candidate.component_labels.get(Microscopy.Site.name)
             == selection.site_label
-            and candidate.component_labels.get(AllComponents.CHANNEL.value)
+            and candidate.component_labels.get(Microscopy.Channel.name)
             == channel_label
             and candidate.declared_address is not None
-            and candidate.declared_address.value_for(AllComponents.Z_INDEX) == "1"
-            and candidate.declared_address.value_for(AllComponents.TIMEPOINT) == "1"
+            and candidate.declared_address.value_for(Microscopy.ZIndex) == "1"
+            and candidate.declared_address.value_for(Microscopy.Timepoint) == "1"
         )
         if len(matches) != 1:
             raise ValueError(

@@ -10,11 +10,12 @@ import logging
 import os
 from collections import defaultdict
 from pathlib import Path
+from collections.abc import Sequence
 from typing import Any, Dict, List, Optional, Union
 
 from polystore.filemanager import FileManager
 
-from openhcs.constants.constants import DEFAULT_IMAGE_EXTENSION
+from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 
@@ -67,7 +68,7 @@ class PatternDiscoveryEngine:
         directory: Union[str, Path],
         pattern: str,
         backend: str,
-        variable_components: Optional[List[str]] = None,
+        variable_components: Optional[Sequence[type[Axis]]] = None,
     ) -> List[str]:
         """Get a list of filenames matching a pattern in a directory."""
         directory_path = str(directory)  # Keep as string for FileManager consistency
@@ -128,14 +129,11 @@ class PatternDiscoveryEngine:
         self,
         file_metadata: FilenameParseResult,
         pattern_metadata: FilenameParseResult,
-        variable_components: List[str],
+        variable_components: Sequence[type[Axis]],
     ) -> bool:
         """Check if a file's metadata matches a pattern's structure."""
         # Check all components in the pattern
-        variable_declarations = {
-            self.parser.component_for_name(component)
-            for component in variable_components
-        }
+        variable_declarations = set(variable_components)
         for component in self.parser.FILENAME_COMPONENTS:
             pattern_value = pattern_metadata.value_for(component)
             file_value = file_metadata.value_for(component)
@@ -154,7 +152,7 @@ class PatternDiscoveryEngine:
         return True
 
     def group_patterns_by_component(
-        self, patterns: List[str], component: str
+        self, patterns: List[str], component: type[Axis]
     ) -> Dict[str, List[str]]:
         """
         Group patterns by a required component.
@@ -171,9 +169,7 @@ class PatternDiscoveryEngine:
             ValueError: If component is not present in a pattern
         """
         grouped_patterns = defaultdict(list)
-        # Validate inputs
-        if not component or not isinstance(component, str):
-            raise ValueError(f"Component must be a non-empty string, got {component}")
+        component_declaration = AxisFamily.active().require(component)
 
         if not all(isinstance(p, str) for p in patterns):
             raise TypeError("All patterns must be strings")
@@ -186,11 +182,11 @@ class PatternDiscoveryEngine:
             # For pattern discovery and grouping, we WANT patterns with placeholders
 
             metadata = self.pattern_cache.metadata_for_filename(self.parser, pattern_str)
-            component_declaration = self.parser.component_for_name(component)
 
             if metadata is None or metadata.value_for(component_declaration) is None:
                 raise ValueError(
-                    f"Missing required component '{component}' in pattern: {pattern_str}"
+                    f"Missing required component '{component.name}' in pattern: "
+                    f"{pattern_str}"
                 )
 
             value = str(metadata.value_for(component_declaration))
@@ -199,16 +195,14 @@ class PatternDiscoveryEngine:
         return grouped_patterns
 
     def subdivide_patterns_by_components(
-        self, patterns: List[str], components: List[str]
+        self, patterns: List[str], components: Sequence[type[Axis]]
     ) -> Dict[tuple, List[str]]:
         """Subdivide patterns by multiple component values."""
         if not components:
             return {(): patterns}
 
         subdivided = defaultdict(list)
-        component_declarations = tuple(
-            self.parser.component_for_name(component) for component in components
-        )
+        component_declarations = tuple(components)
         for pattern in patterns:
             metadata = self.pattern_cache.metadata_for_filename(self.parser, str(pattern))
             if not metadata:
@@ -225,20 +219,17 @@ class PatternDiscoveryEngine:
     def auto_detect_patterns(
         self,
         folder_path: Union[str, Path],
-        variable_components: List[str],
+        variable_components: Sequence[type[Axis]],
         backend: str,
         extensions: List[str] = None,
-        group_by=None,  # Accept GroupBy enum or None
+        group_by: type[GroupingDeclaration] | None = None,
         recursive: bool = False,
         **kwargs,  # Dynamic filter parameters (e.g., well_filter, site_filter)
     ) -> Dict[str, Any]:
         """
         Automatically detect image patterns in a folder.
         """
-        # Extract axis_filter from dynamic kwargs
-        from openhcs.constants import MULTIPROCESSING_AXIS
-
-        axis_name = MULTIPROCESSING_AXIS.value
+        axis_name = AxisFamily.active().partition_axis().name
         axis_filter = kwargs.get(f"{axis_name}_filter")
 
         files_by_axis = self._find_and_filter_images(
@@ -257,15 +248,13 @@ class PatternDiscoveryEngine:
     def auto_detect_patterns_from_files(
         self,
         image_paths: List[Union[str, Path]],
-        variable_components: List[str],
-        group_by=None,
+        variable_components: Sequence[type[Axis]],
+        group_by: type[GroupingDeclaration] | None = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Automatically detect image patterns from an authoritative file list."""
 
-        from openhcs.constants import MULTIPROCESSING_AXIS
-
-        axis_name = MULTIPROCESSING_AXIS.value
+        axis_name = AxisFamily.active().partition_axis().name
         axis_filter = kwargs.get(f"{axis_name}_filter")
         files_by_axis = self._filter_images_by_axis(image_paths, axis_filter)
         if not files_by_axis:
@@ -281,8 +270,8 @@ class PatternDiscoveryEngine:
         image_paths: List[Union[str, Path]],
         *,
         axis_id: str,
-        variable_components: List[str],
-        group_by=None,
+        variable_components: Sequence[type[Axis]],
+        group_by: type[GroupingDeclaration] | None = None,
     ) -> Dict[str, Any]:
         """Detect patterns from files already selected for one runtime axis."""
         if not axis_id:
@@ -298,8 +287,8 @@ class PatternDiscoveryEngine:
     def _patterns_for_files_by_axis(
         self,
         files_by_axis: Dict[str, List[Any]],
-        variable_components: List[str],
-        group_by=None,
+        variable_components: Sequence[type[Axis]],
+        group_by: type[GroupingDeclaration] | None = None,
     ) -> Dict[str, Any]:
         result = {}
         for axis_value, files in files_by_axis.items():
@@ -314,15 +303,12 @@ class PatternDiscoveryEngine:
                         f"Pattern generator returned invalid type: {type(pattern).__name__}"
                     )
 
-            if group_by:
-                # Extract string value from GroupBy enum for pattern grouping
-                component_string = group_by.value if group_by.value else None
-                if component_string:
-                    result[axis_value] = self.group_patterns_by_component(
-                        patterns, component=component_string
-                    )
-                else:
-                    result[axis_value] = patterns
+            grouping_axes = () if group_by is None else group_by.grouping_axes()
+            if grouping_axes:
+                (grouping_axis,) = grouping_axes
+                result[axis_value] = self.group_patterns_by_component(
+                    patterns, component=grouping_axis
+                )
             else:
                 result[axis_value] = patterns
 
@@ -393,14 +379,12 @@ class PatternDiscoveryEngine:
             if not metadata:
                 continue
 
-            # Get multiprocessing axis dynamically from configuration
-            from openhcs.constants import MULTIPROCESSING_AXIS
-
+            partition_axis = AxisFamily.active().partition_axis()
             matched_axis = next(
                 (
                     str(axis_value)
                     for axis_value in axis_filter
-                    if metadata.component_matches(MULTIPROCESSING_AXIS, axis_value)
+                    if metadata.component_matches(partition_axis, axis_value)
                 ),
                 None,
             )
@@ -412,7 +396,10 @@ class PatternDiscoveryEngine:
         return files_by_axis
 
     def _generate_patterns_for_files(
-        self, files: List[Any], variable_components: List[str], axis_value: str
+        self,
+        files: List[Any],
+        variable_components: Sequence[type[Axis]],
+        axis_value: str,
     ) -> List[str]:
         """Generate patterns for a list of files."""
         # Validate input parameters
@@ -421,10 +408,9 @@ class PatternDiscoveryEngine:
                 f"Expected list of file path objects, got {type(files).__name__}"
             )
 
-        if not isinstance(variable_components, list):
-            raise TypeError(
-                f"Expected list of variable components, got {type(variable_components).__name__}"
-            )
+        variable_declarations = {
+            AxisFamily.active().require(component) for component in variable_components
+        }
 
         # Use microscope-specific parser for pattern generation
 
@@ -444,15 +430,11 @@ class PatternDiscoveryEngine:
             if not metadata:
                 continue
 
-            variable_declarations = {
-                self.parser.component_for_name(component)
-                for component in variable_components
-            }
             key_parts = []
             for component in self.parser.FILENAME_COMPONENTS:
                 value = metadata.value_for(component)
                 if component not in variable_declarations and value is not None:
-                    key_parts.append(f"{component.value}={value}")
+                    key_parts.append(f"{component.name}={value}")
 
             key = ",".join(key_parts)
             component_combinations[key].append((file_path, metadata))
@@ -464,10 +446,6 @@ class PatternDiscoveryEngine:
 
             _, template_metadata = files_metadata[0]
             # Generate pattern arguments for all discovered components
-            variable_declarations = {
-                self.parser.component_for_name(component)
-                for component in variable_components
-            }
             pattern_str = self.parser.construct_filename(
                 template_metadata.with_values(
                     (

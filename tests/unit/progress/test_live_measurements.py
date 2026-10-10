@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ArtifactOutputPlan, MeasurementsArtifactType
 from openhcs.core.progress import (
     ProgressEvent,
@@ -32,6 +31,7 @@ from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
     FieldSpec,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,7 +110,7 @@ def _measurement_record(
             path=path,
             artifact_type=MeasurementsArtifactType,
             group_keys=("DAPI",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
         ),
         MeasurementTable(
             name=name,

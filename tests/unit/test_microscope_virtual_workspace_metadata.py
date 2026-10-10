@@ -8,7 +8,6 @@ from types import SimpleNamespace
 
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.virtual_workspace_metadata import FIELDS
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.viewer_streaming_service import ViewerStreamingSource
@@ -16,6 +15,7 @@ from openhcs.microscopes.opera_phenix import OperaPhenixHandler
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_virtual_workspace_metadata_records_parser_owned_axis_values(
@@ -48,8 +48,8 @@ def test_virtual_workspace_metadata_records_parser_owned_axis_values(
         (tmp_path / "openhcs_metadata.json").read_text(encoding="utf-8")
     )
     source_metadata = metadata[FIELDS.SUBDIRECTORIES]["Images"][FIELDS.SOURCE_METADATA]
-    assert source_metadata[virtual_a][AllComponents.WELL.value] == "R01C01"
-    assert source_metadata[virtual_b][AllComponents.WELL.value] == "R02C03"
+    assert source_metadata[virtual_a][Microscopy.Well.name] == "R01C01"
+    assert source_metadata[virtual_b][Microscopy.Well.name] == "R02C03"
 
     projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
         tmp_path,
@@ -126,7 +126,7 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
     monkeypatch.setattr(owner, "get_effective_config", live_config)
 
     assert owner.get_component_keys(
-        AllComponents.WELL, resolved_config=held_config
+        Microscopy.Well, resolved_config=held_config
     ) == ["R01C01"]
     live_config.assert_not_called()
     owner.pipeline_config = replace(
@@ -137,10 +137,10 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
     )
     owner.initialize()
     live_config.reset_mock()
-    assert owner.get_component_keys(AllComponents.WELL) == ["R02C03"]
+    assert owner.get_component_keys(Microscopy.Well) == ["R02C03"]
     assert live_config.call_count == 1
     assert owner.get_component_keys(
-        AllComponents.WELL, resolved_config=held_config
+        Microscopy.Well, resolved_config=held_config
     ) == ["R01C01"]
     assert live_config.call_count == 1
 

@@ -13,7 +13,7 @@ import numpy as np
 from matplotlib.colors import CSS4_COLORS, to_rgb
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.constants.constants import GroupBy, VariableComponents
+from openhcs.core.axes import ColourAxis, TileAxis
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
@@ -39,7 +39,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
 )
 from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
-    required_variable_components,
+    required_axis_roles,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
@@ -643,7 +643,7 @@ class GrayToColorModule(
     module_name = "GrayToColor"
     function_name = "gray_to_color"
     validated = True
-    group_by = GroupBy.SITE
+    group_by_role = TileAxis
     confidence = 1.0
     color_scheme_setting = SettingNameFamily("Select a color scheme")
     rescale_setting = SettingNameFamily("Rescale intensity")
@@ -1542,7 +1542,7 @@ class CompositeGrayToColorRunner(GrayToColorSchemeRunner):
 @declares_primary_image_carrier_transition(
     PrimaryImageCarrierTransition.CREATE_SOURCE_CHANNEL_AXIS,
 )
-@required_variable_components(VariableComponents.CHANNEL)
+@required_axis_roles(ColourAxis)
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def gray_to_color(
@@ -2265,7 +2265,7 @@ class InvertForPrintingModule(
         "invert_for_printing_without_output",
     )
     validated = True
-    group_by = GroupBy.SITE
+    group_by_role = TileAxis
     confidence = 1.0
 
     input_mode_setting = "Input image type"

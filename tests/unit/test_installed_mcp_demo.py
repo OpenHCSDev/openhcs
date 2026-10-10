@@ -13,7 +13,6 @@ from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.messages import TaskProgress
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.constants.constants import AllComponents
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.mcp import installed_demo
@@ -21,6 +20,7 @@ from openhcs.mcp.dev_client import McpDevCommandExecution
 from openhcs.processing.presets.pipelines import (
     loose_operaphenix_neurite_outgrowth as neurite_preset,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _records(tmp_path: Path) -> tuple[dict[str, object], ...]:
@@ -33,11 +33,11 @@ def _records(tmp_path: Path) -> tuple[dict[str, object], ...]:
                 "kind": PlateFileKind.IMAGE.value,
                 "source_path": str(source_path),
                 "metadata": {
-                    AllComponents.WELL.value: "A01",
-                    AllComponents.SITE.value: "1",
-                    AllComponents.CHANNEL.value: str(channel),
-                    AllComponents.Z_INDEX.value: "1",
-                    AllComponents.TIMEPOINT.value: "1",
+                    Microscopy.Well.name: "A01",
+                    Microscopy.Site.name: "1",
+                    Microscopy.Channel.name: str(channel),
+                    Microscopy.ZIndex.name: "1",
+                    Microscopy.Timepoint.name: "1",
                 },
             }
         )

@@ -8,7 +8,6 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
@@ -30,6 +29,7 @@ from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionScope,
 )
 from openhcs.core.steps.function_output_manifest import NoStepOutputManifestMatch
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _identity(image):
@@ -45,8 +45,8 @@ def _fixture():
         step_scope_id="loaded-cohort",
         input_memory_type="numpy",
         output_memory_type="numpy",
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
-        variable_components=(VariableComponents.SITE,),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        variable_components=(Microscopy.Site,),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
     )
     context = ProcessingContext(axis_id="A01")
@@ -58,7 +58,7 @@ def _fixture():
         pattern_group_info="A01_s{iii}_w1_z003_t002.tif",
         component_index=7,
         component_count=99,
-        fixed_component_values=((AllComponents.Z_INDEX, "dispatch-value"),),
+        fixed_component_values=((Microscopy.ZIndex, "dispatch-value"),),
     )
     paths = ["A01_s001_w1_z003_t002.tif", "A01_s002_w1_z003_t002.tif"]
     payload = ImagePayloadMetadata(
@@ -131,8 +131,8 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
     loaded = PatternGroupData.from_loaded_group(request, paths, payload)
     assert loaded.runtime_plane_count == 2
     assert loaded.fixed_component_values == (
-        (AllComponents.Z_INDEX, "3"),
-        (AllComponents.TIMEPOINT, "2"),
+        (Microscopy.ZIndex, "3"),
+        (Microscopy.Timepoint, "2"),
     )
     paths.append("later-mutation.tif")
     image_payload_data(payload)[:] = -1
@@ -140,13 +140,13 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
     assert len(loaded.matching_files) == 3
     request.execution_plan.axis_id = "B02"
     request.execution_plan.execution_group_scope = ComponentGroupScope.dynamic(
-        AllComponents.SITE
+        Microscopy.Site
     )
     assert loaded.axis_scope.axis_id == "B02"
     assert loaded.axis_component == "site"
     assert loaded.fixed_component_values == (
-        (AllComponents.Z_INDEX, "3"),
-        (AllComponents.TIMEPOINT, "2"),
+        (Microscopy.ZIndex, "3"),
+        (Microscopy.Timepoint, "2"),
     )
 
 
@@ -194,8 +194,8 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
     assert loaded.main_data_stack is payload
     assert loaded.runtime_plane_count == 2
     assert loaded.fixed_component_values == (
-        (AllComponents.Z_INDEX, "3"),
-        (AllComponents.TIMEPOINT, "2"),
+        (Microscopy.ZIndex, "3"),
+        (Microscopy.Timepoint, "2"),
     )
 
 
@@ -315,13 +315,13 @@ def test_adapter_request_projects_live_fields_and_preserves_current_payload_epoc
     assert adapter.source_payload is not loaded.main_data_stack
     assert adapter.plane_projection is executor.plane_projection
     assert adapter.execution_scope is executor
-    assert adapter.variable_components == (VariableComponents.SITE,)
+    assert adapter.variable_components == (Microscopy.Site,)
     assert adapter.axis_scope.fixed_component_values == loaded.fixed_component_values
     request.execution_plan.axis_id = "B02"
-    request.execution_plan.variable_components = (VariableComponents.Z_INDEX,)
+    request.execution_plan.variable_components = (Microscopy.ZIndex,)
     updated = executor.runtime_adapter_request(current)
     assert updated.axis_scope.axis_id == "B02"
-    assert updated.variable_components == (VariableComponents.Z_INDEX,)
+    assert updated.variable_components == (Microscopy.ZIndex,)
 
 
 def test_adapter_tuple_admission_precedes_output_map_validation():
@@ -416,7 +416,7 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
         artifact_inputs={input_plan.ref(): input_plan},
         relation_source_scopes={},
         execution_group_scope=ComponentGroupScope.ungrouped(),
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
         main_flow_artifacts=ArtifactSpecCollection((source,)),
     )
     request.execution_plan.step_index = 1
@@ -432,8 +432,8 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
         component_index=7,
         component_count=99,
         fixed_component_values=(
-            (AllComponents.Z_INDEX, "3"),
-            (AllComponents.TIMEPOINT, "2"),
+            (Microscopy.ZIndex, "3"),
+            (Microscopy.Timepoint, "2"),
         ),
     )
     payload = (
@@ -494,8 +494,8 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
     assert loaded.runtime_plane_count == 2
     assert loaded.runtime_plane_index == 7
     assert loaded.fixed_component_values == (
-        (AllComponents.Z_INDEX, "3"),
-        (AllComponents.TIMEPOINT, "2"),
+        (Microscopy.ZIndex, "3"),
+        (Microscopy.Timepoint, "2"),
     )
     replacement = replace(
         canonical,
@@ -692,9 +692,9 @@ def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
 def test_artifact_loaded_coordinates_keep_producer_authority_over_original_source():
     request, canonical = _stored_primary_fixture()
     exact_coordinates = (
-        (AllComponents.CHANNEL, "ProducedChannel"),
-        (AllComponents.Z_INDEX, "3"),
-        (AllComponents.TIMEPOINT, "2"),
+        (Microscopy.Channel, "ProducedChannel"),
+        (Microscopy.ZIndex, "3"),
+        (Microscopy.Timepoint, "2"),
     )
     request = replace(request, fixed_component_values=exact_coordinates)
     assert (
@@ -719,7 +719,7 @@ def test_artifact_loaded_coordinates_keep_producer_authority_over_original_sourc
 
 def test_conversion_and_sequential_filter_use_the_same_transport_admission():
     from pathlib import Path
-    from openhcs.constants.constants import Backend, SequentialComponents
+    from openhcs.constants.constants import Backend
     from openhcs.core.compiled_step_plan import (
         InputConversionPlan,
         SequentialRuntimeFilter,
@@ -740,7 +740,7 @@ def test_conversion_and_sequential_filter_use_the_same_transport_admission():
     )
     plan.input_conversion = None
     plan.sequential_filter_plan = SequentialRuntimeFilterPlan(
-        filters=(SequentialRuntimeFilter(SequentialComponents.TIMEPOINT, "2"),),
+        filters=(SequentialRuntimeFilter(Microscopy.Timepoint, "2"),),
     )
     assert (
         plan.stored_primary_input_edges_for_group(request.compiled_group, None) is None
@@ -798,8 +798,8 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     ).compile_invocation_input_edges(
         compile_function_pattern([consume, consume], {}, {}),
         artifact_inputs={}, relation_source_scopes={},
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
         main_flow_artifacts=ArtifactSpecCollection(
             (source,) if primary_only else (source, ArtifactSpec.input("Other", ImageArtifactType)),
         ),

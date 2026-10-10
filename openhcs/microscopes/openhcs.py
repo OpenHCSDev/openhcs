@@ -24,7 +24,7 @@ from typing import (
     cast,
 )
 
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
     SourceVoxelSpacing,
@@ -55,6 +55,8 @@ from openhcs.microscopes.microscope_interfaces import (
     MetadataViewDocument,
     MetadataViewEntry,
 )
+from openhcs.core.axes import Axis, AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -547,7 +549,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                         plate_path,
                         OpenHCSMetadata.component_collection_field(component),
                     )
-                    for component in AllComponents
+                    for component in AxisFamily.active().axes
                 }
             ),
             FIELDS.AVAILABLE_BACKENDS: self._merge_subdirectory_mapping(
@@ -740,7 +742,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                         component_metadata_field(component),
                     ),
                 )
-                for component in AllComponents
+                for component in AxisFamily.active().axes
             )
         )
 
@@ -885,10 +887,10 @@ class OpenHCSMetadata:
         pass
 
     @staticmethod
-    def component_collection_field(component: AllComponents) -> str:
+    def component_collection_field(component: type[Axis]) -> str:
         """Project one nominal component to its persisted collection field."""
 
-        return SourceComponentProjectionStrategy.for_enum_member(
+        return SourceComponentProjectionStrategy.for_axis(
             component
         ).metadata_collection_field
 
@@ -897,19 +899,19 @@ class OpenHCSMetadata:
         """Derive the component collection fields from their nominal owners."""
 
         return tuple(
-            cls.component_collection_field(component) for component in AllComponents
+            cls.component_collection_field(component) for component in AxisFamily.active().axes
         )
 
     @classmethod
     def component_kwargs(
         cls,
-        values_by_component: Mapping[AllComponents, Any],
+        values_by_component: Mapping[type[Axis], Any],
     ) -> Dict[str, Any]:
         """Build component collection kwargs from one component-keyed mapping."""
 
         return {
             cls.component_collection_field(component): values_by_component[component]
-            for component in AllComponents
+            for component in AxisFamily.active().axes
         }
 
     @classmethod
@@ -929,7 +931,7 @@ class OpenHCSMetadata:
         """Construct persisted metadata from the nominal component authority."""
 
         def serialized_values(
-            component: AllComponents,
+            component: type[Axis],
         ) -> Optional[Dict[str, str | None]]:
             values = component_values.values_for(component)
             return None if values is None else dict(values)
@@ -941,7 +943,7 @@ class OpenHCSMetadata:
             pixel_size=pixel_size,
             image_files=image_files,
             **cls.component_kwargs(
-                {component: serialized_values(component) for component in AllComponents}
+                {component: serialized_values(component) for component in AxisFamily.active().axes}
             ),
             available_backends=available_backends,
             source_diagnostics=source_diagnostics,
@@ -988,7 +990,7 @@ def _openhcs_metadata_from_subdirectory(
                 component: subdirectory_data[
                     OpenHCSMetadata.component_collection_field(component)
                 ]
-                for component in AllComponents
+                for component in AxisFamily.active().axes
             }
         ),
         available_backends=dict(subdirectory_data[FIELDS.AVAILABLE_BACKENDS]),
@@ -1228,19 +1230,17 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             component_metadata, context.metadata_cache
         )
 
-        # CRITICAL: Use AllComponents enum for cache lookups (cache is keyed by AllComponents)
-        # GroupBy and AllComponents have same values but different hashes, so dict.get() fails with GroupBy
         return OpenHCSMetadata(
             microscope_handler_name=handler.microscope_type,
             source_filename_parser_name=handler.parser.__class__.__name__,
             grid_dimensions=grid_dimensions,
             pixel_size=pixel_size,
             image_files=relative_files,
-            channels=merged_metadata.get(AllComponents.CHANNEL),
-            wells=merged_metadata.get(AllComponents.WELL),
-            sites=merged_metadata.get(AllComponents.SITE),
-            z_indexes=merged_metadata.get(AllComponents.Z_INDEX),
-            timepoints=merged_metadata.get(AllComponents.TIMEPOINT),
+            channels=merged_metadata.get(Microscopy.Channel),
+            wells=merged_metadata.get(Microscopy.Well),
+            sites=merged_metadata.get(Microscopy.Site),
+            z_indexes=merged_metadata.get(Microscopy.ZIndex),
+            timepoints=merged_metadata.get(Microscopy.Timepoint),
             available_backends={request.write_backend: True},
             workspace_mapping=None,  # Preserve existing - filtered out by create_metadata()
             main=request.is_main if request.is_main else None,
@@ -1249,7 +1249,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
 
     def _extract_component_metadata_from_files(
         self, file_paths: list, parser
-    ) -> Dict[AllComponents, Optional[Dict[str, Optional[str]]]]:
+    ) -> Dict[type[Axis], Optional[Dict[str, Optional[str]]]]:
         """
         Extract component metadata by parsing actual filenames.
 
@@ -1258,9 +1258,10 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             parser: FilenameParser instance
 
         Returns:
-            Dict mapping AllComponents to component metadata dicts (key -> display_name)
+            Dict mapping each axis to its component metadata (key -> display_name)
+
         """
-        result = {component: {} for component in AllComponents}
+        result = {component: {} for component in AxisFamily.active().axes}
 
         for file_path in file_paths:
             filename = Path(file_path).name
@@ -1269,7 +1270,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
                 continue
 
             # Extract each component from the parsed filename
-            for component in AllComponents:
+            for component in AxisFamily.active().axes:
                 parsed_value = parsed.value_for(component)
                 if parsed_value is not None:
                     component_value = str(parsed_value)
@@ -1285,9 +1286,9 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
 
     def _merge_component_metadata(
         self,
-        extracted: Dict[AllComponents, Optional[Dict[str, Optional[str]]]],
-        cache: Dict[AllComponents, Optional[Dict[str, Optional[str]]]],
-    ) -> Dict[AllComponents, Optional[Dict[str, Optional[str]]]]:
+        extracted: Dict[type[Axis], Optional[Dict[str, Optional[str]]]],
+        cache: Dict[type[Axis], Optional[Dict[str, Optional[str]]]],
+    ) -> Dict[type[Axis], Optional[Dict[str, Optional[str]]]]:
         """
         Merge extracted component keys with display names from original metadata cache.
 
@@ -1304,7 +1305,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             Merged metadata with actual components and preserved display names
         """
         result = {}
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             extracted_dict = extracted.get(component)
             cache_dict = cache.get(component)
 

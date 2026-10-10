@@ -82,7 +82,6 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService,
     ZMQViewerWindowGateway,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -141,6 +140,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQRuntimeObservationExportScope,
 )
 from openhcs.serialization.json import to_jsonable
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def sample_processing_function(image, sigma: float = 1.0):
@@ -570,7 +570,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
         )
         step_plan.execution_group_scope = ComponentGroupScope.from_raw(
             ("A01",),
-            component=AllComponents.WELL,
+            component=Microscopy.Well,
         )
         step_plan.materialized_output = MaterializedOutputPlan(
             output_dir=Path("/tmp/out/A01/checkpoints"),
@@ -588,7 +588,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             name="positions",
             artifact_type=SpecialArtifactType,
             path="/tmp/out/A01/positions.pkl",
-            group_component=AllComponents.WELL,
+            group_component=Microscopy.Well,
             group_keys=("A01",),
             paths_by_group={"A01": "/tmp/out/A01/positions.pkl"},
             source_step_id=0,
@@ -599,7 +599,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
             name="objects",
             artifact_type=ObjectLabelsArtifactType,
             path="/tmp/out/A01/objects.zarr",
-            group_component=AllComponents.WELL,
+            group_component=Microscopy.Well,
             group_keys=("A01",),
             paths_by_group={"A01": "/tmp/out/A01/objects.zarr"},
         )
@@ -2807,7 +2807,7 @@ def test_config_service_reflects_pipeline_schema_without_materializing_lazy_valu
     assert "not another ``InputSource`` value" in input_source_description
     assert "source_bindings_config.bindings[].alias" in nested_paths
     assert "source_bindings_config.metadata_rules[].pattern" in nested_paths
-    assert "napari_streaming_config.site_mode" in nested_paths
+    assert "napari_streaming_config.tile_mode" in nested_paths
     assert nested_schema.path_prefix == "processing_config"
 
     with pytest.raises(ValueError, match="Unknown config schema path_prefix"):
@@ -2939,7 +2939,7 @@ def test_config_service_coerces_generic_source_binding_patch_values():
         source_bindings.bindings[0].selector.filters[0],
         SourceFilterClause,
     )
-    assert source_bindings.bindings[0].component_identity[0].component.value == (
+    assert source_bindings.bindings[0].component_identity[0].component.name == (
         "channel"
     )
     assert "source_bindings_config=LazySourceBindingsConfig" in rendered.source
@@ -3118,8 +3118,8 @@ def test_pipeline_authoring_service_derives_step_config_overrides(monkeypatch):
     assert processing_patch.config_type == "LazyProcessingConfig"
     assert validation.valid is True
     assert "processing_config=LazyProcessingConfig(" in rendered.source
-    assert "VariableComponents.SITE" in rendered.source
-    assert "group_by=GroupBy.CHANNEL" in rendered.source
+    assert "Microscopy.Site" in rendered.source
+    assert "group_by=Microscopy.Channel" in rendered.source
 
 
 def test_pipeline_authoring_service_warns_for_empty_pipeline(monkeypatch):

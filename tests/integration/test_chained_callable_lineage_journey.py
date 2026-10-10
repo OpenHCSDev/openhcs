@@ -12,7 +12,7 @@ from openhcs.agent.services.execution_session_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants import AllComponents, Microscope
+from openhcs.constants import Microscope
 from openhcs.core.artifacts import ArtifactInputPlan, ImageArtifactType
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -45,6 +45,7 @@ from polystore.roi import load_rois_from_zip
 
 # Reuse the public reference's authoritative code block, not a copied callable.
 from tests.unit.agent.test_callable_artifact_reference import reference_namespace  # noqa: F401
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.fixture
@@ -77,7 +78,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
                 value="label-fixture",
             ),
         )),
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
     document = PipelineDocumentAuthority.from_values(
         pipeline_config=PipelineConfig(

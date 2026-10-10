@@ -36,7 +36,7 @@ from pyqt_reactive.widgets.shared.image_table_browser import (
     ImageTableValue,
 )
 
-from openhcs.constants.constants import AllComponents, FileFormat
+from openhcs.constants.constants import FileFormat
 from openhcs.core.config import StreamingConfig
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
@@ -48,11 +48,10 @@ from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.ui.shared.plate_scope_identity import SCOPE_SEGMENT_SEPARATOR
+from openhcs.core.axes import AxisFamily
 
 logger = logging.getLogger(__name__)
 
-
-ALL_COMPONENT_VALUES = frozenset(component.value for component in AllComponents)
 
 
 def _streaming_config_field_names() -> tuple[str, ...]:
@@ -279,9 +278,10 @@ class ImageBrowserMetadataDisplayResolver:
             return value_str
 
         try:
-            if metadata_key not in ALL_COMPONENT_VALUES:
+            family = AxisFamily.active()
+            if metadata_key not in family.names():
                 return value_str
-            component = AllComponents(metadata_key)
+            component = family.named(metadata_key)
             metadata_name = orchestrator.metadata_cache.get_component_metadata(
                 component,
                 value_str,
@@ -1449,7 +1449,7 @@ class ImageBrowserWidget(QWidget):
     def _on_wells_selected(self, well_ids: Set[str]):
         """Handle well selection from plate view."""
         logger.info(f"[WELLS_SELECTED] Received {len(well_ids)} wells: {well_ids}")
-        well_key = AllComponents.WELL.value
+        well_key = AxisFamily.active().partition_axis().name
         self._syncing_plate_filter_selection = True
         try:
             synced = self.image_table_browser.set_column_filter_selection(
@@ -1471,7 +1471,8 @@ class ImageBrowserWidget(QWidget):
         selected_values: frozenset[str],
     ) -> None:
         """Compose the generic Well filter selection into the plate view."""
-        well_key = AllComponents.WELL.value
+        well_key = AxisFamily.active().partition_axis().name
+
         if (
             self._syncing_plate_filter_selection
             or column_key != well_key
@@ -1599,7 +1600,7 @@ class ImageBrowserWidget(QWidget):
         Raises KeyError if metadata missing 'well' component.
         """
         # Well ID is a single component in metadata
-        return str(metadata["well"])
+        return str(metadata[AxisFamily.active().partition_axis().name])
 
     def _detect_plate_dimensions(self, well_ids: Set[str]) -> tuple[int, int]:
         """

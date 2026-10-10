@@ -28,7 +28,6 @@ from zmqruntime.messages import ControlMessageType, TaskProgress
 
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.execution import ExecutionJobStatus, ExecutionStatusRequest
-from openhcs.constants.constants import AllComponents
 from openhcs.core.config import LazyNapariStreamingConfig
 from openhcs.core.execution_state import TerminalExecutionStatus
 from openhcs.core.native_threading import configure_native_thread_environment
@@ -58,6 +57,8 @@ from openhcs.runtime.viewer_protocol import (
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 if TYPE_CHECKING:
     from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth import (
@@ -221,11 +222,11 @@ def _record_metadata(record: Mapping[str, Any]) -> Mapping[str, Any]:
     return metadata
 
 
-def _record_component(record: Mapping[str, Any], component: AllComponents) -> str:
-    value = _record_metadata(record).get(component.value)
+def _record_component(record: Mapping[str, Any], component: type[Axis]) -> str:
+    value = _record_metadata(record).get(component.name)
     if value is None:
         raise InstalledDemoFailure(
-            f"Generated image record is missing {component.value!r} metadata."
+            f"Generated image record is missing {component.name!r} metadata."
         )
     return str(value)
 
@@ -251,40 +252,40 @@ def _neurite_inputs(
 
     ordered = sorted(
         records,
-        key=lambda record: int(_record_component(record, AllComponents.CHANNEL)),
+        key=lambda record: int(_record_component(record, Microscopy.Channel)),
     )
     first, second = ordered
     shared_components = (
-        AllComponents.WELL,
-        AllComponents.SITE,
-        AllComponents.Z_INDEX,
-        AllComponents.TIMEPOINT,
+        Microscopy.Well,
+        Microscopy.Site,
+        Microscopy.ZIndex,
+        Microscopy.Timepoint,
     )
     for component in shared_components:
         values = {_record_component(record, component) for record in ordered}
         if len(values) != 1:
             raise InstalledDemoFailure(
                 "Generated image records disagree on "
-                f"{component.value}: {sorted(values)}"
+                f"{component.name}: {sorted(values)}"
             )
     return LooseOperaPhenixNeuriteInputs(
         plate_path=plate_path,
         output_root=output_root,
-        well=_record_component(first, AllComponents.WELL),
-        site=_record_component(first, AllComponents.SITE),
-        z_index=_record_component(first, AllComponents.Z_INDEX),
-        timepoint=_record_component(first, AllComponents.TIMEPOINT),
+        well=_record_component(first, Microscopy.Well),
+        site=_record_component(first, Microscopy.Site),
+        z_index=_record_component(first, Microscopy.ZIndex),
+        timepoint=_record_component(first, Microscopy.Timepoint),
         viewer_port=viewer_port,
         hoechst=SemanticImageSource(
             alias="Hoechst",
             filename=_record_filename(first),
-            channel=_record_component(first, AllComponents.CHANNEL),
+            channel=_record_component(first, Microscopy.Channel),
         ),
         map2=None,
         smi312=SemanticImageSource(
             alias="SMI312",
             filename=_record_filename(second),
-            channel=_record_component(second, AllComponents.CHANNEL),
+            channel=_record_component(second, Microscopy.Channel),
         ),
     )
 

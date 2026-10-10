@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
@@ -36,6 +35,7 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.serialization.json import to_jsonable
+from openhcs.domains.microscopy.axes import Microscopy
 
 VIRTUAL_PATH = "A01_s001_w1_z001_t001.tif"
 
@@ -63,7 +63,7 @@ def _projection(
     source_metadata: Mapping[str, object] | None = None,
 ) -> SourcePlaneProjection:
     return SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef("disk", VIRTUAL_PATH),
         image_metadata=image_metadata,
         source_metadata={} if source_metadata is None else source_metadata,
@@ -127,7 +127,7 @@ def test_source_projection_serialization_decodes_typed_image_metadata() -> None:
         VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH)
     )
 
-    assert projection.address.value_for(AllComponents.SITE) == "1"
+    assert projection.address.value_for(Microscopy.Site) == "1"
     assert projection.image_metadata == _collapsed_metadata()
 
 
@@ -165,7 +165,7 @@ def test_image_artifact_projection_round_trips_typed_pixel_metadata() -> None:
         source_dtype="uint8",
     )
     projection = SourceArtifactProjection(
-        address=OpenHCSPlaneAddress.from_values("A01", 1, 2, 1, 1),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef("disk", "analysis/A01_candidate.checkpoint.tif"),
         source_alias="neurite_candidate_mask",
         artifact_kind=ImageArtifactType,
@@ -253,7 +253,7 @@ def test_site_collapsed_serialize_read_project_roundtrip_keeps_semantics() -> No
     assert (
         workspace.require_source_projection_for(
             VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH)
-        ).address.value_for(AllComponents.SITE)
+        ).address.value_for(Microscopy.Site)
         == "1"
     )
 

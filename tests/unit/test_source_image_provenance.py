@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -22,6 +21,8 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_source_provenance_projects_scalar_image_set_identity() -> None:
@@ -33,7 +34,7 @@ def test_source_provenance_projects_scalar_image_set_identity() -> None:
             "channel": "1",
         },
     )
-    policy = SourceImageSetIdentityPolicy(frozenset((AllComponents.CHANNEL,)))
+    policy = SourceImageSetIdentityPolicy(frozenset((Microscopy.Channel,)))
 
     identities = provenance.image_set_identities(policy)
 
@@ -57,7 +58,7 @@ def test_source_provenance_preserves_plane_positions_before_axis_deduplication()
             ),
         ),
     )
-    policy = SourceImageSetIdentityPolicy(frozenset((AllComponents.CHANNEL,)))
+    policy = SourceImageSetIdentityPolicy(frozenset((Microscopy.Channel,)))
 
     plane_identities = provenance.image_set_plane_identities(policy)
     axis = provenance.image_set_axis(policy)
@@ -93,16 +94,16 @@ def test_plane_coordinate_reads_preserve_runtime_scope_and_scalar_fallback() -> 
     assert dict(provenance.component_metadata_for_plane(0)) == {
         "well": "A01", "site": "1", "channel": "1", "timepoint": "3",
     }
-    assert provenance.varying_plane_component_values(tuple(AllComponents)) == {
+    assert provenance.varying_plane_component_values(AxisFamily.active().axes) == {
         "site": ("1", "2"), "channel": ("1", "2"),
     }
     assert provenance.require_common_component_values(
-        (AllComponents.WELL, AllComponents.TIMEPOINT)
-    ) == ((AllComponents.WELL, "A01"), (AllComponents.TIMEPOINT, "3"))
+        (Microscopy.Well, Microscopy.Timepoint)
+    ) == ((Microscopy.Well, "A01"), (Microscopy.Timepoint, "3"))
     with pytest.raises(ValueError, match="'site' is not fixed"):
-        provenance.require_common_component_values((AllComponents.SITE,))
+        provenance.require_common_component_values((Microscopy.Site,))
     identities = provenance.image_set_plane_identities(
-        SourceImageSetIdentityPolicy(frozenset((AllComponents.CHANNEL,)))
+        SourceImageSetIdentityPolicy(frozenset((Microscopy.Channel,)))
     )
     assert len(identities) == 2
     assert tuple(next(iter(value)).components for value in identities) == (
@@ -111,8 +112,8 @@ def test_plane_coordinate_reads_preserve_runtime_scope_and_scalar_fallback() -> 
     )
     provenance.source_identity.component_metadata = {"well": "B02", "timepoint": "4"}
     assert provenance.require_common_component_values(
-        (AllComponents.WELL, AllComponents.TIMEPOINT)
-    ) == ((AllComponents.WELL, "B02"), (AllComponents.TIMEPOINT, "4"))
+        (Microscopy.Well, Microscopy.Timepoint)
+    ) == ((Microscopy.Well, "B02"), (Microscopy.Timepoint, "4"))
 
 
 def test_source_provenance_axis_retains_distinct_image_sets() -> None:
@@ -128,7 +129,7 @@ def test_source_provenance_axis_retains_distinct_image_sets() -> None:
             ),
         ),
     )
-    policy = SourceImageSetIdentityPolicy(frozenset((AllComponents.CHANNEL,)))
+    policy = SourceImageSetIdentityPolicy(frozenset((Microscopy.Channel,)))
 
     axis = provenance.image_set_axis(policy)
 

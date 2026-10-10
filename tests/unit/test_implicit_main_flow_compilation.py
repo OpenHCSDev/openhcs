@@ -7,7 +7,7 @@ from objectstate import ObjectStateRegistry
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.config import (
@@ -22,6 +22,7 @@ from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.thresholding import threshold
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
@@ -42,13 +43,13 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
         num_workers=1,
     )
     pipeline_start_processing = LazyProcessingConfig(
-        variable_components=[VariableComponents.SITE],
-        group_by=GroupBy.CHANNEL,
+        variable_components=[Microscopy.Site],
+        group_by=Microscopy.Channel,
         input_source=InputSource.PIPELINE_START,
     )
     previous_step_processing = LazyProcessingConfig(
-        variable_components=[VariableComponents.SITE],
-        group_by=GroupBy.CHANNEL,
+        variable_components=[Microscopy.Site],
+        group_by=Microscopy.Channel,
         input_source=InputSource.PREVIOUS_STEP,
     )
     steps = [
@@ -89,7 +90,7 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
     )
     assert threshold_plan.execution_group_scope == PathPlannerGroupScope.from_raw(
         ("1", "2", "4"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     assert threshold_plan.compiled_function_pattern is not None
     invocation = next(threshold_plan.compiled_function_pattern.iter_invocations())

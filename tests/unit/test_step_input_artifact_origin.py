@@ -5,7 +5,6 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
 from openhcs.core.runtime_image_values import (
@@ -27,6 +26,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("alias", ("Raw", "Response"))
@@ -64,7 +64,7 @@ def test_step_input_selects_current_component_planes_not_original_aliases():
     ).payload_with(data)
     binding = NamedSourceBinding(
         alias="Processed2",
-        selector=SourceSelector(components=(ComponentSelector(AllComponents.CHANNEL, "2"),)),
+        selector=SourceSelector(components=(ComponentSelector(Microscopy.Channel, "2"),)),
     )
 
     result = binding.project_step_input_payload(payload)
@@ -74,7 +74,7 @@ def test_step_input_selects_current_component_planes_not_original_aliases():
     assert image_payload_metadata(result).source_path == "/synthetic/ch2.tif"
     missing = NamedSourceBinding(
         alias="Absent",
-        selector=SourceSelector(components=(ComponentSelector(AllComponents.CHANNEL, "3"),)),
+        selector=SourceSelector(components=(ComponentSelector(Microscopy.Channel, "3"),)),
     )
     with pytest.raises(ValueError, match="selects no current planes"):
         missing.project_step_input_payload(payload)
@@ -129,7 +129,7 @@ def test_existing_alias_and_explicit_selector_must_agree():
     ).payload_with(np.ones((2, 4, 5)))
     binding = NamedSourceBinding(
         alias="Raw1",
-        selector=SourceSelector(components=(ComponentSelector(AllComponents.CHANNEL, "2"),)),
+        selector=SourceSelector(components=(ComponentSelector(Microscopy.Channel, "2"),)),
     )
     with pytest.raises(ValueError, match="selects no current planes"):
         binding.project_step_input_payload(payload)

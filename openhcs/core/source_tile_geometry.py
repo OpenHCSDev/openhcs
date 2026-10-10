@@ -7,9 +7,9 @@ from dataclasses import dataclass
 
 from polystore.source_tile_geometry import SourceTileGeometry
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_projection import SourceProjectionSet
+from openhcs.core.axes import AxisFamily, ColourAxis, TileAxis
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,13 +36,16 @@ class SourceTileLayout:
         spacing_by_group: dict[tuple[str, ...], set[SourceVoxelSpacing]] = {}
         for projection in projections.plane_projections:
             address = projection.address
+            family = AxisFamily.active()
+            tile_axis = family.one(TileAxis)
+            colour_axis = family.one(ColourAxis)
             key = tuple(
                 address.value_for(component)
-                for component in AllComponents
-                if component not in (AllComponents.SITE, AllComponents.CHANNEL)
+                for component in family.axes
+                if component not in (tile_axis, colour_axis)
             )
-            channel = address.value_for(AllComponents.CHANNEL)
-            site = address.value_for(AllComponents.SITE)
+            channel = address.value_for(colour_axis)
+            site = address.value_for(tile_axis)
             geometry = SourceTileGeometry.from_source_metadata(
                 projection.source_metadata
             )

@@ -8,7 +8,6 @@ import re
 from typing import ClassVar, Mapping, Sequence, TypeAlias
 
 from openhcs.core.source_path_identity import source_path_identity
-from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_metadata,
@@ -29,6 +28,7 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.axes import Axis, AxisFamily
 
 ParsedFilenameValue: TypeAlias = str | int | float | bool | None
 FunctionOutputComponentValue: TypeAlias = str | int
@@ -99,7 +99,7 @@ class FunctionOutputPathRequest:
     output_dir: Path
     output_payload: RuntimeArrayData
     input_path: str | None
-    variable_components: Sequence[VariableComponents] = field(default_factory=tuple)
+    variable_components: Sequence[type[Axis]] = field(default_factory=tuple)
     input_aligned_output: bool = False
     identity_cache: FunctionOutputIdentityCache = field(
         default_factory=FunctionOutputIdentityCache
@@ -162,8 +162,8 @@ class FunctionOutputIdentity:
     def filename_address(self) -> OpenHCSPlaneAddress:
         """Project the retained producer coordinates without parsing its path."""
         return OpenHCSPlaneAddress.from_component_values(
-            (component, self.filename_values.get(component.value))
-            for component in AllComponents
+            (component, self.filename_values.get(component.name))
+            for component in AxisFamily.active().axes
         )
 
     def component_metadata(
@@ -366,7 +366,7 @@ class FunctionOutputIdentity:
         if metadata is None:
             return {}
         return {
-            component.value: SourceMetadataFields.canonical_component_value(
+            component.name: SourceMetadataFields.canonical_component_value(
                 component, value
             )
             for component, value in source_component_metadata_items(metadata)
@@ -378,7 +378,7 @@ class FunctionOutputIdentity:
         parsed: FilenameParseResult,
     ) -> dict[str, FunctionOutputComponentValue]:
         return {
-            str(component.value): SourceMetadataFields.canonical_component_value(
+            str(component.name): SourceMetadataFields.canonical_component_value(
                 component, value
             )
             for component, value in parsed.declared_values()
@@ -413,7 +413,7 @@ class FunctionOutputIdentity:
         metadata: ImagePayloadMetadata,
         *,
         fallback_identity_path: str | None = None,
-        variable_components: Sequence[VariableComponents] = (),
+        variable_components: Sequence[type[Axis]] = (),
         input_aligned_output: bool = False,
     ) -> FunctionOutputIdentity | None:
         """Return parser-backed identity carried by image payload metadata."""
@@ -433,7 +433,7 @@ class FunctionOutputIdentity:
         metadata: ImagePayloadMetadata,
         *,
         fallback_identity_path: str | None = None,
-        variable_components: Sequence[VariableComponents] = (),
+        variable_components: Sequence[type[Axis]] = (),
         input_aligned_output: bool = False,
         identity_cache: FunctionOutputIdentityCache,
     ) -> FunctionOutputIdentity | None:
@@ -449,12 +449,12 @@ class FunctionOutputIdentity:
 
     @staticmethod
     def _source_stack_identity_component_values(
-        variable_components: Sequence[VariableComponents],
+        variable_components: Sequence[type[Axis]],
     ) -> frozenset[str]:
         return frozenset(
-            component.value
+            component.name
             for component in variable_components
-            if component.value is not None
+            if component.name is not None
         )
 
     @classmethod
@@ -464,7 +464,7 @@ class FunctionOutputIdentity:
         metadata: ImagePayloadMetadata,
         *,
         fallback_identity_path: str | None,
-        variable_components: Sequence[VariableComponents],
+        variable_components: Sequence[type[Axis]],
         input_aligned_output: bool,
         identity_cache: FunctionOutputIdentityCache,
     ) -> FunctionOutputIdentity | None:
@@ -714,7 +714,7 @@ class FunctionOutputIdentity:
         identity_cache: FunctionOutputIdentityCache,
     ) -> FunctionOutputIdentity:
         if identity.extension is not None and all(
-            component.value in identity.component_values for component in AllComponents
+            component.name in identity.component_values for component in AxisFamily.active().axes
         ):
             return identity
         for path, source in candidates:
@@ -931,7 +931,7 @@ class FunctionOutputIdentity:
             - identity_component_values
         )
         ordered_keys = tuple(
-            component.value for component in AllComponents if component.value in keys
+            component.name for component in AxisFamily.active().axes if component.name in keys
         )
         extra_keys = tuple(sorted(keys - frozenset(ordered_keys)))
         return (*ordered_keys, *extra_keys)

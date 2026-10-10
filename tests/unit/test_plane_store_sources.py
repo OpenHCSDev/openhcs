@@ -21,7 +21,7 @@ from polystore.zarr_batch import (
     ZarrBatchLayout,
 )
 
-from openhcs.constants.constants import AllComponents, Backend, OrchestratorState
+from openhcs.constants.constants import Backend, OrchestratorState
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
@@ -49,6 +49,8 @@ from openhcs.microscopes.bioformats_adapter import (
 from openhcs.microscopes.microscope_base import create_microscope_handler
 from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
@@ -101,11 +103,11 @@ def test_ngff_axis_cardinalities_and_plane_pixels_survive_discovery(
     assert direct.identity == nested.identity
     assert direct.pixel_size == nested.pixel_size == 1.0
     expected_components = {
-        AllComponents.WELL: {"A01"},
-        AllComponents.SITE: {"1"},
-        AllComponents.CHANNEL: {"1", "2"},
-        AllComponents.Z_INDEX: {"1", "2", "3"},
-        AllComponents.TIMEPOINT: {"1", "2"},
+        Microscopy.Well: {"A01"},
+        Microscopy.Site: {"1"},
+        Microscopy.Channel: {"1", "2"},
+        Microscopy.ZIndex: {"1", "2", "3"},
+        Microscopy.Timepoint: {"1", "2"},
     }
     for component, expected in expected_components.items():
         assert {
@@ -113,7 +115,7 @@ def test_ngff_axis_cardinalities_and_plane_pixels_survive_discovery(
             for candidate in nested.candidates
         } == expected
     assert {
-        candidate.component_labels[AllComponents.CHANNEL.value]
+        candidate.component_labels[Microscopy.Channel.name]
         for candidate in nested.candidates
     } == {"NGFF", "NGFF-2"}
     backend = OmeZarrStorageBackend()
@@ -123,9 +125,9 @@ def test_ngff_axis_cardinalities_and_plane_pixels_survive_discovery(
         expected_indices = tuple(
             int(address.value_for(component)) - 1
             for component in (
-                AllComponents.TIMEPOINT,
-                AllComponents.CHANNEL,
-                AllComponents.Z_INDEX,
+                Microscopy.Timepoint,
+                Microscopy.Channel,
+                Microscopy.ZIndex,
             )
         )
         assert candidate.source_ref.source_axis_indices == expected_indices
@@ -158,7 +160,7 @@ def test_legacy_polystore_namespace_does_not_override_declared_source_identity(
     assert dataset.identity.value == "Plate:mixed"
     assert len(dataset.candidates) == 1
     candidate = dataset.candidates[0]
-    assert candidate.declared_address.value_for(AllComponents.WELL) == "A01"
+    assert candidate.declared_address.value_for(Microscopy.Well) == "A01"
     loaded = OmeZarrStorageBackend().load(candidate.source_ref.backend_address)
     np.testing.assert_array_equal(loaded[0, 0, 0], pixels)
 
@@ -177,7 +179,7 @@ def test_ngff_image_can_be_submitted_without_its_plate(
     assert len(dataset.candidates) == 1
     candidate = dataset.candidates[0]
     assert candidate.source_axis_shape == (1, 1, 1)
-    assert candidate.component_labels[AllComponents.CHANNEL.value] == "NGFF"
+    assert candidate.component_labels[Microscopy.Channel.name] == "NGFF"
     loaded = OmeZarrStorageBackend().load(candidate.source_ref.backend_address)
     np.testing.assert_array_equal(loaded[0, 0, 0], pixels)
 
@@ -273,10 +275,10 @@ def test_polystore_zarr_semantic_coordinates_round_trip_through_store_discovery(
 
     assert {
         (
-            candidate.declared_address.value_for(AllComponents.SITE),
-            candidate.declared_address.value_for(AllComponents.CHANNEL),
-            candidate.declared_address.value_for(AllComponents.Z_INDEX),
-            candidate.declared_address.value_for(AllComponents.TIMEPOINT),
+            candidate.declared_address.value_for(Microscopy.Site),
+            candidate.declared_address.value_for(Microscopy.Channel),
+            candidate.declared_address.value_for(Microscopy.ZIndex),
+            candidate.declared_address.value_for(Microscopy.Timepoint),
         )
         for candidate in dataset.candidates
     } == {
@@ -308,7 +310,7 @@ def test_mixed_plane_stores_bind_and_load_through_virtual_workspace(
         Backend.OME_ZARR.value,
     }
     assert {
-        candidate.declared_address.value_for(AllComponents.WELL)
+        candidate.declared_address.value_for(Microscopy.Well)
         for candidate in dataset.candidates
     } == {
         "A01",
@@ -427,17 +429,17 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
         for path in projection.relative_virtual_paths()
     )
     assert {record.source_alias for record in records} == set(edited_aliases.values())
-    assert {record.address.value_for(AllComponents.WELL) for record in records} == {
+    assert {record.address.value_for(Microscopy.Well) for record in records} == {
         "A01",
         "mask.png",
         "plain.tif",
     }
     assert {
         (
-            record.address.value_for(AllComponents.SITE),
-            record.address.value_for(AllComponents.CHANNEL),
-            record.address.value_for(AllComponents.Z_INDEX),
-            record.address.value_for(AllComponents.TIMEPOINT),
+            record.address.value_for(Microscopy.Site),
+            record.address.value_for(Microscopy.Channel),
+            record.address.value_for(Microscopy.ZIndex),
+            record.address.value_for(Microscopy.Timepoint),
         )
         for record in records
     } == {("1", "1", "1", "1")}
@@ -447,15 +449,15 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
     }
     assert len({record.ref.backend_address for record in records}) == len(records)
     expected_components = {
-        AllComponents.WELL: {"A01", "mask.png", "plain.tif"},
-        AllComponents.SITE: {"1"},
-        AllComponents.CHANNEL: {"1"},
-        AllComponents.Z_INDEX: {"1"},
-        AllComponents.TIMEPOINT: {"1"},
+        Microscopy.Well: {"A01", "mask.png", "plain.tif"},
+        Microscopy.Site: {"1"},
+        Microscopy.Channel: {"1"},
+        Microscopy.ZIndex: {"1"},
+        Microscopy.Timepoint: {"1"},
     }
     assert {
         component: set(orchestrator.get_component_keys(component))
-        for component in AllComponents
+        for component in AxisFamily.active().axes
     } == expected_components
 
 
@@ -505,7 +507,7 @@ def test_mixed_plane_stores_materialize_and_reopen_with_source_identity(
             Backend.ZARR.value,
             orchestrator.get_effective_config().zarr_config,
             context,
-            record.address.value_for(AllComponents.WELL),
+            record.address.value_for(Microscopy.Well),
         )
         np.testing.assert_array_equal(payload, stores[alias][1])
 

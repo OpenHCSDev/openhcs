@@ -52,7 +52,7 @@ from openhcs.agent.ui_bridge_actions import PlateOperation
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerOrchestratorCodeDocumentIdentity,
 )
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.plate_image_inventory import (
     PlateFileKind,
@@ -65,6 +65,7 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFilePreviewReader,
     PlateResultFileInventory,
 )
+from openhcs.core.axes import Axis, AxisFamily
 if TYPE_CHECKING:
     from openhcs.core.components.parser_metaprogramming import (
         FilenameParseResult,
@@ -355,20 +356,20 @@ class PlateInspectionFileQueryProjection:
 class PlateInspectionComponentEntrySet:
     """Nominal value set for one HCS component axis."""
 
-    component: AllComponents
+    component: type[Axis]
     values: tuple[PlateInspectionComponentValue, ...] = ()
 
     @classmethod
     def empty(
         cls,
-        component: AllComponents,
+        component: type[Axis],
     ) -> "PlateInspectionComponentEntrySet":
         return cls(component=component)
 
     @classmethod
     def parsed(
         cls,
-        component: AllComponents,
+        component: type[Axis],
         keys: tuple[str, ...],
     ) -> "PlateInspectionComponentEntrySet":
         return cls(
@@ -386,7 +387,7 @@ class PlateInspectionComponentEntrySet:
     @classmethod
     def metadata(
         cls,
-        component: AllComponents,
+        component: type[Axis],
         values: Mapping[str, str | None] | None,
     ) -> "PlateInspectionComponentEntrySet":
         if values is None:
@@ -428,13 +429,13 @@ class PlateInspectionComponentCollection:
         return cls(
             tuple(
                 PlateInspectionComponentEntrySet.empty(component)
-                for component in AllComponents
+                for component in AxisFamily.active().axes
             )
         )
 
     def for_component(
         self,
-        component: AllComponents,
+        component: type[Axis],
     ) -> PlateInspectionComponentEntrySet:
         for entry in self.entries:
             if entry.component is component:
@@ -468,7 +469,7 @@ class PlateInspectionMetadataComponentProjection:
                     component,
                     component_values.values_for(component),
                 )
-                for component in AllComponents
+                for component in AxisFamily.active().axes
             )
         )
 
@@ -477,12 +478,12 @@ class PlateInspectionMetadataComponentProjection:
 class PlateInspectionMutableParsedComponents:
     """Mutable accumulator before parsed component values are frozen."""
 
-    values: dict[AllComponents, set[str]] = field(
-        default_factory=lambda: {component: set() for component in AllComponents}
+    values: dict[type[Axis], set[str]] = field(
+        default_factory=lambda: {component: set() for component in AxisFamily.active().axes}
     )
 
     def add_parsed_filename_values(self, parsed: "FilenameParseResult") -> None:
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             self._add_optional(
                 self.values[component],
                 parsed.value_for(component),
@@ -505,7 +506,7 @@ class PlateInspectionMutableParsedComponents:
                         )
                     ),
                 )
-                for component in AllComponents
+                for component in AxisFamily.active().axes
             )
         )
 
@@ -600,7 +601,7 @@ class PlateInspectionComponentSummaryBuilder:
         bounds: PlateInspectionBounds,
     ) -> tuple[PlateInspectionComponentSummary, ...]:
         summaries: list[PlateInspectionComponentSummary] = []
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             metadata_entries = metadata_values.for_component(component)
             parsed_entries = parsed_values.for_component(component)
             keys = tuple(
@@ -620,7 +621,7 @@ class PlateInspectionComponentSummaryBuilder:
             )
             summaries.append(
                 PlateInspectionComponentSummary(
-                    component=component,
+                    component=component.name,
                     source=self._source(metadata_entries, parsed_entries),
                     count=len(keys),
                     values=values,

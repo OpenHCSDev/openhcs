@@ -6,7 +6,6 @@ from collections.abc import Iterable
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -168,14 +167,15 @@ class CellProfilerModuleArtifactContracts:
             producer_groups: tuple[str | None, ...] = (invocation_key.group_key,)
         elif (
             step_context.source_bindings.binding_declarations
-            and step_context.group_by.value is not None
+            and step_context.group_by.grouping_axes()
         ):
+            (grouped_component,) = step_context.group_by.grouping_axes()
             scoped_outputs = tuple(
                 spec for spec in contract.artifact_outputs if spec.group_scope_sources()
             )
             producer_groups = (
                 step_context.source_bindings.component_group_keys_for_artifact_specs(
-                    AllComponents.from_value(step_context.group_by.value),
+                    grouped_component,
                     scoped_outputs or contract.artifact_inputs,
                     step_context.available_artifacts,
                 )
@@ -207,7 +207,7 @@ class CellProfilerModuleArtifactContracts:
         source_bindings = step_context.source_bindings
         main_flow_artifacts = step_context.main_flow_artifacts
         if group_key != DEFAULT_GROUP_KEY and source_bindings.binding_declarations:
-            grouped_component = AllComponents.from_value(step_context.group_by.value)
+            (grouped_component,) = step_context.group_by.grouping_axes()
             scoped_bindings = tuple(
                 binding
                 for binding in source_bindings.binding_declarations
@@ -221,7 +221,8 @@ class CellProfilerModuleArtifactContracts:
                 for binding in scoped_bindings
             ):
                 raise ValueError(
-                    f"No source binding declares {grouped_component.value} "
+                    f"No source binding declares {grouped_component.name} "
+
                     f"group {group_key!r}."
                 )
             source_bindings = replace(

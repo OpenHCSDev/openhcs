@@ -3246,7 +3246,7 @@ def test_object_state_field_help_uses_object_state_path_types() -> None:
         "channel",
         "z_index",
         "timepoint",
-        "NONE",
+        "none",
     )
 
 

@@ -16,6 +16,8 @@ from openhcs.mcp.dev_client_rendering import (
     McpDevOutputRenderer,
     McpDevPayloadProjection,
 )
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _config_schema_response() -> dict:
@@ -74,8 +76,8 @@ def _config_schema_response() -> dict:
                             },
                             {
                                 "path": "default_component",
-                                "type_repr": "AllComponents",
-                                "default_repr": "AllComponents.CHANNEL",
+                                "type_repr": "type[Axis]",
+                                "default_repr": "Microscopy.Channel",
                                 "required": False,
                                 "description": "Default source component.",
                                 "enum_values": ["channel", "z_index"],

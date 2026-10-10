@@ -1,6 +1,6 @@
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import ObjectLabelsArtifactType
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -30,6 +30,7 @@ from openhcs.core.source_bindings_view import (
     SourceBindingsViewModel,
     SourceInventory,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class FileManagerInventoryStub:
@@ -69,7 +70,7 @@ def test_source_bindings_view_model_projects_pipeline_and_step_bindings():
             NamedSourceBinding(
                 alias="DNA",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
             ),

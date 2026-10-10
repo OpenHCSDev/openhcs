@@ -13,7 +13,6 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     ArtifactInputPlan,
@@ -106,6 +105,8 @@ from openhcs.processing.materialization import (
     materialize,
     materialization_outputs,
 )
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
@@ -733,7 +734,7 @@ def test_export_to_spreadsheet_projects_site_group_scope_without_relabeling_stac
                     "result_value": shift,
                 },
             ),
-            group_component=AllComponents.SITE,
+            group_component=Microscopy.Site,
             group_key=site,
         )
         for site, shift in (("1", -1.0), ("2", -2.0))
@@ -765,9 +766,9 @@ def test_export_to_spreadsheet_uses_declared_image_set_identity_across_channels(
         axis_id="A01",
         subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
         rows=({"slice_index": 0, "Count": 2},),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         group_key="1",
-        variable_components=(AllComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             component_metadata=({"site": "1", "channel": "1"},)
         ),
@@ -781,9 +782,9 @@ def test_export_to_spreadsheet_uses_declared_image_set_identity_across_channels(
             "object_number",
         ),
         rows=({"slice_index": 0, "object_number": 1, "Area": 4.0},),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         group_key="2",
-        variable_components=(AllComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             component_metadata=({"site": "1", "channel": "2"},)
         ),
@@ -795,7 +796,7 @@ def test_export_to_spreadsheet_uses_declared_image_set_identity_across_channels(
         ),
         records_by_axis={"A01": (image_record, object_record)},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
 
@@ -826,11 +827,11 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
                 component_identity=tuple(
                     ComponentSelector(component, value)
                     for component, value in (
-                        (AllComponents.WELL, "A01"),
-                        (AllComponents.SITE, "1"),
-                        (AllComponents.CHANNEL, channel),
-                        (AllComponents.Z_INDEX, "1"),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.Well, "A01"),
+                        (Microscopy.Site, "1"),
+                        (Microscopy.Channel, channel),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
                     )
                 ),
             )
@@ -839,7 +840,7 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
     )
     policy = SourceImageSetIdentityPolicy.from_source_bindings(
         bindings,
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     records = []
     # Two independent fields, each with two cells. Local slice/object IDs repeat
@@ -873,9 +874,9 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
                         for number in (1, 2)
                     ),
                     source_image_provenance_planes=provenance,
-                    group_component=AllComponents.CHANNEL,
+                    group_component=Microscopy.Channel,
                     group_key=channel,
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                 )
             )
         records.append(
@@ -885,9 +886,9 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
                 subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
                 rows=({"slice_index": 0, "Count_Cells": 2},),
                 source_image_provenance_planes=provenance,
-                group_component=AllComponents.CHANNEL,
+                group_component=Microscopy.Channel,
                 group_key="2",
-                variable_components=(AllComponents.SITE,),
+                variable_components=(Microscopy.Site,),
             )
         )
     batch = RuntimeArtifactBatch(
@@ -928,9 +929,9 @@ def test_export_to_spreadsheet_nulls_metadata_that_differs_between_image_planes(
             axis_id="A01",
             subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
             rows=({"slice_index": 0, f"Count_{channel}": int(channel)},),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             group_key=channel,
-            variable_components=(AllComponents.SITE,),
+            variable_components=(Microscopy.Site,),
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 component_metadata=(
                     {
@@ -953,7 +954,7 @@ def test_export_to_spreadsheet_nulls_metadata_that_differs_between_image_planes(
         ),
         records_by_axis={"A01": records},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
 
@@ -1117,9 +1118,9 @@ def test_export_to_spreadsheet_merges_object_features_across_runtime_groups() ->
                     feature_name: value,
                 },
             ),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             group_key=channel,
-            variable_components=(AllComponents.SITE,),
+            variable_components=(Microscopy.Site,),
             source_image_provenance_planes=provenance,
         )
         for name, channel, feature_name, value, provenance in zip(
@@ -1138,7 +1139,7 @@ def test_export_to_spreadsheet_merges_object_features_across_runtime_groups() ->
         ),
         records_by_axis={"A01": records},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
 
@@ -1832,9 +1833,9 @@ def _measurement_record(
     rows: tuple[dict[str, object], ...] | ColumnarRows,
     source_image_name: str | None = None,
     source_image_provenance_planes: SourceImageProvenancePlanes | None = None,
-    group_component: AllComponents | None = None,
+    group_component: type[Axis] | None = None,
     group_key: str | None = None,
-    variable_components: tuple[AllComponents, ...] = (),
+    variable_components: tuple[type[Axis], ...] = (),
 ) -> StoredRuntimeValue:
     if not isinstance(rows, ColumnarRows):
         field_names = tuple(
@@ -1862,13 +1863,13 @@ def _measurement_record(
             component_metadata=tuple(
                 {
                     **(
-                        {group_component.value: group_key}
+                        {group_component.name: group_key}
                         if group_component is not None and group_key is not None
                         else {}
                     ),
                     **(
-                        {AllComponents.SITE.value: str(slice_index + 1)}
-                        if group_component is not AllComponents.SITE
+                        {Microscopy.Site.name: str(slice_index + 1)}
+                        if group_component is not Microscopy.Site
                         else {}
                     ),
                 }

@@ -8,7 +8,6 @@ from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants import AllComponents
 from openhcs.core.callable_contract import (
     CallableContract,
     PrimaryImageCarrierTransition,
@@ -40,6 +39,7 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.processing.backends.cellprofiler.crop import crop
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class _CarrierTestSession(SimpleNamespace):
@@ -119,13 +119,7 @@ def _session(
     )
     projections = {
         path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values(
-                "A01",
-                index,
-                1,
-                1,
-                1,
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, index), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", str(path)),
             source_alias=binding.alias,
         )
@@ -227,11 +221,11 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
     )
     grayscale_binding = NamedSourceBinding(
         alias="gray",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
     rgb_binding = NamedSourceBinding(
         alias="rgb",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
     )
 
     def identity(image):
@@ -254,13 +248,7 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
     )
     projections = {
         path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values(
-                "A01",
-                index,
-                binding.component_identity[0].value,
-                1,
-                1,
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, index), (Microscopy.Channel, binding.component_identity[0].value), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", str(path)),
             source_alias=binding.alias,
         )
@@ -291,7 +279,7 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
         ),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=pattern,
     )
@@ -609,11 +597,11 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
     )
     grayscale_binding = NamedSourceBinding(
         alias="gray",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
     rgb_binding = NamedSourceBinding(
         alias="rgb",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
     )
     color_invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey("color_to_gray", "3", 0),
@@ -625,12 +613,12 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
     )
     projections = {
         grayscale_path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", str(grayscale_path)),
             source_alias=grayscale_binding.alias,
         ),
         rgb_path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values("A01", 2, 2, 1, 1),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 2), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", str(rgb_path)),
             source_alias=rgb_binding.alias,
         ),
@@ -654,7 +642,7 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
         ),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=pattern,
     )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from itertools import product
@@ -23,12 +23,19 @@ from zmqruntime.viewer_protocol import (
     ViewerDisplayConfigWireField,
     ViewerWireMapping,
     ViewerWireValue,
-    viewer_component_mode_value,
 )
 from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
 
-from openhcs.constants.constants import AllComponents
 from openhcs.runtime.viewer_protocol import ViewerComponentValueOrdering
+from openhcs.core.axes import (
+    AxisFamily,
+    AxisRoleKeyedStrategyMixin,
+    ColourAxis,
+    OrdinalValued,
+    PartitionAxis,
+    StackAxis,
+    TimeAxis,
+)
 
 ComponentValue: TypeAlias = str | int | float | bool | tuple | None
 ComponentWireValue: TypeAlias = ComponentValue | Sequence[ComponentValue]
@@ -87,10 +94,70 @@ class ViewerStreamingDataTypeHandlerMeta(AutoRegisterMeta):
         return super().__new__(mcs, name, bases, attrs)
 
 
-class ViewerComponentSemanticRole(Enum):
-    """Semantic roles that viewer backends may request from component axes."""
+class ViewerAxisLabelStrategy(AxisRoleKeyedStrategyMixin):
+    """Viewer label spelling owned by one axis role.
 
-    COLOR = "color"
+    Axes whose roles declare no leaf use their boundary name.
+    """
+
+    abbreviation: ClassVar[str | None] = None
+
+    @classmethod
+    def for_component(cls, component: str) -> type["ViewerAxisLabelStrategy"]:
+        family = AxisFamily.active()
+        if component not in family.names():
+            return cls
+        axis = family.named(component)
+        matches = tuple(
+            strategy
+            for strategy in cls.role_strategy_types()
+            if issubclass(axis, strategy.implements_role)
+        )
+        if len(matches) > 1:
+            raise LookupError(
+                f"Axis {axis!r} has several viewer label roles: "
+                f"{[strategy.__qualname__ for strategy in matches]}."
+            )
+        return matches[0] if matches else cls
+
+    @classmethod
+    def abbreviate(cls, component: str) -> str:
+        if cls.abbreviation is not None:
+            return cls.abbreviation
+        if component in AxisFamily.active().names():
+            return component.title()
+        return component
+
+    @classmethod
+    def named_label(cls, component: str, value: ComponentValue, name: str) -> str:
+        return f"{component.title()} {value}: {name}"
+
+
+class ColourAxisViewerLabel(ViewerAxisLabelStrategy):
+    implements_role = ColourAxis
+    abbreviation = "Ch"
+
+    @classmethod
+    def named_label(cls, component: str, value: ComponentValue, name: str) -> str:
+        return f"{cls.abbreviation}{value}: {name}"
+
+
+class StackAxisViewerLabel(ViewerAxisLabelStrategy):
+    implements_role = StackAxis
+    abbreviation = "Z"
+
+
+class TimeAxisViewerLabel(ViewerAxisLabelStrategy):
+    implements_role = TimeAxis
+    abbreviation = "T"
+
+
+class PartitionAxisViewerLabel(ViewerAxisLabelStrategy):
+    implements_role = PartitionAxis
+
+    @classmethod
+    def named_label(cls, component: str, value: ComponentValue, name: str) -> str:
+        return str(name)
 
 
 class ViewerStreamingDataTypeHandler(
@@ -314,8 +381,10 @@ class ViewerComponentMetadataNormalizer:
         }
 
     def normalize_value(self, component: str, value: ComponentValue) -> ComponentValue:
-        component_identity = AllComponents.from_value(component)
-        if component_identity is None or not component_identity.is_variable_axis():
+        family = AxisFamily.active()
+        if component not in family.names() or not issubclass(
+            family.named(component), OrdinalValued
+        ):
             return value
         if isinstance(value, str):
             stripped = value.strip()
@@ -758,20 +827,6 @@ class ViewerComponentNameMetadataStore:
 class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValue]):
     """Component-value display names shared by viewer receivers."""
 
-    ABBREVIATIONS: ClassVar[Mapping[str, str]] = {
-        AllComponents.CHANNEL.value: "Ch",
-        AllComponents.Z_INDEX.value: "Z",
-        AllComponents.TIMEPOINT.value: "T",
-        AllComponents.SITE.value: "Site",
-        AllComponents.WELL.value: "Well",
-    }
-    METADATA_FORMATTERS: ClassVar[
-        Mapping[str, Callable[[ComponentValue, ComponentValue], str]]
-    ] = {
-        AllComponents.CHANNEL.value: lambda value, name: f"Ch{value}: {name}",
-        AllComponents.WELL.value: lambda _value, name: str(name),
-    }
-
     store: ViewerComponentNameMetadataStore = field(
         default_factory=ViewerComponentNameMetadataStore
     )
@@ -813,15 +868,12 @@ class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValu
         return str(name)
 
     def abbreviation(self, component: str) -> str:
-        if component in self.ABBREVIATIONS:
-            return self.ABBREVIATIONS[component]
-        return component
+        return ViewerAxisLabelStrategy.for_component(component).abbreviate(component)
 
     def named_axis_label(self, component: str, value: ComponentValue, name: str) -> str:
-        formatter = self.METADATA_FORMATTERS.get(component)
-        if formatter is not None:
-            return formatter(value, name)
-        return f"{component.title()} {value}: {name}"
+        return ViewerAxisLabelStrategy.for_component(component).named_label(
+            component, value, name
+        )
 
     def compact_tuple_labels(
         self,
@@ -908,31 +960,6 @@ class ViewerComponentAxisSemantics(ViewerComponentValueDomainPayload):
     def component_modes(self) -> ComponentModeMap:
         return self.layout.component_modes
 
-    def role_component_for_mode(
-        self,
-        *,
-        role: ViewerComponentSemanticRole,
-        mode: DisplayModeValue,
-    ) -> str | None:
-        mode_value = viewer_component_mode_value(mode)
-        for component in self.layout.component_order:
-            if self.layout.component_modes[component] != mode_value:
-                continue
-            component_identity = AllComponents.from_value(component)
-            if component_identity is not None and self.component_has_role(
-                component_identity, role
-            ):
-                return component
-        return None
-
-    @staticmethod
-    def component_has_role(
-        component: AllComponents,
-        role: ViewerComponentSemanticRole,
-    ) -> bool:
-        if role is ViewerComponentSemanticRole.COLOR:
-            return component.is_default_group_by_axis()
-        raise ValueError(f"No component role mapping for {role!r}.")
 
 
 class ViewerComponentAxisSemanticsAuthority:

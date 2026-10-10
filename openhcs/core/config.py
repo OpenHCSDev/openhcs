@@ -9,24 +9,27 @@ Configuration is intended to be immutable and provided as Python objects.
 import logging
 import inspect
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Optional, Union, List, Annotated, ClassVar, Callable
 from enum import Enum
 from abc import ABC, abstractmethod
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 from polystore import config as _polystore_config
-from openhcs.constants import (
-    AllComponents,
-    Microscope,
-    SequentialComponents,
-    VariableComponents,
-    GroupBy,
-)
-from openhcs.constants.constants import (
-    Backend,
-    get_default_variable_components,
-    get_default_group_by,
+from openhcs.constants import Microscope
+from openhcs.constants.constants import Backend
+from openhcs.core.axes import (
+    Axis,
+    AxisFamily,
+    AxisRole,
+    ColourAxis,
+    GroupingChoices,
+    GroupingDeclaration,
+    PartitionAxis,
+    StackAxis,
+    TileAxis,
+    TimeAxis,
+    VariableAxisChoices,
 )
 from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.input_source import InputSource
@@ -237,6 +240,73 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
 # (GlobalPipelineConfig → PipelineConfig by removing "Global" prefix)
 
 
+class AxisRoleModeDisplayConfig:
+    """Viewer display config whose mode fields are declared per axis role.
+
+    Each mode field names its role in ``metadata["axis_role"]``. An axis takes
+    the mode of the first mode field whose role it carries, so the wire
+    projection covers whichever family is active.
+    """
+
+    @classmethod
+    def role_mode_fields(cls) -> tuple[tuple[type[AxisRole], str], ...]:
+        return tuple(
+            (declared.metadata["axis_role"], declared.name)
+            for declared in fields(cls)
+            if "axis_role" in declared.metadata
+        )
+
+    @property
+    def COMPONENT_ORDER(self) -> tuple[str, ...]:
+        return AxisFamily.active().names()
+
+    @classmethod
+    def mode_field_for_axis(cls, axis: type[Axis]) -> str:
+        for role, field_name in cls.role_mode_fields():
+            if issubclass(axis, role):
+                return field_name
+        raise TypeError(
+            f"Axis {axis!r} carries none of the viewer roles of {cls.__name__}: "
+            f"{[role.__name__ for role, _ in cls.role_mode_fields()]}."
+        )
+
+    def component_modes(self) -> dict[str, str]:
+        """Project role mode fields onto the active family's axis names."""
+
+        return {
+            axis.name: getattr(self, self.mode_field_for_axis(axis)).value
+            for axis in AxisFamily.active().axes
+        }
+
+    @classmethod
+    def role_modes_from_wire(
+        cls,
+        component_modes: Mapping[str, ViewerWireValue],
+        mode_type: type[Enum],
+        viewer_label: str,
+    ) -> dict[str, Enum]:
+        """Decode wire modes by axis name back onto the role mode fields."""
+
+        if not isinstance(component_modes, Mapping):
+            raise TypeError(f"{viewer_label} component_modes must be a mapping.")
+        family = AxisFamily.active()
+        if set(component_modes) != set(family.names()):
+            raise ValueError(
+                f"{viewer_label} component_modes must exactly match "
+                f"{family.names()!r}; got {tuple(component_modes)!r}."
+            )
+        modes_by_field: dict[str, Enum] = {}
+        for axis in family.axes:
+            field_name = cls.mode_field_for_axis(axis)
+            mode = mode_type(str(component_modes[axis.name]))
+            if modes_by_field.setdefault(field_name, mode) is not mode:
+                raise ValueError(
+                    f"{viewer_label} axes sharing {field_name} must share one mode; "
+                    f"{axis.name} has {mode.value}."
+                )
+        return modes_by_field
+
+
 class NapariDimensionMode(Enum):
     """How component values are placed in Napari image layers."""
 
@@ -255,12 +325,11 @@ class NapariVariableSizeHandling(Enum):
 
 @dataclass(frozen=True)
 class NapariDisplayConfig(
+    AxisRoleModeDisplayConfig,
     ViewerDisplayConfigABC,
     AnnotatedDataclassValidationMixin,
 ):
-    """Map streamed OpenHCS dimensions and intensity data onto Napari layers."""
-
-    COMPONENT_ORDER: ClassVar[tuple[str, ...]] = AllComponents.ordered_names()
+    """Map streamed axes and intensity data onto Napari layers."""
 
     colormap: NonBlankString = field(
         default="gray",
@@ -282,49 +351,51 @@ class NapariDisplayConfig(
             )
         },
     )
-    site_mode: NapariDimensionMode = field(
+    partition_mode: NapariDimensionMode = field(
         default=NapariDimensionMode.STACK,
         metadata={
-            "description": "Whether site values are stacked or use separate layers."
-        },
-    )
-    channel_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
-            "description": "Whether channel values are stacked or use separate layers."
-        },
-    )
-    z_index_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
-            "description": "Whether z-index values are stacked or use separate layers."
-        },
-    )
-    timepoint_mode: NapariDimensionMode = field(
-        default=NapariDimensionMode.STACK,
-        metadata={
+            "axis_role": PartitionAxis,
             "description": (
-                "Whether timepoint values are stacked or use separate layers."
-            )
+                "Whether parallel-axis values are stacked or use separate layers."
+            ),
         },
     )
-    well_mode: NapariDimensionMode = field(
+    tile_mode: NapariDimensionMode = field(
         default=NapariDimensionMode.STACK,
         metadata={
-            "description": "Whether well values are stacked or use separate layers."
+            "axis_role": TileAxis,
+            "description": (
+                "Whether tile-axis values are stacked or use separate layers."
+            ),
         },
     )
-
-    def component_modes(self) -> dict[str, str]:
-        """Project typed component fields onto the viewer wire vocabulary."""
-
-        return {
-            AllComponents.SITE.value: self.site_mode.value,
-            AllComponents.CHANNEL.value: self.channel_mode.value,
-            AllComponents.Z_INDEX.value: self.z_index_mode.value,
-            AllComponents.TIMEPOINT.value: self.timepoint_mode.value,
-            AllComponents.WELL.value: self.well_mode.value,
-        }
+    colour_mode: NapariDimensionMode = field(
+        default=NapariDimensionMode.STACK,
+        metadata={
+            "axis_role": ColourAxis,
+            "description": (
+                "Whether colour-axis values are stacked or use separate layers."
+            ),
+        },
+    )
+    stack_mode: NapariDimensionMode = field(
+        default=NapariDimensionMode.STACK,
+        metadata={
+            "axis_role": StackAxis,
+            "description": (
+                "Whether stack-axis values are stacked or use separate layers."
+            ),
+        },
+    )
+    time_mode: NapariDimensionMode = field(
+        default=NapariDimensionMode.STACK,
+        metadata={
+            "axis_role": TimeAxis,
+            "description": (
+                "Whether time-axis values are stacked or use separate layers."
+            ),
+        },
+    )
 
     def display_payload_extra(self) -> dict[str, str]:
         """Project Napari-specific display settings onto the wire payload."""
@@ -347,14 +418,11 @@ class NapariDisplayConfig(
 
         from polystore.napari_stream import NapariDisplayWireField
 
-        component_modes = payload[ViewerDisplayConfigWireField.COMPONENT_MODES.value]
-        if not isinstance(component_modes, Mapping):
-            raise TypeError("Napari component_modes must be a mapping.")
-        if set(component_modes) != set(cls.COMPONENT_ORDER):
-            raise ValueError(
-                "Napari component_modes must exactly match "
-                f"{cls.COMPONENT_ORDER!r}; got {tuple(component_modes)!r}."
-            )
+        role_modes = cls.role_modes_from_wire(
+            payload[ViewerDisplayConfigWireField.COMPONENT_MODES.value],
+            NapariDimensionMode,
+            "Napari",
+        )
         colormap = str(payload[NapariDisplayWireField.COLORMAP.value]).strip()
         if not colormap:
             raise ValueError("Napari colormap name must not be blank.")
@@ -363,21 +431,7 @@ class NapariDisplayConfig(
             variable_size_handling=NapariVariableSizeHandling(
                 str(payload[NapariDisplayWireField.VARIABLE_SIZE_HANDLING.value])
             ),
-            site_mode=NapariDimensionMode(
-                str(component_modes[AllComponents.SITE.value])
-            ),
-            channel_mode=NapariDimensionMode(
-                str(component_modes[AllComponents.CHANNEL.value])
-            ),
-            z_index_mode=NapariDimensionMode(
-                str(component_modes[AllComponents.Z_INDEX.value])
-            ),
-            timepoint_mode=NapariDimensionMode(
-                str(component_modes[AllComponents.TIMEPOINT.value])
-            ),
-            well_mode=NapariDimensionMode(
-                str(component_modes[AllComponents.WELL.value])
-            ),
+            **role_modes,
         )
 
 
@@ -396,7 +450,7 @@ class FijiDimensionMode(Enum):
     How to map OpenHCS dimensions to ImageJ hyperstack dimensions.
 
     ImageJ hyperstacks have 3 dimensions: Channels (C), Slices (Z), Frames (T).
-    Each OpenHCS component (site, channel, z_index, timepoint) can be mapped to one of these.
+    Each axis role (tile, colour, stack, time, partition) maps to one of these.
 
     - WINDOW: Create separate windows for each value (like Napari LAYER mode)
     - CHANNEL: Map to ImageJ Channel dimension (C)
@@ -412,12 +466,11 @@ class FijiDimensionMode(Enum):
 
 @dataclass(frozen=True)
 class FijiDisplayConfig(
+    AxisRoleModeDisplayConfig,
     ViewerDisplayConfigABC,
     AnnotatedDataclassValidationMixin,
 ):
-    """Map streamed OpenHCS dimensions and intensity data onto Fiji hyperstacks."""
-
-    COMPONENT_ORDER: ClassVar[tuple[str, ...]] = AllComponents.ordered_names()
+    """Map streamed axes and intensity data onto Fiji hyperstacks."""
 
     lut: NonBlankString = field(
         default="Grays",
@@ -436,57 +489,51 @@ class FijiDisplayConfig(
             )
         },
     )
-    site_mode: FijiDimensionMode = field(
+    partition_mode: FijiDimensionMode = field(
         default=FijiDimensionMode.FRAME,
         metadata={
+            "axis_role": PartitionAxis,
             "description": (
-                "ImageJ dimension used for site values, or WINDOW for separate windows."
-            )
+                "ImageJ dimension used for parallel-axis values, or WINDOW for separate windows."
+            ),
         },
     )
-    channel_mode: FijiDimensionMode = field(
+    tile_mode: FijiDimensionMode = field(
+        default=FijiDimensionMode.FRAME,
+        metadata={
+            "axis_role": TileAxis,
+            "description": (
+                "ImageJ dimension used for tile-axis values, or WINDOW for separate windows."
+            ),
+        },
+    )
+    colour_mode: FijiDimensionMode = field(
         default=FijiDimensionMode.CHANNEL,
         metadata={
+            "axis_role": ColourAxis,
             "description": (
-                "ImageJ dimension used for channel values, or WINDOW for separate windows."
-            )
+                "ImageJ dimension used for colour-axis values, or WINDOW for separate windows."
+            ),
         },
     )
-    z_index_mode: FijiDimensionMode = field(
+    stack_mode: FijiDimensionMode = field(
         default=FijiDimensionMode.SLICE,
         metadata={
+            "axis_role": StackAxis,
             "description": (
-                "ImageJ dimension used for z-index values, or WINDOW for separate windows."
-            )
+                "ImageJ dimension used for stack-axis values, or WINDOW for separate windows."
+            ),
         },
     )
-    timepoint_mode: FijiDimensionMode = field(
+    time_mode: FijiDimensionMode = field(
         default=FijiDimensionMode.FRAME,
         metadata={
+            "axis_role": TimeAxis,
             "description": (
-                "ImageJ dimension used for timepoint values, or WINDOW for separate windows."
-            )
+                "ImageJ dimension used for time-axis values, or WINDOW for separate windows."
+            ),
         },
     )
-    well_mode: FijiDimensionMode = field(
-        default=FijiDimensionMode.FRAME,
-        metadata={
-            "description": (
-                "ImageJ dimension used for well values, or WINDOW for separate windows."
-            )
-        },
-    )
-
-    def component_modes(self) -> dict[str, str]:
-        """Project typed component fields onto the viewer wire vocabulary."""
-
-        return {
-            AllComponents.SITE.value: self.site_mode.value,
-            AllComponents.CHANNEL.value: self.channel_mode.value,
-            AllComponents.Z_INDEX.value: self.z_index_mode.value,
-            AllComponents.TIMEPOINT.value: self.timepoint_mode.value,
-            AllComponents.WELL.value: self.well_mode.value,
-        }
 
     def display_payload_extra(self) -> dict[str, str | bool]:
         """Project Fiji-specific display settings onto the wire payload."""
@@ -507,14 +554,11 @@ class FijiDisplayConfig(
 
         from polystore.fiji_stream import FijiDisplayWireField
 
-        component_modes = payload[ViewerDisplayConfigWireField.COMPONENT_MODES.value]
-        if not isinstance(component_modes, Mapping):
-            raise TypeError("Fiji component_modes must be a mapping.")
-        if set(component_modes) != set(cls.COMPONENT_ORDER):
-            raise ValueError(
-                "Fiji component_modes must exactly match "
-                f"{cls.COMPONENT_ORDER!r}; got {tuple(component_modes)!r}."
-            )
+        role_modes = cls.role_modes_from_wire(
+            payload[ViewerDisplayConfigWireField.COMPONENT_MODES.value],
+            FijiDimensionMode,
+            "Fiji",
+        )
         lut = str(payload[FijiDisplayWireField.LUT.value]).strip()
         if not lut:
             raise ValueError("Fiji LUT name must not be blank.")
@@ -524,21 +568,7 @@ class FijiDisplayConfig(
                 "Fiji auto_contrast must be bool, "
                 f"got {type(auto_contrast).__name__}."
             )
-        return cls(
-            lut=lut,
-            auto_contrast=auto_contrast,
-            site_mode=FijiDimensionMode(str(component_modes[AllComponents.SITE.value])),
-            channel_mode=FijiDimensionMode(
-                str(component_modes[AllComponents.CHANNEL.value])
-            ),
-            z_index_mode=FijiDimensionMode(
-                str(component_modes[AllComponents.Z_INDEX.value])
-            ),
-            timepoint_mode=FijiDimensionMode(
-                str(component_modes[AllComponents.TIMEPOINT.value])
-            ),
-            well_mode=FijiDimensionMode(str(component_modes[AllComponents.WELL.value])),
-        )
+        return cls(lut=lut, auto_contrast=auto_contrast, **role_modes)
 
 
 # Apply the global pipeline config decorator with ui_hidden=True
@@ -699,18 +729,18 @@ class DtypeConfig(
 class ProcessingConfig(AnnotatedDataclassValidationMixin):
     """Independent stack-axis, post-assembly grouping, and main-flow choices."""
 
-    variable_components: Annotated[List[VariableComponents], abbreviation("vars")] = (
-        field(default_factory=get_default_variable_components)
-    )
+    variable_components: Annotated[
+        List[type[Axis]], abbreviation("vars"), VariableAxisChoices()
+    ] = field(default_factory=lambda: list(AxisFamily.active().default_variable()))
     """Components whose values vary along the assembled array axis.
 
     This field is the stack-axis meaning authority. It is independent of
     ``group_by`` and of whether the callable executes per plane or per stack.
     """
 
-    group_by: Annotated[Optional[GroupBy], abbreviation("group")] = field(
-        default_factory=get_default_group_by
-    )
+    group_by: Annotated[
+        Optional[type[GroupingDeclaration]], abbreviation("group"), GroupingChoices()
+    ] = field(default_factory=lambda: AxisFamily.active().default_group_by())
     """Component used to partition already assembled values.
 
     A dictionary function pattern uses the resulting group identity for branch
@@ -757,7 +787,7 @@ class SequentialProcessingConfig(AnnotatedDataclassValidationMixin):
     """
 
     sequential_components: Annotated[
-        List[SequentialComponents], abbreviation("seq_comp")
+        List[type[Axis]], abbreviation("seq_comp"), VariableAxisChoices()
     ] = field(default_factory=list)
     """Plate components whose value combinations run through the whole pipeline in turn.
 

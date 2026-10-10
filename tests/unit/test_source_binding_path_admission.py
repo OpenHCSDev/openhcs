@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -20,6 +19,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.source_projection import SourceCandidate
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _candidate(path, *, identities=(), metadata=None):
@@ -120,7 +120,7 @@ def test_physical_admission_does_not_predict_decoded_metadata_or_components(
         alias="selected",
         selector=SourceSelector(
             metadata=(MetadataSelector("well", "A01"),),
-            components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            components=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
     )
     config = SourceBindingsConfig(bindings=(binding,))

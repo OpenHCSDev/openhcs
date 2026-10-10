@@ -38,20 +38,10 @@ class SourceSchemaFilenameParser(FilenameParser):
             return match.group(1), match.group(2)
         return component_value, ""
 
-    def construct_filename(
-        self,
-        components: FilenameParseResult,
-        site_padding: int = 3,
-        z_padding: int = 3,
-        timepoint_padding: int = 3,
-    ) -> str:
+    def construct_filename(self, components: FilenameParseResult) -> str:
         address = OpenHCSPlaneAddress.from_component_values(
             (component, components.required_value(component))
             for component, _value in components.declared_values()
         )
-        return address.filename(
-            extension=components.extension,
-            site_padding=site_padding,
-            z_padding=z_padding,
-            timepoint_padding=timepoint_padding,
-        )
+        return address.filename(extension=components.extension)
+

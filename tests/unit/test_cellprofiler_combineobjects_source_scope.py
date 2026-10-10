@@ -10,11 +10,6 @@ import numpy as np
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.constants import (
-    AllComponents,
-    GroupBy,
-    VariableComponents,
-)
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactSpec,
@@ -40,6 +35,7 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 COMBINE_OBJECTS_CPIPE = """CellProfiler Pipeline: http://www.cellprofiler.org
 Version:5
@@ -96,8 +92,8 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
         func=combine,
         name="combine",
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.SITE],
-            group_by=GroupBy.CHANNEL,
+            variable_components=[Microscopy.Site],
+            group_by=Microscopy.Channel,
             input_source=InputSource.PIPELINE_START,
         ),
         source_bindings=source_bindings,
@@ -118,13 +114,13 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
         (CallableContract.from_callable(combine),),
         consumer_scope=PathPlannerGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
     assert scope == PathPlannerGroupScope.from_raw(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -163,11 +159,11 @@ def test_public_combineobjects_import_compiles_source_owned_scope(
 
     context = compilation.runtime_contexts["A01"]
     step_plan = context.step_plans[0]
-    assert tuple(step_plan.variable_components) == (VariableComponents.SITE,)
-    assert step_plan.group_by is GroupBy.CHANNEL
+    assert tuple(step_plan.variable_components) == (Microscopy.Site,)
+    assert step_plan.group_by is Microscopy.Channel
     assert step_plan.execution_group_scope == PathPlannerGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     assert tuple(
         binding.input_spec().ref()

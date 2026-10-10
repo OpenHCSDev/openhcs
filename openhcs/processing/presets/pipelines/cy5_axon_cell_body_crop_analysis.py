@@ -3,7 +3,6 @@
 # Automatically collected imports
 from pathlib import Path
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import LazyDtypeConfig, LazyStepMaterializationConfig
 from arraybridge.decorators import DtypeConversion
@@ -22,6 +21,7 @@ from openhcs.processing.backends.analysis.skan_axon_analysis import (
     skan_axon_skeletonize_and_analyze,
 )
 from openhcs.processing.backends.processors.cupy_processor import crop, tophat
+from openhcs.domains.microscopy.axes import Microscopy
 
 # Pipeline steps
 pipeline_steps = []
@@ -38,7 +38,7 @@ step_1 = FunctionStep(
         },
     ),
     name="crop_device",
-    variable_components=[VariableComponents.CHANNEL],
+    variable_components=[Microscopy.Channel],
 )
 pipeline_steps.append(step_1)
 
@@ -105,7 +105,7 @@ step_5 = FunctionStep(
         },
     ),
     name="crop_device",
-    variable_components=[VariableComponents.CHANNEL],
+    variable_components=[Microscopy.Channel],
     input_source=InputSource.PIPELINE_START,
 )
 pipeline_steps.append(step_5)

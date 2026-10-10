@@ -6,44 +6,12 @@ logic, supporting any component configuration and validation patterns.
 """
 
 import logging
-from typing import Generic, TypeVar, List, Optional, Dict, Any, Union, Type
-from enum import Enum
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Sequence
 
-from openhcs.core.components.framework import ComponentConfiguration
-from openhcs.constants.constants import GroupBy
+from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 
 logger = logging.getLogger(__name__)
-
-T = TypeVar("T", bound=Enum)
-U = TypeVar("U", bound=Enum)
-
-
-def convert_enum_by_value(source_enum: T, target_enum_class: Type[U]) -> Optional[U]:
-    """
-    Generic utility to convert between enum types with matching .value attributes.
-
-    This function enables conversion between any two enum classes that have
-    overlapping values, without requiring hardcoded mappings.
-
-    Args:
-        source_enum: Source enum instance to convert from
-        target_enum_class: Target enum class to convert to
-
-    Returns:
-        Target enum instance with matching value, or None if no match found
-
-    Example:
-        >>> convert_enum_by_value(VariableComponents.CHANNEL, GroupBy)
-        <GroupBy.CHANNEL: 'channel'>
-    """
-    source_value = source_enum.value
-
-    for target_enum in target_enum_class:
-        if target_enum.value == source_value:
-            return target_enum
-
-    return None
 
 
 @dataclass
@@ -55,95 +23,77 @@ class ValidationResult:
     warnings: Optional[List[str]] = None
 
 
-class GenericValidator(Generic[T]):
-    """
-    Generic validator for component-agnostic validation.
+class GenericValidator:
+    """Step validation over an axis family's declared constraints."""
 
-    This class replaces the hardcoded component-specific validation logic
-    with a configurable system that works with any component configuration.
-    """
-
-    def __init__(self, config: ComponentConfiguration[T]):
-        """
-        Initialize the validator with a component configuration.
-
-        Args:
-            config: ComponentConfiguration for validation rules
-        """
-        self.config = config
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                "GenericValidator initialized for components: %s",
-                [c.value for c in config.all_components],
-            )
+    def __init__(self, family: type[AxisFamily]):
+        self.family = family
 
     def validate_step(
         self,
-        variable_components: List[T],
-        group_by: Optional[Union[T, "GroupBy"]],
+        variable_components: Sequence[type[Axis]],
+        group_by: type[GroupingDeclaration] | None,
         is_grouped: bool,
         step_name: str,
     ) -> ValidationResult:
-        """
-        Validate a step configuration using generic rules.
+        """Validate one step's variable axes and grouping against the family.
 
         Args:
-            variable_components: List of variable components
-            group_by: Optional group_by component
+            variable_components: Axes the step assembles along
+            group_by: The step's grouping declaration
             is_grouped: Whether the admitted function pattern dispatches by group
             step_name: Name of the step for error reporting
-
-        Returns:
-            ValidationResult indicating success or failure
         """
-        try:
-            # 1. Validate component combination
-            self.config.validate_combination(variable_components, group_by)
+        grouping_axes = () if group_by is None else group_by.grouping_axes()
+        overlap = [axis for axis in grouping_axes if axis in variable_components]
+        if overlap:
+            return ValidationResult(
+                is_valid=False,
+                error_message=(
+                    f"group_by {overlap[0].name} cannot be in variable_components "
+                    f"{[axis.name for axis in variable_components]}"
+                ),
+            )
 
-            # 2. Validate dict pattern requirements
-            if is_grouped and (group_by is None or group_by.value is None):
+        if is_grouped and not grouping_axes:
+            return ValidationResult(
+                is_valid=False,
+                error_message=(
+                    f"Dict pattern requires a concrete group_by axis in "
+                    f"step '{step_name}'. variable_components declares the "
+                    "3D stack axis; dict keys declare dispatch groups and "
+                    "cannot use Ungrouped."
+                ),
+            )
+
+        variable_axes = self.family.variable_axes()
+        partition_name = self.family.partition_axis().name
+        for axis in variable_components:
+            if axis not in variable_axes:
                 return ValidationResult(
                     is_valid=False,
                     error_message=(
-                        f"Dict pattern requires a concrete group_by component in "
-                        f"step '{step_name}'. variable_components declares the "
-                        "3D stack axis; dict keys declare dispatch groups and "
-                        "cannot use GroupBy.NONE."
+                        f"Variable component {axis.name} not available "
+                        f"(multiprocessing axis: {partition_name})"
                     ),
                 )
 
-            # 3. Validate components are in remaining components (not multiprocessing axis)
-            remaining_components = self.config.get_remaining_components()
-            remaining_values = {comp.value for comp in remaining_components}
-
-            for component in variable_components:
-                if component.value not in remaining_values:
-                    return ValidationResult(
-                        is_valid=False,
-                        error_message=f"Variable component {component.value} not available (multiprocessing axis: {self.config.multiprocessing_axis.value})",
-                    )
-
-            # Check group_by is valid if it's not None
-            # Note: group_by can be an enum with .value = None, so check the value explicitly
-            if (
-                group_by is not None
-                and group_by.value is not None
-                and group_by.value not in remaining_values
-            ):
+        for axis in grouping_axes:
+            if axis not in variable_axes:
                 return ValidationResult(
                     is_valid=False,
-                    error_message=f"Group_by component {group_by.value} not available (multiprocessing axis: {self.config.multiprocessing_axis.value})",
+                    error_message=(
+                        f"Group_by component {axis.name} not available "
+                        f"(multiprocessing axis: {partition_name})"
+                    ),
                 )
 
-            return ValidationResult(is_valid=True)
-
-        except ValueError as e:
-            return ValidationResult(is_valid=False, error_message=str(e))
+        return ValidationResult(is_valid=True)
 
     def validate_dict_pattern_keys(
         self,
         func_pattern: Dict[str, Any],
-        group_by: T,
+        group_by: type[Axis],
         step_name: str,
         orchestrator,
         *,
@@ -157,7 +107,7 @@ class GenericValidator(Generic[T]):
 
         Args:
             func_pattern: Dict function pattern to validate
-            group_by: GroupBy component specifying component type
+            group_by: Axis whose values key the dict pattern
             step_name: Name of the step containing the function
             orchestrator: Orchestrator for component key access
             resolved_config: Held compilation configuration, or live saved configuration.
@@ -205,7 +155,7 @@ class GenericValidator(Generic[T]):
                             is_valid=False,
                             error_message=(
                                 f"Function pattern keys {sorted(missing_numeric)} not found in available "
-                                f"{group_by.value} components {sorted(available_numeric)} for step '{step_name}'"
+                                f"{group_by.name} components {sorted(available_numeric)} for step '{step_name}'"
                             ),
                         )
                 except (ValueError, TypeError):
@@ -214,7 +164,7 @@ class GenericValidator(Generic[T]):
                         is_valid=False,
                         error_message=(
                             f"Function pattern keys {sorted(missing_keys)} not found in available "
-                            f"{group_by.value} components {sorted(available_keys_set)} for step '{step_name}'"
+                            f"{group_by.name} components {sorted(available_keys_set)} for step '{step_name}'"
                         ),
                     )
 
@@ -223,5 +173,5 @@ class GenericValidator(Generic[T]):
         except Exception as e:
             return ValidationResult(
                 is_valid=False,
-                error_message=f"Failed to validate dict pattern keys for {group_by.value}: {e}",
+                error_message=f"Failed to validate dict pattern keys for {group_by.name}: {e}",
             )

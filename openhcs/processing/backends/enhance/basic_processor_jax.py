@@ -6,7 +6,7 @@ import numpy as np
 from basicpy import BaSiC
 from basicpy.basicpy import FittingMode
 
-from openhcs.constants.constants import GroupBy
+from openhcs.core.axes import ColourAxis
 from openhcs.core.artifacts import (
     ArtifactSidecarRole,
     ArtifactSpec,
@@ -18,9 +18,9 @@ from openhcs.core.artifacts import (
 from openhcs.core.config import DtypeConfig
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import (
-    allowed_group_by,
+    allowed_group_by_roles,
     artifact_outputs,
-    required_variable_components,
+    required_axis_roles,
 )
 from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFieldOutput
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -53,8 +53,9 @@ DARKFIELD_OUTPUT = _fitted_field_output("basic_darkfield")
 
 
 @numpy_func(contract=ProcessingContract.PURE_3D, dtype_config_default=DtypeConfig())
-@allowed_group_by(GroupBy.CHANNEL)
-@required_variable_components(FittedIlluminationFieldOutput.observation_axis)
+@allowed_group_by_roles(ColourAxis)
+@required_axis_roles(FittedIlluminationFieldOutput.observation_role)
+
 @artifact_outputs(CORRECTED_OUTPUT, FLATFIELD_OUTPUT, DARKFIELD_OUTPUT)
 def basic_flatfield_correction_jax(
     image: np.ndarray,

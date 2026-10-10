@@ -32,7 +32,6 @@ from openhcs.agent.dto.viewer import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.constants.constants import AllComponents
 from openhcs.core.runtime_image_values import image_payload_metadata, image_payload_data
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
@@ -42,15 +41,17 @@ from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.plate_image_inventory import PlateFileRecord
 from openhcs.serialization.json import to_jsonable
 from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def receipt_state(path, *, summary=None):
     fixed = {
-        component.value: 1
-        for component in AllComponents
-        if component is not AllComponents.CHANNEL
+        component.name: 1
+        for component in AxisFamily.active().axes
+        if component is not Microscopy.Channel
     }
-    fixed[AllComponents.WELL.value] = "1"
+    fixed[Microscopy.Well.name] = "1"
     summary = summary if summary is not None else ViewerPayloadSummary.from_wire_mapping(dict(
         path=str(path),
         data_type="image",
@@ -342,7 +343,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     source_items = source.image_source_metadata_items(
         (str(path),), components, projection
     )
-    component_order = tuple(component.value for component in AllComponents)
+    component_order = tuple(component.name for component in AxisFamily.active().axes)
     assert tuple(
         item["channel"] for item in source_items.domain_metadata_items(component_order)
     ) == (2, 1)

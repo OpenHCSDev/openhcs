@@ -37,7 +37,7 @@ from openhcs.agent.services.ui_bridge_service import (
     DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
     UiBridgeService,
 )
-from openhcs.constants import AllComponents, Backend
+from openhcs.constants import Backend
 from openhcs.core.config import StreamingConfig
 from openhcs.core.plate_image_inventory import (
     PlateFileKind,
@@ -71,6 +71,7 @@ from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
 )
+from openhcs.core.axes import AxisFamily
 
 
 class PlateStreamingService:
@@ -417,8 +418,8 @@ class PlateStreamingService:
             first_components = planes.component_metadata[0]
             projection = SourcePlaneProjection(
                 address=OpenHCSPlaneAddress(
-                    (component, first_components[component.value])
-                    for component in AllComponents
+                    (component, first_components[component.name])
+                    for component in AxisFamily.active().axes
                 ),
                 ref=source_ref,
                 source_metadata=first_components,

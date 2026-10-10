@@ -2,7 +2,6 @@ from types import MappingProxyType
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_image_provenance import SourceImageIdentity
@@ -21,6 +20,8 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerAssignmentPlan,
     WorkerLaneExecutionContext,
 )
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity():
@@ -44,13 +45,13 @@ def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity()
         assert lane.owned_wells == tuple(assignments.worker_assignments[slot])
         provider = StreamExecutionAxisDomainProvider.build_for_component(
             context=context,
-            component=StreamExecutionAxisDomainProvider.axis_component,
+            component=AxisFamily.active().partition_axis().name,
             metadata_roots=(),
         )
         domains.append(provider.domain_metadata_items())
     assert domains[0] == domains[1]
     assert {
-        item[StreamExecutionAxisDomainProvider.axis_component] for item in domains[0]
+        item[AxisFamily.active().partition_axis().name] for item in domains[0]
     } == {
         "R02C05",
         "R04C04",
@@ -63,7 +64,7 @@ def test_streaming_domain_requires_bound_execution():
     with pytest.raises(RuntimeError, match="execution_runtime"):
         StreamExecutionAxisDomainProvider.build_for_component(
             context=ProcessingContext(),
-            component=StreamExecutionAxisDomainProvider.axis_component,
+            component=AxisFamily.active().partition_axis().name,
             metadata_roots=(),
         )
 
@@ -244,13 +245,13 @@ def test_collapsed_contributors_do_not_restore_a_stream_pixel_axis():
 
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
-@pytest.mark.parametrize("component", tuple(AllComponents))
+@pytest.mark.parametrize("component", AxisFamily.active().axes)
 def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
     axis, component
 ):
     metadata = _plane_metadata(
         axis,
-        ({component.value: "1"}, {component.value: "2"}),
+        ({component.name: "1"}, {component.name: "2"}),
     )
 
     fields = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
@@ -258,7 +259,7 @@ def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
     )
 
     assert fields["plane_axis"] == axis.value
-    assert fields["plane_component_values"] == {component.value: ("1", "2")}
+    assert fields["plane_component_values"] == {component.name: ("1", "2")}
     assert (
         metadata.retained_plane_component_values() == fields["plane_component_values"]
     )
@@ -269,7 +270,7 @@ def test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain():
 
     assert metadata.retained_plane_component_values() == {}
     wire = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-        metadata, (AllComponents.CHANNEL,)
+        metadata, (Microscopy.Channel,)
     )
     assert "plane_axis" not in wire
     assert "plane_component_values" not in wire
@@ -281,7 +282,7 @@ def test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain():
     )
 
 
-@pytest.mark.parametrize("storage_components", [(), (AllComponents.CHANNEL,)])
+@pytest.mark.parametrize("storage_components", [(), (Microscopy.Channel,)])
 def test_retained_plane_domain_rejects_multiple_varying_components(storage_components):
     metadata = _plane_metadata(
         RuntimePlaneAxis.SOURCE_BINDING,
@@ -301,7 +302,7 @@ def test_singleton_plane_projection_remains_exactly_compiler_owned():
     )
 
     assert StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-        metadata, (AllComponents.SITE,)
+        metadata, (Microscopy.Site,)
     )["plane_component_values"] == {"site": ("3",)}
     with pytest.raises(ValueError, match="exactly one exact component"):
         StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
@@ -317,5 +318,5 @@ def test_singleton_plane_projection_rejects_ambiguous_compiler_components():
 
     with pytest.raises(ValueError, match="exactly one"):
         StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-            metadata, (AllComponents.SITE, AllComponents.CHANNEL)
+            metadata, (Microscopy.Site, Microscopy.Channel)
         )

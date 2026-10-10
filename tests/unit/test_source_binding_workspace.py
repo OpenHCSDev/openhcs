@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import tifffile
 
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
@@ -61,6 +61,8 @@ from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.virtual_workspace_metadata import component_metadata_field
 
 
 def test_transient_axis_views_observe_each_new_projection_without_reusing_released_ids():
@@ -156,8 +158,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache, source_bindings=config,
     ).projection_or_empty()
-    assert set(selected.component_values(AllComponents.SITE)) == set(map(str, expected_sites))
-    assert set(selected.component_values(AllComponents.CHANNEL)) == {"1", "2"}
+    assert set(selected.component_values(Microscopy.Site)) == set(map(str, expected_sites))
+    assert set(selected.component_values(Microscopy.Channel)) == {"1", "2"}
     assert len(selected.pipeline_start_files()) == len(expected_sites) * 2
     for path in selected.pipeline_start_files():
         lookup = VirtualWorkspacePathLookup.from_paths(path, path)
@@ -202,7 +204,7 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     ))
     changed = context.runtime_source_workspace_projection_authority
     assert changed is not prior_authority
-    assert changed.projection_or_empty().component_values(AllComponents.SITE) == ("8",)
+    assert changed.projection_or_empty().component_values(Microscopy.Site) == ("8",)
     handler._source_bindings_config = replace(config, source_filters=())
     assert context.runtime_source_workspace_projection_authority.projection_or_empty() is full
     handler._source_bindings_config = replace(config, source_filters=(
@@ -225,9 +227,9 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         ),
     ).initialize()
     assert orchestrator.source_workspace_files() == selected.pipeline_start_files()
-    assert set(orchestrator.get_component_keys(AllComponents.SITE)) == set(map(str, expected_sites))
-    assert orchestrator.get_component_keys(AllComponents.SITE, [str(expected_sites[0])]) == [str(expected_sites[0])]
-    assert orchestrator.get_component_keys(AllComponents.SITE, ["99"]) == []
+    assert set(orchestrator.get_component_keys(Microscopy.Site)) == set(map(str, expected_sites))
+    assert orchestrator.get_component_keys(Microscopy.Site, [str(expected_sites[0])]) == [str(expected_sites[0])]
+    assert orchestrator.get_component_keys(Microscopy.Site, ["99"]) == []
     from tests.unit.test_completed_output_publication_lifecycle import _facts
     context.record_completed_step_outputs(_facts(workspace))
     with_output = VirtualWorkspaceSourceProjectionAuthority.from_context(context).projection_or_empty()
@@ -399,11 +401,11 @@ def test_source_workspace_excludes_non_pixel_sidecars_before_projection(tmp_path
             bindings=(
                 NamedSourceBinding(
                     alias="Blue",
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 NamedSourceBinding(
                     alias="Green",
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
                 ),
             ),
         ),
@@ -454,7 +456,7 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
                                 value="nuclei_",
                             ),
                         ),
-                        components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                        components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
                 ),
                 NamedSourceBinding(
@@ -467,7 +469,7 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
                                 value="membrane_",
                             ),
                         ),
-                        components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                        components=(ComponentSelector(Microscopy.Channel, "2"),),
                     ),
                 ),
             ),
@@ -484,13 +486,13 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
         projection.source_alias: projection for projection in projection_set.projections
     }
 
-    assert by_alias["nuclei"].address.value_for(AllComponents.WELL) == "A01"
-    assert by_alias["nuclei"].address.value_for(AllComponents.SITE) == "1"
-    assert by_alias["nuclei"].address.value_for(AllComponents.CHANNEL) == "1"
+    assert by_alias["nuclei"].address.value_for(Microscopy.Well) == "A01"
+    assert by_alias["nuclei"].address.value_for(Microscopy.Site) == "1"
+    assert by_alias["nuclei"].address.value_for(Microscopy.Channel) == "1"
     assert by_alias["nuclei"].ref.backend_address == "raw/nuclei_A01_s1.png"
-    assert by_alias["membrane"].address.value_for(AllComponents.WELL) == "A01"
-    assert by_alias["membrane"].address.value_for(AllComponents.SITE) == "1"
-    assert by_alias["membrane"].address.value_for(AllComponents.CHANNEL) == "2"
+    assert by_alias["membrane"].address.value_for(Microscopy.Well) == "A01"
+    assert by_alias["membrane"].address.value_for(Microscopy.Site) == "1"
+    assert by_alias["membrane"].address.value_for(Microscopy.Channel) == "2"
     assert by_alias["membrane"].ref.backend_address == "raw/membrane_A01_s1.png"
 
     metadata = projection_set.metadata_dict(
@@ -542,10 +544,10 @@ def test_source_binding_workspace_projects_semantic_identity_after_raw_selection
                 NamedSourceBinding(
                     alias="DNA",
                     selector=SourceSelector(
-                        components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                        components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
                     component_identity=(
-                        ComponentSelector(AllComponents.CHANNEL, "MCP_DNA"),
+                        ComponentSelector(Microscopy.Channel, "MCP_DNA"),
                     ),
                 ),
             ),
@@ -559,11 +561,11 @@ def test_source_binding_workspace_projects_semantic_identity_after_raw_selection
         filemanager=_filemanager(),
     ).projections
 
-    assert projection.address.value_for(AllComponents.CHANNEL) == "MCP_DNA"
+    assert projection.address.value_for(Microscopy.Channel) == "MCP_DNA"
     original_metadata = dict(
         SourceMetadataFields.original_items(projection.source_metadata)
     )
-    assert original_metadata[AllComponents.CHANNEL.value] == "1"
+    assert original_metadata[Microscopy.Channel.name] == "1"
 
 
 def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
@@ -585,7 +587,7 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
                     ),
                 ),
             ),
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+            component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
 
     projector = SourceBindingWorkspaceProjector(
@@ -619,13 +621,13 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
 
     assert {
         (
-            projection.address.value_for(AllComponents.WELL),
-            projection.address.value_for(AllComponents.SITE),
+            projection.address.value_for(Microscopy.Well),
+            projection.address.value_for(Microscopy.Site),
         )
         for projection in projection_set.projections
     } == {("B02", "3")}
-    assert metadata[FIELDS.WELLS] == {"B02": None}
-    assert metadata[FIELDS.CHANNELS] == {"1": "DNA", "2": "RNA"}
+    assert metadata[component_metadata_field(Microscopy.Well)] == {"B02": None}
+    assert metadata[component_metadata_field(Microscopy.Channel)] == {"1": "DNA", "2": "RNA"}
 
 
 def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):
@@ -662,7 +664,7 @@ def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):
                             ),
                         ),
                     ),
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
             ),
             match_plan=SourceBindingMatchPlan(
@@ -681,11 +683,11 @@ def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):
 
     assert {
         (
-            projection.address.value_for(AllComponents.WELL),
-            projection.address.value_for(AllComponents.SITE),
-            projection.address.value_for(AllComponents.CHANNEL),
-            projection.address.value_for(AllComponents.Z_INDEX),
-            projection.address.value_for(AllComponents.TIMEPOINT),
+            projection.address.value_for(Microscopy.Well),
+            projection.address.value_for(Microscopy.Site),
+            projection.address.value_for(Microscopy.Channel),
+            projection.address.value_for(Microscopy.ZIndex),
+            projection.address.value_for(Microscopy.Timepoint),
         )
         for projection in projection_set.projections
     } == {
@@ -730,7 +732,7 @@ def test_source_binding_workspace_projects_registered_well_parts(tmp_path):
     )
 
     assert {
-        projection.address.value_for(AllComponents.WELL)
+        projection.address.value_for(Microscopy.Well)
         for projection in projection_set.projections
     } == {
         "A01",
@@ -758,7 +760,7 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
             bindings=(
                 NamedSourceBinding(
                     alias="OrigColor",
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
             ),
             match_plan=SourceBindingMatchPlan(
@@ -865,12 +867,12 @@ def test_source_binding_workspace_projector_order_matches_aliases(tmp_path):
         projection.source_alias: projection for projection in projection_set.projections
     }
 
-    assert by_alias["DAPI"].address.value_for(AllComponents.WELL) == "A01"
-    assert by_alias["DAPI"].address.value_for(AllComponents.SITE) == "1"
-    assert by_alias["DAPI"].address.value_for(AllComponents.CHANNEL) == "1"
-    assert by_alias["Actin"].address.value_for(AllComponents.WELL) == "A01"
-    assert by_alias["Actin"].address.value_for(AllComponents.SITE) == "1"
-    assert by_alias["Actin"].address.value_for(AllComponents.CHANNEL) == "2"
+    assert by_alias["DAPI"].address.value_for(Microscopy.Well) == "A01"
+    assert by_alias["DAPI"].address.value_for(Microscopy.Site) == "1"
+    assert by_alias["DAPI"].address.value_for(Microscopy.Channel) == "1"
+    assert by_alias["Actin"].address.value_for(Microscopy.Well) == "A01"
+    assert by_alias["Actin"].address.value_for(Microscopy.Site) == "1"
+    assert by_alias["Actin"].address.value_for(Microscopy.Channel) == "2"
 
 
 def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
@@ -922,7 +924,7 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
                         ),
                     ),
                 ),
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="Actin",
@@ -935,7 +937,7 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
                         ),
                     ),
                 ),
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         ),
         match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
@@ -989,7 +991,7 @@ def test_order_source_sets_preserve_shared_virtual_stack_coordinates(tmp_path):
                             ),
                         ),
                     ),
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 NamedSourceBinding(
                     alias="Membrane",
@@ -1002,11 +1004,11 @@ def test_order_source_sets_preserve_shared_virtual_stack_coordinates(tmp_path):
                             ),
                         ),
                     ),
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
                 ),
             ),
             match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
-            source_stack_components=(AllComponents.Z_INDEX,),
+            source_stack_components=(Microscopy.ZIndex,),
         )
     ).projection_set(
         tmp_path,
@@ -1015,7 +1017,7 @@ def test_order_source_sets_preserve_shared_virtual_stack_coordinates(tmp_path):
     )
 
     assert tuple(
-        (projection.source_alias, projection.address.value_for(AllComponents.Z_INDEX))
+        (projection.source_alias, projection.address.value_for(Microscopy.ZIndex))
         for projection in projection_set.projections
     ) == (
         ("DNA", "1"),
@@ -1180,7 +1182,7 @@ def test_imported_metadata_later_stage_overrides_extracted_field(tmp_path):
 
     assert metadata["Plate"] == "plate_1"
     assert metadata["Dose"] == "0"
-    assert projection.address.value_for(AllComponents.WELL) == "A01"
+    assert projection.address.value_for(Microscopy.Well) == "A01"
     original = dict(SourceMetadataFields.original_items(metadata))
     assert original["Plate"] == "plate_1"
     assert original["Well"] == "A01"
@@ -1614,17 +1616,17 @@ def test_source_binding_workspace_projector_expands_declared_source_stack(tmp_pa
                 NamedSourceBinding(
                     alias="Nuclei",
                     selector=SourceSelector(
-                        components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                        components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
                 ),
             ),
             match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
-            source_stack_components=(AllComponents.Z_INDEX,),
+            source_stack_components=(Microscopy.ZIndex,),
         )
     ).projection_set(tmp_path, (stack,), filemanager=_filemanager())
 
     assert tuple(
-        projection.address.value_for(AllComponents.Z_INDEX)
+        projection.address.value_for(Microscopy.ZIndex)
         for projection in projection_set.projections
     ) == ("1", "2", "3")
     assert tuple(
@@ -1667,7 +1669,7 @@ def test_order_source_sets_pair_expanded_stack_planes_across_aliases(tmp_path):
                 ),
             ),
             match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
-            source_stack_components=(AllComponents.Z_INDEX,),
+            source_stack_components=(Microscopy.ZIndex,),
         )
     ).projection_set(
         tmp_path,
@@ -1678,7 +1680,7 @@ def test_order_source_sets_pair_expanded_stack_planes_across_aliases(tmp_path):
     assert tuple(
         (
             projection.source_alias,
-            projection.address.value_for(AllComponents.Z_INDEX),
+            projection.address.value_for(Microscopy.ZIndex),
             projection.ref.source_axis_indices,
         )
         for projection in projection_set.projections
@@ -1800,7 +1802,7 @@ def test_source_binding_workspace_broadcasts_explicit_single_members(tmp_path):
     )
     assert len(flatfield_projections) == 2
     assert {
-        projection.address.value_for(AllComponents.SITE)
+        projection.address.value_for(Microscopy.Site)
         for projection in flatfield_projections
     } == {
         "1",
@@ -1883,7 +1885,7 @@ def test_metadata_source_sets_reuse_declared_partial_match_members(tmp_path):
         projection.ref.backend_address for projection in illumination_projections
     } == {"plate_illum.tif"}
     assert {
-        projection.address.value_for(AllComponents.SITE)
+        projection.address.value_for(Microscopy.Site)
         for projection in illumination_projections
     } == {
         "1",

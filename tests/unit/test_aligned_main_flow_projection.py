@@ -8,7 +8,6 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
@@ -34,6 +33,7 @@ from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
 )
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class _CompiledInputRequest:
@@ -174,7 +174,7 @@ def _compiled_image_output(
         artifact_type=spec.artifact_type,
         relations=spec.relations,
         group_keys=(channel,),
-        group_component=(None if channel is None else AllComponents.CHANNEL),
+        group_component=(None if channel is None else Microscopy.Channel),
     )
 
 

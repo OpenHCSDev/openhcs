@@ -63,7 +63,8 @@ Neither durable store can load unchanged: both name the deleted classes. Owner d
 
 `tests/unit/test_axis_family_guards.py`:
 - No module under `openhcs/`, `benchmark/` (excluding recorded `benchmark/results/`), `scripts/` or `tests/` names `AllComponents`, `VariableComponents`, `SequentialComponents`, `StreamingComponents`, `GroupBy`, `get_openhcs_config`, `_ComponentTemplate`, `ComponentConfiguration`, `MULTIPROCESSING_AXIS`, `DEFAULT_GROUP_BY` or `DEFAULT_VARIABLE_COMPONENTS`.
-- No kernel module (outside the domain modules listed in the test) imports `openhcs.domains.microscopy` or names a member class of the microscopy family.
+- No kernel module (outside the domain modules listed in the test) imports `openhcs.domains` or names the microscopy family or one of its member classes.
+- Axis-name string literals are not guarded yet: 24 remain in kernel modules, each owned by a later surface (Handoff).
 
 ## Tests
 
@@ -74,6 +75,21 @@ Neither durable store can load unchanged: both name the deleted classes. Owner d
 ## New-case experiments
 
 Today a second domain needs edits to `framework.py`, `constants.py`, `config.py` (two dataclasses, ten fields), five strategy classes and every member reference, and still fails at import. After: one `AxisFamily` subclass and one `activate()` call.
+
+## Handoff (recorded for later surfaces)
+
+Member references left in domain modules (allowed; P moves these packages under `openhcs/domains/`), for **G2/G4**: `microscopes/bioformats_adapter.py` 30, `opera_phenix.py` 25, `imagexpress.py` 14, `omero.py` 9, `openhcs.py` 5, `microscope_base.py` 4; `processing/presets/` 34 across 9 files; `demo/` 9; `mcp/installed_demo.py` 11.
+
+Role resolutions that assume one axis per role (`family.one(role)`), to generalise:
+- **G4:** `source_tile_geometry.py` (tile, colour); `pos_gen/acquisition_positions.py` (tile); `consolidate_analysis_results.py` (partition); `SourceComponentProjectionStrategy` leaves keyed by role still carry microscopy metadata aliases (`"wellrow"`, `"zplane"`, the `"A01"` default) and must become per-axis declarations.
+- **G5:** CellProfiler image names map to `one(ColourAxis)`, "Process as 3D" to `one(StackAxis)` (`processing/backends/cellprofiler/infrastructure.py`).
+- **G3:** stack handling in `source_projection.py`, `source_image_provenance.py`, `roi_point_metadata.py` uses `one(StackAxis)`.
+
+Axis-name string literals left in kernel modules (24, from 49 at head): source metadata aliases (G4), Fiji/NGFF spellings that are external contracts (`FijiDimensionMode.CHANNEL`, NGFF `"channel"`), MCP plate DTO and dev-client rosters (`agent/dto/plate.py`, `mcp/dev_client_commands/plate.py`: G8), `formats/experimental_*` (G8), progress vocabulary (G7).
+
+Viewer display configs carry one mode field per role; G6 turns them into slot families. The image browser plate grid uses the partition axis; G8 separates a grid role from the partition role. The debug JSON switches (`debug_views.py`, `debug_view_models.py`) gained an axis case beside their enum case; K6 merges them onto `to_jsonable`.
+
+Decision G1-Q1 (owner): saved pipelines and config documents written before G1 are rewritten by `tools/cutover/g1_axis_family.py` (verified on files written by pre-G1 `main`); the tool is deleted once the owner has migrated.
 
 ## Done when
 

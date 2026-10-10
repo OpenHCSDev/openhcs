@@ -15,7 +15,8 @@ from typing import TYPE_CHECKING, Annotated, ClassVar, Tuple, cast
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
-from openhcs.constants.constants import GroupBy, MemoryType, VariableComponents
+from openhcs.core.axes import ColourAxis, TileAxis
+from openhcs.constants.constants import MemoryType
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadExecutionMode,
@@ -43,7 +44,7 @@ from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
     composed_image_payload,
     object_label_input_execution_mode,
-    required_variable_components,
+    required_axis_roles,
     resolved_callable_parameter,
     runtime_bound_parameters,
     special_inputs,
@@ -533,7 +534,7 @@ class MeasureColocalizationModule(
     validated = True
     aliases = ("MeasureCorrelation",)
     function_variants = ("measure_colocalization_objects",)
-    group_by = GroupBy.SITE
+    group_by_role = TileAxis
     confidence = 1.0
     measurement_category_prefixes = (
         ("correlation",),
@@ -2542,7 +2543,7 @@ def _colocalization_unit_interval_scale(
     return int(first_scale)
 
 
-@required_variable_components(VariableComponents.CHANNEL)
+@required_axis_roles(ColourAxis)
 @composed_image_payload
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.FLEXIBLE)
@@ -2805,7 +2806,7 @@ def _measure_colocalization_objects_core(
     )
 
 
-@required_variable_components(VariableComponents.CHANNEL)
+@required_axis_roles(ColourAxis)
 @composed_image_payload
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @special_inputs("labels")

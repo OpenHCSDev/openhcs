@@ -18,7 +18,7 @@ from zmqruntime.execution.responses import (
 from zmqruntime.messages import MessageFields
 
 from openhcs.constants import Microscope
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
@@ -64,6 +64,8 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerOrchestratorCodePayload,
 )
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 LIVE_ZMQ_ENV = "OPENHCS_RUN_SOURCE_STORE_ZMQ_ACCEPTANCE"
 REQUIRE_FORMAT_FIXTURES_ENV = "OPENHCS_REQUIRE_SOURCE_STORE_FORMAT_FIXTURES"
@@ -285,17 +287,17 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
     records = tuple(record for _path, record in records_by_alias.values())
 
     assert set(records_by_alias) == set(stores)
-    assert {record.address.value_for(AllComponents.WELL) for record in records} == {
+    assert {record.address.value_for(Microscopy.Well) for record in records} == {
         "A01",
         "mask.png",
         "plain.tif",
     }
     assert {
         (
-            record.address.value_for(AllComponents.SITE),
-            record.address.value_for(AllComponents.CHANNEL),
-            record.address.value_for(AllComponents.Z_INDEX),
-            record.address.value_for(AllComponents.TIMEPOINT),
+            record.address.value_for(Microscopy.Site),
+            record.address.value_for(Microscopy.Channel),
+            record.address.value_for(Microscopy.ZIndex),
+            record.address.value_for(Microscopy.Timepoint),
         )
         for record in records
     } == {("1", "1", "1", "1")}
@@ -306,13 +308,13 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
     assert len({record.ref.backend_address for record in records}) == len(records)
     assert {
         component: set(orchestrator.get_component_keys(component))
-        for component in AllComponents
+        for component in AxisFamily.active().axes
     } == {
-        AllComponents.WELL: {"A01", "mask.png", "plain.tif"},
-        AllComponents.SITE: {"1"},
-        AllComponents.CHANNEL: {"1"},
-        AllComponents.Z_INDEX: {"1"},
-        AllComponents.TIMEPOINT: {"1"},
+        Microscopy.Well: {"A01", "mask.png", "plain.tif"},
+        Microscopy.Site: {"1"},
+        Microscopy.Channel: {"1"},
+        Microscopy.ZIndex: {"1"},
+        Microscopy.Timepoint: {"1"},
     }
     for alias, (source_path, pixels) in stores.items():
         virtual_path, record = records_by_alias[alias]

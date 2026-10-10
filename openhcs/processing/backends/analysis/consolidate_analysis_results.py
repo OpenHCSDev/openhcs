@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
-from openhcs.constants.constants import AllComponents
+from openhcs.core.axes import AxisFamily
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
@@ -167,7 +167,7 @@ class FilenameParserWellResolver(AnalysisWellResolver):
         parsed = self.filename_parser.parse_filename(filename)
         if parsed is None:
             return None
-        value = parsed.value_for(AllComponents.WELL)
+        value = parsed.value_for(AxisFamily.active().partition_axis())
         if value is None:
             return None
         return str(value)

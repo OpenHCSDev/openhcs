@@ -13,12 +13,12 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 from typing import ClassVar, Dict, Mapping, Optional, TYPE_CHECKING, Tuple, Union
-from openhcs.constants.constants import Backend, AllComponents
+from openhcs.constants.constants import Backend
 from openhcs.core.components.parser_metaprogramming import (
     FilenameParseResult,
     GenericFilenameParser,
 )
-from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.components.component_values import AxisValues
 from openhcs.core.source_metadata import (
     SourceMetadataValue,
     SourceVoxelSpacing,
@@ -32,6 +32,8 @@ from polystore.streaming.viewer_transport import (
 )
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.core.axes import Axis, AxisFamily
+
 
 if TYPE_CHECKING:
     from openhcs.core.source_projection import SourcePlaneDataset, SourceProjection
@@ -89,10 +91,10 @@ class MetadataComponentValueSet:
     def __init__(
         self,
         component_values: Iterable[
-            tuple[AllComponents, MetadataComponentValuesInput | None]
+            tuple[type[Axis], MetadataComponentValuesInput | None]
         ],
     ) -> None:
-        self._component_values = OpenHCSComponentValues(
+        self._component_values = AxisValues(
             (
                 (
                     component,
@@ -106,12 +108,12 @@ class MetadataComponentValueSet:
     def from_partial(
         cls,
         component_values: Iterable[
-            tuple[AllComponents, MetadataComponentValuesInput | None]
+            tuple[type[Axis], MetadataComponentValuesInput | None]
         ],
     ) -> "MetadataComponentValueSet":
         """Fill undeclared metadata axes with an explicit unavailable value."""
 
-        partial = OpenHCSComponentValues.from_partial(
+        partial = AxisValues.from_partial(
             component_values,
             missing_value=None,
         )
@@ -119,13 +121,13 @@ class MetadataComponentValueSet:
 
     def component_values(
         self,
-    ) -> tuple[tuple[AllComponents, MetadataComponentValues | None], ...]:
+    ) -> tuple[tuple[type[Axis], MetadataComponentValues | None], ...]:
         """Return component metadata in the order declared by OpenHCS axes."""
         return self._component_values.declared_values()
 
     def values_for(
         self,
-        component: AllComponents,
+        component: type[Axis],
     ) -> MetadataComponentValues | None:
         """Return metadata values for one OpenHCS component declaration."""
         return self._component_values.value_for(component)
@@ -306,9 +308,7 @@ class FilenameParser(
     """
     Abstract base class for parsing microscopy image filenames.
 
-    This class now uses the metaprogramming system to generate component-specific
-    methods dynamically based on the VariableComponents enum, eliminating hardcoded
-    component assumptions.
+    Parsers bind filename values to the axes of the active axis family.
     """
 
     # Registry configuration for AutoRegisterMeta
@@ -316,7 +316,7 @@ class FilenameParser(
     __registry_name__ = "filename parser"  # Human-readable name for logging
 
     def __init__(self):
-        """Initialize the parser with AllComponents enum."""
+        """Initialize the parser over the active axis family."""
         self.pattern_format: str | None = None
         super().__init__()
 
@@ -415,16 +415,16 @@ class MicroscopeImagePathParser(ABC):
 
     def image_path_components(
         self, path: Path
-    ) -> tuple[tuple[AllComponents, int], ...]:
+    ) -> tuple[tuple[type[Axis], int], ...]:
         """Identity terminus for cooperative acquisition-coordinate capabilities."""
         return ()
 
     @staticmethod
     def indexed_folder_components(
         path: Path,
-        component: AllComponents,
+        component: type[Axis],
         pattern: re.Pattern[str],
-    ) -> tuple[tuple[AllComponents, int], ...]:
+    ) -> tuple[tuple[type[Axis], int], ...]:
         """Project a declared folder grammar onto an existing nominal component."""
         return tuple(
             (component, int(match.group(1)))
@@ -648,7 +648,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         """Project display values at the viewer's string-keyed boundary."""
 
         values = self.component_value_set(plate_path).values_for(
-            AllComponents(component_name)
+            AxisFamily.active().named(component_name)
         )
         return None if values is None else dict(values)
 
@@ -687,7 +687,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         component_values = self.component_value_set(plate_path)
         for component, values in component_values.component_values():
             if values:
-                result[component.value] = dict(values)
+                result[component.name] = dict(values)
         return result
 
     def build_metadata_view_document(

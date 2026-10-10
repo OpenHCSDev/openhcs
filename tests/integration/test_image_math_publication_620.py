@@ -12,7 +12,7 @@ import tifffile
 from openhcs.agent.services.execution_session_service import (
     AgentProgressQueue, CompileInspectionInput, InProcessCompileInspectionGateway,
 )
-from openhcs.constants import GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig, LazyNapariStreamingConfig, LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -27,6 +27,7 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("rgb", (False, True))
@@ -46,7 +47,7 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
     config = replace(
         imported, microscope=Microscope.SOURCE_BINDINGS,
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.Z_INDEX], group_by=GroupBy.CHANNEL),
+            variable_components=[Microscopy.ZIndex], group_by=Microscopy.Channel),
         path_planning_config=LazyPathPlanningConfig(global_output_folder=tmp_path / 'results'),
         source_bindings_config=replace(imported.source_bindings_config,
             metadata_rules=(MetadataExtractionRule(source=MetadataSource.FILE_NAME,

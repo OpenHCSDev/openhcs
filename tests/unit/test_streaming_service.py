@@ -22,7 +22,7 @@ from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
 from zmqruntime.viewer_protocol import ViewerBatchWireField, ViewerWireField
 from zmqruntime.viewer_state import ViewerStateManager
 
-from openhcs.constants.constants import AllComponents
+from openhcs.core.axes import AxisFamily
 from openhcs.core.artifacts import ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
@@ -92,6 +92,7 @@ from openhcs.processing.materialization import (
     PointROIOptions,
     materialize,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class FakeFileManager:
@@ -161,11 +162,11 @@ class FakeMetadataHandler:
 
 def filename_parse_result(*, channel: int = 1) -> FilenameParseResult:
     values = {
-        AllComponents.WELL: "A01",
-        AllComponents.SITE: 1,
-        AllComponents.CHANNEL: channel,
-        AllComponents.Z_INDEX: 1,
-        AllComponents.TIMEPOINT: 1,
+        Microscopy.Well: "A01",
+        Microscopy.Site: 1,
+        Microscopy.Channel: channel,
+        Microscopy.ZIndex: 1,
+        Microscopy.Timepoint: 1,
     }
     return FilenameParseResult(values.items(), extension=".tif")
 
@@ -241,7 +242,7 @@ def test_all_streaming_ports_read_declared_registry_fields(config) -> None:
 def test_streaming_config_component_modes_apply_display_defaults() -> None:
     assert NapariStreamingConfig().component_modes() == {
         component: NapariDimensionMode.STACK.value
-        for component in NapariStreamingConfig.COMPONENT_ORDER
+        for component in AxisFamily.active().names()
     }
     assert FijiStreamingConfig().component_modes() == {
         "site": FijiDimensionMode.FRAME.value,
@@ -260,7 +261,7 @@ def test_napari_dimension_modes_distinguish_layers_from_slices() -> None:
     assert NapariDimensionMode.LAYER.value == "layer"
     assert (
         NapariStreamingConfig(
-            site_mode=NapariDimensionMode.LAYER,
+            tile_mode=NapariDimensionMode.LAYER,
         ).component_modes()["site"]
         == "layer"
     )
@@ -688,7 +689,7 @@ def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
             "A49",
             component=None,
             value=None,
-            fixed_component_values=(("z_index", "1"), ("timepoint", "1")),
+            fixed_component_values=((Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")),
         ),
     )
     workspace_projection = VirtualWorkspaceSourceProjection(

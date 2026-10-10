@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import ClassVar
 
 from polystore import (
+    OMEROAddressComponent,
     OMEROPlaneAddress,
     OMEROPlaneFilenameTemplate,
     OMEROWellAddress,
@@ -18,7 +19,7 @@ from polystore import (
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
 
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.microscopes.microscope_base import (
     MicroscopeHandler,
     MicroscopeSourceSelectionRole,
@@ -29,6 +30,7 @@ from openhcs.microscopes.microscope_interfaces import (
     MetadataComponentValueSet,
     MetadataHandler,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)
 
@@ -126,14 +128,14 @@ class OMEROMetadataHandler(MetadataHandler):
 
         metadata = MetadataComponentValueSet.from_partial(
             (
-                (AllComponents.CHANNEL, all_channels),
-                (AllComponents.WELL, all_wells),
+                (Microscopy.Channel, all_channels),
+                (Microscopy.Well, all_wells),
                 (
-                    AllComponents.Z_INDEX,
+                    Microscopy.ZIndex,
                     {str(z + 1): f"Z{z + 1}" for z in range(max_z)},
                 ),
                 (
-                    AllComponents.TIMEPOINT,
+                    Microscopy.Timepoint,
                     {str(t + 1): f"T{t + 1}" for t in range(max_t)},
                 ),
             )
@@ -288,6 +290,16 @@ class OMEROMetadataHandler(MetadataHandler):
         return [Path(f).name for f in virtual_files]
 
 
+OMERO_ADDRESS_AXES = (
+    (OMEROAddressComponent.WELL, Microscopy.Well),
+    (OMEROAddressComponent.SITE, Microscopy.Site),
+    (OMEROAddressComponent.CHANNEL, Microscopy.Channel),
+    (OMEROAddressComponent.Z_INDEX, Microscopy.ZIndex),
+    (OMEROAddressComponent.TIMEPOINT, Microscopy.Timepoint),
+)
+"""PolyStore's OMERO address components bound to the microscopy axes."""
+
+
 class OMEROFilenameParser(FilenameParser):
     """
     Parser for OMERO virtual filenames.
@@ -310,8 +322,9 @@ class OMEROFilenameParser(FilenameParser):
         template = OMEROPlaneFilenameTemplate.from_filename(filename)
         if template is None:
             return None
-        return FilenameParseResult.from_projection(
-            template.projected_values(),
+        values = dict(template.projected_values())
+        return FilenameParseResult(
+            ((axis, values[component]) for component, axis in OMERO_ADDRESS_AXES),
             extension=template.extension,
         )
 
@@ -321,10 +334,14 @@ class OMEROFilenameParser(FilenameParser):
 
         OMERO always generates complete filenames with all components.
         """
-        return OMEROPlaneFilenameTemplate.from_member_projection(
-            components.declared_values(),
+        return OMEROPlaneFilenameTemplate(
+            (
+                (component, components.value_for(axis))
+                for component, axis in OMERO_ADDRESS_AXES
+            ),
             extension=components.extension,
         ).filename()
+
 
     def extract_component_coordinates(self, component_value: str) -> tuple[str, str]:
         """Extract coordinates from well identifier (e.g., 'A01' → ('A', '01'))."""

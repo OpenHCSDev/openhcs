@@ -36,7 +36,7 @@ from benchmark.contracts.tool_adapter import (
     ToolNotInstalledError,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
-from openhcs.constants import AllComponents, Backend
+from openhcs.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
 from openhcs.core.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
@@ -55,6 +55,7 @@ from openhcs.interop.cellprofiler.pipeline_import import (
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.cellprofiler.infrastructure import MetadataModule
+from openhcs.domains.microscopy.axes import Microscopy
 
 PYTHONHASHSEED_ENV = "PYTHONHASHSEED"
 DETERMINISTIC_PYTHONHASHSEED = "0"
@@ -439,7 +440,7 @@ class NativeCellProfilerSelectedSourceUniverse:
             raise ValueError(
                 f"Cannot parse source-binding virtual filename {virtual_path!r}."
             )
-        return str(parsed.required_value(AllComponents.WELL))
+        return str(parsed.required_value(Microscopy.Well))
 
     @staticmethod
     def _workspace_source_path(

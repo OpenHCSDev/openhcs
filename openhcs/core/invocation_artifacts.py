@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.constants.constants import GroupBy
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts import (
@@ -20,6 +19,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
+from openhcs.core.axes import GroupingDeclaration, Ungrouped, is_grouping_declaration
 
 _ClaimValue = TypeVar("_ClaimValue")
 
@@ -68,7 +68,7 @@ class ArtifactDeclarationStepContext:
     step_name: str | None = None
     step_index: int | None = None
     source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS
-    group_by: GroupBy = GroupBy.NONE
+    group_by: type[GroupingDeclaration] = Ungrouped
     input_source: InputSource = InputSource.PREVIOUS_STEP
     available_artifacts: ArtifactSpecCollection = field(
         default_factory=lambda: ArtifactSpecCollection(())
@@ -99,10 +99,11 @@ class ArtifactDeclarationStepContext:
                 "ArtifactDeclarationStepContext.source_bindings must be "
                 f"StepSourceBindingsConfig, got {type(self.source_bindings).__name__}."
             )
-        if not isinstance(self.group_by, GroupBy):
+        if not is_grouping_declaration(self.group_by):
             raise TypeError(
-                "ArtifactDeclarationStepContext.group_by must be GroupBy, got "
-                f"{type(self.group_by).__name__}."
+                "ArtifactDeclarationStepContext.group_by must be an axis or "
+                f"Ungrouped, got {self.group_by!r}."
+
             )
         if not isinstance(self.input_source, InputSource):
             raise TypeError(
@@ -216,7 +217,7 @@ class ArtifactDeclarationStepContext:
         self,
         *,
         source_bindings: StepSourceBindingsConfig,
-        group_by: GroupBy,
+        group_by: type[GroupingDeclaration],
         input_source: InputSource,
         source_groups: tuple[str | None, ...] = (),
     ) -> "ArtifactDeclarationStepContext":

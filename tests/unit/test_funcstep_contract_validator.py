@@ -5,8 +5,6 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.constants import GroupBy, VariableComponents
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputProjectionPlan,
     ArtifactInputPlan,
@@ -38,10 +36,10 @@ from openhcs.core.pipeline.funcstep_contract_validator import (
     FuncStepContractValidator,
 )
 from openhcs.core.pipeline.function_contracts import (
-    allowed_group_by,
+    allowed_group_by_roles,
     artifact_inputs,
     require_variable_component_stack,
-    required_variable_components,
+    required_axis_roles,
 )
 from openhcs.core.config import LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -52,6 +50,16 @@ from openhcs.processing.backends.assemblers.assemble_stack_cpu import (
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
+from openhcs.core.axes import (
+    Axis,
+    ColourAxis,
+    GroupingDeclaration,
+    TileAxis,
+    TimeAxis,
+    Ungrouped,
+)
+
+from openhcs.domains.microscopy.axes import Microscopy
 
 _TRANSPORTED_FLEXIBLE_CALL_SHAPES: list[tuple[int, ...]] = []
 
@@ -155,8 +163,8 @@ def _compiled_semantic_step_plan(
     pattern: FunctionPatternSyntax,
     *,
     provider: InvocationContractProvider,
-    variable_components: tuple[VariableComponents, ...] = (),
-    group_by: GroupBy = GroupBy.NONE,
+    variable_components: tuple[type[Axis], ...] = (),
+    group_by: type[GroupingDeclaration] = Ungrouped,
 ) -> CompiledStepPlan:
     return CompiledStepPlan(
         step_index=0,
@@ -246,12 +254,12 @@ def test_validate_raw_function_pattern_rejects_invalid_execution_memory():
 def test_normalized_group_by_resolves_non_grouped_variable_component_conflict():
     assert (
         FuncStepContractValidator.normalized_group_by(
-            GroupBy.CHANNEL,
-            (VariableComponents.CHANNEL,),
+            Microscopy.Channel,
+            (Microscopy.Channel,),
             "step",
             normalize_function_pattern(_function()),
         )
-        is GroupBy.NONE
+        is Ungrouped
     )
 
 
@@ -260,13 +268,13 @@ def test_normalized_group_by_rejects_grouped_variable_component_conflict():
         ValueError,
         match=(
             r"Step 'step' has invalid processing_config: "
-            r"group_by=CHANNEL cannot also appear in "
-            r"variable_components=\('CHANNEL',\)"
+            r"group_by=channel cannot also appear in "
+            r"variable_components=\('channel',\)"
         ),
     ):
         FuncStepContractValidator.normalized_group_by(
-            GroupBy.CHANNEL,
-            (VariableComponents.CHANNEL,),
+            Microscopy.Channel,
+            (Microscopy.Channel,),
             "step",
             normalize_function_pattern({"1": _function()}),
         )
@@ -279,41 +287,43 @@ def test_validate_funcstep_rejects_dict_pattern_groupby_none():
     step = FunctionStep(
         func={"1": func},
         name="dict-none",
-        processing_config=LazyProcessingConfig(group_by=GroupBy.NONE),
+        processing_config=LazyProcessingConfig(group_by=Ungrouped),
     )
 
     with pytest.raises(
         ValueError,
-        match="Dict pattern requires a concrete group_by component",
+        match="Dict pattern requires a concrete group_by axis",
     ):
         FuncStepContractValidator.validate_funcstep(
             step, orchestrator=SimpleNamespace()
         )
 
 
-def test_validate_required_variable_components_allows_declared_axis():
-    @required_variable_components(VariableComponents.TIMEPOINT)
+def test_validate_required_axis_roles_allows_axis_with_declared_role():
+    @required_axis_roles(TimeAxis)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
-    FuncStepContractValidator.validate_required_variable_components(
-        (VariableComponents.TIMEPOINT,),
+    FuncStepContractValidator.validate_required_axis_roles(
+        (Microscopy.Timepoint,),
         (contract,),
         "track",
     )
 
 
-def test_validate_required_variable_components_rejects_missing_callable_axis():
-    @required_variable_components(VariableComponents.TIMEPOINT)
+def test_validate_required_axis_roles_rejects_missing_role():
+    @required_axis_roles(TimeAxis)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
-    with pytest.raises(ValueError, match="requires variable_components TIMEPOINT"):
-        FuncStepContractValidator.validate_required_variable_components(
+    with pytest.raises(
+        ValueError, match=r"requires variable_components with role TimeAxis \(timepoint\)"
+    ):
+        FuncStepContractValidator.validate_required_axis_roles(
             (),
             (contract,),
             "track",
@@ -339,7 +349,7 @@ def test_validate_processing_contract_allows_pure_3d_with_variable_axis():
         return image
 
     FuncStepContractValidator.validate_processing_contract_variable_components(
-        (VariableComponents.Z_INDEX,),
+        (Microscopy.ZIndex,),
         tuple(_compiled_pattern(full_stack).iter_invocations()),
         "full_stack",
     )
@@ -423,7 +433,7 @@ def test_validate_processing_contract_chain_rejects_stack_consumer_after_collaps
         ),
     ):
         FuncStepContractValidator.validate_processing_contract_chain(
-            (VariableComponents.SITE,),
+            (Microscopy.Site,),
             tuple(group.invocations for group in pattern.groups),
             "ordered_chain",
         )
@@ -440,7 +450,7 @@ def test_validate_processing_contract_chain_rejects_assembly_before_stack_normal
         ),
     ):
         FuncStepContractValidator.validate_processing_contract_chain(
-            (VariableComponents.SITE,),
+            (Microscopy.Site,),
             tuple(group.invocations for group in pattern.groups),
             "normalize_and_stitch",
         )
@@ -460,7 +470,7 @@ def test_validate_processing_contract_chain_allows_slice_consumer_after_collapse
     )
 
     FuncStepContractValidator.validate_processing_contract_chain(
-        (VariableComponents.SITE,),
+        (Microscopy.Site,),
         tuple(group.invocations for group in pattern.groups),
         "ordered_chain",
     )
@@ -482,7 +492,7 @@ def test_compiled_step_rejects_stack_consumer_after_prior_axis_collapse():
         axis_id="A01",
         input_memory_type="numpy",
         output_memory_type="numpy",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         compiled_function_pattern=_compiled_pattern(pattern),
     )
 
@@ -547,44 +557,50 @@ def test_validate_declared_stack_requirement_rejects_without_variable_axis():
         )
 
 
-def test_validate_allowed_group_by_accepts_declared_group_by():
-    @allowed_group_by(GroupBy.NONE)
+def test_validate_allowed_group_by_accepts_axis_with_declared_role():
+    @allowed_group_by_roles(ColourAxis)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
     FuncStepContractValidator.validate_allowed_group_by(
-        GroupBy.NONE,
+        Microscopy.Channel,
         (contract,),
         "cellprofiler",
     )
 
 
-def test_validate_allowed_group_by_treats_none_as_groupby_none():
-    @allowed_group_by(GroupBy.NONE)
+def test_validate_allowed_group_by_rejects_absent_grouping_when_roles_declared():
+    @allowed_group_by_roles(ColourAxis)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
-    FuncStepContractValidator.validate_allowed_group_by(
-        None,
-        (contract,),
-        "cellprofiler",
-    )
+    for absent in (None, Ungrouped):
+        with pytest.raises(
+            ValueError, match="allows group_by axes with role ColourAxis; resolved none"
+        ):
+            FuncStepContractValidator.validate_allowed_group_by(
+                absent,
+                (contract,),
+                "cellprofiler",
+            )
 
 
-def test_validate_allowed_group_by_rejects_forbidden_fanout():
-    @allowed_group_by(GroupBy.NONE)
+def test_validate_allowed_group_by_rejects_axis_without_declared_role():
+    @allowed_group_by_roles(ColourAxis)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
-    with pytest.raises(ValueError, match="allows group_by NONE; resolved CHANNEL"):
+    with pytest.raises(
+        ValueError, match="allows group_by axes with role ColourAxis; resolved site"
+    ):
         FuncStepContractValidator.validate_allowed_group_by(
-            GroupBy.CHANNEL,
+            Microscopy.Site,
             (contract,),
             "cellprofiler",
         )
@@ -597,16 +613,18 @@ def test_compiled_group_rejects_enriched_allowed_group_by_before_runtime():
     provider = _MetadataTransformProvider(
         lambda metadata: replace(
             metadata,
-            allowed_group_by=(GroupBy.SITE,),
+            allowed_group_by_roles=(TileAxis,),
         )
     )
     step_plan = _compiled_semantic_step_plan(
         {"1": first, "2": second},
         provider=provider,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
     )
 
-    with pytest.raises(ValueError, match="allows group_by SITE; resolved CHANNEL"):
+    with pytest.raises(
+        ValueError, match="allows group_by axes with role TileAxis; resolved channel"
+    ):
         FuncStepContractValidator.validate_compiled_step_plan(step_plan)
 
     assert runtime_calls == []
@@ -644,7 +662,7 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
             path=f"/memory/{name}.pkl",
             artifact_type=ImageArtifactType,
             group_keys=(key,),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={
                 key: f"/memory/{name}.pkl",
             },
@@ -657,11 +675,11 @@ def test_compiled_step_accepts_exact_input_edges_across_scheduler_scope():
         step_name="combine",
         axis_id="A01",
         variable_components=(),
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         artifact_inputs=input_plans,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=_compiled_pattern_with_exact_input_edges(
             combine,
@@ -690,7 +708,7 @@ def test_compiled_dict_branches_accept_their_exact_input_scopes():
             path=f"/memory/{name}.pkl",
             artifact_type=ImageArtifactType,
             group_keys=(key,),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={key: f"/memory/{name}.pkl"},
         )
         for name, key in (("left", "1"), ("right", "2"))
@@ -701,11 +719,11 @@ def test_compiled_dict_branches_accept_their_exact_input_scopes():
         step_name="branch",
         axis_id="A01",
         variable_components=(),
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         artifact_inputs=input_plans,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=_compiled_pattern_with_exact_input_edges(
             pattern,
@@ -723,14 +741,14 @@ def test_compiled_group_allows_distinct_enriched_callables_for_resolved_config()
     provider = _MetadataTransformProvider(
         lambda metadata: replace(
             metadata,
-            allowed_group_by=(GroupBy.CHANNEL,),
+            allowed_group_by_roles=(ColourAxis,),
             processing_contract=ProcessingContract.PURE_2D,
         )
     )
     step_plan = _compiled_semantic_step_plan(
         {"1": first, "2": second},
         provider=provider,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
     )
 
     FuncStepContractValidator.validate_compiled_step_plan(step_plan)
@@ -738,8 +756,8 @@ def test_compiled_group_allows_distinct_enriched_callables_for_resolved_config()
     assert runtime_calls == []
 
 
-def test_validate_funcstep_enforces_required_variable_components():
-    @required_variable_components(VariableComponents.TIMEPOINT)
+def test_validate_funcstep_enforces_required_axis_roles():
+    @required_axis_roles(TimeAxis)
     def process(image):
         return image
 
@@ -750,9 +768,9 @@ def test_validate_funcstep_enforces_required_variable_components():
         name="TrackObjects",
         processing_config=LazyProcessingConfig(
             variable_components=[],
-            group_by=GroupBy.NONE,
+            group_by=Ungrouped,
         ),
     )
 
-    with pytest.raises(ValueError, match="requires variable_components TIMEPOINT"):
+    with pytest.raises(ValueError, match="requires variable_components with role TimeAxis"):
         FuncStepContractValidator.validate_funcstep(step)

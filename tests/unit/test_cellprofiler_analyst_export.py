@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     ArtifactOutputPlan,
@@ -100,6 +99,7 @@ from openhcs.processing.backends.cellprofiler.export_to_database import (
 )
 from openhcs.processing.materialization import FileBundleOptions
 from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.domains.microscopy.axes import Microscopy
 
 AXIS_ID = "A01_s1"
 RUNTIME_IMAGE_FIELD = MeasurementRowAxisField.SLICE_INDEX.value
@@ -678,7 +678,7 @@ def test_projection_adds_common_typed_source_provenance_to_image_rows() -> None:
         input_specs=(dna, rna, measurements),
         records_by_axis={AXIS_ID: store.values()},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
 
@@ -858,13 +858,13 @@ def _borrowed_source_export_fixture(
         sources.extend(
             (
                 SourcePlaneProjection(
-                    address=OpenHCSPlaneAddress.from_values("A01", site, 1, 1, 1),
+                    address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
                     ref=SourcePixelRef("disk", str(original)),
                     source_alias="DNA",
                     source_metadata=metadata,
                 ),
                 SourceArtifactProjection(
-                    address=OpenHCSPlaneAddress.from_values("A01", site, 2, 1, 1),
+                    address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
                     ref=SourcePixelRef(
                         "disk", str(calibration), (site - 1,) if embedded_tiff else ()
                     ),
@@ -944,7 +944,7 @@ def _borrowed_source_export_fixture(
         ),
         records_by_axis={"A01": store.values()},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
         source_binding_plan=plan,
     )
@@ -1132,7 +1132,7 @@ def test_measurement_provenance_projects_exact_named_contributors_by_site(
         ),
         records_by_axis={AXIS_ID: store.values()},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
     channels = tuple(

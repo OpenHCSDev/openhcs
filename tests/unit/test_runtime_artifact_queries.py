@@ -5,7 +5,6 @@ import weakref
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactType,
@@ -75,6 +74,7 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.domains.microscopy.axes import Microscopy
 
 AXIS_ID = "A01"
 
@@ -1750,7 +1750,7 @@ def _record_native(
             path=f"/memory/{native_value.name}.pkl",
             artifact_type=kind,
             group_keys=(group_key,) if group_key is not None else (),
-            group_component=(AllComponents.CHANNEL if group_key is not None else None),
+            group_component=(Microscopy.Channel if group_key is not None else None),
         ),
         native_value,
         axis_id=AXIS_ID,

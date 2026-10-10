@@ -14,10 +14,9 @@ from urllib.parse import quote
 
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ArtifactType, ImageArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.components.component_values import AxisValues
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
@@ -43,6 +42,7 @@ from openhcs.core.source_metadata import (
     source_metadata_scalar,
 )
 from openhcs.serialization.json import to_jsonable
+from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, StackAxis, TileAxis
 
 
 class SourceDatasetConflictError(ValueError):
@@ -61,61 +61,37 @@ class SourceDatasetDiagnostic(ABC):
 class OpenHCSPlaneAddress:
     """Canonical OpenHCS logical address for one image plane."""
 
-    _components: OpenHCSComponentValues[str]
+    _components: AxisValues[str]
 
     def __init__(
         self,
-        component_values: Iterable[tuple[AllComponents, object]],
+        component_values: Iterable[tuple[type[Axis], object]],
     ) -> None:
-        components = OpenHCSComponentValues(component_values)
-        normalized_values: list[tuple[AllComponents, str]] = []
+        components = AxisValues(component_values)
+        normalized_values: list[tuple[type[Axis], str]] = []
         for component, value in components.items():
             if value is None or value == "":
                 raise ValueError(
-                    f"{component.value} cannot be empty in an OpenHCS plane address."
+                    f"{component.name} cannot be empty in an OpenHCS plane address."
                 )
-            normalized = str(value)
-            if component is not AllComponents.WELL and normalized.isdecimal():
-                normalized = str(int(normalized))
-            normalized_values.append((component, normalized))
+            normalized_values.append((component, component.normalize_value(value)))
         object.__setattr__(
-            self, "_components", OpenHCSComponentValues(normalized_values)
+            self, "_components", AxisValues(normalized_values)
         )
 
-    @classmethod
-    def from_values(
-        cls,
-        well: object,
-        site: object,
-        channel: object,
-        z_index: object,
-        timepoint: object,
-    ) -> "OpenHCSPlaneAddress":
-        """Bind one plane emitted by an API with named native coordinates."""
-
-        return cls(
-            (
-                (AllComponents.WELL, well),
-                (AllComponents.SITE, site),
-                (AllComponents.CHANNEL, channel),
-                (AllComponents.Z_INDEX, z_index),
-                (AllComponents.TIMEPOINT, timepoint),
-            )
-        )
-
-    def component_values(self) -> OpenHCSComponentValues[str]:
-        """Return address values keyed by OpenHCS component enum."""
+    def component_values(self) -> AxisValues[str]:
+        """Return address values keyed by declared axis."""
 
         return self._components
 
-    def value_for(self, component: AllComponents) -> str:
+    def value_for(self, component: type[Axis]) -> str:
         """Return one logical coordinate through its nominal declaration."""
 
         return self._components.value_for(component)
 
     def with_value(
         self,
-        component: AllComponents,
+        component: type[Axis],
         value: object,
     ) -> "OpenHCSPlaneAddress":
         """Return an address with one declared coordinate replaced."""
@@ -139,7 +115,7 @@ class OpenHCSPlaneAddress:
 
     def parsed_component_values(
         self,
-    ) -> tuple[tuple[AllComponents, str | int], ...]:
+    ) -> tuple[tuple[type[Axis], str | int], ...]:
         """Project canonical identities onto parsed filename scalar values."""
 
         return tuple(
@@ -171,7 +147,7 @@ class OpenHCSPlaneAddress:
     @classmethod
     def from_component_values(
         cls,
-        component_values: Iterable[tuple[AllComponents, object]],
+        component_values: Iterable[tuple[type[Axis], object]],
     ) -> "OpenHCSPlaneAddress":
         """Create an address from nominal OpenHCS component values."""
 
@@ -191,48 +167,44 @@ class OpenHCSPlaneAddress:
                 component,
                 source_component_metadata_raw_value(metadata, component),
             )
-            for component in AllComponents
+            for component in AxisFamily.active().axes
         )
         if any(value is None for _component, value in component_values):
             return None
         return cls(component_values)
 
-    _filename_pattern: ClassVar[re.Pattern[str]] = re.compile(
-        r"^(?P<well>[^_]+)_s(?P<site>[^_]+)_w(?P<channel>[^_]+)"
-        r"_z(?P<z_index>[^_]+)_t(?P<timepoint>[^_.]+)"
-        r"(?:_[^.]*)?(?P<extension>(?:\.\w+)+)$"
-    )
+    def filename(self, extension: str = ".tif") -> str:
+        """Spell this address as an OpenHCS plane filename.
 
-    def filename(
-        self,
-        extension: str = ".tif",
-        site_padding: int = 3,
-        z_padding: int = 3,
-        timepoint_padding: int = 3,
-    ) -> str:
+        The partition value leads; each variable axis follows in declaration
+        order as its declared filename token.
+        """
+
+        family = AxisFamily.active()
         return (
-            f"{self.value_for(AllComponents.WELL)}"
-            f"_s{_padded(self.value_for(AllComponents.SITE), site_padding)}"
-            f"_w{self.value_for(AllComponents.CHANNEL)}"
-            f"_z{_padded(self.value_for(AllComponents.Z_INDEX), z_padding)}"
-            f"_t{_padded(self.value_for(AllComponents.TIMEPOINT), timepoint_padding)}"
-            f"{extension}"
+            self.value_for(family.partition_axis())
+            + "".join(
+                f"_{axis.filename_token(self.value_for(axis))}"
+                for axis in family.variable_axes()
+            )
+            + extension
         )
 
     @classmethod
     def from_filename(cls, filename: str) -> "OpenHCSPlaneFilename | None":
-        match = cls._filename_pattern.match(Path(str(filename)).name)
+        family = AxisFamily.active()
+        match = _plane_filename_pattern(family).match(Path(str(filename)).name)
         if match is None:
             return None
-        values = match.groupdict()
+        ordered_axes = (family.partition_axis(), *family.variable_axes())
         return OpenHCSPlaneFilename(
             address=cls.from_component_values(
                 (
-                    (component, _coordinate_value(values[component.value]))
-                    for component in AllComponents
+                    (axis, _coordinate_value(match.group(f"axis{index}")))
+                    for index, axis in enumerate(ordered_axes)
                 )
             ),
-            extension=values["extension"],
+            extension=match.group("extension"),
         )
 
 
@@ -432,7 +404,7 @@ class SourceCandidate:
         projected_values = address.component_values()
         for component, source_value in self.declared_address.component_values().items():
             if source_value != projected_values[component]:
-                labels[component.value] = None
+                labels[component.name] = None
         return MappingProxyType(labels)
 
     def identity_key(self) -> tuple[object, ...]:
@@ -575,9 +547,12 @@ class SourcePlaneDataset:
             self._record_identity(
                 sample_groups,
                 store_identity.sample_group_key,
-                (
-                    address.value_for(AllComponents.WELL),
-                    address.value_for(AllComponents.SITE),
+                tuple(
+                    address.value_for(axis)
+                    for axis in (
+                        *AxisFamily.active().with_role(PartitionAxis),
+                        *AxisFamily.active().with_role(TileAxis),
+                    )
                 ),
                 "sample group",
             )
@@ -644,7 +619,7 @@ class SourceProjection:
 
         return (self.projection_role, self.address)
 
-    def component_value(self, component: AllComponents) -> str | None:
+    def component_value(self, component: type[Axis]) -> str | None:
         """Return one scalar projection coordinate when the projection has one."""
 
         if self.address is None:
@@ -653,7 +628,7 @@ class SourceProjection:
 
     def source_component_values(
         self,
-    ) -> tuple[tuple[AllComponents, str], ...]:
+    ) -> tuple[tuple[type[Axis], str], ...]:
         """Return scalar coordinates represented by this projection."""
 
         if self.address is None:
@@ -856,9 +831,11 @@ class SourceArtifactProjection(SourceProjection):
     def image_plane_cohort_key(
         self, image_set_policy: SourceImageSetIdentityPolicy
     ) -> tuple[object, ...] | None:
-        """Derive an exact scalar Z cohort, or retain this whole image export."""
+        """Derive an exact scalar stack cohort, or retain this whole image export."""
+        stack_axes = AxisFamily.active().with_role(StackAxis)
         if (
-            image_set_policy.is_identity_component(AllComponents.Z_INDEX)
+            not stack_axes
+            or image_set_policy.is_identity_component(stack_axes[0])
             or self.address is None
         ):
             return None
@@ -869,11 +846,11 @@ class SourceArtifactProjection(SourceProjection):
             tuple(
                 (component, value)
                 for component, value in self.source_component_values()
-                if component is not AllComponents.Z_INDEX
+                if component is not stack_axes[0]
             ),
         )
 
-    def component_value(self, component: AllComponents) -> str | None:
+    def component_value(self, component: type[Axis]) -> str | None:
         """Return scalar address or runtime-scope identity for one component."""
 
         value = SourceProjection.component_value(self, component)
@@ -883,7 +860,7 @@ class SourceArtifactProjection(SourceProjection):
 
     def source_component_values(
         self,
-    ) -> tuple[tuple[AllComponents, str], ...]:
+    ) -> tuple[tuple[type[Axis], str], ...]:
         """Return scalar address or runtime execution-scope coordinates."""
 
         values = SourceProjection.source_component_values(self)
@@ -1030,9 +1007,9 @@ class SourceProjectionSet:
                 groups.setdefault(key, []).append(projection)
         ordered_groups = []
         for group in groups.values():
+            stack_axis = AxisFamily.active().one(StackAxis)
             z_indexes = tuple(
-                projection.component_value(AllComponents.Z_INDEX)
-                for projection in group
+                projection.component_value(stack_axis) for projection in group
             )
             if any(value is None or not value.isdecimal() for value in z_indexes):
                 raise ValueError(
@@ -1045,10 +1022,9 @@ class SourceProjectionSet:
                     key=lambda item: item[0],
                 )
             )
-            first_z_index = int(ordered[0].component_value(AllComponents.Z_INDEX))
+            first_z_index = int(ordered[0].component_value(stack_axis))
             if tuple(
-                int(projection.component_value(AllComponents.Z_INDEX))
-                for projection in ordered
+                int(projection.component_value(stack_axis)) for projection in ordered
             ) != tuple(range(first_z_index, first_z_index + len(ordered))):
                 raise ValueError("Exported Z planes must be unique and contiguous.")
             ordered_groups.append(ordered)
@@ -1164,15 +1140,15 @@ class SourceProjectionMetadataSerializer:
         self,
         projection_set: SourceProjectionSet,
         *,
-        labels: Mapping[AllComponents, Mapping[str, str | None] | None] | None = None,
+        labels: Mapping[type[Axis], Mapping[str, str | None] | None] | None = None,
     ) -> dict[str, dict[str, str | None]]:
         """Project inventory keys from typed addresses; labels cannot add keys."""
         metadata = {}
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             values = self._component_values(projection_set, component)
             component_labels = (labels or {}).get(component) or {}
             metadata[
-                SourceComponentProjectionStrategy.for_enum_member(
+                SourceComponentProjectionStrategy.for_axis(
                     component
                 ).metadata_collection_field
             ] = {
@@ -1294,18 +1270,18 @@ class SourceProjectionMetadataSerializer:
     def _component_values(
         self,
         projection_set: SourceProjectionSet,
-        component: AllComponents,
+        component: type[Axis],
     ) -> dict[str, str | None]:
         values: dict[str, str | None] = {}
         for projection in projection_set.projections:
             key = projection.component_value(component)
             if key is None:
                 continue
-            label = projection.component_labels.get(component.value)
+            label = projection.component_labels.get(component.name)
             previous = values.get(key)
             if previous is not None and label is not None and previous != label:
                 raise ValueError(
-                    f"Conflicting label for {component.value}={key!r}: "
+                    f"Conflicting label for {component.name}={key!r}: "
                     f"{previous!r} vs {label!r}."
                 )
             values[key] = label if label is not None else previous
@@ -1330,7 +1306,7 @@ class SourceProjectionMetadataSerializer:
             for field, value in SourceMetadataFields.scalar_items(metadata)
             if (
                 (component := source_metadata_component(field)) is not None
-                and field != component.value
+                and field != component.name
             )
         }
         if source_component_fields:
@@ -1341,7 +1317,7 @@ class SourceProjectionMetadataSerializer:
             )
         original_metadata = dict(SourceMetadataFields.original_items(metadata))
         for component, value in projection.source_component_values():
-            canonical_value = metadata.get(component.value)
+            canonical_value = metadata.get(component.name)
             conflicts_with_address = (
                 canonical_value is not None
                 and not isinstance(canonical_value, Mapping)
@@ -1359,8 +1335,8 @@ class SourceProjectionMetadataSerializer:
                 for source_value in provenance_values
             ):
                 raise ValueError(
-                    f"Source metadata {component.value}={canonical_value!r} conflicts "
-                    f"with canonical {component.value}={value!r}."
+                    f"Source metadata {component.name}={canonical_value!r} conflicts "
+                    f"with canonical {component.name}={value!r}."
                 )
             metadata = with_source_component_metadata(metadata, component, value)
         if projection.source_alias is not None:
@@ -1408,8 +1384,20 @@ def _coordinate_value(value: str) -> str | int:
     return int(value) if value.isdecimal() else value
 
 
-def _padded(value: str, width: int) -> str:
-    return f"{int(value):0{width}d}" if value.isdecimal() else value
+@lru_cache(maxsize=8)
+def _plane_filename_pattern(family: type[AxisFamily]) -> re.Pattern[str]:
+    """Plane filename grammar derived from the family's declared tokens."""
+
+    variable_axes = family.variable_axes()
+    tokens = "".join(
+        f"_{re.escape(axis.filename_prefix or '')}"
+        f"(?P<axis{index}>[^_{'.' if index == len(variable_axes) else ''}]+)"
+        for index, axis in enumerate(variable_axes, start=1)
+    )
+    return re.compile(
+        rf"^(?P<axis0>[^_]+){tokens}(?:_[^.]*)?(?P<extension>(?:\.\w+)+)$"
+    )
+
 
 
 def _normalize_projection(projection: SourceProjection) -> None:

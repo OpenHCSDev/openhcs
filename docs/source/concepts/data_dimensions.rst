@@ -83,12 +83,12 @@ Example
 
 .. code-block:: python
 
-   from openhcs.constants import GroupBy, VariableComponents
    from openhcs.core.config import LazyProcessingConfig, ProcessingConfig
+   from openhcs.domains.microscopy.axes import Microscopy
 
    processing = ProcessingConfig(
-       variable_components=(VariableComponents.SITE,),
-       group_by=GroupBy.CHANNEL,
+       variable_components=(Microscopy.Site,),
+       group_by=Microscopy.Channel,
    )
    step = FunctionStep(
        func={"1": nuclei, "2": neurites},

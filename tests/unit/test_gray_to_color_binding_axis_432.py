@@ -5,7 +5,6 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImagePayloadBundleContext, ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
@@ -35,6 +34,7 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
 from openhcs.processing.backends.cellprofiler.color import GrayToColorModule, gray_to_color
 from test_cellprofiler_generic_special_input_binding import _compile_public_step
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("explicit_selector", [False, True])
@@ -71,7 +71,7 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     source = metadata.payload_with(pixels[None], None)
     runtime = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=RuntimeValueStore(), callable_contract=contract,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
         axis_scope=RuntimeExecutionAxisScope.from_raw("synthetic", component=None, value=None),
         artifact_inputs={edge.key: InvocationArtifactInputEdgePlan.from_source_declarations(
             key=edge.key, spec=edge.spec, main_flow_artifacts=contract.artifact_inputs,

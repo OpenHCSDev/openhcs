@@ -1,13 +1,13 @@
 # Edit this pipeline and save to apply changes
 
 # Automatically collected imports
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.config import LazyNapariStreamingConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
 from openhcs.pyclesperanto import crop, top_hat
+from openhcs.domains.microscopy.axes import Microscopy
 
 # Pipeline steps
 pipeline_steps = []
@@ -25,7 +25,7 @@ step_1 = FunctionStep(
         },
     ),
     name="crop",
-    variable_components=[VariableComponents.CHANNEL],
+    variable_components=[Microscopy.Channel],
 )
 pipeline_steps.append(step_1)
 

@@ -70,7 +70,7 @@ class ArtifactPlanViewRow:
         if self.plan is None:
             return ""
         scope = self.plan.group_scope()
-        component = "" if scope.component is None else scope.component.value
+        component = "" if scope.component is None else scope.component.name
         keys = ", ".join("default" if key is None else key for key in scope.keys)
         return keys if not component else f"{component}: {keys}"
 

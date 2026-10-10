@@ -71,7 +71,6 @@ from pyqt_reactive.widgets.shared.clickable_help_components import (
 from pyqt_reactive.widgets.no_scroll_spinbox import NoScrollComboBox, NoneAwareCheckBox
 from python_introspect import Enableable, is_enableable
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_bindings import (
     ComponentSelector,
     EMPTY_SOURCE_BINDINGS,
@@ -111,6 +110,7 @@ from objectstate.lazy_factory import (
     replace_raw,
     resolve_lazy_configurations_for_serialization,
 )
+from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from pyqt_reactive.forms.parameter_form_manager import ParameterFormManager
@@ -332,7 +332,7 @@ class StructuredSelectorEditorSpec:
     hint: str
     row_parser: SelectorDialogRowParser
     row_formatter: SelectorDialogRowFormatter
-    column_options: Mapping[int, tuple[str, ...]] = field(
+    column_options: Mapping[int, Callable[[], tuple[str, ...]]] = field(
         default_factory=lambda: MappingProxyType({})
     )
 
@@ -354,7 +354,7 @@ STRUCTURED_SELECTOR_EDITOR_SPEC_ITEMS: tuple[StructuredSelectorEditorSpec, ...] 
         row_parser=parse_key_value_dialog_row,
         row_formatter=format_key_value_dialog_row,
         column_options=MappingProxyType(
-            {0: tuple(component.value for component in AllComponents)}
+            {0: lambda: AxisFamily.active().names()}
         ),
     ),
     StructuredSelectorEditorSpec(
@@ -374,8 +374,10 @@ STRUCTURED_SELECTOR_EDITOR_SPEC_ITEMS: tuple[StructuredSelectorEditorSpec, ...] 
         row_formatter=format_filter_dialog_row,
         column_options=MappingProxyType(
             {
-                0: tuple(subject.value for subject in SourceFilterSubject),
-                1: tuple(match_type.value for match_type in SourceFilterMatchType),
+                0: lambda: tuple(subject.value for subject in SourceFilterSubject),
+                1: lambda: tuple(
+                    match_type.value for match_type in SourceFilterMatchType
+                ),
             }
         ),
     ),
@@ -538,8 +540,9 @@ class StructuredSelectorDialog(QDialog):
         self.table.insertRow(row_index)
         for column_index in range(self.table.columnCount()):
             value = "" if column_index >= len(values) else values[column_index] or ""
-            options = self.editor_spec.column_options.get(column_index)
-            if options is not None:
+            options_source = self.editor_spec.column_options.get(column_index)
+            if options_source is not None:
+                options = options_source()
                 combo = NoScrollComboBox(self.table)
                 combo.setEditable(True)
                 combo.addItems(list(options))
@@ -612,7 +615,7 @@ class SourceBindingSuggestionSet:
         )
         return cls(
             component_selectors=tuple(
-                f"{component.value}=" for component in AllComponents
+                f"{name}=" for name in AxisFamily.active().names()
             ),
             metadata_selectors=tuple(f"{field}=" for field in metadata_fields)
             + cls.inventory_metadata_selectors(inventory),
@@ -1614,7 +1617,7 @@ class SelectorListCodec:
         selectors: tuple[ComponentSelector, ...],
     ) -> str:
         return cls.ITEM_SEPARATOR.join(
-            f"{component_selector.component.value}{cls.KEY_VALUE_SEPARATOR}{component_selector.value}"
+            f"{component_selector.component.name}{cls.KEY_VALUE_SEPARATOR}{component_selector.value}"
             for component_selector in selectors
         )
 
@@ -1649,7 +1652,7 @@ class SelectorListCodec:
             key, value = cls.key_value_parts(item)
             selectors.append(
                 ComponentSelector(
-                    component=AllComponents(key),
+                    component=AxisFamily.active().named(key),
                     value=value,
                 )
             )

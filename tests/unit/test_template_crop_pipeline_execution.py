@@ -9,7 +9,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -26,6 +26,7 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
     multi_template_crop_subset,
 )
 from openhcs.processing.backends.processors.numpy_processor import crop
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize(
@@ -62,7 +63,7 @@ def test_template_crop_persists_each_source_channel(
         tifffile.imwrite(image_dir / f"A01_s001_w{channel}_z001_t001.tif", pixels)
 
     processing = LazyProcessingConfig(
-        variable_components=[VariableComponents.CHANNEL], group_by=GroupBy.SITE
+        variable_components=[Microscopy.Channel], group_by=Microscopy.Site
     )
     steps = [
         FunctionStep(

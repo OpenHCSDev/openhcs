@@ -17,7 +17,7 @@ from polystore.streaming.viewer_transport import (
 from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
-from openhcs.constants.constants import AllComponents, Backend, VariableComponents
+from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -104,6 +104,8 @@ from openhcs.processing.materialization import (
     MaterializationSpec,
     MaterializedFilenameIdentity,
 )
+from openhcs.core.axes import Axis, AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -297,7 +299,7 @@ class ParserStub:
             }
         )
         return FilenameParseResult(
-            ((component, metadata.get(component.value)) for component in AllComponents),
+            ((component, metadata.get(component.name)) for component in AxisFamily.active().axes),
             extension=str(metadata["extension"]),
         )
 
@@ -404,7 +406,7 @@ def test_openhcs_metadata_handler_preserves_unknown_layout_for_serialization(
 
 def function_step_plan(
     step_name: str,
-    variable_components: tuple[VariableComponents, ...] = (),
+    variable_components: tuple[type[Axis], ...] = (),
     pipeline_position: int = 3,
 ) -> CompiledStepPlan:
     return CompiledStepPlan(
@@ -434,7 +436,7 @@ def record_output_path(
     assert metadata is not None
     output_identity = identity or FunctionOutputIdentity(
         component_values={
-            str(component.value): value
+            str(component.name): value
             for component, value in metadata.declared_values()
             if value is not None
         },
@@ -879,7 +881,7 @@ def test_stream_outputs_keeps_scalar_records_from_variable_component_step():
     context = context_stub(filemanager)
     plan = function_step_plan(
         "Normalize",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
     record_output_path(context, plan, path)
 
@@ -982,8 +984,8 @@ def test_stream_outputs_projects_volumetric_source_stack_as_z_planes():
             )
             return FilenameParseResult(
                 (
-                    (component, metadata.get(component.value))
-                    for component in AllComponents
+                    (component, metadata.get(component.name))
+                    for component in AxisFamily.active().axes
                 ),
                 extension=str(metadata["extension"]),
             )
@@ -1069,7 +1071,7 @@ def test_stream_outputs_projects_declared_channel_stack_axis():
     context = context_stub(filemanager)
     plan = function_step_plan(
         "CalculateMath",
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     record_output_path(context, plan, path)
 
@@ -1123,7 +1125,7 @@ def test_stream_outputs_projects_stack_planes_with_item_source_paths():
     context = context_stub(filemanager)
     plan = function_step_plan(
         "MeasureColocalization",
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     record_output_path(context, plan, path)
 
@@ -1531,11 +1533,11 @@ def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifac
         {"channel": {"1": "DNA"}}
     )
     context.metadata_cache = {
-        AllComponents.WELL: {"A01": None},
-        AllComponents.SITE: {"1": None},
-        AllComponents.CHANNEL: {"1": "DNA"},
-        AllComponents.Z_INDEX: {"1": None},
-        AllComponents.TIMEPOINT: {"1": None},
+        Microscopy.Well: {"A01": None},
+        Microscopy.Site: {"1": None},
+        Microscopy.Channel: {"1": "DNA"},
+        Microscopy.ZIndex: {"1": None},
+        Microscopy.Timepoint: {"1": None},
     }
     plan = function_step_plan("Segment nuclei")
     plan.output_dir = output_dir
@@ -1573,11 +1575,11 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
         )
     )
     context.metadata_cache = {
-        AllComponents.WELL: {"A01": None},
-        AllComponents.SITE: {"1": None},
-        AllComponents.CHANNEL: {"1": None},
-        AllComponents.Z_INDEX: {"1": None},
-        AllComponents.TIMEPOINT: {"1": None},
+        Microscopy.Well: {"A01": None},
+        Microscopy.Site: {"1": None},
+        Microscopy.Channel: {"1": None},
+        Microscopy.ZIndex: {"1": None},
+        Microscopy.Timepoint: {"1": None},
     }
     plan = function_step_plan("Mosaic")
     plan.output_dir = output_dir
@@ -1717,11 +1719,11 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
             key=SimpleNamespace(
                 scope=RuntimeExecutionAxisScope.from_raw(
                     "A49",
-                    component=AllComponents.SITE,
+                    component=Microscopy.Site,
                     value="1",
                     fixed_component_values=(
-                        (AllComponents.Z_INDEX, "1"),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
                     ),
                 )
             )
@@ -1840,11 +1842,11 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
             key=SimpleNamespace(
                 scope=RuntimeExecutionAxisScope.from_raw(
                     "A49",
-                    component=AllComponents.SITE,
+                    component=Microscopy.Site,
                     value="1",
                     fixed_component_values=(
-                        (AllComponents.Z_INDEX, "1"),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
                     ),
                 )
             )
@@ -1934,7 +1936,7 @@ class _QualifierIgnoringParserStub:
             }
         )
         return FilenameParseResult(
-            ((component, metadata.get(component.value)) for component in AllComponents),
+            ((component, metadata.get(component.name)) for component in AxisFamily.active().axes),
             extension=str(metadata["extension"]),
         )
 
@@ -1969,11 +1971,11 @@ def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
     context.filemanager.save(pixels, str(first), Backend.MEMORY.value)
     context.filemanager.save(pixels, str(second), Backend.MEMORY.value)
     context.metadata_cache = {
-        AllComponents.WELL: {"A01": None},
-        AllComponents.SITE: {"1": None},
-        AllComponents.CHANNEL: {"1": None},
-        AllComponents.Z_INDEX: {"1": None},
-        AllComponents.TIMEPOINT: {"1": None},
+        Microscopy.Well: {"A01": None},
+        Microscopy.Site: {"1": None},
+        Microscopy.Channel: {"1": None},
+        Microscopy.ZIndex: {"1": None},
+        Microscopy.Timepoint: {"1": None},
     }
     plan = function_step_plan("SaveImages")
     plan.output_dir = output_dir
@@ -2043,11 +2045,11 @@ def test_produced_address_publication_never_parses_generated_filenames(
     )
     context = context_stub(filemanager, parser=parser)
     context.metadata_cache = {
-        AllComponents.WELL: {well: None, "not-produced": None},
-        AllComponents.SITE: {"1": None},
-        AllComponents.CHANNEL: {"1": "DNA", "99": "not-produced"},
-        AllComponents.Z_INDEX: {"1": None, "2": None, "3": None, "99": None},
-        AllComponents.TIMEPOINT: {"1": None},
+        Microscopy.Well: {well: None, "not-produced": None},
+        Microscopy.Site: {"1": None},
+        Microscopy.Channel: {"1": "DNA", "99": "not-produced"},
+        Microscopy.ZIndex: {"1": None, "2": None, "3": None, "99": None},
+        Microscopy.Timepoint: {"1": None},
     }
     plan = function_step_plan("typed identity")
     plan.output_dir = output_dir
@@ -2086,7 +2088,7 @@ def test_produced_address_publication_never_parses_generated_filenames(
         parsed = parser.parse_filename(filename)
         assert parsed is not None
         assert parsed.extension == extension
-        assert parsed.value_for(AllComponents.WELL) == well
+        assert parsed.value_for(Microscopy.Well) == well
         path = output_dir / filename
         tifffile.imwrite(path, pixels)
         filemanager.save(
@@ -2177,13 +2179,13 @@ def test_produced_stacked_dotted_identity_keeps_declared_extension(
             np.zeros((3, 4, 5), dtype=np.uint16), None
         ),
         input_path=Path(source_paths[0]).name,
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
     identity = FunctionOutputIdentity.from_request(request)
     assert identity.extension == extension
     assert "z_index" not in identity.component_values
-    assert identity.filename_address.value_for(AllComponents.Z_INDEX) == "3"
-    assert identity.filename_address.value_for(AllComponents.WELL) == well
+    assert identity.filename_address.value_for(Microscopy.ZIndex) == "3"
+    assert identity.filename_address.value_for(Microscopy.Well) == well
     filename = identity.with_filename_qualifier("centre_dots").filename(parser)
     assert filename == f"{well}_s001_w1_z003_t001_centre_dots{extension}"
 
@@ -2216,11 +2218,11 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     filemanager.save(first_pixels, str(first_image), Backend.MEMORY.value)
     owner_context = context_stub(filemanager)
     owner_context.metadata_cache = {
-        AllComponents.WELL: {"A01": None, "B03": None},
-        AllComponents.SITE: {"1": None},
-        AllComponents.CHANNEL: {"1": "DNA"},
-        AllComponents.Z_INDEX: {"1": None},
-        AllComponents.TIMEPOINT: {"1": None},
+        Microscopy.Well: {"A01": None, "B03": None},
+        Microscopy.Site: {"1": None},
+        Microscopy.Channel: {"1": "DNA"},
+        Microscopy.ZIndex: {"1": None},
+        Microscopy.Timepoint: {"1": None},
     }
     owner_plan = function_step_plan("final")
     owner_plan.output_dir = images_dir
@@ -2474,7 +2476,7 @@ def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
         ).entries
         assert set(entries) == {path}
         projection = entries[path]
-        assert projection.component_value(AllComponents.CHANNEL) == "2"
+        assert projection.component_value(Microscopy.Channel) == "2"
         assert projection.source_metadata["site"] == "1"
         np.testing.assert_array_equal(tifffile.imread(tmp_path / path), pixels)
 
@@ -2778,7 +2780,7 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
     manager.save(metadata.payload_with(pixels), str(path), "memory")
     context = context_stub(manager, parser=SourceSchemaFilenameParser())
     plan = function_step_plan(
-        "Volume checkpoint", variable_components=(VariableComponents.Z_INDEX,)
+        "Volume checkpoint", variable_components=(Microscopy.ZIndex,)
     )
     plan.output_dir = output_dir
     plan.output_plate_root = str(plate_root)
@@ -2831,9 +2833,9 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
                     component=None,
                     value=None,
                     fixed_component_values=(
-                        (AllComponents.CHANNEL, "2"),
-                        (AllComponents.SITE, "1"),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.Channel, "2"),
+                        (Microscopy.Site, "1"),
+                        (Microscopy.Timepoint, "1"),
                     ),
                 ),
             ),
@@ -2856,18 +2858,18 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
     assert projection.address is None
     assert projection.source_alias == "DNA"
     assert (
-        projection.execution_scope.value_text_for_component(AllComponents.CHANNEL)
+        projection.execution_scope.value_text_for_component(Microscopy.Channel)
         == "2"
     )
     assert (
-        projection.execution_scope.value_text_for_component(AllComponents.SITE) == "1"
+        projection.execution_scope.value_text_for_component(Microscopy.Site) == "1"
     )
     assert (
-        projection.execution_scope.value_text_for_component(AllComponents.TIMEPOINT)
+        projection.execution_scope.value_text_for_component(Microscopy.Timepoint)
         == "1"
     )
     assert (
-        projection.execution_scope.value_text_for_component(AllComponents.Z_INDEX)
+        projection.execution_scope.value_text_for_component(Microscopy.ZIndex)
         is None
     )
     assert (

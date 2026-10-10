@@ -73,7 +73,7 @@ from zmqruntime.viewer_protocol import (
     ViewerSourceSpatialDomainPayload,
 )
 
-from openhcs.constants import AllComponents
+from openhcs.core.axes import AxisFamily, StackAxis
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor, ViewerWindowLayerRetirementRequest,
 )
@@ -1021,7 +1021,7 @@ class NapariSeparateLayersDisplayStrategy(NapariVariableSizeDisplayStrategy):
         if context.address.stream_layer_data_type is not StreamingDataType.IMAGE:
             return context
 
-        well_component = AllComponents.WELL.value
+        well_component = AxisFamily.active().partition_axis().name
         ViewerComponentCoordinateAuthority.required_value(
             context.address.components,
             well_component,
@@ -1303,11 +1303,11 @@ def _build_nd_points(
             if fractional_z is not None:
                 try:
                     z_axis_index = axis_projection.projected_axis_components.index(
-                        AllComponents.Z_INDEX.value
+                        AxisFamily.active().one(StackAxis).name
                     )
-                except ValueError as exc:
+                except (ValueError, LookupError) as exc:
                     raise ValueError(
-                        "Fractional-Z point ROI requires a projected z_index axis."
+                        "Fractional-Z point ROI requires a projected stack axis."
                     ) from exc
 
             for coordinate_index, coord in enumerate(coordinates):
@@ -2364,7 +2364,6 @@ class NapariPointsLayerDisplayHandler(
         component_axis_semantics: ViewerComponentAxisSemantics,
     ) -> ComponentValues:
         """Keep the represented source span, not just occupied point Z, navigable."""
-        z_component = AllComponents.Z_INDEX.value
         coordinates = tuple(
             (item, fractional_z)
             for item in items
@@ -2375,12 +2374,15 @@ class NapariPointsLayerDisplayHandler(
         )
         if not coordinates:
             return {}
+        stack_axes = AxisFamily.active().with_role(StackAxis)
+        z_component = stack_axes[0].name if stack_axes else None
         if z_component not in component_axis_semantics.layout.components_for_mode(
             ViewerComponentMode.STACK
         ):
             raise ValueError(
-                "Fractional-Z point ROI requires a projected z_index axis."
+                "Fractional-Z point ROI requires a projected stack axis."
             )
+
         domain = component_axis_semantics.required_component_values((z_component,))[
             z_component
         ]

@@ -4,7 +4,6 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import ProcessingConfig
@@ -23,6 +22,8 @@ from openhcs.processing.backends.cellprofiler import (
     straighten_worms,
     track_objects,
 )
+from openhcs.core.axes import Axis, GroupingDeclaration, Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _processing_config(
@@ -41,8 +42,8 @@ def _processing_config(
 
 def test_processing_config_preserves_resolved_input_source() -> None:
     inherited = ProcessingConfig(
-        variable_components=[VariableComponents.CHANNEL],
-        group_by=GroupBy.SITE,
+        variable_components=[Microscopy.Channel],
+        group_by=Microscopy.Site,
         input_source=InputSource.PIPELINE_START,
     )
     config = _processing_config(
@@ -56,40 +57,40 @@ def test_processing_config_preserves_resolved_input_source() -> None:
 @pytest.mark.parametrize(
     ("func", "variable_components", "group_by"),
     (
-        (gray_to_color, [VariableComponents.CHANNEL], GroupBy.SITE),
-        (align, [VariableComponents.CHANNEL], GroupBy.SITE),
+        (gray_to_color, [Microscopy.Channel], Microscopy.Site),
+        (align, [Microscopy.Channel], Microscopy.Site),
         (
             measure_colocalization,
-            [VariableComponents.CHANNEL],
-            GroupBy.SITE,
+            [Microscopy.Channel],
+            Microscopy.Site,
         ),
         (
             measure_colocalization_objects,
-            [VariableComponents.CHANNEL],
-            GroupBy.SITE,
+            [Microscopy.Channel],
+            Microscopy.Site,
         ),
         (
             track_objects,
-            [VariableComponents.TIMEPOINT],
-            GroupBy.CHANNEL,
+            [Microscopy.Timepoint],
+            Microscopy.Channel,
         ),
         (
             straighten_worms,
-            [VariableComponents.CHANNEL],
-            GroupBy.SITE,
+            [Microscopy.Channel],
+            Microscopy.Site,
         ),
     ),
 )
 def test_callable_axes_and_module_import_grouping_lower_to_processing_config(
     func,
-    variable_components: list[VariableComponents],
-    group_by: GroupBy,
+    variable_components: list[type[Axis]],
+    group_by: type[GroupingDeclaration],
 ) -> None:
     config = _processing_config(
         func,
         inherited=ProcessingConfig(
-            variable_components=[VariableComponents.SITE],
-            group_by=GroupBy.CHANNEL,
+            variable_components=[Microscopy.Site],
+            group_by=Microscopy.Channel,
         ),
     )
 
@@ -107,8 +108,8 @@ def test_callable_axes_and_module_import_grouping_lower_to_processing_config(
 )
 def test_generic_stack_consumers_inherit_pipeline_axis(func) -> None:
     inherited = ProcessingConfig(
-        variable_components=[VariableComponents.SITE],
-        group_by=GroupBy.CHANNEL,
+        variable_components=[Microscopy.Site],
+        group_by=Microscopy.Channel,
     )
 
     assert _processing_config(func, inherited=inherited) == inherited
@@ -116,8 +117,8 @@ def test_generic_stack_consumers_inherit_pipeline_axis(func) -> None:
 
 def test_generic_module_inherits_pipeline_processing_config() -> None:
     inherited = ProcessingConfig(
-        variable_components=[VariableComponents.Z_INDEX],
-        group_by=GroupBy.SITE,
+        variable_components=[Microscopy.ZIndex],
+        group_by=Microscopy.Site,
     )
     config = _processing_config(
         relate_objects,
@@ -129,8 +130,8 @@ def test_generic_module_inherits_pipeline_processing_config() -> None:
 
 def test_plate_execution_scope_selects_plate_processing() -> None:
     inherited = ProcessingConfig(
-        variable_components=[VariableComponents.Z_INDEX],
-        group_by=GroupBy.SITE,
+        variable_components=[Microscopy.ZIndex],
+        group_by=Microscopy.Site,
     )
     config = _processing_config(
         export_to_database,
@@ -140,7 +141,7 @@ def test_plate_execution_scope_selects_plate_processing() -> None:
     assert config == replace(
         inherited,
         variable_components=[],
-        group_by=GroupBy.NONE,
+        group_by=Ungrouped,
     )
 
 

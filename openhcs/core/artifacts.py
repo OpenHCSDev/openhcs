@@ -19,9 +19,9 @@ from typing import TYPE_CHECKING, ClassVar, Self, cast
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.axes import Axis, AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
@@ -917,7 +917,7 @@ class ImageArtifactType(ArtifactType):
         if projection.axis_size != 1:
             raise ValueError(
                 f"Group-scoped scalar artifact {output_plan.name!r} for "
-                f"{output_plan.group_component.value!r} cannot retain a declared "
+                f"{output_plan.group_component.name!r} cannot retain a declared "
                 f"runtime-slice axis of size {projection.axis_size}."
             )
         return RuntimeSliceProjection.value_for_slice(
@@ -1447,7 +1447,7 @@ class MeasurementsArtifactType(MeasurementBearingArtifactType):
             return False
         provenance = data.source_provenance
         return bool(
-            provenance.varying_plane_component_values(tuple(AllComponents))
+            provenance.varying_plane_component_values(AxisFamily.active().axes)
             or len(provenance.represented_source_identities) > 1
         )
 
@@ -3340,8 +3340,8 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
     path: str
     artifact_type: type[ArtifactType] = SpecialArtifactType
     group_keys: tuple[str | None, ...] = (None,)
-    group_component: AllComponents | None = None
-    variable_components: tuple[AllComponents, ...] = ()
+    group_component: type[Axis] | None = None
+    variable_components: tuple[type[Axis], ...] = ()
     component_domains: tuple[ComponentGroupScope, ...] = ()
     paths_by_group: Mapping[str | None, str] | None = None
     sidecar_role: ArtifactSidecarRole | None = None
@@ -3378,9 +3378,9 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
         object.__setattr__(
             self,
             "variable_components",
-            ComponentSet.coerce(self.variable_components).as_tuple(),
+            ComponentSet.of(self.variable_components).as_tuple(),
         )
-        normalized_domains: dict[AllComponents, ComponentGroupScope] = {}
+        normalized_domains: dict[type[Axis], ComponentGroupScope] = {}
         for domain in self.component_domains:
             if not isinstance(domain, ComponentGroupScope):
                 raise TypeError(
@@ -3397,7 +3397,7 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
             if existing is not None and existing != canonical_domain:
                 raise ValueError(
                     f"Artifact plan {self.name!r} declares conflicting domains for "
-                    f"component {domain.component.value!r}: {existing!r} and "
+                    f"component {domain.component.name!r}: {existing!r} and "
                     f"{canonical_domain!r}."
                 )
             normalized_domains[domain.component] = canonical_domain
@@ -3409,7 +3409,7 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
         if self.group_component in self.variable_components:
             raise ValueError(
                 f"Artifact plan {self.name!r} cannot group by "
-                f"{self.group_component.value!r} while also retaining it as a "
+                f"{self.group_component.name!r} while also retaining it as a "
                 "variable component."
             )
         self.group_scope()
@@ -3430,7 +3430,7 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
 
     def component_domain(
         self,
-        component: AllComponents,
+        component: type[Axis],
     ) -> ComponentGroupScope | None:
         """Return the compiled domain inherited for one component axis."""
 
@@ -3465,7 +3465,7 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
             scopes_by_component[component]
             for component in sorted(
                 scopes_by_component,
-                key=lambda value: value.value,
+                key=lambda value: value.name,
             )
         )
 
@@ -3911,7 +3911,7 @@ class ArtifactInputProjectionPlan:
     invocation_scope: ComponentGroupScope
     producer_selection_scope: ComponentGroupScope
     component_scopes: tuple[ComponentGroupScope, ...] = ()
-    consumer_variable_components: tuple[AllComponents, ...] = ()
+    consumer_variable_components: tuple[type[Axis], ...] = ()
 
     @staticmethod
     def declared_producer_selection_scope(
@@ -4014,7 +4014,7 @@ class ArtifactInputProjectionPlan:
             ),
         )
 
-        normalized_scopes: dict[AllComponents, ComponentGroupScope] = {}
+        normalized_scopes: dict[type[Axis], ComponentGroupScope] = {}
         for scope in self.component_scopes:
             if not isinstance(scope, ComponentGroupScope):
                 raise TypeError(
@@ -4034,7 +4034,7 @@ class ArtifactInputProjectionPlan:
             if existing is not None and existing != canonical_scope:
                 raise ValueError(
                     "Artifact input projection declares conflicting scopes for "
-                    f"component {scope.component.value!r}: {existing!r} and "
+                    f"component {scope.component.name!r}: {existing!r} and "
                     f"{canonical_scope!r}."
                 )
             normalized_scopes[scope.component] = canonical_scope
@@ -4046,12 +4046,12 @@ class ArtifactInputProjectionPlan:
         object.__setattr__(
             self,
             "consumer_variable_components",
-            ComponentSet.coerce(self.consumer_variable_components).as_tuple(),
+            ComponentSet.of(self.consumer_variable_components).as_tuple(),
         )
 
     def component_scope(
         self,
-        component: AllComponents,
+        component: type[Axis],
     ) -> ComponentGroupScope | None:
         """Return the exact compiled coordinate for one projected component."""
 
@@ -4066,10 +4066,10 @@ class ArtifactInputProjectionPlan:
     ) -> ComponentSet:
         """Return producer stack axes projected out for this consumer invocation."""
 
-        consumer_components = ComponentSet.coerce(self.consumer_variable_components)
+        consumer_components = ComponentSet.of(self.consumer_variable_components)
         if storage_plan.retains_producer_stack(consumer_components):
             return ComponentSet()
-        return ComponentSet.coerce(storage_plan.variable_components)
+        return ComponentSet.of(storage_plan.variable_components)
 
     def validate_storage_plan(self, storage_plan: ArtifactInputPlan) -> None:
         """Require this projection to select within its producer storage plan."""
@@ -4087,7 +4087,7 @@ class ArtifactInputProjectionPlan:
             if selection_scope.component is not producer_scope.component:
                 raise ValueError(
                     f"Artifact input {artifact_ref!r} producer component "
-                    f"{producer_scope.component.value!r} does not match selection "
+                    f"{producer_scope.component.name!r} does not match selection "
                     f"{selection_scope.component!r}."
                 )
             if not selection_scope.is_dynamic:
@@ -4105,14 +4105,14 @@ class ArtifactInputProjectionPlan:
         artifact_ref = storage_plan.ref()
         producer_scope = storage_plan.producer_group_scope()
         selection_scope = self.producer_selection_scope
-        retained_components = ComponentSet.coerce(self.consumer_variable_components)
+        retained_components = ComponentSet.of(self.consumer_variable_components)
         if (
             not producer_scope.is_ungrouped
             and producer_scope.component in retained_components
         ):
             if selection_scope != producer_scope:
                 raise ValueError(
-                    f"Retained producer axis {producer_scope.component.value!r} for "
+                    f"Retained producer axis {producer_scope.component.name!r} for "
                     f"{artifact_ref!r} must select the complete producer scope."
                 )
         elif not producer_scope.is_ungrouped:
@@ -4132,12 +4132,12 @@ class ArtifactInputProjectionPlan:
             if scope is None:
                 raise ValueError(
                     f"Artifact input {artifact_ref!r} projects producer stack "
-                    f"component {component.value!r} without an exact coordinate."
+                    f"component {component.name!r} without an exact coordinate."
                 )
             if not scope.is_dynamic and len(scope.keys) != 1:
                 raise ValueError(
                     f"Artifact input {artifact_ref!r} projection for component "
-                    f"{component.value!r} is not a single exact coordinate: {scope!r}."
+                    f"{component.name!r} is not a single exact coordinate: {scope!r}."
                 )
             if scope.is_dynamic and self.invocation_scope.component is not component:
                 raise ValueError(

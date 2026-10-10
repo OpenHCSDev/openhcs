@@ -19,7 +19,7 @@ from typing import (
 
 import numpy as np
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -145,6 +145,7 @@ from openhcs.core.steps.function_output_identity import (
     FunctionOutputPathRequest,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
 
 logger = logging.getLogger(__name__)
 
@@ -286,7 +287,7 @@ class PatternGroupExecutionScope:
             ).source_provenance.represented_source_image_names
         )
         if represented_names:
-            variable_components = ComponentSet.coerce(
+            variable_components = ComponentSet.of(
                 self.execution_plan.variable_components or ()
             )
             return plan.for_represented_source_stack(
@@ -324,11 +325,10 @@ class PatternGroupExecutionScope:
         return self.main_flow_source_binding_plan
 
     @property
-    def axis_component(self) -> str | None:
+    def axis_component(self) -> type[Axis] | None:
         if self.component_value is None:
             return None
-        component = self.execution_plan.execution_group_scope.component
-        return None if component is None else component.value
+        return self.execution_plan.execution_group_scope.component
 
     @property
     def axis_component_value(self) -> str | None:
@@ -404,14 +404,14 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             payload
         ).source_provenance.with_common_scalar_identity_from_planes()
         common_source_metadata = source_provenance.source_component_metadata or {}
-        variable_components = ComponentSet.coerce(
+        variable_components = ComponentSet.of(
             self.execution_plan.variable_components or ()
         )
         execution_group_component = self.execution_plan.execution_group_scope.component
         fixed_components = tuple(
             component
-            for component in AllComponents
-            if not component.is_multiprocessing_axis()
+            for component in AxisFamily.active().axes
+            if not issubclass(component, PartitionAxis)
             and component is not execution_group_component
             and component not in variable_components
             and source_component_metadata_value(
@@ -635,11 +635,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 request.pattern_group_info,
                 context.filemanager,
                 plan.read_backend,
-                (
-                    [component.value for component in plan.variable_components]
-                    if plan.variable_components
-                    else None
-                ),
+                list(plan.variable_components) if plan.variable_components else None,
                 pattern_cache=context.runtime_pattern_discovery_cache,
             )
         if producer_index is not None and not producer_matching_files:
@@ -811,7 +807,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         if self.main_flow_source_binding_plan.has_primary_content:
             return matching_files
 
-        group_component = self.execution_plan.execution_group_value
+        group_component = self.execution_plan.execution_group_scope.component
         component_value = self.component_value
         if group_component is None or component_value is None:
             return matching_files
@@ -820,7 +816,8 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         filtered = self.context.runtime_pattern_discovery_cache.files_for_component(
             parser,
             matching_files,
-            parser.component_for_name(group_component),
+            group_component,
+
             component_value,
         )
         if not filtered:

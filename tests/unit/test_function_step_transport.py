@@ -16,7 +16,6 @@ from tempfile import TemporaryDirectory
 import pytest
 from zmqruntime.messages import ControlMessageType, MessageFields
 
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
@@ -45,6 +44,7 @@ from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionClient,
     ZMQExecutionRequestBuilder,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _execute_spawned_custom_invocation(
@@ -81,8 +81,8 @@ def _public_step() -> FunctionStep:
         ),
         name="CorrectIlluminationApply",
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.SITE,
+            variable_components=[Microscopy.Channel],
+            group_by=Microscopy.Site,
         ),
     )
 
@@ -317,9 +317,9 @@ def test_transport_preserves_explicit_lazy_processing_defaults() -> None:
     restored = FunctionStepTransportAuthority.pipeline_steps_from_namespace(namespace)
 
     assert restored[0].processing_config.variable_components == [
-        VariableComponents.CHANNEL
+        Microscopy.Channel
     ]
-    assert restored[0].processing_config.group_by is GroupBy.SITE
+    assert restored[0].processing_config.group_by is Microscopy.Site
 
 
 def test_cellprofiler_callable_uses_registered_function_reference() -> None:

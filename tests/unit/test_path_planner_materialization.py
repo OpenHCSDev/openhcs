@@ -6,7 +6,6 @@ from types import SimpleNamespace
 import pytest
 import numpy as np
 
-from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
@@ -117,6 +116,8 @@ from openhcs.core.steps.function_runtime import (
 from openhcs.microscopes.microscope_interfaces import MetadataArtifactProvider
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize
+from openhcs.core.axes import Axis, GroupingDeclaration, Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_outputs=()):
@@ -312,8 +313,8 @@ def _resolved_step(
     is_function_step: bool = True,
     func=None,
     source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
-    group_by: GroupBy = GroupBy.CHANNEL,
-    variable_components: tuple[VariableComponents, ...] = (VariableComponents.SITE,),
+    group_by: type[GroupingDeclaration] = Microscopy.Channel,
+    variable_components: tuple[type[Axis], ...] = (Microscopy.Site,),
     input_source: InputSource = InputSource.PREVIOUS_STEP,
     processing_config: ProcessingConfig | None = None,
     step_materialization_config=None,
@@ -411,7 +412,7 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
     )
 
     assert execution_bindings == CompiledSourceBindingPlan.empty()
-    assert execution_group_scope == PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
+    assert execution_group_scope == PathPlannerGroupScope.dynamic(Microscopy.Channel)
     assert runtime_input_plans == {}
     assert compiled is not None
     (invocation,) = compiled.default_group.invocations
@@ -619,7 +620,7 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
             enabled=True,
             bindings=(NamedSourceBinding(alias="DNA"),),
         ),
-        group_by=GroupBy.NONE,
+        group_by=Ungrouped,
         variable_components=(),
         input_source=InputSource.PIPELINE_START,
     )
@@ -878,7 +879,7 @@ def test_same_name_typed_artifacts_compile_through_producer_and_consumer_plans()
     producer_snapshot = _resolved_step(
         name="produce_shared",
         func=produce_shared,
-        group_by=GroupBy.NONE,
+        group_by=Ungrouped,
         variable_components=(),
         input_source=InputSource.PIPELINE_START,
     )
@@ -944,7 +945,7 @@ def test_same_name_typed_artifacts_compile_through_producer_and_consumer_plans()
     consumer_snapshot = _resolved_step(
         name="consume_shared",
         func=consume_shared,
-        group_by=GroupBy.NONE,
+        group_by=Ungrouped,
         variable_components=(),
     )
     (
@@ -1053,18 +1054,18 @@ def test_artifact_output_plan_only_preserves_explicit_source_stack_scope():
                 name=source.name,
                 path="/memory/source.pkl",
                 artifact_type=source.artifact_type,
-                variable_components=(AllComponents.CHANNEL,),
+                variable_components=(Microscopy.Channel,),
             )
         },
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        variable_components=ComponentSet((AllComponents.CHANNEL,)),
+        variable_components=ComponentSet((Microscopy.Channel,)),
         step_name="transform",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )
 
     assert outputs[output_specs[0].ref()].variable_components == ()
     assert outputs[output_specs[1].ref()].variable_components == (
-        AllComponents.CHANNEL,
+        Microscopy.Channel,
     )
 
 
@@ -1100,12 +1101,12 @@ def test_artifact_output_source_lookup_combines_repeated_main_flow_inputs():
         sid=2,
         artifact_inputs={},
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        variable_components=ComponentSet((AllComponents.Z_INDEX,)),
+        variable_components=ComponentSet((Microscopy.ZIndex,)),
         step_name="watershed",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )
 
-    assert outputs[output.ref()].variable_components == (AllComponents.Z_INDEX,)
+    assert outputs[output.ref()].variable_components == (Microscopy.ZIndex,)
 
 
 @pytest.mark.parametrize("stored_main_flow", [False, True])
@@ -1155,7 +1156,7 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow(
         artifact_inputs=stored_inputs,
         relation_source_scopes={},
         execution_group_scope=PathPlannerGroupScope.ungrouped(),
-        consumer_variable_components=ComponentSet((AllComponents.Z_INDEX,)),
+        consumer_variable_components=ComponentSet((Microscopy.ZIndex,)),
         main_flow_artifacts=ArtifactSpecCollection(source_specs),
     )
 
@@ -1187,8 +1188,8 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     )
 
     processing_config = LazyProcessingConfig(
-        variable_components=[VariableComponents.SITE],
-        group_by=GroupBy.CHANNEL,
+        variable_components=[Microscopy.Site],
+        group_by=Microscopy.Channel,
         input_source=InputSource.PREVIOUS_STEP,
     )
     steps = (
@@ -1237,7 +1238,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     )
     channel_scope = PathPlannerGroupScope.from_raw(
         ("1", "2", "4"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     planner.plans[0] = CompiledStepPlan(
         step_index=0,
@@ -1258,7 +1259,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         planner.artifact_context,
         step_name=steps[1].name,
         step_index=1,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         input_source=InputSource.PREVIOUS_STEP,
     )
     planner.artifact_context = consumer_context
@@ -1299,7 +1300,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         sid=1,
         consumer_scope=execution_scope,
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        variable_components=ComponentSet((AllComponents.SITE,)),
+        variable_components=ComponentSet((Microscopy.Site,)),
         step_name="Threshold",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )
@@ -1317,7 +1318,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         artifact_inputs=compiled_inputs,
         relation_source_scopes={},
         execution_group_scope=execution_scope,
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
         main_flow_artifacts=planner.artifact_context.main_flow_artifacts,
     )
     edge = next(compiled_consumer.iter_invocations()).artifact_input_edges[0]
@@ -1365,16 +1366,16 @@ def test_artifact_output_source_uses_compiled_plan_across_parameter_occurrences(
                 name=measured.name,
                 path="/memory/Cells.pkl",
                 artifact_type=measured.artifact_type,
-                variable_components=(AllComponents.Z_INDEX,),
+                variable_components=(Microscopy.ZIndex,),
             )
         },
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        variable_components=ComponentSet((AllComponents.Z_INDEX,)),
+        variable_components=ComponentSet((Microscopy.ZIndex,)),
         step_name="MeasureObjectNeighbors",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )
 
-    assert outputs[output.ref()].variable_components == (AllComponents.Z_INDEX,)
+    assert outputs[output.ref()].variable_components == (Microscopy.ZIndex,)
     assert outputs[output.ref()].relations == output.relations
 
 
@@ -1417,16 +1418,16 @@ def test_artifact_output_source_lookup_ignores_shared_input_broadcast_projection
             path="/memory/OrigGreen.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("2",),
-            group_component=AllComponents.CHANNEL,
-            variable_components=(AllComponents.SITE,),
+            group_component=Microscopy.Channel,
+            variable_components=(Microscopy.Site,),
         ),
         red.ref(): ArtifactInputPlan(
             name=red.name,
             path="/memory/OrigRed.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("3",),
-            group_component=AllComponents.CHANNEL,
-            variable_components=(AllComponents.SITE,),
+            group_component=Microscopy.Channel,
+            variable_components=(Microscopy.Site,),
         ),
         green_mask.ref(): ArtifactInputPlan(
             name=mask_name,
@@ -1434,8 +1435,8 @@ def test_artifact_output_source_lookup_ignores_shared_input_broadcast_projection
             artifact_type=ImageArtifactType,
             sidecar_role=ArtifactSidecarRole.CROP_MASK,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
-            variable_components=(AllComponents.SITE,),
+            group_component=Microscopy.Channel,
+            variable_components=(Microscopy.Site,),
         ),
     }
 
@@ -1458,7 +1459,7 @@ def test_artifact_output_source_lookup_ignores_shared_input_broadcast_projection
         sid=2,
         artifact_inputs=artifact_inputs,
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        variable_components=ComponentSet((AllComponents.SITE,)),
+        variable_components=ComponentSet((Microscopy.Site,)),
         step_name="Crop",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )
@@ -1491,13 +1492,13 @@ def test_artifact_output_source_lookup_ignores_shared_input_broadcast_projection
         sid=2,
         artifact_inputs=artifact_inputs,
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        variable_components=ComponentSet((AllComponents.SITE,)),
+        variable_components=ComponentSet((Microscopy.Site,)),
         step_name="Crop",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )
 
     assert projected[ambiguous_output.ref()].variable_components == (
-        AllComponents.SITE,
+        Microscopy.Site,
     )
 
 
@@ -1544,7 +1545,7 @@ def test_artifact_lineage_projects_exact_source_binding_component():
         bindings=(
             NamedSourceBinding(
                 alias=source_binding_spec.name,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
     )
@@ -1576,8 +1577,8 @@ def test_artifact_lineage_projects_exact_source_binding_component():
             path="/memory/Stain1.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("1", "2"),
-            group_component=AllComponents.SITE,
-            variable_components=(AllComponents.CHANNEL,),
+            group_component=Microscopy.Site,
+            variable_components=(Microscopy.Channel,),
             paths_by_group={
                 "1": "/memory/Stain1_site_1.pkl",
                 "2": "/memory/Stain1_site_2.pkl",
@@ -1619,22 +1620,22 @@ def test_artifact_lineage_projects_exact_source_binding_component():
 
     expected_channel_scope = ComponentGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     assert maps.group_scope.keys == expected_channel_scope.keys
     assert maps.group_scope.component is expected_channel_scope.component
     assert maps.outputs[object_output.ref()].group_keys == ("1",)
     assert maps.outputs[object_output.ref()].variable_components == (
-        AllComponents.SITE,
+        Microscopy.Site,
     )
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
     assert edge.projection.invocation_scope == expected_channel_scope
-    assert edge.projection.component_scope(AllComponents.CHANNEL) == (
+    assert edge.projection.component_scope(Microscopy.Channel) == (
         expected_channel_scope
     )
     assert edge.projection.producer_selection_scope == ComponentGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.SITE,
+        component=Microscopy.Site,
     )
 
 
@@ -1672,7 +1673,7 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
         bindings=(
             NamedSourceBinding(
                 alias=source.name,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
     )
@@ -1682,20 +1683,20 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
     ).with_source_declarations((source,))
     producer_scope = PathPlannerGroupScope.from_raw(
         ("1",),
-        component=AllComponents.SITE,
+        component=Microscopy.Site,
     )
     relation_scopes = planner.artifacts.relation_source_scopes_by_ref(
         producer_declarations,
         {},
         group_scope=producer_scope,
         source_bindings=source_bindings,
-        group_by=GroupBy.SITE,
+        group_by=Microscopy.Site,
     )
     output_groups = planner.artifacts.output_groups_from_declared_relations(
         producer_declarations,
         group_scope=producer_scope,
         relation_source_scopes=relation_scopes,
-        consumer_variable_components=ComponentSet((AllComponents.CHANNEL,)),
+        consumer_variable_components=ComponentSet((Microscopy.Channel,)),
         step_index=2,
         step_name="produce",
     )
@@ -1706,16 +1707,16 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
         artifact_inputs={},
         relation_source_scopes=relation_scopes,
         source_bindings=source_bindings,
-        variable_components=ComponentSet((AllComponents.CHANNEL,)),
+        variable_components=ComponentSet((Microscopy.Channel,)),
         step_name="produce",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )[output_spec.ref()]
 
     fixed_channel = ComponentGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
-    assert output_plan.component_domain(AllComponents.CHANNEL) == fixed_channel
+    assert output_plan.component_domain(Microscopy.Channel) == fixed_channel
 
     input_spec = output_spec.for_plan_type(ArtifactInputPlan)
 
@@ -1733,14 +1734,14 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
     )
     consumer_scope = PathPlannerGroupScope.from_raw(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     input_plan = planner.artifacts.process_artifact_inputs(
         consumer_declarations,
         3,
         consumer_scope,
         EMPTY_SOURCE_BINDINGS,
-        ComponentSet((AllComponents.SITE,)),
+        ComponentSet((Microscopy.Site,)),
         step_name="consume",
         execution_scope=FunctionStepExecutionScope.AXIS,
     )[input_spec.ref()]
@@ -1749,7 +1750,7 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
         {input_plan.ref(): input_plan},
         group_scope=consumer_scope,
         source_bindings=EMPTY_SOURCE_BINDINGS,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
     )
     compiled = planner.artifacts.compile_invocation_input_edges(
         compile_function_pattern(
@@ -1760,18 +1761,18 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
         artifact_inputs={input_plan.ref(): input_plan},
         relation_source_scopes=consumer_relation_scopes,
         execution_group_scope=consumer_scope,
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
 
-    assert input_plan.component_domain(AllComponents.CHANNEL) == fixed_channel
+    assert input_plan.component_domain(Microscopy.Channel) == fixed_channel
     assert consumer_relation_scopes[input_spec.ref()] == (
         PathPlannerGroupScope.from_raw(
             fixed_channel.keys,
             component=fixed_channel.component,
         )
     )
-    assert edge.projection.component_scope(AllComponents.CHANNEL) == fixed_channel
+    assert edge.projection.component_scope(Microscopy.Channel) == fixed_channel
 
 
 @pytest.mark.parametrize(
@@ -1779,13 +1780,13 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
     (
         (
             "Crop",
-            (AllComponents.SITE,),
-            ((), (AllComponents.SITE,)),
+            (Microscopy.Site,),
+            ((), (Microscopy.Site,)),
         ),
         (
             "Align",
-            (AllComponents.CHANNEL,),
-            ((AllComponents.CHANNEL,), (), ()),
+            (Microscopy.Channel,),
+            ((Microscopy.Channel,), (), ()),
         ),
     ),
     ids=("crop-site-and-scalar-sources", "align-channel-and-scalar-sources"),
@@ -1864,7 +1865,7 @@ def test_group_by_namespaces_compiler_owned_outputs():
 
     scopes = planner.artifacts.output_groups_from_declared_relations(
         namespaced,
-        group_scope=PathPlannerGroupScope.from_raw(("1", "2"), component=AllComponents.CHANNEL),
+        group_scope=PathPlannerGroupScope.from_raw(("1", "2"), component=Microscopy.Channel),
         relation_source_scopes={}, consumer_variable_components=ComponentSet(),
         step_index=0, step_name="identify",
     )
@@ -1917,7 +1918,7 @@ def test_group_by_namespaces_runtime_adapter_artifact_outputs():
     assert declarations.output_groups[output_ref] == {None}
     scopes = planner.artifacts.output_groups_from_declared_relations(
         namespaced,
-        group_scope=PathPlannerGroupScope.from_raw(("1", "2"), component=AllComponents.CHANNEL),
+        group_scope=PathPlannerGroupScope.from_raw(("1", "2"), component=Microscopy.Channel),
         relation_source_scopes={}, consumer_variable_components=ComponentSet(),
         step_index=0, step_name="correct_illumination",
     )
@@ -1933,7 +1934,7 @@ def test_declared_group_lineage_scopes_outputs_without_rewriting_execution():
             path="/memory/Tile_of_grid.pkl",
             artifact_type=ObjectLabelsArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/Tile_of_grid_1.pkl"},
         ),
     )
@@ -1971,7 +1972,7 @@ def test_declared_group_lineage_scopes_outputs_without_rewriting_execution():
         _resolved_step(name="FilterObjects"),
         3,
         declarations,
-        PathPlannerGroupScope.from_raw(("2",), component=AllComponents.CHANNEL),
+        PathPlannerGroupScope.from_raw(("2",), component=Microscopy.Channel),
     )
 
     filtered_tiles_ref = ArtifactSpec.output(
@@ -1984,11 +1985,11 @@ def test_declared_group_lineage_scopes_outputs_without_rewriting_execution():
     ).ref()
     assert maps.outputs[filtered_tiles_ref].group_keys == ("1",)
     assert maps.outputs[measurements_ref].group_keys == ("1",)
-    assert maps.outputs[filtered_tiles_ref].group_component is AllComponents.CHANNEL
-    assert maps.outputs[measurements_ref].group_component is AllComponents.CHANNEL
+    assert maps.outputs[filtered_tiles_ref].group_component is Microscopy.Channel
+    assert maps.outputs[measurements_ref].group_component is Microscopy.Channel
     assert maps.group_scope == PathPlannerGroupScope.from_raw(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -2016,7 +2017,7 @@ def test_declared_group_lineage_uses_main_flow_scope_without_artifact_plan():
     )
     group_scope = PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.SITE,
+        component=Microscopy.Site,
     )
 
     maps = planner.artifacts.compile_plan_maps(
@@ -2035,7 +2036,7 @@ def test_declared_group_lineage_uses_main_flow_scope_without_artifact_plan():
         "1",
         "2",
     )
-    assert maps.outputs[measurements_ref].group_component is AllComponents.SITE
+    assert maps.outputs[measurements_ref].group_component is Microscopy.Site
 
 
 def test_prior_main_flow_artifact_scopes_output_without_rewriting_execution():
@@ -2045,7 +2046,7 @@ def test_prior_main_flow_artifact_scopes_output_without_rewriting_execution():
         path="/memory/CropRed.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("3",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"3": "/memory/CropRed_3.pkl"},
     )
     _record_declared_output(planner, producer)
@@ -2076,14 +2077,14 @@ def test_prior_main_flow_artifact_scopes_output_without_rewriting_execution():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("2", "3"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
     assert maps.inputs == {}
     assert maps.group_scope == PathPlannerGroupScope.from_raw(
         ("2", "3"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     nuclei_ref = ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType).ref()
     assert maps.outputs[nuclei_ref].group_keys == ("3",)
@@ -2118,7 +2119,7 @@ def test_dict_invocation_lineage_uses_its_non_plan_input_group_scope():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
@@ -2138,7 +2139,7 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
             path="/memory/Tile_of_grid.pkl",
             artifact_type=ObjectLabelsArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/Tile_of_grid_1.pkl"},
         ),
     )
@@ -2188,13 +2189,13 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("2",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
     assert maps.group_scope == PathPlannerGroupScope.from_raw(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     measurement_name = "MeasureObjectIntensity_3_measurements"
     measurement_ref = ArtifactSpec.output(
@@ -2221,8 +2222,8 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
     consumer_snapshot = _resolved_step(
         name="FilterObjects",
         func=filter_objects,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
     )
     consumer_maps = planner.artifacts.compile_plan_maps(
         consumer_snapshot,
@@ -2237,7 +2238,7 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
         ),
         PathPlannerGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
     compiled = planner.artifacts.build_step_compiled_function_pattern(
@@ -2255,7 +2256,7 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
     assert edge.projection.producer_selection_scope == ComponentGroupScope(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -2275,8 +2276,8 @@ def test_artifact_managed_lineage_keeps_exact_named_inputs_in_one_invocation():
                 path=f"/memory/{name}.pkl",
                 artifact_type=artifact_type,
                 group_keys=(channel,),
-                group_component=AllComponents.CHANNEL,
-                variable_components=(AllComponents.SITE,),
+                group_component=Microscopy.Channel,
+                variable_components=(Microscopy.Site,),
                 paths_by_group={channel: f"/memory/{name}_{channel}.pkl"},
             ),
         )
@@ -2340,7 +2341,7 @@ def test_artifact_managed_single_source_output_retains_source_group_scope():
             path="/memory/CropBlue.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/CropBlue_1.pkl"},
         ),
     )
@@ -2383,7 +2384,7 @@ def test_artifact_managed_single_source_output_retains_source_group_scope():
     assert maps.group_scope == PathPlannerGroupScope.ungrouped()
     nuclei_ref = ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType).ref()
     assert maps.outputs[nuclei_ref].group_keys == ("1",)
-    assert maps.outputs[nuclei_ref].group_component is AllComponents.CHANNEL
+    assert maps.outputs[nuclei_ref].group_component is Microscopy.Channel
 
 
 def test_declared_group_lineage_unions_compatible_source_groups():
@@ -2395,7 +2396,7 @@ def test_declared_group_lineage_unions_compatible_source_groups():
             path="/memory/OrigStain1.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/OrigStain1_1.pkl"},
         ),
     )
@@ -2406,7 +2407,7 @@ def test_declared_group_lineage_unions_compatible_source_groups():
             path="/memory/OrigStain2.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("2",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"2": "/memory/OrigStain2_2.pkl"},
         ),
     )
@@ -2445,7 +2446,7 @@ def test_declared_group_lineage_unions_compatible_source_groups():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
@@ -2455,18 +2456,18 @@ def test_declared_group_lineage_unions_compatible_source_groups():
     ).ref()
     assert maps.outputs[measurements_ref].group_keys == ("1", "2")
     assert maps.relation_source_scopes[first_ref] == (
-        PathPlannerGroupScope.from_raw(("1",), component=AllComponents.CHANNEL)
+        PathPlannerGroupScope.from_raw(("1",), component=Microscopy.Channel)
     )
     assert maps.relation_source_scopes[second_ref] == (
-        PathPlannerGroupScope.from_raw(("2",), component=AllComponents.CHANNEL)
+        PathPlannerGroupScope.from_raw(("2",), component=Microscopy.Channel)
     )
 
 
 def test_dynamic_group_scope_union_remains_dynamic():
-    dynamic_scope = PathPlannerGroupScope.dynamic(AllComponents.SITE)
+    dynamic_scope = PathPlannerGroupScope.dynamic(Microscopy.Site)
     concrete_scope = PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.SITE,
+        component=Microscopy.Site,
     )
 
     assert (
@@ -2489,8 +2490,8 @@ def test_collected_lineage_outputs_use_relation_owned_group_scope():
                 path=f"/memory/{name}.pkl",
                 artifact_type=artifact_type,
                 group_keys=(channel,),
-                group_component=AllComponents.CHANNEL,
-                variable_components=(AllComponents.SITE,),
+                group_component=Microscopy.Channel,
+                variable_components=(Microscopy.Site,),
                 paths_by_group={channel: f"/memory/{name}_{channel}.pkl"},
             ),
         )
@@ -2526,21 +2527,21 @@ def test_collected_lineage_outputs_use_relation_owned_group_scope():
     maps = planner.artifacts.compile_plan_maps(
         _resolved_step(
             name="MeasureColocalization",
-            group_by=GroupBy.SITE,
-            variable_components=(VariableComponents.CHANNEL,),
+            group_by=Microscopy.Site,
+            variable_components=(Microscopy.Channel,),
         ),
         3,
         declarations,
-        PathPlannerGroupScope.dynamic(AllComponents.SITE),
+        PathPlannerGroupScope.dynamic(Microscopy.Site),
     )
 
-    assert maps.group_scope == PathPlannerGroupScope.dynamic(AllComponents.SITE)
+    assert maps.group_scope == PathPlannerGroupScope.dynamic(Microscopy.Site)
     measurements_ref = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
     ).ref()
     assert maps.outputs[measurements_ref].group_keys == (None,)
-    assert maps.outputs[measurements_ref].group_component is AllComponents.SITE
+    assert maps.outputs[measurements_ref].group_component is Microscopy.Site
 
 
 def test_output_lineage_uses_input_qualified_consumer_scope():
@@ -2563,7 +2564,7 @@ def test_output_lineage_uses_input_qualified_consumer_scope():
             path="/memory/Nuclei.pkl",
             artifact_type=nuclei.artifact_type,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/Nuclei_1.pkl"},
         ),
     )
@@ -2574,7 +2575,7 @@ def test_output_lineage_uses_input_qualified_consumer_scope():
             path="/memory/PriorMeasurements.pkl",
             artifact_type=prior_measurements.artifact_type,
             group_keys=("1", "2"),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={
                 "1": "/memory/PriorMeasurements_1.pkl",
                 "2": "/memory/PriorMeasurements_2.pkl",
@@ -2603,7 +2604,7 @@ def test_output_lineage_uses_input_qualified_consumer_scope():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
@@ -2611,7 +2612,7 @@ def test_output_lineage_uses_input_qualified_consumer_scope():
     assert maps.relation_source_scopes[prior_measurements.ref()] == (
         PathPlannerGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         )
     )
     assert output_plan.group_keys == ("1",)
@@ -2670,7 +2671,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
             NamedSourceBinding(
                 alias=name,
                 origin=SourceBindingOrigin.PIPELINE_START,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+                component_identity=(ComponentSelector(Microscopy.Channel, channel),),
             )
             for name, channel in ((blue.name, "1"), (green.name, "2"))
         ),
@@ -2680,13 +2681,13 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         name="MeasureChannels",
         func=functions,
         source_bindings=source_bindings,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         input_source=InputSource.PIPELINE_START,
     )
     execution_scope = PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
     maps = planner.artifacts.compile_plan_maps(
@@ -2702,7 +2703,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         artifact_inputs=maps.inputs,
         relation_source_scopes=maps.relation_source_scopes,
         execution_group_scope=execution_scope,
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
         source_bindings=source_bindings,
         available_artifacts=planner.artifact_context.available_artifacts,
         main_flow_artifacts=planner.artifact_context.main_flow_artifacts,
@@ -2749,8 +2750,8 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
             path="/memory/Cells.pkl",
             artifact_type=ObjectLabelsArtifactType,
             group_keys=("2",),
-            group_component=AllComponents.CHANNEL,
-            variable_components=(AllComponents.SITE,),
+            group_component=Microscopy.Channel,
+            variable_components=(Microscopy.Site,),
             paths_by_group={"2": "/memory/Cells_2.pkl"},
         ),
     )
@@ -2768,7 +2769,7 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
     step_context = ArtifactDeclarationStepContext(
         step_name=snapshot.name,
         step_index=3,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         available_artifacts=ArtifactSpecCollection((labels_input,)),
         available_artifact_producers=(
             ArtifactProducer(
@@ -2820,7 +2821,7 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
     )
     assert selector in consumed_names
     group_scope = PathPlannerGroupScope.from_raw(
-        ("1", "2"), component=AllComponents.CHANNEL
+        ("1", "2"), component=Microscopy.Channel
     )
 
     if measurement_group == "1":
@@ -2859,7 +2860,7 @@ def test_declared_group_lineage_cannot_rewrite_scalar_step_execution_scope():
             path="/memory/MembInvertRemoveHoles.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("3",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"3": "/memory/MembInvertRemoveHoles_3.pkl"},
         ),
     )
@@ -2870,7 +2871,7 @@ def test_declared_group_lineage_cannot_rewrite_scalar_step_execution_scope():
             path="/memory/MonolayerMask.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/MonolayerMask_1.pkl"},
         ),
     )
@@ -2916,12 +2917,12 @@ def test_declared_group_lineage_cannot_rewrite_scalar_step_execution_scope():
         _resolved_step(name="MaskImage"),
         3,
         declarations,
-        PathPlannerGroupScope.from_raw(("1", "3"), component=AllComponents.CHANNEL),
+        PathPlannerGroupScope.from_raw(("1", "3"), component=Microscopy.Channel),
     )
 
     assert maps.group_scope == PathPlannerGroupScope.from_raw(
         ("1", "3"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     masked_ref = ArtifactSpec.output("MembMasked", ImageArtifactType).ref()
     assert maps.outputs[masked_ref].group_keys == ("3",)
@@ -2951,7 +2952,7 @@ def test_artifact_output_storage_scope_is_independent_of_execution_scope():
             path="/memory/PriorMeasurements.pkl",
             artifact_type=MeasurementsArtifactType,
             group_keys=("1", "2"),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={
                 "1": "/memory/PriorMeasurements_1.pkl",
                 "2": "/memory/PriorMeasurements_2.pkl",
@@ -2967,7 +2968,7 @@ def test_artifact_output_storage_scope_is_independent_of_execution_scope():
             path="/memory/Nuclei.pkl",
             artifact_type=ObjectLabelsArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/Nuclei_1.pkl"},
             producer_step_index=2,
             producer_step_name="IdentifyPrimaryObjects",
@@ -3005,12 +3006,12 @@ def test_artifact_output_storage_scope_is_independent_of_execution_scope():
         _resolved_step(name="CalculateMath"),
         3,
         declarations,
-        PathPlannerGroupScope.from_raw(("3",), component=AllComponents.CHANNEL),
+        PathPlannerGroupScope.from_raw(("3",), component=Microscopy.Channel),
     )
 
     assert maps.group_scope == PathPlannerGroupScope.from_raw(
         ("3",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     ratio_ref = ArtifactSpec.output("Ratio", MeasurementsArtifactType).ref()
     assert maps.outputs[ratio_ref].group_keys == ("1",)
@@ -3029,7 +3030,7 @@ def test_each_output_storage_scope_is_independent_of_execution_scope():
             path="/memory/source.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("2",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"2": "/memory/source_2.pkl"},
         ),
     )
@@ -3075,17 +3076,17 @@ def test_each_output_storage_scope_is_independent_of_execution_scope():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
     execution_scope = PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     relation_scope = PathPlannerGroupScope.from_raw(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     assert maps.group_scope == execution_scope
     scoped_ref = ArtifactSpec.output("scoped", ImageArtifactType).ref()
@@ -3110,7 +3111,7 @@ def test_dict_pattern_output_groups_do_not_drive_scalar_scope_narrowing():
             path="/memory/source.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("3",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"3": "/memory/source_3.pkl"},
         ),
     )
@@ -3149,12 +3150,12 @@ def test_dict_pattern_output_groups_do_not_drive_scalar_scope_narrowing():
         _resolved_step(name="dict_pattern"),
         3,
         declarations,
-        PathPlannerGroupScope.from_raw(("1", "3"), component=AllComponents.CHANNEL),
+        PathPlannerGroupScope.from_raw(("1", "3"), component=Microscopy.Channel),
     )
 
     assert maps.group_scope == PathPlannerGroupScope.from_raw(
         ("1", "3"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -3183,7 +3184,7 @@ def test_source_binding_component_identity_narrows_declared_output_lineage():
         bindings=(
             NamedSourceBinding(
                 alias="origMemb",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
             ),
         ),
         enabled=True,
@@ -3195,14 +3196,14 @@ def test_source_binding_component_identity_narrows_declared_output_lineage():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("1", "2", "3"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         source_bindings=source_bindings,
     )
 
     cells_ref = ArtifactSpec.output("Cells", ObjectLabelsArtifactType).ref()
     assert maps.outputs[cells_ref].group_keys == ("3",)
-    assert maps.outputs[cells_ref].group_component is AllComponents.CHANNEL
+    assert maps.outputs[cells_ref].group_component is Microscopy.Channel
 
 
 def test_source_binding_identity_scopes_outputs_without_execution_fanout():
@@ -3230,7 +3231,7 @@ def test_source_binding_identity_scopes_outputs_without_execution_fanout():
         bindings=(
             NamedSourceBinding(
                 alias="origMemb",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
             ),
         ),
         enabled=True,
@@ -3247,7 +3248,7 @@ def test_source_binding_identity_scopes_outputs_without_execution_fanout():
     assert maps.group_scope == PathPlannerGroupScope.ungrouped()
     cells_ref = ArtifactSpec.output("Cells", ObjectLabelsArtifactType).ref()
     assert maps.outputs[cells_ref].group_keys == ("3",)
-    assert maps.outputs[cells_ref].group_component is AllComponents.CHANNEL
+    assert maps.outputs[cells_ref].group_component is Microscopy.Channel
 
 
 def test_image_object_outputs_keep_declared_image_execution_group_scope():
@@ -3262,7 +3263,7 @@ def test_image_object_outputs_keep_declared_image_execution_group_scope():
             path="/memory/Tile_of_grid.pkl",
             artifact_type=ObjectLabelsArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/Tile_of_grid_1.pkl"},
         ),
     )
@@ -3308,7 +3309,7 @@ def test_image_object_outputs_keep_declared_image_execution_group_scope():
         declarations,
         PathPlannerGroupScope.from_raw(
             ("2",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
@@ -3328,7 +3329,7 @@ def test_group_lineage_source_resolves_prior_main_flow_output_without_store_inpu
             path="/memory/Tile_of_grid.pkl",
             artifact_type=ObjectLabelsArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/Tile_of_grid_1.pkl"},
         ),
     )
@@ -3361,7 +3362,7 @@ def test_group_lineage_source_resolves_prior_main_flow_output_without_store_inpu
         declarations,
         PathPlannerGroupScope.from_raw(
             ("2",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
@@ -3393,8 +3394,8 @@ def test_resolved_pipeline_owns_invocation_aware_artifact_declarations():
     snapshot = _resolved_step(
         is_function_step=True,
         func=(identify, {"artifact_name": "cells"}),
-        group_by=GroupBy.NONE,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Ungrouped,
+        variable_components=(Microscopy.Site,),
         name="identify_cells",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
@@ -3453,17 +3454,17 @@ def test_artifact_managed_regular_pattern_preserves_group_by_scope():
     snapshot = _resolved_step(
         is_function_step=True,
         func=filter_objects,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="FilterObjects",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
     )
     input_component_scopes = PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.from_raw(
+            Microscopy.Channel: PathPlannerGroupScope.from_raw(
                 ("1", "2"),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             )
         }
     )
@@ -3481,7 +3482,7 @@ def test_artifact_managed_regular_pattern_preserves_group_by_scope():
 
     assert execution_groups == PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     assert execution_scope is FunctionStepExecutionScope.AXIS
 
@@ -3502,7 +3503,7 @@ def test_artifact_managed_regular_pattern_preserves_group_by_scope():
 
     assert execution_groups == PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     assert execution_scope is FunctionStepExecutionScope.AXIS
 
@@ -3577,15 +3578,15 @@ def test_artifact_managed_regular_pattern_uses_declared_owner_scope():
             path="/memory/Nuclei.pkl",
             artifact_type=nuclei.artifact_type,
             group_keys=("1", "2"),
-            group_component=AllComponents.SITE,
+            group_component=Microscopy.Site,
             component_domains=(
                 ComponentGroupScope.from_raw(
                     ("1",),
-                    component=AllComponents.CHANNEL,
+                    component=Microscopy.Channel,
                 ),
                 ComponentGroupScope.from_raw(
                     ("1", "2"),
-                    component=AllComponents.SITE,
+                    component=Microscopy.Site,
                 ),
             ),
         ),
@@ -3593,17 +3594,17 @@ def test_artifact_managed_regular_pattern_uses_declared_owner_scope():
     snapshot = _resolved_step(
         is_function_step=True,
         func=identify_primary_objects,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="IdentifyPrimaryObjects",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
     )
     main_flow_scopes = PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.from_raw(
+            Microscopy.Channel: PathPlannerGroupScope.from_raw(
                 ("2", "3"),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             )
         }
     )
@@ -3616,7 +3617,7 @@ def test_artifact_managed_regular_pattern_uses_declared_owner_scope():
 
     assert scope == PathPlannerGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -3643,23 +3644,23 @@ def test_artifact_managed_regular_pattern_unions_compatible_owner_scopes():
                 path=f"/memory/{spec.name}.pkl",
                 artifact_type=spec.artifact_type,
                 group_keys=(channel,),
-                group_component=AllComponents.CHANNEL,
+                group_component=Microscopy.Channel,
             ),
         )
     snapshot = _resolved_step(
         is_function_step=True,
         func=relate_objects,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="RelateObjects",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
     )
     main_flow_scopes = PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.from_raw(
+            Microscopy.Channel: PathPlannerGroupScope.from_raw(
                 ("1", "2"),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             )
         }
     )
@@ -3672,7 +3673,7 @@ def test_artifact_managed_regular_pattern_unions_compatible_owner_scopes():
 
     assert scope == PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -3697,23 +3698,23 @@ def test_artifact_owner_variable_axis_projects_to_consumer_scope():
             path="/memory/CometOutline.pkl",
             artifact_type=comet_outline.artifact_type,
             group_keys=("1", "2"),
-            group_component=AllComponents.SITE,
+            group_component=Microscopy.Site,
         ),
     )
     snapshot = _resolved_step(
         is_function_step=True,
         func=measure_object_size_shape,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="MeasureObjectSizeShape",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
     )
     main_flow_scopes = PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.from_raw(
+            Microscopy.Channel: PathPlannerGroupScope.from_raw(
                 ("1",),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             )
         }
     )
@@ -3726,7 +3727,7 @@ def test_artifact_owner_variable_axis_projects_to_consumer_scope():
 
     assert scope == PathPlannerGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -3735,8 +3736,8 @@ def test_execution_groups_resolve_non_grouped_variable_component_conflicts():
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE, VariableComponents.CHANNEL),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site, Microscopy.Channel),
         name="source_bound_cellprofiler_step",
         source_bindings=EMPTY_SOURCE_BINDINGS,
     )
@@ -3757,8 +3758,8 @@ def test_non_dict_group_by_declares_dynamic_scope_without_plate_key_lookup():
     source_snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="enhance",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
@@ -3770,7 +3771,7 @@ def test_non_dict_group_by_declares_dynamic_scope_without_plate_key_lookup():
     )
     assert source_scope == PathPlannerGroupScope.from_raw(
         (None,),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -3779,8 +3780,8 @@ def test_non_dict_group_by_uses_dynamic_source_scope_for_pipeline_start():
     source_snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="source_loaded_channel_callable",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PIPELINE_START,
@@ -3792,7 +3793,7 @@ def test_non_dict_group_by_uses_dynamic_source_scope_for_pipeline_start():
     )
     assert source_scope == PathPlannerGroupScope.from_raw(
         (None,),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -3804,8 +3805,8 @@ def test_dict_pattern_group_by_declares_execution_group_component():
             "1": lambda image: image,
             "2": lambda image: image,
         },
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="channel_dispatch",
         source_bindings=EMPTY_SOURCE_BINDINGS,
     )
@@ -3817,7 +3818,7 @@ def test_dict_pattern_group_by_declares_execution_group_component():
 
     assert scope == PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -3829,8 +3830,8 @@ def test_dict_pattern_rejects_group_by_none_execution_component():
             "1": lambda image: image,
             "2": lambda image: image,
         },
-        group_by=GroupBy.NONE,
-        variable_components=(VariableComponents.CHANNEL,),
+        group_by=Ungrouped,
+        variable_components=(Microscopy.Channel,),
         name="channel_dispatch",
         source_bindings=EMPTY_SOURCE_BINDINGS,
     )
@@ -3851,14 +3852,14 @@ def test_execution_groups_reject_grouped_group_by_axis_conflict():
     composite_snapshot = _resolved_step(
         is_function_step=True,
         func={"1": lambda image: image},
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.CHANNEL,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Channel,),
         name="channel_dispatch",
         source_bindings=EMPTY_SOURCE_BINDINGS,
     )
     with pytest.raises(
         ValueError,
-        match="channel_dispatch.*group_by=CHANNEL cannot also appear",
+        match="channel_dispatch.*group_by=channel cannot also appear",
     ):
         planner.execution_groups.get_execution_groups(
             composite_snapshot,
@@ -3870,18 +3871,18 @@ def test_non_dict_group_by_preserves_explicitly_collapsed_input_axis():
     planner = _artifact_planner_stub()
     input_scopes = PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.ungrouped(),
-            VariableComponents.SITE: PathPlannerGroupScope.from_raw(
+            Microscopy.Channel: PathPlannerGroupScope.ungrouped(),
+            Microscopy.Site: PathPlannerGroupScope.from_raw(
                 ("1", "2"),
-                component=AllComponents.SITE,
+                component=Microscopy.Site,
             ),
         }
     )
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="measure_channel_named_artifacts_over_site_stack",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
@@ -3926,23 +3927,23 @@ def test_module_special_outputs_preserve_existing_main_flow_component_scopes():
     )
     input_scopes = PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.from_raw(
+            Microscopy.Channel: PathPlannerGroupScope.from_raw(
                 ("1",),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             ),
-            VariableComponents.SITE: PathPlannerGroupScope.ungrouped(),
+            Microscopy.Site: PathPlannerGroupScope.ungrouped(),
         }
     )
     snapshot = _resolved_step(
         is_function_step=True,
-        variable_components=(VariableComponents.CHANNEL,),
-        group_by=GroupBy.SITE,
+        variable_components=(Microscopy.Channel,),
+        group_by=Microscopy.Site,
         name="measurement_only",
     )
 
     output_scopes = input_scopes.output_after(
         snapshot,
-        PathPlannerGroupScope.dynamic(AllComponents.SITE),
+        PathPlannerGroupScope.dynamic(Microscopy.Site),
         pattern,
     )
 
@@ -3977,29 +3978,29 @@ def test_module_canonical_output_applies_functionstep_component_transformation()
     )
     input_scopes = PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.from_raw(
+            Microscopy.Channel: PathPlannerGroupScope.from_raw(
                 ("1",),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             ),
-            VariableComponents.SITE: PathPlannerGroupScope.ungrouped(),
+            Microscopy.Site: PathPlannerGroupScope.ungrouped(),
         }
     )
     snapshot = _resolved_step(
         is_function_step=True,
-        variable_components=(VariableComponents.CHANNEL,),
-        group_by=GroupBy.SITE,
+        variable_components=(Microscopy.Channel,),
+        group_by=Microscopy.Site,
         name="image_output",
     )
 
     output_scopes = input_scopes.output_after(
         snapshot,
-        PathPlannerGroupScope.dynamic(AllComponents.SITE),
+        PathPlannerGroupScope.dynamic(Microscopy.Site),
         pattern,
     )
 
     assert output_scopes == PathPlannerComponentScopes(
         {
-            VariableComponents.SITE: PathPlannerGroupScope.dynamic(AllComponents.SITE),
+            Microscopy.Site: PathPlannerGroupScope.dynamic(Microscopy.Site),
         }
     )
 
@@ -4021,8 +4022,8 @@ def test_non_dict_group_by_namespaces_artifact_outputs_with_dynamic_component():
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="single_callable_channel_artifacts",
         source_bindings=EMPTY_SOURCE_BINDINGS,
         input_source=InputSource.PREVIOUS_STEP,
@@ -4034,7 +4035,7 @@ def test_non_dict_group_by_namespaces_artifact_outputs_with_dynamic_component():
         declarations,
         PathPlannerGroupScope.from_raw(
             (None,),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
     )
 
@@ -4042,7 +4043,7 @@ def test_non_dict_group_by_namespaces_artifact_outputs_with_dynamic_component():
         ArtifactSpec.output("segmentation_masks", ObjectLabelsArtifactType).ref()
     ]
     assert output_plan.group_keys == (None,)
-    assert output_plan.group_component is AllComponents.CHANNEL
+    assert output_plan.group_component is Microscopy.Channel
 
 
 def test_non_dict_group_by_uses_source_binding_identity_for_pipeline_start_scope():
@@ -4050,19 +4051,19 @@ def test_non_dict_group_by_uses_source_binding_identity_for_pipeline_start_scope
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="source_bound_channel_groups",
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
             bindings=(
                 NamedSourceBinding(
                     alias="OrigStain1",
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 NamedSourceBinding(
                     alias="OrigStain2",
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
                 ),
             ),
         ),
@@ -4076,7 +4077,7 @@ def test_non_dict_group_by_uses_source_binding_identity_for_pipeline_start_scope
 
     assert scope == PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -4099,7 +4100,7 @@ def test_auxiliary_source_does_not_restrict_declared_payload_execution(stored_pa
     bindings = [
         NamedSourceBinding(
             alias=prefix.name,
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
         )
     ]
     if stored_payload:
@@ -4110,21 +4111,21 @@ def test_auxiliary_source_does_not_restrict_declared_payload_execution(stored_pa
                 path="/memory/composed.pkl",
                 artifact_type=payload.artifact_type,
                 group_keys=("1", "2", "3"),
-                group_component=AllComponents.SITE,
+                group_component=Microscopy.Site,
             ),
         )
     else:
         bindings.append(
             NamedSourceBinding(
                 alias=payload.name,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
             )
         )
     snapshot = _resolved_step(
         is_function_step=True,
         func=save_declared_payload,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         source_bindings=StepSourceBindingsConfig(
             enabled=True, bindings=tuple(bindings)
         ),
@@ -4138,9 +4139,9 @@ def test_auxiliary_source_does_not_restrict_declared_payload_execution(stored_pa
     )
 
     expected = (
-        PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
+        PathPlannerGroupScope.dynamic(Microscopy.Channel)
         if stored_payload
-        else PathPlannerGroupScope.from_raw(("3",), component=AllComponents.CHANNEL)
+        else PathPlannerGroupScope.from_raw(("3",), component=Microscopy.Channel)
     )
     assert scope == expected
     assert not scope.contains_runtime_key("1") or scope.is_dynamic
@@ -4153,11 +4154,11 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
         bindings=(
             NamedSourceBinding(
                 alias="BF_image",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="DF_image",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
                 projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
             ),
         ),
@@ -4165,8 +4166,8 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="bf_source_consumer",
         source_bindings=source_bindings,
         input_source=InputSource.PIPELINE_START,
@@ -4211,7 +4212,7 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
     )
     assert scope == PathPlannerGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -4240,8 +4241,8 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
             path="/memory/CropBlue.pkl",
             artifact_type=source.artifact_type,
             group_keys=("1", "2"),
-            group_component=AllComponents.CHANNEL,
-            variable_components=(AllComponents.SITE,),
+            group_component=Microscopy.Channel,
+            variable_components=(Microscopy.Site,),
             paths_by_group={
                 "1": "/memory/CropBlue_channel_1.pkl",
                 "2": "/memory/CropBlue_channel_2.pkl",
@@ -4253,12 +4254,12 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
     snapshot = _resolved_step(
         name="Measure",
         func=measure,
-        group_by=GroupBy.SITE,
-        variable_components=(VariableComponents.CHANNEL,),
+        group_by=Microscopy.Site,
+        variable_components=(Microscopy.Channel,),
     )
     execution_scope = PathPlannerGroupScope.from_raw(
         ("1", "2", "3"),
-        component=AllComponents.SITE,
+        component=Microscopy.Site,
     )
     declarations = extract_artifact_declarations(measure)
 
@@ -4284,7 +4285,7 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
     assert maps.inputs[source.ref()].producer_group_scope() == (
         ComponentGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         )
     )
     assert PathPlannerGroupScope.from_output_plan(maps.outputs[measurements.ref()]) == (
@@ -4292,7 +4293,7 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
     )
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
     assert edge.projection.invocation_scope == ComponentGroupScope.dynamic(
-        AllComponents.SITE
+        Microscopy.Site
     )
     assert edge.projection.producer_selection_scope == (
         maps.inputs[source.ref()].producer_group_scope()
@@ -4319,11 +4320,11 @@ def test_execution_anchor_ignores_source_artifact_lineage():
         bindings=(
             NamedSourceBinding(
                 alias="OrigBlue",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigRed",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
                 projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
             ),
         ),
@@ -4380,7 +4381,7 @@ def test_runtime_artifact_input_plan_owns_relation_source_scope():
         bindings=(
             NamedSourceBinding(
                 alias="OrigRed",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
             ),
         ),
     )
@@ -4389,7 +4390,7 @@ def test_runtime_artifact_input_plan_owns_relation_source_scope():
         path="/memory/RGBImage.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1", "2", "3"),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         paths_by_group={
             "1": "/memory/RGBImage_site_1.pkl",
             "2": "/memory/RGBImage_site_2.pkl",
@@ -4410,15 +4411,15 @@ def test_runtime_artifact_input_plan_owns_relation_source_scope():
         {artifact_input.ref(): artifact_input},
         group_scope=PathPlannerGroupScope.from_raw(
             ("3",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         source_bindings=source_bindings,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
     )
 
     assert relation_scopes[rgb_image.ref()] == PathPlannerGroupScope.from_raw(
         ("1", "2", "3"),
-        component=AllComponents.SITE,
+        component=Microscopy.Site,
     )
 
 
@@ -4583,19 +4584,19 @@ def test_non_dict_group_by_ignores_source_binding_identity_for_other_components(
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.SITE,
-        variable_components=(VariableComponents.CHANNEL,),
+        group_by=Microscopy.Site,
+        variable_components=(Microscopy.Channel,),
         name="source_bound_site_groups",
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
             bindings=(
                 NamedSourceBinding(
                     alias="OrigStain1",
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 NamedSourceBinding(
                     alias="OrigStain2",
-                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                    component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
                 ),
             ),
         ),
@@ -4609,26 +4610,26 @@ def test_non_dict_group_by_ignores_source_binding_identity_for_other_components(
 
     assert scope == PathPlannerGroupScope.from_raw(
         (None,),
-        component=AllComponents.SITE,
+        component=Microscopy.Site,
     )
 
 
 def test_compiled_group_by_preserves_dynamic_execution_scope():
     planner = _artifact_planner_stub()
     planner.cfg = PathConfigStub(sub_dir="images", output_dir_suffix="_generated")
-    planner.plans[3].group_by = GroupBy.CHANNEL
-    planner.plans[3].variable_components = (VariableComponents.SITE,)
+    planner.plans[3].group_by = Microscopy.Channel
+    planner.plans[3].variable_components = (Microscopy.Site,)
     snapshot = _resolved_step(
         is_function_step=True,
         func=lambda image: image,
-        group_by=GroupBy.CHANNEL,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         name="measure_after_channel_collapse",
         input_source=InputSource.PREVIOUS_STEP,
     )
     artifact_maps = ArtifactPlanMaps(
         declarations=ArtifactGraph.empty(),
-        group_scope=PathPlannerGroupScope.dynamic(AllComponents.CHANNEL),
+        group_scope=PathPlannerGroupScope.dynamic(Microscopy.Channel),
         inputs={},
         outputs={},
         relation_source_scopes={},
@@ -4649,9 +4650,9 @@ def test_compiled_group_by_preserves_dynamic_execution_scope():
         None,
     )
 
-    assert planner.plans[3].group_by is GroupBy.CHANNEL
+    assert planner.plans[3].group_by is Microscopy.Channel
     assert planner.plans[3].execution_group_scope == PathPlannerGroupScope.dynamic(
-        AllComponents.CHANNEL
+        Microscopy.Channel
     )
     assert planner.plans[3].analysis_results_dir == "/data/plate1_generated/analysis"
 
@@ -4802,7 +4803,7 @@ def test_artifact_input_plan_preserves_single_grouped_producer_scope():
             path="/memory/illumination.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("1",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"1": "/memory/illumination_channel_1.pkl"},
             producer_step_index=1,
             producer_step_name="calculate_illumination",
@@ -4820,7 +4821,7 @@ def test_artifact_input_plan_preserves_single_grouped_producer_scope():
         ),
         consumer_scope=PathPlannerGroupScope.from_raw(
             ("2", "3"),
-            component=AllComponents.SITE,
+            component=Microscopy.Site,
         ),
         sid=2,
         step_name="apply_illumination",
@@ -4832,7 +4833,7 @@ def test_artifact_input_plan_preserves_single_grouped_producer_scope():
     illumination_ref = ArtifactSpec.input("illumination", ImageArtifactType).ref()
     plan = inputs[illumination_ref]
     assert plan.group_keys == ("1",)
-    assert plan.group_component is AllComponents.CHANNEL
+    assert plan.group_component is Microscopy.Channel
     assert plan.path == "/memory/illumination_channel_1.pkl"
     assert plan.paths_by_group == {"1": "/memory/illumination_channel_1.pkl"}
 
@@ -4842,28 +4843,28 @@ def test_artifact_input_plan_preserves_single_grouped_producer_scope():
     (
         (PathPlannerGroupScope.ungrouped(), PathPlannerGroupScope.ungrouped(), True),
         (
-            PathPlannerGroupScope.dynamic(AllComponents.CHANNEL),
-            PathPlannerGroupScope.dynamic(AllComponents.CHANNEL),
+            PathPlannerGroupScope.dynamic(Microscopy.Channel),
+            PathPlannerGroupScope.dynamic(Microscopy.Channel),
             True,
         ),
         (
-            PathPlannerGroupScope.dynamic(AllComponents.CHANNEL),
-            PathPlannerGroupScope.from_raw(("1",), component=AllComponents.CHANNEL),
+            PathPlannerGroupScope.dynamic(Microscopy.Channel),
+            PathPlannerGroupScope.from_raw(("1",), component=Microscopy.Channel),
             True,
         ),
         (
-            PathPlannerGroupScope.from_raw(("1", "2"), component=AllComponents.CHANNEL),
-            PathPlannerGroupScope.from_raw(("2",), component=AllComponents.CHANNEL),
+            PathPlannerGroupScope.from_raw(("1", "2"), component=Microscopy.Channel),
+            PathPlannerGroupScope.from_raw(("2",), component=Microscopy.Channel),
             True,
         ),
         (
-            PathPlannerGroupScope.from_raw(("1",), component=AllComponents.CHANNEL),
-            PathPlannerGroupScope.dynamic(AllComponents.CHANNEL),
+            PathPlannerGroupScope.from_raw(("1",), component=Microscopy.Channel),
+            PathPlannerGroupScope.dynamic(Microscopy.Channel),
             False,
         ),
         (
-            PathPlannerGroupScope.dynamic(AllComponents.CHANNEL),
-            PathPlannerGroupScope.dynamic(AllComponents.SITE),
+            PathPlannerGroupScope.dynamic(Microscopy.Channel),
+            PathPlannerGroupScope.dynamic(Microscopy.Site),
             False,
         ),
     ),
@@ -4879,7 +4880,7 @@ def test_component_group_scope_contains_exact_required_scope(
 def test_component_group_scope_selects_runtime_key_from_static_domain():
     scope = ComponentGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
     assert scope.select_runtime_key("2") == "2"
@@ -4903,7 +4904,7 @@ def test_compilation_rejects_ambiguous_cross_component_artifact_selection():
             path="/memory/image.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("1", "2"),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={
                 "1": "/memory/image_channel_1.pkl",
                 "2": "/memory/image_channel_2.pkl",
@@ -4926,8 +4927,8 @@ def test_compilation_rejects_ambiguous_cross_component_artifact_selection():
     snapshot = _resolved_step(
         name="consumer",
         func=consume,
-        group_by=GroupBy.NONE,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Ungrouped,
+        variable_components=(Microscopy.Site,),
     )
     maps = planner.artifacts.compile_plan_maps(
         snapshot,
@@ -4966,7 +4967,7 @@ def test_compilation_selects_exact_singleton_cross_component_artifact():
             path="/memory/image_channel_2.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("2",),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={"2": "/memory/image_channel_2.pkl"},
             producer_step_index=1,
             producer_step_name="producer",
@@ -4986,8 +4987,8 @@ def test_compilation_selects_exact_singleton_cross_component_artifact():
     snapshot = _resolved_step(
         name="consumer",
         func=consume,
-        group_by=GroupBy.NONE,
-        variable_components=(VariableComponents.SITE,),
+        group_by=Ungrouped,
+        variable_components=(Microscopy.Site,),
     )
     maps = planner.artifacts.compile_plan_maps(
         snapshot,
@@ -4998,7 +4999,7 @@ def test_compilation_selects_exact_singleton_cross_component_artifact():
 
     producer_scope = maps.inputs[input_spec.ref()].producer_group_scope()
     assert producer_scope.keys == ("2",)
-    assert producer_scope.component is AllComponents.CHANNEL
+    assert producer_scope.component is Microscopy.Channel
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         3,
@@ -5033,7 +5034,7 @@ def test_compilation_accepts_exact_single_artifact_from_another_group():
         path="/memory/relationships_channel_2.pkl",
         artifact_type=RelationshipsArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/relationships_channel_2.pkl"},
     )
     compiled = compile_function_pattern(
@@ -5048,11 +5049,11 @@ def test_compilation_accepts_exact_single_artifact_from_another_group():
             input_spec.ref(): input_plan.producer_group_scope(),
             owner_spec.ref(): PathPlannerGroupScope.from_raw(
                 ("2",),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             ),
         },
         execution_group_scope=PathPlannerGroupScope.ungrouped(),
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
     assert edge.projection.invocation_scope.is_ungrouped
@@ -5075,7 +5076,7 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
     )
     broad_channel_scope = PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
     def compile_source_producer(
@@ -5126,7 +5127,7 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
 
         assert maps.group_scope == PathPlannerGroupScope.from_raw(
             (expected_group,),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         )
         return output
 
@@ -5173,12 +5174,12 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
         artifact_inputs=maps.inputs,
         relation_source_scopes=maps.relation_source_scopes,
         execution_group_scope=maps.group_scope,
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
 
     assert maps.group_scope == PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     edges = {
         edge.spec.name: edge
@@ -5206,7 +5207,7 @@ def test_compilation_rejects_declared_lineage_from_multi_group_producer():
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "1": "/memory/image_channel_1.pkl",
             "2": "/memory/image_channel_2.pkl",
@@ -5217,7 +5218,7 @@ def test_compilation_rejects_declared_lineage_from_multi_group_producer():
         path="/memory/site_source.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         paths_by_group={"1": "/memory/site_source_1.pkl"},
     )
     input_plans = {
@@ -5236,7 +5237,7 @@ def test_compilation_rejects_declared_lineage_from_multi_group_producer():
                 source_spec.ref(): source_plan.producer_group_scope(),
             },
             execution_group_scope=PathPlannerGroupScope.ungrouped(),
-            consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+            consumer_variable_components=ComponentSet((Microscopy.Site,)),
         )
 
 
@@ -5247,8 +5248,8 @@ def test_artifact_plan_rejects_group_component_as_variable_axis():
             path="/memory/objects.pkl",
             artifact_type=ObjectLabelsArtifactType,
             group_keys=(None,),
-            group_component=AllComponents.SITE,
-            variable_components=(AllComponents.SITE,),
+            group_component=Microscopy.Site,
+            variable_components=(Microscopy.Site,),
         )
 
 
@@ -5261,7 +5262,7 @@ def test_artifact_input_plan_preserves_multi_grouped_producer_across_components(
             path="/memory/illumination_channel_1.pkl",
             artifact_type=ImageArtifactType,
             group_keys=("1", "2"),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={
                 "1": "/memory/illumination_channel_1.pkl",
                 "2": "/memory/illumination_channel_2.pkl",
@@ -5282,7 +5283,7 @@ def test_artifact_input_plan_preserves_multi_grouped_producer_across_components(
         ),
         consumer_scope=PathPlannerGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.SITE,
+            component=Microscopy.Site,
         ),
         sid=2,
         step_name="apply_illumination",
@@ -5294,7 +5295,7 @@ def test_artifact_input_plan_preserves_multi_grouped_producer_across_components(
     illumination_ref = ArtifactSpec.input("illumination", ImageArtifactType).ref()
     plan = inputs[illumination_ref]
     assert plan.group_keys == ("1", "2")
-    assert plan.group_component is AllComponents.CHANNEL
+    assert plan.group_component is Microscopy.Channel
     assert plan.paths_by_group == {
         "1": "/memory/illumination_channel_1.pkl",
         "2": "/memory/illumination_channel_2.pkl",
@@ -5319,8 +5320,8 @@ def test_realized_component_domain_does_not_replace_dynamic_projection_coordinat
         path="/memory/illumination_channel_1.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
-        variable_components=(AllComponents.SITE,),
+        group_component=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         paths_by_group={
             "1": "/memory/illumination_channel_1.pkl",
             "2": "/memory/illumination_channel_2.pkl",
@@ -5345,10 +5346,10 @@ def test_realized_component_domain_does_not_replace_dynamic_projection_coordinat
         artifact_inputs={input_plan.ref(): input_plan},
         relation_source_scopes={
             illumination_spec.ref(): input_plan.producer_group_scope(),
-            source_spec.ref(): PathPlannerGroupScope.dynamic(AllComponents.SITE),
+            source_spec.ref(): PathPlannerGroupScope.dynamic(Microscopy.Site),
         },
-        execution_group_scope=PathPlannerGroupScope.dynamic(AllComponents.SITE),
-        consumer_variable_components=ComponentSet((AllComponents.CHANNEL,)),
+        execution_group_scope=PathPlannerGroupScope.dynamic(Microscopy.Site),
+        consumer_variable_components=ComponentSet((Microscopy.Channel,)),
         source_bindings=source_bindings,
         available_artifacts=ArtifactSpecCollection((source_spec, illumination_spec)),
     )
@@ -5359,10 +5360,10 @@ def test_realized_component_domain_does_not_replace_dynamic_projection_coordinat
         edge.storage_plan.producer_group_scope()
     )
     assert edge.projection.invocation_scope == ComponentGroupScope.dynamic(
-        AllComponents.SITE
+        Microscopy.Site
     )
-    assert edge.projection.component_scope(AllComponents.SITE) == (
-        ComponentGroupScope.dynamic(AllComponents.SITE)
+    assert edge.projection.component_scope(Microscopy.Site) == (
+        ComponentGroupScope.dynamic(Microscopy.Site)
     )
 
 
@@ -5384,18 +5385,18 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
         path="/memory/IllumStain1.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     second = ArtifactInputPlan(
         name="IllumStain2",
         path="/memory/IllumStain2.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     execution_scope = PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     storage = {first.ref(): first, second.ref(): second}
     compiled = compile_function_pattern(
@@ -5411,7 +5412,7 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
             second_spec.ref(): second.producer_group_scope(),
         },
         execution_group_scope=execution_scope,
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
     execution_plan = CompiledStepPlan(
         step_index=2,
@@ -5443,13 +5444,13 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
     assert first_edge.projection.invocation_scope == (
         ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         )
     )
     assert second_edge.projection.invocation_scope == (
         ComponentGroupScope.from_raw(
             ("2",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         )
     )
 
@@ -5467,15 +5468,15 @@ def test_grouped_invocation_is_independent_of_source_artifact_domain():
         path="/memory/Objects1.pkl",
         artifact_type=input_spec.artifact_type,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     invocation_scope = PathPlannerGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     producer_domain = PathPlannerGroupScope.from_raw(
         ("3",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     invocation = next(
         compile_function_pattern(
@@ -5519,11 +5520,11 @@ def test_fixed_producer_coordinate_precedes_consumer_group_lineage():
     )
     producer_channel = PathPlannerGroupScope.from_raw(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     consumer_channel = PathPlannerGroupScope.from_raw(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
     component_scopes = PathPlannerArtifactStage.exact_component_scopes(
@@ -5560,11 +5561,11 @@ def test_relation_selects_one_coordinate_from_multi_coordinate_producer_domain()
     )
     producer_domain = PathPlannerGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     selected_channel = PathPlannerGroupScope.from_raw(
         ("2",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
     component_scopes = PathPlannerArtifactStage.exact_component_scopes(
@@ -5597,7 +5598,7 @@ def test_produced_artifact_projection_does_not_revalidate_source_binding_domain(
         path="/memory/Cells.pkl",
         artifact_type=consumed.artifact_type,
         group_keys=("3",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         source_step_id=4,
     )
     compiled = compile_function_pattern(
@@ -5610,7 +5611,7 @@ def test_produced_artifact_projection_does_not_revalidate_source_binding_domain(
         bindings=(
             NamedSourceBinding(
                 alias=source.name,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "5"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "5"),),
             ),
         ),
     )
@@ -5621,16 +5622,16 @@ def test_produced_artifact_projection_does_not_revalidate_source_binding_domain(
         relation_source_scopes={source.ref(): input_plan.producer_group_scope()},
         execution_group_scope=PathPlannerGroupScope.from_raw(
             ("5",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
         source_bindings=source_bindings,
         available_artifacts=ArtifactSpecCollection((source, consumed)),
     )
 
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
-    assert edge.projection.component_scope(AllComponents.CHANNEL) == (
-        ComponentGroupScope.from_raw(("3",), component=AllComponents.CHANNEL)
+    assert edge.projection.component_scope(Microscopy.Channel) == (
+        ComponentGroupScope.from_raw(("3",), component=Microscopy.Channel)
     )
 
 
@@ -5647,9 +5648,9 @@ def test_non_dict_artifact_input_uses_function_step_execution_scope():
         path="/memory/positions.pkl",
         artifact_type=SpecialArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
-    execution_scope = PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
+    execution_scope = PathPlannerGroupScope.dynamic(Microscopy.Channel)
     compiled = compile_function_pattern(
         assemble,
         {plan.ref(): plan for plan in (input_plan,)},
@@ -5663,11 +5664,11 @@ def test_non_dict_artifact_input_uses_function_step_execution_scope():
             input_spec.ref(): input_plan.producer_group_scope(),
         },
         execution_group_scope=execution_scope,
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
 
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
-    expected_scope = ComponentGroupScope.dynamic(AllComponents.CHANNEL)
+    expected_scope = ComponentGroupScope.dynamic(Microscopy.Channel)
     assert edge.projection.invocation_scope == expected_scope
     assert edge.projection.producer_selection_scope == expected_scope
 
@@ -5690,7 +5691,7 @@ def test_grouped_invocations_keep_distinct_edges_for_same_artifact_ref():
         path="/memory/crop_mask.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("2", "3"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "2": "/memory/crop_mask_2.pkl",
             "3": "/memory/crop_mask_3.pkl",
@@ -5709,9 +5710,9 @@ def test_grouped_invocations_keep_distinct_edges_for_same_artifact_ref():
         },
         execution_group_scope=PathPlannerGroupScope.from_raw(
             ("2", "3"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
     edges = compiled.artifact_input_edges_by_key()
 

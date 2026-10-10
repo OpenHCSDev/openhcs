@@ -12,8 +12,6 @@ from openhcs.constants.constants import (  # Backend constants; Memory constants
     DEFAULT_ASSEMBLER_LOG_LEVEL,
     DEFAULT_BACKEND,
     DEFAULT_CPU_THREAD_COUNT,
-    get_default_group_by,
-    get_multiprocessing_axis,
     DEFAULT_IMAGE_EXTENSION,
     DEFAULT_IMAGE_EXTENSIONS,
     LOADABLE_IMAGE_EXTENSIONS,
@@ -27,7 +25,6 @@ from openhcs.constants.constants import (  # Backend constants; Memory constants
     DEFAULT_RECURSIVE_PATTERN_SEARCH,
     DEFAULT_SITE_PADDING,
     DEFAULT_TILE_OVERLAP,
-    get_default_variable_components,
     FORCE_DISK_WRITE,
     GPU_MEMORY_TYPES,
     MEMORY_TYPE_CUPY,
@@ -45,16 +42,8 @@ from openhcs.constants.constants import (  # Backend constants; Memory constants
     VALID_MEMORY_TYPES,
     WRITE_BACKEND,
     Backend,
-    AllComponents,
-    GroupBy,
     MemoryType,
-    SequentialComponents,
-    VariableComponents,
 )
-
-DEFAULT_VARIABLE_COMPONENTS = get_default_variable_components()
-DEFAULT_GROUP_BY = get_default_group_by()
-MULTIPROCESSING_AXIS = get_multiprocessing_axis()
 
 __all__ = [
     # Backends
@@ -84,15 +73,8 @@ __all__ = [
     "LOADABLE_IMAGE_EXTENSIONS",
     "DEFAULT_SITE_PADDING",
     "DEFAULT_RECURSIVE_PATTERN_SEARCH",
-    "DEFAULT_VARIABLE_COMPONENTS",
-    "DEFAULT_GROUP_BY",
-    "AllComponents",
-    "GroupBy",
-    "SequentialComponents",
-    "VariableComponents",
     "Microscope",
     "DEFAULT_MICROSCOPE",
-    "MULTIPROCESSING_AXIS",
     # Input Source
     "InputSource",
     # Pipeline

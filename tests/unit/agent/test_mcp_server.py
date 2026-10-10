@@ -22,6 +22,7 @@ import openhcs.mcp.bootstrap as bootstrap
 import openhcs.mcp.server as server
 import openhcs.mcp.stdio as mcp_stdio
 from openhcs.agent.authoring_contexts import AuthoringContextDeclaration
+from openhcs.core.axes import AxisFamily
 from openhcs.agent.capabilities import (
     AuthoringLocalCapabilitySurfaceProfile,
     CapabilityKind,
@@ -5812,8 +5813,8 @@ def test_mcp_dev_client_inspect_plate_command_renders_compact_summary():
         "root=Images metadata_detected=False diagnostic=Index.xml not found"
     ) in rendered
     assert (
-        "Axis sizes: wells=1 sites=<unknown> channels=2 z=<unknown> "
-        "timepoints=<unknown> profile=unknown-site,multi-channel,unknown-z_index,"
+        "Axis sizes: well=1 site=<unknown> channel=2 z_index=<unknown> "
+        "timepoint=<unknown> profile=unknown-site,multi-channel,unknown-z_index,"
         "unknown-timepoint"
     ) in rendered
     assert (
@@ -13582,7 +13583,7 @@ def test_mcp_dev_client_validate_viewer_command_accepts_component_aliases():
     assert call.arguments["required_axis_labels"] == ["channel", "y", "x"]
     assert call.arguments["required_component_labels"].count("well") == 1
     assert set(call.arguments["required_component_labels"]) == {
-        component.value for component in dev_client.AllComponents
+        component.name for component in AxisFamily.active().axes
     }
 
 

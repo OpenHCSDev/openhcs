@@ -1,6 +1,5 @@
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_bindings import (
     SourceFilterClause,
     SourceFilterMatchType,
@@ -20,6 +19,8 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
     with_original_source_metadata,
 )
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize(
@@ -97,14 +98,14 @@ def test_source_filters_match_flat_conjunction_of_disjunction_groups() -> None:
 @pytest.mark.parametrize(
     ("field", "component"),
     (
-        ("well", AllComponents.WELL),
-        ("Metadata_Site", AllComponents.SITE),
-        ("ChannelNumber", AllComponents.CHANNEL),
+        ("well", Microscopy.Well),
+        ("Metadata_Site", Microscopy.Site),
+        ("ChannelNumber", Microscopy.Channel),
     ),
 )
 def test_source_metadata_component_matches_semantic_component_names(
     field: str,
-    component: AllComponents,
+    component: type[Axis],
 ):
     assert source_metadata_component(field) is component
 
@@ -112,8 +113,8 @@ def test_source_metadata_component_matches_semantic_component_names(
 def test_source_component_metadata_value_matches_alias_fields():
     metadata = {"ChannelNumber": "01", "Metadata_Site": "A"}
 
-    assert source_component_metadata_value(metadata, AllComponents.CHANNEL) == "01"
-    assert source_component_metadata_value(metadata, AllComponents.SITE) == "A"
+    assert source_component_metadata_value(metadata, Microscopy.Channel) == "01"
+    assert source_component_metadata_value(metadata, Microscopy.Site) == "A"
 
 
 def test_semantic_well_value_uses_registered_compound_component_projection():
@@ -125,14 +126,14 @@ def test_semantic_well_value_uses_registered_compound_component_projection():
 def test_source_component_metadata_value_prefers_canonical_field_over_alias():
     metadata = {"ChannelNumber": "00", "channel": "3"}
 
-    assert source_component_metadata_value(metadata, AllComponents.CHANNEL) == "3"
-    assert source_component_metadata_raw_value(metadata, AllComponents.CHANNEL) == "3"
+    assert source_component_metadata_value(metadata, Microscopy.Channel) == "3"
+    assert source_component_metadata_raw_value(metadata, Microscopy.Channel) == "3"
 
 
 def test_source_component_metadata_values_include_native_and_alias_fields():
     metadata = {"channel": "1", "ChannelNumber": "00"}
 
-    assert source_component_metadata_values(metadata, AllComponents.CHANNEL) == (
+    assert source_component_metadata_values(metadata, Microscopy.Channel) == (
         "1",
         "00",
     )
@@ -147,7 +148,7 @@ def test_original_source_metadata_preserves_literal_selectors_without_axis_pollu
 
     assert source_metadata_value(metadata, "ChannelNumber") == "2"
     assert source_metadata_value(metadata, "channel") == "1"
-    assert source_component_metadata_values(metadata, AllComponents.CHANNEL) == ("1",)
+    assert source_component_metadata_values(metadata, Microscopy.Channel) == ("1",)
 
 
 def test_source_metadata_value_preserves_literal_and_component_ownership():
@@ -158,7 +159,7 @@ def test_source_metadata_value_preserves_literal_and_component_ownership():
     )
 
     assert source_metadata_value(metadata, "well") == "A01"
-    assert source_component_metadata_value(metadata, AllComponents.WELL) == "fields"
+    assert source_component_metadata_value(metadata, Microscopy.Well) == "fields"
 
 
 def test_source_metadata_value_requires_exact_literal_field_identity():
@@ -184,7 +185,7 @@ def test_with_source_component_metadata_replaces_alias_fields():
 
     updated = with_source_component_metadata(
         metadata,
-        AllComponents.WELL,
+        Microscopy.Well,
         "W001",
     )
 
@@ -193,7 +194,7 @@ def test_with_source_component_metadata_replaces_alias_fields():
         "ChannelNumber": "1",
         "well": "W001",
     }
-    assert source_component_metadata_values(updated, AllComponents.WELL) == ("W001",)
+    assert source_component_metadata_values(updated, Microscopy.Well) == ("W001",)
 
 
 def test_source_metadata_values_equal_preserves_declared_scalar_identity():

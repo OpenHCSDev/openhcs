@@ -16,7 +16,6 @@ from openhcs.agent.dto.common import (
     JsonValue,
 )
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.constants.constants import AllComponents
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
@@ -917,9 +916,9 @@ class PlateInspectionComponentValue:
 
 @dataclass(frozen=True, slots=True)
 class PlateInspectionComponentSummary:
-    """Bounded values for one HCS component dimension."""
+    """Bounded values for one declared axis, named by its boundary name."""
 
-    component: AllComponents
+    component: str
     source: PlateInspectionValueSource
     count: int
     values: tuple[PlateInspectionComponentValue, ...] = ()

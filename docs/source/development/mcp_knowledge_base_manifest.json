@@ -392,12 +392,12 @@
       "document_id": "openhcs_component_system",
       "section_count": 0,
       "source_path": "docs/source/concepts/component_system_concepts.rst",
-      "summary": "AllComponents, VariableComponents, GroupBy, MULTIPROCESSING_AXIS, component configuration, axis caching, wells, sites, channels, and z/time axes.",
+      "summary": "Axis, AxisFamily, axis roles (partition, tile, colour, stack, time), the Microscopy family, Ungrouped, axis caching, wells, sites, channels, and z/time axes.",
       "tags": [
-        "AllComponents",
-        "VariableComponents",
-        "GroupBy",
-        "MULTIPROCESSING_AXIS",
+        "Axis",
+        "AxisFamily",
+        "axis roles",
+        "Ungrouped",
         "well",
         "site",
         "channel"

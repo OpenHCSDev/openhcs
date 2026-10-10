@@ -116,17 +116,18 @@ class PipelineEditorFunctionPresentation:
             orchestrator = self.editor._get_current_orchestrator()
             metadata_cache = orchestrator.metadata_cache if orchestrator else None
             step = state.to_object(update_delegate=False) if state else None
-            group_by = (
-                step.processing_config.group_by
+            grouping_axes = (
+                step.processing_config.group_by.grouping_axes()
                 if isinstance(step, AbstractStep)
-                else None
+                and step.processing_config.group_by is not None
+                else ()
             )
             entries = []
             for key in sorted(func.keys()):
                 display_name = None
-                if group_by and metadata_cache:
+                if grouping_axes and metadata_cache:
                     display_name = metadata_cache.get_component_metadata(
-                        group_by, str(key)
+                        grouping_axes[0], str(key)
                     )
                 if display_name is None:
                     display_name = str(key)

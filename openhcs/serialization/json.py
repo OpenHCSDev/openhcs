@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import ForwardRef, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
+
+from openhcs.core.axes import AxisDeclarationMeta
 from python_introspect import signature_analysis_target
 
 JsonScalar: TypeAlias = str | int | float | bool | None
@@ -99,6 +101,13 @@ def _jsonable_registered_type(value: AutoRegisterMeta) -> JsonValue:
     if key is None:
         raise TypeError(f"Registered type {value.__qualname__} has no registry key.")
     return to_jsonable(key)
+
+
+@to_jsonable.register(AxisDeclarationMeta)
+def _jsonable_axis_declaration(value: AxisDeclarationMeta) -> JsonValue:
+    """Axes and grouping declarations cross JSON boundaries by declared name."""
+
+    return value.name
 
 
 @to_jsonable.register(Enum)

@@ -19,7 +19,6 @@ from types import MappingProxyType
 from typing import Any, ClassVar, TYPE_CHECKING, TypeAlias, cast
 
 from metaclass_registry import AutoRegisterMeta
-from openhcs.constants.constants import AllComponents
 from openhcs.core.alias_property import AliasProperty
 import numpy as np
 
@@ -49,6 +48,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_matching import source_component_metadata_value
 
 from enum import Enum
+from openhcs.core.axes import AxisFamily
 
 
 @lru_cache(maxsize=32768)
@@ -2401,7 +2401,7 @@ def measurement_rows_with_source_provenance(
         return source_provenance.component_metadata_for_plane(slice_index)
 
     metadata_by_row = tuple(metadata_for_row(index) for index in range(row_count))
-    for component in AllComponents:
+    for component in AxisFamily.active().axes:
         values = tuple(
             (
                 MEASUREMENT_SPARSE_CELL
@@ -2417,7 +2417,8 @@ def measurement_rows_with_source_provenance(
             for row_index in range(row_count)
         )
         if not all(is_structural_missing_measurement_cell(value) for value in values):
-            coordinate_columns[component.value] = values
+            coordinate_columns[component.name] = values
+
 
     def source_names_for_row(row_index: int) -> tuple[str, ...]:
         if slice_values is None:

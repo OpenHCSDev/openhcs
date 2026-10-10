@@ -7,7 +7,6 @@ Generated: 2025-10-21 01:49:14.400609
 # Edit this pipeline and save to apply changes
 
 # Automatically collected imports
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
     LazyFijiStreamingConfig,
@@ -32,6 +31,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     create_projection,
     stack_percentile_normalize,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 # Pipeline document
 pipeline_config = PipelineConfig()
@@ -51,7 +51,7 @@ step_2 = FunctionStep(
     func=create_composite,
     name="create_composite",
     processing_config=LazyProcessingConfig(
-        variable_components=[VariableComponents.CHANNEL]
+        variable_components=[Microscopy.Channel]
     ),
 )
 pipeline_steps.append(step_2)
@@ -61,7 +61,7 @@ step_3 = FunctionStep(
     func=create_projection,
     name="Z-Stack Flattening",
     processing_config=LazyProcessingConfig(
-        variable_components=[VariableComponents.Z_INDEX]
+        variable_components=[Microscopy.ZIndex]
     ),
     step_materialization_config=LazyStepMaterializationConfig(),
 )
@@ -90,7 +90,7 @@ step_7 = FunctionStep(
     func=create_projection,
     name="Z-Stack Flattening",
     processing_config=LazyProcessingConfig(
-        variable_components=[VariableComponents.Z_INDEX]
+        variable_components=[Microscopy.ZIndex]
     ),
     napari_streaming_config=LazyNapariStreamingConfig(),
     fiji_streaming_config=LazyFijiStreamingConfig(),

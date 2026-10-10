@@ -34,6 +34,7 @@ from openhcs.core.steps.function_output_manifest import (
     StepOutputManifestStore,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_artifact_output_kind_is_owned_by_original_compiled_plan() -> None:
@@ -615,7 +616,6 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
 
 
 def test_named_producer_members_keep_acquisition_filters_and_site_correlations():
-    from openhcs.constants import AllComponents
     from openhcs.core.source_bindings import (
         CompiledSourceBindingPlan, ComponentSelector, NamedSourceBinding,
         SourceFilterClause, SourceFilterMatchType, SourceFilterSubject, SourceSelector,
@@ -654,7 +654,7 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
         selector=SourceSelector(filters=(SourceFilterClause(
             SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "N_R",
         ),)),
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     ),))
     index = ProducedPathRecordIndex.from_records(tuple(records), parser)
     anchors = index.matching_records("A01_s{iii}_w1_z001_t001.tif")

@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from typing import List, Optional, Tuple, Union, Type
 
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.components.parser_metaprogramming import (
     format_filename_component,
 )
@@ -25,6 +25,8 @@ from openhcs.microscopes.microscope_interfaces import (
     MetadataHandler,
     MicroscopeImagePathParser,
 )
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +38,12 @@ class ImageXpressTimePointPaths(MicroscopeImagePathParser):
 
     def image_path_components(
         self, path: Path
-    ) -> tuple[tuple[AllComponents, int], ...]:
+    ) -> tuple[tuple[type[Axis], int], ...]:
         return (
             *super().image_path_components(path),
             *self.indexed_folder_components(
                 path,
-                AllComponents.TIMEPOINT,
+                Microscopy.Timepoint,
                 self._timepoint_folder_pattern,
             ),
         )
@@ -54,12 +56,12 @@ class ImageXpressZStepPaths(MicroscopeImagePathParser):
 
     def image_path_components(
         self, path: Path
-    ) -> tuple[tuple[AllComponents, int], ...]:
+    ) -> tuple[tuple[type[Axis], int], ...]:
         return (
             *super().image_path_components(path),
             *self.indexed_folder_components(
                 path,
-                AllComponents.Z_INDEX,
+                Microscopy.ZIndex,
                 self._zstep_folder_pattern,
             ),
         )
@@ -238,11 +240,11 @@ class ImageXpressFilenameParser(FilenameParser):
             # Use the parsed components in the result
             result = FilenameParseResult(
                 (
-                    (AllComponents.WELL, well),
-                    (AllComponents.SITE, site),
-                    (AllComponents.CHANNEL, channel),
-                    (AllComponents.Z_INDEX, z_index),
-                    (AllComponents.TIMEPOINT, timepoint),
+                    (Microscopy.Well, well),
+                    (Microscopy.Site, site),
+                    (Microscopy.Channel, channel),
+                    (Microscopy.ZIndex, z_index),
+                    (Microscopy.Timepoint, timepoint),
                 ),
                 extension=ext if ext else ".tif",
             )
@@ -292,11 +294,11 @@ class ImageXpressFilenameParser(FilenameParser):
     ) -> str:
         """Construct an ImageXpress filename from nominal component values."""
 
-        well = components.required_value(AllComponents.WELL)
-        site = components.required_value(AllComponents.SITE)
-        channel = components.required_value(AllComponents.CHANNEL)
-        z_index = components.value_for(AllComponents.Z_INDEX)
-        timepoint = components.value_for(AllComponents.TIMEPOINT)
+        well = components.required_value(Microscopy.Well)
+        site = components.required_value(Microscopy.Site)
+        channel = components.required_value(Microscopy.Channel)
+        z_index = components.value_for(Microscopy.ZIndex)
+        timepoint = components.value_for(Microscopy.Timepoint)
 
         parts = [f"{plate_name}_{well}" if plate_name is not None else well]
 
@@ -327,7 +329,7 @@ class ImageXpressFilenameParser(FilenameParser):
         """Own MetaXpress acquisition spelling, including folder-only Z axes."""
         if not include_all_components or plate_name is not None:
             components = components.with_values(
-                ((AllComponents.Z_INDEX, None), (AllComponents.TIMEPOINT, None))
+                ((Microscopy.ZIndex, None), (Microscopy.Timepoint, None))
             )
         return self.construct_filename(
             components,
@@ -515,7 +517,7 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
             if wave_name:
                 channel_mapping[wave_num] = wave_name
         return MetadataComponentValueSet.from_partial(
-            ((AllComponents.CHANNEL, channel_mapping or None),)
+            ((Microscopy.Channel, channel_mapping or None),)
         )
 
 

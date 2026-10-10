@@ -26,7 +26,7 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.constants.constants import MemoryType, VariableComponents
+from openhcs.constants.constants import MemoryType
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactSpec,
@@ -141,6 +141,7 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu 
     _yen_threshold_numba,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.axes import Axis, StackAxis
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts import ArtifactSpecCollection, ArtifactSpecRelation
@@ -3323,13 +3324,14 @@ class ThresholdModule(
         *,
         image,
         kwargs: RuntimeCallableKwargs,
-        variable_components: tuple[VariableComponents, ...],
+        variable_components: tuple[type[Axis], ...],
     ) -> ImagePayloadExecutionMode:
         """Execute CP volumetric thresholding only over a declared Z stack."""
 
         del cls, image, kwargs
-        if VariableComponents.Z_INDEX in variable_components:
+        if any(issubclass(axis, StackAxis) for axis in variable_components):
             return default
+
         return ImagePayloadExecutionMode.NATURAL
 
     @classmethod

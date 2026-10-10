@@ -20,7 +20,6 @@ from openhcs.agent.capabilities import (
     FullLocalCapabilitySurfaceProfile,
     LocalCapabilitySurfaceProfile,
 )
-from openhcs.constants.constants import AllComponents as AllComponents
 from openhcs.mcp.dev_client_core import (
     DEFAULT_CALL_TIMEOUT_SECONDS,
     DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS as DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
@@ -58,7 +57,6 @@ from openhcs.mcp.dev_client_rendering import (
 _DECLARATION_MODULES = (dev_client_commands,)
 
 __all__ = (
-    "AllComponents",
     "DEFAULT_CODE_DOCUMENT_MAX_CHARS",
     "DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS",
     "GeneratedMcpDevCommandProfile",

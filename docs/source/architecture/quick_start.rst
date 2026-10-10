@@ -223,7 +223,6 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
 
 .. code-block:: python
 
-   from openhcs.constants import AllComponents
    from openhcs.core.config import (
        LazyProcessingConfig,
        LazySourceBindingsConfig,
@@ -241,6 +240,7 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
        SourceSelector,
    )
    from openhcs.core.steps.function_step import FunctionStep
+   from openhcs.domains.microscopy.axes import Microscopy
    from openhcs.processing.backends.processors.numpy_processor import (
        stack_percentile_normalize,
    )
@@ -258,7 +258,7 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
                ),
            ),
            component_identity=(
-               ComponentSelector(AllComponents.CHANNEL, channel),
+               ComponentSelector(Microscopy.Channel, channel),
            ),
        )
 

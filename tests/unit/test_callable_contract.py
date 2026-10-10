@@ -10,7 +10,6 @@ from arraybridge import MemoryContractAttribute, SliceBySliceRuntimeParameter
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import parameter_exclusions
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
 from openhcs.core.callable_contract import (
@@ -42,7 +41,7 @@ from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.pipeline.function_contracts import (
-    required_variable_components,
+    required_axis_roles,
     runtime_bound_parameters,
     special_inputs,
 )
@@ -55,6 +54,8 @@ from openhcs.core.runtime_batch_contracts import (
 )
 from openhcs.processing.backends.lib_registry.cupy_registry import CupyRegistry
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.axes import TimeAxis
+from openhcs.domains.microscopy.axes import Microscopy
 
 _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS = 0
 
@@ -391,17 +392,17 @@ def test_callable_contract_projects_runtime_context_exclusion() -> None:
     )
 
 
-def test_callable_contract_reads_required_variable_components() -> None:
-    @required_variable_components(VariableComponents.TIMEPOINT)
+def test_callable_contract_reads_required_axis_roles() -> None:
+    @required_axis_roles(TimeAxis)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
-    assert contract.required_variable_components == (VariableComponents.TIMEPOINT,)
+    assert contract.required_axis_roles == (TimeAxis,)
     assert CallableMetadata.from_callable(process).as_namespace()[
-        FunctionContractAttribute.required_variable_components
-    ] == (VariableComponents.TIMEPOINT,)
+        FunctionContractAttribute.required_axis_roles
+    ] == (TimeAxis,)
 
 
 def test_callable_contract_reads_runtime_image_execution_mode_from_function_reference() -> (

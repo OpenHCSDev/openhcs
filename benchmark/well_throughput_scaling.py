@@ -36,7 +36,6 @@ from benchmark.openhcs_measured_run import (
     execute_measured_openhcs_pipeline_on_client,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
-from openhcs.constants.constants import AllComponents
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
@@ -80,6 +79,8 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQRuntimeObservationExportScope,
 )
 from openhcs.serialization.json import to_jsonable
+from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.virtual_workspace_metadata import component_metadata_field
 
 WELL_THROUGHPUT_ROWS_CSV = "well_throughput.csv"
 WELL_THROUGHPUT_EVENTS_CSV = "well_throughput_progress_events.csv"
@@ -3139,7 +3140,7 @@ def _replicate_source_binding_workspace_wells(
 
     available_source_wells = tuple(
         dict.fromkeys(
-            projection.address.value_for(AllComponents.WELL)
+            projection.address.value_for(Microscopy.Well)
             for projection in source_projections.entries.values()
             if projection.address is not None
         )
@@ -3173,7 +3174,7 @@ def _replicate_source_binding_workspace_wells(
                 f"Source projection ref disagrees with workspace mapping: {virtual_path!r}"
             )
         if (
-            projection.address.value_for(AllComponents.WELL)
+            projection.address.value_for(Microscopy.Well)
             not in selected_source_well_keys
         ):
             continue
@@ -3188,7 +3189,7 @@ def _replicate_source_binding_workspace_wells(
                 f"Source projection address disagrees with virtual path: {virtual_path!r}"
             )
         for well_id in target_wells:
-            site = parsed.required_value(AllComponents.SITE)
+            site = parsed.required_value(Microscopy.Site)
             expanded_path = _synthetic_well_virtual_path(
                 parser,
                 str(virtual_path),
@@ -3242,7 +3243,7 @@ def _replicate_source_binding_workspace_wells(
         )
     )
     main_metadata[FIELDS.IMAGE_FILES] = expanded_image_files
-    main_metadata[FIELDS.WELLS] = {well_id: None for well_id in target_wells}
+    main_metadata[component_metadata_field(Microscopy.Well)] = {well_id: None for well_id in target_wells}
     AtomicMetadataWriter().replace_subdirectory_metadata(
         metadata_path, FIELDS.DEFAULT_SUBDIRECTORY, main_metadata
     )
@@ -3259,8 +3260,8 @@ def _synthetic_well_virtual_path(
     filename = parser.construct_filename(
         parsed.with_values(
             (
-                (AllComponents.WELL, well_id),
-                (AllComponents.SITE, site),
+                (Microscopy.Well, well_id),
+                (Microscopy.Site, site),
             )
         )
     )

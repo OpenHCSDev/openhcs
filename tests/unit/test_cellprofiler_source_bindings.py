@@ -13,7 +13,6 @@ import numpy as np
 import pytest
 
 import openhcs.core.source_bindings as source_bindings_module
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import (
     LazySourceBindingsConfig,
@@ -53,6 +52,7 @@ from openhcs.interop.cellprofiler.parser import (
     ModuleBlock,
     ModuleSetting,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _field_names(record_type: type[object]) -> frozenset[str]:
@@ -123,7 +123,7 @@ def test_component_group_binding_scope_filters_its_axis_and_broadcasts_others() 
                 alias="DNA",
                 component_identity=(
                     ComponentSelector(
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value="1",
                     ),
                 ),
@@ -132,7 +132,7 @@ def test_component_group_binding_scope_filters_its_axis_and_broadcasts_others() 
                 alias="RNA",
                 component_identity=(
                     ComponentSelector(
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value="2",
                     ),
                 ),
@@ -143,19 +143,19 @@ def test_component_group_binding_scope_filters_its_axis_and_broadcasts_others() 
     assert tuple(
         binding.alias
         for binding in config.bindings_for_component_group(
-            AllComponents.CHANNEL,
+            Microscopy.Channel,
             "2",
         )
     ) == ("RNA",)
     assert tuple(
         binding.alias
         for binding in config.bindings_for_component_group(
-            AllComponents.SITE,
+            Microscopy.Site,
             "1",
         )
     ) == ("DNA", "RNA")
     with pytest.raises(ValueError, match="channel|3"):
-        config.bindings_for_component_group(AllComponents.CHANNEL, "3")
+        config.bindings_for_component_group(Microscopy.Channel, "3")
 
 
 def test_lazy_source_configs_cover_every_inherited_dataclass_field() -> None:
@@ -247,7 +247,7 @@ def test_complete_lazy_setup_facts_pycodify_and_reconstruct_in_fresh_process() -
                 FieldSpec("Dose", float, required=False),
                 FieldSpec("Frame", int, required=False),
             ),
-            source_stack_components=(AllComponents.TIMEPOINT,),
+            source_stack_components=(Microscopy.Timepoint,),
             grouping_metadata_fields=("Plate", "Well"),
             source_voxel_spacing=SourceVoxelSpacing((2.0, 1.0, 1.0)),
         )
@@ -259,7 +259,7 @@ def test_complete_lazy_setup_facts_pycodify_and_reconstruct_in_fresh_process() -
     script = "\n".join(
         (
             source,
-            "from openhcs.constants.constants import AllComponents",
+            "from openhcs.domains.microscopy.axes import Microscopy",
             "from openhcs.core.artifacts import ObjectLabelsArtifactType",
             "cfg = pipeline_config.source_bindings_config",
             "assert cfg.bindings[0].artifact_kind is ObjectLabelsArtifactType",
@@ -270,7 +270,7 @@ def test_complete_lazy_setup_facts_pycodify_and_reconstruct_in_fresh_process() -
             "assert cfg.imported_metadata_tables[0].joins[0].imported_metadata_field == 'WellID'",
             "assert cfg.metadata_fields[0].dtype is float",
             "assert cfg.metadata_fields[1].dtype is int",
-            "assert cfg.source_stack_components == (AllComponents.TIMEPOINT,)",
+            "assert cfg.source_stack_components == (Microscopy.Timepoint,)",
             "assert cfg.grouping_metadata_fields == ('Plate', 'Well')",
             "assert cfg.source_voxel_spacing.values_zyx == (2.0, 1.0, 1.0)",
         )
@@ -963,7 +963,7 @@ def test_names_and_types_contributes_3d_axis_and_voxel_spacing() -> None:
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 
     assert isinstance(config.source_spatial_domain, VolumeSourceSpatialDomain)
-    assert config.source_stack_components == (AllComponents.Z_INDEX,)
+    assert config.source_stack_components == (Microscopy.ZIndex,)
     assert config.source_voxel_spacing.values_zyx == (2.0, 1.0, 0.5)
     assert config.source_voxel_spacing.unit is SourceVoxelSpacingUnit.RELATIVE
 

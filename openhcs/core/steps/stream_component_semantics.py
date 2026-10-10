@@ -28,7 +28,6 @@ from zmqruntime.viewer_protocol import (
     ViewerWireValue,
 )
 
-from openhcs.constants.constants import AllComponents, get_multiprocessing_axis
 from openhcs.core.config import FijiDimensionMode, NapariDimensionMode
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -62,6 +61,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentValueDomainPayload,
     ViewerObjectDisplayConfigInput,
 )
+from openhcs.core.axes import Axis, AxisFamily
 
 StreamComponentMetadata = SourceComponentMetadata | None
 ComponentDisplayName: TypeAlias = str | int | float | bool | None
@@ -77,7 +77,7 @@ class StreamImagePayloadMetadataProjector:
         payload: RuntimeProjectionData,
         *,
         metadata: ImagePayloadMetadata,
-        plane_components: tuple[AllComponents, ...],
+        plane_components: tuple[type[Axis], ...],
         component_modes: Mapping[str, str],
         source_description: str,
     ) -> tuple[RuntimeProjectedPayloadItem, ...]:
@@ -149,9 +149,9 @@ class StreamImagePayloadMetadataProjector:
         return cls._item_fields(
             metadata,
             tuple(
-                component
+                AxisFamily.active().named(component_name)
                 for component_name in component_order
-                if (component := AllComponents.from_value(component_name)) is not None
+                if component_name in AxisFamily.active().names()
             ),
             project_singleton=False,
         )
@@ -160,7 +160,7 @@ class StreamImagePayloadMetadataProjector:
     def item_fields_for_plane_components(
         cls,
         metadata: ImagePayloadMetadata | None,
-        plane_components: tuple[AllComponents, ...],
+        plane_components: tuple[type[Axis], ...],
     ) -> dict[str, ViewerWireValue]:
         """Project retained image planes, with compiler-owned singleton identity."""
 
@@ -174,7 +174,7 @@ class StreamImagePayloadMetadataProjector:
     def _item_fields(
         cls,
         metadata: ImagePayloadMetadata | None,
-        plane_components: tuple[AllComponents, ...],
+        plane_components: tuple[type[Axis], ...],
         *,
         project_singleton: bool,
     ) -> dict[str, ViewerWireValue]:
@@ -217,7 +217,7 @@ class StreamImagePayloadMetadataProjector:
     @staticmethod
     def _singleton_plane_component_values(
         metadata: ImagePayloadMetadata,
-        plane_components: tuple[AllComponents, ...],
+        plane_components: tuple[type[Axis], ...],
     ) -> dict[str, tuple[ComponentValue, ...]]:
         """Project one exact source plane onto its declared viewer component."""
 
@@ -225,7 +225,7 @@ class StreamImagePayloadMetadataProjector:
             0
         ).source_component_metadata
         values = {
-            component.value: (value,)
+            component.name: (value,)
             for component in plane_components
             if (
                 value := source_component_metadata_raw_value(
@@ -375,11 +375,13 @@ class StreamViewerComponentMetadataProjector:
         metadata: SourceComponentMetadata,
         component: str,
     ) -> ComponentValue:
-        component_identity = AllComponents.from_value(component)
-        if component_identity is None:
-            value = metadata.get(component)
+        family = AxisFamily.active()
+        if component in family.names():
+            value = source_component_metadata_raw_value(
+                metadata, family.named(component)
+            )
         else:
-            value = source_component_metadata_raw_value(metadata, component_identity)
+            value = metadata.get(component)
         if value is None:
             return None
         return ViewerComponentValueParser.parse(
@@ -699,7 +701,6 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
     """Declared domain provider for the execution multiprocessing axis."""
 
     registry_key: ClassVar[str] = "execution_axis"
-    axis_component: ClassVar[str] = str(get_multiprocessing_axis().value)
     execution_axis_values: tuple[ComponentValue, ...] = ()
 
     @classmethod
@@ -728,7 +729,8 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
 
     @classmethod
     def supports(cls, component: str) -> bool:
-        return component == cls.axis_component
+        return component == AxisFamily.active().partition_axis().name
+
 
     def domain_metadata_items(self) -> StreamComponentDomainMetadataItems:
         return tuple({self.component: value} for value in self.execution_axis_values)

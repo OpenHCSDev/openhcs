@@ -33,8 +33,10 @@ from python_introspect import (
     coerce_enum_member,
     declared_enum_type,
     enum_input_values,
+    resolve_optional,
 )
 
+from openhcs.core.axes import AxisFamily, GroupingDeclaration
 from openhcs.agent.dto.common import (
     AgentError,
     JsonValue,
@@ -510,6 +512,11 @@ def _coerce_patch_value(field_type, value: JsonValue) -> object:
     if enum_type is not None:
         return coerce_enum_member(enum_type, value)
 
+    if isinstance(value, str) and _is_grouping_declaration_type(
+        resolve_optional(unwrapped_type)
+    ):
+        return AxisFamily.active().grouping_named(value)
+
     path_type = _unwrap_path_type(unwrapped_type)
     if path_type is not None and isinstance(value, str):
         return path_type(value)
@@ -519,6 +526,15 @@ def _coerce_patch_value(field_type, value: JsonValue) -> object:
         return registered_type.coerce(value)
 
     return value
+
+
+def _is_grouping_declaration_type(field_type) -> bool:
+    """Whether a field holds an axis or grouping declaration (``type[...]``)."""
+
+    if get_origin(field_type) is not type:
+        return False
+    (bound,) = get_args(field_type)
+    return isinstance(bound, type) and issubclass(bound, GroupingDeclaration)
 
 
 def _coerce_collection_patch_value(field_type, value: JsonValue) -> tuple[bool, object]:
@@ -709,8 +725,10 @@ def _field_schema_tree(
     field_descriptions = dataclass_parameter_descriptions(cls)
     try:
         resolved_types = get_type_hints(cls)
+        declared_types = get_type_hints(cls, include_extras=True)
     except (NameError, TypeError):
         resolved_types = {}
+        declared_types = {}
     direct_fields: list[ConfigFieldSchema] = []
     nested_fields: list[ConfigFieldSchema] = []
     next_ancestors = (*ancestors, cls)
@@ -724,6 +742,7 @@ def _field_schema_tree(
                 field_descriptions,
                 declaring_cls=cls,
                 field_type=field_type,
+                declared_type=declared_types.get(config_field.name, field_type),
                 field_path=field_path,
                 authoring_value_path=authoring_value_path,
                 inheritable=inherited_from_lazy_scope,
@@ -756,6 +775,7 @@ def _schema_for_field(
     *,
     declaring_cls: type,
     field_type=None,
+    declared_type=None,
     field_path: str | None = None,
     authoring_value_path: tuple[str, ...] | None = None,
     inheritable: bool = False,
@@ -778,7 +798,9 @@ def _schema_for_field(
         default_repr=default_repr,
         required=_is_required(field),
         description=field_descriptions.get(field.name),
-        enum_values=enum_input_values(source_type),
+        enum_values=enum_input_values(
+            source_type if declared_type is None else declared_type
+        ),
         registry_values=_registered_type_values(source_type),
         ui_hidden=ui_hidden,
         lazy=lazy_base is not None,

@@ -39,7 +39,6 @@ from zmqruntime.config import TransportMode
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
-from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import AnalysisConsolidationConfig
 from openhcs.core.measurement_row_materialization import (
@@ -127,6 +126,8 @@ from openhcs.processing.materialization.core import (
     RuntimePlaneStackAxesProjectionSelection,
     ViewerStreamBackendCallKwargs,
 )
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _memory_materialize(spec, data, path, filemanager):
@@ -338,7 +339,7 @@ def test_roi_output_projection_preserves_requested_summary_content():
 
 
 class _TestViewerDisplayConfig(ViewerDisplayConfigABC):
-    COMPONENT_ORDER = AllComponents.ordered_names()
+    COMPONENT_ORDER = AxisFamily.active().names()
     variable_size_handling = None
     auto_contrast = True
 
@@ -367,7 +368,7 @@ class _TestViewerFilenameParser(ViewerFilenameParserABC):
         parsed.setdefault("z_index", "1")
         parsed.setdefault("timepoint", "1")
         return FilenameParseResult(
-            ((component, parsed[component.value]) for component in AllComponents),
+            ((component, parsed[component.name]) for component in AxisFamily.active().axes),
             extension=parsed.get("extension", ".tif"),
         )
 
@@ -539,8 +540,8 @@ def test_materialization_spec_declares_filename_identity() -> None:
 @pytest.mark.parametrize(
     ("component", "component_values"),
     (
-        (VariableComponents.TIMEPOINT, (0, 1)),
-        (VariableComponents.Z_INDEX, (1, 2)),
+        (Microscopy.Timepoint, (0, 1)),
+        (Microscopy.ZIndex, (1, 2)),
     ),
 )
 def test_indexed_image_materialization_streams_each_declared_component_plane(
@@ -562,7 +563,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
                             "channel": 1,
                             "z_index": 1,
                             "timepoint": 1,
-                            component.value: value,
+                            component.name: value,
                         }
                         for value in component_values
                     )
@@ -595,7 +596,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
         request = kwargs["stream_request"]
         streamed_components.append(
             dict(request.source.metadata.component_metadata_for_item(path, 0))[
-                component.value
+                component.name
             ]
         )
     assert tuple(streamed_components) == component_values
@@ -873,7 +874,7 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
 
 @pytest.mark.unit
 @pytest.mark.parametrize("source_z_origin", (0, 10))
-@pytest.mark.parametrize("variable_components", ((), (VariableComponents.Z_INDEX,)))
+@pytest.mark.parametrize("variable_components", ((), (Microscopy.ZIndex,)))
 def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     tmp_path, source_z_origin, variable_components,
 ):
@@ -1253,7 +1254,7 @@ def test_tiff_stack_streaming_projects_scalar_metadata_over_declared_stack_axis(
         filemanager=fm,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
 
     saved_images = [
@@ -1273,11 +1274,11 @@ def test_tiff_stack_projection_skips_axes_already_varying_in_slice_metadata() ->
         MaterializationInputItem(
             value=ImagePayloadMetadata(
                 source_component_metadata={
-                    AllComponents.WELL.value: "A01",
-                    AllComponents.SITE.value: 1,
-                    AllComponents.Z_INDEX.value: index + 1,
-                    AllComponents.CHANNEL.value: 3,
-                    AllComponents.TIMEPOINT.value: 1,
+                    Microscopy.Well.name: "A01",
+                    Microscopy.Site.name: 1,
+                    Microscopy.ZIndex.name: index + 1,
+                    Microscopy.Channel.name: 3,
+                    Microscopy.Timepoint.name: 1,
                 },
             ).payload_with(np.zeros((5, 7), dtype=np.float32), None),
             source_description="materialization payload",
@@ -1290,7 +1291,7 @@ def test_tiff_stack_projection_skips_axes_already_varying_in_slice_metadata() ->
     )
 
     axes = RuntimePlaneStackAxesProjectionSelection(
-        (VariableComponents.Z_INDEX, VariableComponents.CHANNEL),
+        (Microscopy.ZIndex, Microscopy.Channel),
         items,
     ).axes()
 
@@ -1303,9 +1304,9 @@ def test_tiff_stack_projection_rejects_ambiguous_scalar_declared_axes() -> None:
         MaterializationInputItem(
             value=ImagePayloadMetadata(
                 source_component_metadata={
-                    AllComponents.WELL.value: "A01",
-                    AllComponents.SITE.value: 1,
-                    AllComponents.CHANNEL.value: 3,
+                    Microscopy.Well.name: "A01",
+                    Microscopy.Site.name: 1,
+                    Microscopy.Channel.name: 3,
                 },
             ).payload_with(np.zeros((5, 7), dtype=np.float32), None),
             source_description="materialization payload",
@@ -1319,7 +1320,7 @@ def test_tiff_stack_projection_rejects_ambiguous_scalar_declared_axes() -> None:
 
     with pytest.raises(ValueError, match="cannot map runtime plane metadata"):
         RuntimePlaneStackAxesProjectionSelection(
-            (VariableComponents.Z_INDEX, VariableComponents.CHANNEL),
+            (Microscopy.ZIndex, Microscopy.Channel),
             items,
         ).axes()
 
@@ -1339,19 +1340,19 @@ def test_tiff_stack_projection_uses_artifact_scalar_z_origin() -> None:
     )
 
     axes = RuntimePlaneStackAxesProjectionSelection(
-        (VariableComponents.Z_INDEX, VariableComponents.CHANNEL),
+        (Microscopy.ZIndex, Microscopy.Channel),
         items,
         SourceImageIdentity(
             component_metadata={
-                AllComponents.WELL.value: "A01",
-                AllComponents.SITE.value: 1,
-                AllComponents.Z_INDEX.value: 1,
-                AllComponents.CHANNEL.value: 3,
+                Microscopy.Well.name: "A01",
+                Microscopy.Site.name: 1,
+                Microscopy.ZIndex.name: 1,
+                Microscopy.Channel.name: 3,
             },
         ),
     ).axes()
 
-    assert axes == frozenset((AllComponents.Z_INDEX.value,))
+    assert axes == frozenset((Microscopy.ZIndex.name,))
 
 
 @pytest.mark.unit
@@ -1379,8 +1380,8 @@ def test_tiff_stack_streaming_preserves_runtime_source_plane_metadata() -> None:
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
         variable_components=(
-            VariableComponents.Z_INDEX,
-            VariableComponents.CHANNEL,
+            Microscopy.ZIndex,
+            Microscopy.Channel,
         ),
     )
 
@@ -1422,7 +1423,7 @@ def test_tiff_stack_streaming_projects_artifact_identity_over_declared_stack_axi
                 "timepoint": 1,
             },
         ),
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
 
     saved_images = [
@@ -1696,7 +1697,7 @@ def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance(viewer_
         filemanager=fm,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -1818,7 +1819,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
         filemanager=fm,
         backends=["napari_stream"],
         backend_kwargs={"napari_stream": _viewer_stream_backend_kwargs()},
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
 
     roi_saves = [item for item in fm.saved if item[1].endswith(".roi.zip")]
@@ -2616,7 +2617,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
         manager,
         ("disk",),
         context=_SourceSchemaProcessingContext(),
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         artifact_filename_identity=SourceImageIdentity(
             component_metadata={**components[0], "extension": ".tif"},
         ),
@@ -2647,11 +2648,11 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
         image_metadata=saved_metadata,
         execution_scope=RuntimeExecutionAxisScope.from_raw(
             "A01",
-            component="channel",
+            component=Microscopy.Channel,
             value="2",
             fixed_component_values=(
-                (AllComponents.SITE, "1"),
-                (AllComponents.TIMEPOINT, "1"),
+                (Microscopy.Site, "1"),
+                (Microscopy.Timepoint, "1"),
             ),
         ),
     )

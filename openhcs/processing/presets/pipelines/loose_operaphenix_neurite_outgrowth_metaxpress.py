@@ -13,7 +13,6 @@ the selected TIFFs were copied away from that plate metadata.
 
 from pathlib import Path
 
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
@@ -34,6 +33,8 @@ from .loose_operaphenix_neurite_outgrowth import (
     SemanticImageSource,
     build_loose_operaphenix_neurite_config,
 )
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def build_loose_operaphenix_neurite_metaxpress_pipeline(
@@ -73,8 +74,8 @@ def build_loose_operaphenix_neurite_metaxpress_pipeline(
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Channel],
+            group_by=Ungrouped,
             input_source=InputSource.PIPELINE_START,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(

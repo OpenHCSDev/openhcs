@@ -13,7 +13,7 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -86,6 +86,8 @@ from openhcs.core.step_dependencies import (
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
@@ -110,7 +112,7 @@ def test_runtime_step_values_share_within_step_and_release_between_steps() -> No
 def test_runtime_axis_scope_returns_exact_complete_plane_selection() -> None:
     scope = RuntimeExecutionAxisScope.from_raw(
         "A01",
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
         value="1",
     )
 
@@ -125,7 +127,7 @@ def test_runtime_axis_scope_returns_exact_complete_plane_selection() -> None:
 def test_runtime_axis_scope_returns_none_only_without_declared_component_axis() -> None:
     scope = RuntimeExecutionAxisScope.from_raw(
         "A01",
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
         value="1",
     )
 
@@ -138,13 +140,13 @@ def test_runtime_axis_scope_joins_correlated_rows_without_inventing_states() -> 
     rows = tuple(
         RuntimeExecutionAxisScope.from_raw(
             "A01", component=None, value=None,
-            fixed_component_values=((AllComponents.SITE, site), (AllComponents.TIMEPOINT, timepoint)),
+            fixed_component_values=((Microscopy.Site, site), (Microscopy.Timepoint, timepoint)),
         )
         for site, timepoint in (("1", "3"), ("2", "4"))
     )
     time_three = RuntimeExecutionAxisScope.from_raw(
         "A01", component=None, value=None,
-        fixed_component_values=((AllComponents.TIMEPOINT, "3"),),
+        fixed_component_values=((Microscopy.Timepoint, "3"),),
     )
     joined = tuple(
         result for row in rows
@@ -158,7 +160,7 @@ def test_runtime_axis_scope_empty_context_broadcasts_to_actual_correlated_row() 
     empty = RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None)
     source = RuntimeExecutionAxisScope.from_raw(
         "A01", component=None, value=None,
-        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3")),
+        fixed_component_values=((Microscopy.Site, "1"), (Microscopy.Timepoint, "3")),
     )
     assert empty.join_execution_cohort(source) == source
     assert source.join_execution_cohort(empty) == source
@@ -166,12 +168,12 @@ def test_runtime_axis_scope_empty_context_broadcasts_to_actual_correlated_row() 
 
 
 @pytest.mark.parametrize("axis,component,value", [
-    ("B01", AllComponents.CHANNEL, "1"),
-    ("A01", AllComponents.SITE, "1"),
-    ("A01", AllComponents.CHANNEL, "2"),
+    ("B01", Microscopy.Channel, "1"),
+    ("A01", Microscopy.Site, "1"),
+    ("A01", Microscopy.Channel, "2"),
 ])
 def test_runtime_axis_scope_cannot_join_other_execution_group(axis, component, value) -> None:
-    own = RuntimeExecutionAxisScope.from_raw("A01", component=AllComponents.CHANNEL, value="1")
+    own = RuntimeExecutionAxisScope.from_raw("A01", component=Microscopy.Channel, value="1")
     other = RuntimeExecutionAxisScope.from_raw(axis, component=component, value=value)
     assert own.join_execution_cohort(other) is None
 
@@ -179,15 +181,15 @@ def test_runtime_axis_scope_cannot_join_other_execution_group(axis, component, v
 def test_runtime_axis_scope_join_derives_partial_fixed_context_union() -> None:
     left = RuntimeExecutionAxisScope.from_raw(
         "A01", component=None, value=None,
-        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3")),
+        fixed_component_values=((Microscopy.Site, "1"), (Microscopy.Timepoint, "3")),
     )
     right = RuntimeExecutionAxisScope.from_raw(
         "A01", component=None, value=None,
-        fixed_component_values=((AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "2")),
+        fixed_component_values=((Microscopy.Timepoint, "3"), (Microscopy.ZIndex, "2")),
     )
     expected = RuntimeExecutionAxisScope.from_raw(
         "A01", component=None, value=None,
-        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "2")),
+        fixed_component_values=((Microscopy.Site, "1"), (Microscopy.Timepoint, "3"), (Microscopy.ZIndex, "2")),
     )
     assert left.join_execution_cohort(right) == expected
     assert right.join_execution_cohort(left) == expected
@@ -468,7 +470,7 @@ def _record_measurements(
     path: str,
     count: int,
     object_name: str | None = None,
-    group_component: AllComponents | None = None,
+    group_component: type[Axis] | None = None,
     group_key: str | None = None,
 ) -> None:
     output_plan = ArtifactOutputPlan(
@@ -989,7 +991,7 @@ def test_plate_scope_image_set_policy_includes_compiled_group_component() -> Non
     )
     context = _plate_context("A01", (plan,))
     context.source_image_set_identity_policy = SourceImageSetIdentityPolicy(
-        frozenset((AllComponents.CHANNEL,))
+        frozenset((Microscopy.Channel,))
     )
     _record_measurements(
         context,
@@ -1002,7 +1004,7 @@ def test_plate_scope_image_set_policy_includes_compiled_group_component() -> Non
 
     assert len(batches) == 1
     assert batches[0].source_image_set_identity_policy.plane_member_components == (
-        frozenset((AllComponents.CHANNEL,))
+        frozenset((Microscopy.Channel,))
     )
 
 
@@ -1032,7 +1034,7 @@ def test_plate_scope_collects_runtime_discovered_component_groups() -> None:
                 name=measurement_spec.name,
                 path=input_path,
                 artifact_type=measurement_spec.artifact_type,
-                group_component=AllComponents.CHANNEL,
+                group_component=Microscopy.Channel,
                 paths_by_group={None: input_path},
             ),
         ),
@@ -1050,7 +1052,7 @@ def test_plate_scope_collects_runtime_discovered_component_groups() -> None:
             name=measurement_spec.name,
             path=f"/memory/A01/measurements_w{group_key}",
             count=int(group_key),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             group_key=group_key,
         )
 

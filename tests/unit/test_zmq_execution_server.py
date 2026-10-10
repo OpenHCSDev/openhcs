@@ -16,7 +16,6 @@ from zmqruntime.messages import (
 )
 
 import openhcs.runtime.zmq_execution_server as zmq_execution_server_module
-from openhcs.constants.constants import GroupBy
 from openhcs.core.config import (
     GlobalPipelineConfig,
     PipelineConfig,
@@ -57,11 +56,12 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQExecutionRequestPayload,
     ZMQRuntimeObservationExportScope,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> None:
     global_config = GlobalPipelineConfig(
-        processing_config=ProcessingConfig(group_by=GroupBy.CHANNEL)
+        processing_config=ProcessingConfig(group_by=Microscopy.Channel)
     )
     configs = OpenHCSExecutionConfigBundle(
         global_pipeline=global_config,
@@ -96,7 +96,7 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
         use_live=False,
     )
     assert saved_global_config is global_config
-    assert saved_global_config.processing_config.group_by is GroupBy.CHANNEL
+    assert saved_global_config.processing_config.group_by is Microscopy.Channel
 
 
 @pytest.mark.parametrize("failed", [False, True])
@@ -780,7 +780,7 @@ def test_compiled_axis_selection_uses_admitted_axes_and_debug_policy():
 def test_compiled_request_keeps_config_scope_without_resolving_configuration(monkeypatch):
     server = ZMQExecutionServer(port=5555)
     global_config = GlobalPipelineConfig(
-        processing_config=ProcessingConfig(group_by=GroupBy.CHANNEL)
+        processing_config=ProcessingConfig(group_by=Microscopy.Channel)
     )
     context = ZMQExecutionContext(
         execution_id="compiled-adoption",

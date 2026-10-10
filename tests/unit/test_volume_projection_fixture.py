@@ -13,7 +13,6 @@ import sys
 import numpy as np
 import pytest
 
-from openhcs.constants import AllComponents
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactSpecCollection, ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data, image_payload_metadata
 from openhcs.core.runtime_object_labels import object_label_dense_array
@@ -21,6 +20,8 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlane
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 
@@ -38,7 +39,7 @@ def source_volume():
     pixels = np.zeros((3, 8, 9), dtype=np.uint16)
     for index in range(3):
         pixels[index, 1:index + 3, 1:index + 3] = index + 11
-    addresses = tuple(OpenHCSPlaneAddress.from_values("image.ome.tif", 1, 1, z + 1, 1) for z in range(3))
+    addresses = tuple(OpenHCSPlaneAddress(((Microscopy.Well, "image.ome.tif"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, z + 1), (Microscopy.Timepoint, 1))) for z in range(3))
     metadata = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/synthetic-unit-input/image.ome.tif",) * 3,
@@ -55,7 +56,7 @@ def output_plan(declaration):
     return ArtifactOutputPlan(
         name=bound.name, path="/synthetic-unit-output/" + bound.name,
         artifact_type=bound.artifact_type, relations=bound.relations,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
 
 
@@ -99,8 +100,8 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
         assert contextual_rows.source_provenance == expected_provenance
         assert contextual_rows.subject.object_name == fixture.VOLUME_LABELS.name
         assert contextual_rows.subject.id_field == "object_label"
-        for component in AllComponents:
-            assert tuple(contextual_rows.rows.column_values(component.value)) == tuple(
+        for component in AxisFamily.active().axes:
+            assert tuple(contextual_rows.rows.column_values(component.name)) == tuple(
                 source_component_metadata_value(
                     source_metadata.source_image_provenance_planes.plane(index).component_metadata,
                     component,

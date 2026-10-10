@@ -1,160 +1,139 @@
-"""Nominal value sets keyed by the canonical OpenHCS component declaration."""
+"""Complete value sets over the active axis family."""
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
-from enum import Enum
 from types import MappingProxyType
 from typing import Generic, TypeVar
 
-from openhcs.constants.constants import AllComponents
+from openhcs.core.axes import Axis, AxisFamily, is_axis
 
 ComponentValueT = TypeVar("ComponentValueT")
 
 
-class OpenHCSComponentValues(
-    Mapping[AllComponents, ComponentValueT],
+class AxisValues(
+    Mapping[type[Axis], ComponentValueT],
     Generic[ComponentValueT],
 ):
-    """Complete immutable values owned by the canonical OpenHCS axes."""
+    """Complete immutable values, one per axis of the active family."""
 
     __slots__ = ("_declared_values",)
 
     def __init__(
         self,
-        component_values: Iterable[tuple[AllComponents, ComponentValueT]],
+        component_values: Iterable[tuple[type[Axis], ComponentValueT]],
     ) -> None:
+        family = AxisFamily.active()
         supplied_values = tuple(component_values)
-        if any(
-            not isinstance(component, AllComponents) for component, _ in supplied_values
-        ):
-            raise TypeError("Component values require exact AllComponents members")
+        if any(not family.contains(axis) for axis, _ in supplied_values):
+            raise TypeError(
+                f"Axis values require axes of {family.__qualname__}; got "
+                f"{[axis for axis, _ in supplied_values if not family.contains(axis)]}"
+            )
 
-        values_by_component = dict(supplied_values)
-        if len(values_by_component) != len(supplied_values):
-            raise ValueError("Each OpenHCS component may be bound only once")
+        values_by_axis = dict(supplied_values)
+        if len(values_by_axis) != len(supplied_values):
+            raise ValueError("Each axis may be bound only once")
 
-        missing = tuple(
-            component
-            for component in AllComponents
-            if component not in values_by_component
-        )
+        missing = tuple(axis for axis in family.axes if axis not in values_by_axis)
         if missing:
             raise ValueError(
-                "Component values must bind the canonical declaration exactly: "
-                + ", ".join(f"missing {component.value}" for component in missing)
+                "Axis values must bind the active family exactly: "
+                + ", ".join(f"missing {axis.name}" for axis in missing)
             )
 
         self._declared_values = tuple(
-            (component, values_by_component[component]) for component in AllComponents
-        )
-
-    @classmethod
-    def from_member_projection(
-        cls,
-        source_values: Iterable[tuple[Enum, ComponentValueT]],
-    ) -> "OpenHCSComponentValues[ComponentValueT]":
-        """Project another nominal enum by matching its declared member names."""
-
-        projected_by_name: dict[str, ComponentValueT] = {}
-        for component, value in source_values:
-            if not isinstance(component, Enum):
-                raise TypeError("Projected components must be nominal enum members")
-            if component.name in projected_by_name:
-                raise ValueError(
-                    f"Projected component {component.name!r} was bound more than once"
-                )
-            projected_by_name[component.name] = value
-
-        missing = tuple(
-            component.name
-            for component in AllComponents
-            if component.name not in projected_by_name
-        )
-        if missing:
-            raise ValueError(
-                "Component projection lacks declared members: " + ", ".join(missing)
-            )
-        return cls(
-            (component, projected_by_name[component.name])
-            for component in AllComponents
+            (axis, values_by_axis[axis]) for axis in family.axes
         )
 
     @classmethod
     def from_partial(
         cls,
-        component_values: Iterable[tuple[AllComponents, ComponentValueT]],
+        component_values: Iterable[tuple[type[Axis], ComponentValueT]],
         *,
         missing_value: ComponentValueT,
-    ) -> "OpenHCSComponentValues[ComponentValueT]":
-        """Complete a partial nominal binding with one explicit absent value."""
+    ) -> "AxisValues[ComponentValueT]":
+        """Complete a partial binding with one explicit absent value."""
 
         supplied_values = tuple(component_values)
-        if any(
-            not isinstance(component, AllComponents) for component, _ in supplied_values
-        ):
-            raise TypeError("Component values require exact AllComponents members")
-        values_by_component = dict(supplied_values)
-        if len(values_by_component) != len(supplied_values):
-            raise ValueError("Each OpenHCS component may be bound only once")
+        values_by_axis = dict(supplied_values)
+        if len(values_by_axis) != len(supplied_values):
+            raise ValueError("Each axis may be bound only once")
+        family = AxisFamily.active()
+        for axis in values_by_axis:
+            family.require(axis)
         return cls(
-            (
-                component,
-                values_by_component.get(component, missing_value),
-            )
-            for component in AllComponents
+            (axis, values_by_axis.get(axis, missing_value)) for axis in family.axes
+        )
+
+    @classmethod
+    def from_wire_mapping(
+        cls,
+        component_values: Mapping[str, ComponentValueT],
+        *,
+        missing_value: ComponentValueT,
+    ) -> "AxisValues[ComponentValueT]":
+        """Read each declared axis's boundary name from ``component_values``."""
+
+        family = AxisFamily.active()
+        return cls(
+            (axis, component_values.get(axis.name, missing_value))
+            for axis in family.axes
         )
 
     def declared_values(
         self,
-    ) -> tuple[tuple[AllComponents, ComponentValueT], ...]:
-        """Return values in canonical declaration order."""
+    ) -> tuple[tuple[type[Axis], ComponentValueT], ...]:
+        """Return values in declaration order."""
 
         return self._declared_values
 
-    def __getitem__(self, component: AllComponents) -> ComponentValueT:
+    def __getitem__(self, component: type[Axis]) -> ComponentValueT:
         return self.value_for(component)
 
-    def __iter__(self) -> Iterator[AllComponents]:
-        return (component for component, _ in self._declared_values)
+    def __iter__(self) -> Iterator[type[Axis]]:
+        return (axis for axis, _ in self._declared_values)
 
     def __len__(self) -> int:
         return len(self._declared_values)
 
-    def value_for(self, component: AllComponents) -> ComponentValueT:
-        """Return the value for one exact canonical component."""
+    def value_for(self, component: type[Axis]) -> ComponentValueT:
+        """Return the value for one declared axis."""
 
-        if not isinstance(component, AllComponents):
-            raise TypeError("Component lookup requires an exact AllComponents member")
-        for declared_component, value in self._declared_values:
-            if declared_component is component:
+        if not is_axis(component):
+            raise TypeError(f"Axis lookup requires a declared axis; got {component!r}")
+        for declared_axis, value in self._declared_values:
+            if declared_axis is component:
                 return value
         raise KeyError(component)
 
     def with_value(
         self,
-        component: AllComponents,
+        component: type[Axis],
         value: ComponentValueT,
-    ) -> "OpenHCSComponentValues[ComponentValueT]":
-        """Return a value set with one canonical component replaced."""
+    ) -> "AxisValues[ComponentValueT]":
+        """Return a value set with one axis replaced."""
 
         self.value_for(component)
         return type(self)(
             (
-                declared_component,
-                value if declared_component is component else current_value,
+                declared_axis,
+                value if declared_axis is component else current_value,
             )
-            for declared_component, current_value in self._declared_values
+            for declared_axis, current_value in self._declared_values
         )
 
     def wire_mapping(self) -> Mapping[str, ComponentValueT]:
         """Serialize values at an explicit string-keyed boundary."""
 
         return MappingProxyType(
-            {component.value: value for component, value in self._declared_values}
+            {axis.name: value for axis, value in self._declared_values}
         )
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, OpenHCSComponentValues):
+        if not isinstance(other, AxisValues):
             return NotImplemented
         return self._declared_values == other._declared_values
+
+    def __hash__(self) -> int:
+        return hash(self._declared_values)

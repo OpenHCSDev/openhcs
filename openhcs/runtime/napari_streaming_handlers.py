@@ -20,7 +20,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
 
-from openhcs.constants import AllComponents
+from openhcs.core.axes import AxisFamily, StackAxis
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
@@ -1422,7 +1422,12 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         """Spatial review axes, excluding acquisition selectors and payload bands."""
         return tuple(
             axis
-            for axis in (AllComponents.Z_INDEX.value, "y", "x")
+            for axis in (
+                *(stack.name for stack in AxisFamily.active().with_role(StackAxis)),
+                "y",
+                "x",
+            )
+
             if axis in self.axis_labels
         )
 

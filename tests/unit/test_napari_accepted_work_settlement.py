@@ -92,7 +92,7 @@ def wire_receiver(receiver):
 
 def wire_batch(item):
     items = item if isinstance(item, list) else [item]
-    config = NapariDisplayConfig(channel_mode=NapariDimensionMode.LAYER)
+    config = NapariDisplayConfig(colour_mode=NapariDimensionMode.LAYER)
     producer = StreamProducerIdentity.pipeline_output(
         output_kind="artifact",
         output_key="test",

@@ -24,7 +24,6 @@ from pyqt_reactive.services.pattern_data_manager import (
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
-from openhcs.constants import GroupBy
 from openhcs.constants.constants import OrchestratorState
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -66,6 +65,8 @@ from openhcs.ui.shared.plate_scope_identity import (
     PipelineScopeIdentity,
     PlateScopeIdentity,
 )
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 TEST_PLATE_SCOPE = "plate"
 
@@ -1599,27 +1600,27 @@ def test_pipeline_update_refreshes_existing_step_scope_state() -> None:
     editor.plate_manager = None
     original = FunctionStep(
         name="IdentifyPrimaryObjects",
-        processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL),
+        processing_config=LazyProcessingConfig(group_by=Microscopy.Channel),
     )
     editor.update_pipeline_for_plate(TEST_PLATE_SCOPE, [original])
 
     replacement = FunctionStep(
         name="IdentifyPrimaryObjects",
-        processing_config=LazyProcessingConfig(group_by=GroupBy.NONE),
+        processing_config=LazyProcessingConfig(group_by=Ungrouped),
     )
     replacement._scope_token = original._scope_token
 
     editor.update_pipeline_for_plate(TEST_PLATE_SCOPE, [replacement])
 
     resolved = editor.get_pipeline_for_plate(TEST_PLATE_SCOPE)
-    assert resolved[0].processing_config.group_by is GroupBy.NONE
+    assert resolved[0].processing_config.group_by is Ungrouped
 
 
 def test_groupby_none_is_concrete_object_state_override() -> None:
     ObjectStateRegistry.clear()
 
-    assert not (GroupBy.NONE == None)  # noqa: E711
-    assert not (None == GroupBy.NONE)  # noqa: E711
+    assert not (Ungrouped == None)  # noqa: E711
+    assert not (None == Ungrouped)  # noqa: E711
 
     state = ObjectState(
         FunctionStep(
@@ -1629,9 +1630,9 @@ def test_groupby_none_is_concrete_object_state_override() -> None:
         scope_id="plate::functionstep_0",
     )
 
-    state.update_parameter("processing_config.group_by", GroupBy.NONE)
+    state.update_parameter("processing_config.group_by", Ungrouped)
 
-    assert state.parameters["processing_config.group_by"] is GroupBy.NONE
+    assert state.parameters["processing_config.group_by"] is Ungrouped
     assert "processing_config.group_by" in state.signature_diff_fields
 
     state.reset_parameter("processing_config.group_by")

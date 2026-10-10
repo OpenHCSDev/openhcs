@@ -23,7 +23,6 @@ from zmqruntime.viewer_protocol import (
 from openhcs.serialization.json import to_jsonable
 from collections.abc import Mapping
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.runtime_array_values import (
     DataBackedRuntimeArrayPayload,
@@ -53,6 +52,7 @@ from openhcs.core.source_spatial_domain import (
 from openhcs.core.source_spatial_domain import (
     _spatial_shape_pair as _source_spatial_shape_pair,
 )
+from openhcs.core.axes import AxisFamily
 
 PhysicalBorderEdgesYX = tuple[bool, bool, bool, bool] | None
 
@@ -528,7 +528,7 @@ class ImagePayloadMetadata(
         if self.plane_axis is None:
             return {}
         return self.source_provenance.varying_plane_component_values(
-            tuple(AllComponents)
+            AxisFamily.active().axes
         )
 
     @classmethod
@@ -1221,7 +1221,7 @@ class ImagePayloadMetadata(
         # Scalar context cannot collapse coordinates that vary across this
         # payload's represented source planes, including runtime stacks.
         varying = self.source_provenance.varying_plane_component_values(
-            tuple(AllComponents)
+            AxisFamily.active().axes
         )
         if varying:
             fallback_provenance = fallback_provenance.with_source_component_metadata(

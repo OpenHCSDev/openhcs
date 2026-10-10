@@ -14,6 +14,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerComponentMode
 
+from openhcs.core.axes import AxisFamily
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import (
     NapariDisplayConfig,
@@ -92,6 +93,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _component_name_metadata(payload, context="test component metadata"):
@@ -1964,7 +1966,7 @@ class _RegionDisplayConfig(NapariDisplayConfig):
     """New display declaration: inherit existing modes and add one owned axis."""
 
     REGION_COMPONENT = "region"
-    COMPONENT_ORDER = (*NapariDisplayConfig.COMPONENT_ORDER, REGION_COMPONENT)
+    COMPONENT_ORDER = (*AxisFamily.active().names(), REGION_COMPONENT)
     region_mode: NapariDimensionMode = NapariDimensionMode.STACK
 
     def component_modes(self) -> dict[str, str]:
@@ -1977,8 +1979,8 @@ class _RegionDisplayConfig(NapariDisplayConfig):
 @pytest.mark.parametrize(
     "component, mode_field, config_type",
     [
-        ("channel", "channel_mode", NapariDisplayConfig),
-        ("site", "site_mode", NapariDisplayConfig),
+        ("channel", "colour_mode", NapariDisplayConfig),
+        ("site", "tile_mode", NapariDisplayConfig),
         (_RegionDisplayConfig.REGION_COMPONENT, "region_mode", _RegionDisplayConfig),
     ],
 )
@@ -6401,7 +6403,7 @@ def test_napari_points_layer_rejects_fractional_z_without_z_axis():
         projected_axis_components=("channel",),
         component_values={"channel": [1]},
     )
-    with pytest.raises(ValueError, match="projected z_index axis"):
+    with pytest.raises(ValueError, match="projected stack axis"):
         napari_viewer_server._build_nd_points([item], presentation.projection)
 
 

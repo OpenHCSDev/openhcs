@@ -23,7 +23,6 @@ from benchmark.contracts.comparison_manifest import (
     JSONValue,
     ManifestCasePayload,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import ArtifactType, MeasurementsArtifactType
 from openhcs.core.config import (
@@ -44,6 +43,7 @@ from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
+from openhcs.domains.microscopy.axes import Microscopy
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 OFFICIAL30_MANIFEST_PATH = (
@@ -233,7 +233,7 @@ def _materialized_well_labels(
             for metadata in prepared.materialization.source_metadata.values()
             for value in source_component_metadata_values(
                 metadata,
-                AllComponents.WELL,
+                Microscopy.Well,
             )
         }
     )

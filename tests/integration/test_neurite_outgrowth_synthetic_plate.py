@@ -37,7 +37,7 @@ from zmqruntime.config import TransportMode
 from skimage.draw import disk, line
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
     GlobalPipelineConfig,
@@ -75,6 +75,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
 from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _write_known_neurite_images(plate_dir):
@@ -157,8 +158,8 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.SITE,
+            variable_components=[Microscopy.Channel],
+            group_by=Microscopy.Site,
         ),
     )
 
@@ -190,11 +191,11 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             for output in compiled_plan.artifact_outputs.values()
             if output.name == "neurite_candidate_mask"
         )
-        assert checkpoint_plan.group_component is AllComponents.SITE
+        assert checkpoint_plan.group_component is Microscopy.Site
         assert checkpoint_plan.group_scope_sources()
         assert checkpoint_plan.source_context_source() is None
-        assert compiled_plan.variable_components == [VariableComponents.CHANNEL]
-        assert compiled_plan.group_by is GroupBy.SITE
+        assert compiled_plan.variable_components == [Microscopy.Channel]
+        assert compiled_plan.group_by is Microscopy.Site
         compiled_pattern = compiled_plan.compiled_function_pattern
         assert compiled_pattern is not None
         compiled_invocation = next(compiled_pattern.iter_invocations())

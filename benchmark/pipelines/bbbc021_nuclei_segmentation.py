@@ -26,7 +26,6 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
     LazyNapariStreamingConfig,
 )
-from openhcs.constants.constants import VariableComponents
 
 # ============================================================================
 # SELECT BACKEND (uncomment one set)
@@ -35,6 +34,7 @@ from openhcs.constants.constants import VariableComponents
 # --- CPU Backend (numpy/scipy) ---
 from benchmark.pipelines.cellprofiler_preprocess import preprocess_cpu as preprocess
 from benchmark.pipelines.cellprofiler_nuclei import identify_primary_objects as segment
+from openhcs.domains.microscopy.axes import Microscopy
 
 # --- GPU Backend (pyclesperanto - OpenCL, works on AMD/NVIDIA/Intel) ---
 # from benchmark.pipelines.cellprofiler_preprocess import preprocess_gpu as preprocess
@@ -65,7 +65,7 @@ step_1 = FunctionStep(
     ),
     name="CellProfiler Preprocessing",
     processing_config=LazyProcessingConfig(
-        variable_components=[VariableComponents.CHANNEL]
+        variable_components=[Microscopy.Channel]
     ),
 )
 pipeline_steps.append(step_1)
@@ -87,7 +87,7 @@ step_2 = FunctionStep(
     ),
     name="IdentifyPrimaryObjects (Nuclei)",
     processing_config=LazyProcessingConfig(
-        variable_components=[VariableComponents.CHANNEL]
+        variable_components=[Microscopy.Channel]
     ),
     napari_streaming_config=LazyNapariStreamingConfig(),
     step_materialization_config=LazyStepMaterializationConfig(),

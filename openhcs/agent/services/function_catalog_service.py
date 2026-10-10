@@ -1254,8 +1254,8 @@ def _runtime_contract_summary(
         processing_contract=_enum_member_name(contract.processing_contract),
         declared_processing_contract=contract.declared_processing_contract,
         runtime_bound_parameters=contract.runtime_bound_parameters,
-        required_variable_components=tuple(
-            component.name for component in contract.required_variable_components
+        required_axis_roles=tuple(
+            role.__name__ for role in contract.required_axis_roles
         ),
         artifact_inputs=artifact_inputs,
         artifact_outputs=artifact_outputs,

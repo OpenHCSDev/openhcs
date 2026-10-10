@@ -43,6 +43,7 @@ from openhcs.core.virtual_workspace_metadata import (
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.serialization.json import to_jsonable
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def metadata_fixture():
@@ -176,7 +177,7 @@ def test_atomic_perwell_projection_merge_preserves_all_records(tmp_path):
     def merge(well):
         virtual_path = f"{well}.tif"
         projection = SourcePlaneProjection(
-            OpenHCSPlaneAddress.from_values(well, 1, 1, 1, 1),
+            OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             SourcePixelRef("disk", virtual_path),
             image_metadata=metadata_fixture(),
         )
@@ -202,7 +203,7 @@ def calibrated_projection(well, path, pixel_size):
     source_metadata = {}
     spacing.merge_into(source_metadata, path=path)
     return SourcePlaneProjection(
-        OpenHCSPlaneAddress.from_values(well, 1, 1, 1, 1),
+        OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         SourcePixelRef("disk", path),
         source_metadata=source_metadata,
         image_metadata=metadata_fixture().replace_fields(source_voxel_spacing=spacing),

@@ -65,7 +65,7 @@ from openhcs.agent.ui_bridge_identities import (
     PipelineEditorStateSurfaceIdentityDeclaration,
     PipelineEditorWidgetIdentity,
 )
-from openhcs.constants.constants import GroupBy, OrchestratorState, VariableComponents
+from openhcs.constants.constants import OrchestratorState
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -125,6 +125,7 @@ from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 from openhcs.ui.shared.plate_scope_identity import (
     PipelineScopeIdentity,
 )
+from openhcs.core.axes import Axis, GroupingDeclaration
 
 logger = logging.getLogger(__name__)
 
@@ -312,15 +313,15 @@ class StepProcessingTooltipSection:
 
     def variable_components_line(
         self,
-        variable_components: list[VariableComponents],
+        variable_components: list[type[Axis]],
     ) -> str:
         if not variable_components:
             return "Variable Components: None"
         comp_names = [component.name for component in variable_components]
         return f"Variable Components: [{', '.join(comp_names)}]"
 
-    def group_by_line(self, group_by: GroupBy) -> str:
-        if not group_by or group_by.value is None:
+    def group_by_line(self, group_by: type[GroupingDeclaration] | None) -> str:
+        if group_by is None or not group_by.grouping_axes():
             return "Group By: None"
         return f"Group By: {group_by.name}"
 

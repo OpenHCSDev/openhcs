@@ -6,7 +6,7 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_workspace_projection import (
@@ -26,6 +26,7 @@ from tests.unit.bioformats_fixture import (
     bioformats_filemanager,
     write_bioformats_manifest_fixture,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_bioformats_handler_writes_normalized_workspace_metadata(
@@ -241,14 +242,14 @@ def test_bioformats_metadata_handler_reports_component_values(tmp_path: Path) ->
     assert handler.get_grid_dimensions(tmp_path) == (1, 1)
     assert handler.get_pixel_size(tmp_path) == 0.5
     component_values = handler.component_value_set(tmp_path)
-    assert component_values.values_for(AllComponents.CHANNEL) == {
+    assert component_values.values_for(Microscopy.Channel) == {
         "1": "DAPI",
         "2": "GFP",
     }
-    assert component_values.values_for(AllComponents.WELL) == {"A01": "A01"}
-    assert component_values.values_for(AllComponents.SITE) == {"1": None}
-    assert component_values.values_for(AllComponents.Z_INDEX) == {"1": None}
-    assert component_values.values_for(AllComponents.TIMEPOINT) == {"1": None}
+    assert component_values.values_for(Microscopy.Well) == {"A01": "A01"}
+    assert component_values.values_for(Microscopy.Site) == {"1": None}
+    assert component_values.values_for(Microscopy.ZIndex) == {"1": None}
+    assert component_values.values_for(Microscopy.Timepoint) == {"1": None}
 
 
 def test_bioformats_auto_detection_is_late_fallback(tmp_path: Path) -> None:

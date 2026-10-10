@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from openhcs.core.alias_property import AliasProperty
 
-from openhcs.constants.constants import AllComponents, MEMORY_TYPE_NUMPY
+from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.component_group_scope import ComponentGroupScope
@@ -137,6 +137,7 @@ from openhcs.core.steps.function_runtime import (
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class DebugRuntimeTokenParameter:
@@ -1536,7 +1537,7 @@ def test_debug_snapshot_round_trips_invocation_parameters_and_artifact_identity(
         name="objects",
         path="/tmp/objects.json",
         artifact_type=ObjectLabelsArtifactType,
-        group_component=AllComponents.WELL,
+        group_component=Microscopy.Well,
         group_keys=("A01",),
     )
     event = DebugEvent(
@@ -1581,7 +1582,7 @@ def test_paused_worker_runtime_inspection_projects_runtime_value_store():
             name="measurements",
             path="/memory/measurements.pkl",
             artifact_type=MeasurementsArtifactType,
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             group_keys=("DAPI",),
         ),
         measurements,
@@ -1608,7 +1609,7 @@ def test_paused_worker_runtime_inspection_projects_runtime_value_store():
     assert key_record["name"] == "measurements"
     assert key_record["artifact_type"] == MeasurementsArtifactType.value
     assert key_record["scope"]["axis_id"] == DebugRuntimeFixture.AXIS_ID
-    assert key_record["scope"]["component"] == AllComponents.CHANNEL.value
+    assert key_record["scope"]["component"] == Microscopy.Channel.name
     assert key_record["scope"]["value"] == "DAPI"
     assert location_record["backend"] == DebugRuntimeFixture.DEBUG_SNAPSHOT_BACKEND
     assert location_record["path"] == "/memory/measurements.pkl"

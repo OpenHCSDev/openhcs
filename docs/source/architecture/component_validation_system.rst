@@ -2,11 +2,11 @@ Component validation
 ====================
 
 Component declarations describe semantic microscope dimensions such as well,
-site, channel, Z, and time point. ``AllComponents``, ``VariableComponents``,
-``SequentialComponents``, and ``GroupBy`` are typed views used at different
-boundaries; equal string values do not make the declarations interchangeable.
+site, channel, Z, and time point. Each is an ``Axis`` class declared by the
+active ``AxisFamily``; subsets such as the variable axes are family queries,
+and a step's absent grouping is the explicit ``Ungrouped`` declaration.
 
-Validation converts external values to the exact owning enum and rejects
+Validation decodes external names through ``AxisFamily.named`` and rejects
 unknown or semantically invalid combinations. It checks, among other things,
 that:
 

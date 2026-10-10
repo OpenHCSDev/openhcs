@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactInputProjectionPlan,
@@ -37,6 +37,7 @@ from openhcs.core.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
+from openhcs.core.axes import Axis
 
 
 @dataclass(slots=True)
@@ -78,7 +79,7 @@ def cellprofiler_runtime_input_edge_for_test(
     invocation_scope: ComponentGroupScope,
     producer_selection_scope: ComponentGroupScope,
     component_scopes: tuple[ComponentGroupScope, ...],
-    consumer_variable_components: tuple[AllComponents, ...],
+    consumer_variable_components: tuple[type[Axis], ...],
 ) -> InvocationArtifactInputEdgePlan:
     """Build one exact compiled input edge without deriving projection semantics."""
 

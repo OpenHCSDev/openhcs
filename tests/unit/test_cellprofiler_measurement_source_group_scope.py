@@ -7,7 +7,6 @@ from typing import ClassVar
 
 import numpy as np
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
@@ -38,6 +37,7 @@ from openhcs.interop.cellprofiler.runtime.output_record_request import (
 from tests.unit.cellprofiler_runtime_test_support import (
     runtime_adapter_request_for_test,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class _PayloadBackedOutputRecordRequest(CellProfilerOutputRecordRequest):
@@ -100,7 +100,7 @@ def test_measurement_source_alignment_uses_selected_output_group_scope() -> None
         path="/artifacts/CombinedMeasurements",
         artifact_type=measurements.artifact_type,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     adapter = CellProfilerRuntimeAdapter(
         runtime_adapter_request_for_test(
@@ -111,7 +111,7 @@ def test_measurement_source_alignment_uses_selected_output_group_scope() -> None
             group_key="1",
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
                 value="1",
             ),
         )

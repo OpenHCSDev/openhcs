@@ -3314,7 +3314,7 @@ class SetViewerImageColorCapability(ViewerNativePresentationCapability):
     title = "Set native image colormap and blending"
     description = (
         "Set an installed Napari colormap and blending mode on one exact mounted scalar "
-        "image route. Returns actual native readback. Use channel_mode=LAYER in the "
+        "image route. Returns actual native readback. Use colour_mode=LAYER in the "
         "stream's original display_config for simultaneous channel composition, and "
         "the existing image-intensity tool for each route's numeric window. No pixels, "
         "axes, transforms or physical source identities change. RGB images fail closed."

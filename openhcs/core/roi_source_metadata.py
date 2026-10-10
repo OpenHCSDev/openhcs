@@ -14,6 +14,7 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.source_image_provenance import SourceComponentMetadata
 from openhcs.serialization.json import to_jsonable
+from openhcs.core.axes import AxisFamily
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,12 +84,11 @@ class ROIPlaneMetadata:
 
     @staticmethod
     def component_values(metadata: ImagePayloadMetadata) -> dict[str, tuple[object, ...]]:
-        from openhcs.constants.constants import AllComponents
 
         return {
             component: tuple(dict.fromkeys(values))
             for component, values in metadata.source_provenance.varying_plane_component_values(
-                tuple(AllComponents)
+                AxisFamily.active().axes
             ).items()
         }
 

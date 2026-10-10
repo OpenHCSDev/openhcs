@@ -7,7 +7,6 @@ import pytest
 from arraybridge.decorators import PRESERVE_INPUT_DTYPE_CONFIG
 
 import openhcs.processing.backends.cellprofiler  # noqa: F401
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
@@ -61,6 +60,7 @@ from openhcs.core.runtime_spatial_grid import (
 from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _subclasses(root: type) -> tuple[type, ...]:
@@ -642,7 +642,7 @@ def test_variable_component_projection_requires_declared_plane_provenance() -> N
     request = RuntimeProjectionSourceIdentityRequest(
         value=np.zeros((2, 4, 5), dtype=np.float32),
         source_description="undeclared image stack",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
 
     with pytest.raises(
@@ -661,7 +661,7 @@ def test_variable_component_projection_validates_declared_cardinality() -> None:
     request = RuntimeProjectionSourceIdentityRequest(
         value=payload,
         source_description="mismatched image stack",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -681,7 +681,7 @@ def test_variable_component_projection_rejects_expanded_source_provenance() -> N
     request = RuntimeProjectionSourceIdentityRequest(
         value=payload,
         source_description="expanded-provenance image stack",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=3,
@@ -708,7 +708,7 @@ def test_variable_component_projection_uses_declared_plane_axis() -> None:
             RuntimeProjectionSourceIdentityRequest(
                 value=payload,
                 source_description="declared image stack",
-                variable_components=(VariableComponents.SITE,),
+                variable_components=(Microscopy.Site,),
                 plane_projection=RuntimePlaneAxisValueProjection.preserve(
                     axis=RuntimePlaneAxis.RUNTIME_SLICE,
                     axis_size=2,

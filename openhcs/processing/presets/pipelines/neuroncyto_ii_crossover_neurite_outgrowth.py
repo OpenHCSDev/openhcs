@@ -26,7 +26,7 @@ from pathlib import Path
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.config import (
@@ -59,6 +59,8 @@ from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize_plane,
 )
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,11 +96,11 @@ def _exact_source_binding(
             ),
         ),
         component_identity=(
-            ComponentSelector(AllComponents.WELL, inputs.image_id),
-            ComponentSelector(AllComponents.SITE, "1"),
-            ComponentSelector(AllComponents.CHANNEL, channel),
-            ComponentSelector(AllComponents.Z_INDEX, "1"),
-            ComponentSelector(AllComponents.TIMEPOINT, "1"),
+            ComponentSelector(Microscopy.Well, inputs.image_id),
+            ComponentSelector(Microscopy.Site, "1"),
+            ComponentSelector(Microscopy.Channel, channel),
+            ComponentSelector(Microscopy.ZIndex, "1"),
+            ComponentSelector(Microscopy.Timepoint, "1"),
         ),
     )
 
@@ -164,8 +166,8 @@ def build_neuroncyto_ii_crossover_demo(
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Channel],
+            group_by=Ungrouped,
             input_source=InputSource.PIPELINE_START,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
@@ -263,8 +265,8 @@ def neuroncyto_ii_crossover_demo_contribution(
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Channel],
+            group_by=Ungrouped,
             input_source=InputSource.PIPELINE_START,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
@@ -279,8 +281,8 @@ def neuroncyto_ii_crossover_demo_contribution(
         name=compact_step.name,
         func=compact_step.func,
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Channel],
+            group_by=Ungrouped,
             input_source=InputSource.PREVIOUS_STEP,
         ),
         napari_streaming_config=compact_step.napari_streaming_config,

@@ -12,7 +12,6 @@ import tifffile
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 import openhcs.demo.synthetic_data as producer_module
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
     SourceProjectionMetadataSerializer,
@@ -29,6 +28,8 @@ from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser, ImageXpressHandler
 from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class SyntheticAcquisitionIdentity(unittest.TestCase):
@@ -65,7 +66,7 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         self.assertEqual(set(projections), set(paths))
         self.assertEqual(set(metadata[FIELDS.WORKSPACE_MAPPING]), set(paths))
         parser = FilenameParser.__registry__[metadata[FIELDS.SOURCE_FILENAME_PARSER_NAME]]()
-        address_sets = {component: set() for component in AllComponents}
+        address_sets = {component: set() for component in AxisFamily.active().axes}
         physical_refs = set()
         for path, projection in projections.items():
             parsed = parser.parse_filename(Path(path).name)
@@ -78,16 +79,16 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
             self.assertTrue(physical.is_file())
             self.assertEqual(tifffile.imread(physical).shape, (32, 32))
             physical_refs.add(ref.backend_address)
-            for component in AllComponents:
+            for component in AxisFamily.active().axes:
                 address_sets[component].add(projection.address.value_for(component))
         self.assertEqual(len(physical_refs), count)
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             self.assertEqual(set(metadata[component_metadata_field(component)]), address_sets[component])
         # A fresh real metadata handler reads the persisted component authority.
         reopened = OpenHCSMetadataHandler(
             FileManager({"disk": DiskStorageBackend()})
         ).component_value_set(plate)
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             self.assertEqual(set(reopened.values_for(component)), address_sets[component])
         return address_sets
 
@@ -109,12 +110,12 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                                     generator.generate_openhcs_metadata(sub_dir="custom")
                             metadata = self.document(plate)
                             values = self.assert_coherent(plate, metadata, 8 * z_levels)
-                            self.assertEqual(values[AllComponents.WELL],
+                            self.assertEqual(values[Microscopy.Well],
                                 {"A01", "D12"} if format == "ImageXpress" else {"R01C01", "R04C12"})
-                            self.assertEqual(values[AllComponents.SITE], {"1", "2"})
-                            self.assertEqual(values[AllComponents.CHANNEL], {"1", "2"})
-                            self.assertEqual(values[AllComponents.Z_INDEX], {str(z) for z in range(1, z_levels + 1)})
-                            self.assertEqual(values[AllComponents.TIMEPOINT], {"1"})
+                            self.assertEqual(values[Microscopy.Site], {"1", "2"})
+                            self.assertEqual(values[Microscopy.Channel], {"1", "2"})
+                            self.assertEqual(values[Microscopy.ZIndex], {str(z) for z in range(1, z_levels + 1)})
+                            self.assertEqual(values[Microscopy.Timepoint], {"1"})
                             self.assertEqual(metadata[FIELDS.MICROSCOPE_HANDLER_NAME],
                                 "imagexpress" if format == "ImageXpress" else "opera_phenix")
 
@@ -122,10 +123,10 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         generator, plate = self.generate("OperaPhenix", explicit=True)
         metadata = self.document(plate)
         parser = FilenameParser.__registry__[metadata[FIELDS.SOURCE_FILENAME_PARSER_NAME]]()
-        parsed_wells = {parser.parse_filename(path.name).value_for(AllComponents.WELL)
+        parsed_wells = {parser.parse_filename(path.name).value_for(Microscopy.Well)
                         for path in plate.rglob("*.tiff")}
-        self.assertEqual(set(metadata[FIELDS.WELLS]), parsed_wells)
-        self.assertEqual(set(metadata[FIELDS.WELLS]) | parsed_wells, {"R01C01"})
+        self.assertEqual(set(metadata[component_metadata_field(Microscopy.Well)]), parsed_wells)
+        self.assertEqual(set(metadata[component_metadata_field(Microscopy.Well)]) | parsed_wells, {"R01C01"})
         self.assert_coherent(plate, metadata, 2)
 
     def test_imagexpress_bioformats_stack_retains_folder_axis_and_refs(self):
@@ -141,7 +142,7 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         generator, plate = self.generate("OperaPhenix", skip_files=("r01c01f1p01-ch2sk1fk1fl1.tiff",))
         metadata = self.document(plate)
         values = self.assert_coherent(plate, metadata, 1)
-        self.assertEqual(values[AllComponents.CHANNEL], {"1"})
+        self.assertEqual(values[Microscopy.Channel], {"1"})
 
     def test_repeat_generation_replaces_emitted_plane_inventory(self):
         generator, plate = self.generate("OperaPhenix", z_levels=2)
@@ -154,7 +155,7 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                         for site in (1, 3) for channel in (1, 2))
         generator, plate = self.generate("OperaPhenix", grid=(1, 4), skip_files=skipped)
         values = self.assert_coherent(plate, self.document(plate), 4)
-        self.assertEqual(values[AllComponents.SITE], {"2", "4"})
+        self.assertEqual(values[Microscopy.Site], {"2", "4"})
 
     def test_new_complete_address_needs_no_metadata_variant(self):
         generator, plate = self.generate("OperaPhenix")
@@ -163,10 +164,10 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                                    plate / "Images", "D12", 17, 7, 99)
             generator.generate_openhcs_metadata(sub_dir="Images")
         values = self.assert_coherent(plate, self.document(plate), 3)
-        self.assertEqual(values[AllComponents.WELL], {"R01C01", "R04C12"})
-        self.assertEqual(values[AllComponents.Z_INDEX], {"1", "99"})
-        self.assertEqual(values[AllComponents.SITE], {"1", "17"})
-        self.assertEqual(values[AllComponents.CHANNEL], {"1", "2", "7"})
+        self.assertEqual(values[Microscopy.Well], {"R01C01", "R04C12"})
+        self.assertEqual(values[Microscopy.ZIndex], {"1", "99"})
+        self.assertEqual(values[Microscopy.Site], {"1", "17"})
+        self.assertEqual(values[Microscopy.Channel], {"1", "2", "7"})
         np.testing.assert_array_equal(tifffile.imread(plate / "Images/r04c12f17p99-ch7sk1fk1fl1.tiff"),
                                       np.full((32, 32), 172, dtype=np.uint16))
 
@@ -174,8 +175,8 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         generator, plate = self.generate("ImageXpress", channels=1, bioformats=True)
         self.assertEqual({path.name for path in plate.rglob("*.tif")}, {f"{plate.name}_A01.tif"})
         values = self.assert_coherent(plate, self.document(plate), 1)
-        for component in AllComponents:
-            if component is not AllComponents.WELL:
+        for component in AxisFamily.active().axes:
+            if component is not Microscopy.Well:
                 self.assertEqual(values[component], {"1"})
 
     def test_xml_urls_and_physical_names_share_parser_owner(self):
@@ -261,11 +262,11 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                 parser = parser_type()
                 self.assertIs(FilenameParser.__registry__[parser_type.__name__], parser_type)
                 self.assertEqual(parser_type.__mro__.count(GenericFilenameParser), 1)
-                self.assertEqual(parser.FILENAME_COMPONENTS, tuple(AllComponents))
+                self.assertEqual(parser.FILENAME_COMPONENTS, AxisFamily.active().axes)
                 components = parser.bind_declared_values(
-                    ((AllComponents.WELL, "D12"), (AllComponents.SITE, 17),
-                     (AllComponents.CHANNEL, 7), (AllComponents.Z_INDEX, 99),
-                     (AllComponents.TIMEPOINT, 3)))
+                    ((Microscopy.Well, "D12"), (Microscopy.Site, 17),
+                     (Microscopy.Channel, 7), (Microscopy.ZIndex, 99),
+                     (Microscopy.Timepoint, 3)))
                 physical_name = parser.construct_acquisition_filename(components)
                 self.assertEqual(physical_name, "scope172_D12_s017_w7.tif")
                 self.assertEqual(len(parser.acquisition_calls), 1)
@@ -290,8 +291,8 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                     grid_dimensions=[1, 1], pixel_size=0.65, main=True)
                 AtomicMetadataWriter().replace_subdirectory_metadata(get_metadata_path(plate), ".", metadata)
                 values = self.assert_coherent(plate, metadata, 1)
-                self.assertEqual(values[AllComponents.Z_INDEX], {"99"})
-                self.assertEqual(values[AllComponents.TIMEPOINT], {"3"})
+                self.assertEqual(values[Microscopy.ZIndex], {"99"})
+                self.assertEqual(values[Microscopy.Timepoint], {"3"})
 
         class RecordedScopedImageXpressHandler(ImageXpressHandler):
             _microscope_type = "recorded_scoped_imagexpress"

@@ -25,7 +25,7 @@ those projections; they do not invent component keys or depend on a concrete
 microscope module.
 
 Complete component values cross internal boundaries as
-``OpenHCSComponentValues`` keyed by ``AllComponents`` members in declaration
+``AxisValues`` keyed by the active family's axes in declaration
 order. Filename parsers carry that value set in ``FilenameParseResult`` and
 metadata handlers project it through ``MetadataComponentValueSet``. Missing
 values remain explicit entries rather than making each consumer maintain a

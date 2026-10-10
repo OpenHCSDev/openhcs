@@ -38,6 +38,7 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _identity(image, *, sigma: float = 1.0):
@@ -842,10 +843,6 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
 
 
 def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> None:
-    from openhcs.constants.constants import (
-        AllComponents,
-        GroupBy,
-    )
     from openhcs.constants.input_source import InputSource
     from openhcs.core.artifacts import (
         ArtifactSpec,
@@ -870,7 +867,7 @@ def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> No
                 alias=f"OrigStain{channel}",
                 component_identity=(
                     ComponentSelector(
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=str(channel),
                     ),
                 ),
@@ -886,7 +883,7 @@ def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> No
         step_name="CorrectIlluminationCalculate",
         step_index=3,
         source_bindings=source_bindings,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         input_source=InputSource.PIPELINE_START,
         available_artifacts=source_artifacts,
         main_flow_artifacts=source_artifacts,
@@ -954,7 +951,6 @@ def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> No
 
 
 def test_grouped_contracts_project_prior_main_flow_by_producer_ownership() -> None:
-    from openhcs.constants.constants import GroupBy
     from openhcs.core.artifacts import ArtifactInputPlan, ArtifactSpecCollection
     from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -978,7 +974,7 @@ def test_grouped_contracts_project_prior_main_flow_by_producer_ownership() -> No
     step_context = ArtifactDeclarationStepContext(
         step_name="IdentifyPrimaryObjects",
         step_index=1,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         available_artifacts=ArtifactSpecCollection(grouped_images),
         main_flow_artifacts=ArtifactSpecCollection(
             image.for_plan_type(ArtifactInputPlan) for image in grouped_images

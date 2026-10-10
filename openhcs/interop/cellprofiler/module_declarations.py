@@ -18,7 +18,6 @@ from typing import (
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 
-from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecRef
 from openhcs.core.callable_contract import (
@@ -60,6 +59,14 @@ from openhcs.interop.cellprofiler_setting_normalization import (
 from openhcs.processing.backends.lib_registry.openhcs_registry import (
     OpenHCSFunctionCatalogDeclaration,
 )
+from openhcs.core.axes import (
+    Axis,
+    AxisFamily,
+    AxisRole,
+    GroupingDeclaration,
+    Ungrouped,
+)
+
 
 _CELLPROFILER_BACKEND_PACKAGE = "openhcs.processing.backends.cellprofiler"
 _CELLPROFILER_MODULE_REGISTRY = LazyDiscoveryDict(enable_cache=False)
@@ -171,8 +178,10 @@ class CellProfilerModule(
     confidence: ClassVar[float] = 0.5
     validated: ClassVar[bool] = False
     respects_masks: ClassVar[bool] = False
-    group_by: ClassVar[GroupBy | None] = None
-    """Whether coalesced generated emissions must stay explicit per group.
+    group_by_role: ClassVar[type[AxisRole] | None] = None
+    """Axis role this module's invocations group by (resolved per family).
+
+    Whether coalesced generated emissions must stay explicit per group.
 
     Most grouped emissions with identical public callable settings can be exposed
     as one normal OpenHCS callable. Modules that need per-group invocation
@@ -375,11 +384,13 @@ class CellProfilerModule(
             )
         cls.confidence = float(cls.confidence)
         cls.validated = bool(cls.validated)
-        if cls.group_by is not None:
-            cls.group_by = (
-                cls.group_by
-                if isinstance(cls.group_by, GroupBy)
-                else GroupBy(cls.group_by)
+        if cls.group_by_role is not None and not (
+            isinstance(cls.group_by_role, type)
+            and issubclass(cls.group_by_role, AxisRole)
+        ):
+            raise TypeError(
+                f"{cls.__name__}.group_by_role must be an axis role, got "
+                f"{cls.group_by_role!r}."
             )
         _validate_unique_module_names(cls)
         CellProfilerModule._measurement_feature_marker_types_for_key_payload.__func__.cache_clear()
@@ -962,29 +973,36 @@ class CellProfilerModule(
                 f"{type(inherited).__name__}."
             )
         if callable_contract.execution_scope is FunctionStepExecutionScope.PLATE:
-            variable_components: tuple[VariableComponents, ...] = ()
-            group_by = GroupBy.NONE
+            variable_components: tuple[type[Axis], ...] = ()
+            group_by: type[GroupingDeclaration] | None = Ungrouped
             input_source = InputSource.PREVIOUS_STEP
         else:
-            variable_components = tuple(
-                callable_contract.required_variable_components
-                or inherited.variable_components
+            family = AxisFamily.active()
+            required_axes = tuple(
+                dict.fromkeys(
+                    axis
+                    for role in callable_contract.required_axis_roles
+                    for axis in family.with_role(role)
+                )
             )
-            group_by = cls.group_by if cls.group_by is not None else inherited.group_by
+            variable_components = required_axes or tuple(inherited.variable_components)
+            group_by = (
+                family.one(cls.group_by_role)
+                if cls.group_by_role is not None
+                else inherited.group_by
+            )
             input_source = inherited.input_source
-            if (
-                group_by is not None
-                and group_by.value is not None
-                and step_context is not None
-            ):
-                grouping_component = AllComponents.from_value(group_by.value)
+            grouping_axes = () if group_by is None else group_by.grouping_axes()
+            if grouping_axes and step_context is not None:
+                (grouping_component,) = grouping_axes
                 source_anchor_group_keys = step_context.source_bindings.component_group_keys_for_artifact_specs(
+
                     grouping_component,
                     cls.processing_group_scope_inputs(callable_contract),
                     step_context.available_artifacts,
                 )
                 if len(source_anchor_group_keys) > 1:
-                    group_by = GroupBy.NONE
+                    group_by = Ungrouped
         return replace(
             inherited,
             variable_components=list(variable_components),

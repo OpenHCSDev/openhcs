@@ -70,7 +70,6 @@ from benchmark.well_throughput_scaling import (
     _write_progress_diagnostics,
     well_throughput_start_method_from_manifest,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
     GlobalPipelineConfig,
@@ -122,6 +121,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQRuntimeObservationExportScope,
 )
 from openhcs.serialization.json import to_jsonable
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -1291,7 +1291,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
     ):
         raise RuntimeError("CellProfiler import did not prepare a complete document.")
     source_wells = {
-        source_component_metadata_value(metadata, AllComponents.WELL)
+        source_component_metadata_value(metadata, Microscopy.Well)
         for metadata in prepared.materialization.source_metadata.values()
     }
     wells = _select_genuine_wells(

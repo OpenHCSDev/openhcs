@@ -10,11 +10,11 @@ from pyqt_reactive.widgets.shared.manager_action_controller import (
     ManagerActionOperations,
 )
 
-from openhcs.constants import GroupBy
 from openhcs.core.pipeline_document import PipelineDocument
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
     PipelineEditorCodeWorkflow,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class _Signal:
@@ -94,26 +94,26 @@ pipeline_steps = [
 """
 
 VALID_SOURCE = """
-from openhcs.constants import GroupBy
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.config import LazyProcessingConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 pipeline_config = PipelineConfig()
 pipeline_steps = [
     FunctionStep(
-        func=[], processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL)
+        func=[], processing_config=LazyProcessingConfig(group_by=Microscopy.Channel)
     )
 ]
 """
 
 VALID_DEFAULT_CONFIG_SOURCE = """
-from openhcs.constants import GroupBy
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.config import LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
 
 pipeline_steps = [
     FunctionStep(
-        func=[], processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL)
+        func=[], processing_config=LazyProcessingConfig(group_by=Microscopy.Channel)
     )
 ]
 """
@@ -137,7 +137,7 @@ def test_invalid_config_is_rejected_before_pipeline_editor_mutation() -> None:
     controller.apply_edited_code(operations, VALID_SOURCE)
 
     assert len(editor.pipeline_steps) == 1
-    assert editor.pipeline_steps[0].processing_config.group_by is GroupBy.CHANNEL
+    assert editor.pipeline_steps[0].processing_config.group_by is Microscopy.Channel
     assert editor.item_list_update_count == 1
     assert len(editor.pipeline_changed.values) == 1
 

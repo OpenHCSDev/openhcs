@@ -17,11 +17,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Union
 
-from openhcs.constants.constants import (
-    GroupBy,
-    VariableComponents,
-    SequentialComponents,
-)
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -80,6 +75,8 @@ from tests.integration.helpers.fixture_utils import (
 
 from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.axes import AxisFamily, Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @dataclass(frozen=True)
@@ -275,8 +272,8 @@ def create_test_pipeline(
         Step(
             func=create_composite,
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.CHANNEL],
-                group_by=GroupBy.NONE,
+                variable_components=[Microscopy.Channel],
+                group_by=Ungrouped,
             ),
             napari_streaming_config=LazyNapariStreamingConfig(
                 port=5557, enabled=enable_napari
@@ -289,7 +286,7 @@ def create_test_pipeline(
             name="Z-Stack Flattening",
             func=(create_projection, {"method": NumpyStackProjectionMethod.MAX}),
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.Z_INDEX]
+                variable_components=[Microscopy.ZIndex]
             ),
             step_materialization_config=LazyStepMaterializationConfig(),
         ),
@@ -311,7 +308,7 @@ def create_test_pipeline(
             name="Z-Stack Flattening",
             func=(create_projection, {"method": NumpyStackProjectionMethod.MAX}),
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.Z_INDEX]
+                variable_components=[Microscopy.ZIndex]
             ),
         ),
         Step(
@@ -498,11 +495,11 @@ def _initialize_orchestrator(
         omero_backend = OMEROLocalBackend(omero_conn=omero_manager.conn)
         storage_registry["omero_local"] = omero_backend
 
-    # Convert sequential component names to SequentialComponents enum
+    # Decode sequential axis names through the active family
     sequential_components = []
     if sequential_config and sequential_config.get("sequential_components"):
         for comp_name in sequential_config["sequential_components"]:
-            sequential_components.append(SequentialComponents[comp_name])
+            sequential_components.append(AxisFamily.active().named(comp_name))
 
     # Determine materialization backend for OMERO tests
     # For OMERO tests, use omero_local backend for materialization
@@ -601,13 +598,12 @@ def _execute_pipeline_phases(
     """Execute compilation and execution phases of the pipeline (direct mode)."""
     import multiprocessing
     import threading
-    from openhcs.constants import MULTIPROCESSING_AXIS
     from openhcs.core.progress import set_progress_queue
     import logging
 
     logger = logging.getLogger(__name__)
 
-    wells = orchestrator.get_component_keys(MULTIPROCESSING_AXIS)
+    wells = orchestrator.get_component_keys(AxisFamily.active().partition_axis())
     if not wells:
         raise RuntimeError("No wells found for processing")
 
@@ -759,11 +755,11 @@ def _execute_pipeline_with_mode(
         # Create global config for ZMQ execution
         global_config = _create_pipeline_config(test_config)
 
-        # Convert sequential component names to SequentialComponents enum
+        # Decode sequential axis names through the active family
         sequential_components = []
         if sequential_config and sequential_config.get("sequential_components"):
             for comp_name in sequential_config["sequential_components"]:
-                sequential_components.append(SequentialComponents[comp_name])
+                sequential_components.append(AxisFamily.active().named(comp_name))
 
         # Determine materialization backend for OMERO tests
         # For OMERO tests, use omero_local backend for materialization

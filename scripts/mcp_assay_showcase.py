@@ -503,7 +503,7 @@ def _z_stack_processing_config_source() -> str:
 
     return """        processing_config=LazyProcessingConfig(
             input_source=InputSource.PIPELINE_START,
-            variable_components=[VariableComponents.Z_INDEX],
+            variable_components=[Microscopy.ZIndex],
         ),
 """
 
@@ -538,7 +538,7 @@ def _primary_object_source(plate_path: Path, output_path: Path) -> str:
         plate_path,
         output_path,
         processing_imports=(
-            "from openhcs.constants.constants import VariableComponents"
+            "from openhcs.domains.microscopy.axes import Microscopy"
         ),
         extra_imports=(
             """from openhcs.processing.backends.analysis.cell_counting_cpu import (
@@ -564,7 +564,8 @@ def _dual_channel_source(plate_path: Path, output_path: Path) -> str:
         plate_path,
         output_path,
         processing_imports=(
-            "from openhcs.constants.constants import GroupBy, VariableComponents"
+            "from openhcs.core.axes import Ungrouped\n"
+            "from openhcs.domains.microscopy.axes import Microscopy"
         ),
         extra_imports=(
             """from openhcs.processing.backends.analysis.count_cells_simple import (
@@ -600,8 +601,8 @@ def _dual_channel_source(plate_path: Path, output_path: Path) -> str:
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Channel],
+            group_by=Ungrouped,
             input_source=InputSource.PIPELINE_START,
         ),
 """
@@ -618,7 +619,8 @@ def _colocalization_source(plate_path: Path, output_path: Path) -> str:
         plate_path,
         output_path,
         processing_imports=(
-            "from openhcs.constants.constants import GroupBy, VariableComponents"
+            "from openhcs.core.axes import Ungrouped\n"
+            "from openhcs.domains.microscopy.axes import Microscopy"
         ),
         extra_imports=(
             """from openhcs.processing.backends.cellprofiler.colocalization import (
@@ -652,8 +654,8 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Channel],
+            group_by=Ungrouped,
             input_source=InputSource.PIPELINE_START,
         ),
         ),
@@ -666,8 +668,8 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Channel],
+            group_by=Ungrouped,
             input_source=InputSource.PIPELINE_START,
         ),
 """

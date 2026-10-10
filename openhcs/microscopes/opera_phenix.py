@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Type, Tuple
 
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.components.parser_metaprogramming import (
     format_filename_component,
 )
@@ -27,6 +27,7 @@ from openhcs.microscopes.microscope_interfaces import (
     MetadataComponentValueSet,
     MetadataHandler,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +167,7 @@ class OperaPhenixHandler(MicroscopeHandler):
             metadata = self.parser.parse_filename(file_name)
             if metadata is None:
                 continue
-            original_field_id = metadata.value_for(AllComponents.SITE)
+            original_field_id = metadata.value_for(Microscopy.Site)
             if original_field_id is None:
                 continue
 
@@ -176,7 +177,7 @@ class OperaPhenixHandler(MicroscopeHandler):
             # Construct the new filename with proper padding
             new_name = self.parser.construct_filename(
                 metadata.with_value(
-                    AllComponents.SITE,
+                    Microscopy.Site,
                     new_field_id,
                 )
             )
@@ -263,11 +264,11 @@ class OperaPhenixHandler(MicroscopeHandler):
                 sample_metadata = metadata
 
             # Collect dimension values
-            well = metadata.value_for(AllComponents.WELL)
-            channel = metadata.value_for(AllComponents.CHANNEL)
-            site = metadata.value_for(AllComponents.SITE)
-            z_index = metadata.value_for(AllComponents.Z_INDEX)
-            timepoint = metadata.value_for(AllComponents.TIMEPOINT)
+            well = metadata.value_for(Microscopy.Well)
+            channel = metadata.value_for(Microscopy.Channel)
+            site = metadata.value_for(Microscopy.Site)
+            z_index = metadata.value_for(Microscopy.ZIndex)
+            timepoint = metadata.value_for(Microscopy.Timepoint)
 
             if well:
                 wells.add(well)
@@ -338,11 +339,11 @@ class OperaPhenixHandler(MicroscopeHandler):
             filename = self.parser.construct_filename(
                 sample_metadata.with_values(
                     (
-                        (AllComponents.WELL, well),
-                        (AllComponents.CHANNEL, channel),
-                        (AllComponents.SITE, site),
-                        (AllComponents.Z_INDEX, z_index),
-                        (AllComponents.TIMEPOINT, timepoint),
+                        (Microscopy.Well, well),
+                        (Microscopy.Channel, channel),
+                        (Microscopy.Site, site),
+                        (Microscopy.ZIndex, z_index),
+                        (Microscopy.Timepoint, timepoint),
                     )
                 ),
                 site_padding=3,  # Virtual workspace uses standardized 3-digit padding
@@ -495,11 +496,11 @@ class OperaPhenixFilenameParser(FilenameParser):
 
             result = FilenameParseResult(
                 (
-                    (AllComponents.WELL, well),
-                    (AllComponents.SITE, site),
-                    (AllComponents.CHANNEL, channel),
-                    (AllComponents.Z_INDEX, z_index),
-                    (AllComponents.TIMEPOINT, timepoint),
+                    (Microscopy.Well, well),
+                    (Microscopy.Site, site),
+                    (Microscopy.Channel, channel),
+                    (Microscopy.ZIndex, z_index),
+                    (Microscopy.Timepoint, timepoint),
                 ),
                 extension=ext if ext else ".tif",
             )
@@ -516,11 +517,11 @@ class OperaPhenixFilenameParser(FilenameParser):
     ) -> str:
         """Construct an Opera Phenix filename from nominal component values."""
 
-        well = components.required_value(AllComponents.WELL)
-        site = components.required_value(AllComponents.SITE)
-        channel = components.required_value(AllComponents.CHANNEL)
-        z_index = components.required_value(AllComponents.Z_INDEX)
-        timepoint = components.required_value(AllComponents.TIMEPOINT)
+        well = components.required_value(Microscopy.Well)
+        site = components.required_value(Microscopy.Site)
+        channel = components.required_value(Microscopy.Channel)
+        z_index = components.required_value(Microscopy.ZIndex)
+        timepoint = components.required_value(Microscopy.Timepoint)
 
         row_name, column_name = self.extract_component_coordinates(well)
         row = ord(row_name) - ord("A") + 1
@@ -568,7 +569,7 @@ class OperaPhenixFilenameParser(FilenameParser):
         metadata = self.parse_filename(filename)
         if metadata is None:
             return filename
-        site = metadata.value_for(AllComponents.SITE)
+        site = metadata.value_for(Microscopy.Site)
         if site is None:
             return filename
 
@@ -580,7 +581,7 @@ class OperaPhenixFilenameParser(FilenameParser):
         # This ensures all filenames have the same format, even if the field ID didn't change
         return self.construct_filename(
             metadata.with_value(
-                AllComponents.SITE,
+                Microscopy.Site,
                 new_field_id,
             )
         )
@@ -809,7 +810,7 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
             )
             channel_values = None
         return MetadataComponentValueSet.from_partial(
-            ((AllComponents.CHANNEL, channel_values),)
+            ((Microscopy.Channel, channel_values),)
         )
 
     def create_xml_parser(self, xml_path: Union[str, Path]):

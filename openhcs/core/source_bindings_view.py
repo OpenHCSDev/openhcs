@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_binding_workspace import (
     SourceSetAssembler,
     SourceBindingWorkspaceProjector,
@@ -27,6 +26,7 @@ from openhcs.core.source_bindings import (
     StepSourceBindingsConfig,
 )
 from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.axes import is_axis
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,7 +74,7 @@ class SourceSelectorView:
     @staticmethod
     def component_name(component: object) -> str:
         return (
-            component.value if isinstance(component, AllComponents) else str(component)
+            component.name if is_axis(component) else str(component)
         )
 
     @property

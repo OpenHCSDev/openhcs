@@ -22,7 +22,7 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect import Enableable
 from python_introspect.enableable import EnableableMeta
 
-from openhcs.constants.constants import AllComponents, GroupBy, Microscope
+from openhcs.constants.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -33,7 +33,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
 )
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.components.validation import convert_enum_by_value
+
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
@@ -47,6 +47,7 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
@@ -602,7 +603,7 @@ class SourceBindingMatchPlan:
 class ComponentSelector:
     """Component-axis key/value pair used either to select sources or assign identity."""
 
-    component: Any
+    component: type[Axis]
     """OpenHCS plate component, such as channel, site, Z index, or timepoint."""
 
     value: str
@@ -780,13 +781,13 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
             self.component_identity,
             ComponentSelector,
         )
-        seen_components: dict[AllComponents, str] = {}
+        seen_components: dict[type[Axis], str] = {}
         for selector in component_identity:
             existing = seen_components.get(selector.component)
             if existing is not None and existing != selector.value:
                 raise ValueError(
                     f"{type(self).__name__}.component_identity contains "
-                    f"conflicting {selector.component.value!r} values "
+                    f"conflicting {selector.component.name!r} values "
                     f"{existing!r} and {selector.value!r}."
                 )
             seen_components[selector.component] = selector.value
@@ -831,7 +832,7 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
             if existing.value != selector.value:
                 raise ValueError(
                     f"Source assignment {self.alias!r} declares "
-                    f"{selector.component.value!r} identity {existing.value!r}, "
+                    f"{selector.component.name!r} identity {existing.value!r}, "
                     f"but {selector.value!r} was requested."
                 )
             return self.component_identity
@@ -839,7 +840,7 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
 
     def is_compatible_with_component_group(
         self,
-        component: AllComponents,
+        component: type[Axis],
         group_key: str,
     ) -> bool:
         """Return whether this identity permits one typed execution group."""
@@ -855,7 +856,7 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
 
     def requires_cross_group_candidate_resolution(
         self,
-        component: AllComponents,
+        component: type[Axis],
         group_key: str,
     ) -> bool:
         """Return whether assigned identity differs from its selected coordinate."""
@@ -1194,7 +1195,7 @@ class NamedSourceBinding(SourceAssignmentBase):
 
     def component_values(
         self,
-        component: AllComponents,
+        component: type[Axis],
         *,
         realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
     ) -> tuple[str, ...]:
@@ -1217,7 +1218,7 @@ class NamedSourceBinding(SourceAssignmentBase):
         return tuple(dict.fromkeys(values))
 
     def _declared_component_values(
-        self, component: AllComponents
+        self, component: type[Axis]
     ) -> tuple[str, ...]:
         """Resolve exact identity values before selector-derived coordinates."""
         for declarations in (self.component_identity, self.selector.components):
@@ -1234,17 +1235,17 @@ class NamedSourceBinding(SourceAssignmentBase):
         self,
         *,
         realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
-    ) -> Mapping[AllComponents, tuple[str, ...]]:
+    ) -> Mapping[type[Axis], tuple[str, ...]]:
         """Admit all component domains from the same matched source records."""
         domains = {
             component: values
-            for component in AllComponents
+            for component in AxisFamily.active().axes
             for values in (self._declared_component_values(component),)
             if values
         }
-        if realized_source_metadata is None or len(domains) == len(AllComponents):
+        if realized_source_metadata is None or len(domains) == len(AxisFamily.active().axes):
             return domains
-        realized: dict[AllComponents, list[str]] = {}
+        realized: dict[type[Axis], list[str]] = {}
         for metadata in realized_source_metadata:
             if not self.matches_realized_source_metadata(metadata):
                 continue
@@ -1280,7 +1281,7 @@ class NamedSourceBinding(SourceAssignmentBase):
         self,
         *,
         group_keys: tuple[str | None, ...],
-        group_component: AllComponents | None,
+        group_component: type[Axis] | None,
     ) -> ArtifactInputPlan:
         """Project this source declaration into a compiler input plan."""
 
@@ -1305,7 +1306,7 @@ class NamedSourceBinding(SourceAssignmentBase):
 
     def requires_step_input_component_stack(
         self,
-        components: tuple[AllComponents, ...],
+        components: tuple[type[Axis], ...],
     ) -> bool:
         """Whether resolving this binding needs component-varying step input."""
         if self.origin is not SourceBindingOrigin.STEP_INPUT:
@@ -1318,17 +1319,12 @@ class NamedSourceBinding(SourceAssignmentBase):
             selector.component in components for selector in self.selector.components
         )
 
-    @property
-    def requires_step_input_channel_stack(self) -> bool:
-        """Whether resolving this binding needs channel-varying step input."""
-        return self.requires_step_input_component_stack((AllComponents.CHANNEL,))
-
 
 class SourceBindingDeclarationsMixin:
     """Shared named-binding view for editable and compiled source plans."""
 
     bindings: tuple[NamedSourceBinding, ...] | None
-    source_stack_components: tuple[AllComponents, ...]
+    source_stack_components: tuple[type[Axis], ...]
     source_spatial_domain: SourceSpatialDomain
 
     @property
@@ -1417,18 +1413,13 @@ class SourceBindingDeclarationsMixin:
 
     def requires_step_input_component_stack(
         self,
-        components: tuple[AllComponents, ...],
+        components: tuple[type[Axis], ...],
     ) -> bool:
         """Whether any declaration needs component-resolved step input."""
         return any(
             binding.requires_step_input_component_stack(components)
             for binding in self.binding_declarations
         )
-
-    @property
-    def requires_step_input_channel_stack(self) -> bool:
-        """Whether any declaration needs channel-resolved step input."""
-        return self.requires_step_input_component_stack((AllComponents.CHANNEL,))
 
     @property
     def requires_pipeline_start_resolution(self) -> bool:
@@ -1462,7 +1453,7 @@ class SourceBindingDeclarationsMixin:
 
     def bindings_for_component_group(
         self,
-        component: AllComponents | None,
+        component: type[Axis] | None,
         group_key: str | None,
     ) -> tuple[NamedSourceBinding, ...]:
         """Return bindings compatible with one typed execution group."""
@@ -1488,14 +1479,14 @@ class SourceBindingDeclarationsMixin:
         )
         if not matching_bindings:
             raise ValueError(
-                f"No source binding declares {normalized_component.value} "
+                f"No source binding declares {normalized_component.name} "
                 f"group {normalized_group_key!r}."
             )
         return matching_bindings
 
     def requires_cross_group_candidate_resolution(
         self,
-        component: AllComponents,
+        component: type[Axis],
         group_key: str,
     ) -> bool:
         """Return whether this semantic group must search other source groups."""
@@ -1575,7 +1566,7 @@ class SourceBindingDeclarationsMixin:
 
     def for_component_group(
         self,
-        component: AllComponents,
+        component: type[Axis],
         group_key: str,
     ) -> Self:
         """Return these declarations scoped to one typed component group."""
@@ -1604,7 +1595,7 @@ class SourceBindingDeclarationsMixin:
 
     def component_group_keys_for_artifact_specs(
         self,
-        component: AllComponents,
+        component: type[Axis],
         specs: Iterable[ArtifactSpec],
         available_artifacts: ArtifactSpecCollection,
         *,
@@ -1886,7 +1877,7 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     imported_metadata_tables: tuple[ImportedMetadataTable, ...] = ()
     """External metadata tables joined to source records before matching."""
 
-    source_stack_components: tuple[AllComponents, ...] = ()
+    source_stack_components: tuple[type[Axis], ...] = ()
     """Ordered plate components that form one logical source image stack."""
 
     source_spatial_domain: SourceSpatialDomain = field(
@@ -2234,7 +2225,7 @@ class StepSourceBindingsConfig(
 
 def source_binding_group_keys_for_group_by(
     source_bindings: SourceBindingDeclarationsMixin,
-    group_by: GroupBy,
+    group_by: type[GroupingDeclaration],
     *,
     realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
 ) -> tuple[str, ...]:
@@ -2245,10 +2236,10 @@ def source_binding_group_keys_for_group_by(
             "source_binding_group_keys_for_group_by requires "
             f"SourceBindingDeclarationsMixin, got {type(source_bindings).__name__}."
         )
-    resolved_group_by = group_by if isinstance(group_by, GroupBy) else GroupBy(group_by)
-    if resolved_group_by.value is None:
+    grouping_axes = group_by.grouping_axes()
+    if not grouping_axes:
         return ()
-    component = AllComponents.from_value(resolved_group_by.value)
+    (component,) = grouping_axes
     realized_metadata = (
         None if realized_source_metadata is None else tuple(realized_source_metadata)
     )
@@ -2304,7 +2295,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
 
     registry_key: ClassVar[str] = "compiled"
     bindings: tuple[NamedSourceBinding, ...] = ()
-    source_stack_components: tuple[AllComponents, ...] = ()
+    source_stack_components: tuple[type[Axis], ...] = ()
     source_spatial_domain: SourceSpatialDomain = field(
         default_factory=SourceSpatialDomain
     )
@@ -2404,7 +2395,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
     def for_main_flow_scope(
         self,
         *,
-        component: AllComponents | None,
+        component: type[Axis] | None,
         group_key: str | None,
         main_flow_refs: tuple[ArtifactSpecRef, ...] | None,
     ) -> "CompiledSourceBindingPlan | None":
@@ -2437,7 +2428,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             tuple[MetadataExtractionRule, ...],
             SourceBindingMatchPlan | None,
             tuple[FieldSpec, ...],
-            tuple[AllComponents, ...],
+            tuple[type[Axis], ...],
             SourceSpatialDomain,
         ],
     ]:
@@ -2471,7 +2462,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         metadata_rules: tuple[MetadataExtractionRule, ...],
         match_plan: SourceBindingMatchPlan | None,
         metadata_fields: tuple[FieldSpec, ...],
-        source_stack_components: tuple[AllComponents, ...],
+        source_stack_components: tuple[type[Axis], ...],
         source_spatial_domain: SourceSpatialDomain,
     ) -> CompiledSourceBindingPlan:
         return cls(
@@ -2535,16 +2526,12 @@ class SourceBindingRuntimeMetadataNormalizer:
 EMPTY_SOURCE_BINDINGS = StepSourceBindingsConfig()
 
 
-def _coerce_component(value: Any, field_name: str) -> Any:
-    if isinstance(value, AllComponents):
-        return value
-    if isinstance(value, Enum) and (
-        converted := convert_enum_by_value(value, AllComponents)
-    ):
-        return converted
-    return AllComponents(
-        value,
-    )
+def _coerce_component(value: Any, field_name: str) -> type[Axis]:
+    try:
+        return AxisFamily.active().require(value)
+    except TypeError as error:
+        raise TypeError(f"{field_name}: {error}") from error
+
 
 
 def _require_name(value: str, field_name: str) -> None:

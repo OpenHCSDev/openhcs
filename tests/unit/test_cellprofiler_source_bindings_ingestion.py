@@ -11,7 +11,7 @@ from polystore.disk import DiskBackend
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_projection import SourceCandidate
@@ -28,6 +28,8 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _field_names(record_type: type[object]) -> tuple[str, ...]:
@@ -36,7 +38,7 @@ def _field_names(record_type: type[object]) -> tuple[str, ...]:
 
 def _two_channel_config(
     *,
-    source_stack_components: tuple[AllComponents, ...] = (),
+    source_stack_components: tuple[type[Axis], ...] = (),
 ) -> SourceBindingsConfig:
     return SourceBindingsConfig(
         metadata_rules=(
@@ -66,7 +68,7 @@ def _two_channel_config(
                         ),
                     ),
                 ),
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="RNA",
@@ -79,7 +81,7 @@ def _two_channel_config(
                         ),
                     ),
                 ),
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         ),
         source_stack_components=source_stack_components,
@@ -116,13 +118,16 @@ def test_source_candidate_owns_one_exact_source_ref() -> None:
     assert candidate.source_ref is source_ref
 
 
-def test_component_projection_registry_exactly_covers_all_components() -> None:
+def test_component_projection_strategies_cover_every_declared_axis() -> None:
+    from openhcs.core.axes import AxisFamily
     from openhcs.core.source_metadata import SourceComponentProjectionStrategy
 
-    assert {
-        registered_type.strategy_key
-        for registered_type in SourceComponentProjectionStrategy.registered_strategy_types()
-    } == set(AllComponents)
+    family = AxisFamily.active()
+    strategies = {
+        axis: SourceComponentProjectionStrategy.strategy_type_for_axis(axis)
+        for axis in family.axes
+    }
+    assert len(set(strategies.values())) == len(family.axes)
 
 
 def test_workspace_projection_uses_exact_submitted_root_and_file_universe(
@@ -206,8 +211,8 @@ def test_workspace_projection_materializes_complete_declared_universe(
     assert len(projection_set.projections) == 4
     assert {
         (
-            projection.address.value_for(AllComponents.SITE),
-            projection.address.value_for(AllComponents.CHANNEL),
+            projection.address.value_for(Microscopy.Site),
+            projection.address.value_for(Microscopy.Channel),
         )
         for projection in projection_set.projections
     } == {("1", "1"), ("1", "2"), ("2", "1"), ("2", "2")}
@@ -238,12 +243,12 @@ def test_source_stack_expansion_is_declared_by_config(tmp_path: Path) -> None:
     np.save(rna, np.stack((np.full((4, 4), 3), np.full((4, 4), 4))))
 
     projection_set = SourceBindingWorkspaceProjector(
-        _two_channel_config(source_stack_components=(AllComponents.TIMEPOINT,))
+        _two_channel_config(source_stack_components=(Microscopy.Timepoint,))
     ).projection_set(source_root, (dna, rna), filemanager=_filemanager())
 
     assert len(projection_set.projections) == 4
     assert {
-        projection.address.value_for(AllComponents.TIMEPOINT)
+        projection.address.value_for(Microscopy.Timepoint)
         for projection in projection_set.projections
     } == {"1", "2"}
     assert {

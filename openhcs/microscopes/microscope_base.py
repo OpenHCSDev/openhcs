@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union, Type, TYPE_CHECKING
 
 # Import constants
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 
 # Import generic metaclass infrastructure from external package
 from metaclass_registry import (
@@ -36,6 +36,7 @@ from openhcs.microscopes.microscope_interfaces import (
     MetadataHandler,
     MicroscopeImagePathParser,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)
 
@@ -649,14 +650,14 @@ class MicroscopeHandler(
                 continue
 
             # Validate required components
-            site = metadata.value_for(AllComponents.SITE)
+            site = metadata.value_for(Microscopy.Site)
             if site is None:
                 logger.warning(
                     "Missing 'site' component in filename: %s", original_name
                 )
                 continue
 
-            channel = metadata.value_for(AllComponents.CHANNEL)
+            channel = metadata.value_for(Microscopy.Channel)
             if channel is None:
                 logger.warning(
                     "Missing 'channel' component in filename: %s", original_name
@@ -664,7 +665,7 @@ class MicroscopeHandler(
                 continue
 
             # z_index is optional - default to 1 if not present
-            z_index = metadata.value_for(AllComponents.Z_INDEX)
+            z_index = metadata.value_for(Microscopy.ZIndex)
             if z_index is None:
                 z_index = 1
 
@@ -679,7 +680,7 @@ class MicroscopeHandler(
 
             # Reconstruct the filename with proper padding
             new_name = parser.construct_filename(
-                metadata.with_value(AllComponents.Z_INDEX, z_index)
+                metadata.with_value(Microscopy.ZIndex, z_index)
             )
 
             # Add to rename map if different
@@ -778,8 +779,8 @@ class MicroscopeHandler(
             filemanager: FileManager instance for file operations
             backend: Backend to use for file operations (required)
             extensions: Optional list of file extensions to include
-            group_by: GroupBy enum to group patterns by (e.g., GroupBy.CHANNEL, GroupBy.Z_INDEX)
-            variable_components: List of components to make variable (e.g., ['site', 'z_index'])
+            group_by: Grouping declaration to group patterns by (an axis or Ungrouped)
+            variable_components: Axes to make variable (e.g., the site and z axes)
             **kwargs: Dynamic filter parameters (e.g., well_filter, site_filter, channel_filter)
 
         Returns:
@@ -823,9 +824,10 @@ class MicroscopeHandler(
         pattern,
         filemanager: FileManager,
         backend: str,
-        variable_components: Optional[List[str]] = None,
+        variable_components=None,
         *,
         pattern_cache: "RuntimePatternDiscoveryCache | None" = None,
+
     ):
         """
         Delegate to pattern engine.
@@ -835,7 +837,7 @@ class MicroscopeHandler(
             pattern: Pattern to match (str for literal filenames)
             filemanager: FileManager instance for file operations
             backend: Backend to use for file operations (required)
-            variable_components: List of components that can vary (will be ignored during matching)
+            variable_components: Axes that can vary (ignored during matching)
 
         Returns:
             List of matching filenames

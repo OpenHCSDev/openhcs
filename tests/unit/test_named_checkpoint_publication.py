@@ -12,7 +12,6 @@ import pytest
 import tifffile
 
 from test_artifact_publication_journey import _plate, progress_events
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.artifacts import (
     ArtifactSidecarRole, ImageArtifactType, MainFlowPlaneProjectionOutputSpec,
     MainFlowStackOutputSpec,
@@ -25,7 +24,7 @@ from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.orchestrator.execution_result import RuntimeContextObservation, RuntimeExecutionObservation
 from openhcs.core.pipeline.function_contracts import (
-    artifact_outputs, required_variable_components,
+    artifact_outputs, required_axis_roles,
 )
 from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
@@ -39,6 +38,9 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.processing.materialization import (
     ImageFileOptions, MaterializationSpec, MaterializedFilenameIdentity,
 )
+from openhcs.core.axes import TileAxis
+from openhcs.domains.microscopy.axes import Microscopy
+
 
 
 @dataclass(frozen=True)
@@ -64,7 +66,7 @@ def _field(name):
 
 
 @numpy_decorator(contract=ProcessingContract.PURE_3D)
-@required_variable_components(VariableComponents.SITE)
+@required_axis_roles(TileAxis)
 @artifact_outputs(
     MainFlowStackOutputSpec.output("corrected", ImageArtifactType),
     _field("flat"), _field("dark"),
@@ -89,7 +91,7 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     step = FunctionStep(
         func=synthetic_three_outputs,
         processing_config=LazyProcessingConfig(
-            group_by=GroupBy.CHANNEL, variable_components=[VariableComponents.SITE],
+            group_by=Microscopy.Channel, variable_components=[Microscopy.Site],
         ),
         step_materialization_config=LazyStepMaterializationConfig(enabled=True),
     )
@@ -125,7 +127,7 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     ]
     assert len(ordinary) == len(checkpoints) - len(ordinary) == 24
     assert {projection.address for projection in ordinary} == {
-        OpenHCSPlaneAddress.from_values("A01", site, 1, 1, 1)
+        OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
         for site in range(1, 25)
     }
     for item in checkpoints:

@@ -9,7 +9,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.constants import GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.function_patterns import get_core_callable
@@ -31,6 +31,8 @@ from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth im
 from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth_metaxpress import (
     build_loose_operaphenix_neurite_metaxpress_pipeline,
 )
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _inputs(plate_path: Path, output_root: Path) -> LooseOperaPhenixNeuriteInputs:
@@ -87,8 +89,8 @@ def test_compact_example_uses_owned_channel_order_and_one_function_step(
     step = steps[0]
     assert step.name == "CompactMetaXpressNeuriteOutgrowth"
     assert get_core_callable(step.func) is neurite_outgrowth_metaxpress
-    assert step.processing_config.variable_components == [VariableComponents.CHANNEL]
-    assert step.processing_config.group_by is GroupBy.NONE
+    assert step.processing_config.variable_components == [Microscopy.Channel]
+    assert step.processing_config.group_by is Ungrouped
     assert step.processing_config.input_source is InputSource.PIPELINE_START
     assert step.napari_streaming_config.enabled is True
     assert step.napari_streaming_config.well_filter is None
@@ -185,5 +187,5 @@ def test_compact_example_compiles_the_full_ordered_channel_stack(
     context = compilation.runtime_contexts[inputs.well]
     plan = context.step_plans[0]
     assert plan.step_name == "CompactMetaXpressNeuriteOutgrowth"
-    assert tuple(plan.variable_components) == (VariableComponents.CHANNEL,)
+    assert tuple(plan.variable_components) == (Microscopy.Channel,)
     assert plan.compiled_function_pattern is not None

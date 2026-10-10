@@ -26,7 +26,6 @@ from openhcs.agent.services.plate_inspection_service import (
 from openhcs.agent.services.synthetic_plate_service import (
     SyntheticPlateGenerationService,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.plate_image_inventory import PlateFileKind
@@ -40,6 +39,8 @@ from tests.unit.bioformats_fixture import (
     bioformats_filemanager,
     write_bioformats_manifest_fixture,
 )
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class ImageXpressPlateFixture:
@@ -214,23 +215,23 @@ def test_plate_inspection_auto_detects_imagexpress_without_mutating(tmp_path: Pa
         )
     )
 
-    assert tuple(summary.component.value for summary in result.components) == (
-        AllComponents.ordered_names()
+    assert tuple(summary.component for summary in result.components) == (
+        AxisFamily.active().names()
     )
     well_summary = next(
         summary
         for summary in result.components
-        if summary.component is AllComponents.WELL
+        if summary.component == Microscopy.Well.name
     )
     site_summary = next(
         summary
         for summary in result.components
-        if summary.component is AllComponents.SITE
+        if summary.component == Microscopy.Site.name
     )
     channel_summary = next(
         summary
         for summary in result.components
-        if summary.component is AllComponents.CHANNEL
+        if summary.component == Microscopy.Channel.name
     )
     assert result.schema_version == "openhcs.agent.v1"
     assert result.errors == ()
@@ -524,7 +525,7 @@ def test_synthetic_plate_generation_service_writes_inspectable_plate(tmp_path: P
     channel_summary = next(
         summary
         for summary in inspection.components
-        if summary.component is AllComponents.CHANNEL
+        if summary.component == Microscopy.Channel.name
     )
 
     assert generation.errors == ()
@@ -1268,12 +1269,12 @@ def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
     channel_summary = next(
         summary
         for summary in inspection.components
-        if summary.component is AllComponents.CHANNEL
+        if summary.component == Microscopy.Channel.name
     )
     timepoint_summary = next(
         summary
         for summary in inspection.components
-        if summary.component is AllComponents.TIMEPOINT
+        if summary.component == Microscopy.Timepoint.name
     )
 
     assert inspection.errors == ()

@@ -10,7 +10,6 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from benchmark.matched_cellprofiler_batch import _require_compared_output_inventory
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from benchmark.equivalence.comparison import runtime_image_differences
@@ -33,8 +32,9 @@ from openhcs.core.source_projection import (
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
-Z_STACK = SourceImageSetIdentityPolicy(frozenset({AllComponents.Z_INDEX}))
+Z_STACK = SourceImageSetIdentityPolicy(frozenset({Microscopy.ZIndex}))
 EXACT = RuntimeEquivalencePolicy(image_abs_tolerance=0, image_rel_tolerance=0)
 
 
@@ -70,7 +70,7 @@ def exported_volume(tmp_path):
     for plane_index, plane in enumerate(volume):
         path = candidate / f"opaque-{plane_index}.tiff"
         imageio.imwrite(path, plane)
-        address = OpenHCSPlaneAddress.from_values("A01", "1", "2", plane_index + 1, "1")
+        address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, plane_index + 1), (Microscopy.Timepoint, "1")))
         projections.append(
             SourceArtifactProjection(
                 address=address,
@@ -166,18 +166,18 @@ def test_observation_owns_the_grouping_axis(exported_volume):
 @pytest.mark.parametrize(
     "component",
     (
-        AllComponents.WELL,
-        AllComponents.SITE,
-        AllComponents.CHANNEL,
-        AllComponents.TIMEPOINT,
+        Microscopy.Well,
+        Microscopy.Site,
+        Microscopy.Channel,
+        Microscopy.Timepoint,
     ),
 )
 def test_different_source_cohorts_cannot_be_combined(exported_volume, component):
     candidate, _, _, projections = exported_volume
     changed_address = projections[1].address.with_value(
-        component, "B02" if component is AllComponents.WELL else "2"
+        component, "B02" if component is Microscopy.Well else "2"
     )
-    if component is AllComponents.CHANNEL:
+    if component is Microscopy.Channel:
         changed_address = projections[1].address.with_value(component, "3")
     projections[1] = replace(
         projections[1],
@@ -246,7 +246,7 @@ def test_source_z_origin_is_preserved_without_assuming_one(exported_volume):
     candidate, _, volume, projections = exported_volume
     shifted = []
     for index, projection in enumerate(projections):
-        address = projection.address.with_value(AllComponents.Z_INDEX, str(index + 7))
+        address = projection.address.with_value(Microscopy.ZIndex, str(index + 7))
         shifted.append(
             replace(
                 projection,

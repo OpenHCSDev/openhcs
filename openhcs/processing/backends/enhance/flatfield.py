@@ -4,11 +4,11 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
 
-from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.axes import AxisFamily, AxisRole, TileAxis
 
 
 class FlatfieldCorrectionMode(Enum):
@@ -22,7 +22,7 @@ class FlatfieldCorrectionMode(Enum):
 class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     """One fitted field, owned by all independent observations, not one plane."""
 
-    observation_axis: ClassVar[VariableComponents] = VariableComponents.SITE
+    observation_role: ClassVar[type[AxisRole]] = TileAxis
     data: RuntimeArrayData
     observation_count: int
 
@@ -36,17 +36,19 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     def validate_observation_domain(cls, source: RuntimeArrayData) -> None:
         """Reject mislabeled metadata-backed ensembles before fitting."""
         metadata = image_payload_metadata(source)
+        family = AxisFamily.active()
         retained_axes = tuple(
-            AllComponents.from_value(name)
-            for name in metadata.retained_plane_component_values()
+            family.named(name) for name in metadata.retained_plane_component_values()
         )
+        observation_axes = family.with_role(cls.observation_role)
         # Plain NumPy observations have no claimed acquisition domain. Restrict
         # annotated sources using the metadata owner's declared presence state.
-        if metadata.has_values and retained_axes != (
-            AllComponents.from_value(cls.observation_axis.value),
+        if metadata.has_values and (
+            len(retained_axes) != 1 or retained_axes[0] not in observation_axes
         ):
             raise ValueError(
-                f"BaSiC requires independent {cls.observation_axis.name} observations "
+                f"BaSiC requires independent {cls.observation_role.__name__} "
+                f"observations ({', '.join(axis.name for axis in observation_axes)}) "
                 "with every other source component fixed."
             )
 

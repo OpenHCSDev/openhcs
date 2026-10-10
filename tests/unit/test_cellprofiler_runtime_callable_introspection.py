@@ -8,7 +8,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import (
@@ -50,6 +49,7 @@ from openhcs.processing.backends.cellprofiler import (
     mask_objects,
     save_images,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _compilation_session_for_steps(
@@ -124,7 +124,7 @@ def test_imported_function_step_values_remain_signature_diffs_in_object_state():
             enabled=False,
             debug_pause=True,
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.SITE],
+                variable_components=[Microscopy.Site],
                 input_source=InputSource.PIPELINE_START,
             ),
         ),
@@ -138,7 +138,7 @@ def test_imported_function_step_values_remain_signature_diffs_in_object_state():
     assert state.parameters["debug_pause"] is True
     assert state._signature_defaults["debug_pause"] is False
     assert state.parameters["processing_config.variable_components"] == [
-        VariableComponents.SITE
+        Microscopy.Site
     ]
     assert state._signature_defaults["processing_config.variable_components"] is None
     assert (
@@ -421,12 +421,12 @@ def test_cellprofiler_compile_time_contract_provider_scopes_grouped_source_bindi
             NamedSourceBinding(
                 alias="OrigStain1",
                 artifact_kind=ImageArtifactType,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
                 artifact_kind=ImageArtifactType,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         ),
     )
@@ -475,12 +475,12 @@ def test_compile_time_provider_derives_group_contracts_from_public_pattern_after
             NamedSourceBinding(
                 alias="OrigStain1",
                 artifact_kind=ImageArtifactType,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
                 artifact_kind=ImageArtifactType,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         ),
     )

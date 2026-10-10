@@ -9,7 +9,6 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.artifacts import ArtifactOutputPlan, ObjectLabelsArtifactType
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticObjectLabelsArtifactOutputMaterializationStrategy,
@@ -60,6 +59,7 @@ from tests.unit.test_function_artifact_materialization import (
     _context,
     _plan,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class ComponentDisplayConfig(StreamingConfigStub):
@@ -69,7 +69,7 @@ class ComponentDisplayConfig(StreamingConfigStub):
         self.mode = mode
 
     def component_modes(self):
-        return {**super().component_modes(), self.component.value: self.mode}
+        return {**super().component_modes(), self.component.name: self.mode}
 
 
 def _source_bound_labels(component):
@@ -78,7 +78,7 @@ def _source_bound_labels(component):
     pixels[1, 1:3, 2:5] = 2
     source_fields = tuple(
         {"well": "A01", "site": 1, "channel": 1, "z_index": 1,
-         "timepoint": 1, component.value: value}
+         "timepoint": 1, component.name: value}
         for value in (1, 2)
     )
     paths = tuple(
@@ -108,7 +108,7 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
     labels, pixels = _source_bound_labels(component)
     output_plan = ArtifactOutputPlan(
         name="Nuclei", path="/memory/Nuclei.pkl", artifact_type=ObjectLabelsArtifactType,
-        variable_components=(VariableComponents(component.value),),
+        variable_components=(component,),
         materialization=AutomaticObjectLabelsArtifactOutputMaterializationStrategy().materialization(),
     )
     ensure_storage_registry()
@@ -144,7 +144,7 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
     plan = replace(_plan(
         output_plan,
         streaming_configs={"napari_stream": ComponentDisplayConfig(component, mode)},
-        variable_components=(VariableComponents(component.value),),
+        variable_components=(component,),
     ), analysis_results_dir=str(tmp_path / "analysis"), output_dir=tmp_path / "images")
     PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, plan, context)
     assert len(disk_outputs) == 1
@@ -157,7 +157,7 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
     assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     assert metadata.source_provenance.source_plane_count == 2
     assert metadata.source_voxel_spacing.values_zyx == (0.75, 0.75)
-    assert [metadata.source_provenance.for_source_plane(index).source_component_metadata[component.value]
+    assert [metadata.source_provenance.for_source_plane(index).source_component_metadata[component.name]
             for index in range(2)] == [1, 2]
     np.testing.assert_array_equal(labels.labels, pixels)
     tiff_saves = [saved for saved in stream_saves if saved[1].endswith(".labels.tif")]
@@ -217,13 +217,13 @@ def _received_item(batch, pixels):
     return item, semantics
 
 
-@pytest.mark.parametrize("component", (AllComponents.CHANNEL, AllComponents.SITE))
+@pytest.mark.parametrize("component", (Microscopy.Channel, Microscopy.Site))
 def test_automatic_aggregate_label_tiff_honors_separate_layers(component, viewer_ack_return_route, monkeypatch, tmp_path):
     labels, pixels, saves, batches = _automatic_label_tiff(component, "layer", viewer_ack_return_route, monkeypatch, tmp_path)
     # This is the original strict receiver, not a test-side default or projection.
     keys = _route_keys(batches)
     items = [item for batch in batches for item in batch.batch_images]
-    assert [item["metadata"][component.value] for item in items] == [1, 2]
+    assert [item["metadata"][component.name] for item in items] == [1, 2]
     assert len(set(keys)) == 2
     assert [tuple(item["shape"]) for item in items] == [(4, 5), (4, 5)]
     for index, (content, _path, _backend, _kwargs) in enumerate(saves):
@@ -231,7 +231,7 @@ def test_automatic_aggregate_label_tiff_honors_separate_layers(component, viewer
     np.testing.assert_array_equal(labels.labels, pixels)
 
 
-@pytest.mark.parametrize("component", (AllComponents.CHANNEL, AllComponents.SITE))
+@pytest.mark.parametrize("component", (Microscopy.Channel, Microscopy.Site))
 def test_automatic_aggregate_label_tiff_preserves_stack(component, viewer_ack_return_route, monkeypatch, tmp_path):
     labels, pixels, saves, batches = _automatic_label_tiff(component, "stack", viewer_ack_return_route, monkeypatch, tmp_path)
     assert len(saves) == len(batches) == 1
@@ -240,23 +240,23 @@ def test_automatic_aggregate_label_tiff_preserves_stack(component, viewer_ack_re
     assert tuple(item["shape"]) == pixels.shape
     assert item["dtype"] == str(pixels.dtype)
     assert item["plane_axis"] == RuntimePlaneAxis.SOURCE_BINDING.value
-    assert item["plane_component_values"] == {component.value: ["1", "2"]}
+    assert item["plane_component_values"] == {component.name: ["1", "2"]}
     decoded = ImagePayloadMetadata.from_viewer_image_metadata(item["image_metadata"])
     assert decoded.source_voxel_spacing.values_zyx == (0.75, 0.75)
     assert decoded.source_spatial_domain.source_shape_yx == (4, 5)
-    assert component.value not in item["metadata"]
+    assert component.name not in item["metadata"]
     assert len(_route_keys(batches)) == 1
     received, semantics = _received_item(batches[0], saves[0][0])
     bindings = NapariAggregateAxisBindingAuthority.bindings((received,), semantics)
     assert len(bindings.bindings) == 1
-    assert bindings.bindings[0].component == component.value
+    assert bindings.bindings[0].component == component.name
     assert bindings.bindings[0].values == (1, 2)
     np.testing.assert_array_equal(labels.labels, pixels)
 
 
 def test_strict_receiver_still_rejects_aggregate_without_scalar_layer(viewer_ack_return_route, monkeypatch, tmp_path):
     _labels, _pixels, _saves, batches = _automatic_label_tiff(
-        AllComponents.CHANNEL, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
+        Microscopy.Channel, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
     )
     batch = batches[0]
     layout = normalize_component_layout(batch.message["display_config"])
@@ -271,7 +271,7 @@ def test_single_output_kwargs_cannot_hide_projected_pixels(
     plane_count, viewer_ack_return_route, monkeypatch, tmp_path,
 ):
     labels, pixels, saves, _batches = _automatic_label_tiff(
-        AllComponents.CHANNEL, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
+        Microscopy.Channel, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
     )
     metadata = labels.metadata.replace_fields(
         source_image_provenance_planes=SourceImageProvenancePlanes(
@@ -280,12 +280,12 @@ def test_single_output_kwargs_cannot_hide_projected_pixels(
     )
     request = replace(
         saves[0][3][ViewerStreamKwarg.STREAM_REQUEST.value],
-        display_config=ComponentDisplayConfig(AllComponents.CHANNEL, "layer"),
+        display_config=ComponentDisplayConfig(Microscopy.Channel, "layer"),
     )
     kwargs = ViewerStreamBackendCallKwargs(ViewerStreamBackendKwargs(request))
     output = Output(
         path=saves[0][1], content=pixels[:plane_count], metadata=metadata,
-        variable_components=(AllComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     with pytest.raises(ValueError, match="requires batch saving"):
         kwargs.to_filemanager_kwargs(output)
@@ -312,7 +312,7 @@ def test_strict_aggregate_receiver_rejects_malformed_tiff_domains(
     domain, error, viewer_ack_return_route, monkeypatch, tmp_path,
 ):
     _labels, _pixels, saves, batches = _automatic_label_tiff(
-        AllComponents.CHANNEL, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
+        Microscopy.Channel, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
     )
     received, semantics = _received_item(batches[0], saves[0][0])
     received = replace(received, plane_component_domain=ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
@@ -324,7 +324,7 @@ def test_strict_aggregate_receiver_rejects_malformed_tiff_domains(
 
 def test_strict_receiver_rejects_duplicate_plane_coordinates(viewer_ack_return_route, monkeypatch, tmp_path):
     _labels, _pixels, _saves, batches = _automatic_label_tiff(
-        AllComponents.CHANNEL, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
+        Microscopy.Channel, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
     )
     wire = batches[0].batch_images[0]
     domain = {**wire["plane_component_values"], "channel": ["1", "1"]}
@@ -336,7 +336,7 @@ def test_strict_receiver_rejects_duplicate_plane_coordinates(viewer_ack_return_r
 
 def test_strict_receiver_rejects_inconsistent_item_plane_domains(viewer_ack_return_route, monkeypatch, tmp_path):
     _labels, _pixels, saves, batches = _automatic_label_tiff(
-        AllComponents.CHANNEL, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
+        Microscopy.Channel, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
     )
     received, semantics = _received_item(batches[0], saves[0][0])
     reversed_item = replace(
@@ -348,14 +348,14 @@ def test_strict_receiver_rejects_inconsistent_item_plane_domains(viewer_ack_retu
         NapariAggregateAxisBindingAuthority.bindings((received, reversed_item), semantics)
 
 
-@pytest.mark.parametrize("component", (AllComponents.CHANNEL, AllComponents.SITE))
+@pytest.mark.parametrize("component", (Microscopy.Channel, Microscopy.Site))
 def test_existing_projection_owns_source_binding_label_planes(component):
     labels, pixels = _source_bound_labels(component)
     payload = labels.metadata.attach_to(labels.image_data())
     items = RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload, source_description="automatic label TIFF",
-            variable_components=(VariableComponents(component.value),),
+            variable_components=(component,),
             plane_projection=RuntimePlaneAxisValueProjection.preserve(
                 axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2,
             ),
@@ -365,31 +365,31 @@ def test_existing_projection_owns_source_binding_label_planes(component):
     for index, item in enumerate(items):
         np.testing.assert_array_equal(item.data, pixels[index])
         assert item.metadata.plane_axis is None
-        assert item.require_source_component_metadata()[component.value] == index + 1
+        assert item.require_source_component_metadata()[component.name] == index + 1
         assert item.metadata.source_voxel_spacing.values_zyx == (0.75, 0.75)
         assert np.shares_memory(item.data, labels.image_data())
 
 
 def test_existing_projection_does_not_infer_runtime_axis_from_label_array():
-    labels, _pixels = _source_bound_labels(AllComponents.CHANNEL)
+    labels, _pixels = _source_bound_labels(Microscopy.Channel)
     with pytest.raises(RuntimeSliceProjectionDeclarationError, match="requires a nominal payload"):
         RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
                 value=labels.metadata.attach_to(labels.image_data()),
                 source_description="automatic label TIFF",
-                variable_components=(VariableComponents.CHANNEL,),
+                variable_components=(Microscopy.Channel,),
             )
         )
 
 
 def test_existing_projection_rejects_label_source_cardinality_mismatch():
-    labels, _pixels = _source_bound_labels(AllComponents.CHANNEL)
+    labels, _pixels = _source_bound_labels(Microscopy.Channel)
     with pytest.raises(ValueError, match="metadata cardinality mismatch"):
         RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
                 value=labels.metadata.attach_to(labels.image_data()),
                 source_description="automatic label TIFF",
-                variable_components=(VariableComponents.CHANNEL,),
+                variable_components=(Microscopy.Channel,),
                 plane_projection=RuntimePlaneAxisValueProjection.preserve(
                     axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=3,
                 ),

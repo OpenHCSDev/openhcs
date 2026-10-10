@@ -160,27 +160,21 @@ def test_showcase_sources_are_seven_bounded_distinct_pipeline_documents(tmp_path
         if blueprint_index >= 3:
             assert "export_to_spreadsheet" in source
             assert '"export_all_measurement_types": True' in source
+        microscopy_import = "from openhcs.domains.microscopy.axes import Microscopy"
+        ungrouped_import = "from openhcs.core.axes import Ungrouped"
         if blueprint.wavelengths == 1:
             if blueprint.z_stack_levels > 1:
-                assert (
-                    "from openhcs.constants.constants import VariableComponents"
-                    in source
-                )
-                assert "variable_components=[VariableComponents.Z_INDEX]" in source
-            elif "VariableComponents" in source:
-                assert (
-                    "from openhcs.constants.constants import "
-                    "GroupBy, VariableComponents" in source
-                )
-                assert "variable_components=[VariableComponents.SITE]" in source
-                assert "group_by=GroupBy.CHANNEL" in source
+                assert microscopy_import in source
+                assert "variable_components=[Microscopy.ZIndex]" in source
+            elif "Microscopy." in source:
+                assert microscopy_import in source
+                assert "variable_components=[Microscopy.Site]" in source
+                assert "group_by=Microscopy.Channel" in source
             else:
-                assert "GroupBy" not in source
+                assert "Ungrouped" not in source
         else:
-            assert (
-                "from openhcs.constants.constants import GroupBy, VariableComponents"
-                in source
-            )
+            assert microscopy_import in source
+            assert ungrouped_import in source
 
         generation = blueprint.generation_arguments(plate_path)
         assert generation[0] == "generate-synthetic-plate"

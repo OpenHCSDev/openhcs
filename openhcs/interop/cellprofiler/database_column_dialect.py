@@ -459,7 +459,7 @@ class CellProfilerDatabaseColumnDialect:
         if metadata is None:
             return {}
         return {
-            component.value: (
+            component.name: (
                 SourceMetadataFields.canonical_component_value(component, domain[0])
                 if len(domain) == 1
                 else None
