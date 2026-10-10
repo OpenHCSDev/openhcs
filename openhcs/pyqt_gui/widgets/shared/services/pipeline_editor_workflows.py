@@ -24,7 +24,7 @@ from openhcs.core.debug import (
 )
 from openhcs.core.debug_views import DebugViewModel
 from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
@@ -520,7 +520,7 @@ class PipelineEditorCodeWorkflow(ManagerCodeExecutionWorkflow):
         if not self.validate_namespace(namespace):
             return False
 
-        document = PipelineDocumentAuthority.from_namespace(namespace)
+        document = PipelineDocumentCodec.from_namespace(namespace)
         self.editor.require_pipeline_definition_mutation_allowed(
             self.editor.current_plate
         )
@@ -567,7 +567,7 @@ class PipelineEditorCodeWorkflow(ManagerCodeExecutionWorkflow):
 
     def validate_namespace(self, namespace: dict) -> bool:
         try:
-            PipelineDocumentAuthority.from_namespace(namespace)
+            PipelineDocumentCodec.from_namespace(namespace)
         except (TypeError, ValueError):
             return False
         return True

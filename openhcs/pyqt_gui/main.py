@@ -54,8 +54,8 @@ from openhcs.agent.ui_bridge_identities import (
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
-from openhcs.pyqt_gui.services.desktop_restart import DesktopSessionRestart
-from openhcs.pyqt_gui.services.desktop_update import (
+from openhcs.desktop.restart import DesktopSessionRestart
+from openhcs.desktop.update import (
     DesktopRestartSession,
     DesktopRuntimeEnvironment,
     DesktopUpdateCheckFailure,
@@ -96,7 +96,7 @@ from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiOwnedStateSurfaceDeclaration,
 )
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
-from openhcs.pyqt_gui.services.zmq_version_restart import (
+from openhcs.desktop.zmq_version_restart import (
     ZMQVersionRestartDialogPresenter,
     ZMQVersionRestartWorkflow,
 )
@@ -206,12 +206,7 @@ class OpenHCSMainWindow(QMainWindow):
             widget_gui_config=runtime_context.ui_config,
             function_catalog_service=function_catalog_service,
         )
-        self.window_services = main_window_services
-        self.widget_services = main_window_services
-        self.theme_manager_services = main_window_services
-        self.window_color_scheme_services = main_window_services
-        self.theme_file_services = main_window_services
-        self.config_services = main_window_services
+        self.service_adapter = main_window_services
         self.desktop_update_service = DesktopUpdateService(self)
         self.desktop_update_presenter = DesktopUpdateDialogPresenter(
             main_window_services,
@@ -245,7 +240,7 @@ class OpenHCSMainWindow(QMainWindow):
             main_window=self,
             client_service=self.plate_manager_widget.zmq_client_service,
             execution_state=lambda: self.plate_manager_widget.execution_state,
-            execute_async=self.window_services.execute_async_operation,
+            execute_async=self.service_adapter.execute_async_operation,
             publish_status=self.status_message.emit,
             presenter=self.zmq_version_restart_presenter,
         )
@@ -298,10 +293,10 @@ class OpenHCSMainWindow(QMainWindow):
                 )
             raise
         self.runtime_context = self.runtime_context.with_ui_config(new_config)
-        self.window_services.widget_gui_config = new_config
+        self.service_adapter.widget_gui_config = new_config
         self.ui_config_changed.emit(new_config)
         if new_config.zmq != previous_config.zmq:
-            self.window_services.execute_async_operation(
+            self.service_adapter.execute_async_operation(
                 self._prepare_execution_services
             )
 
@@ -321,19 +316,6 @@ class OpenHCSMainWindow(QMainWindow):
         for manager in (self.plate_manager_widget, self.pipeline_editor_widget):
             manager.set_preview_config(config.list_previews)
 
-    @property
-    def service_adapter(self):
-        return self.config_services
-
-    @service_adapter.setter
-    def service_adapter(self, value):
-        self.window_services = value
-        self.widget_services = value
-        self.theme_manager_services = value
-        self.window_color_scheme_services = value
-        self.theme_file_services = value
-        self.config_services = value
-
     def deferred_initialization(self):
         """Initialize visible UI state before the authoritative ready paint."""
 
@@ -346,7 +328,7 @@ class OpenHCSMainWindow(QMainWindow):
     def start_background_services(self) -> None:
         """Start non-visual services after the initialized window has painted."""
 
-        self.window_services.execute_async_operation(self._prepare_execution_services)
+        self.service_adapter.execute_async_operation(self._prepare_execution_services)
         self._start_ui_bridge_if_enabled()
         self._check_for_updates_on_startup()
 
@@ -414,7 +396,7 @@ class OpenHCSMainWindow(QMainWindow):
         spec = self.window_specs[window_id]
 
         def factory() -> QDialog:
-            window = self.window_services.create_window(spec)
+            window = self.service_adapter.create_window(spec)
             return window
 
         return factory
@@ -449,7 +431,7 @@ class OpenHCSMainWindow(QMainWindow):
             Qt.DockWidgetArea.TopDockWidgetArea,
         )
 
-        self.system_monitor = self.widget_services.create_system_monitor_widget()
+        self.system_monitor = self.service_adapter.create_system_monitor_widget()
         system_monitor_pane = MainWindowDockPane.create(
             main_window=self,
             window_id=SystemMonitorWindowIdentity.require_value(),
@@ -477,7 +459,7 @@ class OpenHCSMainWindow(QMainWindow):
             self.show_synthetic_plate_generator
         )
 
-        self.plate_manager_widget = self.widget_services.create_plate_manager_widget()
+        self.plate_manager_widget = self.service_adapter.create_plate_manager_widget()
         plate_manager_pane = MainWindowDockPane.create(
             main_window=self,
             window_id=PlateManagerWidgetIdentity.require_value(),
@@ -493,7 +475,7 @@ class OpenHCSMainWindow(QMainWindow):
         )
 
         ports_to_scan = self.zmq_server_manager_ports_to_scan()
-        self.zmq_manager_widget = self.widget_services.create_zmq_server_manager_widget(
+        self.zmq_manager_widget = self.service_adapter.create_zmq_server_manager_widget(
             ports_to_scan
         )
         self.zmq_manager_widget.log_file_opened.connect(self._open_log_file_in_viewer)
@@ -511,7 +493,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.embedded_widgets.register(zmq_manager_pane)
 
         self.pipeline_editor_widget = (
-            self.widget_services.create_pipeline_editor_widget()
+            self.service_adapter.create_pipeline_editor_widget()
         )
         pipeline_editor_pane = MainWindowDockPane.create(
             main_window=self,
@@ -599,7 +581,7 @@ class OpenHCSMainWindow(QMainWindow):
     def apply_initial_theme(self):
         """Apply initial color scheme to the main window."""
         # Get theme manager from service adapter
-        theme_manager = self.theme_manager_services.get_theme_manager()
+        theme_manager = self.service_adapter.theme_manager
 
         # Note: ServiceAdapter already applied dark theme globally in its __init__
         # Just register for theme change notifications, don't re-apply
@@ -846,7 +828,7 @@ class OpenHCSMainWindow(QMainWindow):
         # rendered by a permanent right-lane label below instead.
         from openhcs.pyqt_gui.widgets.shared.time_travel_widget import TimeTravelWidget
 
-        color_scheme = self.window_color_scheme_services.get_current_color_scheme()
+        color_scheme = self.service_adapter.get_current_color_scheme()
         self.bottom_control_panel = QWidget(self)
         bottom_control_layout = QVBoxLayout(self.bottom_control_panel)
         bottom_control_layout.setContentsMargins(0, 0, 0, 0)
@@ -903,7 +885,7 @@ class OpenHCSMainWindow(QMainWindow):
             floating_windows=self.floating_windows,
             status_progress_bar=self._status_progress_bar,
             ui_bridge_lifecycle=self.ui_bridge_lifecycle,
-            ui_services=self.window_services,
+            ui_services=self.service_adapter,
         )
 
     def setup_connections(self):
@@ -925,7 +907,7 @@ class OpenHCSMainWindow(QMainWindow):
         self._connect_zmq_lifecycle()
 
         # Connect service adapter to application
-        self.config_services.set_global_config(self.pipeline_runtime_config)
+        self.service_adapter.set_global_config(self.pipeline_runtime_config)
 
         self._connect_object_state_lifecycle()
 
@@ -1298,7 +1280,7 @@ class OpenHCSMainWindow(QMainWindow):
 
         # Create and show the generator window
         generator_window = SyntheticPlateGeneratorWindow(
-            color_scheme=self.window_color_scheme_services.get_current_color_scheme(),
+            color_scheme=self.service_adapter.get_current_color_scheme(),
             parent=self,
         )
 
@@ -1375,26 +1357,8 @@ class OpenHCSMainWindow(QMainWindow):
                     f"Set current_plate to {plate_path} before loading pipeline"
                 )
 
-            # Load the pipeline file
-            from pathlib import Path
-
-            pipeline_file = Path(pipeline_path)
-
-            if not pipeline_file.exists():
-                raise FileNotFoundError(f"Pipeline file not found: {pipeline_path}")
-
-            # For .py files, read code and use existing _handle_edited_code
-            if pipeline_file.suffix == ".py":
-                with open(pipeline_file, "r") as f:
-                    code = f.read()
-
-                # Use existing infrastructure that already handles code execution
-                pipeline_editor._handle_edited_code(code)
-                logger.info(f"Loaded pipeline from Python file: {pipeline_path}")
-            else:
-                # For pickled files, use existing infrastructure
-                pipeline_editor.load_pipeline_from_file(pipeline_file)
-                logger.info(f"Loaded pipeline: {pipeline_path}")
+            pipeline_editor.load_pipeline_from_file(Path(pipeline_path))
+            logger.info(f"Loaded pipeline: {pipeline_path}")
 
         except Exception as e:
             logger.error(f"Failed to load pipeline: {e}", exc_info=True)
@@ -1768,7 +1732,7 @@ class OpenHCSMainWindow(QMainWindow):
     def on_config_changed(self, new_config: GlobalPipelineConfig):
         """Handle global configuration changes."""
         self.set_pipeline_runtime_config(new_config)
-        self.config_services.set_global_config(new_config)
+        self.service_adapter.set_global_config(new_config)
         self.lifecycle_workflow.propagate_config(new_config)
 
     def closeEvent(self, event):
@@ -1817,12 +1781,12 @@ class OpenHCSMainWindow(QMainWindow):
 
     def switch_to_dark_theme(self):
         """Switch to dark theme variant."""
-        self.theme_manager_services.switch_to_dark_theme()
+        self.service_adapter.theme_manager.switch_to_dark_theme()
         self.status_message.emit("Switched to dark theme")
 
     def switch_to_light_theme(self):
         """Switch to light theme variant."""
-        self.theme_manager_services.switch_to_light_theme()
+        self.service_adapter.theme_manager.switch_to_light_theme()
         self.status_message.emit("Switched to light theme")
 
     def load_theme_from_file(self):
@@ -1832,7 +1796,9 @@ class OpenHCSMainWindow(QMainWindow):
         )
 
         if file_path:
-            theme_loaded = self.theme_file_services.load_theme_from_config(file_path)
+            theme_loaded = self.service_adapter.theme_manager.load_theme_from_config(
+                file_path
+            )
             if theme_loaded:
                 self.status_message.emit(f"Loaded theme from {Path(file_path).name}")
             else:
@@ -1852,7 +1818,9 @@ class OpenHCSMainWindow(QMainWindow):
         )
 
         if file_path:
-            theme_saved = self.theme_file_services.save_current_theme(file_path)
+            theme_saved = self.service_adapter.theme_manager.save_current_theme(
+                file_path
+            )
             if theme_saved:
                 self.status_message.emit(f"Saved theme to {Path(file_path).name}")
             else:

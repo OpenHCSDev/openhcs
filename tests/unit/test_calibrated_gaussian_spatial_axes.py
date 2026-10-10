@@ -194,7 +194,7 @@ def test_original_cohort_composition_keeps_every_source_plane(physical_volume):
     )
     if physical_volume:
         metadata = metadata.replace_fields(
-            source_spatial_domain=VolumeSourceSpatialDomain().admit_source_cohort(
+            source_spatial_domain=VolumeSourceSpatialDomain().with_source_cohort(
                 metadata.source_spatial_domain, depth=len(planes),
             )
         )

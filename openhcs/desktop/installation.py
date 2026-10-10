@@ -238,7 +238,7 @@ class DesktopInstallerContract:
                 )
 
     def write(self, path: Path) -> None:
-        """Serialize this validated projection for native consumers."""
+        """Serialize this validated contract for native installers."""
 
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(

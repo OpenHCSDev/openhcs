@@ -47,6 +47,8 @@ from openhcs.agent.dto.ui_bridge import (
     UiBridgeOperationStatus,
     UiBridgeOperationWaitRequest,
     UiObjectStateFieldFilter,
+    UiPlateManagerRowState,
+    UiPlateManagerState,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
     UiSelectedPlateWorkflowResult,
@@ -260,7 +262,7 @@ class McpToolArgumentRecord(ABC):
         """Return the sparse JSON object passed to an MCP tool."""
 
 
-class McpToolArgumentAuthority:
+class McpToolArguments:
     """Project typed command payloads to MCP tool argument mappings."""
 
     @staticmethod
@@ -400,9 +402,9 @@ class McpDevTransportFailure:
 
 @dataclass(frozen=True, slots=True)
 class McpDevPayloadFailure:
-    """Rejected response contract, retaining the complete external receipt."""
+    """Rejected response contract, keeping the payload exactly as it was sent."""
 
-    receipt: JsonValue
+    payload: JsonValue
     errors: tuple[AgentError, ...]
 
     def __post_init__(self) -> None:
@@ -436,31 +438,26 @@ class McpDevToolResult:
 
     @staticmethod
     def _decode_payload(payload, contracts):
-        if isinstance(payload, McpDevPayloadFailure):
+        if not isinstance(payload, Mapping):
+            # Already decoded: a declared record or a recorded failure.
             return payload
-        # Transport failures are not malformed successes. Admit their nominal
-        # declaration first, without attaching unrelated error-shape rejections
-        # to an actual capability result or its original diagnostic cause.
-        for boundary_contract in get_args(McpBoundaryFailure):
-            try:
-                if isinstance(payload, boundary_contract):
-                    return payload
-                return dataclass_from_mapping(boundary_contract, payload)
-            except (TypeError, ValueError):
-                pass
+        # Declared contracts reject undeclared fields, so a tool-failure
+        # payload never decodes as a success; only then is it read as one.
         rejections: list[AgentError] = []
         for contract in contracts:
             try:
-                if isinstance(payload, contract):
-                    return payload
                 return dataclass_from_mapping(contract, payload)
             except (TypeError, ValueError) as error:
                 rejections.append(
                     AgentError.from_exception("mcp_payload_invalid", error)
                 )
-        # The local rejection is a declared transport record too. Its canonical
-        # dataclass projection retains both cause and original native receipt.
-        # Recover that record through the same codec, not another error parser.
+        for boundary_contract in get_args(McpBoundaryFailure):
+            try:
+                return dataclass_from_mapping(boundary_contract, payload)
+            except (TypeError, ValueError):
+                pass
+        # A payload rejected earlier is itself a recorded failure (its JSON
+        # form keeps the cause and the payload as sent); decode it as one.
         try:
             return dataclass_from_mapping(McpDevPayloadFailure, payload)
         except (TypeError, ValueError):
@@ -531,35 +528,6 @@ class McpDevToolResult:
         )
 
 
-@dataclass(frozen=True, slots=True)
-class WorkflowPollRowState:
-    """Typed PlateManager state row subset used by workflow polling."""
-
-    plate_scope_id: str | None
-    orchestrator_state: str | None
-    initialized: bool | None
-    compiled: bool | None
-    init_pending: bool | None
-    compile_pending: bool | None
-    execution_active: bool | None
-    terminal_status: str | None
-    queue_position: int | None
-
-    @classmethod
-    def from_mapping(cls, row: Mapping[str, JsonValue]) -> "WorkflowPollRowState":
-        return cls(
-            plate_scope_id=optional_str(row.get("plate_scope_id")),
-            orchestrator_state=optional_str(row.get("orchestrator_state")),
-            initialized=optional_bool(row.get("initialized")),
-            compiled=optional_bool(row.get("compiled")),
-            init_pending=optional_bool(row.get("init_pending")),
-            compile_pending=optional_bool(row.get("compile_pending")),
-            execution_active=optional_bool(row.get("execution_active")),
-            terminal_status=optional_str(row.get("terminal_status")),
-            queue_position=optional_int(row.get("queue_position")),
-        )
-
-
 class WorkflowTerminalStateCriterion(ABC, metaclass=AutoRegisterMeta):
     """Registered terminal-state criterion for one selected workflow kind."""
 
@@ -581,10 +549,10 @@ class WorkflowTerminalStateCriterion(ABC, metaclass=AutoRegisterMeta):
         return cls.__registry__[workflow]()
 
     @abstractmethod
-    def terminal_for_row(self, row: WorkflowPollRowState) -> bool:
+    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
         """Return whether this workflow has reached its terminal row state."""
 
-    def failed_for_row(self, row: WorkflowPollRowState) -> bool:
+    def failed_for_row(self, row: UiPlateManagerRowState) -> bool:
         """Return whether this workflow reached a failed terminal row state."""
         terminal_status = terminal_execution_status(row.terminal_status)
         if terminal_status is not None and terminal_status.counts_as_failed:
@@ -602,7 +570,7 @@ class InitWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     failed_orchestrator_states = (OrchestratorState.INIT_FAILED,)
     terminal_state_is_idempotent = True
 
-    def terminal_for_row(self, row: WorkflowPollRowState) -> bool:
+    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
         return row.init_pending is False and row.initialized is True
 
 
@@ -610,7 +578,7 @@ class CompileWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     workflow = UiSelectedPlateWorkflowKind.COMPILE
     failed_orchestrator_states = (OrchestratorState.COMPILE_FAILED,)
 
-    def terminal_for_row(self, row: WorkflowPollRowState) -> bool:
+    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
         return row.compile_pending is False and row.compiled is True
 
 
@@ -618,7 +586,7 @@ class RunWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     workflow = UiSelectedPlateWorkflowKind.RUN
     failed_orchestrator_states = (OrchestratorState.EXEC_FAILED,)
 
-    def terminal_for_row(self, row: WorkflowPollRowState) -> bool:
+    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
         return (
             row.execution_active is False
             and row.queue_position is None
@@ -640,10 +608,10 @@ class WorkflowStatePollPolicy:
             )
         )
 
-    def terminal_for_row(self, row: WorkflowPollRowState) -> bool:
+    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
         return self.criterion.terminal_for_row(row)
 
-    def failed_for_row(self, row: WorkflowPollRowState) -> bool:
+    def failed_for_row(self, row: UiPlateManagerRowState) -> bool:
         return self.criterion.failed_for_row(row)
 
     def can_evaluate(
@@ -716,31 +684,22 @@ class WorkflowPollBaseline:
         cls,
         result: McpDevToolResult,
     ) -> "WorkflowPollBaseline | None":
-        state_payload = state_surface_payload(result)
-        if not state_payload:
+        state = plate_manager_state(result)
+        if state is None:
             return None
         return cls(
-            revision_token=optional_str(
-                state_surface_document(result).current_revision_token
-            )
-            or optional_str(state_payload.get("current_revision_token")),
-            object_state_token=optional_int(state_payload.get("object_state_token")),
+            revision_token=state.current_revision_token,
+            object_state_token=state.object_state_token,
         )
 
     def changed_by(self, result: McpDevToolResult) -> bool:
-        state_payload = state_surface_payload(result)
-        if not state_payload:
+        state = plate_manager_state(result)
+        if state is None:
             return False
-        revision_token = optional_str(
-            state_surface_document(result).current_revision_token
-        ) or optional_str(state_payload.get("current_revision_token"))
-        object_state_token = optional_int(state_payload.get("object_state_token"))
         return (
-            revision_token is not None and revision_token != self.revision_token
-        ) or (
-            object_state_token is not None
-            and object_state_token != self.object_state_token
-        )
+            state.current_revision_token is not None
+            and state.current_revision_token != self.revision_token
+        ) or state.object_state_token != self.object_state_token
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1109,24 +1068,6 @@ def parse_optional_json_object(
     return parse_json_object(argument_text)
 
 
-def optional_bool(value: JsonValue) -> bool | None:
-    if isinstance(value, bool):
-        return value
-    return None
-
-
-def optional_int(value: JsonValue) -> int | None:
-    if type(value) is int:
-        return value
-    return None
-
-
-def optional_str(value: JsonValue) -> str | None:
-    if isinstance(value, str):
-        return value
-    return None
-
-
 def _payload_from_text(text: str) -> JsonValue:
     try:
         return cast(JsonValue, json.loads(text))
@@ -1186,12 +1127,18 @@ def require_json_object_payload(value: JsonValue) -> JsonObject:
 
 @singledispatch
 def _agent_errors(value: object) -> tuple[AgentError, ...]:
-    """One diagnostic descent mechanism over actual declared and JSON values."""
+    """One diagnostic descent mechanism over actual declared and JSON values.
+
+    A record's diagnostics are its declared error lists. A single ``AgentError``
+    held as a field (for example an action's ``disabled_error``) describes the
+    record's content and is not a failure of the call, matching the JSON branch.
+    """
     if is_dataclass(value) and not isinstance(value, type):
         return tuple(
             error
             for declaration in fields(value)
-            for error in _agent_errors(getattr(value, declaration.name))
+            if not isinstance(field_value := getattr(value, declaration.name), AgentError)
+            for error in _agent_errors(field_value)
         )
     return ()
 
@@ -1856,19 +1803,10 @@ async def call_mcp_session(
     )
 
 
-def first_mapping_payload(result: McpDevToolResult) -> Mapping[str, JsonValue] | None:
-    if not result.payloads:
-        return None
-    first_payload = result.payloads[0]
-    if isinstance(first_payload, Mapping):
-        return first_payload
-    return None
-
-
 def execute_source_session_tool_arguments(
     args: argparse.Namespace,
 ) -> dict[str, JsonValue]:
-    return McpToolArgumentAuthority.from_payload(
+    return McpToolArguments.from_payload(
         {
             "plate_path": args.plate_path,
             "pipeline_source": pipeline_source_from_args(args),
@@ -1886,7 +1824,7 @@ def execute_source_submit_tool_arguments(
     *,
     session_id: str,
 ) -> dict[str, JsonValue]:
-    return McpToolArgumentAuthority.from_payload(
+    return McpToolArguments.from_payload(
         to_jsonable(
             PipelineExecutionSubmissionRequest(
                 session_id=session_id,
@@ -1943,7 +1881,7 @@ def viewer_connection_arguments(
     *,
     allow_positional_value_after_port_option: bool = False,
 ) -> dict[str, JsonValue]:
-    return McpToolArgumentAuthority.from_record(
+    return McpToolArguments.from_record(
         ViewerConnectionArguments.from_args(
             args,
             allow_positional_value_after_port_option=(
@@ -2221,7 +2159,7 @@ def ui_connection_arguments(
     *,
     timeout_ms: int | None,
 ) -> dict[str, JsonValue]:
-    return McpToolArgumentAuthority.from_record(
+    return McpToolArguments.from_record(
         UiConnectionArguments.from_args(args, timeout_ms=timeout_ms)
     )
 
@@ -2231,7 +2169,7 @@ def ui_tool_arguments(
     *,
     timeout_ms: int | None,
 ) -> dict[str, JsonValue]:
-    return McpToolArgumentAuthority.from_record(
+    return McpToolArguments.from_record(
         UiToolArguments(
             connection=UiConnectionArguments.from_args(
                 args,
@@ -2348,7 +2286,7 @@ def ui_request_tool_arguments(
 ) -> dict[str, JsonValue]:
     """Add a UI connection envelope to request-owned MCP arguments."""
 
-    arguments = McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+    arguments = McpToolArguments.from_payload(request.as_tool_arguments())
     arguments["connection"] = ui_connection_arguments(
         args,
         timeout_ms=timeout_ms,
@@ -2461,21 +2399,12 @@ def state_surface_document(result: McpDevToolResult) -> UiStateSurfaceDocument |
     return result.decoded_payload_as(UiStateSurfaceDocument)
 
 
-def state_surface_payload(result: McpDevToolResult) -> Mapping[str, JsonValue]:
+def plate_manager_state(result: McpDevToolResult) -> UiPlateManagerState | None:
+    """The PlateManager state carried by a state-surface read, decoded once."""
     document = state_surface_document(result)
-    return {} if document is None else document.payload
-
-
-def state_surface_rows(result: McpDevToolResult) -> tuple[WorkflowPollRowState, ...]:
-    state_payload = state_surface_payload(result)
-    rows = state_payload.get("rows")
-    if not isinstance(rows, list):
-        return ()
-    return tuple(
-        WorkflowPollRowState.from_mapping(row)
-        for row in rows
-        if isinstance(row, Mapping)
-    )
+    if document is None or not document.payload:
+        return None
+    return dataclass_from_mapping(UiPlateManagerState, document.payload)
 
 
 def workflow_poll_has_reached_terminal_state(
@@ -2520,11 +2449,12 @@ def workflow_poll_terminal_status(
 def workflow_poll_manager_is_idle(result: McpDevToolResult) -> bool:
     """Return whether the workflow owner has completed batch finalization."""
 
-    state_payload = state_surface_payload(result)
-    manager_state = optional_str(state_payload.get("manager_execution_state"))
+    state = plate_manager_state(result)
+    if state is None:
+        return False
     try:
-        return not ManagerExecutionState(manager_state).busy
-    except (TypeError, ValueError):
+        return not ManagerExecutionState(state.manager_execution_state).busy
+    except ValueError:
         return False
 
 
@@ -2532,13 +2462,13 @@ def workflow_poll_target_rows(
     result: McpDevToolResult,
     *,
     target_scope_ids: tuple[str, ...],
-) -> tuple[WorkflowPollRowState, ...]:
-    rows = state_surface_rows(result)
-    if not rows:
+) -> tuple[UiPlateManagerRowState, ...]:
+    state = plate_manager_state(result)
+    if state is None:
         return ()
     if not target_scope_ids:
-        return rows
-    return tuple(row for row in rows if row.plate_scope_id in target_scope_ids)
+        return state.rows
+    return tuple(row for row in state.rows if row.plate_scope_id in target_scope_ids)
 
 
 def terminal_execution_status(

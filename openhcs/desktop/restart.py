@@ -10,7 +10,7 @@ import subprocess
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from PyQt6.QtCore import QTimer
 
-from openhcs.pyqt_gui.services.desktop_update import (
+from openhcs.desktop.update import (
     DesktopRestartEnvironment,
     DesktopRestartPurpose,
     DesktopRestartSession,
@@ -71,7 +71,7 @@ class DesktopSessionRestart:
     def start(self, *, parent_pid: int | None = None) -> bool:
         if not self.session.is_complete:
             raise DesktopUpdateError("The saved OpenHCS restart session is incomplete.")
-        worker = Path(__file__).with_name("desktop_restart_worker.py")
+        worker = Path(__file__).with_name("restart_worker.py")
         if not worker.is_file():
             raise DesktopUpdateError("The OpenHCS restart worker is unavailable.")
 

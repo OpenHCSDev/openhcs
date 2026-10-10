@@ -12,36 +12,94 @@ from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.messages import TaskProgress
 
+from python_introspect import to_jsonable
+
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from openhcs.agent.dto.execution import ExecutionJobRef, ExecutionJobStatus
+from openhcs.agent.dto.plate import PlateFileQueryRecordSummary
+from openhcs.agent.dto.viewer import (
+    ViewerWindowDescriptor,
+    ViewerWindowValidationSummaryResult,
+)
+from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.mcp import installed_demo
 from openhcs.mcp.dev_client import McpDevCommandExecution
+from openhcs.mcp.dev_client_core import (
+    McpDevServerIdentity,
+    McpDevToolBatchResponse,
+    McpDevToolResult,
+)
 from openhcs.processing.presets.pipelines import (
     loose_operaphenix_neurite_outgrowth as neurite_preset,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 
 
-def _records(tmp_path: Path) -> tuple[dict[str, object], ...]:
+def _records(tmp_path: Path) -> tuple[PlateFileQueryRecordSummary, ...]:
     records = []
     for channel in (1, 2):
         source_path = tmp_path / f"A01_s001_w{channel}_z001_t001.tif"
         source_path.touch()
         records.append(
-            {
-                "kind": PlateFileKind.IMAGE.value,
-                "source_path": str(source_path),
-                "metadata": {
+            PlateFileQueryRecordSummary(
+                kind=PlateFileKind.IMAGE,
+                key=source_path.name,
+                source_path=str(source_path),
+                metadata={
                     Microscopy.Well.name: "A01",
                     Microscopy.Site.name: "1",
                     Microscopy.Channel.name: str(channel),
                     Microscopy.ZIndex.name: "1",
                     Microscopy.Timepoint.name: "1",
                 },
-            }
+            )
         )
     return tuple(records)
+
+
+def _job(status: str, **values) -> ExecutionJobStatus:
+    return ExecutionJobStatus(
+        schema_version=SCHEMA_VERSION,
+        session_id="session-1",
+        job_id="job-1",
+        kind="execute",
+        uri="openhcs://jobs/job-1",
+        server_execution_id=None,
+        status=status,
+        **values,
+    )
+
+
+def _validation(*, settled: bool) -> ViewerWindowValidationSummaryResult:
+    return ViewerWindowValidationSummaryResult(
+        schema_version=SCHEMA_VERSION,
+        observed=True,
+        valid=settled,
+        pending_update_count=0 if settled else 8,
+        mounted_layer_count=9 if settled else 0,
+        nonzero_payload_count=9 if settled else 0,
+        viewer=ViewerWindowDescriptor(viewer_type=ViewerType.NAPARI, title="napari"),
+    )
+
+
+def _execution(capability, payload, *, returncode: int = 0) -> McpDevCommandExecution:
+    """Frame one declared result exactly as the dev client serializes it."""
+    response = McpDevToolBatchResponse(
+        server=McpDevServerIdentity(command="python", module="openhcs.mcp"),
+        results=(
+            McpDevToolResult(tool=capability.name, mcp_error=False, payloads=(payload,)),
+        ),
+    )
+    return McpDevCommandExecution(
+        argv=(capability.cli_command or capability.name,),
+        payload=to_jsonable(response),
+        rendered_output="",
+        returncode=returncode,
+        server_stderr_tail=None,
+    )
 
 
 def test_portable_source_projects_authoritative_neurite_preset(
@@ -74,7 +132,7 @@ def test_portable_source_projects_authoritative_neurite_preset(
         viewer=True,
     )
 
-    document = PipelineDocumentAuthority.from_source(source)
+    document = PipelineDocumentCodec.from_source(source)
     expected_steps = observed["pipeline_steps"]
 
     assert document.pipeline_config == observed["pipeline_config"]
@@ -200,7 +258,7 @@ def test_portable_source_normalization_defers_catalog_and_execution_runtimes(
     probe = """
 import sys
 from pathlib import Path
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 def forbidden_catalog_discovery(cls):
@@ -210,7 +268,7 @@ RegistryService.get_all_functions_with_metadata = classmethod(
     forbidden_catalog_discovery
 )
 baseline_modules = frozenset(sys.modules)
-PipelineDocumentAuthority.from_source(Path(sys.argv[1]).read_text(encoding="utf-8"))
+PipelineDocumentCodec.from_source(Path(sys.argv[1]).read_text(encoding="utf-8"))
 execution_prefixes = (
     "centrosome.cpmorphology",
     "centrosome.zernike",
@@ -250,7 +308,7 @@ def test_headless_portable_source_disables_every_viewer_config(
         viewer=False,
     )
 
-    document = PipelineDocumentAuthority.from_source(source)
+    document = PipelineDocumentCodec.from_source(source)
 
     assert all(
         not step.napari_streaming_config.enabled
@@ -267,27 +325,28 @@ def test_installed_demo_phase_reporting_preserves_json_stdout(capsys) -> None:
     assert captured.err == "Installed demo phase: starting MCP session\n"
 
 
-def test_command_payload_selects_declaration_owned_tool_result() -> None:
-    tool_name = agent_capabilities.validate_viewer_window_state.name
-    execution = McpDevCommandExecution(
-        argv=("validate-viewer", "43123"),
-        payload={
-            "results": [
-                {
-                    "tool": tool_name,
-                    "mcp_error": False,
-                    "payloads": [{"observed": True, "valid": True, "errors": []}],
-                }
-            ]
-        },
-        rendered_output="",
-        returncode=0,
-        server_stderr_tail=None,
+def test_command_payload_decodes_the_declared_result() -> None:
+    capability = agent_capabilities.validate_viewer_window_state
+    validation = _validation(settled=True)
+
+    payload = installed_demo._command_payload(
+        _execution(capability, validation),
+        capability=capability,
+        payload_type=ViewerWindowValidationSummaryResult,
     )
 
-    payload = installed_demo._command_payload(execution, tool_name=tool_name)
+    assert payload == validation
 
-    assert payload == {"observed": True, "valid": True, "errors": []}
+
+def test_command_payload_rejects_a_missing_declared_result() -> None:
+    capability = agent_capabilities.validate_viewer_window_state
+
+    with pytest.raises(installed_demo.InstalledDemoFailure, match="returned no"):
+        installed_demo._command_payload(
+            _execution(agent_capabilities.query_plate_files, _validation(settled=True)),
+            capability=capability,
+            payload_type=ViewerWindowValidationSummaryResult,
+        )
 
 
 def test_execute_pipeline_submits_then_polls_declared_job_status(
@@ -296,16 +355,24 @@ def test_execute_pipeline_submits_then_polls_declared_job_status(
 ) -> None:
     observed: dict[str, object] = {"submissions": []}
 
-    def fake_run_mcp(client, argv, *, tool_name, timeout_seconds):
+    def fake_run_mcp(client, argv, *, capability, payload_type, timeout_seconds):
         observed["submissions"].append(
             {
                 "client": client,
                 "argv": tuple(argv),
-                "tool_name": tool_name,
+                "capability": capability,
                 "timeout_seconds": timeout_seconds,
             }
         )
-        return {"status": "submitted", "job_id": "job-1"}
+        return ExecutionJobRef(
+            session_id="session-1",
+            job_id="job-1",
+            kind="execute",
+            uri="openhcs://jobs/job-1",
+            server_execution_id=None,
+            schema_version=SCHEMA_VERSION,
+            status="submitted",
+        )
 
     def fake_poll(client, *, job_id, timeout_seconds=180.0):
         observed.update(
@@ -313,7 +380,7 @@ def test_execute_pipeline_submits_then_polls_declared_job_status(
             job_id=job_id,
             poll_timeout_seconds=timeout_seconds,
         )
-        return {"status": "complete", "job_id": job_id}
+        return _job("complete")
 
     monkeypatch.setattr(installed_demo, "_run_mcp", fake_run_mcp)
     monkeypatch.setattr(installed_demo, "_poll_execution_job", fake_poll)
@@ -326,12 +393,12 @@ def test_execute_pipeline_submits_then_polls_declared_job_status(
         runtime_port=43125,
     )
 
-    assert payload == {"status": "complete", "job_id": "job-1"}
+    assert payload == _job("complete")
     submissions = observed["submissions"]
     assert isinstance(submissions, list) and len(submissions) == 1
     submission = submissions[0]
     assert submission["client"] is client
-    assert submission["tool_name"] == agent_capabilities.submit_pipeline_execution.name
+    assert submission["capability"] is agent_capabilities.submit_pipeline_execution
     assert submission["timeout_seconds"] is None
     assert "--submit-timeout-ms" not in submission["argv"]
     assert "--no-wait" in submission["argv"]
@@ -341,27 +408,14 @@ def test_execute_pipeline_submits_then_polls_declared_job_status(
 
 
 def test_execution_status_call_uses_owned_job_request() -> None:
-    tool_name = agent_capabilities.get_execution_status.name
+    capability = agent_capabilities.get_execution_status
+    tool_name = capability.name
     observed: dict[str, object] = {}
 
     class FakeClient:
         def execute(self, argv, *, timeout_seconds):
             observed.update(argv=tuple(argv), timeout_seconds=timeout_seconds)
-            return McpDevCommandExecution(
-                argv=tuple(argv),
-                payload={
-                    "results": [
-                        {
-                            "tool": tool_name,
-                            "mcp_error": False,
-                            "payloads": [{"status": "running", "job_id": "job-1"}],
-                        }
-                    ]
-                },
-                rendered_output="",
-                returncode=0,
-                server_stderr_tail=None,
-            )
+            return _execution(capability, _job("running"))
 
     payload = installed_demo._execution_status_payload(
         FakeClient(),
@@ -369,7 +423,7 @@ def test_execution_status_call_uses_owned_job_request() -> None:
     )
 
     argv = observed["argv"]
-    assert payload == {"status": "running", "job_id": "job-1"}
+    assert payload == _job("running")
     assert observed["timeout_seconds"] is None
     assert argv[:5] == (
         "--timeout-seconds",
@@ -392,7 +446,7 @@ def test_execution_poll_observes_progress_until_complete(monkeypatch) -> None:
     def fake_status(_client, *, request):
         status = next(statuses)
         calls.append(status)
-        return {"status": status, "job_id": request.job_id}
+        return _job(status)
 
     monkeypatch.setattr(installed_demo, "_execution_status_payload", fake_status)
     monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
@@ -405,10 +459,10 @@ def test_execution_poll_observes_progress_until_complete(monkeypatch) -> None:
     )
 
     assert calls == ["submitted", "running", "complete"]
-    assert payload == {"status": "complete", "job_id": "job-1"}
+    assert payload == _job("complete")
 
 
-def _progress_payload(sequence: int, *, percent: float) -> dict[str, object]:
+def _progress(sequence: int, *, percent: float) -> ExecutionProgressObservation:
     event = TaskProgress(
         task_id="execution-1",
         phase="execute",
@@ -418,16 +472,15 @@ def _progress_payload(sequence: int, *, percent: float) -> dict[str, object]:
         completed=sequence,
         total=3,
     ).to_dict()
-    observation = ExecutionProgressObservation(sequence=sequence, event=event)
-    return observation.as_wire()
+    return ExecutionProgressObservation(sequence=sequence, event=event)
 
 
 def test_execution_poll_refreshes_stall_budget_from_exact_progress(monkeypatch) -> None:
     payloads = iter(
         (
-            {"status": "running", "progress": _progress_payload(1, percent=10.0)},
-            {"status": "running", "progress": _progress_payload(2, percent=50.0)},
-            {"status": "complete", "progress": _progress_payload(3, percent=100.0)},
+            _job("running", progress=_progress(1, percent=10.0)),
+            _job("running", progress=_progress(2, percent=50.0)),
+            _job("complete", progress=_progress(3, percent=100.0)),
         )
     )
     now = 0.0
@@ -452,7 +505,7 @@ def test_execution_poll_refreshes_stall_budget_from_exact_progress(monkeypatch) 
         maximum_duration_seconds=10.0,
     )
 
-    assert payload["status"] == "complete"
+    assert payload.status == "complete"
     assert now > 1.0
 
 
@@ -467,7 +520,7 @@ def test_execution_poll_fails_when_running_status_has_no_progress(monkeypatch) -
     monkeypatch.setattr(
         installed_demo,
         "_execution_status_payload",
-        lambda _client, *, request: {"status": "running", "job_id": request.job_id},
+        lambda _client, *, request: _job("running"),
     )
     monkeypatch.setattr(installed_demo.time, "monotonic", monotonic)
     monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
@@ -485,22 +538,10 @@ def test_execution_poll_fails_when_running_status_has_no_progress(monkeypatch) -
 
 
 def test_validate_viewer_polls_until_debounced_layers_settle(monkeypatch) -> None:
-    responses = iter(
-        (
-            {"observed": True, "valid": False, "pending_update_count": 8},
-            {
-                "observed": True,
-                "valid": True,
-                "pending_update_count": 0,
-                "mounted_layer_count": 9,
-                "nonzero_payload_count": 9,
-                "viewer": {"viewer_type": "napari"},
-            },
-        )
-    )
+    responses = iter((_validation(settled=False), _validation(settled=True)))
     calls: list[dict[str, object]] = []
 
-    def fake_run_mcp(client, argv, *, tool_name, timeout_seconds):
+    def fake_run_mcp(client, argv, *, capability, payload_type, timeout_seconds):
         calls.append({"argv": tuple(argv), "timeout_seconds": timeout_seconds})
         return next(responses)
 
@@ -517,7 +558,7 @@ def test_validate_viewer_polls_until_debounced_layers_settle(monkeypatch) -> Non
 
     payload = installed_demo._validate_viewer(object(), viewer_port=43126)
 
-    assert payload["valid"] is True
+    assert payload.valid is True
     assert len(calls) == 2
     assert calls[1]["timeout_seconds"] == 30.0
 
@@ -525,27 +566,15 @@ def test_validate_viewer_polls_until_debounced_layers_settle(monkeypatch) -> Non
 def test_validate_viewer_retries_failed_control_commands_until_viewer_starts(
     monkeypatch,
 ) -> None:
-    responses = iter(
-        (
-            {"errors": [{"code": "viewer_window_state_failed"}]},
-            {
-                "observed": True,
-                "valid": True,
-                "pending_update_count": 0,
-                "mounted_layer_count": 9,
-                "nonzero_payload_count": 9,
-                "viewer": {"viewer_type": "napari"},
-            },
-        )
-    )
+    responses = iter((None, _validation(settled=True)))
     calls: list[dict[str, object]] = []
 
-    def fake_run_mcp(client, argv, *, tool_name, timeout_seconds):
+    def fake_run_mcp(client, argv, *, capability, payload_type, timeout_seconds):
         calls.append({"argv": tuple(argv), "timeout_seconds": timeout_seconds})
         payload = next(responses)
-        if "errors" in payload:
+        if payload is None:
             raise installed_demo.InstalledDemoFailure(
-                f"MCP command failed: payload={{'errors': {payload['errors']}}}"
+                "MCP command failed: viewer_window_state_failed"
             )
         return payload
 
@@ -562,7 +591,7 @@ def test_validate_viewer_retries_failed_control_commands_until_viewer_starts(
 
     payload = installed_demo._validate_viewer(object(), viewer_port=43128)
 
-    assert payload["valid"] is True
+    assert payload.valid is True
     assert len(calls) == 2
 
 
@@ -574,8 +603,8 @@ def test_validate_viewer_fails_after_settle_deadline(monkeypatch) -> None:
         now += 30.0
         return now
 
-    def fake_run_mcp(client, argv, *, tool_name, timeout_seconds):
-        return {"observed": True, "valid": False, "pending_update_count": 8}
+    def fake_run_mcp(client, argv, *, capability, payload_type, timeout_seconds):
+        return _validation(settled=False)
 
     monkeypatch.setattr(installed_demo, "_run_mcp", fake_run_mcp)
     monkeypatch.setattr(installed_demo.time, "monotonic", monotonic)

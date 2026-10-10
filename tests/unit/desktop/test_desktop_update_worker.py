@@ -16,8 +16,8 @@ from pathlib import Path
 import pytest
 
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
-from openhcs.pyqt_gui.services import desktop_update_worker
+from openhcs.desktop.installation import DESKTOP_INSTALL_PROFILE
+from openhcs.desktop import update_worker as desktop_update_worker
 from openhcs.resources.brand import BrandAsset, brand_asset_path
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
@@ -909,7 +909,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from objectstate.object_state import ObjectStateRegistry
-from openhcs.pyqt_gui.services.desktop_update import (
+from openhcs.desktop.update import (
     DesktopRestartSession,
     DesktopRestartSucceeded,
 )
@@ -920,7 +920,7 @@ parser.add_argument("--restore-update-session", required=True, type=Path)
 args = parser.parse_args()
 calls = []
 ObjectStateRegistry.load_history_from_file = classmethod(
-    lambda cls, path, *, migration: calls.append(
+    lambda cls, path: calls.append(
         ["history", Path(path).read_text(encoding="utf-8")]
     )
 )

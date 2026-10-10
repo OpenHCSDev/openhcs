@@ -11,7 +11,7 @@ from pathlib import Path
 
 from packaging.version import Version
 
-from openhcs.pyqt_gui.services.desktop_update_worker import (
+from openhcs.desktop.update_worker import (
     DesktopUpdatePlan,
     DesktopUpdateProgressAction,
     DesktopUpdateProgressReporterABC,
@@ -44,7 +44,7 @@ def main() -> int:
     if arguments.plan is not None:
         plan = DesktopUpdatePlan.read(arguments.plan)
     else:
-        from openhcs.pyqt_gui.services.desktop_update import (
+        from openhcs.desktop.update import (
             DesktopRuntimeEnvironment,
         )
 

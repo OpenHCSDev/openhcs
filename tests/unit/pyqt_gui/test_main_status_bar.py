@@ -37,9 +37,7 @@ class _MainWindowLifecycleHarness(_MainWindowStatusBarHarness):
 
 
 def _configure_status_bar_harness(window) -> None:
-    window.window_color_scheme_services = SimpleNamespace(
-        get_current_color_scheme=ColorScheme
-    )
+    window.service_adapter = SimpleNamespace(get_current_color_scheme=ColorScheme)
     window.plate_manager_widget = SimpleNamespace(
         update_button_states=lambda: None,
         require_pipeline_definition_mutation_allowed=lambda: None,
@@ -47,7 +45,6 @@ def _configure_status_bar_harness(window) -> None:
     window.embedded_widgets = MainWindowEmbeddedWidgets()
     window.floating_windows = {}
     window.ui_bridge_lifecycle = SimpleNamespace(close=lambda: None)
-    window.window_services = SimpleNamespace()
     OpenHCSMainWindow.setup_status_bar(window)
 
 

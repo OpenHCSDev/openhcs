@@ -2,7 +2,7 @@
 
 These installers are thin, user-scoped adapters over existing authorities:
 
-1. `DESKTOP_INSTALL_PROFILE` in `openhcs.desktop_installation` owns only
+1. `DESKTOP_INSTALL_PROFILE` in `openhcs.desktop.installation` owns only
    native-install policy: the selected Python minor, desktop extras,
    binary-wheel constraints, and one reviewed uv release.
    `render_installer_contract.py` combines that policy with the project entry
@@ -11,7 +11,7 @@ These installers are thin, user-scoped adapters over existing authorities:
 2. uv installs its standalone executable without requiring Python, installs or
    locates the selected Python, creates the dedicated virtual environment, and
    installs the contract's PyPI requirement.
-3. The installed `openhcs.desktop_deployment` authority projects the platform
+3. The installed `openhcs.desktop.deployment` authority projects the platform
    launcher, shortcut, and icon from the package's declared entry points and
    brand assets. Both native setup and the in-application updater invoke that
    same owner.

@@ -644,11 +644,11 @@ def run(args) -> None:
             MaterializationBackend,
             PipelineConfig,
         )
-        from openhcs.core.pipeline_document import PipelineDocumentAuthority
+        from openhcs.core.pipeline_document import PipelineDocumentCodec
         from openhcs.core.steps.function_step import FunctionStep
         from openhcs.processing.custom_functions import registration_live_probe
 
-        document = PipelineDocumentAuthority.from_values(
+        document = PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(
                 num_workers=1,
                 use_threading=True,
@@ -669,7 +669,7 @@ def run(args) -> None:
                 )
             ],
         )
-        pipeline_source = PipelineDocumentAuthority.render(document)
+        pipeline_source = PipelineDocumentCodec.render(document)
         (receipt_dir / "pipeline.py").write_text(pipeline_source)
         inspected = call(
             "openhcs_inspect_pipeline_source_artifact_plan",

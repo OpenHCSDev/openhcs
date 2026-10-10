@@ -18,10 +18,10 @@ import openhcs.pyqt_gui.main as main_module
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.desktop_deployment import (
+from openhcs.desktop.deployment import (
     DESKTOP_RESTART_EXECUTABLE_ENVIRONMENT_VARIABLE,
 )
-from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
+from openhcs.desktop.installation import DESKTOP_INSTALL_PROFILE
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import (
     assemble_stack_cpu,
 )
@@ -29,7 +29,7 @@ from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
-from openhcs.pyqt_gui.services.desktop_update import (
+from openhcs.desktop.update import (
     LATEST_RELEASE_API_URL,
     DesktopRestartPurpose,
     DesktopRestartRestoreOutcomeABC,
@@ -45,7 +45,7 @@ from openhcs.pyqt_gui.services.desktop_update import (
     DesktopUpdateService,
     parse_latest_release,
 )
-from openhcs.pyqt_gui.services.desktop_update_worker import (
+from openhcs.desktop.update_worker import (
     DesktopUpdatePlan,
     DesktopUpdateProgressTheme,
 )
@@ -521,11 +521,11 @@ def test_runtime_plan_stages_sibling_and_never_targets_running_python(
         environment_root=environment,
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.DesktopDeploymentContext.from_runtime",
+        "openhcs.desktop.update.DesktopDeploymentContext.from_runtime",
         classmethod(lambda cls, *_args, **_kwargs: context),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.DesktopDeploymentAuthority.current",
+        "openhcs.desktop.update.DesktopDeployment.current",
         classmethod(
             lambda cls: SimpleNamespace(
                 update_candidate=lambda _context: SimpleNamespace(
@@ -586,7 +586,7 @@ def test_service_starts_worker_with_unambiguous_argument_vectors(
         lambda self, version: _staged_update_plan(tmp_path),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.subprocess.Popen",
+        "openhcs.desktop.update.subprocess.Popen",
         lambda command, **kwargs: launched.append((command, kwargs)),
     )
     service = DesktopUpdateService(
@@ -678,7 +678,7 @@ def test_windows_update_worker_uses_windowed_interpreter_and_no_console(
         lambda self, version: _staged_update_plan(tmp_path),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.subprocess.Popen",
+        "openhcs.desktop.update.subprocess.Popen",
         lambda command, **kwargs: launched.append((command, kwargs)),
     )
     service = DesktopUpdateService(
@@ -721,23 +721,23 @@ def test_runtime_environment_rejects_distribution_outside_virtual_environment(
     base_python = tmp_path / "base-python"
     base_python.touch()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.executable",
+        "openhcs.desktop.update.sys.executable",
         str(python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.prefix",
+        "openhcs.desktop.update.sys.prefix",
         str(environment_root),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.base_prefix",
+        "openhcs.desktop.update.sys.base_prefix",
         str(tmp_path / "base"),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys._base_executable",
+        "openhcs.desktop.update.sys._base_executable",
         str(base_python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.distribution",
+        "openhcs.desktop.update.distribution",
         lambda _name: SimpleNamespace(
             locate_file=lambda _path: source_root,
             read_text=lambda _name: None,
@@ -759,19 +759,19 @@ def test_runtime_environment_rejects_worker_interpreter_inside_target_environmen
     python.parent.mkdir()
     python.touch()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.executable",
+        "openhcs.desktop.update.sys.executable",
         str(python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys._base_executable",
+        "openhcs.desktop.update.sys._base_executable",
         str(python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.prefix",
+        "openhcs.desktop.update.sys.prefix",
         str(environment_root),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.base_prefix",
+        "openhcs.desktop.update.sys.base_prefix",
         str(tmp_path / "base"),
     )
 
@@ -794,23 +794,23 @@ def test_runtime_environment_prefers_installer_owned_stable_restart(
     entry_point = environment_root / "bin" / "openhcs"
     entry_point.touch()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.executable",
+        "openhcs.desktop.update.sys.executable",
         str(python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.prefix",
+        "openhcs.desktop.update.sys.prefix",
         str(environment_root),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.base_prefix",
+        "openhcs.desktop.update.sys.base_prefix",
         str(tmp_path / "base"),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys._base_executable",
+        "openhcs.desktop.update.sys._base_executable",
         str(base_python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.argv",
+        "openhcs.desktop.update.sys.argv",
         [
             str(entry_point),
             "--log-level",
@@ -822,7 +822,7 @@ def test_runtime_environment_prefers_installer_owned_stable_restart(
         ],
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.distribution",
+        "openhcs.desktop.update.distribution",
         lambda _name: SimpleNamespace(
             locate_file=lambda _path: distribution_root,
             read_text=lambda _name: None,
@@ -871,27 +871,27 @@ def test_runtime_environment_preserves_virtual_environment_python_symlink(
     python.parent.mkdir()
     python.symlink_to(base_python)
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.executable",
+        "openhcs.desktop.update.sys.executable",
         str(python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys._base_executable",
+        "openhcs.desktop.update.sys._base_executable",
         str(base_python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.prefix",
+        "openhcs.desktop.update.sys.prefix",
         str(environment_root),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.base_prefix",
+        "openhcs.desktop.update.sys.base_prefix",
         str(tmp_path / "base"),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.argv",
+        "openhcs.desktop.update.sys.argv",
         ["openhcs-gui"],
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.distribution",
+        "openhcs.desktop.update.distribution",
         lambda _name: SimpleNamespace(
             locate_file=lambda _path: distribution_root,
             read_text=lambda _name: None,
@@ -922,27 +922,27 @@ def test_runtime_environment_accepts_installer_current_directory_symlink(
     current_environment.symlink_to(environment_root, target_is_directory=True)
     current_python = current_environment / "bin" / "python"
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.executable",
+        "openhcs.desktop.update.sys.executable",
         str(current_python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys._base_executable",
+        "openhcs.desktop.update.sys._base_executable",
         str(base_python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.prefix",
+        "openhcs.desktop.update.sys.prefix",
         str(environment_root),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.base_prefix",
+        "openhcs.desktop.update.sys.base_prefix",
         str(tmp_path / "base"),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.argv",
+        "openhcs.desktop.update.sys.argv",
         ["openhcs-gui"],
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.distribution",
+        "openhcs.desktop.update.distribution",
         lambda _name: SimpleNamespace(
             locate_file=lambda _path: distribution_root,
             read_text=lambda _name: None,
@@ -968,30 +968,30 @@ def test_runtime_environment_rejects_read_only_install(
     base_python = tmp_path / "base-python"
     base_python.touch()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.executable",
+        "openhcs.desktop.update.sys.executable",
         str(python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.prefix",
+        "openhcs.desktop.update.sys.prefix",
         str(environment_root),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys.base_prefix",
+        "openhcs.desktop.update.sys.base_prefix",
         str(tmp_path / "base"),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.sys._base_executable",
+        "openhcs.desktop.update.sys._base_executable",
         str(base_python),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.distribution",
+        "openhcs.desktop.update.distribution",
         lambda _name: SimpleNamespace(
             locate_file=lambda _path: distribution_root,
             read_text=lambda _name: None,
         ),
     )
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.desktop_update.os.access",
+        "openhcs.desktop.update.os.access",
         lambda *_args: False,
     )
 
@@ -1016,7 +1016,7 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
             require_plate_manager=lambda: plate_manager,
         ),
         runtime_context=SimpleNamespace(ui_config=object()),
-        window_services=SimpleNamespace(
+        service_adapter=SimpleNamespace(
             get_current_color_scheme=lambda: ColorScheme(),
         ),
     )
@@ -1100,7 +1100,7 @@ def test_saved_update_session_restores_through_existing_authorities(
     )
     monkeypatch.setattr(
         "objectstate.object_state.ObjectStateRegistry.load_history_from_file",
-        lambda path, *, migration: calls.append(("history", path)),
+        lambda path: calls.append(("history", path)),
     )
 
     consumed = session.consume()
@@ -1198,7 +1198,7 @@ def test_saved_session_restores_selected_plate_after_all_scope_payload(
     )
     monkeypatch.setattr(
         "objectstate.object_state.ObjectStateRegistry.load_history_from_file",
-        lambda path, *, migration: calls.append(("history", path)),
+        lambda path: calls.append(("history", path)),
     )
 
     consumed = session.consume()

@@ -75,7 +75,7 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(
         metadata = metadata.replace_fields(
             source_spatial_domain=VolumeSourceSpatialDomain(
                 source_depth=3
-            ).admit_source_cohort(
+            ).with_source_cohort(
                 metadata.source_spatial_domain,
                 depth=3,
             )

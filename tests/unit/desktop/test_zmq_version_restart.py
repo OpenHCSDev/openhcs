@@ -11,8 +11,8 @@ from pyqt_reactive.services.async_operation_executor import (
 )
 
 from openhcs.core.execution_state import ManagerExecutionState
-from openhcs.pyqt_gui.services.desktop_update import DesktopUpdateError
-from openhcs.pyqt_gui.services.zmq_version_restart import ZMQVersionRestartWorkflow
+from openhcs.desktop.update import DesktopUpdateError
+from openhcs.desktop.zmq_version_restart import ZMQVersionRestartWorkflow
 
 
 class _WindowProbe(QDialog):
@@ -119,7 +119,7 @@ def test_successful_replacement_starts_saved_session_and_closes_ui(
     window = _WindowProbe()
     presenter = _PresenterProbe()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.zmq_version_restart.DesktopSessionRestart.capture",
+        "openhcs.desktop.zmq_version_restart.DesktopSessionRestart.capture",
         lambda _window: session,
     )
     workflow = _workflow(
@@ -157,7 +157,7 @@ def test_endpoint_replacement_failure_discards_saved_session(
     statuses = []
     presenter = _PresenterProbe()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.zmq_version_restart.DesktopSessionRestart.capture",
+        "openhcs.desktop.zmq_version_restart.DesktopSessionRestart.capture",
         lambda _window: session,
     )
     workflow = _workflow(
@@ -186,7 +186,7 @@ def test_synchronous_executor_rejection_discards_saved_session(
     statuses = []
     presenter = _PresenterProbe()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.zmq_version_restart.DesktopSessionRestart.capture",
+        "openhcs.desktop.zmq_version_restart.DesktopSessionRestart.capture",
         lambda _window: session,
     )
 
@@ -215,7 +215,7 @@ def test_capture_failure_does_not_schedule_endpoint_replacement(
     scheduled = []
     presenter = _PresenterProbe()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.zmq_version_restart.DesktopSessionRestart.capture",
+        "openhcs.desktop.zmq_version_restart.DesktopSessionRestart.capture",
         lambda _window: (_ for _ in ()).throw(OSError("session could not be saved")),
     )
     workflow = _workflow(
@@ -240,7 +240,7 @@ def test_pending_replacement_owns_subsequent_mismatch_observations(
     scheduled = []
     presenter = _PresenterProbe()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.zmq_version_restart.DesktopSessionRestart.capture",
+        "openhcs.desktop.zmq_version_restart.DesktopSessionRestart.capture",
         lambda _window: session,
     )
     workflow = _workflow(
@@ -270,7 +270,7 @@ def test_restart_worker_validation_failure_preserves_running_ui(
     presenter = _PresenterProbe()
     window = _WindowProbe()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.zmq_version_restart.DesktopSessionRestart.capture",
+        "openhcs.desktop.zmq_version_restart.DesktopSessionRestart.capture",
         lambda _window: session,
     )
     workflow = _workflow(
@@ -300,7 +300,7 @@ def test_failed_restart_worker_launch_preserves_running_ui(
     presenter = _PresenterProbe()
     window = _WindowProbe()
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.services.zmq_version_restart.DesktopSessionRestart.capture",
+        "openhcs.desktop.zmq_version_restart.DesktopSessionRestart.capture",
         lambda _window: session,
     )
     workflow = _workflow(

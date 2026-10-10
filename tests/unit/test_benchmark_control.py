@@ -57,7 +57,7 @@ from openhcs.agent.dto.execution import ExecutionJobRef, ExecutionJobStatus
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.execution_session_service import CompletedPipelineExecution
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.environment_provenance import (
@@ -623,7 +623,7 @@ def test_measured_finalization_refuses_missing_server_timing_without_receipt(
     observation_path.touch()
     submission = OpenHCSExecutionSubmission(
         plate_id=tmp_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
         global_config=GlobalPipelineConfig(),

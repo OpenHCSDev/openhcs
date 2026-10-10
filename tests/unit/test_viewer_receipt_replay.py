@@ -328,8 +328,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     received = decoded.payload_for(GetViewerWindowStateCapability)
     assert isinstance(received.layers[0].payload_summaries[0], ViewerPayloadSummary)
     assert received.layers[0].payload_summaries[0].require_plane_components() == {"channel": (2, 1)}
-    binding = McpDevOutputRenderer.for_output_contract(GetViewerWindowStateCapability.output_contract)
-    compact = binding.render_result(decoded, binding.renderer_type.render_options_type())
+    renderer = McpDevOutputRenderer.for_output_contract(GetViewerWindowStateCapability.output_contract)
+    compact = renderer.render(decoded)
     assert '"aggregate_component_values": {"channel": [2, 1]}' in compact
     assert '"source_spatial_shape_yx": [8, 9]' in compact
     from openhcs.runtime.viewer_component_system import (

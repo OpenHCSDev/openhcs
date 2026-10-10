@@ -345,10 +345,12 @@ def test_component_artifact_admission_precedes_source_provenance_capture(monkeyp
     request, paths, initial = _fixture()
     request.execution_plan.artifact_inputs = {"invalid": object()}
     monkeypatch.setattr(
-        function_runtime,
-        "image_payload_metadata",
-        lambda _payload: pytest.fail(
-            "source projection must follow artifact-plan admission"
+        type(initial),
+        "metadata",
+        property(
+            lambda _payload: pytest.fail(
+                "source projection must follow artifact-plan admission"
+            )
         ),
     )
     with pytest.raises(TypeError, match="Component artifact input"):

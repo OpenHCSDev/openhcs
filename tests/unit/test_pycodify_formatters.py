@@ -25,7 +25,7 @@ from openhcs.core.function_reference import (
     ModuleExportRegistryFunctionReference,
     RegistryFunctionReference,
 )
-from openhcs.core.function_step_document import FunctionStepDocumentAuthority
+from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
 from openhcs.processing.backends.cellprofiler.colocalization import (
@@ -365,11 +365,11 @@ def test_function_step_round_trip_omits_injected_values_but_keeps_runtime_settin
         name="MeasureObjectSizeShape",
     )
 
-    source = FunctionStepDocumentAuthority.render(
-        FunctionStepDocumentAuthority.from_value(step),
+    source = FunctionStepDocumentCodec.render(
+        FunctionStepDocumentCodec.from_value(step),
         clean_mode=clean_mode,
     )
-    reconstructed = FunctionStepDocumentAuthority.from_source(source).step
+    reconstructed = FunctionStepDocumentCodec.from_source(source).step
     reconstructed_kwargs = reconstructed.func[1]
     reconstructed_contract = CallableContract.from_callable(reconstructed.func[0])
 

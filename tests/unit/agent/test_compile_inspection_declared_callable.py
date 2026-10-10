@@ -9,7 +9,7 @@ from openhcs.agent.services.execution_session_service import (
     artifact_plan_inspection_from_compilation,
 )
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.processing.backends.cellprofiler.smoothing import reducenoise
@@ -27,7 +27,7 @@ def test_real_declared_callable_compiles_without_global_catalog(monkeypatch, tmp
         wavelengths=1, z_stack_levels=1, wells=["A01"], num_cells=3,
         random_seed=123, include_all_components=True,
     ).generate_dataset()
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(num_workers=1),
         pipeline_steps=[FunctionStep(func=(reducenoise, {
             "patch_size": 3, "patch_distance": 3, "cutoff_distance": 0.1,

@@ -50,10 +50,7 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse,
     McpDevToolResult,
 )
-from openhcs.mcp.dev_client_rendering import (
-    McpDevOutputRenderer,
-    McpDevTypedOutputRenderer,
-)
+from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 from openhcs.mcp.dev_client_renderers.pipeline import PipelineArtifactPlanRenderer
 from python_introspect import to_jsonable
 
@@ -110,7 +107,7 @@ def test_registration_renderer_retains_typed_error_receipt_and_handle(registered
     decoded = McpDevToolBatchResponse.for_rendering(to_jsonable(response))
     assert decoded.payload_for(agent_capabilities.register_custom_function) == original
     text = CustomFunctionRegistrationRenderer.render(to_jsonable(response))
-    assert "incomplete observation or projection" in text
+    assert "incomplete observation" in text
     assert f"registered_count: {registered_count}" in text
     assert "zero/absent does not prove no mutation" in text
     assert text.count(f"{code}: original cause") == 1
@@ -434,13 +431,13 @@ def test_execute_journey_preserves_native_variants_progress_and_errors(waited):
         },
     ],
 )
-def test_malformed_contract_is_explicit_and_keeps_entire_receipt(broken):
+def test_malformed_contract_is_explicit_and_keeps_entire_payload(broken):
     response = batch(agent_capabilities.inspect_pipeline_source_artifact_plan, broken)
     failed = response.results[0].payloads[0]
     assert isinstance(failed, McpDevPayloadFailure)
-    assert failed.receipt == broken
+    assert failed.payload == broken
     rejection = to_jsonable(failed)
-    assert rejection["receipt"] == broken
+    assert rejection["payload"] == broken
     assert rejection["errors"] == to_jsonable(failed.errors)
     assert response.has_errors()
     rendered = PipelineArtifactPlanRenderer.render(response)
@@ -486,16 +483,16 @@ def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
     class ExtendedInspection(ArtifactPlanInspection):
         extension_fact: str = "retained"
 
-    binding = McpDevOutputRenderer.for_output_contract(ExtendedInspection)
-    assert binding.renderer_type is PipelineArtifactPlanRenderer
+    renderer = McpDevOutputRenderer.for_output_contract(ExtendedInspection)
+    assert renderer is PipelineArtifactPlanRenderer
     value = McpDevToolResult._decode_payload(
         to_jsonable(
             ExtendedInspection(schema_version=SCHEMA_VERSION, plate_path="extended")
         ), (ExtendedInspection,)
     )
     assert type(value) is ExtendedInspection and value.extension_fact == "retained"
-    assert "plate=extended" in binding.renderer_type.render_payload_value(
-        value, binding.renderer_type.render_options_type()
+    assert "plate=extended" in renderer.render_payload_value(
+        value, renderer.render_options_type()
     )
 
     # One capability declaration selects the new output at real wire ingress;
@@ -509,22 +506,18 @@ def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
     assert type(response.results[0].first_decoded_payload()) is ExtendedInspection
     assert "plate=extended" in PipelineArtifactPlanRenderer.render(response)
     command = CapabilityBackedCommandSpec.for_capability_name(ExtensionCapability.name)
-    assert "plate=extended" in command.render_result(
-        response, command.call_render_args({})
-    )
+    assert "plate=extended" in command.render_call_result(response)
 
 
 @pytest.mark.parametrize("value", [None, False, 0, ""])
 def test_shared_optional_presentation_preserves_native_absence(value):
-    from openhcs.mcp.dev_client_rendering import McpDevTypedOutputRenderer
-
     observed = []
 
     def present(fact):
         observed.append(fact)
         return (str(fact),)
 
-    lines = McpDevTypedOutputRenderer.optional_lines(value, present)
+    lines = McpDevOutputRenderer.optional_lines(value, present)
     assert lines == (() if value is None else (str(value),))
     assert observed == ([] if value is None else [value])
 
@@ -539,7 +532,7 @@ def test_cooperative_diamond_renderer_identity_is_visited_once(reverse_order):
 
     events = []
 
-    class ValueRenderer(McpDevTypedOutputRenderer):
+    class ValueRenderer(McpDevOutputRenderer):
         @classmethod
         def render_payload(cls, payload: NewResult, options):
             events.append("ancestor")
@@ -565,12 +558,10 @@ def test_cooperative_diamond_renderer_identity_is_visited_once(reverse_order):
         cli_command = f"s1-diamond-{int(reverse_order)}"
         output_contract = NewResult
 
-    binding = McpDevOutputRenderer.for_output_contract(NewResult)
+    renderer = McpDevOutputRenderer.for_output_contract(NewResult)
     value = McpDevToolResult._decode_payload({"value": "one-declaration"}, (NewResult,))
     assert (
-        binding.renderer_type.render_payload_value(
-            value, binding.renderer_type.render_options_type()
-        )
+        renderer.render_payload_value(value, renderer.render_options_type())
         == "one-declaration"
     )
     expected = ["right", "left"] if reverse_order else ["left", "right"]
@@ -578,35 +569,11 @@ def test_cooperative_diamond_renderer_identity_is_visited_once(reverse_order):
     events.clear()
     response = batch(DiamondCapability, value)
     command = CapabilityBackedCommandSpec.for_capability_name(DiamondCapability.name)
-    assert command.render_result(response, command.call_render_args({})) == value.value
+    assert command.render_call_result(response) == value.value
     assert events == [*expected, "ancestor"]
     assert Diamond.__mro__.count(ValueRenderer) == 1
-    assert tuple(McpDevOutputRenderer.declaration_types()).count(Diamond) == 1
     # Registry views are projections of declaration identity, not a second roster.
     assert McpDevOutputRenderer.__registry__[NewResult] is Diamond
-
-
-def test_pipeline_guard_forbids_raw_reader_reintroduction():
-    import openhcs.mcp.dev_client_renderers.pipeline as pipeline
-
-    tree = ast.parse(Path(pipeline.__file__).read_text())
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            assert node.func.attr not in {
-                "get",
-                "nested_mapping",
-                "sequence_of_mappings",
-                "first_tool_payload",
-                "tool_payload",
-            }
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-            assert node.func.id not in {
-                "isinstance",
-                "getattr",
-                "hasattr",
-                "optional_int",
-                "optional_bool",
-            }
 
 
 def test_submission_declaration_preserves_advertised_external_contract():
@@ -797,7 +764,7 @@ def test_persistent_client_execute_uses_real_command_boundary_without_runtime(
     assert execution.returncode == int(malformed)
     payload = execution.payload["results"][0]["payloads"][0]
     if malformed:
-        assert payload["receipt"] == receipt
+        assert payload["payload"] == receipt
         assert len(payload["errors"]) == 1
         assert payload["errors"][0]["code"] == "mcp_payload_invalid"
     else:

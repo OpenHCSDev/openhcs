@@ -26,7 +26,7 @@ from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
-    ImagePayloadMetadataCarrier,
+    ImagePayload,
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
@@ -212,7 +212,7 @@ def test_pure_2d_contract_slices_image_metadata_payload_nominally() -> None:
         payload,
     )
 
-    assert isinstance(result, ImagePayloadMetadataCarrier)
+    assert isinstance(result, ImagePayload)
     np.testing.assert_array_equal(result.data, stack + 1)
     assert seen_paths == ["z0.tif", "z1.tif"]
     assert result.metadata.source_image_provenance_planes.paths == (
@@ -445,7 +445,7 @@ def test_volumetric_projection_accepts_metadata_payload_array_methods() -> None:
     assert result_metadata.plane_axis is None
 
 
-def test_with_image_payload_data_rejects_implicit_channel_mask_collapse() -> None:
+def test_with_pixels_rejects_implicit_channel_mask_collapse() -> None:
     mask = np.zeros((4, 5, 2), dtype=bool)
     mask[:, :, 0] = True
     source = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(

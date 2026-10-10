@@ -740,8 +740,6 @@ def _process_single_slice(
         best_rotation_angle=best_rotation_angle,
     )
 
-    # REMOVED: Exception handling - let errors fail loud instead of silent warnings
-
 
 def _stack_with_padding(
     cropped_slices: List[np.ndarray],

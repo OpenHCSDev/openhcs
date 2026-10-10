@@ -15,7 +15,7 @@ from typing import Any
 
 from packaging.requirements import Requirement
 
-from openhcs.desktop_installation import DesktopInstallerSchemaVersion
+from openhcs.desktop.installation import DesktopInstallerSchemaVersion
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from scripts.smoke_installed_gui import INSTALLED_GUI_SMOKE_TIMING
 
@@ -258,8 +258,8 @@ def _smoke_desktop_restart_worker(
 
     worker_probe = (
         "from pathlib import Path; "
-        "from openhcs.pyqt_gui.services import desktop_restart_worker; "
-        "print(Path(desktop_restart_worker.__file__).resolve())"
+        "from openhcs.desktop import restart_worker; "
+        "print(Path(restart_worker.__file__).resolve())"
     )
     worker_path = Path(
         _run_checked(

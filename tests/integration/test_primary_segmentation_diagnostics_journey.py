@@ -122,7 +122,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     )
     from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_object_labels import object_label_dense_array
     from openhcs.core.source_bindings import (
         ComponentSelector,
@@ -221,7 +221,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             "distance_to_dilate": 2,
         },
     )
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
             microscope=Microscope.SOURCE_BINDINGS,
             source_bindings_config=LazySourceBindingsConfig(
@@ -246,8 +246,8 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         ),
         pipeline_steps=[primary, secondary],
     )
-    document = PipelineDocumentAuthority.from_source(
-        PipelineDocumentAuthority.render(document)
+    document = PipelineDocumentCodec.from_source(
+        PipelineDocumentCodec.render(document)
     )
     bundle = (
         InProcessCompileInspectionGateway()

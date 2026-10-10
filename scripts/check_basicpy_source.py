@@ -151,9 +151,9 @@ class BasicPySourceTests(unittest.TestCase):
             if isinstance(node, ast.Call)
         ]
         self.assertIn(
-            "image_payload_metadata(source).collapse_leading_plane_axis", calls
+            "source.metadata.collapse_leading_plane_axis", calls
         )
-        self.assertIn("image_payload_metadata(source).require_independent_observation_axis", calls)
+        self.assertIn("source.metadata.require_independent_observation_axis", calls)
         metadata_tree = ast.parse((ROOT / "openhcs/core/runtime_image_values.py").read_text())
         metadata_owner = next(
             node for node in metadata_tree.body

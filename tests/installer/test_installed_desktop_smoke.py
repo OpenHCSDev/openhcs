@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.desktop_installation import DesktopInstallerSchemaVersion
+from openhcs.desktop.installation import DesktopInstallerSchemaVersion
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from scripts import smoke_installed_desktop as desktop_smoke
 

@@ -24,7 +24,7 @@ from openhcs.core.function_reference import (
     RegistryFunctionReference,
 )
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.python_source_literal import PythonSourceLiteral
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.mcp.dev_client_core import McpDevToolResult
@@ -150,7 +150,7 @@ def test_real_authoring_render_parse_retains_registry_memory_contract(
     assert validation.valid, validation.errors
     source = service.render_source(ref, clean=clean).source
     assert "from skimage.exposure.exposure import adjust_gamma" not in source
-    restored = PipelineDocumentAuthority.from_source(source)
+    restored = PipelineDocumentCodec.from_source(source)
     step = restored.pipeline_steps[0]
     assert FuncStepContractValidator.validate_function_pattern(
         step.func, step.name
