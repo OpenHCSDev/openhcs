@@ -99,20 +99,20 @@ class ProgressStatus(Enum):
 class ProgressChannelDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     """Nominal semantic declaration for one progress channel."""
 
-    __registry_key__ = "channel"
+    __registry_key__ = "progress_channel"
     __skip_if_no_key__ = True
     __registry__: ClassVar[
         dict[ProgressChannel, type["ProgressChannelDeclarationBase"]]
     ] = {}
 
-    channel: ClassVar[ProgressChannel | None] = None
+    progress_channel: ClassVar[ProgressChannel | None] = None
     role: ClassVar[ProgressChannelRole]
 
     @classmethod
     def require_channel(cls) -> ProgressChannel:
-        if cls.channel is None:
+        if cls.progress_channel is None:
             raise TypeError(f"{cls.__name__} does not declare a progress channel.")
-        return cls.channel
+        return cls.progress_channel
 
     @classmethod
     def for_channel(
@@ -135,19 +135,19 @@ class ExecutionProgressChannel:
 
 
 class InitProgressChannel(ControlProgressChannel, ProgressChannelDeclarationBase):
-    channel = ProgressChannel.INIT
+    progress_channel = ProgressChannel.INIT
 
 
 class CompileProgressChannel(ControlProgressChannel, ProgressChannelDeclarationBase):
-    channel = ProgressChannel.COMPILE
+    progress_channel = ProgressChannel.COMPILE
 
 
 class PipelineProgressChannel(ExecutionProgressChannel, ProgressChannelDeclarationBase):
-    channel = ProgressChannel.PIPELINE
+    progress_channel = ProgressChannel.PIPELINE
 
 
 class StepProgressChannel(ExecutionProgressChannel, ProgressChannelDeclarationBase):
-    channel = ProgressChannel.STEP
+    progress_channel = ProgressChannel.STEP
 
 
 class ProgressPhaseDeclarationBase(ABC, metaclass=AutoRegisterMeta):
@@ -160,7 +160,7 @@ class ProgressPhaseDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     ] = {}
 
     phase: ClassVar[ProgressPhase | None] = None
-    channel: ClassVar[type[ProgressChannelDeclarationBase]]
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]]
     is_terminal: ClassVar[bool] = False
     is_failure: ClassVar[bool] = False
     is_success_terminal: ClassVar[bool] = False
@@ -218,25 +218,25 @@ class StatusTerminatedProgressPhase:
 class InitChannelProgressPhase:
     """Trait for progress phases carried on the init channel."""
 
-    channel: ClassVar[type[ProgressChannelDeclarationBase]] = InitProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = InitProgressChannel
 
 
 class CompileChannelProgressPhase:
     """Trait for progress phases carried on the compile channel."""
 
-    channel: ClassVar[type[ProgressChannelDeclarationBase]] = CompileProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = CompileProgressChannel
 
 
 class PipelineChannelProgressPhase:
     """Trait for progress phases carried on the pipeline execution channel."""
 
-    channel: ClassVar[type[ProgressChannelDeclarationBase]] = PipelineProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = PipelineProgressChannel
 
 
 class StepChannelProgressPhase:
     """Trait for progress phases carried on the step execution channel."""
 
-    channel: ClassVar[type[ProgressChannelDeclarationBase]] = StepProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = StepProgressChannel
 
 
 class InitProgressPhase(InitChannelProgressPhase, ProgressPhaseDeclarationBase):
@@ -398,7 +398,7 @@ class QueuedProgressStatus(ProgressStatusDeclarationBase):
 
 def phase_channel(phase: ProgressPhase) -> ProgressChannel:
     """Classify phase to semantic channel."""
-    return ProgressPhaseDeclarationBase.for_phase(phase).channel.require_channel()
+    return ProgressPhaseDeclarationBase.for_phase(phase).progress_channel.require_channel()
 
 
 def progress_channel_role(channel: ProgressChannel) -> ProgressChannelRole:

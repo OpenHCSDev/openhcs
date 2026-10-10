@@ -149,7 +149,7 @@ class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
 
     kind: PlateFileKind | None = PlateFileKind.IMAGE
     path_contains: str | None = None
-    well: str | None = None
+    partition: str | None = None
     limit: int = 1
 
 
@@ -320,7 +320,7 @@ class PlateFileQueryRequest:
     pattern_format: str | None = None
     kind: PlateFileKind | None = PlateFileKind.IMAGE
     path_contains: str | None = None
-    well: str | None = None
+    partition: str | None = None
     offset: int = 0
     limit: int = 50
     include_previews: bool = True
@@ -337,7 +337,7 @@ class PlateFileQueryRequest:
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         path_contains: str | None = None,
-        well: str | None = None,
+        partition: str | None = None,
         offset: int = 0,
         limit: int = 50,
         include_previews: bool = True,
@@ -351,7 +351,7 @@ class PlateFileQueryRequest:
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             path_contains=path_contains,
-            well=well,
+            partition=partition,
             offset=offset,
             limit=limit,
             include_previews=include_previews,
@@ -367,7 +367,7 @@ class PlateFileQueryRequest:
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "path_contains": self.path_contains,
-            "well": self.well,
+            "partition": self.partition,
             "offset": self.offset,
             "limit": self.limit,
             "include_previews": self.include_previews,
@@ -388,7 +388,7 @@ class PlateFileStreamRequest:
     pattern_format: str | None = None
     kind: PlateFileKind | None = PlateFileKind.IMAGE
     path_contains: str | None = None
-    well: str | None = None
+    partition: str | None = None
     limit: int = 1
     viewer_config_key: str = NapariViewer.config_key
     display_config: NapariDisplayConfig | None = None
@@ -407,7 +407,7 @@ class PlateFileStreamRequest:
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         path_contains: str | None = None,
-        well: str | None = None,
+        partition: str | None = None,
         limit: int = 1,
         viewer_config_key: str = NapariViewer.config_key,
         display_config: NapariDisplayConfig | None = None,
@@ -426,7 +426,7 @@ class PlateFileStreamRequest:
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             path_contains=path_contains,
-            well=well,
+            partition=partition,
             limit=limit,
             viewer_config_key=viewer_config_key,
             display_config=display_config,
@@ -449,7 +449,7 @@ class PlateFileStreamRequest:
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "path_contains": self.path_contains,
-            "well": self.well,
+            "partition": self.partition,
             "limit": self.limit,
             "viewer_config_key": self.viewer_config_key,
             "display_config": to_jsonable(self.display_config),
@@ -545,7 +545,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         target: str = SelectedPlateFileQueryTarget.SELECTED.value,
         path_contains: str | None = None,
-        well: str | None = None,
+        partition: str | None = None,
         offset: int = 0,
         limit: int = 50,
         include_previews: bool = True,
@@ -558,7 +558,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             target=cls.target_from_value(target),
             path_contains=path_contains,
-            well=well,
+            partition=partition,
             offset=offset,
             limit=limit,
             include_previews=include_previews,
@@ -573,7 +573,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "target": self.target.value,
             "path_contains": self.path_contains,
-            "well": self.well,
+            "partition": self.partition,
             "offset": self.offset,
             "limit": self.limit,
             "include_previews": self.include_previews,
@@ -593,7 +593,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
             pattern_format=self.pattern_format,
             kind=self.kind,
             path_contains=self.path_contains,
-            well=self.well,
+            partition=self.partition,
             offset=self.offset,
             limit=self.limit,
             include_previews=self.include_previews,
@@ -710,7 +710,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         target: str = SelectedPlateFileQueryTarget.SELECTED.value,
         path_contains: str | None = None,
-        well: str | None = None,
+        partition: str | None = None,
         limit: int = 1,
         viewer_config_key: str = NapariViewer.config_key,
         host: str = "localhost",
@@ -726,7 +726,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             target=cls.target_from_value(target),
             path_contains=path_contains,
-            well=well,
+            partition=partition,
             limit=limit,
             viewer_config_key=viewer_config_key,
             connection=ExecutionConnectionSpec(
@@ -746,7 +746,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "target": self.target.value,
             "path_contains": self.path_contains,
-            "well": self.well,
+            "partition": self.partition,
             "limit": self.limit,
             "viewer_config_key": self.viewer_config_key,
             **self.connection.tool_arguments(),
@@ -768,7 +768,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
             pattern_format=self.pattern_format,
             kind=self.kind,
             path_contains=self.path_contains,
-            well=self.well,
+            partition=self.partition,
             limit=self.limit,
             viewer_config_key=self.viewer_config_key,
             connection=self.connection,
@@ -799,7 +799,7 @@ class SyntheticPlateGenerationRequest:
     shared_cell_fraction: float = (
         SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.shared_cell_fraction
     )
-    wells: tuple[str, ...] = SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.wells
+    partition_values: tuple[str, ...] = SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.partition_values
     format: SyntheticPlateFormat = (
         SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.format
     )
@@ -841,7 +841,7 @@ class SyntheticPlateGenerationRequest:
         shared_cell_fraction: float = (
             SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.shared_cell_fraction
         ),
-        wells: list[str] | None = None,
+        partition_values: list[str] | None = None,
         format: str = (SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.format.value),
         openhcs_format: bool = (
             SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.openhcs_format
@@ -868,10 +868,10 @@ class SyntheticPlateGenerationRequest:
             z_stack_levels=z_stack_levels,
             num_cells=num_cells,
             shared_cell_fraction=shared_cell_fraction,
-            wells=(
-                tuple(wells)
-                if wells is not None
-                else SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.wells
+            partition_values=(
+                tuple(partition_values)
+                if partition_values is not None
+                else SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.partition_values
             ),
             format=SyntheticPlateFormat(format),
             openhcs_format=openhcs_format,
@@ -893,7 +893,7 @@ class SyntheticPlateGenerationRequest:
             "z_stack_levels": self.z_stack_levels,
             "num_cells": self.num_cells,
             "shared_cell_fraction": self.shared_cell_fraction,
-            "wells": list(self.wells),
+            "partition_values": list(self.partition_values),
             "format": self.format.value,
             "openhcs_format": self.openhcs_format,
             "include_all_components": self.include_all_components,
@@ -1038,7 +1038,7 @@ class SyntheticPlateGenerationResult(AgentResultEnvelope):
     tile_size: tuple[int, int] = ()
     overlap_percent: int = 0
     stage_error_px: int = 0
-    wells: tuple[str, ...] = ()
+    partition_values: tuple[str, ...] = ()
     wavelengths: int = 0
     z_stack_levels: int = 0
     num_cells: int = 0

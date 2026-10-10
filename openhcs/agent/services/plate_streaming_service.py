@@ -160,7 +160,7 @@ class PlateStreamingService:
             )
             result = replace(result, viewer_type=config.viewer_family.viewer_type(), connection=connection)
             if request.result_directory is not None:
-                if request.kind is not PlateFileKind.RESULT or request.well is not None:
+                if request.kind is not PlateFileKind.RESULT or request.partition is not None:
                     raise ValueError(
                         "Explicit result-directory streaming requires kind='result' "
                         "and no acquisition-component filter."
@@ -502,7 +502,7 @@ class PlateStreamingService:
         inventory_query = PlateFileInventoryQuery(
             kinds=kinds,
             path_contains=request.path_contains,
-            well=request.well,
+            partition=request.partition,
             offset=0,
             limit=requested_limit,
         )

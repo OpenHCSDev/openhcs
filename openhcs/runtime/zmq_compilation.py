@@ -76,7 +76,7 @@ class ZMQCompilationRequest:
     pipeline_steps: list[AbstractStep]
     orchestrator: "PipelineOrchestrator"
     resolved_config: GlobalPipelineConfig | None
-    wells: list[str]
+    partition_values: list[str]
     compile_artifact_id: str | None
     compilation_signature: str
     debug_replay_signature: str
@@ -155,7 +155,7 @@ class ZMQCompilationRequest:
             ):
                 execution_bundle = self.orchestrator.compile_pipelines(
                     pipeline_definition=self.pipeline_steps,
-                    well_filter=self.wells,
+                    well_filter=self.partition_values,
                     is_zmq_execution=True,
                     debug_execution_policy=self.debug_execution_policy,
                     resolved_config=self.resolved_config,

@@ -77,11 +77,11 @@ def test_desktop_workflow_does_not_copy_config_filenames_or_use_legacy_runner() 
     assert defaults.compiled_results_file_name not in source
     assert defaults.raw_results_file_name not in source
     assert defaults.heatmap_file_name not in source
-    assert "formats.experimental_analysis import" not in source
+    assert "experimental_analysis.analysis import" not in source
 
 
 def test_engine_projects_declaration_owned_sheet_names(monkeypatch) -> None:
-    from openhcs.formats import experimental_analysis
+    from openhcs.processing.backends.experimental_analysis import analysis as experimental_analysis
 
     config = ExperimentalAnalysisConfig(
         design_sheet_name="design",
@@ -110,7 +110,7 @@ def test_engine_projects_declaration_owned_sheet_names(monkeypatch) -> None:
 
 
 def test_engine_delegates_to_declared_normalization_method(monkeypatch) -> None:
-    from openhcs.formats import experimental_analysis
+    from openhcs.processing.backends.experimental_analysis import analysis as experimental_analysis
 
     engine = ExperimentalAnalysisEngine(
         ExperimentalAnalysisConfig(normalization_method=NormalizationMethod.Z_SCORE)

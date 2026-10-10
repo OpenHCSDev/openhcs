@@ -129,7 +129,7 @@ def test_real_inventory_query_and_initialization_agree_on_physical_identity(tmp_
         PlateFileQueryRequest.from_fields(
             plate_path=str(plate),
             microscope_type="imagexpress",
-            well="A01",
+            partition="A01",
             include_previews=False,
             limit=3,
         )

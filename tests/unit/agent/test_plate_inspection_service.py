@@ -149,7 +149,7 @@ def test_plate_request_dtos_own_mcp_tool_argument_projection():
     )
     synthetic_request = SyntheticPlateGenerationRequest.from_fields(
         output_dir="/tmp/synthetic",
-        wells=["A01"],
+        partition_values=["A01"],
         format="ImageXpress",
     )
 
@@ -159,7 +159,7 @@ def test_plate_request_dtos_own_mcp_tool_argument_projection():
     assert sample_request.as_tool_arguments()["include_array_values"] is False
     assert sample_request.as_tool_arguments()["resolution_index"] == 0
     assert sample_request.as_tool_arguments()["max_auto_resolution_size"] == 512
-    assert synthetic_request.as_tool_arguments()["wells"] == ["A01"]
+    assert synthetic_request.as_tool_arguments()["partition_values"] == ["A01"]
     assert synthetic_request.as_tool_arguments()["format"] == "ImageXpress"
 
 
@@ -509,7 +509,7 @@ def test_synthetic_plate_generation_service_writes_inspectable_plate(tmp_path: P
             tile_height=32,
             wavelengths=2,
             num_cells=4,
-            wells=("A01",),
+            partition_values=("A01",),
             random_seed=7,
             sample_file_limit=3,
         )
@@ -758,7 +758,7 @@ def test_plate_image_sample_resolves_openhcs_virtual_workspace(
             plate_path=str(plate),
             microscope_type="openhcsdata",
             kind=PlateFileKind.IMAGE,
-            well="A01",
+            partition="A01",
             limit=5,
         )
     )
@@ -779,7 +779,7 @@ def test_plate_image_sample_resolves_openhcs_virtual_workspace(
             plate_path=str(plate),
             microscope_type="auto",
             kind=PlateFileKind.IMAGE,
-            well="A01",
+            partition="A01",
             limit=5,
         )
     )
@@ -1044,7 +1044,7 @@ def test_explicit_result_directory_rejects_acquisition_selection(
             plate_path=str(tmp_path),
             result_directory=str(tmp_path),
             kind=kind,
-            well=well,
+            partition=well,
         )
     )
     assert result.errors[0].code == "plate_result_directory_selection_invalid"

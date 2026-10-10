@@ -160,10 +160,10 @@ class SaveImagesWhen(str, Enum):
 
 
 class SaveImagesSeriesAxis(str, Enum):
-    """Source component used by sequential SaveImages filenames."""
+    """CellProfiler movie dimension that numbers sequential SaveImages files."""
 
-    TIMEPOINT = "timepoint"
-    Z_INDEX = "z_index"
+    TIME = "time"
+    SLICE = "slice"
 
 
 class SaveImagesOutputLocation(str, Enum):
@@ -220,8 +220,8 @@ SaveImagesBitDepth.FLOAT32.cellprofiler_literals = ("32-bit floating point",)
 SaveImagesWhen.EVERY_CYCLE.cellprofiler_literals = ("Every cycle",)
 SaveImagesWhen.FIRST_CYCLE.cellprofiler_literals = ("First cycle",)
 SaveImagesWhen.LAST_CYCLE.cellprofiler_literals = ("Last cycle",)
-SaveImagesSeriesAxis.TIMEPOINT.cellprofiler_literals = ("T (Time)",)
-SaveImagesSeriesAxis.Z_INDEX.cellprofiler_literals = ("Z (Slice)",)
+SaveImagesSeriesAxis.TIME.cellprofiler_literals = ("T (Time)",)
+SaveImagesSeriesAxis.SLICE.cellprofiler_literals = ("Z (Slice)",)
 SaveImagesOutputLocation.DEFAULT_OUTPUT_FOLDER.cellprofiler_literals = (
     "Default Output Folder",
 )
@@ -996,7 +996,7 @@ def save_images(
     when_to_save: SaveImagesWhen = SaveImagesWhen.EVERY_CYCLE,
     create_subfolders: bool = False,
     base_image_folder: str | None = None,
-    series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIMEPOINT,
+    series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIME,
     lossless_compression: bool = True,
     context: ProcessingContext | None = None,
 ) -> tuple[RuntimeArrayData, RuntimeArrayData]:
@@ -1053,7 +1053,7 @@ def save_images_with_measurements(
     when_to_save: SaveImagesWhen = SaveImagesWhen.EVERY_CYCLE,
     create_subfolders: bool = False,
     base_image_folder: str | None = None,
-    series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIMEPOINT,
+    series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIME,
     lossless_compression: bool = True,
     slice_index: int = 0,
     context: ProcessingContext | None = None,

@@ -48,7 +48,7 @@ def test_zero_geometry_real_mcp_journey(tmp_path, monkeypatch, format, native):
             "1",
             "--num-cells",
             "4",
-            "--well",
+            "--partition-value",
             "A01",
             "--random-seed",
             "7",

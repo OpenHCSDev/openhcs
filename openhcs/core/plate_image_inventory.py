@@ -481,11 +481,11 @@ class PlateFileRecord:
             )
             if needle not in haystack:
                 return False
-        if query.well is not None:
+        if query.partition is not None:
             partition_value = self.metadata.get(
                 AxisFamily.active().partition_axis().name
             )
-            if partition_value is None or str(partition_value) != query.well:
+            if partition_value is None or str(partition_value) != query.partition:
                 return False
         return True
 

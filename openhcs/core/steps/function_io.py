@@ -106,7 +106,7 @@ class ZarrComponentAxisProjection(AxisRoleKeyedStrategyMixin, ABC):
 
     axis_order: ClassVar[int]
     axis_name: ClassVar[str]
-    axis_type: ClassVar[str]
+    """NGFF axis name; PolyStore derives its NGFF type."""
     axis_role: ClassVar[ZarrBatchAxisRole] = ZarrBatchAxisRole.ARRAY
 
     @classmethod
@@ -132,7 +132,6 @@ class ZarrComponentAxisProjection(AxisRoleKeyedStrategyMixin, ABC):
         axes = tuple(
             ZarrBatchAxis(
                 name=axis_type.axis_name,
-                axis_type=axis_type.axis_type,
                 values=tuple(dict.fromkeys(item_values)),
                 role=axis_type.axis_role,
             )
@@ -198,41 +197,37 @@ class ZarrComponentAxisProjection(AxisRoleKeyedStrategyMixin, ABC):
         return str(value)
 
 
-class TimepointZarrAxisProjection(ZarrComponentAxisProjection):
+class TimeZarrAxisProjection(ZarrComponentAxisProjection):
     implements_role = TimeAxis
     axis_order = 0
     axis_name = "t"
-    axis_type = "time"
 
 
-class SiteZarrAxisProjection(ZarrComponentAxisProjection):
+class TileZarrAxisProjection(ZarrComponentAxisProjection):
     implements_role = TileAxis
     axis_order = 1
     axis_name = "field"
-    axis_type = "field"
     axis_role = ZarrBatchAxisRole.HCS_IMAGE
 
 
-class ChannelZarrAxisProjection(ZarrComponentAxisProjection):
+class ColourZarrAxisProjection(ZarrComponentAxisProjection):
     implements_role = ColourAxis
     axis_order = 2
     axis_name = "c"
-    axis_type = "channel"
 
     @classmethod
     def item_value(
         cls, identity: ZarrBatchItemIdentity, component: type[Axis]
     ) -> str:
-        channel = super().item_value(identity, component)
+        value = super().item_value(identity, component)
         qualifier = identity.filename_qualifier
-        return channel if qualifier is None else f"{channel}:{qualifier}"
+        return value if qualifier is None else f"{value}:{qualifier}"
 
 
-class ZIndexZarrAxisProjection(ZarrComponentAxisProjection):
+class StackZarrAxisProjection(ZarrComponentAxisProjection):
     implements_role = StackAxis
     axis_order = 3
     axis_name = "z"
-    axis_type = "space"
 
 
 def zarr_batch_layout(

@@ -1144,7 +1144,7 @@ class PlateInspectionService:
             query_kind is PlateFileKind.RESULT
             and request.microscope_type == PlateInspectionDefaults.MICROSCOPE_AUTO
             and request.pattern_format is None
-            and request.well is None
+            and request.partition is None
         ):
             result_only = self._result_only_query_files(
                 request=request,
@@ -1159,7 +1159,7 @@ class PlateInspectionService:
             query_kind is PlateFileKind.IMAGE
             and request.microscope_type == PlateInspectionDefaults.MICROSCOPE_AUTO
             and request.pattern_format is None
-            and request.well is None
+            and request.partition is None
         ):
             result_only = self._result_only_query_files(
                 request=request,
@@ -1206,7 +1206,7 @@ class PlateInspectionService:
         parser = self._parser(
             handler,
             warnings,
-            warn=query_kind is not PlateFileKind.RESULT or request.well is not None,
+            warn=query_kind is not PlateFileKind.RESULT or request.partition is not None,
         )
         file_inventory = self._plate_file_inventory_for_query(
             handler,
@@ -1232,7 +1232,7 @@ class PlateInspectionService:
         plate_path: Path,
     ) -> PlateFileQueryResult:
         """Read persisted files without inventing a microscope/source identity."""
-        if request.kind is not PlateFileKind.RESULT or request.well is not None:
+        if request.kind is not PlateFileKind.RESULT or request.partition is not None:
             return self._query_files_error(
                 request,
                 AgentError(
@@ -1311,7 +1311,7 @@ class PlateInspectionService:
             PlateFileInventoryQuery(
                 kinds=PlateFileInventoryQuery.kinds_for(request.kind),
                 path_contains=request.path_contains,
-                well=request.well,
+                partition=request.partition,
                 offset=request.offset,
                 limit=request.limit,
             )

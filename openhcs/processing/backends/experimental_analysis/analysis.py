@@ -22,11 +22,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 from openhcs.domains.microscopy.config import NormalizationMethod
-from openhcs.formats.experimental_layout_rows import (
+from openhcs.processing.backends.experimental_analysis.layout_rows import (
     ExperimentalAnalysisScope,
     ExperimentalLayoutRowRole,
 )
-from openhcs.formats.experimental_result_formats import ExperimentalResultFormatStrategy
+from openhcs.processing.backends.experimental_analysis.result_formats import ExperimentalResultFormatStrategy
 
 
 @dataclass(frozen=True, slots=True)

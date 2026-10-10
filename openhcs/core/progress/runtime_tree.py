@@ -136,10 +136,10 @@ class WorkerProgressTreeNode(
         return f"Worker {identity.worker_slot or identity.node_id}"
 
 
-class WellProgressTreeNode(
+class PartitionProgressTreeNode(
     ExplicitPercentRuntimeTreeNode, RuntimeTreeNodeDeclarationBase
 ):
-    node_kind = "well"
+    node_kind = "partition"
     sort_order = 20
 
     @classmethod
@@ -719,7 +719,7 @@ class RuntimeTreeNodeFactory:
         children: List[RuntimeTreeNode],
     ) -> RuntimeTreeNode:
         return self.make_runtime_node(
-            declaration=WellProgressTreeNode,
+            declaration=PartitionProgressTreeNode,
             identity=RuntimeTreeNodeIdentity(node_id=axis_id, axis_id=axis_id),
             status=status,
             info="",
@@ -1126,6 +1126,6 @@ __all__ = (
     "RuntimeTreeProjectionBuilder",
     "RuntimeTreeStatusProjector",
     "StepProgressTreeNode",
-    "WellProgressTreeNode",
+    "PartitionProgressTreeNode",
     "WorkerProgressTreeNode",
 )

@@ -186,6 +186,45 @@ def test_plane_addresses_spell_the_declared_tokens(remote_sensing) -> None:
     assert parsed.address.filename(".tif") == "S07_f002_b3_d014.tif"
 
 
+def test_zarr_layout_follows_roles_and_ngff_types(remote_sensing) -> None:
+    from polystore.zarr_batch import ZarrBatchAxisRole
+
+    from openhcs.core.components.parser_metaprogramming import FilenameParseResult
+    from openhcs.core.steps.function_io import (
+        ZarrBatchItemIdentity,
+        ZarrComponentAxisProjection,
+    )
+
+    identities = [
+        ZarrBatchItemIdentity(
+            component_values=FilenameParseResult(
+                (
+                    (RemoteSensing.Scene, "S01"),
+                    (RemoteSensing.Tile, tile),
+                    (RemoteSensing.Band, band),
+                    (RemoteSensing.Date, "1"),
+                ),
+                extension=".tif",
+            )
+        )
+        for tile in ("1", "2")
+        for band in ("1", "2", "3")
+    ]
+    layout = ZarrComponentAxisProjection.batch_layout(identities)
+
+    assert [(axis.name, axis.values, axis.role) for axis in layout.axes] == [
+        ("t", ("1",), ZarrBatchAxisRole.ARRAY),
+        ("field", ("1", "2"), ZarrBatchAxisRole.HCS_IMAGE),
+        ("c", ("1", "2", "3"), ZarrBatchAxisRole.ARRAY),
+    ]
+    assert layout.ngff_axes == (
+        {"name": "t", "type": "time"},
+        {"name": "c", "type": "channel"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    )
+
+
 def test_step_validation_and_compiler_axis_resolution(remote_sensing) -> None:
     from openhcs.core.components.validation import GenericValidator
     from openhcs.core.pipeline.path_planner import (
