@@ -924,7 +924,7 @@ def test_last_source_frame_retains_points_and_shapes_during_domain_pruning(
     for route in routes:
         layer = receiver.layer_route_state.layer(route)
         selected = len(layer.data) - 1
-        assert selected in layer._indices_view
+        assert selected in layer._view_indices
         layer.selected_data = {selected}
         retained[route] = (layer, layer.features.iloc[selected][feature])
     QApplication.instance().processEvents()
@@ -947,7 +947,7 @@ def test_last_source_frame_retains_points_and_shapes_during_domain_pruning(
         native = receiver.layer_route_state.layer(route)
         assert (native is not old) is joined
         assert set(native.features.iloc[list(native.selected_data)][feature]) == {identity}
-        assert set(native.selected_data) <= set(native._indices_view)
+        assert set(native.selected_data) <= set(native._view_indices)
         state = receiver.layer_route_state.dimension_state_for(route)
         assert state.presentation.projection.component_values["well"] == (
             ["A01", "A03"] if joined else ["A03"]

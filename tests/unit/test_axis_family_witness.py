@@ -164,6 +164,8 @@ def test_an_axis_without_a_viewer_role_takes_each_viewer_default_slot() -> None:
     from openhcs.core.config import FijiDisplayConfig, NapariDisplayConfig
 
     class Survey(AxisFamily):
+        payload_spatial_rank = 2
+
         class Replicate(Axis, DefaultVariable, OrdinalValued):
             name = "replicate"
 
