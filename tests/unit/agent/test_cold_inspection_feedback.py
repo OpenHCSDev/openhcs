@@ -5,7 +5,7 @@ import threading
 from types import SimpleNamespace
 
 import pytest
-from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
+from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.capabilities import (
     MainThreadProgressCapability, QueryPlateFilesCapability, SamplePlateImageCapability,
@@ -13,11 +13,9 @@ from openhcs.agent.capabilities import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.agent.services.execution_session_service import (
-    AgentProgressQueue, CompileInspectionGatewayABC, ExecutionSessionService,
+from openhcs.agent.services.artifact_plan_inspection_service import (
+    AgentProgressQueue, CompileInspectionGatewayABC, ArtifactPlanInspectionService,
 )
-from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.core.progress import (
     ProgressEventPayload, ProgressIdentity, ProgressPhase, ProgressStatus, create_event,
@@ -107,14 +105,13 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
             release.clear()
             compile_entered.clear()
             gateway = gateway_type()
-            service = ExecutionSessionService(
+            service = ArtifactPlanInspectionService(
                 path_policy=AgentPathPolicy.with_roots(
                     readable_roots=(tmp_path,), writable_roots=(tmp_path,),
                 ),
-                pipeline_service=PipelineAuthoringService(FunctionCatalogService(), config),
                 config_service=config, compile_inspection_gateway=gateway,
             )
-            built = build_server(SimpleNamespace(execution_service=service),
+            built = build_server(SimpleNamespace(artifact_plan_service=service),
                                  main_thread_dispatcher=executor.dispatcher)
             tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
 

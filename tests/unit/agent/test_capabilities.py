@@ -62,20 +62,26 @@ def test_manual_streaming_declares_viewer_side_effects_and_directory_request():
     )
 
 
-def test_source_session_capability_owns_progress_heartbeat_policy():
+def test_capabilities_own_their_progress_heartbeat_policy():
     capabilities = {
         capability.name: capability
         for capability in get_capability_registry().capabilities
     }
 
-    source_session = capabilities[
-        "openhcs_create_orchestrator_session_from_pipeline_source"
-    ]
+    inspection = capabilities["openhcs_inspect_pipeline_source_artifact_plan"]
+    assert inspection.progress_heartbeat_seconds == 1.0
+    assert inspection.progress_worker_thread_safe is False
+    assert inspection.as_jsonable()["progress_heartbeat_seconds"] == 1.0
+    assert inspection.as_jsonable()["progress_worker_thread_safe"] is False
 
-    assert source_session.progress_heartbeat_seconds == 10.0
-    assert source_session.progress_worker_thread_safe is False
-    assert source_session.as_jsonable()["progress_heartbeat_seconds"] == 10.0
-    assert source_session.as_jsonable()["progress_worker_thread_safe"] is False
+    # Session operations return at once; only waiting for events reports progress.
+    session_events = capabilities["openhcs_session_events"]
+    assert (
+        session_events.progress_heartbeat_seconds
+        == ProgressAcknowledgedCapability.progress_heartbeat_seconds
+    )
+    assert session_events.progress_worker_thread_safe is True
+    assert capabilities["openhcs_run_datasets"].progress_heartbeat_seconds is None
 
     function_search = capabilities["openhcs_search_functions"]
     assert (
@@ -228,9 +234,9 @@ def test_local_surface_profiles_filter_declaration_metadata_without_name_lists()
     assert recovery_names <= desktop_names
     assert "openhcs_ui_wait_for_operation_receipt" in desktop_names
     assert "openhcs_ui_wait_for_operation" not in desktop_names
-    assert "openhcs_create_orchestrator_session" in desktop_names
-    assert "openhcs_submit_pipeline_execution" in desktop_names
-    assert "openhcs_cancel_execution" in desktop_names
+    assert "openhcs_add_datasets" in desktop_names
+    assert "openhcs_run_datasets" in desktop_names
+    assert "openhcs_stop_execution" in desktop_names
     assert "openhcs_ui_invoke_widget_action" not in desktop_names
 
     desktop_capabilities = {
@@ -245,7 +251,7 @@ def test_local_surface_profiles_filter_declaration_metadata_without_name_lists()
         capability_surface_profile=CoreLocalCapabilitySurfaceProfile(),
     )
     core_names = {capability.name for capability in core.capabilities}
-    assert "openhcs_create_orchestrator_session" in core_names
+    assert "openhcs_run_datasets" in core_names
     assert "openhcs_stream_plate_files_to_viewer" not in core_names
     assert "openhcs_ui_bridge_status" not in core_names
 
@@ -407,11 +413,11 @@ def test_similar_mcp_tool_names_are_disambiguated_by_target_context_and_role():
     assert capabilities["openhcs_ui_sample_selected_plate_image"].exposition.role is (
         CapabilityRole.MODE_VARIANT
     )
-    assert capabilities["openhcs_get_execution_status"].exposition.target_context is (
-        CapabilityTargetContext.SUBMITTED_JOB
+    assert capabilities["openhcs_session_datasets"].exposition.target_context is (
+        CapabilityTargetContext.HEADLESS_SESSION
     )
-    assert capabilities["openhcs_cancel_execution"].exposition.target_context is (
-        CapabilityTargetContext.SUBMITTED_JOB
+    assert capabilities["openhcs_stop_execution"].exposition.target_context is (
+        CapabilityTargetContext.HEADLESS_SESSION
     )
     assert (
         capabilities["openhcs_get_runtime_server_execution_status"].exposition.target_context

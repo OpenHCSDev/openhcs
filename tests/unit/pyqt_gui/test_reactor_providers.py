@@ -26,7 +26,9 @@ def test_component_provider_resolves_the_public_orchestrator_declaration(
     monkeypatch.setattr(
         provider,
         "_get_plate_manager",
-        lambda: SimpleNamespace(selected_plate_path=str(tmp_path)),
+        lambda: SimpleNamespace(
+            session=SimpleNamespace(current_scope_id=str(tmp_path))
+        ),
     )
     monkeypatch.setattr(
         ObjectStateRegistry,

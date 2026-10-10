@@ -30,7 +30,7 @@ from openhcs.mcp.server import build_server
 from openhcs.mcp.socket import McpSocketTransport, wait_for_socket
 
 from test_persisted_output_reopen import NoRuntimeBridge, declared_output
-from test_streaming_service import FakeViewer
+from tests.unit.test_streaming_service import FakeViewer
 
 
 @pytest.fixture

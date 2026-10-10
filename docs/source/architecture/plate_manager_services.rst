@@ -1,97 +1,65 @@
-Plate Manager services
-======================
+The OpenHCS session
+===================
 
-The Plate Manager widget delegates workflow policy to
-``PlateManagerBatchWorkflow``. The facade owns shared context and lifecycle;
-``BatchWorkflowComponents`` owns lazy construction of focused services.
+Every client of OpenHCS (the Qt GUI, headless MCP, scripts) works through one
+``Session`` (``openhcs/authoring/session``). The session holds no copy of what
+ObjectState already owns: the dataset list, each dataset's ``PipelineConfig``
+and its pipeline steps live in ObjectState. The session owns the runtime state
+around them: pending initialisation and compilation, compiled artifacts, the
+execution batch, debug sessions, live measurements and the runtime projection.
 
 Ownership map
 -------------
 
-``openhcs/pyqt_gui/services/plate_manager_batch_workflow.py``
-  Workflow facade and compile-all-then-execute-all sequence.
+``session.py``
+  ``Session``: dataset add/delete/split, initialisation, compile and run, stop,
+  debug runs, finished-execution records, admission checks, and the ports a
+  client supplies (``MainThread``, ``DatasetAccess``, ``Renderer``).
 
-``openhcs/pyqt_gui/widgets/shared/services/batch_workflow_components.py``
-  Lazy component owner for compile, submit, control, progress, debug, and live
-  measurement services.
+``operations/``
+  The ``SessionOperation`` family. One class per action: label, tooltip,
+  request and result types, availability and ``run``. Headless operations are
+  also MCP tools, derived in ``openhcs.agent.capabilities``; renderer
+  operations ask the attached renderer to present something.
 
-``openhcs/pyqt_gui/widgets/shared/services/compile_batch_workflow_service.py``
-  Batch compile policy and exact compile-artifact collection.
+``views.py``
+  ``SessionView`` family: ``DatasetListView`` and ``PipelineStepsView`` derive
+  frozen states (``openhcs.agent.dto.session``) and name the operations a
+  renderer binds to its buttons.
 
-``openhcs/pyqt_gui/widgets/shared/services/compile_workflow_service.py``
-  One compile request, its nominal identity, submission, and wait behavior.
+``events.py``
+  The ``SessionEvent`` family and the event log. Clients subscribe (the GUI's
+  ``QtSessionEventRelay``) or wait for events past a sequence number (MCP's
+  ``openhcs_session_events``); none polls.
 
-``openhcs/pyqt_gui/widgets/shared/services/plate_pipeline_request_builder.py``
-  Projection of one selected plate into ``CompileJob`` or ``RunSpec``.
+``compile_batch.py``, ``submission.py``, ``execution_control.py``, ``debug_runs.py``, ``progress.py``
+  Compile batches, submission and terminal following, stop and failure
+  convergence, debug execution, progress registration and projection.
 
-``openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py``
-  Execution submission, completion polling, and terminal callbacks.
+``dataset_document.py``
+  The datasets as one code document: render it, and apply an edited one within
+  a selected or all-datasets ``DatasetDocumentScope``.
 
-``openhcs/pyqt_gui/widgets/shared/services/execution_control_service.py``
-  Stop, cancel, disconnect, and failure convergence.
+``pipelines.py``
+  Pipeline declaration reconciliation and saved-baseline commits for the
+  pipeline, step and nested-function ObjectState graph.
 
-``openhcs/pyqt_gui/widgets/shared/services/progress_workflow_service.py``
-  Coalesced progress projection and server-information refresh.
-
-``openhcs/pyqt_gui/widgets/shared/services/plate_manager_workflows.py``
-  Code-document mutation scope and application. A selected document may synchronise
-  only the plate graphs named by its read-time scope; an all-plates document
-  synchronises the complete visible collection.
-
-``openhcs/pyqt_gui/services/pipeline_object_state_binding.py``
-  Pipeline declaration reconciliation and saved-baseline commits for the exact
-  active editor, step, and nested-function state graph.
-
-``openhcs/agent/services/endpoint_function_catalog_service.py``
-  Shared asynchronous projection of the execution endpoint's callable
-  catalogue for desktop and local MCP authoring. The endpoint remains the
-  authority for callable availability and transports only the exact selected
-  callable reference back to a consumer.
-
-Supporting presentation owners include
-``execution_server_status_presenter.py``, ``progress_batch_reset.py``, and
-``plate_config_resolver.py`` in the same services package.
+Dataset scope kinds (``core/dataset_sources/dataset_scopes.py``) say what a row
+stands for; CellProfiler registers one row per ``.cppipe`` from interop.
+Pipeline file formats are ``PipelineImporter`` subclasses keyed by suffix.
 
 Invariants
 ----------
 
-- Every selected run compiles before the first execution submission.
-- Execution requests carry the exact compiled artifact ID returned for their
-  plate.
-- Plate, progress, and terminal state have host-owned stores; services project
-  updates rather than maintain parallel semantic caches.
-- Generic submit/wait/status-polling mechanics belong to ZMQRuntime. OpenHCS
-  owns how those mechanics map to plate compilation and UI state.
-- Complete pipeline documents reconcile their step and nested-function
-  occurrences by declaration-owned authority. Unchanged and unambiguously
-  edited occurrences retain identity across reordering; ambiguous duplicates
-  receive new scopes rather than inheriting identity by position.
-- Callable occurrence comparison unwraps equivalent wrappers and excludes
-  keyword arguments equal to signature defaults, so source projection does not
-  create a different declaration merely by making a default explicit.
-- Applying a Pipeline Editor code document commits the reconciled root, step,
-  and nested-function states as the editor's saved baseline. The Pipeline
-  Editor has no second Save action after code apply.
-- Code-document selection is proof-bearing apply authority. Applying a selected
-  Plate Manager document preserves every unselected plate and rejects a payload
-  whose plate IDs differ from the scope that was read.
-- A selected code document preserves an unchanged exported global declaration,
-  including its live/saved draft split. A submitted global change still requires
-  global mutation admission; an all-plates document retains its complete commit
-  semantics. The mutation-scope declaration owns this distinction.
-- Initialisation and compilation reserve the affected plate before asynchronous
-  work. Execution admission reserves the existing batch before connection;
-  editing another plate neither replaces that batch nor clears its progress.
-- Lightweight row activity projects current lifecycle state without resolving
-  every plate's effective configuration or output relations. Rich result and MCP
-  state projections retain those relations when requested.
-- After the initialized desktop first paints, background startup uses the batch
-  workflow's persistent endpoint policy and then prewarms the endpoint-owned
-  callable catalogue without blocking Qt. Desktop and local MCP consumers share
-  that service instead of constructing process-local catalogues.
-- Cleanup removes listeners and timers owned by the workflow facade and retires
-  both admitted clients and in-progress connection attempts through the same
-  client owner.
+- Every selected run compiles before the first execution submission, and each
+  execution carries the compile artifact id returned for its dataset.
+- Initialisation and compilation reserve the affected dataset before
+  asynchronous work; execution reserves the batch before connecting.
+- A selected code document preserves every unselected dataset and rejects a
+  payload whose scope ids differ from the ones it was read with.
+- Session work that touches ObjectState runs on the client's main thread
+  (``DispatcherThread`` over the Qt dispatcher in the GUI and in MCP).
+- Widgets hold no session state; they render views and invoke operations.
 
 See :doc:`batch_workflow_service`, :doc:`progress_runtime_projection_system`,
 and :doc:`zmq_server_browser_system`.

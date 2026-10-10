@@ -410,7 +410,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "UI-VISIBLE WORKFLOW" in ui
     assert "FOLDER ONBOARDING WORKFLOW" not in ui
     assert "HEADLESS EXECUTION WORKFLOW" not in ui
-    assert "'view_results' action relates" in ui
+    assert "'show_live_results' action relates" in ui
     assert "Do not select a surface by title matching" in ui
     assert "object/source identity" in ui
     assert "not a mirror of dialog tabs or table cells" in ui
@@ -546,7 +546,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "openhcs_get_viewer_window_payloads" in debugging
     assert "openhcs_summarize_viewer_window_rois" in debugging
     assert "schema-bearing per-object measurement rows" in debugging
-    assert "follow the 'view_results' action's `related_state_surface_ids`" in debugging
+    assert "follow the 'show_live_results' action's `related_state_surface_ids`" in debugging
     assert "never guess from a title substring" in debugging
     assert "bounded retained-table authority" in debugging
     assert "row/object cardinality" in debugging
@@ -596,7 +596,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "rank strong unassigned residual components" in viewer
     assert "exact raw-versus-result pixels or rasterized shapes" in viewer
     assert "reconcile schema-bearing per-object measurement rows" in viewer
-    assert "declared 'view_results' action's `related_state_surface_ids`" in viewer
+    assert "declared 'show_live_results' action's `related_state_surface_ids`" in viewer
     assert "Do not select by title substring" in viewer
     assert "Plate Manager Results action" in viewer
     assert "widget-tree cell scraping" in viewer

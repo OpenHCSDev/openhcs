@@ -5,10 +5,10 @@ from types import ModuleType, SimpleNamespace
 
 from PyQt6.QtWidgets import QApplication, QWidget
 
+from openhcs.authoring.session.live_measurements import LiveMeasurementTable
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.pyqt_gui.windows.live_measurements_window import (
     LiveMeasurementsWindow,
-    LiveMeasurementTableModel,
     _scope_text,
 )
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
@@ -65,7 +65,7 @@ def test_image_browser_is_created_only_when_its_results_tab_is_selected(
     )
 
     window = LiveMeasurementsWindow(
-        LiveMeasurementTableModel(),
+        LiveMeasurementTable(),
         orchestrator=orchestrator,
         zmq_config=OpenHCSZMQConfig(),
     )

@@ -321,6 +321,12 @@ class RunDatasets(DatasetTargetsOperation, DatasetWorkflowOperation, HeadlessOpe
                 code="execution_batch_active",
                 message="An execution batch is already running.",
             )
+        pending = [s for s in request.scope_ids if session.has_pending_definition_work(s)]
+        if pending:
+            return AgentError(
+                code="dataset_definition_pending",
+                message=f"Run is unavailable while {', '.join(pending)} prepares.",
+            )
         not_compiled = [s for s in request.scope_ids if s not in session.compiled]
         if not_compiled:
             return AgentError(

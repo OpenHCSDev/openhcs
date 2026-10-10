@@ -364,7 +364,7 @@ def test_live_measurement_surface_is_discovered_from_public_catalog():
             "actions": [
                 {
                     "widget_id": "plate_manager",
-                    "action_id": "view_results",
+                    "action_id": "show_live_results",
                     "related_state_surface_ids": [
                         "plate_manager.state",
                         "runtime-owned-id",
@@ -684,7 +684,7 @@ class _FakeMcpClient:
                     "actions": [
                         {
                             "widget_id": "plate_manager",
-                            "action_id": "view_results",
+                            "action_id": "show_live_results",
                             "related_state_surface_ids": [
                                 "plate_manager.state",
                                 "runtime-owned-id",
@@ -843,7 +843,7 @@ def test_showcase_reuses_one_persistent_session_and_writes_timing_report(tmp_pat
         ],
     }
     assert scenario["human_results_table"] == {
-        "action_id": "view_results",
+        "action_id": "show_live_results",
         "operation_id": "operation-1",
         "outcome": "accepted",
         "status": "completed",
@@ -867,6 +867,6 @@ def test_showcase_reuses_one_persistent_session_and_writes_timing_report(tmp_pat
         argv[:2] == ("state-surface", "runtime-owned-id") for argv in fake_client.argv
     )
     assert any(
-        argv[:3] == ("invoke-action", "plate_manager", "view_results")
+        argv[:3] == ("invoke-action", "plate_manager", "show_live_results")
         for argv in fake_client.argv
     )

@@ -90,7 +90,7 @@ Source the active checkout environment, then call the dev client directly:
    python -m openhcs.mcp.dev_client knowledge-document openhcs_architecture_quick_start --max-chars 4000
    python -m openhcs.mcp.dev_client knowledge-search "viewer"
    python -m openhcs.mcp.dev_client ui-smoke --allow-error-payloads
-   python -m openhcs.mcp.dev_client selected-workflow init_plate
+   python -m openhcs.mcp.dev_client selected-workflow initialize_datasets
    python -m openhcs.mcp.dev_client widget-tree plate_manager
    python -m openhcs.mcp.dev_client window-snapshot main_window --output-dir-path /tmp/openhcs-ui-evidence
    python -m openhcs.mcp.dev_client viewer-payloads 5565 --include-shape-payloads
@@ -172,16 +172,16 @@ execute request is sent, the tool reports that known outcome. A timeout after
 the request is sent remains an unknown outcome; poll server status before
 retrying.
 
-For accepted non-blocking jobs, ``openhcs_get_execution_status`` returns the
-control-plane lifecycle status together with the submitting client's latest
-progress event and monotonic progress sequence. A changing sequence is exact
-activity evidence even when the coarse execution status remains ``running``.
-Terminal status is cached and releases that client's progress subscription.
-``openhcs_cancel_execution`` uses the same retained job/client relationship;
-its result distinguishes an applied server cancellation from the status
-observed afterwards. A timeout does not prove that the job stopped.
-The optional ``runtime_observation_export_path`` on the normal execution
-submission is checked against agent writable roots and must not already exist.
+Headless MCP is an OpenHCS session with no renderer: the same
+``SessionOperation`` classes the GUI binds to its buttons are the MCP tools
+(``openhcs_add_datasets``, ``openhcs_set_dataset_pipeline``,
+``openhcs_initialize_datasets``, ``openhcs_compile_datasets``,
+``openhcs_run_datasets``, ``openhcs_stop_execution``). Each returns the
+``event_sequence`` it started at; ``openhcs_session_events`` waits for the
+events after it and ``openhcs_session_datasets`` reads the dataset rows. A
+timeout does not prove that a run stopped.
+The optional ``runtime_observation_export_path`` on ``openhcs_run_datasets``
+is checked against agent writable roots and must not already exist.
 It is carried by the shared typed auxiliary execution declaration; the MCP
 server does not maintain a second observation transport key or job lifecycle.
 The optional ``runtime_observation_export_scope`` uses that declaration's

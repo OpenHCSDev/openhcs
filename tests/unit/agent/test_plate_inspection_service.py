@@ -265,7 +265,7 @@ def test_plate_inspection_auto_detects_imagexpress_without_mutating(tmp_path: Pa
     assert result.workflow_advice.ui_code_document_id == (
         "plate_manager.orchestrator_config"
     )
-    assert result.workflow_advice.ui_operation == "init"
+    assert result.workflow_advice.ui_operation == "initialize_datasets"
     assert not (plate / "openhcs_metadata.json").exists()
 
 

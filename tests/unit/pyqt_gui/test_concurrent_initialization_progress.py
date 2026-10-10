@@ -24,36 +24,34 @@ def test_init_signals_and_completion_preserve_running_progress():
     projection.add_plate(plate)
     projection.mark_latest(plate.identity)
     projection.recalculate_summary()
-    manager = SimpleNamespace(
-        runtime_progress_projection=projection, plate_init_pending={"/other"}
-    )
+    session = SimpleNamespace(runtime_projection=projection, init_pending={"/other"})
     bar = QProgressBar()
     workflow = MainWindowLifecycleWorkflow(
-        main_window=None,
-        embedded_widgets=SimpleNamespace(require_plate_manager=lambda: manager),
+        main_window=SimpleNamespace(session=session),
+        embedded_widgets=SimpleNamespace(),
         floating_windows={},
         status_progress_bar=bar,
         ui_bridge_lifecycle=None,
         ui_services=None,
     )
     try:
-        workflow.progress_started(1)
+        # Initialization start, progress and completion each refresh the bar.
+        workflow.refresh_progress()
         assert not bar.isHidden()
         assert bar.maximum() == 100
         assert bar.value() == round(projection.overall_percent)
-        workflow.progress_updated(1)
-        manager.plate_init_pending.clear()
-        workflow.progress_finished()
+        session.init_pending.clear()
+        workflow.refresh_progress()
         assert not bar.isHidden()
         assert bar.maximum() == 100
         assert bar.value() == round(projection.overall_percent)
-        manager.runtime_progress_projection = ExecutionRuntimeProjection()
-        manager.plate_init_pending.add("/other")
+        session.runtime_projection = ExecutionRuntimeProjection()
+        session.init_pending.add("/other")
         workflow.refresh_progress()
         assert not bar.isHidden()
         assert bar.maximum() == 0
-        manager.plate_init_pending.clear()
-        workflow.progress_finished()
+        session.init_pending.clear()
+        workflow.refresh_progress()
         assert bar.isHidden()
     finally:
         bar.close()

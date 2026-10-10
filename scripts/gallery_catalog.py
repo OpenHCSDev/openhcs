@@ -41,7 +41,7 @@ from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
 
 if TYPE_CHECKING:
-    from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope
+    from openhcs.authoring.session.step_scopes import StepEditorScope
 
 RELEASE_MEDIA_SCHEMA_VERSION = "openhcs.release-media.v7"
 RELEASE_MEDIA_RECORD_NAME = "release-media-record.json"
@@ -380,7 +380,7 @@ class ObjectStateCaptureScopeRole(str, Enum):
     def resolve(self, scope_ids: Sequence[str]) -> str:
         """Resolve one unambiguous live scope through this member's leaf rules."""
 
-        from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope
+        from openhcs.authoring.session.step_scopes import StepEditorScope
 
         parsed_scopes = []
         for scope_id in scope_ids:

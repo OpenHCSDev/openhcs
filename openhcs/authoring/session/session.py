@@ -275,10 +275,10 @@ class Session:
         global_config: GlobalPipelineConfig,
         main_thread: MainThread,
         progress_interval_seconds: float = 1 / 30,
-        dataset_access: DatasetAccess | None = None,
+        dataset_access: DatasetAccess = UnrestrictedDatasetAccess(),
     ) -> None:
         self.main_thread = main_thread
-        self.dataset_access = dataset_access or UnrestrictedDatasetAccess()
+        self.dataset_access = dataset_access
         self.renderer: Renderer = NoRenderer()
         self.event_log = SessionEventLog()
         self.global_config = global_config
@@ -864,6 +864,10 @@ class Session:
 
     @execution_state.setter
     def execution_state(self, state: ManagerExecutionState) -> None:
+        if not isinstance(state, ManagerExecutionState):
+            raise TypeError(
+                f"execution_state must be ManagerExecutionState, got {state!r}."
+            )
         if state is self._execution_state:
             return
         self._execution_state = state
@@ -1092,7 +1096,7 @@ class Session:
     def observation_export_params(
         self,
         export_path: str | None,
-        export_scope: str,
+        export_scope: ZMQRuntimeObservationExportScope | str,
     ) -> ZMQAuxiliaryExecutionParams | None:
         """Runtime observation export options for a run, under the access policy."""
 

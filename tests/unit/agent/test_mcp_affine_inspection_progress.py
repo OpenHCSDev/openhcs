@@ -12,7 +12,6 @@ from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
-    CreateOrchestratorSessionFromPipelineSourceCapability,
     GetKnowledgeDocumentCapability,
     InspectPipelineSourceArtifactPlanCapability,
     MainThreadProgressCapability,
@@ -31,7 +30,6 @@ from python_introspect import to_jsonable
 
 @pytest.mark.parametrize("declaration", (
     InspectPipelineSourceArtifactPlanCapability,
-    CreateOrchestratorSessionFromPipelineSourceCapability,
     GetKnowledgeDocumentCapability,
 ))
 def test_source_leaf_composes_original_progress_and_affinity(declaration):
@@ -52,7 +50,7 @@ class AffineInspectionService:
         self.error = error
         self.calls = []
 
-    def inspect_pipeline_source_artifact_plan_request(self, request):
+    def inspect(self, request):
         assert threading.current_thread() is threading.main_thread()
         assert QThread.currentThread() == QCoreApplication.instance().thread()
         self.calls.append((request, self.request_identity.get()))
@@ -91,7 +89,7 @@ def test_generated_inspection_main_thread_context_progress_and_terminal(error):
     service = AffineInspectionService(identity, error=error)
     executor = McpTransportExecutor()
     built = build_server(
-        SimpleNamespace(execution_service=service),
+        SimpleNamespace(artifact_plan_service=service),
         main_thread_dispatcher=executor.dispatcher,
     )
     tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
@@ -166,7 +164,7 @@ def test_independent_new_leaf_cooperative_hooks_need_no_consumer_edits():
     identity = ContextVar("new-affine-declaration", default="new-case")
     service = AffineInspectionService(identity)
     executor = McpTransportExecutor()
-    built = build_server(SimpleNamespace(execution_service=service), main_thread_dispatcher=executor.dispatcher)
+    built = build_server(SimpleNamespace(artifact_plan_service=service), main_thread_dispatcher=executor.dispatcher)
 
     async def exercise():
         for declaration in (NewBefore, NewAfter):
@@ -341,9 +339,9 @@ class WireInspectionService(AffineInspectionService):
         time.sleep(self.work_seconds)
         return True
 
-    def inspect_pipeline_source_artifact_plan_request(self, request):
+    def inspect(self, request):
         self.error = ValueError("Original controlled source error") if request.pipeline_source == "failed" else None
-        return super().inspect_pipeline_source_artifact_plan_request(request)
+        return super().inspect(request)
 
 
 def serve_stdio_inspection_fixture(*, work_seconds=2.4):
@@ -352,7 +350,7 @@ def serve_stdio_inspection_fixture(*, work_seconds=2.4):
     identity = ContextVar("wire-source-identity", default="wire")
     with McpStdioTransport.reserve_process_stdio() as transport:
         transport.run(build_server(
-            SimpleNamespace(execution_service=WireInspectionService(identity, work_seconds=work_seconds)),
+            SimpleNamespace(artifact_plan_service=WireInspectionService(identity, work_seconds=work_seconds)),
             main_thread_dispatcher=transport.execution.dispatcher,
         ))
 
@@ -374,7 +372,7 @@ def test_resident_continuous_connections_keep_affinity_and_wire_progress(
     service = WireInspectionService(
         ContextVar("resident-source-identity", default="resident"), work_seconds=work_seconds,
     )
-    built = build_server(SimpleNamespace(execution_service=service), main_thread_dispatcher=transport.execution.dispatcher)
+    built = build_server(SimpleNamespace(artifact_plan_service=service), main_thread_dispatcher=transport.execution.dispatcher)
     clients = AsyncOperationExecutor(max_workers=1)
     diagnostics = io.StringIO()
 

@@ -5,8 +5,6 @@ import inspect
 import textwrap
 from pathlib import Path
 
-from objectstate.lazy_factory import ensure_global_config_context
-from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtWidgets import QApplication
 from pyqt_reactive.services.help_document import HelpDocumentFormat
 from pyqt_reactive.services.window_manager import WindowManager
@@ -30,7 +28,6 @@ from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseDocumentSpec,
     KnowledgeBaseService,
 )
-from openhcs.core.config import GlobalPipelineConfig
 from openhcs.pyqt_gui.config import get_default_ui_config
 from openhcs.pyqt_gui.services.main_window_workflows import build_main_window_specs
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
@@ -45,13 +42,10 @@ from openhcs.pyqt_gui.windows.help_window import (
     HelpWindow,
     KnowledgeDocumentSelection,
 )
-from tests.unit.pyqt_gui.test_pipeline_editor_widget import (
-    PipelineEditorServiceStub,
-    QtApplicationHarness,
-)
-from tests.unit.pyqt_gui.test_plate_manager_widget import (
-    PlateManagerServiceStub,
-    close_widget,
+from tests.unit.pyqt_gui.session_harness import (
+    GuiServiceStub,
+    caller_session,
+    qt_app,
 )
 
 
@@ -204,7 +198,7 @@ class _FunctionCatalogService:
 def test_help_window_projects_exact_canonical_catalog_search_and_document(
     tmp_path: Path,
 ) -> None:
-    QtApplicationHarness.app()
+    qt_app()
     service = _knowledge_service(tmp_path)
     function_catalog = _FunctionCatalogService()
     window = HelpWindow(
@@ -247,7 +241,7 @@ def test_help_window_projects_exact_canonical_catalog_search_and_document(
 def test_help_window_resolves_registered_function_through_shared_renderer(
     tmp_path: Path,
 ) -> None:
-    QtApplicationHarness.app()
+    qt_app()
     function_catalog = _FunctionCatalogService()
     window = HelpWindow(
         knowledge_service=_knowledge_service(tmp_path),
@@ -298,7 +292,7 @@ def test_help_window_resolves_registered_function_through_shared_renderer(
 def test_help_window_derives_rst_rendering_from_source_authority(
     tmp_path: Path,
 ) -> None:
-    QtApplicationHarness.app()
+    qt_app()
     docs = tmp_path / "docs"
     docs.mkdir()
     (docs / "guide.rst").write_text(
@@ -345,7 +339,7 @@ def test_knowledge_window_is_registered_under_canonical_ui_window_id() -> None:
 def test_knowledge_window_opens_exact_manager_document_sections(
     tmp_path: Path,
 ) -> None:
-    QtApplicationHarness.app()
+    qt_app()
     service = _knowledge_service(tmp_path)
     window = HelpWindow(
         knowledge_service=service,
@@ -381,8 +375,7 @@ def test_pipeline_and_plate_manager_help_buttons_open_managed_knowledge_window(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    QtApplicationHarness.app()
-    ObjectStateRegistry.clear()
+    qt_app()
     knowledge_service = _knowledge_service(tmp_path)
     function_catalog = _FunctionCatalogService()
     calls: list[tuple[str, bool]] = []
@@ -411,16 +404,14 @@ def test_pipeline_and_plate_manager_help_buttons_open_managed_knowledge_window(
             AssertionError("Manager Help must not open class-docstring help")
         ),
     )
-    pipeline_service = PipelineEditorServiceStub()
-    pipeline_service.main_window = main_window
-    pipeline = PipelineEditorWidget(pipeline_service)
-    plate_service = PlateManagerServiceStub()
-    plate_service.main_window = main_window
-    ensure_global_config_context(GlobalPipelineConfig, plate_service.global_config)
-    plate = PlateManagerWidget(
-        plate_service,
-        gui_config=get_default_ui_config(),
-    )
+    with caller_session() as session:
+        _open_manager_help(session, main_window, knowledge_service, calls)
+
+
+def _open_manager_help(session, main_window, knowledge_service, calls) -> None:
+    services = GuiServiceStub(main_window=main_window)
+    pipeline = PipelineEditorWidget(services, session)
+    plate = PlateManagerWidget(services, session, gui_config=get_default_ui_config())
 
     try:
         assert isinstance(pipeline.context_help_button, HelpButton)
@@ -493,8 +484,8 @@ def test_pipeline_and_plate_manager_help_buttons_open_managed_knowledge_window(
             managed_help.close()
             WindowManager.unregister(OpenHCSUiWindowId.knowledge_base, managed_help)
         pipeline.close()
-        close_widget(plate)
-        ObjectStateRegistry.clear()
+        plate.cleanup()
+        plate.close()
 
 
 def test_context_help_installation_delegates_to_title_composition() -> None:

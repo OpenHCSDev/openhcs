@@ -3,7 +3,6 @@ from __future__ import annotations
 import ast
 from dataclasses import replace
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from PyQt6.QtCore import QEvent, Qt
@@ -27,11 +26,12 @@ from openhcs.pyqt_gui.config import (
 from openhcs.pyqt_gui.services.main_window_workflows import (
     MainWindowShortcutLifecycle,
 )
-from openhcs.pyqt_gui.widgets.shared.services.batch_workflow_components import (
-    BatchWorkflowComponents,
-)
-from openhcs.authoring.session.progress import (
-    ProgressWorkflowService,
+from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
+from tests.unit.pyqt_gui.session_harness import (
+    GuiServiceStub,
+    caller_session,
+    qt_app,
+    session_port,
 )
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
@@ -250,34 +250,27 @@ def test_time_travel_shortcut_accepts_any_configured_qt_key(qapp) -> None:
         lifecycle.close()
 
 
-def test_progress_config_updates_materialized_timer_owner() -> None:
-    intervals: list[int] = []
-    service = object.__new__(ProgressWorkflowService)
-    service._config = ProgressUIConfig(update_fps=30.0)
-    service._progress_coalesce_timer = SimpleNamespace(
-        setInterval=intervals.append,
-    )
-    updated = ProgressUIConfig(update_fps=20.0)
+def test_ui_config_reaches_the_session_progress_interval_and_transport() -> None:
+    qt_app()
+    with caller_session() as session:
+        manager = PlateManagerWidget(
+            GuiServiceStub(), session, gui_config=get_default_ui_config()
+        )
+        try:
+            updated = replace(
+                get_default_ui_config(),
+                progress=ProgressUIConfig(update_fps=20.0),
+                zmq=OpenHCSZMQConfig(default_port=session_port() + 1, persistent=False),
+            )
 
-    service.update_config(updated)
+            manager.set_ui_config(updated)
 
-    assert service._config is updated
-    assert intervals == [50]
-
-
-def test_progress_config_updates_lazy_component_and_live_service() -> None:
-    applied: list[ProgressUIConfig] = []
-    components = object.__new__(BatchWorkflowComponents)
-    components.progress_config = ProgressUIConfig(update_fps=30.0)
-    components._progress_workflow = SimpleNamespace(
-        update_config=applied.append,
-    )
-    updated = ProgressUIConfig(update_fps=10.0)
-
-    components.update_progress_config(updated)
-
-    assert components.progress_config is updated
-    assert applied == [updated]
+            assert updated.progress.update_interval_ms == 50
+            assert session.progress._interval_seconds == 0.05
+            assert session.client.config == updated.zmq
+        finally:
+            manager.cleanup()
+            manager.close()
 
 
 def test_removed_ui_config_and_lifecycle_mirrors_do_not_recur() -> None:

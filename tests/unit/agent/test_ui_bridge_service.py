@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.agent.dto.session import DatasetRowState
 
 import inspect
 import json
@@ -54,7 +55,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateScopeListRequest,
     UiObjectStateScopeSummary,
     UiObjectStateValuePreview,
-    UiPlateManagerRowState,
     UiPlateManagerState,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
@@ -646,11 +646,11 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
                 object_state_token=1,
                 manager_execution_state="idle",
                 rows=(
-                    UiPlateManagerRowState(
-                        plate_scope_id=PLATE_SCOPE_ID,
+                    DatasetRowState(
+                        scope_id=PLATE_SCOPE_ID,
                         name=PLATE_NAME,
-                        plate_root=f"/tmp/{PLATE_SCOPE_ID}",
-                        cppipe_path=None,
+                        root=f"/tmp/{PLATE_SCOPE_ID}",
+                        pipeline_path=None,
                         selected=True,
                         initialized=True,
                         compiled=False,
@@ -2091,7 +2091,7 @@ def test_ui_requests_own_mcp_tool_argument_projection():
         "base_revision_token": "rev-1",
     }
     assert workflow_request.as_tool_arguments() == {
-        "workflow": "compile_plate",
+        "workflow": "compile_datasets",
         "target_scope_ids": [PLATE_SCOPE_ID],
         "observed_selection_revision_token": "selection-1",
         "request_token": "request-1",
@@ -2116,7 +2116,7 @@ def test_ui_requests_own_mcp_tool_argument_projection():
         ),
         UiActionInvokeRequest.from_fields(
             widget_id="plate_manager",
-            action_id="compile_plate",
+            action_id="compile_datasets",
         ),
         UiWidgetActionInvokeRequest.from_fields(
             window_id="pipeline_editor",

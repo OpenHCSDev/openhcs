@@ -8,12 +8,10 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSelectionMode,
     UiStateSurfaceRequest,
 )
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
     UiStateSurfaceIdentityDeclarationBase,
 )
-from objectstate.object_state import ObjectStateRegistry
 from openhcs.core.artifacts import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.progress import (
@@ -46,7 +44,8 @@ from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.authoring.session.progress_notifications import (
     LiveMeasurementAvailableNotification,
 )
-from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementTableModel
+from openhcs.authoring.session.operations.datasets import ShowLiveResults
+from tests.unit.pyqt_gui.session_harness import caller_session
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,13 +54,18 @@ class _PlateRow:
 
 
 class _Manager:
-    def __init__(self) -> None:
+    """The widget surface the providers read: its session and list selection."""
+
+    def __init__(self, session) -> None:
+        self.session = session
         self.plates = [_PlateRow("plate-1"), _PlateRow("plate-2")]
         self.selected = [self.plates[0]]
-        self.live_measurement_model = LiveMeasurementTableModel()
 
     def get_selected_items(self) -> list[_PlateRow]:
         return list(self.selected)
+
+    def selection_scope_ids(self) -> tuple[str, ...]:
+        return tuple(row.scope_id for row in self.selected)
 
 
 class _InlineDispatcher:
@@ -152,7 +156,7 @@ def test_live_measurement_surface_is_declared_by_owning_widget() -> None:
         is PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration
     )
     assert declaration.payload_schema == "openhcs.ui.live_measurements_state.v1"
-    assert declaration.related_action_ids == (PlateManagerAction.VIEW_RESULTS.value,)
+    assert declaration.related_action_ids == (ShowLiveResults.operation_id,)
     assert declaration.surface_id in {
         declaration_type.require_value()
         for declaration_type in UiStateSurfaceIdentityDeclarationBase.__registry__.values()
@@ -209,97 +213,99 @@ def test_ast_inventory_finds_each_protocol_surface_only_on_its_widget_owner() ->
 
 
 def test_live_measurement_surface_projects_exact_bounded_preview_and_revision() -> None:
-    ObjectStateRegistry.clear()
-    manager = _Manager()
-    manager.live_measurement_model.add_notification(_notification())
-    bridge = _bridge(manager)
-    declaration = _live_measurement_declaration()
+    with caller_session() as session:
+        manager = _Manager(session)
+        session.live_measurements.add_notification(_notification())
+        bridge = _bridge(manager)
+        declaration = _live_measurement_declaration()
 
-    catalog = bridge.list_state_surfaces()
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=declaration.surface_id,
-            selection_mode=UiCodeDocumentSelectionMode.ALL.value,
+        catalog = bridge.list_state_surfaces()
+        state = bridge.get_state_surface(
+            UiStateSurfaceRequest(
+                surface_id=declaration.surface_id,
+                selection_mode=UiCodeDocumentSelectionMode.ALL.value,
+            )
         )
-    )
-    poll = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=declaration.surface_id,
-            selection_mode=UiCodeDocumentSelectionMode.ALL.value,
-            base_revision_token=state.current_revision_token,
+        poll = bridge.get_state_surface(
+            UiStateSurfaceRequest(
+                surface_id=declaration.surface_id,
+                selection_mode=UiCodeDocumentSelectionMode.ALL.value,
+                base_revision_token=state.current_revision_token,
+            )
         )
-    )
 
-    assert declaration.surface_id in {
-        surface.surface_id for surface in catalog.surfaces
-    }
-    assert state.payload_schema == declaration.payload_schema
-    assert state.payload["retained_entry_count"] == 1
-    assert state.payload["visible_entry_count"] == 1
-    assert state.payload["total_row_count"] == 3
-    entry = state.payload["entries"][0]
-    assert entry["execution_id"] == "execution-1"
-    assert entry["plate_id"] == "plate-1"
-    assert entry["step_name"] == "Neurite Outgrowth"
-    assert entry["preview"]["columns"] == ["label_id", "neurite_length_px"]
-    assert entry["preview"]["rows"][0] == {
-        "label_id": 1,
-        "neurite_length_px": 160.0,
-    }
-    assert entry["preview"]["row_count"] == 3
-    assert entry["preview"]["truncated_rows"] is True
-    assert entry["preview"]["object_name"] == "neurons"
-    assert entry["preview"]["materialized_locations"] == [
-        {
-            "path": "/results/B03_per_neuron_measurements.csv",
-            "backend": "disk",
+        assert declaration.surface_id in {
+            surface.surface_id for surface in catalog.surfaces
         }
-    ]
-    assert poll.unchanged is True
+        assert state.payload_schema == declaration.payload_schema
+        assert state.payload["retained_entry_count"] == 1
+        assert state.payload["visible_entry_count"] == 1
+        assert state.payload["total_row_count"] == 3
+        entry = state.payload["entries"][0]
+        assert entry["execution_id"] == "execution-1"
+        assert entry["plate_id"] == "plate-1"
+        assert entry["step_name"] == "Neurite Outgrowth"
+        assert entry["preview"]["columns"] == ["label_id", "neurite_length_px"]
+        assert entry["preview"]["rows"][0] == {
+            "label_id": 1,
+            "neurite_length_px": 160.0,
+        }
+        assert entry["preview"]["row_count"] == 3
+        assert entry["preview"]["truncated_rows"] is True
+        assert entry["preview"]["object_name"] == "neurons"
+        assert entry["preview"]["materialized_locations"] == [
+            {
+                "path": "/results/B03_per_neuron_measurements.csv",
+                "backend": "disk",
+                "table_header": None,
+                "table_row_count": None,
+            }
+        ]
+        assert poll.unchanged is True
 
 
 def test_live_measurement_surface_honors_plate_selection_and_populates_overview() -> (
     None
 ):
-    ObjectStateRegistry.clear()
-    manager = _Manager()
-    manager.live_measurement_model.add_notification(_notification())
-    bridge = _bridge(manager)
-    declaration = _live_measurement_declaration()
+    with caller_session() as session:
+        manager = _Manager(session)
+        session.live_measurements.add_notification(_notification())
+        bridge = _bridge(manager)
+        declaration = _live_measurement_declaration()
 
-    selected = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=declaration.surface_id,
-            selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+        selected = bridge.get_state_surface(
+            UiStateSurfaceRequest(
+                surface_id=declaration.surface_id,
+                selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+            )
         )
-    )
-    overview = bridge.get_state_surface(
-        UiStateSurfaceRequest(surface_id="ui_live_overview.state")
-    )
-    section = next(
-        item
-        for item in overview.payload["sections"]
-        if item["section_id"] == declaration.surface_id
-    )
-
-    assert selected.selected_scope_ids == ("plate-1",)
-    assert selected.payload["visible_entry_count"] == 1
-    assert section["metrics"][0] == {
-        "key": "tables",
-        "label": "tables",
-        "value": "1",
-    }
-    assert section["metrics"][1]["value"] == "3"
-    assert section["items"][0]["label"] == ("Neurite Outgrowth: PerNeuronMeasurements")
-
-    manager.selected = [manager.plates[1]]
-    filtered = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=declaration.surface_id,
-            selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+        overview = bridge.get_state_surface(
+            UiStateSurfaceRequest(surface_id="ui_live_overview.state")
         )
-    )
+        section = next(
+            item
+            for item in overview.payload["sections"]
+            if item["section_id"] == declaration.surface_id
+        )
 
-    assert filtered.selected_scope_ids == ("plate-2",)
-    assert filtered.payload["visible_entry_count"] == 0
-    assert filtered.payload["entries"] == []
+        assert selected.selected_scope_ids == ("plate-1",)
+        assert selected.payload["visible_entry_count"] == 1
+        assert section["metrics"][0] == {
+            "key": "tables",
+            "label": "tables",
+            "value": "1",
+        }
+        assert section["metrics"][1]["value"] == "3"
+        assert section["items"][0]["label"] == ("Neurite Outgrowth: PerNeuronMeasurements")
+
+        manager.selected = [manager.plates[1]]
+        filtered = bridge.get_state_surface(
+            UiStateSurfaceRequest(
+                surface_id=declaration.surface_id,
+                selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+            )
+        )
+
+        assert filtered.selected_scope_ids == ("plate-2",)
+        assert filtered.payload["visible_entry_count"] == 0
+        assert filtered.payload["entries"] == []

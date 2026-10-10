@@ -11,7 +11,7 @@ from openhcs.agent.dto.execution import PipelineSourceArtifactPlanInspectionRequ
 from openhcs.agent.dto.plate import PlatePathInspectionRequest
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.agent.services.execution_session_service import ExecutionSessionService
+from openhcs.agent.services.artifact_plan_inspection_service import ArtifactPlanInspectionService
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.core.config import LazyWellFilterConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
@@ -200,11 +200,10 @@ def test_explicit_inspection_and_artifact_plan_reach_opera_axes(
             pipeline_steps=[FunctionStep(func=percentile_normalize)],
         )
     )
-    artifact_plan = ExecutionSessionService(
+    artifact_plan = ArtifactPlanInspectionService(
         path_policy=path_policy,
-        pipeline_service=object(),
         config_service=ConfigService(),
-    ).inspect_pipeline_source_artifact_plan_request(
+    ).inspect(
         PipelineSourceArtifactPlanInspectionRequest.from_fields(
             plate_path=str(tmp_path),
             pipeline_source=pipeline_source,

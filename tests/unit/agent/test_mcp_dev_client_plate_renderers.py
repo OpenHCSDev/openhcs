@@ -1,6 +1,7 @@
 """Plate renderer family over typed DTO fixtures."""
 
 from __future__ import annotations
+from openhcs.agent.dto.session import DatasetRowState
 
 import sys
 from dataclasses import replace
@@ -35,7 +36,6 @@ from openhcs.agent.dto.plate import (
     SelectedPlateImageSampleResult,
     SyntheticPlateGenerationResult,
 )
-from openhcs.agent.dto.ui_bridge import UiPlateManagerRowState
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.synthetic_plate_generation import SyntheticPlateFormat
@@ -68,11 +68,11 @@ def render(value) -> str:
     return renderer.render(response)
 
 
-def row(**changes) -> UiPlateManagerRowState:
+def row(**changes) -> DatasetRowState:
     return replace(
-        UiPlateManagerRowState(
-            plate_scope_id="/plates/a", name="plate-a", plate_root="/plates/a",
-            cppipe_path=None, selected=True, initialized=True, compiled=False,
+        DatasetRowState(
+            scope_id="/plates/a", name="plate-a", root="/plates/a",
+            pipeline_path=None, selected=True, initialized=True, compiled=False,
             init_pending=False, compile_pending=False, execution_active=False,
             status_prefix="", orchestrator_state=None, execution_id=None,
             terminal_status=None, runtime_state=None, runtime_percent=None,
@@ -320,7 +320,7 @@ def test_selected_plate_images_render_the_nested_inspection(target, command):
 
 
 def test_selected_plate_files_hint_related_output_only_for_an_empty_selected_query():
-    selected_row = to_jsonable(row(output_plate_root="/plates/a_out"))
+    selected_row = to_jsonable(row(output_root="/plates/a_out"))
     empty = query(total_count=0, returned_count=0, truncated_count=0, records=())
     text = render(
         SelectedPlateFileQueryResult(

@@ -348,9 +348,11 @@ class PipelineStepsView(SessionView):
     def state_of(
         cls,
         session: "Session",
+        scope_id: str,
         selected_step_scope_ids: tuple[str, ...] = (),
     ) -> PipelineStepsState:
-        scope_id = session.current_scope_id
+        """One dataset's steps ("" for no dataset)."""
+
         if not scope_id:
             return PipelineStepsState(
                 scope_id=None,

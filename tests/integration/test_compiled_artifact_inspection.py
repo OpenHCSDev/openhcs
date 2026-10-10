@@ -8,7 +8,6 @@ import threading
 import time
 from collections import OrderedDict
 from contextlib import contextmanager
-from types import SimpleNamespace
 
 from zmqruntime import TcpDataControlPortPairAuthority
 from zmqruntime.config import TransportMode
@@ -50,25 +49,16 @@ from openhcs.core.runtime_stores import (
     RuntimeArtifactLocation,
     RuntimeValueStore,
 )
-from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.widgets.artifact_plan_view import ArtifactPlanViewModel
-from openhcs.authoring.session.compilation import (
-    CompileWorkflowService,
-    PlateCompiledState,
-)
-from openhcs.authoring.session.progress_notifications import (
-    DebugProgressNotificationService,
-)
-from openhcs.authoring.session.server_status import (
-    ExecutionServerStatusPresenter,
-)
-from openhcs.authoring.session.progress import (
-    ProgressWorkflowService,
-)
+from objectstate.object_state import ObjectStateRegistry
+from zmqruntime.messages import ExecutionRecord
+from openhcs.authoring.session.compilation import CompiledDataset, wait_for_compile
+from openhcs.authoring.session.events import RuntimeArtifactAvailable
 from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
-    RuntimeArtifactProgressNotificationService,
 )
+from openhcs.authoring.session.session import CallerThread, Session
+from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.zmq_compilation import (
     ZMQCompilationResult,
     ZMQCompileArtifactRecord,
@@ -80,40 +70,6 @@ from openhcs.runtime.zmq_control import (
 )
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
-
-
-class ImmediateBlockingContext:
-    async def run_blocking(self, loop, operation):
-        del loop
-        return operation()
-
-
-class RecordingProgressTracker:
-    def __init__(self) -> None:
-        self.events: list[tuple[str, ProgressEvent]] = []
-        self.mutation_listeners = []
-
-    def register_event(self, execution_id: str, event: ProgressEvent) -> bool:
-        self.events.append((execution_id, event))
-        for listener in tuple(self.mutation_listeners):
-            listener(object())
-        return True
-
-    def subscribe_mutations(self, listener):
-        self.mutation_listeners.append(listener)
-        return RecordingMutationSubscription(self.mutation_listeners, listener)
-
-
-class RecordingMutationSubscription:
-    def __init__(self, listeners, listener) -> None:
-        self._listeners = listeners
-        self._listener = listener
-
-    def release(self) -> bool:
-        if self._listener not in self._listeners:
-            return False
-        self._listeners.remove(self._listener)
-        return True
 
 
 @contextmanager
@@ -276,18 +232,13 @@ def test_compiled_bundle_populates_static_view_then_runtime_enriches_same_row() 
             ).inspection
 
     inspection = asyncio.run(
-        CompileWorkflowService(
-            context=ImmediateBlockingContext()
-        ).wait_for_compile_completion(
-            zmq_client=RoutedClient(),
-            loop=object(),
-            execution_id="compile-1",
-            plate_path="/plates/one",
+        wait_for_compile(
+            RoutedClient(), execution_id="compile-1", scope_id="/plates/one"
         )
     )
-    state = PlateCompiledState(
+    state = CompiledDataset(
         compile_artifact_id="compile-1",
-        definition_pipeline=(),
+        steps=(),
         inspection=inspection,
     )
     static_model = ArtifactPlanViewModel.from_inspection(
@@ -345,15 +296,7 @@ def test_artifact_ui_inspection_crosses_live_zmq_from_server_compiled_record() -
     record, output_plan = _compiled_record()
 
     with _live_artifact_server(record) as (_server, client):
-        inspection = asyncio.run(
-            CompileWorkflowService(
-                context=ImmediateBlockingContext()
-            ).inspect_compile_artifact(
-                zmq_client=client,
-                loop=object(),
-                compile_artifact_id=record.execution_id,
-            )
-        )
+        inspection = client.get_compiled_artifact_inspection(record.execution_id)
 
     model = ArtifactPlanViewModel.from_inspection(inspection, step_index=0)
 
@@ -368,46 +311,40 @@ def test_spawned_worker_runtime_observation_crosses_server_zmq_to_artifact_ui() 
     record, _output_plan = _compiled_record()
 
     with _live_artifact_server(record) as (server, client):
-        inspection = asyncio.run(
-            CompileWorkflowService(
-                context=ImmediateBlockingContext()
-            ).inspect_compile_artifact(
-                zmq_client=client,
-                loop=object(),
-                compile_artifact_id=record.execution_id,
-            )
-        )
+        inspection = client.get_compiled_artifact_inspection(record.execution_id)
         model = {
             "value": ArtifactPlanViewModel.from_inspection(inspection, step_index=0)
         }
         notifications: list[RuntimeArtifactAvailableNotification] = []
         available = threading.Event()
-        runtime_artifacts = RuntimeArtifactProgressNotificationService()
 
-        def apply_runtime_notification(
-            notification: RuntimeArtifactAvailableNotification,
-        ) -> None:
+        def apply_runtime_notification(record) -> None:
+            if not isinstance(record.event, RuntimeArtifactAvailable):
+                return
+            notification = record.event.notification
             notifications.append(notification)
             model["value"] = model["value"].with_runtime_notification(notification)
             available.set()
 
-        runtime_artifacts.add_listener(apply_runtime_notification)
-        tracker = RecordingProgressTracker()
-        progress_service = ProgressWorkflowService(
-            host=SimpleNamespace(_progress_tracker=tracker),
-            context=SimpleNamespace(
-                zmq=SimpleNamespace(zmq_client=client),
-            ),
-            debug_notifications=DebugProgressNotificationService(),
-            status_presenter=ExecutionServerStatusPresenter(),
-            config=ProgressUIConfig(),
-            runtime_artifacts=runtime_artifacts,
+        ObjectStateRegistry.clear()
+        session = Session(
+            transport_config=OpenHCSZMQConfig(persistent=False),
+            global_config=GlobalPipelineConfig(),
+            main_thread=CallerThread(),
         )
-        client.progress_callback = progress_service.on_progress
+        session.subscribe(apply_runtime_notification)
+        client.progress_callback = session.progress.on_progress
         client.enable_progress_stream()
         time.sleep(0.15)
 
         server._worker_assignments_by_execution["run-1"] = {"worker_0": ["A01"]}
+        # The server publishes progress only for executions it admitted.
+        server.active_executions["run-1"] = ExecutionRecord(
+            execution_id="run-1",
+            plate_id="/plates/one",
+            client_address=None,
+            status="running",
+        )
         multiprocessing_context = multiprocessing.get_context("spawn")
         worker_queue = multiprocessing_context.Queue()
         progress_forwarder = threading.Thread(
@@ -434,11 +371,15 @@ def test_spawned_worker_runtime_observation_crosses_server_zmq_to_artifact_ui() 
             worker_queue.close()
             worker_queue.join_thread()
             server._worker_assignments_by_execution.pop("run-1", None)
+            server.active_executions.pop("run-1", None)
 
         assert available.wait(timeout=5.0)
+        tracked = session.progress_tracker.get_events("run-1")
+        session.close()
+        ObjectStateRegistry.clear()
 
     assert len(notifications) == 1
-    assert tracker.events == [("run-1", notifications[0].event)]
+    assert list(tracked) == [notifications[0].event]
     assert notifications[0].event.worker_assignments == {"worker_0": ["A01"]}
     assert model["value"].rows[0].runtime_location == ("memory:/memory/ResultImage.pkl")
     assert model["value"].rows[0].value_type == "bytes"

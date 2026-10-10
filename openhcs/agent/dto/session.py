@@ -10,6 +10,7 @@ from openhcs.agent.dto.common import (
     AgentError,
     AgentWarning,
 )
+from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +43,9 @@ class DatasetRunRequest(AgentDataclassCliRequest):
 
     scope_ids: tuple[str, ...]
     runtime_observation_export_path: str | None = None
-    runtime_observation_export_scope: str = "values"
+    runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
+        ZMQRuntimeObservationExportScope.VALUES
+    )
 
 
 @dataclass(frozen=True, slots=True)

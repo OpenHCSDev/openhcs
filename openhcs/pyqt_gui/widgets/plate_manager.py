@@ -166,7 +166,7 @@ class PlateManagerWidget(
     STATE_BINDING = ManagerStateBinding(
         items_attr="plates",
         selection_attr="selected_plate_path",
-        selection_signal_attr="plate_selected",
+        selection_signal_attr="list_selection_changed",
     )
     ITEM_HOOKS = ManagerItemHooks(
         id_projection=AttributeItemIdProjection("scope_id"),
@@ -177,6 +177,10 @@ class PlateManagerWidget(
         preview_line=("num_workers",),
         detail_line_field="path",
     )
+
+    # A row click selects in the session; plate_selected then projects the
+    # session's SelectionChanged, so each selection is announced once.
+    list_selection_changed = pyqtSignal(str)
 
     # Qt projections of session events, for other GUI components.
     plate_selected = pyqtSignal(str)

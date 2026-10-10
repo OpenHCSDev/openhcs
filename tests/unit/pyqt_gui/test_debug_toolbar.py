@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from types import SimpleNamespace
+from contextlib import contextmanager
+from dataclasses import dataclass
 
-from metaclass_registry import AutoRegisterMeta
 from objectstate.lazy_factory import PREVIEW_LABEL_REGISTRY
 from PyQt6.QtWidgets import QApplication
 from pyqt_reactive.theming import ColorScheme
@@ -23,7 +23,10 @@ from openhcs.core.debug import (
     FileManagerDebugSnapshotStore,
 )
 from openhcs.core.debug_views import DebugViewModel
-from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.authoring.session.progress_notifications import (
+    DebugSnapshotAvailableNotification,
+)
+from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutionStatus
 from openhcs.core.progress import (
     ProgressEvent,
     ProgressIdentity,
@@ -31,16 +34,8 @@ from openhcs.core.progress import (
     ProgressStatus,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.pyqt_gui.services.plate_manager_batch_workflow import (
-    DebugSnapshotAvailableNotification,
-    PlateManagerBatchWorkflow,
-)
-from openhcs.authoring.session.execution_batch import (
-    ExecutionBatchRuntime,
-)
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     PipelineDebugPauseBoundaryState,
     PipelineDebugSessionContext,
@@ -50,12 +45,14 @@ from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     PipelineDebugActionDeclarationBase,
     PipelineDebugCommandActionDeclaration,
 )
-from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
-    PipelineEditorDebugWorkflow,
-    PipelineEditorFunctionPresentation,
-)
 from openhcs.pyqt_gui.windows.debug_inspector_window import (
     DebugArtifactMaterializeRequest,
+)
+from tests.unit.pyqt_gui.session_harness import (
+    GuiServiceStub,
+    add_datasets,
+    caller_session,
+    qt_app,
 )
 
 
@@ -279,244 +276,6 @@ def test_debug_toolbar_disables_run_to_pause_without_pause_boundary() -> None:
     )
 
 
-class StatusSignalRecorder:
-    """Signal-like recorder for command routing tests."""
-
-    def __init__(self) -> None:
-        self.messages: list[str] = []
-
-    def emit(self, message: str) -> None:
-        self.messages.append(message)
-
-
-class PlateManagerStopRecorder:
-    """Plate-manager seam used by the pipeline editor stop command."""
-
-    def __init__(self) -> None:
-        self.stop_calls = 0
-        self.force_values: list[bool | None] = []
-
-    def action_stop_execution(self, force: bool | None = None) -> None:
-        self.stop_calls += 1
-        self.force_values.append(force)
-
-
-class PlateManagerRunRecorder:
-    """Plate-manager seam used by debug run dispatch tests."""
-
-    def __init__(self) -> None:
-        self.run_calls = []
-        self.terminal_summary = None
-        self.debug_session_state = None
-        self.execution_state = ManagerExecutionState.IDLE
-
-    async def action_run_debug_plate(self, plate_path, **kwargs):
-        self.run_calls.append((plate_path, kwargs))
-
-    async def action_export_debug_artifact(self, **kwargs) -> None:
-        self.run_calls.append(("export", kwargs))
-
-    async def action_inspect_debug_runtime(self, *, debug_session_id: str):
-        return DebugViewModel(
-            title=f"Runtime {debug_session_id}",
-            sections=(),
-        )
-
-    def debug_terminal_summary_for_plate(self, plate_path: str):
-        del plate_path
-        return self.terminal_summary
-
-    def debug_session_for_plate(self, plate_path: str):
-        del plate_path
-        return self.debug_session_state
-
-    def debug_session_context_for_plate(
-        self,
-        plate_path: str,
-    ) -> PipelineDebugSessionContext:
-        return PipelineDebugSessionContext(
-            target=PipelineDebugTargetState(
-                current_plate_scope_id=plate_path,
-                pipeline_scope_id="plate::pipeline",
-                initialized=True,
-                compiled=True,
-            ),
-            session=self.debug_session_for_plate(plate_path),
-            terminal_summary=self.debug_terminal_summary_for_plate(plate_path),
-            manager_execution_state=self.execution_state,
-        )
-
-
-class DebugBatchWorkflowRecorder:
-    """Batch workflow seam for paused-worker GUI command routing tests."""
-
-    require_execution_admission = PlateManagerBatchWorkflow.require_execution_admission
-
-    def __init__(self, host) -> None:
-        self.host = host
-        self.run_calls = []
-        self.worker_commands = []
-
-    async def run_debug_plate(self, **kwargs) -> None:
-        self.run_calls.append(kwargs)
-
-    async def send_debug_worker_command(
-        self,
-        *,
-        debug_session_id: str,
-        command_type: DebugCommandType,
-    ) -> None:
-        self.worker_commands.append((debug_session_id, command_type))
-
-
-class PlateManagerDebugHarness:
-    """Minimal plate-manager state used by paused-worker UX tests."""
-
-    plate_has_active_work = PlateManagerWidget.plate_has_active_work
-    plate_has_pending_definition_work = (
-        PlateManagerWidget.plate_has_pending_definition_work
-    )
-    require_pipeline_definition_mutation_allowed = (
-        PlateManagerWidget.require_pipeline_definition_mutation_allowed
-    )
-
-    def __init__(self) -> None:
-        self._active_debug_sessions = {}
-        self._debug_terminal_summaries_by_plate = {}
-        self.manager_execution_state_changed = StatusSignalRecorder()
-        self.execution_state = ManagerExecutionState.IDLE
-        self._batch_workflow_service = DebugBatchWorkflowRecorder(self)
-        self.execution_error = StatusSignalRecorder()
-        self.export_calls = []
-        self.item_updates = 0
-        self.button_updates = 0
-        self.plate_terminal_activity_status = ExecutionBatchRuntime()
-        self.plate_init_pending = set()
-        self.plate_compile_pending = set()
-
-    def get_selected_items(self) -> list[dict[str, str]]:
-        return []
-
-    async def action_export_debug_artifact(self, **kwargs) -> None:
-        self.export_calls.append(kwargs)
-
-    def debug_session_for_plate(self, plate_path: str) -> DebugSession | None:
-        return self._active_debug_sessions.get(plate_path)
-
-    def debug_terminal_summary_for_plate(self, plate_path: str):
-        del plate_path
-        return None
-
-    def update_item_list(self) -> None:
-        self.item_updates += 1
-
-    def update_button_states(self) -> None:
-        self.button_updates += 1
-
-
-class PipelineEditorDebugStateRecorder:
-    """Pipeline-editor state used by terminal debug-session cleanup tests."""
-
-    def __init__(self, session: DebugSession) -> None:
-        self.current_plate = None if session.plate_id is None else session.plate_id
-        self.debug_session_state: DebugSession | None = session
-        self.debug_terminal_summary = None
-        self.item_updates = 0
-        self.button_updates = 0
-
-    def update_item_list(self) -> None:
-        self.item_updates += 1
-
-    def update_button_states(self) -> None:
-        self.button_updates += 1
-
-
-class ImmediatePipelineEditorCoroutineRunner:
-    """Test runner that executes workflow coroutines synchronously."""
-
-    def __init__(self, editor) -> None:
-        self.editor = editor
-
-    def submit(self, coroutine) -> None:
-        asyncio.run(coroutine)
-
-
-class PipelineEditorHarnessBase(metaclass=AutoRegisterMeta):
-    """Shared pipeline-editor harness fields for debug command tests."""
-
-    __registry_key__ = "registry_key"
-    __skip_if_no_key__ = True
-    registry_key = None
-
-    def __init__(self, plate_manager) -> None:
-        self.plate_manager = plate_manager
-        self.status_message = StatusSignalRecorder()
-        self.debug_workflow = PipelineEditorDebugWorkflow(self)
-        self.function_presentation = PipelineEditorFunctionPresentation(self)
-        self.pipeline_steps = []
-
-
-class PipelineEditorCommandHarness(PipelineEditorHarnessBase):
-    """Minimal object carrying the attributes used by debug command dispatch."""
-
-    registry_key = "command"
-
-    def __init__(self, plate_manager: PlateManagerStopRecorder | None) -> None:
-        super().__init__(plate_manager)
-        self.debug_run_commands: list[DebugCommandType] = []
-
-
-class PipelineEditorRunHarness(PipelineEditorHarnessBase):
-    """Minimal object carrying attributes used by debug run dispatch."""
-
-    registry_key = "run"
-
-    def __init__(self) -> None:
-        super().__init__(PlateManagerRunRecorder())
-        self.current_plate = "plate"
-        self.debug_session_state = None
-        self.debug_terminal_summary = None
-        self.debug_inspector_window = None
-        self.pipeline_steps = [
-            FunctionStep(func=lambda image: image, name="first"),
-            FunctionStep(func=lambda image: image, name="pause", debug_pause=True),
-        ]
-
-    def debug_session_context(self) -> PipelineDebugSessionContext:
-        return PipelineEditorWidget.debug_session_context(self)
-
-
-class PipelineEditorDirtyHarness(PipelineEditorHarnessBase):
-    """Minimal object carrying state used by debug dirty invalidation."""
-
-    registry_key = "dirty"
-
-    def __init__(self) -> None:
-        super().__init__(PlateManagerRunRecorder())
-        cursor = DebugCursor(
-            step_index=1,
-            step_scope_id="step-1",
-            group_key="default",
-            invocation_key="default:0:segment",
-        )
-        self.current_plate = "plate"
-        self.saved = []
-        self._suppress_pipeline_state_sync = False
-        self.debug_session_state = DebugSession.create(plate_id="plate").with_cursor(
-            cursor
-        )
-        self.debug_terminal_summary = None
-
-    def save_pipeline_for_plate(self, plate, steps) -> None:
-        self.saved.append((plate, steps))
-
-    def notify_pipeline_definition_changed(self, plate) -> None:
-        return None
-
-    def _publish_pipeline_definition_change(self, plate, steps) -> None:
-        PipelineEditorWidget._publish_pipeline_definition_change(self, plate, steps)
-
-
 class DebugInspectorRecorder:
     """Recorder replacing the heavy Qt inspector in route tests."""
 
@@ -550,10 +309,6 @@ class DebugInspectorRecorder:
         self.raise_calls += 1
 
 
-class FileManagerRecorder:
-    """FileManager identity used by VFS debug snapshot route tests."""
-
-
 class SignalConnectRecorder:
     """Signal-like object that records connected callables."""
 
@@ -564,51 +319,351 @@ class SignalConnectRecorder:
         self.connected.append(callback)
 
 
-class PipelineEditorSnapshotHarness:
-    """Minimal object carrying the attributes used by snapshot display."""
+@dataclass
+class DebugEditor:
+    """A pipeline editor over a session with one dataset whose work is recorded."""
 
-    def __init__(self) -> None:
-        self.status_message = StatusSignalRecorder()
-        self.debug_inspector_window = None
-        self.filemanager = FileManagerRecorder()
-        self.service_adapter = self
-        self.plate_manager = None
-        self.debug_session_state = None
-        self.debug_terminal_summary = None
-        self.debug_workflow = PipelineEditorDebugWorkflow(self)
-        self.button_state_updates = 0
-        self.item_updates = 0
+    session: object
+    scope_id: str
+    editor: PipelineEditorWidget
+    started: list
+    messages: list[str]
 
-    def get_file_manager(self) -> FileManagerRecorder:
-        return self.filemanager
+    @property
+    def workflow(self):
+        return self.editor.debug_workflow
 
-    def update_item_list(self) -> None:
-        self.item_updates += 1
+    def debug_runs(self) -> list[dict]:
+        return [
+            {"scope_id": args[0], **kwargs}
+            for work, args, kwargs in self.started
+            if work == self.session.run_debug
+        ]
 
-    def update_button_states(self) -> None:
-        self.button_state_updates += 1
 
-    def _handle_debug_artifact_export_request(self, request) -> None:
-        self.debug_workflow.handle_artifact_export_request(request)
+@contextmanager
+def debug_editor(tmp_path, monkeypatch, *, run_started_work: bool = False):
+    app = qt_app()
+    with caller_session() as session:
+        (scope_id,) = add_datasets(session, tmp_path, "plate")
+        orchestrator = session.orchestrator(scope_id)
+        orchestrator._state = type(orchestrator.state).READY
+        session.set_pipeline(
+            scope_id,
+            [
+                FunctionStep(func=_identity, name="first"),
+                FunctionStep(func=_identity, name="paused", debug_pause=True),
+                FunctionStep(func=_identity, name="last"),
+            ],
+        )
+        started = []
 
-    def _handle_debug_artifact_open_request(self, request) -> None:
-        self.debug_workflow.handle_artifact_open_request(request)
+        def start(work, *args, **kwargs):
+            started.append((work, args, kwargs))
+            if run_started_work:
+                asyncio.run(work(*args, **kwargs))
+
+        monkeypatch.setattr(session, "start", start)
+        editor = PipelineEditorWidget(GuiServiceStub(file_manager=object()), session)
+        messages: list[str] = []
+        editor.status_message.connect(messages.append)
+        app.processEvents()
+        try:
+            yield DebugEditor(session, scope_id, editor, started, messages)
+        finally:
+            editor.close()
+
+
+def _identity(image):
+    return image
+
+
+def segment(image):
+    return image
+
+
+def finish(image):
+    return image
+
+
+def _cursor(step_index: int, invocation: str) -> DebugCursor:
+    return DebugCursor(
+        step_index=step_index,
+        step_scope_id=f"step-{step_index}",
+        group_key="default",
+        invocation_key=f"default:0:{invocation}",
+    )
+
+
+def test_pipeline_editor_routes_stop_debug_command_to_the_session(
+    tmp_path, monkeypatch
+) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        stops = []
+        monkeypatch.setattr(harness.session, "stop_execution", stops.append)
+
+        harness.workflow.handle_command(DebugCommand(DebugCommandType.STOP))
+
+        assert stops == [True]
+        assert harness.messages[-1] == "Requested debug execution stop."
+
+
+def test_pipeline_editor_has_route_for_every_debug_command() -> None:
+    command_types = {
+        declaration.command_type()
+        for declaration in PipelineDebugActionDeclarationBase.__registry__.values()
+        if issubclass(declaration, PipelineDebugCommandActionDeclaration)
+    }
+    assert command_types == set(DebugCommandType)
+
+
+def test_streaming_preview_label_is_declared_on_config_class() -> None:
+    assert PREVIEW_LABEL_REGISTRY[NapariStreamingConfig] == "NAP"
+
+
+def test_pipeline_editor_dispatches_pause_step_indices(tmp_path, monkeypatch) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        assert harness.workflow.pause_step_indices() == (1,)
+
+        harness.workflow.run_command(DebugCommandType.RUN_TO_PAUSE)
+
+        assert harness.debug_runs() == [
+            {
+                "scope_id": harness.scope_id,
+                "command_type": DebugCommandType.RUN_TO_PAUSE,
+                "pause_step_indices": (1,),
+                "start_step_index": 0,
+                "start_after_invocation_key": None,
+            }
+        ]
+        assert "Submitting debug run to pause" in harness.messages[-1]
+
+
+def test_pipeline_editor_step_advances_from_the_current_invocation(
+    tmp_path, monkeypatch
+) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
+            plate_id=harness.scope_id
+        ).with_cursor(_cursor(1, "segment"))
+
+        harness.workflow.handle_command(DebugCommand(DebugCommandType.STEP))
+
+        (run,) = harness.debug_runs()
+        assert run["command_type"] is DebugCommandType.STEP
+        assert run["start_step_index"] == 1
+        assert run["start_after_invocation_key"] == "default:0:segment"
+
+
+def test_pipeline_editor_restarts_from_the_dirty_debug_cursor(
+    tmp_path, monkeypatch
+) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_sessions[harness.scope_id] = (
+            DebugSession.create(plate_id=harness.scope_id)
+            .with_cursor(_cursor(1, "segment"))
+            .mark_dirty_from_cursor()
+        )
+
+        harness.workflow.run_command(DebugCommandType.RESTART)
+
+        (run,) = harness.debug_runs()
+        assert run["start_step_index"] == 1
+
+
+def test_pipeline_editor_step_replays_from_terminal_debug_cursor(
+    tmp_path, monkeypatch
+) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_terminal_summaries[harness.scope_id] = (
+            DebugTerminalSummary(
+                debug_session_id="debug-terminal",
+                plate_id=harness.scope_id,
+                terminal_status="complete",
+                cursor=_cursor(2, "measure"),
+                command_type=DebugCommandType.STEP,
+                axis_id="A01",
+            )
+        )
+
+        harness.workflow.run_command(DebugCommandType.STEP)
+
+        assert harness.debug_runs() == [
+            {
+                "scope_id": harness.scope_id,
+                "command_type": DebugCommandType.STEP,
+                "pause_step_indices": (1,),
+                "start_step_index": 2,
+                "start_after_invocation_key": "default:0:measure",
+            }
+        ]
+        assert harness.scope_id not in harness.session.debug_terminal_summaries
+
+
+def test_debug_context_prefers_terminal_state_over_a_stale_inspected_session(
+    tmp_path, monkeypatch
+) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.compiled[harness.scope_id] = object()
+        harness.session.inspected_debug_sessions[harness.scope_id] = (
+            DebugSession.create(
+                plate_id=harness.scope_id, execution_id="old-exec", axis_id="A01"
+            ).with_cursor(_cursor(0, "first"))
+        )
+        summary = DebugTerminalSummary(
+            debug_session_id="debug-terminal",
+            plate_id=harness.scope_id,
+            terminal_status="complete",
+            cursor=_cursor(2, "measure"),
+            command_type=DebugCommandType.STEP,
+            axis_id="A01",
+        )
+        harness.session.debug_terminal_summaries[harness.scope_id] = summary
+
+        context = harness.editor.debug_session_context()
+
+        assert context.active_session is None
+        assert context.phase.value == "terminal_complete"
+        assert context.terminal_summary is summary
+
+
+def test_runtime_inspection_renders_the_active_session(tmp_path, monkeypatch) -> None:
+    from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
+
+    monkeypatch.setattr(
+        pipeline_editor_workflows, "DebugInspectorWindow", DebugInspectorRecorder
+    )
+    with debug_editor(tmp_path, monkeypatch, run_started_work=True) as harness:
+        session = DebugSession.create(
+            plate_id=harness.scope_id, execution_id="exec-1", axis_id="A01"
+        )
+        harness.session.debug_sessions[harness.scope_id] = session
+        inspected = []
+
+        async def inspect_runtime(*, debug_session_id):
+            inspected.append(debug_session_id)
+            return DebugViewModel(title=f"Runtime {debug_session_id}", sections=())
+
+        monkeypatch.setattr(
+            harness.session.debug_runs, "inspect_runtime", inspect_runtime
+        )
+
+        harness.workflow.show_runtime_inspection()
+
+        inspector = harness.editor.debug_inspector_window
+        assert inspected == [session.debug_session_id]
+        assert inspector.inspection_view_models == [
+            DebugViewModel(title=f"Runtime {session.debug_session_id}", sections=())
+        ]
+        assert inspector.show_calls == 1
+        assert inspector.raise_calls == 1
+
+
+def test_runtime_inspection_requires_an_active_session(tmp_path, monkeypatch) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.workflow.show_runtime_inspection()
+
+        assert harness.started == []
+        assert harness.messages[-1] == (
+            "Runtime inspection requires an active debug session."
+        )
+
+
+def test_pipeline_change_marks_the_debug_session_dirty(tmp_path, monkeypatch) -> None:
+    from openhcs.authoring.session.events import StatusReported
+
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
+            plate_id=harness.scope_id
+        ).with_cursor(_cursor(1, "segment"))
+        statuses = []
+        harness.session.subscribe(
+            lambda record: statuses.append(record.event.text)
+            if isinstance(record.event, StatusReported)
+            else None
+        )
+
+        harness.session.set_pipeline(
+            harness.scope_id, [FunctionStep(func=_identity, name="changed")]
+        )
+
+        assert [
+            step.name for step in harness.session.pipeline_steps(harness.scope_id)
+        ] == ["changed"]
+        assert (
+            harness.session.debug_sessions[harness.scope_id].dirty_from_cursor
+            is not None
+        )
+        assert statuses == [
+            "Debug snapshots downstream of the current cursor are dirty."
+        ]
+
+
+def test_invocation_badges_mark_the_cursor_row_and_dirty_replay_start(
+    tmp_path, monkeypatch
+) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_sessions[harness.scope_id] = (
+            DebugSession.create(plate_id=harness.scope_id)
+            .with_cursor(_cursor(1, "segment"))
+            .mark_dirty_from_cursor()
+        )
+        presentation = harness.editor.function_presentation
+
+        def texts(step_index=None):
+            return tuple(
+                badge.text
+                for badge in presentation.invocation_badges(
+                    [segment, finish], step_index=step_index
+                )
+            )
+
+        assert texts() == ("default[0] segment", "default[1] finish")
+        assert texts(0) == ("default[0] segment", "default[1] finish")
+        assert texts(1) == ("▶ default[0] segment *", "default[1] finish")
+
+
+def test_badge_provider_uses_the_rendered_step_index(tmp_path, monkeypatch) -> None:
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
+            plate_id=harness.scope_id
+        ).with_cursor(_cursor(1, "segment"))
+        presentation = harness.editor.function_presentation
+        first = FunctionStep(func=segment, name="first")
+        second = FunctionStep(func=segment, name="second")
+
+        first_badges = presentation.badge_provider(first, step_index=0)
+        second_badges = presentation.badge_provider(second, step_index=1)
+
+        assert first_badges("default", 0, segment) is None
+        assert second_badges("default", 0, segment) == "▶ default[0] segment"
+
+
+def test_inactive_invocation_badges_stay_out_of_titles(tmp_path, monkeypatch) -> None:
+    def crop(image):
+        return image
+
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
+            plate_id=harness.scope_id
+        ).with_cursor(_cursor(1, "segment"))
+        presentation = harness.editor.function_presentation
+
+        badges = presentation.badge_provider(FunctionStep(func=crop), step_index=0)
+
+        assert badges("default", 0, crop) is None
+        assert presentation.format_func_preview(crop) == "func=crop"
 
 
 def debug_snapshot_notification(
+    scope_id: str,
     *,
     snapshot_store_backend: str | None,
 ) -> DebugSnapshotAvailableNotification:
-    cursor = DebugCursor(
-        step_index=1,
-        step_scope_id="plate::step-1",
-        group_key="default",
-        invocation_key="default:0:segment",
-    )
     debug_context = DebugProgressContext(
         debug_session_id="debug-1",
         snapshot_id="snap-1",
-        cursor=cursor,
+        cursor=_cursor(1, "segment"),
         event_type=DebugEventType.AFTER_INVOCATION,
         snapshot_store_ref="/debug",
         snapshot_store_backend=snapshot_store_backend,
@@ -617,7 +672,7 @@ def debug_snapshot_notification(
         progress_event=ProgressEvent(
             identity=ProgressIdentity(
                 execution_id="exec-1",
-                plate_id="plate",
+                plate_id=scope_id,
                 axis_id="A01",
                 step_name="step",
             ),
@@ -634,435 +689,40 @@ def debug_snapshot_notification(
     )
 
 
-def test_pipeline_editor_routes_stop_debug_command_to_plate_manager() -> None:
-    plate_manager = PlateManagerStopRecorder()
-    harness = PipelineEditorCommandHarness(plate_manager)
-
-    harness.debug_workflow.handle_command(DebugCommand(DebugCommandType.STOP))
-
-    assert plate_manager.stop_calls == 1
-    assert plate_manager.force_values == [True]
-    assert harness.status_message.messages == ["Requested debug execution stop."]
-
-
-def test_plate_manager_reuses_persistent_paused_worker_across_commands(
-    tmp_path,
-) -> None:
-    plate_path = str(tmp_path / "plate")
-    harness = PlateManagerDebugHarness()
-
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            harness,
-            plate_path,
-            command_type=DebugCommandType.RUN_TO_PAUSE,
-            pause_step_indices=(1,),
-        )
-    )
-    session = harness._active_debug_sessions[plate_path]
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            harness,
-            plate_path,
-            command_type=DebugCommandType.STEP,
-        )
-    )
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            harness,
-            plate_path,
-            command_type=DebugCommandType.RUN,
-        )
-    )
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            harness,
-            plate_path,
-            command_type=DebugCommandType.STOP,
-        )
-    )
-
-    assert harness._batch_workflow_service.run_calls == [
-        {
-            "plate_path": plate_path,
-            "debug_session_id": session.debug_session_id,
-            "snapshot_store_ref": str(tmp_path / ".openhcs_debug"),
-            "snapshot_store_backend": None,
-            "command_type": DebugCommandType.RUN_TO_PAUSE,
-            "selected_source_group": None,
-            "pause_step_indices": (1,),
-            "start_step_index": 0,
-            "start_after_invocation_key": None,
-            "replay_mode": DebugReplayMode.PERSISTENT_PAUSED_WORKER,
-        }
-    ]
-    assert harness._batch_workflow_service.worker_commands == [
-        (session.debug_session_id, DebugCommandType.STEP),
-        (session.debug_session_id, DebugCommandType.RUN),
-        (session.debug_session_id, DebugCommandType.STOP),
-    ]
-    assert plate_path not in harness._active_debug_sessions
-
-
-def test_plate_manager_completion_clears_matching_pipeline_editor_debug_session() -> (
-    None
-):
-    plate_path = "plate"
-    manager = PlateManagerDebugHarness()
-    session = DebugSession.create(plate_id=plate_path)
-    manager._active_debug_sessions[plate_path] = session
-
-    PlateManagerWidget._clear_debug_session_for_plate(manager, plate_path)
-
-    assert plate_path not in manager._active_debug_sessions
-    assert manager._debug_terminal_summaries_by_plate == {}
-
-
-def test_pipeline_editor_routes_step_debug_command_to_bounded_run(monkeypatch) -> None:
-    from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
-
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "PipelineEditorCoroutineRunner",
-        ImmediatePipelineEditorCoroutineRunner,
-    )
-    harness = PipelineEditorRunHarness()
-
-    harness.debug_workflow.handle_command(DebugCommand(DebugCommandType.STEP))
-
-    assert (
-        harness.plate_manager.run_calls[0][1]["command_type"] is DebugCommandType.STEP
-    )
-
-
-def test_pipeline_editor_has_route_for_every_debug_command() -> None:
-    command_types = {
-        declaration.command_type()
-        for declaration in PipelineDebugActionDeclarationBase.__registry__.values()
-        if issubclass(declaration, PipelineDebugCommandActionDeclaration)
-    }
-    assert command_types == set(DebugCommandType)
-
-
-def test_streaming_preview_label_is_declared_on_config_class() -> None:
-    assert PREVIEW_LABEL_REGISTRY[NapariStreamingConfig] == "NAP"
-
-
-def test_pipeline_editor_dispatches_pause_step_indices(monkeypatch) -> None:
-    from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
-
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "PipelineEditorCoroutineRunner",
-        ImmediatePipelineEditorCoroutineRunner,
-    )
-    harness = PipelineEditorRunHarness()
-
-    harness.debug_workflow.run_command(DebugCommandType.RUN_TO_PAUSE)
-
-    assert harness.plate_manager.run_calls == [
-        (
-            "plate",
-            {
-                "command_type": DebugCommandType.RUN_TO_PAUSE,
-                "pause_step_indices": (1,),
-                "start_step_index": 0,
-                "start_after_invocation_key": None,
-            },
-        )
-    ]
-    assert "Submitting debug run to pause" in harness.status_message.messages[0]
-
-
-def test_pipeline_editor_derives_pause_step_indices() -> None:
-    harness = PipelineEditorRunHarness()
-
-    assert harness.debug_workflow.pause_step_indices() == (1,)
-
-
-def test_pipeline_editor_restarts_from_dirty_debug_cursor() -> None:
-    harness = PipelineEditorDirtyHarness()
-
-    harness.debug_session_state = harness.debug_session_state.mark_dirty_from_cursor()
-
-    assert harness.debug_workflow.start_step_index(DebugCommandType.RESTART) == 1
-
-
-def test_pipeline_editor_step_advances_from_current_debug_invocation() -> None:
-    harness = PipelineEditorDirtyHarness()
-
-    assert harness.debug_workflow.start_step_index(DebugCommandType.STEP) == 1
-    assert (
-        harness.debug_workflow.start_after_invocation_key(DebugCommandType.STEP)
-        == "default:0:segment"
-    )
-
-
-def test_pipeline_editor_step_replays_from_terminal_debug_cursor(monkeypatch) -> None:
-    from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
-
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "PipelineEditorCoroutineRunner",
-        ImmediatePipelineEditorCoroutineRunner,
-    )
-    harness = PipelineEditorRunHarness()
-    cursor = DebugCursor(
-        step_index=2,
-        step_scope_id="step-2",
-        group_key="default",
-        invocation_key="default:0:measure",
-    )
-    harness.plate_manager.terminal_summary = DebugTerminalSummary(
-        debug_session_id="debug-terminal",
-        plate_id="plate",
-        terminal_status="complete",
-        cursor=cursor,
-        command_type=DebugCommandType.STEP,
-        axis_id="A01",
-    )
-
-    harness.debug_workflow.run_command(DebugCommandType.STEP)
-
-    assert harness.plate_manager.run_calls == [
-        (
-            "plate",
-            {
-                "command_type": DebugCommandType.STEP,
-                "pause_step_indices": (1,),
-                "start_step_index": 2,
-                "start_after_invocation_key": "default:0:measure",
-            },
-        )
-    ]
-
-
-def test_pipeline_editor_context_uses_manager_terminal_state_over_stale_local_session() -> (
-    None
-):
-    harness = PipelineEditorRunHarness()
-    local_cursor = DebugCursor(
-        step_index=0,
-        step_scope_id="step-0",
-        group_key="default",
-        invocation_key="default:0:first",
-    )
-    harness.debug_session_state = DebugSession.create(
-        plate_id="plate",
-        execution_id="old-exec",
-        axis_id="A01",
-    ).with_cursor(local_cursor)
-    terminal_cursor = DebugCursor(
-        step_index=2,
-        step_scope_id="step-2",
-        group_key="default",
-        invocation_key="default:0:measure",
-    )
-    harness.plate_manager.terminal_summary = DebugTerminalSummary(
-        debug_session_id="debug-terminal",
-        plate_id="plate",
-        terminal_status="complete",
-        cursor=terminal_cursor,
-        command_type=DebugCommandType.STEP,
-        axis_id="A01",
-    )
-
-    context = PipelineEditorWidget.debug_session_context(harness)
-
-    assert context.active_session is None
-    assert context.phase.value == "terminal_complete"
-    assert context.terminal_summary is harness.plate_manager.terminal_summary
-
-
-def test_pipeline_editor_runtime_inspection_posts_render_from_active_context(
-    monkeypatch,
+def test_snapshot_loads_from_the_vfs_store_and_moves_the_displayed_cursor(
+    tmp_path, monkeypatch
 ) -> None:
     from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
 
-    class ImmediateUiThreadDispatcher:
-        def post(self, callback) -> None:
-            callback()
-
     monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "PipelineEditorCoroutineRunner",
-        ImmediatePipelineEditorCoroutineRunner,
+        pipeline_editor_workflows, "DebugInspectorWindow", DebugInspectorRecorder
     )
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "DebugInspectorWindow",
-        DebugInspectorRecorder,
-    )
-    harness = PipelineEditorRunHarness()
-    harness.service_adapter = SimpleNamespace(
-        ui_dispatcher=ImmediateUiThreadDispatcher()
-    )
-    session = DebugSession.create(
-        plate_id="plate",
-        execution_id="exec-1",
-        axis_id="A01",
-    )
-    harness.debug_session_state = session
-
-    harness.debug_workflow.show_runtime_inspection()
-
-    inspector = harness.debug_inspector_window
-    assert inspector.inspection_view_models == [
-        DebugViewModel(
-            title=f"Runtime {session.debug_session_id}",
-            sections=(),
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.workflow.show_snapshot(
+            debug_snapshot_notification(
+                harness.scope_id, snapshot_store_backend="memory"
+            )
         )
-    ]
-    assert inspector.show_calls == 1
-    assert inspector.raise_calls == 1
+
+        inspector = harness.editor.debug_inspector_window
+        assert inspector.local_loads == []
+        ((store, snapshot_id),) = inspector.store_loads
+        assert isinstance(store, FileManagerDebugSnapshotStore)
+        assert store.filemanager is harness.editor.service_adapter.get_file_manager()
+        assert store.backend == "memory"
+        assert snapshot_id == "snap-1"
+        displayed = harness.session.displayed_debug_session(harness.scope_id)
+        assert displayed.debug_session_id == "debug-1"
+        assert displayed.cursor == _cursor(1, "segment")
+        assert inspector.artifact_export_requested.connected == [
+            harness.workflow.handle_artifact_export_request
+        ]
+        assert inspector.artifact_open_requested.connected == [
+            harness.workflow.handle_artifact_open_request
+        ]
 
 
-def test_pipeline_editor_marks_debug_session_dirty_on_pipeline_change() -> None:
-    harness = PipelineEditorDirtyHarness()
-    steps = [FunctionStep(func=lambda image: image, name="changed")]
-
-    PipelineEditorWidget.on_pipeline_changed(harness, steps)
-
-    assert harness.saved == [("plate", steps)]
-    assert harness.debug_session_state.dirty_from_cursor is not None
-    assert harness.status_message.messages == [
-        "Debug snapshots downstream of the current cursor are dirty."
-    ]
-
-
-def test_pipeline_editor_formats_invocation_badges_with_debug_cursor() -> None:
-    def segment(image):
-        return image
-
-    def finish(image):
-        return image
-
-    harness = PipelineEditorDirtyHarness()
-    harness.debug_session_state = harness.debug_session_state.mark_dirty_from_cursor()
-
-    badges = harness.function_presentation.invocation_badges([segment, finish])
-
-    assert tuple(badge.text for badge in badges) == (
-        "default[0] segment",
-        "default[1] finish",
-    )
-
-    non_cursor_row_badges = harness.function_presentation.invocation_badges(
-        [segment, finish],
-        step_index=0,
-    )
-    cursor_row_badges = harness.function_presentation.invocation_badges(
-        [segment, finish],
-        step_index=1,
-    )
-
-    assert tuple(badge.text for badge in non_cursor_row_badges) == (
-        "default[0] segment",
-        "default[1] finish",
-    )
-    assert tuple(badge.text for badge in cursor_row_badges) == (
-        "▶ default[0] segment *",
-        "default[1] finish",
-    )
-
-
-def test_pipeline_editor_badge_provider_uses_rendered_step_index() -> None:
-    def segment(image):
-        return image
-
-    harness = PipelineEditorDirtyHarness()
-    first = FunctionStep(func=segment, name="first")
-    second = FunctionStep(func=segment, name="second")
-    harness.pipeline_steps = [first, second]
-
-    first_badge_provider = harness.function_presentation.badge_provider(
-        first,
-        step_index=0,
-    )
-    second_badge_provider = harness.function_presentation.badge_provider(
-        second,
-        step_index=1,
-    )
-
-    assert first_badge_provider("default", 0, segment) is None
-    assert second_badge_provider("default", 0, segment) == "▶ default[0] segment"
-
-
-def test_pipeline_editor_hides_inactive_invocation_badges_from_titles() -> None:
-    def crop(image):
-        return image
-
-    harness = PipelineEditorDirtyHarness()
-    step = FunctionStep(func=crop)
-
-    badge_provider = harness.function_presentation.badge_provider(step, step_index=0)
-
-    assert badge_provider("default", 0, crop) is None
-    assert harness.function_presentation.format_func_preview(crop) == "func=crop"
-
-
-def test_pipeline_editor_reports_stop_without_plate_manager() -> None:
-    harness = PipelineEditorCommandHarness(None)
-
-    harness.debug_workflow.handle_command(DebugCommand(DebugCommandType.STOP))
-
-    assert harness.status_message.messages == [
-        "Debug stop requires a connected Plate Manager.",
-    ]
-
-
-def test_pipeline_editor_loads_vfs_debug_snapshot_store(monkeypatch) -> None:
-    from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
-
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "DebugInspectorWindow",
-        DebugInspectorRecorder,
-    )
-    harness = PipelineEditorSnapshotHarness()
-
-    harness.debug_workflow.show_snapshot(
-        debug_snapshot_notification(snapshot_store_backend="memory")
-    )
-
-    inspector = harness.debug_inspector_window
-    assert inspector.local_loads == []
-    assert len(inspector.store_loads) == 1
-    store, snapshot_id = inspector.store_loads[0]
-    assert isinstance(store, FileManagerDebugSnapshotStore)
-    assert store.filemanager is harness.filemanager
-    assert store.backend == "memory"
-    assert snapshot_id == "snap-1"
-    assert harness.item_updates == 1
-    assert harness.button_state_updates == 1
-
-
-def test_pipeline_editor_connects_debug_inspector_artifact_actions(monkeypatch) -> None:
-    from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
-
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "DebugInspectorWindow",
-        DebugInspectorRecorder,
-    )
-    harness = PipelineEditorSnapshotHarness()
-
-    harness.debug_workflow.show_snapshot(
-        debug_snapshot_notification(snapshot_store_backend="memory")
-    )
-
-    inspector = harness.debug_inspector_window
-    assert inspector.artifact_export_requested.connected == [
-        harness.debug_workflow.handle_artifact_export_request
-    ]
-    assert inspector.artifact_open_requested.connected == [
-        harness.debug_workflow.handle_artifact_open_request
-    ]
-
-
-def test_pipeline_editor_exports_debug_artifact_through_plate_manager(
-    monkeypatch,
-) -> None:
+def test_debug_artifact_export_runs_through_the_session(tmp_path, monkeypatch) -> None:
     from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
 
     monkeypatch.setattr(
@@ -1070,133 +730,124 @@ def test_pipeline_editor_exports_debug_artifact_through_plate_manager(
         "getExistingDirectory",
         lambda *_args, **_kwargs: "/tmp/debug-export",
     )
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "PipelineEditorCoroutineRunner",
-        ImmediatePipelineEditorCoroutineRunner,
-    )
-    harness = PipelineEditorSnapshotHarness()
-    harness.debug_session_state = DebugSession(
-        debug_session_id="debug-1",
-        snapshot_store_ref="/debug",
-        snapshot_store_backend="memory",
-    )
-    harness.plate_manager = PlateManagerRunRecorder()
-    artifact_ref = DebugArtifactRef(
-        kind=MeasurementsArtifactType,
-        name="Measurements",
-        cursor=DebugCursor(0, "scope", "default", "default:0:measure"),
-        storage_ref="/debug/measurements.csv",
-        storage_backend="memory",
-    )
-
-    harness.debug_workflow.handle_artifact_export_request(
-        DebugArtifactMaterializeRequest(artifact_ref=artifact_ref)
-    )
-
-    assert harness.plate_manager.run_calls == [
-        (
-            "export",
-            {
-                "debug_session_id": "debug-1",
-                "artifact_ref": artifact_ref,
-                "export_root": "/tmp/debug-export",
-                "snapshot_store_ref": "/debug",
-                "snapshot_store_backend": "memory",
-            },
+    with debug_editor(tmp_path, monkeypatch) as harness:
+        harness.session.debug_sessions[harness.scope_id] = DebugSession(
+            debug_session_id="debug-1",
+            plate_id=harness.scope_id,
+            snapshot_store_ref="/debug",
+            snapshot_store_backend="memory",
         )
-    ]
+        artifact_ref = DebugArtifactRef(
+            kind=MeasurementsArtifactType,
+            name="Measurements",
+            cursor=DebugCursor(0, "scope", "default", "default:0:measure"),
+            storage_ref="/debug/measurements.csv",
+            storage_backend="memory",
+        )
+
+        harness.workflow.handle_artifact_export_request(
+            DebugArtifactMaterializeRequest(artifact_ref=artifact_ref)
+        )
+
+        assert harness.started == [
+            (
+                harness.session.debug_runs.export_artifact,
+                (),
+                {
+                    "debug_session_id": "debug-1",
+                    "artifact_ref": artifact_ref,
+                    "export_root": "/tmp/debug-export",
+                    "snapshot_store_ref": "/debug",
+                    "snapshot_store_backend": "memory",
+                },
+            )
+        ]
 
 
-def test_debug_gui_workflow_runs_commands_inspects_snapshot_and_exports(
-    monkeypatch,
-    tmp_path,
+def test_session_reuses_the_persistent_paused_worker_across_commands(
+    tmp_path, monkeypatch
 ) -> None:
-    from openhcs.pyqt_gui.widgets.shared.services import pipeline_editor_workflows
+    with caller_session() as session:
+        (scope_id,) = add_datasets(session, tmp_path, "plate")
+        orchestrator = session.orchestrator(scope_id)
+        orchestrator._state = type(orchestrator.state).READY
+        compiled, submitted, worker_commands = [], [], []
 
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "DebugInspectorWindow",
-        DebugInspectorRecorder,
-    )
-    monkeypatch.setattr(
-        pipeline_editor_workflows.QFileDialog,
-        "getExistingDirectory",
-        lambda *_args, **_kwargs: str(tmp_path / "export"),
-    )
-    monkeypatch.setattr(
-        pipeline_editor_workflows,
-        "PipelineEditorCoroutineRunner",
-        ImmediatePipelineEditorCoroutineRunner,
-    )
+        async def connect():
+            return object()
 
-    plate_path = str(tmp_path / "plate")
-    plate_manager = PlateManagerDebugHarness()
-    editor = PipelineEditorSnapshotHarness()
-    editor.plate_manager = plate_manager
+        async def compile_artifact_id(request, debug_request):
+            compiled.append(debug_request)
+            return "debug-compile"
 
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            plate_manager,
-            plate_path,
-            command_type=DebugCommandType.RUN_TO_PAUSE,
-            pause_step_indices=(1,),
+        async def submit(request, *, compile_artifact_id, debug_request):
+            submitted.append((request.scope_id, compile_artifact_id))
+
+        async def send_worker_command(*, debug_session_id, command_type):
+            worker_commands.append((debug_session_id, command_type))
+
+        monkeypatch.setattr(session, "connect_client", connect)
+        monkeypatch.setattr(
+            session.debug_runs, "compile_artifact_id", compile_artifact_id
         )
-    )
-    session = plate_manager._active_debug_sessions[plate_path]
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            plate_manager,
-            plate_path,
-            command_type=DebugCommandType.STEP,
+        monkeypatch.setattr(session.debug_runs, "submit", submit)
+        monkeypatch.setattr(
+            session.debug_runs, "send_worker_command", send_worker_command
         )
-    )
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            plate_manager,
-            plate_path,
-            command_type=DebugCommandType.RUN,
-        )
-    )
 
-    editor.debug_workflow.show_snapshot(
-        debug_snapshot_notification(snapshot_store_backend="memory")
-    )
-    artifact_ref = DebugArtifactRef(
-        kind=MeasurementsArtifactType,
-        name="Measurements",
-        cursor=DebugCursor(0, "scope", "default", "default:0:measure"),
-        storage_ref="/debug/measurements.csv",
-        storage_backend="memory",
-    )
-    editor.debug_workflow.handle_artifact_export_request(
-        DebugArtifactMaterializeRequest(artifact_ref=artifact_ref)
-    )
-    asyncio.run(
-        PlateManagerWidget.action_run_debug_plate(
-            plate_manager,
-            plate_path,
-            command_type=DebugCommandType.STOP,
+        asyncio.run(
+            session.run_debug(
+                scope_id,
+                command_type=DebugCommandType.RUN_TO_PAUSE,
+                pause_step_indices=(1,),
+            )
         )
-    )
+        debug_session = session.debug_sessions[scope_id]
+        for command in (
+            DebugCommandType.STEP,
+            DebugCommandType.RUN,
+            DebugCommandType.STOP,
+        ):
+            asyncio.run(session.run_debug(scope_id, command_type=command))
 
-    assert plate_manager._batch_workflow_service.run_calls[0]["replay_mode"] is (
-        DebugReplayMode.PERSISTENT_PAUSED_WORKER
-    )
-    assert plate_manager._batch_workflow_service.worker_commands == [
-        (session.debug_session_id, DebugCommandType.STEP),
-        (session.debug_session_id, DebugCommandType.RUN),
-        (session.debug_session_id, DebugCommandType.STOP),
-    ]
-    assert plate_path not in plate_manager._active_debug_sessions
-    assert editor.debug_session_state.debug_session_id == "debug-1"
-    assert len(editor.debug_inspector_window.store_loads) == 1
-    assert plate_manager.export_calls == [
-        {
-            "debug_session_id": "debug-1",
-            "artifact_ref": artifact_ref,
-            "export_root": str(tmp_path / "export"),
-            "snapshot_store_ref": "/debug",
-            "snapshot_store_backend": "memory",
-        }
-    ]
+        (debug_request,) = compiled
+        assert debug_request.debug_session_id == debug_session.debug_session_id
+        assert debug_request.snapshot_store_ref == str(
+            tmp_path / "plate" / ".openhcs_debug"
+        )
+        assert debug_request.snapshot_store_backend is None
+        assert debug_request.command_type is DebugCommandType.RUN_TO_PAUSE
+        assert debug_request.selected_source_group is None
+        assert debug_request.pause_step_indices == (1,)
+        assert debug_request.start_step_index == 0
+        assert debug_request.start_after_invocation_key is None
+        assert debug_request.replay_mode is DebugReplayMode.PERSISTENT_PAUSED_WORKER
+        assert submitted == [(scope_id, "debug-compile")]
+        assert worker_commands == [
+            (debug_session.debug_session_id, DebugCommandType.STEP),
+            (debug_session.debug_session_id, DebugCommandType.RUN),
+            (debug_session.debug_session_id, DebugCommandType.STOP),
+        ]
+        assert scope_id not in session.debug_sessions
+
+
+def test_dataset_completion_retires_its_debug_session(tmp_path) -> None:
+    with caller_session() as session:
+        (scope_id,) = add_datasets(session, tmp_path, "plate")
+        debug_session = DebugSession.create(plate_id=scope_id)
+        session.debug_sessions[scope_id] = debug_session
+        session.batch.begin_batch((scope_id,))
+        session.batch.record_execution(scope_id, "exec-1")
+        session.execution_state = ManagerExecutionState.RUNNING
+
+        session.finish_dataset_execution(
+            TerminalExecutionStatus.FAILED.completion_payload(
+                execution_id="exec-1", execution_payload={}
+            ),
+            scope_id,
+        )
+
+        assert scope_id not in session.debug_sessions
+        summary = session.debug_terminal_summaries[scope_id]
+        assert summary.debug_session_id == debug_session.debug_session_id
+        assert summary.terminal_status == TerminalExecutionStatus.FAILED.value

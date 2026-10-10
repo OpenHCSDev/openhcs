@@ -789,7 +789,9 @@ class PipelineEditorStateSurfaceProvider(UiStateSurfaceProviderABC):
 
     def _state(self, *, selection_mode: str) -> UiPipelineEditorState:
         selected = self._manager.selected_step_scope_ids()
-        view = PipelineStepsView.state_of(self._manager.session, selected)
+        view = PipelineStepsView.state_of(
+            self._manager.session, self._manager.current_plate, selected
+        )
         steps = view.steps
         if selection_mode == UiCodeDocumentSelectionMode.SELECTED.value:
             steps = tuple(step for step in steps if step.selected)

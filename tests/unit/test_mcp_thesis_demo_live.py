@@ -1044,14 +1044,14 @@ def test_ui_operation_wait_is_one_public_terminal_command(
 
 
 def test_plate_action_waits_for_accepted_receipt(monkeypatch) -> None:
-    action = demo.PlateManagerAction.VIEW_METADATA
+    action = demo.ShowDatasetImages
     monkeypatch.setattr(
         demo,
         "plate_action_summary",
         lambda _ctx, _action: demo.UiActionSummary(
             schema_version="openhcs.agent.v1",
             identity=demo.UiActionIdentity(
-                widget_id="plate_manager", action_id=action.value
+                widget_id="plate_manager", action_id=action.operation_id
             ),
             title="Action",
             enabled=True,

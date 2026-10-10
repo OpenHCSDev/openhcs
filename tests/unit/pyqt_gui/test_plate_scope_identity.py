@@ -1,58 +1,59 @@
 from pathlib import Path
 
-from openhcs.ui.shared.plate_scope_identity import (
-    PipelineScopeIdentity,
-    PlateScopeIdentity,
-)
+from openhcs.core.dataset_sources.dataset_scopes import DatasetScope, PlainDatasetScope
+from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
+from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 
 
 def test_cellprofiler_pipeline_scope_keeps_cppipe_identity_inside_plate_segment(
     tmp_path: Path,
 ) -> None:
-    plate_root = tmp_path / "AdvancedSegmentation"
-    cppipe_path = plate_root / "BBBC022 Analysis Final.cppipe"
+    root = tmp_path / "AdvancedSegmentation"
+    pipeline_path = root / "BBBC022 Analysis Final.cppipe"
 
-    identity = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        cppipe_path,
-    )
-    parsed = PlateScopeIdentity.from_scope_id(identity.scope_id)
+    scope = CellProfilerPipelineScope.scope_for(root, pipeline_path)
+    parsed = DatasetScope.parse(scope.scope_id)
 
-    assert "::" not in identity.scope_id
-    assert parsed.plate_root == plate_root
-    assert parsed.cppipe_path == cppipe_path
+    assert "::" not in scope.scope_id
+    assert parsed.kind is CellProfilerPipelineScope
+    assert parsed.root == root
+    assert parsed.pipeline_path == pipeline_path
     assert parsed.display_name == "AdvancedSegmentation / BBBC022 Analysis Final"
+    assert parsed.code_value() == scope.scope_id
+
+
+def test_plain_dataset_scope_is_its_root(tmp_path: Path) -> None:
+    scope = DatasetScope.parse(str(tmp_path / "plate"))
+
+    assert scope.kind is PlainDatasetScope
+    assert scope.pipeline_path is None
+    assert scope.display_name == "plate"
+    assert scope.code_value() == tmp_path / "plate"
 
 
 def test_pipeline_scope_identity_parses_cppipe_plate_scope(tmp_path: Path) -> None:
-    plate_root = tmp_path / "AdvancedSegmentation"
-    cppipe_path = plate_root / "BBBC022 Analysis Final.cppipe"
-    plate_identity = PlateScopeIdentity.from_cellprofiler_pipeline(
-        plate_root,
-        cppipe_path,
+    scope = CellProfilerPipelineScope.scope_for(
+        tmp_path / "AdvancedSegmentation",
+        tmp_path / "AdvancedSegmentation" / "BBBC022 Analysis Final.cppipe",
     )
 
-    pipeline_identity = PipelineScopeIdentity.from_plate_scope(
-        plate_identity.scope_id,
-    )
+    pipeline_identity = PipelineScopeIdentity.from_plate_scope(scope.scope_id)
     parsed = PipelineScopeIdentity.from_scope_id(pipeline_identity.scope_id)
 
     assert PipelineScopeIdentity.matches(pipeline_identity.scope_id)
-    assert parsed.plate_scope == plate_identity.scope_id
+    assert parsed.plate_scope == scope.scope_id
 
 
-def test_plate_scope_identity_owns_nested_object_state_scopes(
-    tmp_path: Path,
-) -> None:
-    identity = PlateScopeIdentity.from_cellprofiler_pipeline(
+def test_dataset_scope_owns_nested_object_state_scopes(tmp_path: Path) -> None:
+    scope = CellProfilerPipelineScope.scope_for(
         tmp_path / "plate",
         tmp_path / "plate" / "analysis.cppipe",
     )
 
-    assert identity.owns_object_state_scope(identity.scope_id)
-    assert identity.owns_object_state_scope(f"{identity.scope_id}::pipeline")
-    assert identity.owns_object_state_scope(
-        f"{identity.scope_id}::functionstep_0::function_0"
+    assert scope.owns_object_state_scope(scope.scope_id)
+    assert scope.owns_object_state_scope(f"{scope.scope_id}::pipeline")
+    assert scope.owns_object_state_scope(
+        f"{scope.scope_id}::functionstep_0::function_0"
     )
-    assert not identity.owns_object_state_scope(f"{identity.scope_id}-other")
-    assert not identity.owns_object_state_scope("")
+    assert not scope.owns_object_state_scope(f"{scope.scope_id}-other")
+    assert not scope.owns_object_state_scope("")

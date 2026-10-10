@@ -4,24 +4,18 @@ from openhcs.core.progress.projection import (
     PlateRuntimeProjection,
     PlateRuntimeState,
 )
-from openhcs.authoring.session.server_status import (
-    ExecutionServerStatusPresenter,
-)
+from openhcs.authoring.session.progress import execution_server_status_text
 
 
-def test_execution_server_status_presenter_returns_ready_when_no_plates():
-    presenter = ExecutionServerStatusPresenter()
+def test_execution_server_status_status_text_returns_ready_when_no_plates():
     projection = ExecutionRuntimeProjection()
 
-    view = presenter.build_status_text(
-        projection=projection,
-    )
+    text = execution_server_status_text(projection)
 
-    assert view.text == "Ready"
+    assert text == "Ready"
 
 
-def test_execution_server_status_presenter_includes_projection_counts():
-    presenter = ExecutionServerStatusPresenter()
+def test_execution_server_status_status_text_includes_projection_counts():
     plate_one = PlateRuntimeProjection(
         identity=PlateRuntimeIdentity(execution_id="exec-1", plate_id="/tmp/p1"),
         state=PlateRuntimeState.COMPILING,
@@ -44,15 +38,12 @@ def test_execution_server_status_presenter_includes_projection_counts():
         },
         overall_percent=62.5,
     )
-    view = presenter.build_status_text(
-        projection=projection,
-    )
+    text = execution_server_status_text(projection)
 
-    assert view.text == "Server: ⏳ 1 compiling, ⚙️ 1 executing | 2 plates | avg 62.5%"
+    assert text == "Server: ⏳ 1 compiling, ⚙️ 1 executing | 2 plates | avg 62.5%"
 
 
-def test_execution_server_status_presenter_includes_failed_projection_count():
-    presenter = ExecutionServerStatusPresenter()
+def test_execution_server_status_status_text_includes_failed_projection_count():
     failed_plate = PlateRuntimeProjection(
         identity=PlateRuntimeIdentity(execution_id="exec-3", plate_id="/tmp/p3"),
         state=PlateRuntimeState.FAILED,
@@ -66,8 +57,6 @@ def test_execution_server_status_presenter_includes_failed_projection_count():
         overall_percent=10.0,
     )
 
-    view = presenter.build_status_text(
-        projection=projection,
-    )
+    text = execution_server_status_text(projection)
 
-    assert view.text == "Server: ❌ 1 failed | 1 plates | avg 10.0%"
+    assert text == "Server: ❌ 1 failed | 1 plates | avg 10.0%"

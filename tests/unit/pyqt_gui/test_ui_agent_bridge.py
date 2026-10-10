@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 
 import pytest
@@ -40,13 +39,14 @@ from pyqt_reactive.services.window_code_document import (
 )
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
-from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors import simple_code_editor
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared import (
     BaseFormDialog,
     ManagedWindowActionCapabilities,
 )
+from pyqt_reactive.widgets.shared.base_form_dialog import ManagedWindowAction
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 from pyqt_reactive.widgets.shared.list_item_delegate import (
     DIRTY_FIELDS_ROLE,
     OBJECT_STATE_PATH_ROLE,
@@ -93,8 +93,27 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeConnectionResolution,
     UiBridgeService,
 )
-from openhcs.agent.ui_bridge_actions import MainWindowAction
 from openhcs.agent.ui_bridge_identities import PipelineDebugToolbarWidgetIdentity
+from openhcs.authoring.session.datasets import DatasetRow
+from openhcs.authoring.session.operations.application import (
+    CheckForUpdates,
+    ExitApplication,
+    RestartApplication,
+)
+from openhcs.authoring.session.operations.datasets import (
+    CompileDatasets,
+    InitializeDatasets,
+    RunDatasets,
+    ShowDatasetCode,
+    ShowLiveResults,
+)
+from openhcs.authoring.session.operations.pipelines import (
+    DeletePipelineSteps,
+    EditPipelineStep,
+    ShowPipelineCode,
+)
+from openhcs.authoring.session.session import CallerThread, Renderer, Session
+from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
 from openhcs.constants.constants import OrchestratorState
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -104,7 +123,6 @@ from openhcs.core.config import (
 )
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.debug import (
-    DebugCommand,
     DebugCommandType,
     DebugCursor,
     DebugEventType,
@@ -116,7 +134,6 @@ from openhcs.core.execution_state import (
     ManagerExecutionState,
 )
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
-from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocument
 from openhcs.core.progress import (
     ProgressEvent,
@@ -125,12 +142,10 @@ from openhcs.core.progress import (
     ProgressStatus,
 )
 from openhcs.core.progress.debug_projection import (
-    DebugRuntimeProjection,
     RuntimeProjectionBuilder,
     RuntimeProjectionSource,
 )
 from openhcs.core.progress.projection import (
-    ExecutionRuntimeProjection,
     PlateRuntimeIdentity,
     PlateRuntimeProjection,
     PlateRuntimeState,
@@ -148,12 +163,14 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
     MainWindowEmbeddedWidgets,
 )
 from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
-from openhcs.pyqt_gui.services.service_adapter import GlobalEventBus
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
     UiAgentBridgeService,
     UiBridgeOperationTracker,
     UiCodeDocumentSourcePolicy,
     UiObjectStateSnapshotProvider,
+)
+from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+    state_surface_ids_for_action,
 )
 from openhcs.pyqt_gui.services.ui_bridge_composition import (
     OpenHCSUiBridgeCompositionRoot,
@@ -185,40 +202,20 @@ from openhcs.pyqt_gui.services.ui_bridge_server import (
     UiBridgeServerBinding,
 )
 from openhcs.pyqt_gui.services.ui_bridge_windows import (
-    MainWindowActionProvider,
     MainWindowBridgeProviderSet,
-    ManagedWindowAction,
     QtTopLevelWindowProjection,
     UiWidgetTreeResultFactory,
     UiWindowProjectionService,
 )
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
-from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
-from openhcs.pyqt_gui.widgets.pipeline_editor import (
-    PipelineEditorAction,
-    PipelineEditorWidget,
-)
-from openhcs.pyqt_gui.widgets.plate_manager import (
-    PlateManagerAction,
-    PlateManagerWidget,
-)
-from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
-    PipelineDebugPauseBoundaryState,
-    PipelineDebugSessionContext,
-    PipelineDebugTargetState,
-)
-from openhcs.authoring.session.execution_batch import (
-    ExecutionBatchRuntime,
-)
+from openhcs.pyqt_gui.session_rendering import GuiRenderer
+from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
+from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     DebugToolbarAuxiliaryAction,
     PipelineDebugActionDeclarationBase,
     StepDebugAction,
 )
-from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
-    WidgetActionRoute,
-)
-from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementTableModel
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from python_introspect import to_jsonable
@@ -226,9 +223,13 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
+from openhcs.core.selection import SelectedAllSelectionMode
+from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from tests.unit.pyqt_gui.session_harness import session_gui, session_port
 
 DOCUMENT_ID = UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value
 PLATE_SCOPE_ID = "plate-1"
+DATASET_SCOPE_ID = "/tmp/openhcs-ui-bridge-test/plate-1"
 PLATE_NAME = "plate 1"
 ALL_SELECTION_MODE = UiCodeDocumentSelectionMode.ALL.value
 SELECTED_SELECTION_MODE = UiCodeDocumentSelectionMode.SELECTED.value
@@ -241,19 +242,6 @@ VALID_SOURCE = (
     f"per_plate_configs = {{'{PLATE_SCOPE_ID}': PipelineConfig()}}\n"
     f"pipeline_data = {{'{PLATE_SCOPE_ID}': []}}\n"
 )
-
-
-def test_manager_button_presentations_derive_from_action_declarations() -> None:
-    assert [
-        action.button_config for action in PlateManagerAction if action.has_button
-    ] == PlateManagerWidget.BUTTON_CONFIGS
-    assert [
-        action.button_config for action in PipelineEditorAction
-    ] == PipelineEditorWidget.BUTTON_CONFIGS
-
-
-class FakeEmptySelectionPolicy(str, Enum):
-    ERROR = "error"
 
 
 def _bridge_server_config(directory_path: Path) -> AgentUiBridgeConfig:
@@ -280,11 +268,6 @@ def _json_payload_values(payload):
 @dataclass
 class Dummy:
     x: int = 1
-
-
-@dataclass
-class FakeOrchestrator:
-    state: OrchestratorState
 
 
 class FakeWindowCodeDocumentDriver(WindowCodeDocumentDriver):
@@ -403,20 +386,6 @@ def test_pyqt_codegen_provider_delegates_config_documents() -> None:
         )
 
 
-@dataclass(frozen=True, slots=True)
-class FakeRow:
-    scope_id: str
-    name: str
-    plate_root: str = f"/tmp/{PLATE_SCOPE_ID}"
-    cppipe_path: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class FakeCodeDocumentContext:
-    source: str
-    selected_scope_ids: tuple[str, ...]
-
-
 class FakeOperations:
     def __init__(self, state: ObjectState | None = None) -> None:
         self.state = state
@@ -440,46 +409,6 @@ class FakeOperations:
     def post_code_execution(self) -> None:
         self.post_count += 1
         ObjectStateRegistry.increment_token()
-
-
-@dataclass(frozen=True, slots=True)
-class FakeButton:
-    enabled: bool = True
-
-    def isEnabled(self) -> bool:
-        return self.enabled
-
-
-class FakeServiceAdapter:
-    def execute_async_operation(self, operation):
-        raise AssertionError(f"Unexpected async operation in test: {operation!r}")
-
-
-class EmbeddedManagerServiceStub:
-    """Minimal service adapter surface needed by AbstractManagerWidget subclasses."""
-
-    def __init__(self) -> None:
-        self.global_config = GlobalPipelineConfig()
-        self.color_scheme = ColorScheme()
-        self.event_bus = GlobalEventBus()
-
-    def get_global_config(self) -> GlobalPipelineConfig:
-        return self.global_config
-
-    def get_current_color_scheme(self) -> ColorScheme:
-        return self.color_scheme
-
-    def get_event_bus(self) -> GlobalEventBus:
-        return self.event_bus
-
-    def get_file_manager(self):
-        return None
-
-    def execute_async_operation(self, operation):
-        return operation()
-
-    def show_error_dialog(self, message: str) -> None:
-        self.last_error_message = message
 
 
 class InlineDispatcher:
@@ -569,11 +498,18 @@ class FakeEmbeddedWindowWidgets(MainWindowEmbeddedWidgets):
 class FakeMainWindow:
     function_catalog_service = None
 
-    def __init__(self, *, pipeline_editor: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        pipeline_editor: QWidget | None = None,
+        session: Session | None = None,
+    ) -> None:
         self.embedded_widgets = FakeEmbeddedWindowWidgets(
             pipeline_editor=pipeline_editor
         )
         self.window_specs = {}
+        self.session = session or BridgeSessions.get()
+        self.session.attach_renderer(GuiRenderer(self))
         self.check_for_updates_action = QPushButton()
         self.exit_action = QAction("Exit")
         self.update_check_count = 0
@@ -594,92 +530,6 @@ class FakeMainWindow:
         self.update_check_count += 1
 
 
-def test_main_window_update_action_is_projected_and_dispatches() -> None:
-    QtApplicationAuthority.app()
-    main_window = FakeMainWindow()
-    registry = UiBridgeSurfaceRegistry()
-    snapshot_provider = UiObjectStateSnapshotProvider()
-    MainWindowBridgeProviderSet(main_window).register(
-        UiBridgeRegistrationContext(
-            registry=registry,
-            snapshot_provider=snapshot_provider,
-        )
-    )
-    bridge = UiAgentBridgeService(
-        registry=registry,
-        dispatcher=InlineDispatcher(),
-        snapshot_provider=snapshot_provider,
-    )
-
-    action = next(
-        summary
-        for summary in bridge.list_actions().actions
-        if summary.identity.widget_id == "main_window"
-    )
-    result = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=action.identity.widget_id,
-            action_id=action.identity.action_id,
-        )
-    )
-
-    assert action.identity.action_id == MainWindowAction.CHECK_FOR_UPDATES.value
-    assert action.enabled is True
-    assert action.invocation_mode == "async"
-    assert result.status == "accepted"
-    assert main_window.update_check_count == 1
-
-
-def test_main_window_restart_action_owns_dispatch_and_reconnect_warning() -> None:
-    QtApplicationAuthority.app()
-    main_window = FakeMainWindow()
-    provider = MainWindowActionProvider(main_window)
-    action = MainWindowAction.RESTART_SESSION
-    summary = provider.summary(action.value)
-    assert summary.enabled
-    assert summary.confirmation_required
-    result = provider.invoke(
-        UiActionInvokeRequest(
-            widget_id="main_window",
-            action_id=action.value,
-        )
-    )
-    assert result.status == "accepted"
-    assert main_window.restart_count == 1
-    assert main_window.update_check_count == 0
-    assert result.warnings == action.warnings
-    assert "ui_restart_reconnect_required" in {
-        warning.code for warning in provider.catalog().warnings
-    }
-
-
-def test_main_window_exit_action_owns_dispatch_and_disconnect_warning() -> None:
-    QtApplicationAuthority.app()
-    main_window = FakeMainWindow()
-    provider = MainWindowActionProvider(main_window)
-    action = MainWindowAction.EXIT
-    summary = provider.summary(action.value)
-    assert summary.enabled
-    assert summary.confirmation_required
-    assert summary.side_effects == action.side_effects
-
-    result = provider.invoke(
-        UiActionInvokeRequest(
-            widget_id="main_window",
-            action_id=action.value,
-        )
-    )
-
-    assert result.status == "accepted"
-    assert main_window.exit_count == 1
-    assert main_window.restart_count == 0
-    assert main_window.update_check_count == 0
-    assert result.warnings == action.warnings
-    assert "ui_exit_disconnect_expected" in {
-        warning.code for warning in provider.catalog().warnings
-    }
-
-
 def test_ui_bridge_composition_discovers_new_provider_set_declarations() -> None:
     factory_calls: list[object] = []
 
@@ -697,6 +547,7 @@ def test_ui_bridge_composition_discovers_new_provider_set_declarations() -> None
     class CompositionMainWindow:
         pipeline_editor_widget = object()
         function_catalog_service = None
+        session = BridgeSessions.get()
 
     main_window = CompositionMainWindow()
     main_window.plate_manager_widget = FakePlateManager()
@@ -709,17 +560,6 @@ def test_ui_bridge_composition_discovers_new_provider_set_declarations() -> None
         )
 
     assert factory_calls == [main_window]
-
-
-def test_ui_bridge_composition_builds_all_registered_provider_sets() -> None:
-    QtApplicationAuthority.app()
-    main_window = FakeMainWindow()
-    main_window.plate_manager_widget = FakePlateManager()
-    main_window.pipeline_editor_widget = FakePipelineEditor()
-
-    bridge = OpenHCSUiBridgeCompositionRoot.for_main_window(main_window).build_service()
-
-    assert isinstance(bridge, UiAgentBridgeService)
 
 
 def test_embedded_code_document_registrations_are_registry_discovered(
@@ -812,282 +652,6 @@ class FakeManagedFormWindow(BaseFormDialog):
         self.finish_managed_save(close_window=close_window)
 
 
-class FakePlateManager:
-    # Existing workflow tests exercise an already connected execution endpoint.
-    compilation_action = PlateManagerAction.COMPILE_PLATE
-    BUTTON_CONFIGS = [
-        ("Code", PlateManagerAction.CODE_PLATE.value, "Generate Python code"),
-    ]
-    ACTION_ROUTES = {
-        PlateManagerAction.CODE_PLATE: WidgetActionRoute(
-            PlateManagerAction.CODE_PLATE,
-            lambda widget: widget.action_code_plate,
-        ),
-    }
-
-    def __init__(
-        self,
-        *,
-        selected: tuple[FakeRow, ...] = (),
-        plates: tuple[FakeRow, ...] = (FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
-        operations: FakeOperations | None = None,
-        pipeline_steps: tuple[FunctionStep, ...] = (),
-    ) -> None:
-        self.selected = list(selected)
-        self.plates = list(plates)
-        self.operations = operations or FakeOperations()
-        self.pipeline_steps = pipeline_steps
-        self.execution_state = ManagerExecutionState.IDLE
-        self.runtime_progress_projection = ExecutionRuntimeProjection()
-        self.live_measurement_model = LiveMeasurementTableModel()
-        self.plate_terminal_activity_status = ExecutionBatchRuntime()
-        self.plate_init_pending = set()
-        self.plate_compile_pending = set()
-        self.plate_compiled_data = {}
-        self.global_config = GlobalPipelineConfig()
-        self.service_adapter = FakeServiceAdapter()
-        self.buttons = {
-            PlateManagerAction.CODE_PLATE.value: FakeButton(),
-        }
-        self.code_action_count = 0
-        self.stop_action_count = 0
-
-    def get_selected_items(self):
-        return list(self.selected)
-
-    def orchestrator_code_document_context(
-        self,
-        *,
-        selection_mode: str = SELECTED_SELECTION_MODE,
-        empty_selection_policy: str = FakeEmptySelectionPolicy.ERROR.value,
-    ) -> FakeCodeDocumentContext:
-        rows_by_mode = {
-            UiCodeDocumentSelectionMode.ALL: self.plates,
-            UiCodeDocumentSelectionMode.SELECTED: self.selected,
-        }
-        rows = rows_by_mode[UiCodeDocumentSelectionMode(selection_mode)]
-        if (
-            not rows
-            and FakeEmptySelectionPolicy(empty_selection_policy)
-            is FakeEmptySelectionPolicy.ERROR
-        ):
-            raise ValueError("No plates selected.")
-        return FakeCodeDocumentContext(
-            source=VALID_SOURCE,
-            selected_scope_ids=tuple(row.scope_id for row in rows),
-        )
-
-    def code_document_execution_operations(
-        self, _mutation_scope=None
-    ) -> FakeOperations:
-        return self.operations
-
-    def _get_current_pipeline_definition(self, plate_path: str):
-        del plate_path
-        return list(self.pipeline_steps)
-
-    def action_code_plate(self) -> None:
-        self.code_action_count += 1
-
-    is_any_plate_running = PlateManagerWidget.is_any_plate_running
-
-    def action_stop_execution(self) -> None:
-        self.stop_action_count += 1
-
-    def require_pipeline_definition_mutation_allowed(
-        self,
-        plate_path: str | None = None,
-    ) -> None:
-        del plate_path
-
-    def require_pipeline_definition_mutation_allowed_for_scope(
-        self,
-        scope_id: str,
-    ) -> None:
-        del scope_id
-
-    def debug_session_for_plate(self, plate_path: str):
-        del plate_path
-        return None
-
-    def debug_terminal_summary_for_plate(self, plate_path: str):
-        del plate_path
-        return None
-
-    def debug_session_context_for_plate(
-        self,
-        plate_path: str,
-    ) -> PipelineDebugSessionContext:
-        target = PipelineDebugTargetState(
-            current_plate_scope_id=plate_path,
-            pipeline_scope_id=PipelineScopeIdentity.from_plate_scope(
-                plate_path,
-            ).scope_id,
-            initialized=True,
-            compiled=plate_path in self.plate_compiled_data,
-            terminal_status=None,
-        )
-        return PipelineDebugSessionContext(
-            target=target,
-            session=self.debug_session_for_plate(plate_path),
-            terminal_summary=self.debug_terminal_summary_for_plate(plate_path),
-            pause_boundaries=PipelineDebugPauseBoundaryState(),
-            manager_execution_state=self.execution_state,
-        )
-
-
-class FakePipelineEditor:
-    BUTTON_CONFIGS = PipelineEditorWidget.BUTTON_CONFIGS
-    STATE_BINDING = PipelineEditorWidget.STATE_BINDING
-    ACTION_ROUTES = {
-        PipelineEditorAction.ADD_STEP: WidgetActionRoute(
-            PipelineEditorAction.ADD_STEP,
-            lambda widget: widget.action_add,
-        ),
-        PipelineEditorAction.DELETE_STEP: WidgetActionRoute(
-            PipelineEditorAction.DELETE_STEP,
-            lambda widget: widget.action_delete,
-        ),
-        PipelineEditorAction.EDIT_STEP: WidgetActionRoute(
-            PipelineEditorAction.EDIT_STEP,
-            lambda widget: widget.action_edit,
-        ),
-        PipelineEditorAction.AUTO_LOAD_PIPELINE: WidgetActionRoute(
-            PipelineEditorAction.AUTO_LOAD_PIPELINE,
-            lambda widget: widget.action_auto_load_pipeline,
-        ),
-        PipelineEditorAction.CODE_PIPELINE: WidgetActionRoute(
-            PipelineEditorAction.CODE_PIPELINE,
-            lambda widget: widget.action_code_pipeline,
-        ),
-    }
-
-    def __init__(
-        self,
-        *,
-        current_plate: str = PLATE_SCOPE_ID,
-        selected_indices: tuple[int, ...] = (0,),
-    ) -> None:
-        self.current_plate = current_plate
-        self.pipeline_steps = [
-            FunctionStep(func=lambda image: image, name="step_one"),
-            FunctionStep(func=lambda image: image, name="step_two"),
-        ]
-        self.selected_indices = selected_indices
-        self.service_adapter = FakeServiceAdapter()
-        self.buttons = {
-            action.value: FakeButton(enabled=True) for action in self.ACTION_ROUTES
-        }
-        self.debug_toolbar = DebugToolbarWidget()
-        self.debug_session_state = None
-        self.debug_terminal_summary = None
-        self.debug_runtime_projection_state = DebugRuntimeProjection.empty()
-        self.initialized = bool(current_plate)
-        self.compiled = bool(current_plate)
-        self.manager_execution_state = ManagerExecutionState.IDLE
-        self.terminal_status = None
-        self.debug_toolbar.set_debug_session_context(self.debug_session_context())
-        self.debug_workflow = FakePipelineDebugWorkflow()
-        self.add_count = 0
-        self.delete_count = 0
-        self.edit_count = 0
-        self.auto_count = 0
-        self.code_count = 0
-
-    def get_selected_items(self):
-        return [self.pipeline_steps[index] for index in self.selected_indices]
-
-    def _get_item_scope_id(self, item: FunctionStep, index: int) -> str:
-        del item
-        return f"scope-from-manager-hook-{index}"
-
-    def selected_step_scope_ids(self) -> tuple[str, ...]:
-        selected = set(self.selected_indices)
-        return tuple(
-            self._get_item_scope_id(step, index)
-            for index, step in enumerate(self.pipeline_steps)
-            if index in selected
-        )
-
-    def debug_session_context(self) -> PipelineDebugSessionContext:
-        target = None
-        if self.current_plate:
-            target = PipelineDebugTargetState(
-                current_plate_scope_id=self.current_plate,
-                pipeline_scope_id=PipelineScopeIdentity.from_plate_scope(
-                    self.current_plate
-                ).scope_id,
-                initialized=self.initialized,
-                compiled=self.compiled,
-                terminal_status=self.terminal_status,
-            )
-        return PipelineDebugSessionContext(
-            target=target,
-            session=self.debug_session_state,
-            terminal_summary=self.debug_terminal_summary,
-            pause_boundaries=PipelineDebugPauseBoundaryState(
-                pause_step_indices=tuple(
-                    index
-                    for index, step in enumerate(self.pipeline_steps)
-                    if step.debug_pause
-                )
-            ),
-            manager_execution_state=self.manager_execution_state,
-        )
-
-    def debug_runtime_projection(self) -> DebugRuntimeProjection:
-        return self.debug_runtime_projection_state
-
-    def action_add(self) -> None:
-        self.add_count += 1
-
-    def action_delete(self) -> None:
-        self.delete_count += 1
-
-    def action_edit(self) -> None:
-        self.edit_count += 1
-
-    def action_auto_load_pipeline(self) -> None:
-        self.auto_count += 1
-
-    def action_code_pipeline(self) -> None:
-        self.code_count += 1
-
-
-class FakePipelineDebugWorkflow:
-    def __init__(self) -> None:
-        self.commands: list[DebugCommand] = []
-        self.runtime_inspections = 0
-
-    def run_command(self, command_type: DebugCommandType) -> None:
-        self.commands.append(DebugCommand(command_type))
-
-    def stop_command(self) -> None:
-        self.commands.append(DebugCommand(DebugCommandType.STOP))
-
-    def show_status(self, message: str) -> None:
-        del message
-
-    def show_runtime_inspection(self) -> None:
-        self.runtime_inspections += 1
-
-
-@pytest.fixture(autouse=True)
-def reset_object_state_registry():
-    ObjectStateRegistry._states.clear()
-    ObjectStateRegistry._time_travel_limbo.clear()
-    ObjectStateRegistry._graveyard.clear()
-    ObjectStateRegistry._snapshots.clear()
-    ObjectStateRegistry._timelines.clear()
-    ObjectStateRegistry._current_timeline = "main"
-    ObjectStateRegistry._current_head = None
-    ObjectStateRegistry._in_time_travel = False
-    ObjectStateRegistry._atomic_depth = 0
-    ObjectStateRegistry._atomic_label = None
-    ObjectStateRegistry._atomic_triggering_scope = None
-    ObjectStateRegistry._token = 0
-
-
 def test_atomic_success_does_not_record_snapshot_on_failure() -> None:
     state = ObjectState(Dummy(), scope_id=PLATE_SCOPE_ID)
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -1118,88 +682,10 @@ def test_selected_read_fails_loudly_when_no_plate_is_selected() -> None:
     assert document.selected_scope_ids == ()
 
 
-def test_selected_plate_document_does_not_fall_back_to_all_rows() -> None:
-    other_row = FakeRow("plate-2", "plate 2")
-    manager = FakePlateManager(
-        selected=(),
-        plates=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME), other_row),
-    )
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    selected_document = bridge.get_document(
-        UiCodeDocumentRequest(
-            document_id=DOCUMENT_ID,
-            selection_mode=SELECTED_SELECTION_MODE,
-        )
-    )
-    all_document = bridge.get_document(
-        UiCodeDocumentRequest(
-            document_id=DOCUMENT_ID,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-    selected_state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=SELECTED_SELECTION_MODE,
-        )
-    )
-    all_state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-
-    assert selected_document.errors[0].code == "no_selection"
-    assert selected_document.selected_scope_ids == ()
-    assert selected_document.summary.current_selection_count == 0
-    assert all_document.errors == ()
-    assert all_document.selected_scope_ids == (PLATE_SCOPE_ID, other_row.scope_id)
-    assert all_document.summary.current_selection_count == 0
-    assert selected_state.selected_scope_ids == ()
-    assert selected_state.summary.current_selection_count == 0
-    assert selected_state.payload["rows"] == []
-    assert all_state.selected_scope_ids == ()
-    assert [row["selected"] for row in all_state.payload["rows"]] == [False, False]
-    assert selected_state.current_revision_token != all_state.current_revision_token
-
-    manager.selected = [other_row]
-    newly_selected_document = bridge.get_document(
-        UiCodeDocumentRequest(
-            document_id=DOCUMENT_ID,
-            selection_mode=SELECTED_SELECTION_MODE,
-        )
-    )
-    newly_selected_state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=SELECTED_SELECTION_MODE,
-        )
-    )
-
-    assert newly_selected_document.errors == ()
-    assert newly_selected_document.selected_scope_ids == (other_row.scope_id,)
-    assert newly_selected_document.summary.current_selection_count == 1
-    assert newly_selected_state.selected_scope_ids == (other_row.scope_id,)
-    assert newly_selected_state.summary.current_selection_count == 1
-    assert [row["plate_scope_id"] for row in newly_selected_state.payload["rows"]] == [
-        other_row.scope_id
-    ]
-    assert newly_selected_state.payload["rows"][0]["selected"] is True
-    assert (
-        newly_selected_state.current_revision_token
-        != selected_state.current_revision_token
-    )
-
-
 def test_all_plate_document_context_failure_is_not_reported_as_no_selection() -> None:
     class FailingPlateManager(FakePlateManager):
-        def orchestrator_code_document_context(self, **kwargs):
-            del kwargs
+        def dataset_document(self, selection_mode):
+            del selection_mode
             raise RuntimeError("context construction failed")
 
     bridge = UiAgentBridgeService(
@@ -1497,6 +983,7 @@ def test_embedded_window_focus_uses_authoritative_dock_pane() -> None:
 def test_floating_embedded_pane_is_not_duplicated_as_qt_top_level() -> None:
     app = QtApplicationAuthority.app()
     main_window = QMainWindow()
+    main_window.session = BridgeSessions.get()
     embedded_widgets = MainWindowEmbeddedWidgets()
     pipeline_pane = MainWindowDockPane.create(
         main_window=main_window,
@@ -1554,6 +1041,7 @@ def test_embedded_registration_does_not_hide_main_window_from_bridge(
 ) -> None:
     app = QtApplicationAuthority.app()
     main_window = QMainWindow()
+    main_window.session = BridgeSessions.get()
     main_window.setWindowTitle("OpenHCS")
     embedded_widgets = MainWindowEmbeddedWidgets()
     embedded_scope_id = "test_main_window_embedded_scope"
@@ -1699,51 +1187,6 @@ def test_widget_tree_item_rows_carry_shared_object_state_roles() -> None:
         assert step_action.dirty is True
         assert step_action.signature_diff is True
         assert step_action.semantic_markers == ("*", "_")
-    finally:
-        pipeline_editor.close()
-
-
-def test_embedded_manager_window_summary_carries_shared_row_semantics() -> None:
-    app = QtApplicationAuthority.app()
-    pipeline_editor = PipelineEditorWidget(EmbeddedManagerServiceStub())
-    pipeline_editor.setObjectName("pipeline_editor")
-    row = QListWidgetItem("1. Normalize")
-    row.setData(OBJECT_STATE_PATH_ROLE, "plate-1::functionstep_0")
-    row.setData(DIRTY_FIELDS_ROLE, {"name", "napari_streaming_config.enabled"})
-    row.setData(SIG_DIFF_FIELDS_ROLE, {"func"})
-    assert pipeline_editor.item_list is not None
-    pipeline_editor.item_list.addItem(row)
-    main_window = FakeMainWindow(pipeline_editor=pipeline_editor)
-    main_window.embedded_widgets.show_pipeline_editor()
-    app.processEvents()
-
-    registry = UiBridgeSurfaceRegistry()
-    snapshot_provider = UiObjectStateSnapshotProvider()
-    MainWindowBridgeProviderSet(main_window).register(
-        UiBridgeRegistrationContext(
-            registry=registry,
-            snapshot_provider=snapshot_provider,
-        )
-    )
-    bridge = UiAgentBridgeService(
-        registry=registry,
-        dispatcher=InlineDispatcher(),
-        snapshot_provider=snapshot_provider,
-    )
-
-    try:
-        windows = bridge.list_windows()
-        summary = next(
-            window
-            for window in windows.windows
-            if window.window_id == "pipeline_editor"
-        )
-
-        assert summary.dirty is True
-        assert summary.signature_diff is True
-        assert summary.dirty_field_count == 2
-        assert summary.signature_diff_field_count == 1
-        assert summary.semantic_markers == ("*", "_")
     finally:
         pipeline_editor.close()
 
@@ -3371,1007 +2814,6 @@ def test_all_read_returns_source_hash_and_revision() -> None:
     assert document.selected_scope_ids == (PLATE_SCOPE_ID,)
 
 
-def test_plate_manager_state_surface_projects_runtime_row_status() -> None:
-    manager = FakePlateManager(selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),))
-    manager.plate_compile_pending.add(PLATE_SCOPE_ID)
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-    poll_state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-            base_revision_token=state.current_revision_token,
-        )
-    )
-
-    assert state.summary.surface_id == UiStateSurfaceId.PLATE_MANAGER.value
-    row = state.payload["rows"][0]
-    assert row["plate_scope_id"] == PLATE_SCOPE_ID
-    assert row["status_prefix"] == "⏳ Compile"
-    assert row["compile_pending"] is True
-    assert row["selected"] is True
-    assert poll_state.unchanged is True
-
-
-def test_view_results_action_relates_widget_owned_live_measurement_surface() -> None:
-    manager = FakePlateManager(selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),))
-    manager.ACTION_ROUTES = {
-        PlateManagerAction.VIEW_RESULTS: WidgetActionRoute(
-            PlateManagerAction.VIEW_RESULTS,
-            lambda _widget: None,
-        ),
-    }
-    manager.buttons[PlateManagerAction.VIEW_RESULTS.value] = FakeButton(enabled=True)
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    action = bridge.list_actions().actions[0]
-
-    assert action.identity.action_id == PlateManagerAction.VIEW_RESULTS.value
-    assert action.related_state_surface_ids == (
-        "plate_manager.state",
-        "plate_manager.live_measurements",
-    )
-
-
-def test_plate_manager_state_surface_links_source_and_output_plate_rows() -> None:
-    source_row = FakeRow(
-        PLATE_SCOPE_ID,
-        PLATE_NAME,
-        plate_root="/tmp/source-plate",
-    )
-    output_row = FakeRow(
-        "/tmp/source-plate_openhcs",
-        "source-plate_openhcs",
-        plate_root="/tmp/source-plate_openhcs",
-    )
-    manager = FakePlateManager(
-        selected=(source_row,),
-        plates=(source_row, output_row),
-    )
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-
-    source_payload, output_payload = state.payload["rows"]
-    assert source_payload["output_plate_scope_id"] == output_row.scope_id
-    assert source_payload["output_plate_root"] == output_row.plate_root
-    assert source_payload["source_plate_scope_id"] is None
-    assert output_payload["source_plate_scope_id"] == source_row.scope_id
-    assert output_payload["source_plate_root"] == source_row.plate_root
-    assert (
-        output_payload["output_plate_scope_id"] == "/tmp/source-plate_openhcs_openhcs"
-    )
-    assert output_payload["output_plate_root"] == "/tmp/source-plate_openhcs_openhcs"
-
-
-def test_plate_manager_state_surface_uses_row_effective_path_config(
-    tmp_path: Path,
-) -> None:
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
-    source_root = tmp_path / "source-plate"
-    source_root.mkdir()
-    output_root = tmp_path / "source-plate_custom"
-    source_row = FakeRow(
-        PLATE_SCOPE_ID,
-        PLATE_NAME,
-        plate_root=str(source_root),
-    )
-    output_row = FakeRow(
-        str(output_root),
-        "source-plate_custom",
-        plate_root=str(output_root),
-    )
-    orchestrator = PipelineOrchestrator(
-        source_root,
-        pipeline_config=PipelineConfig(
-            path_planning_config=LazyPathPlanningConfig(
-                output_dir_suffix="_custom",
-            ),
-        ),
-    )
-    ObjectStateRegistry.register(
-        ObjectState(orchestrator, scope_id=source_row.scope_id),
-        _skip_snapshot=True,
-    )
-    manager = FakePlateManager(
-        selected=(source_row,),
-        plates=(source_row, output_row),
-    )
-    bridge = UiAgentBridgeService(provider_set=PlateManagerBridgeProviderSet(manager))
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-
-    source_payload, output_payload = state.payload["rows"]
-    assert source_payload["output_plate_scope_id"] == output_row.scope_id
-    assert source_payload["output_plate_root"] == output_row.plate_root
-    assert output_payload["source_plate_scope_id"] == source_row.scope_id
-    assert output_payload["source_plate_root"] == source_row.plate_root
-
-
-@pytest.mark.parametrize("reverse_rows", [False, True])
-def test_plate_manager_intermediate_plate_keeps_both_path_relations(
-    tmp_path: Path, reverse_rows: bool
-) -> None:
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
-    roots = (
-        tmp_path / "raw",
-        tmp_path / "raw_stitched",
-        tmp_path / "raw_stitched_analysis",
-    )
-    rows = tuple(FakeRow(str(root), root.name, plate_root=str(root)) for root in roots)
-    for row, suffix in zip(rows, ("_stitched", "_analysis")):
-        orchestrator = PipelineOrchestrator(
-            Path(row.plate_root),
-            pipeline_config=PipelineConfig(
-                path_planning_config=LazyPathPlanningConfig(output_dir_suffix=suffix)
-            ),
-        )
-        ObjectStateRegistry.register(
-            ObjectState(orchestrator, scope_id=row.scope_id), _skip_snapshot=True
-        )
-    manager = FakePlateManager(
-        selected=(rows[1],), plates=rows[::-1] if reverse_rows else rows
-    )
-    bridge = UiAgentBridgeService(provider_set=PlateManagerBridgeProviderSet(manager))
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-    middle = next(
-        row
-        for row in state.payload["rows"]
-        if row["plate_scope_id"] == rows[1].scope_id
-    )
-    assert middle["source_plate_root"] == rows[0].plate_root
-    assert middle["source_plate_scope_id"] == rows[0].scope_id
-    assert middle["output_plate_root"] == rows[2].plate_root
-    assert middle["output_plate_scope_id"] == rows[2].scope_id
-
-
-def test_plate_manager_state_ignores_stale_runtime_without_current_execution_id() -> (
-    None
-):
-    manager = FakePlateManager(selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),))
-    stale_projection = PlateRuntimeProjection(
-        identity=PlateRuntimeIdentity(
-            execution_id="old-execution",
-            plate_id=PLATE_SCOPE_ID,
-        ),
-        state=PlateRuntimeState.EXECUTING,
-        percent=0.0,
-        axis_progress=(),
-        latest_timestamp=1.0,
-    )
-    manager.runtime_progress_projection.add_plate(stale_projection)
-    manager.runtime_progress_projection.mark_latest(stale_projection.identity)
-    bridge = UiAgentBridgeService(provider_set=PlateManagerBridgeProviderSet(manager))
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-
-    row = state.payload["rows"][0]
-    assert row["execution_id"] is None
-    assert row["execution_active"] is False
-    assert row["runtime_state"] is None
-    assert row["runtime_percent"] is None
-    assert row["status_prefix"] == ""
-
-
-def test_plate_manager_state_terminal_status_overrides_stale_executing_state() -> None:
-    ObjectStateRegistry.register(
-        ObjectState(
-            FakeOrchestrator(state=OrchestratorState.EXECUTING),
-            scope_id=PLATE_SCOPE_ID,
-        ),
-        _skip_snapshot=True,
-    )
-    manager = FakePlateManager(selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),))
-    manager.plate_terminal_activity_status.begin_batch((PLATE_SCOPE_ID,))
-    manager.plate_terminal_activity_status.record_execution(
-        PLATE_SCOPE_ID,
-        "failed-execution",
-    )
-    manager.plate_terminal_activity_status.mark_terminal(PLATE_SCOPE_ID, "failed")
-    bridge = UiAgentBridgeService(provider_set=PlateManagerBridgeProviderSet(manager))
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-
-    row = state.payload["rows"][0]
-    assert row["execution_id"] == "failed-execution"
-    assert row["terminal_status"] == "failed"
-    assert row["orchestrator_state"] == "exec_failed"
-    assert row["execution_active"] is False
-    assert row["status_prefix"] == "❌ Exec Failed"
-
-
-def test_plate_manager_action_catalog_token_can_guard_invoke() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePlateManager(
-        selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
-    )
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    action = bridge.list_actions().actions[0]
-    accepted = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=action.identity.widget_id,
-            action_id=action.identity.action_id,
-            selected_scope_ids=action.target_scope_ids,
-            observed_selection_revision_token=action.selection_revision_token,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-    stale = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=action.identity.widget_id,
-            action_id=action.identity.action_id,
-            selected_scope_ids=action.target_scope_ids,
-            observed_selection_revision_token="stale-token",
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-
-    assert action.selection_revision_token
-    assert accepted.status == "accepted"
-    assert accepted.selection_revision_token == action.selection_revision_token
-    assert manager.code_action_count == 1
-    assert stale.status == "rejected"
-    assert stale.errors
-    assert stale.errors[0].code == "stale_ui_action_revision"
-    assert stale.errors[0].hint is not None
-    assert "openhcs_ui_list_actions" in stale.errors[0].hint
-    assert "selection_revision_token" in stale.errors[0].hint
-    assert "base_revision_token" in stale.errors[0].hint
-
-
-def test_selected_run_workflow_dispatches_stop_while_execution_is_active() -> None:
-    QtApplicationAuthority.app()
-    ObjectStateRegistry.register(
-        ObjectState(
-            FakeOrchestrator(state=OrchestratorState.EXECUTING),
-            scope_id=PLATE_SCOPE_ID,
-        ),
-        _skip_snapshot=True,
-    )
-    manager = FakePlateManager(
-        selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
-    )
-    manager.execution_state = ManagerExecutionState.RUNNING
-    manager.ACTION_ROUTES = {
-        PlateManagerAction.RUN_PLATE: PlateManagerWidget.ACTION_ROUTES[
-            PlateManagerAction.RUN_PLATE
-        ],
-    }
-    manager.BUTTON_CONFIGS = [
-        config
-        for config in PlateManagerWidget.BUTTON_CONFIGS
-        if config[1] == PlateManagerAction.RUN_PLATE.value
-    ]
-    manager.buttons[PlateManagerAction.RUN_PLATE.value] = FakeButton(enabled=True)
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    action = bridge.list_actions().actions[0]
-    result = bridge.selected_plate_workflow(
-        UiSelectedPlateWorkflowRequest(
-            workflow=UiSelectedPlateWorkflowKind.RUN,
-            selected_scope_ids=(PLATE_SCOPE_ID,),
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-
-    assert action.enabled is True
-    assert action.disabled_error is None
-    assert result.action_result.status == "accepted"
-    assert manager.stop_action_count == 1
-
-
-def _pipeline_editor_bridge(manager: FakePipelineEditor) -> UiAgentBridgeService:
-    snapshot_provider = UiObjectStateSnapshotProvider()
-    registry = UiBridgeSurfaceRegistry()
-    PipelineEditorBridgeProviderSet(manager).register(
-        UiBridgeRegistrationContext(
-            registry=registry,
-            snapshot_provider=snapshot_provider,
-        )
-    )
-    return UiAgentBridgeService(
-        registry=registry,
-        dispatcher=InlineDispatcher(),
-        snapshot_provider=snapshot_provider,
-    )
-
-
-def test_pipeline_editor_action_catalog_uses_declared_routes_and_scope_hooks() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePipelineEditor(selected_indices=(1,))
-    manager.buttons[PipelineEditorAction.EDIT_STEP.value] = FakeButton(enabled=False)
-    bridge = _pipeline_editor_bridge(manager)
-
-    actions = {
-        action.identity.action_id: action
-        for action in bridge.list_actions().actions
-        if action.identity.widget_id == OpenHCSUiWindowId.pipeline_editor
-    }
-    code_action = actions[PipelineEditorAction.CODE_PIPELINE.value]
-    edit_action = actions[PipelineEditorAction.EDIT_STEP.value]
-    auto_action = actions[PipelineEditorAction.AUTO_LOAD_PIPELINE.value]
-
-    assert set(actions) == {action.value for action in PipelineEditorAction}
-    assert code_action.identity.widget_id == OpenHCSUiWindowId.pipeline_editor
-    assert code_action.confirmation_required is False
-    assert code_action.side_effects == ("opens_code_document_window",)
-    assert code_action.target_scope_ids == (
-        PipelineScopeIdentity.from_plate_scope(PLATE_SCOPE_ID).scope_id,
-    )
-    assert code_action.selection_mode == "current_pipeline"
-    assert edit_action.target_scope_ids == ("scope-from-manager-hook-1",)
-    assert edit_action.selection_mode == "selected_steps"
-    assert edit_action.related_state_surface_ids == ("pipeline_editor.state",)
-    assert edit_action.disabled_error is not None
-    assert edit_action.disabled_error.hint is not None
-    assert "selected step" in edit_action.disabled_error.hint
-    assert auto_action.confirmation_required is True
-    assert auto_action.side_effects == ("loads_basic_pipeline", "mutates_pipeline")
-
-
-def test_pipeline_debug_toolbar_actions_are_exposed_from_toolbar_declarations() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePipelineEditor()
-    bridge = _pipeline_editor_bridge(manager)
-    widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-
-    actions = {
-        action.identity.action_id: action
-        for action in bridge.list_actions().actions
-        if action.identity.widget_id == widget_id
-    }
-    expected_action_ids = {
-        declaration.action_id()
-        for declaration in PipelineDebugActionDeclarationBase.toolbar_actions()
-    }
-
-    assert set(actions) == expected_action_ids
-    step_action = actions[DebugCommandType.STEP.value]
-    restart_action = actions[DebugCommandType.RESTART.value]
-    stop_action = actions[DebugCommandType.STOP.value]
-    runtime_action = actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]
-    assert step_action.title == StepDebugAction.label
-    assert step_action.enabled is True
-    assert step_action.confirmation_required is True
-    assert restart_action.enabled is False
-    assert restart_action.disabled_error is not None
-    assert restart_action.disabled_error.code == "debug_session_required"
-    assert stop_action.enabled is False
-    assert stop_action.disabled_error is not None
-    assert stop_action.disabled_error.code == "debug_session_required"
-    assert runtime_action.enabled is False
-    assert runtime_action.disabled_error is not None
-    assert runtime_action.disabled_error.code == "debug_session_required"
-
-
-def test_pipeline_debug_toolbar_projects_pending_execution_to_bridge_actions() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePipelineEditor()
-    manager.manager_execution_state = ManagerExecutionState.RUNNING
-    manager.debug_toolbar.set_debug_session_context(manager.debug_session_context())
-    bridge = _pipeline_editor_bridge(manager)
-    widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-    actions = {
-        action.identity.action_id: action
-        for action in bridge.list_actions().actions
-        if action.identity.widget_id == widget_id
-    }
-
-    step_action = actions[DebugCommandType.STEP.value]
-    stop_action = actions[DebugCommandType.STOP.value]
-
-    assert step_action.enabled is False
-    assert step_action.disabled_error is not None
-    assert step_action.disabled_error.code == "debug_execution_pending"
-    assert stop_action.enabled is True
-
-
-def test_pipeline_debug_toolbar_action_invoke_routes_to_debug_workflow() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePipelineEditor()
-    bridge = _pipeline_editor_bridge(manager)
-    widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-    action = next(
-        action
-        for action in bridge.list_actions().actions
-        if (
-            action.identity.widget_id == widget_id
-            and action.identity.action_id == DebugCommandType.STEP.value
-        )
-    )
-
-    rejected = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=widget_id,
-            action_id=DebugCommandType.STEP.value,
-            selected_scope_ids=action.target_scope_ids,
-            observed_selection_revision_token=action.selection_revision_token,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(True),
-        )
-    )
-    accepted = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=widget_id,
-            action_id=DebugCommandType.STEP.value,
-            selected_scope_ids=action.target_scope_ids,
-            observed_selection_revision_token=action.selection_revision_token,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-
-    assert rejected.status == "rejected"
-    assert rejected.errors
-    assert rejected.errors[0].code == "confirmation_required"
-    assert accepted.status == "accepted"
-    assert manager.debug_workflow.commands == [DebugCommand(DebugCommandType.STEP)]
-
-
-def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePipelineEditor()
-    bridge = _pipeline_editor_bridge(manager)
-    widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-    manager.debug_session_state = DebugSession.create(plate_id=PLATE_SCOPE_ID)
-    manager.debug_toolbar.set_debug_session_context(manager.debug_session_context())
-    action = next(
-        action
-        for action in bridge.list_actions().actions
-        if (
-            action.identity.widget_id == widget_id
-            and action.identity.action_id
-            == DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value
-        )
-    )
-
-    result = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=widget_id,
-            action_id=DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
-            selected_scope_ids=action.target_scope_ids,
-            observed_selection_revision_token=action.selection_revision_token,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(True),
-        )
-    )
-
-    assert action.enabled is True
-    assert action.confirmation_required is False
-    assert result.status == "accepted"
-    assert manager.debug_workflow.runtime_inspections == 1
-
-
-def test_pipeline_debug_session_state_surface_projects_context_and_actions() -> None:
-    QtApplicationAuthority.app()
-    cursor = DebugCursor(
-        step_index=1,
-        step_scope_id="scope-from-manager-hook-1",
-        group_key="default",
-        invocation_key="default:0:segment",
-    )
-    manager = FakePipelineEditor()
-    manager.debug_session_state = DebugSession.create(
-        plate_id=PLATE_SCOPE_ID,
-        execution_id="exec-1",
-        axis_id="A01",
-    ).with_cursor(cursor)
-    bridge = _pipeline_editor_bridge(manager)
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-    actions = {action["action_id"]: action for action in state.payload["actions"]}
-
-    assert state.summary.surface_id == UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value
-    assert state.payload["phase"] == "active_session"
-    assert state.payload["current_plate_scope_id"] == PLATE_SCOPE_ID
-    assert state.payload["pipeline_scope_id"] == (
-        PipelineScopeIdentity.from_plate_scope(PLATE_SCOPE_ID).scope_id
-    )
-    assert (
-        state.payload["active_session_id"]
-        == manager.debug_session_state.debug_session_id
-    )
-    assert state.payload["execution_id"] == "exec-1"
-    assert state.payload["axis_id"] == "A01"
-    assert state.payload["cursor"]["step_scope_id"] == "scope-from-manager-hook-1"
-    assert actions[DebugCommandType.RESTART.value]["enabled"] is True
-    assert actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is True
-    assert actions[DebugCommandType.STEP.value]["label"] == StepDebugAction.label
-
-
-def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
-    QtApplicationAuthority.app()
-    cursor = DebugCursor(
-        step_index=1,
-        step_scope_id="scope-from-manager-hook-1",
-        group_key="default",
-        invocation_key="default:0:segment",
-    )
-    session = DebugSession(
-        debug_session_id="debug-1",
-        plate_id=PLATE_SCOPE_ID,
-        execution_id="exec-1",
-        axis_id="A01",
-    ).with_cursor(cursor)
-    progress_event = ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="exec-1",
-            plate_id=PLATE_SCOPE_ID,
-            axis_id="A01",
-            step_name="IdentifyPrimaryObjects",
-        ),
-        phase=ProgressPhase.PATTERN_GROUP,
-        status=ProgressStatus.SUCCESS,
-        percent=100.0,
-        completed=1,
-        total=1,
-        timestamp=123.0,
-        pid=1234,
-        context=DebugProgressContext(
-            debug_session_id="debug-1",
-            snapshot_id="snapshot-1",
-            cursor=cursor,
-            event_type=DebugEventType.AFTER_INVOCATION,
-            snapshot_store_ref="/debug",
-        ).to_progress_context(),
-    )
-    manager = FakePipelineEditor()
-    manager.debug_session_state = session
-    manager.debug_runtime_projection_state = (
-        RuntimeProjectionBuilder()
-        .build(
-            RuntimeProjectionSource(
-                events_by_execution={"exec-1": [progress_event]},
-                session=session,
-            )
-        )
-        .debug
-    )
-    bridge = _pipeline_editor_bridge(manager)
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-
-    assert state.payload["current_frame"]["debug_session_id"] == "debug-1"
-    assert state.payload["current_frame"]["snapshot_id"] == "snapshot-1"
-    assert state.payload["current_frame"]["event_type"] == "after_invocation"
-    assert state.payload["current_frame"]["progress_identity"]["axis_id"] == "A01"
-    assert state.payload["last_frame"] == state.payload["current_frame"]
-
-
-def test_pipeline_debug_session_state_surface_projects_terminal_summary() -> None:
-    QtApplicationAuthority.app()
-    cursor = DebugCursor(
-        step_index=1,
-        step_scope_id="scope-from-manager-hook-1",
-        group_key="default",
-        invocation_key="default:0:segment",
-    )
-    manager = FakePipelineEditor()
-    manager.debug_terminal_summary = DebugTerminalSummary(
-        debug_session_id="debug-1",
-        plate_id=PLATE_SCOPE_ID,
-        terminal_status="complete",
-        cursor=cursor,
-        command_type=DebugCommandType.STEP,
-        axis_id="A01",
-        snapshot_id="snapshot-1",
-        snapshot_store_ref="/debug",
-    )
-    bridge = _pipeline_editor_bridge(manager)
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-
-    assert state.payload["phase"] == "terminal_complete"
-    assert state.payload["active_session_id"] is None
-    assert state.payload["terminal_summary"]["debug_session_id"] == "debug-1"
-    assert state.payload["terminal_summary"]["command_type"] == "step"
-    assert state.payload["terminal_summary"]["cursor"]["step_index"] == 1
-
-
-def test_pipeline_debug_session_state_surface_retire_matching_local_session() -> None:
-    QtApplicationAuthority.app()
-    cursor = DebugCursor(
-        step_index=1,
-        step_scope_id="scope-from-manager-hook-1",
-        group_key="default",
-        invocation_key="default:0:segment",
-    )
-    manager = FakePipelineEditor()
-    manager.debug_session_state = (
-        DebugSession.create(
-            plate_id=PLATE_SCOPE_ID,
-            execution_id="exec-1",
-            axis_id="A01",
-        )
-        .with_cursor(cursor)
-        .with_command(DebugCommandType.STEP)
-    )
-    manager.debug_terminal_summary = DebugTerminalSummary(
-        debug_session_id=manager.debug_session_state.debug_session_id,
-        plate_id=PLATE_SCOPE_ID,
-        terminal_status="complete",
-        cursor=cursor,
-        command_type=DebugCommandType.STEP,
-        axis_id="A01",
-        snapshot_id="snapshot-1",
-        snapshot_store_ref="/debug",
-    )
-    bridge = _pipeline_editor_bridge(manager)
-
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-    actions = {action["action_id"]: action for action in state.payload["actions"]}
-
-    assert state.payload["phase"] == "terminal_complete"
-    assert state.payload["active_session_id"] is None
-    assert state.payload["execution_id"] is None
-    assert state.payload["cursor"] is None
-    assert state.payload["terminal_summary"]["debug_session_id"] == (
-        manager.debug_session_state.debug_session_id
-    )
-    assert actions[DebugCommandType.RUN.value]["label"] == "Start Debug"
-    assert actions[DebugCommandType.RESTART.value]["enabled"] is False
-    assert actions[DebugCommandType.STOP.value]["enabled"] is False
-    assert actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is False
-
-
-def test_pipeline_editor_state_surface_projects_steps_and_selection(
-    monkeypatch,
-) -> None:
-    QtApplicationAuthority.app()
-    manager = FakePipelineEditor(selected_indices=(1,))
-    bridge = _pipeline_editor_bridge(manager)
-    reference_indexes: dict[int, int] = {}
-
-    @dataclass(frozen=True)
-    class _FunctionReference:
-        composite_key: str
-
-    def function_reference(function):
-        index = reference_indexes.setdefault(id(function), len(reference_indexes))
-        return _FunctionReference(f"test:function_{index}")
-
-    monkeypatch.setattr(
-        FunctionReferenceTransportAuthority,
-        "function_reference",
-        staticmethod(function_reference),
-    )
-
-    catalog = bridge.list_state_surfaces()
-    state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PIPELINE_EDITOR.value,
-            selection_mode=ALL_SELECTION_MODE,
-        )
-    )
-    selected_state = bridge.get_state_surface(
-        UiStateSurfaceRequest(
-            surface_id=UiStateSurfaceId.PIPELINE_EDITOR.value,
-            selection_mode=SELECTED_SELECTION_MODE,
-            base_revision_token=state.current_revision_token,
-        )
-    )
-
-    assert catalog.surfaces[0].surface_id == UiStateSurfaceId.PIPELINE_EDITOR.value
-    assert state.summary.surface_id == UiStateSurfaceId.PIPELINE_EDITOR.value
-    assert state.summary.current_selection_count == 1
-    assert state.summary.total_scope_count == 2
-    assert state.payload["pipeline_scope_id"] == (
-        PipelineScopeIdentity.from_plate_scope(PLATE_SCOPE_ID).scope_id
-    )
-    assert state.payload["selected_scope_ids"] == ["scope-from-manager-hook-1"]
-    assert [step["name"] for step in state.payload["steps"]] == [
-        "step_one",
-        "step_two",
-    ]
-    assert state.payload["steps"][0]["selected"] is False
-    assert state.payload["steps"][1]["selected"] is True
-    assert state.payload["steps"][1]["step_scope_id"] == "scope-from-manager-hook-1"
-    assert state.payload["steps"][0]["function_ids"] == ["test:function_0"]
-    assert state.payload["steps"][1]["function_ids"] == ["test:function_1"]
-    assert selected_state.payload["steps"][0]["name"] == "step_two"
-    assert selected_state.payload["steps"][0]["function_ids"] == ["test:function_1"]
-    assert selected_state.unchanged is False
-
-
-def test_pipeline_editor_action_invoke_uses_selection_token_and_confirmation() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePipelineEditor(selected_indices=(0,))
-    bridge = _pipeline_editor_bridge(manager)
-
-    actions = {
-        action.identity.action_id: action for action in bridge.list_actions().actions
-    }
-    code_action = actions[PipelineEditorAction.CODE_PIPELINE.value]
-    edit_action = actions[PipelineEditorAction.EDIT_STEP.value]
-
-    code_result = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=code_action.identity.widget_id,
-            action_id=code_action.identity.action_id,
-            selected_scope_ids=code_action.target_scope_ids,
-            observed_selection_revision_token=code_action.selection_revision_token,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(True),
-        )
-    )
-    edit_result = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=edit_action.identity.widget_id,
-            action_id=edit_action.identity.action_id,
-            selected_scope_ids=edit_action.target_scope_ids,
-            observed_selection_revision_token=edit_action.selection_revision_token,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(True),
-        )
-    )
-    stale_result = bridge.invoke_action(
-        UiActionInvokeRequest(
-            widget_id=edit_action.identity.widget_id,
-            action_id=edit_action.identity.action_id,
-            selected_scope_ids=("wrong-target",),
-            observed_selection_revision_token=edit_action.selection_revision_token,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-
-    assert code_result.status == "accepted"
-    assert manager.code_count == 1
-    assert edit_result.status == "rejected"
-    assert edit_result.errors
-    assert edit_result.errors[0].code == "confirmation_required"
-    assert manager.edit_count == 0
-    assert stale_result.status == "rejected"
-    assert stale_result.errors
-    assert stale_result.errors[0].code == "stale_ui_action_selection"
-    assert stale_result.errors[0].hint is not None
-    assert "selection_mode=selected_steps" in stale_result.errors[0].hint
-    assert "pipeline_editor.state" in stale_result.errors[0].hint
-    assert "openhcs_ui_navigate_window" in stale_result.errors[0].hint
-    assert "window_id='pipeline_editor'" in stale_result.errors[0].hint
-    assert "item_id from its current state surface" in stale_result.errors[0].hint
-    assert "window_id='wrong-target'" not in stale_result.errors[0].hint
-
-
-def test_selected_workflow_returns_before_queued_plate_action_runs() -> None:
-    QtApplicationAuthority.app()
-    dispatcher = QueuedPostDispatcher()
-    manager = FakePlateManager(
-        selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
-    )
-    manager.ACTION_ROUTES = {
-        PlateManagerAction.INIT_PLATE: WidgetActionRoute(
-            PlateManagerAction.INIT_PLATE,
-            lambda widget: widget.action_code_plate,
-        ),
-    }
-    manager.BUTTON_CONFIGS = [
-        ("Init", PlateManagerAction.INIT_PLATE.value, "Initialize plate"),
-    ]
-    manager.buttons[PlateManagerAction.INIT_PLATE.value] = FakeButton(enabled=True)
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=dispatcher,
-    )
-
-    result = bridge.selected_plate_workflow(
-        UiSelectedPlateWorkflowRequest(
-            workflow=UiSelectedPlateWorkflowKind.INIT,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-
-    operation_id = result.action_result.receipt.bridge_operation_id
-    assert result.action_result.status == "accepted"
-    assert operation_id is not None
-    assert result.action_result.workflow_status_surface_ids == ("plate_manager.state",)
-    assert manager.code_action_count == 0
-    assert len(dispatcher.callbacks) == 1
-    assert bridge.get_operation_status(operation_id).status == "running"
-
-    dispatcher.run_next()
-
-    assert manager.code_action_count == 1
-    operation = bridge.get_operation_status(operation_id)
-    assert operation.status == "completed"
-    assert operation.outcome == "accepted"
-
-
-def test_selected_workflow_rejection_includes_selection_recovery_hint() -> None:
-    QtApplicationAuthority.app()
-    manager = FakePlateManager(selected=(), plates=())
-    manager.ACTION_ROUTES = {
-        PlateManagerAction.COMPILE_PLATE: WidgetActionRoute(
-            PlateManagerAction.COMPILE_PLATE,
-            lambda widget: widget.action_code_plate,
-        ),
-    }
-    manager.BUTTON_CONFIGS = [
-        ("Compile", PlateManagerAction.COMPILE_PLATE.value, "Compile plate pipelines"),
-    ]
-    manager.buttons[PlateManagerAction.COMPILE_PLATE.value] = FakeButton(enabled=True)
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    catalog = bridge.list_actions()
-    action = catalog.actions[0]
-    result = bridge.selected_plate_workflow(
-        UiSelectedPlateWorkflowRequest(
-            workflow=UiSelectedPlateWorkflowKind.COMPILE,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-
-    assert not action.enabled
-    assert action.disabled_error is not None
-    assert action.disabled_error.code == "plate_selection_required"
-    assert action.disabled_error.hint is not None
-    assert "plate_manager.state" in action.disabled_error.hint
-    assert "plate_manager.orchestrator_config" in action.disabled_error.hint
-    assert "openhcs_ui_apply_code_document" in action.disabled_error.hint
-    assert catalog.warnings
-    assert catalog.warnings[0].code == "plate_path_setup_uses_code_document"
-    assert "plate_paths" in catalog.warnings[0].message
-    assert result.errors
-    assert result.errors[0].code == "plate_selection_required"
-    assert result.errors[0].hint is not None
-    assert "plate_manager.orchestrator_config" in result.errors[0].hint
-
-
-def test_selected_compile_reports_init_precondition_when_plate_is_created() -> None:
-    QtApplicationAuthority.app()
-    ObjectStateRegistry.register(
-        ObjectState(
-            FakeOrchestrator(state=OrchestratorState.CREATED),
-            scope_id=PLATE_SCOPE_ID,
-        ),
-        _skip_snapshot=True,
-    )
-    manager = FakePlateManager(
-        selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
-        pipeline_steps=(FunctionStep(func=lambda image: image, name="Defined"),),
-    )
-    manager.ACTION_ROUTES = {
-        PlateManagerAction.COMPILE_PLATE: WidgetActionRoute(
-            PlateManagerAction.COMPILE_PLATE,
-            lambda widget: widget.action_code_plate,
-        ),
-    }
-    manager.BUTTON_CONFIGS = [
-        ("Compile", PlateManagerAction.COMPILE_PLATE.value, "Compile plate pipelines"),
-    ]
-    manager.buttons[PlateManagerAction.COMPILE_PLATE.value] = FakeButton(enabled=True)
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager),
-        dispatcher=InlineDispatcher(),
-    )
-
-    action = bridge.list_actions().actions[0]
-    assert not action.enabled
-    assert action.disabled_error is not None
-    assert action.disabled_error.code == "orchestrator_not_initialized"
-    assert "init_plate" in action.disabled_error.message
-
-    result = bridge.selected_plate_workflow(
-        UiSelectedPlateWorkflowRequest(
-            workflow=UiSelectedPlateWorkflowKind.COMPILE,
-            selected_scope_ids=(PLATE_SCOPE_ID,),
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
-        )
-    )
-
-    assert result.action_result.status == "rejected"
-    assert result.errors
-    assert result.errors[0].code == "orchestrator_not_initialized"
-    assert "init_plate" in result.errors[0].message
-
-
-def test_selected_workflow_confirmation_rejection_avoids_ui_preflight() -> None:
-    QtApplicationAuthority.app()
-    ObjectStateRegistry.register(
-        ObjectState(
-            FakeOrchestrator(state=OrchestratorState.READY),
-            scope_id=PLATE_SCOPE_ID,
-        ),
-        _skip_snapshot=True,
-    )
-    manager = FakePlateManager(
-        selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
-        pipeline_steps=(FunctionStep(func=lambda image: image, name="Defined"),),
-    )
-    manager.ACTION_ROUTES = {
-        PlateManagerAction.COMPILE_PLATE: WidgetActionRoute(
-            PlateManagerAction.COMPILE_PLATE,
-            lambda widget: widget.action_code_plate,
-        ),
-    }
-    manager.BUTTON_CONFIGS = [
-        ("Compile", PlateManagerAction.COMPILE_PLATE.value, "Compile plate pipelines"),
-    ]
-    manager.buttons[PlateManagerAction.COMPILE_PLATE.value] = FakeButton(enabled=True)
-    dispatcher = CountingDispatcher()
-    bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(manager), dispatcher=dispatcher
-    )
-
-    result = bridge.selected_plate_workflow(
-        UiSelectedPlateWorkflowRequest(
-            workflow=UiSelectedPlateWorkflowKind.COMPILE,
-            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(True),
-        )
-    )
-
-    assert result.action_result.status == "rejected"
-    assert result.errors[0].code == "confirmation_required"
-    assert result.action_result.target_scope_ids == ()
-    assert result.action_result.selection_revision_token is None
-    assert result.action_result.workflow_status_surface_ids == ("plate_manager.state",)
-    assert dispatcher.call_count == 0
-
-
 def test_validation_rejects_side_effecting_source_before_execution() -> None:
     bridge = UiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(FakePlateManager())
@@ -4443,7 +2885,7 @@ def test_apply_rejection_reports_current_revision_and_snapshot() -> None:
     bridge = UiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(
             FakePlateManager(
-                selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
+                selected=(PLATE_SCOPE_ID,),
                 operations=FakeOperations(state),
             )
         ),
@@ -4478,7 +2920,7 @@ def test_confirmation_required_apply_rejection_reports_current_context() -> None
     bridge = UiAgentBridgeService(
         provider_set=PlateManagerBridgeProviderSet(
             FakePlateManager(
-                selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),),
+                selected=(PLATE_SCOPE_ID,),
                 operations=FakeOperations(state),
             )
         ),
@@ -4977,10 +3419,10 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
     tmp_path: Path,
 ) -> None:
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
+    manager = FakePlateManager(selected=(PLATE_SCOPE_ID,))
+    manager.session.ensure_datasets((DATASET_SCOPE_ID,))
     bridge = UiAgentBridgeService(
-        provider_set=PlateManagerBridgeProviderSet(
-            FakePlateManager(selected=(FakeRow(PLATE_SCOPE_ID, PLATE_NAME),))
-        ),
+        provider_set=PlateManagerBridgeProviderSet(manager),
         dispatcher=InlineDispatcher(),
     )
     server = UiBridgeControlServer(
@@ -5023,7 +3465,7 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
             state_catalog.surfaces[0].surface_id == UiStateSurfaceId.PLATE_MANAGER.value
         )
         assert document.source == VALID_SOURCE
-        assert state.payload["rows"][0]["plate_scope_id"] == PLATE_SCOPE_ID
+        assert state.payload["rows"][0]["scope_id"] == DATASET_SCOPE_ID
         assert Path(binding.descriptor_file_path).exists()
     finally:
         server.stop()
@@ -5176,3 +3618,1194 @@ class _StaticUiBridgeDescriptorResolver:
     ) -> UiBridgeConnectionResolution:
         del connection
         return UiBridgeConnectionResolution.from_connection(self._connection)
+
+
+class BridgeSessions:
+    """One caller-thread session per test, created on first use and closed after."""
+
+    current: Session | None = None
+
+    @classmethod
+    def get(cls) -> Session:
+        if cls.current is None:
+            ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+            cls.current = Session(
+                transport_config=OpenHCSZMQConfig(
+                    default_port=session_port(), persistent=False
+                ),
+                global_config=GlobalPipelineConfig(),
+                main_thread=CallerThread(),
+            )
+        return cls.current
+
+    @classmethod
+    def close(cls) -> None:
+        if cls.current is not None:
+            cls.current.close()
+            cls.current = None
+
+
+class RecordingRenderer(Renderer):
+    """Records what the session asks a client to present."""
+
+    def __init__(self) -> None:
+        self.presented: list[tuple[type, object]] = []
+
+    def presents(self, operation) -> bool:
+        return True
+
+    def present(self, operation, request) -> None:
+        self.presented.append((operation, request))
+
+    def prompt(self, operation):
+        return None
+
+
+@dataclass(frozen=True, slots=True)
+class FakeCodeDocumentContext:
+    source: str
+    selected_scope_ids: tuple[str, ...]
+
+
+class FakePlateManager:
+    """The dataset list's code-document port: rows, a selection, a document.
+
+    Documents render a fixed source and apply through ``operations``; the
+    session is real and serves the dataset operations' actions.
+    """
+
+    def __init__(
+        self,
+        *,
+        selected: tuple[str, ...] = (),
+        plates: tuple[str, ...] = (PLATE_SCOPE_ID,),
+        operations: FakeOperations | None = None,
+    ) -> None:
+        self.selected = list(selected)
+        self.plate_scope_ids = list(plates)
+        self.operations = operations or FakeOperations()
+        self.document_scopes: list[object] = []
+
+    @property
+    def session(self) -> Session:
+        return BridgeSessions.get()
+
+    @property
+    def plates(self) -> list[DatasetRow]:
+        return [DatasetRow.of(scope_id) for scope_id in self.plate_scope_ids]
+
+    def get_selected_items(self) -> list[DatasetRow]:
+        return [DatasetRow.of(scope_id) for scope_id in self.selected]
+
+    def selection_scope_ids(self) -> tuple[str, ...]:
+        return tuple(self.selected)
+
+    def dataset_document(self, selection_mode) -> FakeCodeDocumentContext:
+        scope_ids = (
+            self.plate_scope_ids
+            if selection_mode is SelectedAllSelectionMode.ALL
+            else self.selected
+        )
+        return FakeCodeDocumentContext(
+            source=VALID_SOURCE, selected_scope_ids=tuple(scope_ids)
+        )
+
+    def code_document_operations(self, scope) -> FakeOperations:
+        self.document_scopes.append(scope)
+        return self.operations
+
+
+@contextmanager
+def dataset_gui(*names: str, selected: tuple[int, ...] = (0,)):
+    """The real dataset list over a session holding ``names`` as datasets."""
+
+    with session_gui() as gui:
+        scope_ids = gui.session.ensure_datasets(names)
+        gui.session.select(tuple(scope_ids[index] for index in selected))
+        gui.settle()
+        yield gui, scope_ids
+
+
+def _identity_one(image):
+    return image
+
+
+def _identity_two(image):
+    return image
+
+
+@contextmanager
+def pipeline_gui(selected_steps: tuple[int, ...] = (0,), *, compiled: bool = True):
+    """The real pipeline editor over a session with one two-step dataset."""
+
+    with session_gui() as gui:
+        session = gui.session
+        session.ensure_datasets((DATASET_SCOPE_ID,))
+        session.set_dataset_state(DATASET_SCOPE_ID, OrchestratorState.READY)
+        session.set_pipeline(
+            DATASET_SCOPE_ID,
+            [
+                FunctionStep(func=_identity_one, name="step_one"),
+                FunctionStep(func=_identity_two, name="step_two"),
+            ],
+        )
+        if compiled:
+            session.compiled[DATASET_SCOPE_ID] = object()
+        session.select((DATASET_SCOPE_ID,))
+        gui.settle()
+        editor = gui.pipeline_editor
+        for index in selected_steps:
+            editor.item_list.item(index).setSelected(True)
+        gui.settle()
+        editor.update_button_states()
+        yield gui
+
+
+def _pipeline_editor_bridge(editor) -> UiAgentBridgeService:
+    snapshot_provider = UiObjectStateSnapshotProvider()
+    registry = UiBridgeSurfaceRegistry()
+    PipelineEditorBridgeProviderSet(editor).register(
+        UiBridgeRegistrationContext(
+            registry=registry,
+            snapshot_provider=snapshot_provider,
+        )
+    )
+    return UiAgentBridgeService(
+        registry=registry,
+        dispatcher=InlineDispatcher(),
+        snapshot_provider=snapshot_provider,
+    )
+
+
+def _plate_manager_bridge(manager, dispatcher=None) -> UiAgentBridgeService:
+    return UiAgentBridgeService(
+        provider_set=PlateManagerBridgeProviderSet(manager),
+        dispatcher=dispatcher or InlineDispatcher(),
+    )
+
+
+def _plate_manager_state(bridge, selection_mode=ALL_SELECTION_MODE, **kwargs):
+    return bridge.get_state_surface(
+        UiStateSurfaceRequest(
+            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
+            selection_mode=selection_mode,
+            **kwargs,
+        )
+    )
+
+
+@pytest.fixture(autouse=True)
+def reset_object_state_registry():
+    ObjectStateRegistry._states.clear()
+    ObjectStateRegistry._time_travel_limbo.clear()
+    ObjectStateRegistry._graveyard.clear()
+    ObjectStateRegistry._snapshots.clear()
+    ObjectStateRegistry._timelines.clear()
+    ObjectStateRegistry._current_timeline = "main"
+    ObjectStateRegistry._current_head = None
+    ObjectStateRegistry._in_time_travel = False
+    ObjectStateRegistry._atomic_depth = 0
+    ObjectStateRegistry._atomic_label = None
+    ObjectStateRegistry._atomic_triggering_scope = None
+    ObjectStateRegistry._token = 0
+    yield
+    BridgeSessions.close()
+
+
+def test_manager_buttons_are_their_views_operations() -> None:
+    for widget in (PlateManagerWidget, PipelineEditorWidget):
+        assert [config[1] for config in widget.BUTTON_CONFIGS] == [
+            operation.operation_id for operation in widget.SESSION_VIEW.operations
+        ]
+
+
+def _main_window_bridge(main_window) -> UiAgentBridgeService:
+    registry = UiBridgeSurfaceRegistry()
+    snapshot_provider = UiObjectStateSnapshotProvider()
+    MainWindowBridgeProviderSet(main_window).register(
+        UiBridgeRegistrationContext(
+            registry=registry,
+            snapshot_provider=snapshot_provider,
+        )
+    )
+    return UiAgentBridgeService(
+        registry=registry,
+        dispatcher=InlineDispatcher(),
+        snapshot_provider=snapshot_provider,
+    )
+
+
+def test_main_window_actions_are_application_operations_presented_by_the_window() -> (
+    None
+):
+    QtApplicationAuthority.app()
+    main_window = FakeMainWindow()
+    bridge = _main_window_bridge(main_window)
+    catalog = bridge.list_actions()
+    actions = {
+        action.identity.action_id: action
+        for action in catalog.actions
+        if action.identity.widget_id == "main_window"
+    }
+    operations = (CheckForUpdates, RestartApplication, ExitApplication)
+
+    assert set(actions) == {operation.operation_id for operation in operations}
+    for operation in operations:
+        action = actions[operation.operation_id]
+        assert action.enabled is True
+        assert action.title == operation.label
+        assert action.side_effects == operation.side_effects
+        assert action.confirmation_required is operation.confirmation_required
+    assert {"ui_restart_reconnect_required", "ui_exit_disconnect_expected"} <= {
+        warning.code for warning in catalog.warnings
+    }
+
+    counts = []
+    for operation in operations:
+        result = bridge.invoke_action(
+            UiActionInvokeRequest(
+                widget_id="main_window",
+                action_id=operation.operation_id,
+                confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
+                    False
+                ),
+            )
+        )
+        assert result.status == "accepted", result.errors
+        assert result.warnings == operation.warnings
+        counts.append(
+            (
+                main_window.update_check_count,
+                main_window.restart_count,
+                main_window.exit_count,
+            )
+        )
+    assert counts == [(1, 0, 0), (1, 1, 0), (1, 1, 1)]
+
+
+def test_main_window_action_is_unavailable_while_its_window_action_is_disabled() -> (
+    None
+):
+    QtApplicationAuthority.app()
+    main_window = FakeMainWindow()
+    main_window.check_for_updates_action.setEnabled(False)
+    bridge = _main_window_bridge(main_window)
+
+    action = next(
+        action
+        for action in bridge.list_actions().actions
+        if action.identity.action_id == CheckForUpdates.operation_id
+    )
+    result = bridge.invoke_action(
+        UiActionInvokeRequest(
+            widget_id="main_window",
+            action_id=CheckForUpdates.operation_id,
+            confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
+        )
+    )
+
+    assert action.enabled is False
+    assert action.disabled_error.code == "update_check_in_progress"
+    assert result.status == "rejected"
+    assert main_window.update_check_count == 0
+
+
+def test_ui_bridge_composition_builds_all_registered_provider_sets() -> None:
+    QtApplicationAuthority.app()
+    with pipeline_gui() as gui:
+        main_window = FakeMainWindow(session=gui.session)
+        main_window.plate_manager_widget = gui.plate_manager
+        main_window.pipeline_editor_widget = gui.pipeline_editor
+
+        bridge = OpenHCSUiBridgeCompositionRoot.for_main_window(
+            main_window
+        ).build_service()
+
+        assert isinstance(bridge, UiAgentBridgeService)
+
+
+def test_selected_plate_document_does_not_fall_back_to_all_rows() -> None:
+    """Documents and state honour an empty selection instead of every row.
+
+    The dataset list widget always keeps a row selected while rows exist, so
+    the empty selection is held by the port stand-in and the session.
+    """
+
+    first, second = DATASET_SCOPE_ID, f"{DATASET_SCOPE_ID}-other"
+    manager = FakePlateManager(selected=(), plates=(first, second))
+    manager.session.ensure_datasets((first, second))
+    manager.session.select(())
+    bridge = _plate_manager_bridge(manager)
+
+    def document(mode):
+        return bridge.get_document(
+            UiCodeDocumentRequest(document_id=DOCUMENT_ID, selection_mode=mode)
+        )
+
+    selected_document = document(SELECTED_SELECTION_MODE)
+    all_document = document(ALL_SELECTION_MODE)
+    selected_state = _plate_manager_state(bridge, SELECTED_SELECTION_MODE)
+    all_state = _plate_manager_state(bridge)
+
+    assert selected_document.errors[0].code == "no_selection"
+    assert selected_document.selected_scope_ids == ()
+    assert selected_document.summary.current_selection_count == 0
+    assert all_document.errors == ()
+    assert all_document.selected_scope_ids == (first, second)
+    assert all_document.summary.current_selection_count == 0
+    assert selected_state.selected_scope_ids == ()
+    assert selected_state.summary.current_selection_count == 0
+    assert selected_state.payload["rows"] == []
+    assert all_state.selected_scope_ids == ()
+    assert [row["selected"] for row in all_state.payload["rows"]] == [False, False]
+    assert selected_state.current_revision_token != all_state.current_revision_token
+
+    manager.selected = [second]
+    manager.session.select((second,))
+    newly_selected_document = document(SELECTED_SELECTION_MODE)
+    newly_selected_state = _plate_manager_state(bridge, SELECTED_SELECTION_MODE)
+
+    assert newly_selected_document.errors == ()
+    assert newly_selected_document.selected_scope_ids == (second,)
+    assert newly_selected_document.summary.current_selection_count == 1
+    assert newly_selected_state.selected_scope_ids == (second,)
+    assert newly_selected_state.summary.current_selection_count == 1
+    assert [
+        row["scope_id"] for row in newly_selected_state.payload["rows"]
+    ] == [second]
+    assert newly_selected_state.payload["rows"][0]["selected"] is True
+    assert (
+        newly_selected_state.current_revision_token
+        != selected_state.current_revision_token
+    )
+
+
+def test_embedded_manager_window_summary_carries_shared_row_semantics() -> None:
+    app = QtApplicationAuthority.app()
+    with session_gui() as gui:
+        pipeline_editor = gui.pipeline_editor
+        pipeline_editor.setObjectName("pipeline_editor")
+        row = QListWidgetItem("1. Normalize")
+        row.setData(OBJECT_STATE_PATH_ROLE, "plate-1::functionstep_0")
+        row.setData(DIRTY_FIELDS_ROLE, {"name", "napari_streaming_config.enabled"})
+        row.setData(SIG_DIFF_FIELDS_ROLE, {"func"})
+        pipeline_editor.item_list.addItem(row)
+        main_window = FakeMainWindow(
+            pipeline_editor=pipeline_editor, session=gui.session
+        )
+        main_window.embedded_widgets.show_pipeline_editor()
+        app.processEvents()
+
+        summary = next(
+            window
+            for window in _main_window_bridge(main_window).list_windows().windows
+            if window.window_id == "pipeline_editor"
+        )
+
+        assert summary.dirty is True
+        assert summary.signature_diff is True
+        assert summary.dirty_field_count == 2
+        assert summary.signature_diff_field_count == 1
+        assert summary.semantic_markers == ("*", "_")
+
+
+# ---------------------------------------------------------------------------
+# Dataset list state surface: the session's DatasetListView
+# ---------------------------------------------------------------------------
+
+
+def test_plate_manager_state_surface_projects_runtime_row_status() -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        gui.session.mark_compile_pending((DATASET_SCOPE_ID,))
+        bridge = _plate_manager_bridge(gui.plate_manager)
+
+        state = _plate_manager_state(bridge)
+        poll_state = _plate_manager_state(
+            bridge, base_revision_token=state.current_revision_token
+        )
+
+        assert state.summary.surface_id == UiStateSurfaceId.PLATE_MANAGER.value
+        row = state.payload["rows"][0]
+        assert row["scope_id"] == DATASET_SCOPE_ID
+        assert row["status_prefix"] == "⏳ Compile"
+        assert row["compile_pending"] is True
+        assert row["selected"] is True
+        assert poll_state.unchanged is True
+
+
+def test_every_dataset_action_relates_its_declared_state_surfaces() -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        bridge = _plate_manager_bridge(gui.plate_manager)
+
+        actions = {
+            action.identity.action_id: action
+            for action in bridge.list_actions().actions
+        }
+
+        assert set(actions) == {
+            operation.operation_id for operation in DatasetListView.operations
+        }
+        for operation in DatasetListView.operations:
+            assert actions[operation.operation_id].related_state_surface_ids == (
+                state_surface_ids_for_action(
+                    PlateManagerWidget.UI_STATE_SURFACE_DECLARATIONS,
+                    operation.operation_id,
+                )
+            )
+        assert actions[ShowLiveResults.operation_id].related_state_surface_ids == (
+            "plate_manager.state",
+            "plate_manager.live_measurements",
+        )
+
+
+def test_plate_manager_state_surface_links_source_and_output_plate_rows(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source-plate"
+    output_root = tmp_path / "source-plate_openhcs"
+    with dataset_gui(str(source_root), str(output_root)) as (gui, scope_ids):
+        source, output = scope_ids
+
+        state = _plate_manager_state(_plate_manager_bridge(gui.plate_manager))
+
+        source_payload, output_payload = state.payload["rows"]
+        assert source_payload["output_scope_id"] == output
+        assert source_payload["output_root"] == str(output_root)
+        assert source_payload["source_scope_id"] is None
+        assert output_payload["source_scope_id"] == source
+        assert output_payload["source_root"] == str(source_root)
+        assert output_payload["output_scope_id"] == f"{output_root}_openhcs"
+        assert output_payload["output_root"] == f"{output_root}_openhcs"
+
+
+def _path_suffix(session, scope_id: str, suffix: str) -> None:
+    session.apply_dataset_configs(
+        {
+            scope_id: PipelineConfig(
+                path_planning_config=LazyPathPlanningConfig(output_dir_suffix=suffix)
+            )
+        }
+    )
+
+
+def test_plate_manager_state_surface_uses_row_effective_path_config(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source-plate"
+    output_root = tmp_path / "source-plate_custom"
+    with dataset_gui(str(source_root), str(output_root)) as (gui, scope_ids):
+        source, output = scope_ids
+        _path_suffix(gui.session, source, "_custom")
+
+        state = _plate_manager_state(_plate_manager_bridge(gui.plate_manager))
+
+        source_payload, output_payload = state.payload["rows"]
+        assert source_payload["output_scope_id"] == output
+        assert source_payload["output_root"] == str(output_root)
+        assert output_payload["source_scope_id"] == source
+        assert output_payload["source_root"] == str(source_root)
+
+
+@pytest.mark.parametrize("reverse_rows", [False, True])
+def test_plate_manager_intermediate_plate_keeps_both_path_relations(
+    tmp_path: Path, reverse_rows: bool
+) -> None:
+    roots = tuple(
+        str(tmp_path / name) for name in ("raw", "raw_stitched", "raw_stitched_analysis")
+    )
+    ordered = roots[::-1] if reverse_rows else roots
+    with dataset_gui(*ordered, selected=(1,)) as (gui, _scope_ids):
+        for root, suffix in zip(roots, ("_stitched", "_analysis")):
+            _path_suffix(gui.session, root, suffix)
+
+        state = _plate_manager_state(_plate_manager_bridge(gui.plate_manager))
+
+        middle = next(
+            row for row in state.payload["rows"] if row["scope_id"] == roots[1]
+        )
+        assert middle["source_root"] == roots[0]
+        assert middle["source_scope_id"] == roots[0]
+        assert middle["output_root"] == roots[2]
+        assert middle["output_scope_id"] == roots[2]
+
+
+def test_plate_manager_state_ignores_stale_runtime_without_current_execution_id() -> (
+    None
+):
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        stale_projection = PlateRuntimeProjection(
+            identity=PlateRuntimeIdentity(
+                execution_id="old-execution",
+                plate_id=DATASET_SCOPE_ID,
+            ),
+            state=PlateRuntimeState.EXECUTING,
+            percent=0.0,
+            axis_progress=(),
+            latest_timestamp=1.0,
+        )
+        gui.session.runtime_projection.add_plate(stale_projection)
+        gui.session.runtime_projection.mark_latest(stale_projection.identity)
+
+        row = _plate_manager_state(_plate_manager_bridge(gui.plate_manager)).payload[
+            "rows"
+        ][0]
+
+        assert row["execution_id"] is None
+        assert row["execution_active"] is False
+        assert row["runtime_state"] is None
+        assert row["runtime_percent"] is None
+        assert row["status_prefix"] == ""
+
+
+def test_plate_manager_state_terminal_status_overrides_stale_executing_state() -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        session = gui.session
+        session.orchestrator(DATASET_SCOPE_ID)._state = OrchestratorState.EXECUTING
+        session.batch.begin_batch((DATASET_SCOPE_ID,))
+        session.batch.record_execution(DATASET_SCOPE_ID, "failed-execution")
+        session.batch.mark_terminal(DATASET_SCOPE_ID, "failed")
+
+        row = _plate_manager_state(_plate_manager_bridge(gui.plate_manager)).payload[
+            "rows"
+        ][0]
+
+        assert row["execution_id"] == "failed-execution"
+        assert row["terminal_status"] == "failed"
+        assert row["orchestrator_state"] == "exec_failed"
+        assert row["execution_active"] is False
+        assert row["status_prefix"] == "❌ Exec Failed"
+
+
+# ---------------------------------------------------------------------------
+# Dataset list actions: the view's operations, invoked through the session
+# ---------------------------------------------------------------------------
+
+
+def test_plate_manager_action_catalog_token_can_guard_invoke() -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        renderer = RecordingRenderer()
+        gui.session.attach_renderer(renderer)
+        bridge = _plate_manager_bridge(gui.plate_manager)
+
+        action = next(
+            action
+            for action in bridge.list_actions().actions
+            if action.identity.action_id == ShowDatasetCode.operation_id
+        )
+
+        def invoke(token):
+            return bridge.invoke_action(
+                UiActionInvokeRequest(
+                    widget_id=action.identity.widget_id,
+                    action_id=action.identity.action_id,
+                    selected_scope_ids=action.target_scope_ids,
+                    observed_selection_revision_token=token,
+                    confirmation_requirement=(
+                        UiBridgeConfirmationRequirement.from_flag(False)
+                    ),
+                )
+            )
+
+        accepted = invoke(action.selection_revision_token)
+        stale = invoke("stale-token")
+
+        assert action.selection_revision_token
+        assert action.target_scope_ids == (DATASET_SCOPE_ID,)
+        assert accepted.status == "accepted"
+        assert accepted.selection_revision_token == action.selection_revision_token
+        assert [operation for operation, _request in renderer.presented] == [
+            ShowDatasetCode
+        ]
+        assert stale.status == "rejected"
+        assert stale.errors[0].code == "stale_ui_action_revision"
+
+
+def test_selected_run_workflow_dispatches_stop_while_execution_is_active(
+    monkeypatch,
+) -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        session = gui.session
+        session.batch.begin_batch((DATASET_SCOPE_ID,))
+        session.batch.record_execution(DATASET_SCOPE_ID, "execution-1")
+        session.execution_state = ManagerExecutionState.RUNNING
+        forces = []
+        monkeypatch.setattr(
+            session.execution_control, "stop", lambda force: forces.append(force)
+        )
+        bridge = _plate_manager_bridge(gui.plate_manager)
+
+        action = next(
+            action
+            for action in bridge.list_actions().actions
+            if action.identity.action_id == RunDatasets.operation_id
+        )
+        result = bridge.selected_plate_workflow(
+            UiSelectedPlateWorkflowRequest(
+                workflow=UiSelectedPlateWorkflowKind.RUN,
+                selected_scope_ids=(DATASET_SCOPE_ID,),
+                confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
+                    False
+                ),
+            )
+        )
+
+        assert action.enabled is True
+        assert action.title == ManagerExecutionState.RUNNING.run_button_text
+        assert action.disabled_error is None
+        assert result.action_result.status == "accepted"
+        assert forces == [False]
+        assert session.execution_state is ManagerExecutionState.FORCE_KILL_READY
+
+
+def test_selected_workflow_returns_before_the_queued_operation_runs(
+    monkeypatch,
+) -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        started = []
+        monkeypatch.setattr(
+            gui.session, "start", lambda work, *args, **kwargs: started.append(args)
+        )
+        dispatcher = QueuedPostDispatcher()
+        bridge = _plate_manager_bridge(gui.plate_manager, dispatcher)
+
+        result = bridge.selected_plate_workflow(
+            UiSelectedPlateWorkflowRequest(
+                workflow=UiSelectedPlateWorkflowKind.INIT,
+                confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
+                    False
+                ),
+            )
+        )
+
+        operation_id = result.action_result.receipt.bridge_operation_id
+        assert result.action_result.status == "accepted"
+        assert operation_id is not None
+        assert result.action_result.workflow_status_surface_ids == (
+            "plate_manager.state",
+        )
+        assert started == []
+        assert len(dispatcher.callbacks) == 1
+        assert bridge.get_operation_status(operation_id).status == "running"
+
+        dispatcher.run_next()
+
+        assert started == [((DATASET_SCOPE_ID,),)]
+        operation = bridge.get_operation_status(operation_id)
+        assert operation.status == "completed"
+        assert operation.outcome == "accepted"
+
+
+def test_selected_workflow_without_a_selection_names_the_missing_datasets(
+    monkeypatch,
+) -> None:
+    with dataset_gui(selected=()) as (gui, _scope_ids):
+        monkeypatch.setattr(
+            gui.session,
+            "endpoint_status",
+            lambda: EndpointStartupStatus(EndpointStartupPhase.CONNECTED, "test"),
+        )
+        bridge = _plate_manager_bridge(gui.plate_manager)
+
+        action = next(
+            action
+            for action in bridge.list_actions().actions
+            if action.identity.action_id == CompileDatasets.operation_id
+        )
+        result = bridge.selected_plate_workflow(
+            UiSelectedPlateWorkflowRequest(
+                workflow=UiSelectedPlateWorkflowKind.COMPILE,
+                confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
+                    False
+                ),
+            )
+        )
+
+        assert not action.enabled
+        assert action.disabled_error.code == "dataset_selection_required"
+        assert "scope_ids" in action.disabled_error.hint
+        assert result.errors[0].code == "dataset_selection_required"
+        assert "scope_ids" in result.errors[0].hint
+
+
+def test_selected_compile_reports_the_init_precondition(monkeypatch) -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        monkeypatch.setattr(
+            gui.session,
+            "endpoint_status",
+            lambda: EndpointStartupStatus(EndpointStartupPhase.CONNECTED, "test"),
+        )
+        gui.session.set_pipeline(
+            DATASET_SCOPE_ID, [FunctionStep(func=_identity_one, name="Defined")]
+        )
+        bridge = _plate_manager_bridge(gui.plate_manager)
+
+        action = next(
+            action
+            for action in bridge.list_actions().actions
+            if action.identity.action_id == CompileDatasets.operation_id
+        )
+        result = bridge.selected_plate_workflow(
+            UiSelectedPlateWorkflowRequest(
+                workflow=UiSelectedPlateWorkflowKind.COMPILE,
+                selected_scope_ids=(DATASET_SCOPE_ID,),
+                confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
+                    False
+                ),
+            )
+        )
+
+        for error in (action.disabled_error, result.errors[0]):
+            assert error.code == "dataset_not_initialized"
+            assert InitializeDatasets.operation_id in error.hint
+        assert not action.enabled
+        assert result.action_result.status == "rejected"
+
+
+def test_selected_workflow_confirmation_rejection_avoids_ui_preflight(
+    monkeypatch,
+) -> None:
+    with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
+        started = []
+        monkeypatch.setattr(
+            gui.session, "start", lambda work, *args, **kwargs: started.append(args)
+        )
+        dispatcher = CountingDispatcher()
+        bridge = _plate_manager_bridge(gui.plate_manager, dispatcher)
+
+        result = bridge.selected_plate_workflow(
+            UiSelectedPlateWorkflowRequest(
+                workflow=UiSelectedPlateWorkflowKind.INIT,
+                confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
+                    True
+                ),
+            )
+        )
+
+        assert result.action_result.status == "rejected"
+        assert result.errors[0].code == "confirmation_required"
+        assert result.action_result.workflow_status_surface_ids == (
+            "plate_manager.state",
+        )
+        assert dispatcher.call_count == 0
+        assert started == []
+
+
+# ---------------------------------------------------------------------------
+# Pipeline editor and its debug toolbar
+# ---------------------------------------------------------------------------
+
+
+def _actions(bridge, widget_id):
+    return {
+        action.identity.action_id: action
+        for action in bridge.list_actions().actions
+        if action.identity.widget_id == widget_id
+    }
+
+
+def test_pipeline_editor_actions_project_their_operations() -> None:
+    with pipeline_gui(selected_steps=(1,)) as gui:
+        editor = gui.pipeline_editor
+        actions = _actions(
+            _pipeline_editor_bridge(editor), OpenHCSUiWindowId.pipeline_editor
+        )
+        (selected_scope_id,) = editor.selected_step_scope_ids()
+
+        assert set(actions) == {
+            operation.operation_id for operation in PipelineStepsView.operations
+        }
+        for operation in PipelineStepsView.operations:
+            action = actions[operation.operation_id]
+            assert action.title == operation.label
+            assert action.side_effects == operation.side_effects
+            assert action.confirmation_required is operation.confirmation_required
+            assert action.selection_mode == operation.selection_mode
+            assert action.target_scope_ids == (selected_scope_id,)
+            assert action.enabled is True, operation
+        assert actions[EditPipelineStep.operation_id].related_state_surface_ids == (
+            "pipeline_editor.state",
+        )
+
+
+def test_pipeline_editor_step_actions_need_a_selected_step() -> None:
+    with pipeline_gui(selected_steps=()) as gui:
+        actions = _actions(
+            _pipeline_editor_bridge(gui.pipeline_editor),
+            OpenHCSUiWindowId.pipeline_editor,
+        )
+
+        for operation in (EditPipelineStep, DeletePipelineSteps):
+            error = actions[operation.operation_id].disabled_error
+            assert error is not None
+            assert error.code == "step_selection_required"
+        assert actions[ShowPipelineCode.operation_id].enabled is True
+
+
+def test_pipeline_editor_action_invoke_uses_selection_token_and_confirmation() -> None:
+    with pipeline_gui(selected_steps=(0,)) as gui:
+        renderer = RecordingRenderer()
+        gui.session.attach_renderer(renderer)
+        bridge = _pipeline_editor_bridge(gui.pipeline_editor)
+        actions = _actions(bridge, OpenHCSUiWindowId.pipeline_editor)
+        code_action = actions[ShowPipelineCode.operation_id]
+        edit_action = actions[EditPipelineStep.operation_id]
+
+        def invoke(action, *, confirm, targets=None):
+            return bridge.invoke_action(
+                UiActionInvokeRequest(
+                    widget_id=action.identity.widget_id,
+                    action_id=action.identity.action_id,
+                    selected_scope_ids=targets or action.target_scope_ids,
+                    observed_selection_revision_token=action.selection_revision_token,
+                    confirmation_requirement=(
+                        UiBridgeConfirmationRequirement.from_flag(confirm)
+                    ),
+                )
+            )
+
+        code_result = invoke(code_action, confirm=True)
+        edit_result = invoke(edit_action, confirm=True)
+        stale_result = invoke(edit_action, confirm=False, targets=("wrong-target",))
+
+        assert code_result.status == "accepted"
+        assert edit_result.status == "rejected"
+        assert edit_result.errors[0].code == "confirmation_required"
+        assert stale_result.status == "rejected"
+        assert stale_result.errors[0].code == "stale_ui_action_selection"
+        assert [operation for operation, _request in renderer.presented] == [
+            ShowPipelineCode
+        ]
+
+
+def test_pipeline_editor_state_surface_projects_steps_and_selection(
+    monkeypatch,
+) -> None:
+    reference_indexes: dict[int, int] = {}
+
+    @dataclass(frozen=True)
+    class _FunctionReference:
+        composite_key: str
+
+    def function_reference(function):
+        index = reference_indexes.setdefault(id(function), len(reference_indexes))
+        return _FunctionReference(f"test:function_{index}")
+
+    monkeypatch.setattr(
+        FunctionReferenceTransportAuthority,
+        "function_reference",
+        staticmethod(function_reference),
+    )
+    with pipeline_gui(selected_steps=(1,)) as gui:
+        editor = gui.pipeline_editor
+        bridge = _pipeline_editor_bridge(editor)
+        (selected_scope_id,) = editor.selected_step_scope_ids()
+
+        catalog = bridge.list_state_surfaces()
+        state = bridge.get_state_surface(
+            UiStateSurfaceRequest(
+                surface_id=UiStateSurfaceId.PIPELINE_EDITOR.value,
+                selection_mode=ALL_SELECTION_MODE,
+            )
+        )
+        selected_state = bridge.get_state_surface(
+            UiStateSurfaceRequest(
+                surface_id=UiStateSurfaceId.PIPELINE_EDITOR.value,
+                selection_mode=SELECTED_SELECTION_MODE,
+                base_revision_token=state.current_revision_token,
+            )
+        )
+
+        assert catalog.surfaces[0].surface_id == UiStateSurfaceId.PIPELINE_EDITOR.value
+        assert state.summary.current_selection_count == 1
+        assert state.summary.total_scope_count == 2
+        assert state.payload["pipeline_scope_id"] == (
+            PipelineScopeIdentity.from_plate_scope(DATASET_SCOPE_ID).scope_id
+        )
+        assert state.payload["selected_scope_ids"] == [selected_scope_id]
+        assert [step["name"] for step in state.payload["steps"]] == [
+            "step_one",
+            "step_two",
+        ]
+        assert state.payload["steps"][0]["selected"] is False
+        assert state.payload["steps"][1]["selected"] is True
+        assert state.payload["steps"][1]["step_scope_id"] == selected_scope_id
+        assert state.payload["steps"][0]["function_ids"] == ["test:function_0"]
+        assert state.payload["steps"][1]["function_ids"] == ["test:function_1"]
+        assert selected_state.payload["steps"][0]["name"] == "step_two"
+        assert selected_state.payload["steps"][0]["function_ids"] == [
+            "test:function_1"
+        ]
+        assert selected_state.unchanged is False
+
+
+def _debug_actions(bridge):
+    return _actions(bridge, PipelineDebugToolbarWidgetIdentity.require_value())
+
+
+def test_pipeline_debug_toolbar_actions_are_exposed_from_toolbar_declarations() -> (
+    None
+):
+    with pipeline_gui() as gui:
+        actions = _debug_actions(_pipeline_editor_bridge(gui.pipeline_editor))
+
+        assert set(actions) == {
+            declaration.action_id()
+            for declaration in PipelineDebugActionDeclarationBase.toolbar_actions()
+        }
+        step_action = actions[DebugCommandType.STEP.value]
+        assert step_action.title == StepDebugAction.label
+        assert step_action.enabled is True
+        assert step_action.confirmation_required is True
+        for action_id in (
+            DebugCommandType.RESTART.value,
+            DebugCommandType.STOP.value,
+            DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
+        ):
+            assert actions[action_id].enabled is False
+            assert actions[action_id].disabled_error.code == "debug_session_required"
+
+
+def test_pipeline_debug_toolbar_projects_pending_execution_to_bridge_actions() -> None:
+    with pipeline_gui() as gui:
+        gui.session.execution_state = ManagerExecutionState.RUNNING
+        gui.settle()
+        actions = _debug_actions(_pipeline_editor_bridge(gui.pipeline_editor))
+
+        step_action = actions[DebugCommandType.STEP.value]
+        assert step_action.enabled is False
+        assert step_action.disabled_error.code == "debug_execution_pending"
+        assert actions[DebugCommandType.STOP.value].enabled is True
+
+
+def test_pipeline_debug_toolbar_action_invoke_routes_to_the_session(
+    monkeypatch,
+) -> None:
+    with pipeline_gui() as gui:
+        started = []
+        monkeypatch.setattr(
+            gui.session,
+            "start",
+            lambda work, *args, **kwargs: started.append((work, args, kwargs)),
+        )
+        bridge = _pipeline_editor_bridge(gui.pipeline_editor)
+        widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
+        action = _debug_actions(bridge)[DebugCommandType.STEP.value]
+
+        def invoke(confirm):
+            return bridge.invoke_action(
+                UiActionInvokeRequest(
+                    widget_id=widget_id,
+                    action_id=DebugCommandType.STEP.value,
+                    selected_scope_ids=action.target_scope_ids,
+                    observed_selection_revision_token=action.selection_revision_token,
+                    confirmation_requirement=(
+                        UiBridgeConfirmationRequirement.from_flag(confirm)
+                    ),
+                )
+            )
+
+        rejected = invoke(True)
+        accepted = invoke(False)
+
+        assert rejected.status == "rejected"
+        assert rejected.errors[0].code == "confirmation_required"
+        assert accepted.status == "accepted"
+        ((work, args, kwargs),) = started
+        assert work == gui.session.run_debug
+        assert args == (DATASET_SCOPE_ID,)
+        assert kwargs["command_type"] is DebugCommandType.STEP
+
+
+def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
+    monkeypatch,
+) -> None:
+    with pipeline_gui() as gui:
+        gui.session.debug_sessions[DATASET_SCOPE_ID] = DebugSession.create(
+            plate_id=DATASET_SCOPE_ID
+        )
+        gui.pipeline_editor.update_button_states()
+        inspections = []
+        monkeypatch.setattr(
+            gui.pipeline_editor.debug_workflow.__class__,
+            "show_runtime_inspection",
+            lambda self: inspections.append(self),
+        )
+        bridge = _pipeline_editor_bridge(gui.pipeline_editor)
+        widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
+        action = _debug_actions(bridge)[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]
+
+        result = bridge.invoke_action(
+            UiActionInvokeRequest(
+                widget_id=widget_id,
+                action_id=DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
+                selected_scope_ids=action.target_scope_ids,
+                observed_selection_revision_token=action.selection_revision_token,
+                confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
+                    True
+                ),
+            )
+        )
+
+        assert action.enabled is True
+        assert action.confirmation_required is False
+        assert result.status == "accepted"
+        assert len(inspections) == 1
+
+
+def _debug_cursor() -> DebugCursor:
+    return DebugCursor(
+        step_index=1,
+        step_scope_id="plate-1::functionstep_1",
+        group_key="default",
+        invocation_key="default:0:segment",
+    )
+
+
+def _debug_state(gui):
+    return _pipeline_editor_bridge(gui.pipeline_editor).get_state_surface(
+        UiStateSurfaceRequest(
+            surface_id=UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value,
+            selection_mode=ALL_SELECTION_MODE,
+        )
+    )
+
+
+def test_pipeline_debug_session_state_surface_projects_context_and_actions() -> None:
+    with pipeline_gui() as gui:
+        debug_session = DebugSession.create(
+            plate_id=DATASET_SCOPE_ID, execution_id="exec-1", axis_id="A01"
+        ).with_cursor(_debug_cursor())
+        gui.session.debug_sessions[DATASET_SCOPE_ID] = debug_session
+
+        state = _debug_state(gui)
+        actions = {action["action_id"]: action for action in state.payload["actions"]}
+
+        assert state.summary.surface_id == UiStateSurfaceId.PIPELINE_DEBUG_SESSION.value
+        assert state.payload["phase"] == "active_session"
+        assert state.payload["current_plate_scope_id"] == DATASET_SCOPE_ID
+        assert state.payload["pipeline_scope_id"] == (
+            PipelineScopeIdentity.from_plate_scope(DATASET_SCOPE_ID).scope_id
+        )
+        assert state.payload["active_session_id"] == debug_session.debug_session_id
+        assert state.payload["execution_id"] == "exec-1"
+        assert state.payload["axis_id"] == "A01"
+        assert state.payload["cursor"]["step_scope_id"] == "plate-1::functionstep_1"
+        assert actions[DebugCommandType.RESTART.value]["enabled"] is True
+        assert (
+            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is True
+        )
+        assert actions[DebugCommandType.STEP.value]["label"] == StepDebugAction.label
+
+
+def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
+    with pipeline_gui() as gui:
+        debug_session = DebugSession(
+            debug_session_id="debug-1",
+            plate_id=DATASET_SCOPE_ID,
+            execution_id="exec-1",
+            axis_id="A01",
+        ).with_cursor(_debug_cursor())
+        progress_event = ProgressEvent(
+            identity=ProgressIdentity(
+                execution_id="exec-1",
+                plate_id=DATASET_SCOPE_ID,
+                axis_id="A01",
+                step_name="IdentifyPrimaryObjects",
+            ),
+            phase=ProgressPhase.PATTERN_GROUP,
+            status=ProgressStatus.SUCCESS,
+            percent=100.0,
+            completed=1,
+            total=1,
+            timestamp=123.0,
+            pid=1234,
+            context=DebugProgressContext(
+                debug_session_id="debug-1",
+                snapshot_id="snapshot-1",
+                cursor=_debug_cursor(),
+                event_type=DebugEventType.AFTER_INVOCATION,
+                snapshot_store_ref="/debug",
+            ).to_progress_context(),
+        )
+        gui.session.debug_sessions[DATASET_SCOPE_ID] = debug_session
+        gui.session.debug_runtime_projection = (
+            RuntimeProjectionBuilder()
+            .build(
+                RuntimeProjectionSource(
+                    events_by_execution={"exec-1": [progress_event]},
+                    session=debug_session,
+                )
+            )
+            .debug
+        )
+
+        state = _debug_state(gui)
+
+        assert state.payload["current_frame"]["debug_session_id"] == "debug-1"
+        assert state.payload["current_frame"]["snapshot_id"] == "snapshot-1"
+        assert state.payload["current_frame"]["event_type"] == "after_invocation"
+        assert state.payload["current_frame"]["progress_identity"]["axis_id"] == "A01"
+        assert state.payload["last_frame"] == state.payload["current_frame"]
+
+
+def _terminal_summary(debug_session_id: str) -> DebugTerminalSummary:
+    return DebugTerminalSummary(
+        debug_session_id=debug_session_id,
+        plate_id=DATASET_SCOPE_ID,
+        terminal_status="complete",
+        cursor=_debug_cursor(),
+        command_type=DebugCommandType.STEP,
+        axis_id="A01",
+        snapshot_id="snapshot-1",
+        snapshot_store_ref="/debug",
+    )
+
+
+def test_pipeline_debug_session_state_surface_projects_terminal_summary() -> None:
+    with pipeline_gui() as gui:
+        gui.session.debug_terminal_summaries[DATASET_SCOPE_ID] = _terminal_summary(
+            "debug-1"
+        )
+
+        state = _debug_state(gui)
+
+        assert state.payload["phase"] == "terminal_complete"
+        assert state.payload["active_session_id"] is None
+        assert state.payload["terminal_summary"]["debug_session_id"] == "debug-1"
+        assert state.payload["terminal_summary"]["command_type"] == "step"
+        assert state.payload["terminal_summary"]["cursor"]["step_index"] == 1
+
+
+def test_pipeline_debug_session_terminal_summary_retires_the_inspected_session() -> (
+    None
+):
+    with pipeline_gui() as gui:
+        inspected = (
+            DebugSession.create(
+                plate_id=DATASET_SCOPE_ID, execution_id="exec-1", axis_id="A01"
+            )
+            .with_cursor(_debug_cursor())
+            .with_command(DebugCommandType.STEP)
+        )
+        gui.session.inspected_debug_sessions[DATASET_SCOPE_ID] = inspected
+        gui.session.debug_terminal_summaries[DATASET_SCOPE_ID] = _terminal_summary(
+            inspected.debug_session_id
+        )
+
+        state = _debug_state(gui)
+        actions = {action["action_id"]: action for action in state.payload["actions"]}
+
+        assert state.payload["phase"] == "terminal_complete"
+        assert state.payload["active_session_id"] is None
+        assert state.payload["execution_id"] is None
+        assert state.payload["cursor"] is None
+        assert (
+            state.payload["terminal_summary"]["debug_session_id"]
+            == inspected.debug_session_id
+        )
+        assert actions[DebugCommandType.RUN.value]["label"] == "Start Debug"
+        assert actions[DebugCommandType.RESTART.value]["enabled"] is False
+        assert actions[DebugCommandType.STOP.value]["enabled"] is False
+        assert (
+            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is False
+        )
