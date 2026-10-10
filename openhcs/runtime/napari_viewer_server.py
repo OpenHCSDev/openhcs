@@ -2964,6 +2964,7 @@ class NapariLayerDisplayPipeline:
     ) -> NapariLayerDisplayWork:
         if component_names_metadata:
             self.server.component_name_metadata.merge(component_names_metadata)
+        self.server.component_name_metadata.declare(display_payload.layout.declared_axes)
 
         if not items:
             raise ValueError(f"Napari display batch for {layer_key!r} has no items.")

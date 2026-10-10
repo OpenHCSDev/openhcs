@@ -839,8 +839,13 @@ class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValu
 
     def merge(self, incoming: "ViewerComponentNameMetadata") -> None:
         self.store.merge_store(incoming.store)
-        if incoming.declared_axes:
-            object.__setattr__(self, "declared_axes", incoming.declared_axes)
+        self.declare(incoming.declared_axes)
+
+    def declare(self, declared_axes: DeclaredAxes) -> None:
+        """Label components by the latest stream's axis declarations."""
+
+        if declared_axes:
+            object.__setattr__(self, "declared_axes", declared_axes)
 
     def clear(self) -> None:
         self.store.clear()

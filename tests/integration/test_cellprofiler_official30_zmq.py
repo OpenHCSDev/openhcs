@@ -84,7 +84,7 @@ _OFFICIAL30_FIJI_VIEWER_PARAMS = tuple(
         case_index,
         case,
         id=(
-            "+".join(viewer_type.wire_value for viewer_type in viewer_types)
+            "+".join(viewer_type.value for viewer_type in viewer_types)
             + f"-{case_index:02d}-{case.name}"
         ),
     )
@@ -262,7 +262,7 @@ def _registered_streaming_config_kwargs(
                 port=ports_by_viewer[viewer_type],
                 transport_mode=TransportMode.TCP,
             )
-        config_kwargs[viewer_type.config_key] = config_type(**init_kwargs)
+        config_kwargs[viewer_type.family.config_key] = config_type(**init_kwargs)
 
     if selected_viewers - set(StreamingConfig.__registry__):
         raise ValueError("Official30 viewer variant selected an unregistered config.")
@@ -775,15 +775,15 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
         **streaming_configs,
     )
     endpoints = {
-        viewer_type.wire_value: ViewerRuntimeEndpoint(
-            streaming_configs[viewer_type.config_key]
+        viewer_type.value: ViewerRuntimeEndpoint(
+            streaming_configs[viewer_type.family.config_key]
             .viewer_runtime_config()
             .transport_endpoint,
             OPENHCS_ZMQ_CONFIG,
         )
         for viewer_type in viewer_types
     }
-    variant_id = "+".join(viewer_type.wire_value for viewer_type in viewer_types)
+    variant_id = "+".join(viewer_type.value for viewer_type in viewer_types)
     case_output_root = tmp_path / variant_id / f"case_{case_index:02d}"
     macro_path = tmp_path / f"{variant_id}_fresh_process_probe.ijm"
     macro_path.write_text(_FIJI_FRESH_PROCESS_IMAGE_PROBE, encoding="utf-8")
@@ -822,7 +822,7 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
 
             runtime_observation = _runtime_observation(observations[0])
             for viewer_type in viewer_types:
-                config = streaming_configs[viewer_type.config_key]
+                config = streaming_configs[viewer_type.family.config_key]
                 if viewer_type is ViewerType.NAPARI:
                     _assert_live_napari_state(config, runtime_observation)
                 elif viewer_type is ViewerType.FIJI:
