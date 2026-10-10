@@ -86,7 +86,7 @@ class PublicationAuditCapability:
         context.publication_audit.append(("after", self.sub_dir))
 
 
-def plan_for(plate):
+def plan_for(plate, backend=Backend.DISK.value):
     return CompiledStepPlan(
         step_index=0,
         step_name="synthetic saved result",
@@ -97,7 +97,7 @@ def plan_for(plate):
         analysis_results_dir=str(plate / "compiled_default"),
         runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(
             persistent_enabled=True,
-            persistent_backend=Backend.DISK.value,
+            persistent_backend=backend,
         ),
     )
 
@@ -105,6 +105,7 @@ def plan_for(plate):
 def save_archive_outcome(
     context, plate, destination, monkeypatch,
     *, filename="independent-outline.roi.zip", content=b"synthetic admission only",
+    backend=Backend.DISK.value,
 ):
     """Use the original declared bundle writer, batch and disk save boundary."""
     spec = MaterializationSpec(FileBundleOptions())
@@ -115,10 +116,10 @@ def save_archive_outcome(
         payload,
         str(base_path),
         context.filemanager,
-        (Backend.DISK.value,),
+        (backend,),
     )
     saved = batch.save()
-    (output,) = saved.outputs_for_backend(Backend.DISK.value)
+    (output,) = saved.outputs_for_backend(backend)
     assert output is batch.outputs[0]
     # Source qualification must consume the original successful save, not render
     # a mutable logical payload again or use planned names as proof of a save.
@@ -242,6 +243,41 @@ def test_saved_roi_only_batch_publishes_and_reconciles_without_rendering(
     assert plate / destination in reconciled
     OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})
     assert result_paths(plate, publication_context) == (output.path,)
+
+
+def test_result_only_destination_saved_through_zarr_passthrough_publishes_complete_entry(
+    tmp_path,
+    publication_context,
+    monkeypatch,
+):
+    """Zarr saves archives through disk passthrough; publication must still see them."""
+    from polystore.zarr import ZarrStorageBackend
+
+    publication_context.filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.ZARR.value: ZarrStorageBackend(),
+        }
+    )
+    monkeypatch.setattr(
+        "polystore.backend_registry.get_backend_instance",
+        lambda key: publication_context.filemanager._get_backend(key),
+    )
+    plate = tmp_path / "plate"
+    outcome, output = save_archive_outcome(
+        publication_context, plate, "results", monkeypatch, backend=Backend.ZARR.value
+    )
+    plan = plan_for(plate, Backend.ZARR.value)
+    publication_context.step_plans = {0: plan}
+    _publish_saved_step(publication_context, plan, artifact_materializations=(outcome,))
+    OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})
+
+    published = json.loads(METADATA_CONFIG.metadata_path(plate).read_text())
+    entry = published["subdirectories"]["results"]
+    assert entry["image_files"] == []
+    assert entry["microscope_handler_name"] == "openhcsdata"
+    assert entry["available_backends"] == {Backend.ZARR.value: True}
+    assert Path(output.path).is_file()
 
 
 def test_shared_writer_accepts_result_only_but_not_unaddressed_images(
