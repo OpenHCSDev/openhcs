@@ -252,10 +252,16 @@ def test_release_workflow_signs_when_configured_and_discloses_fallback() -> None
             "  publish-release-recovery:"
         )
     ]
-    assert (
-        "needs: [verify-release-commit, build-windows-installer, "
-        "build-macos-installer]" in publish_job
+    publish_needs = next(
+        line.split("needs:", 1)[1].strip(" []").split(", ")
+        for line in publish_job.splitlines()
+        if line.strip().startswith("needs:")
     )
+    assert {
+        "verify-release-commit",
+        "build-windows-installer",
+        "build-macos-installer",
+    } <= set(publish_needs)
 
     recovery_job = workflow[
         workflow.index("  publish-release-recovery:") : workflow.index(

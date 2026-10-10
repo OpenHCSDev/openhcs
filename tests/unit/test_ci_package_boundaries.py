@@ -527,10 +527,10 @@ def test_coverage_collection_and_publication_fail_closed() -> None:
     assert coverage_uploads
     assert all("if-no-files-found: error" in upload for upload in coverage_uploads)
     assert "timeout-minutes: 45" in unit_match.group("body")
-    assert "--cov=openhcs" in unit_match.group("body")
+    assert "run_installed_tests.py --coverage" in unit_match.group("body")
     assert "name: coverage-unit" in unit_match.group("body")
     assert "if-no-files-found: error" in unit_match.group("body")
-    assert "--cov=openhcs" in gui_match.group("body")
+    assert "run_installed_tests.py --coverage" in gui_match.group("body")
     assert "name: coverage-gui" in gui_match.group("body")
     assert "if-no-files-found: error" in gui_match.group("body")
     assert "cp .coverage .coverage.wheel" in wheel_match.group("body")

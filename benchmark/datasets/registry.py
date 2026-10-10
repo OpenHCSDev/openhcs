@@ -8,6 +8,10 @@ from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
+from benchmark.contracts.upstream_sources import (
+    DATASET_GIT_SOURCES,
+    DatasetGitSource,
+)
 from benchmark.contracts.dataset import (
     ArchiveFormat,
     BenchmarkCategory,
@@ -37,16 +41,6 @@ from benchmark.contracts.validation import (
     ValidationTrialSplit,
 )
 from openhcs.constants.constants import Microscope
-
-CELLPROFILER_TUTORIALS_REPO = "https://github.com/CellProfiler/tutorials.git"
-CELLPROFILER_TUTORIALS_REVISION = "264a8155da21a2d468051f78211bed2e580a8934"
-CP4_BENCHMARK_SUPPLEMENT_REPO = (
-    "https://github.com/carpenterlab/2021_Stirling_BMCBioInformatics.git"
-)
-CP4_BENCHMARK_SUPPLEMENT_REVISION = "40abc2e600fd46b74c213999dd25c5245048dc92"
-CELL_ORIENTATION_REPO = "https://github.com/rgomez-AI/CellOrientation.git"
-CHROMTRANS_REPO = "https://github.com/rgomez-AI/3DChromTrans.git"
-
 
 BBBC039_INDEPENDENT_VALIDATION = IndependentValidationSpec(
     record_url="https://bbbc.broadinstitute.org/BBBC039",
@@ -405,32 +399,30 @@ def _case(
 
 
 def _git_sparse(
-    git_url: str,
+    git_source: DatasetGitSource,
     *sparse_paths: str,
-    git_ref: str = "HEAD",
 ) -> DatasetSourceSpec:
     """Declare a sparse git acquisition source."""
     return DatasetSourceSpec(
         kind=DatasetSourceKind.GIT_SPARSE,
-        git_url=git_url,
-        git_ref=git_ref,
+        git_url=git_source.git_url,
+        git_ref=git_source.git_ref,
         sparse_paths=tuple(sparse_paths),
     )
 
 
 def _git_sparse_with_archives(
-    git_url: str,
+    git_source: DatasetGitSource,
     urls: tuple[str, ...],
     *sparse_paths: str,
-    git_ref: str = "HEAD",
     tls_verify: bool = True,
 ) -> DatasetSourceSpec:
     """Declare a sparse git acquisition source with companion data archives."""
     return DatasetSourceSpec(
         kind=DatasetSourceKind.GIT_SPARSE_WITH_ARCHIVES,
         urls=urls,
-        git_url=git_url,
-        git_ref=git_ref,
+        git_url=git_source.git_url,
+        git_ref=git_source.git_ref,
         sparse_paths=tuple(sparse_paths),
         tls_verify=tls_verify,
     )
@@ -643,7 +635,7 @@ class CellOrientationWoundHealingDataset(
     public_alias = "CELL_ORIENTATION_WOUND_HEALING"
     size_bytes = 201274355
     source = _git_sparse_with_archives(
-        CELL_ORIENTATION_REPO,
+        DATASET_GIT_SOURCES[id],
         ("https://public-docs.crg.es/almu/rgomez/Jennifer_Jungfleisch/Dataset.zip",),
         "workflow",
         tls_verify=False,
@@ -657,7 +649,7 @@ class ChromTrans3dFishDataset(SourceBindingsDatasetMixin, BenchmarkDatasetDeclar
     public_alias = "CHROMTRANS_3D_FISH"
     size_bytes = 98822670
     source = _git_sparse_with_archives(
-        CHROMTRANS_REPO,
+        DATASET_GIT_SOURCES[id],
         ("https://public-docs.crg.es/almu/rgomez/Anna_Oncins/Dataset.zip",),
         "workflow",
         tls_verify=False,
@@ -674,7 +666,7 @@ class CellProfilerTutorialsDataset(
     public_alias = "CELLPROFILER_TUTORIALS"
     size_bytes = 650000000
     source = _git_sparse(
-        CELLPROFILER_TUTORIALS_REPO,
+        DATASET_GIT_SOURCES[id],
         "3DNoiseNuclei",
         "3d_monolayer",
         "AdvancedSegmentation",
@@ -682,7 +674,6 @@ class CellProfilerTutorialsDataset(
         "PixelBasedClassification",
         "QualityControl",
         "Translocation",
-        git_ref=CELLPROFILER_TUTORIALS_REVISION,
     )
     benchmark_cases = (
         _case(
@@ -748,9 +739,8 @@ class CellProfiler4BenchmarkSupplementDataset(
     public_alias = "CELLPROFILER4_BENCHMARK_SUPPLEMENT"
     size_bytes = 5000000
     source = _git_sparse(
-        CP4_BENCHMARK_SUPPLEMENT_REPO,
+        DATASET_GIT_SOURCES[id],
         "CombineObjects",
-        git_ref=CP4_BENCHMARK_SUPPLEMENT_REVISION,
     )
     benchmark_cases = (
         _case(

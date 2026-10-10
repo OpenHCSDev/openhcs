@@ -61,15 +61,11 @@ class GitHubActionsClient:
         self,
         *,
         workflow: str,
-        branch: str,
         maximum_runs: int,
     ) -> tuple[WorkflowRun, ...]:
         payload = self._get_json(
             f"repos/{self._repository}/actions/workflows/{workflow}/runs",
-            fields=(
-                ("branch", branch),
-                ("per_page", str(maximum_runs)),
-            ),
+            fields=(("per_page", str(maximum_runs)),),
         )
         return tuple(
             WorkflowRun(
@@ -120,8 +116,20 @@ class GitHubActionsClient:
 
 
 def git_is_ancestor(candidate_sha: str, head_sha: str) -> bool:
-    """Return whether ``candidate_sha`` is an ancestor of ``head_sha``."""
+    """Return whether ``candidate_sha`` is an ancestor of ``head_sha``.
 
+    The quality job checks out full history, so every ancestor of the head is
+    present locally; a commit absent from the clone (for example a squashed,
+    deleted pull-request branch) is therefore not an ancestor.
+    """
+
+    present = subprocess.run(
+        ("git", "cat-file", "-e", f"{candidate_sha}^{{commit}}"),
+        check=False,
+        capture_output=True,
+    )
+    if present.returncode != 0:
+        return False
     completed = subprocess.run(
         ("git", "merge-base", "--is-ancestor", candidate_sha, head_sha),
         check=False,
@@ -186,7 +194,6 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", default=os.environ.get("GITHUB_REPOSITORY"))
     parser.add_argument("--workflow", default=None)
-    parser.add_argument("--branch", default=os.environ.get("GITHUB_REF_NAME"))
     parser.add_argument("--head-sha", default=os.environ.get("GITHUB_SHA"))
     parser.add_argument("--job-name", default=os.environ.get("GITHUB_JOB"))
     parser.add_argument("--maximum-runs", type=int, default=100)
@@ -197,7 +204,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     repository = args.repository or _required_environment("GITHUB_REPOSITORY")
     workflow = args.workflow or _workflow_file_from_environment()
-    branch = args.branch or _required_environment("GITHUB_REF_NAME")
     head_sha = args.head_sha or _required_environment("GITHUB_SHA")
     job_name = args.job_name or _required_environment("GITHUB_JOB")
     if args.maximum_runs < 1 or args.maximum_runs > 100:
@@ -207,7 +213,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     baseline = select_successful_job_baseline(
         client.workflow_runs(
             workflow=workflow,
-            branch=branch,
             maximum_runs=args.maximum_runs,
         ),
         current_head_sha=head_sha,

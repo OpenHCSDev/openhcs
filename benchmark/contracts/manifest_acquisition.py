@@ -8,24 +8,21 @@ import subprocess
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
+
+from benchmark.contracts.upstream_sources import (
+    ManifestRootAcquisitionKind,
+    ManifestRootAcquisitionSpec,
+)
 
 ManifestRootRequirementMap = dict[str, list["ManifestRootRequirement"]]
 
 
 class ManifestAcquisitionError(RuntimeError):
     """Raised when a benchmark manifest root cannot be materialized."""
-
-
-class ManifestRootAcquisitionKind(Enum):
-    """Supported benchmark-manifest root acquisition families."""
-
-    DATASET_REGISTRY = "dataset_registry"
-    GIT_SPARSE = "git_sparse"
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,42 +33,6 @@ class ManifestRootRequirement:
     path_key: str
     relative_path: Path
     dataset_id: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class ManifestRootAcquisitionSpec:
-    """Declarative acquisition policy for one manifest path root."""
-
-    kind: ManifestRootAcquisitionKind
-    git_url: str | None = None
-    git_ref: str = "HEAD"
-    sparse_paths: tuple[str, ...] = ()
-    dataset_ids: tuple[str, ...] = ()
-
-    @classmethod
-    def from_manifest(cls, raw_value: object) -> "ManifestRootAcquisitionSpec":
-        """Parse an acquisition block from a benchmark manifest."""
-        if not isinstance(raw_value, Mapping):
-            raise ValueError("Manifest root acquisition must be an object.")
-        raw_kind = raw_value.get("kind")
-        if raw_kind is None:
-            raise ValueError("Manifest root acquisition must declare kind.")
-        try:
-            kind = ManifestRootAcquisitionKind(str(raw_kind))
-        except ValueError as exc:
-            raise ValueError(
-                f"Unsupported manifest root acquisition kind {raw_kind!r}."
-            ) from exc
-        raw_sparse_paths = raw_value.get("sparse_paths", ())
-        raw_dataset_ids = raw_value.get("dataset_ids", ())
-        git_url = raw_value.get("git_url")
-        return cls(
-            kind=kind,
-            git_url=str(git_url) if git_url is not None else None,
-            git_ref=str(raw_value.get("git_ref", "HEAD")),
-            sparse_paths=_string_tuple(raw_sparse_paths, "sparse_paths"),
-            dataset_ids=_string_tuple(raw_dataset_ids, "dataset_ids"),
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -290,14 +251,3 @@ def _git_sparse_paths(request: ManifestRootAcquisitionRequest) -> tuple[str, ...
         if requirement.relative_path.parts
     )
     return tuple(dict.fromkeys(paths))
-
-
-def _string_tuple(raw_value: object, field_name: str) -> tuple[str, ...]:
-    """Parse a manifest string sequence."""
-    if raw_value is None:
-        return ()
-    if isinstance(raw_value, str):
-        return (raw_value,)
-    if not isinstance(raw_value, Sequence):
-        raise ValueError(f"Manifest acquisition {field_name} must be a sequence.")
-    return tuple(str(item) for item in raw_value)
