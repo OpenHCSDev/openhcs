@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate import ObjectState
-from PyQt6.QtCore import QModelIndex, Qt, QTimer
+from PyQt6.QtCore import QModelIndex, Qt
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QMessageBox,
@@ -106,7 +106,14 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
     UiWindowSummary,
 )
-from openhcs.agent.ui_bridge_actions import MainWindowAction
+from openhcs.authoring.session.operations.application import (
+    CheckForUpdates,
+    ExitApplication,
+    RestartApplication,
+)
+from openhcs.pyqt_gui.services.ui_bridge_session_actions import (
+    SessionOperationActionProvider,
+)
 from openhcs.agent.ui_bridge_identities import (
     MainWindowWidgetIdentity,
     ManagedWindowWidgetIdentity,
@@ -2807,74 +2814,6 @@ class UiWindowProjectionService(
         )
 
 
-class MainWindowActionProvider(UiActionProviderABC):
-    """Action provider for main-window application commands."""
-
-    identity = MAIN_WINDOW_ACTION_PROVIDER_IDENTITY
-
-    def __init__(self, main_window: "OpenHCSMainWindow") -> None:
-        self._main_window = main_window
-
-    def catalog(self) -> UiActionCatalog:
-        return UiActionCatalog(
-            schema_version=SCHEMA_VERSION,
-            actions=tuple(self.summary(action.value) for action in MainWindowAction),
-            warnings=tuple(
-                warning for action in MainWindowAction for warning in action.warnings
-            ),
-        )
-
-    def summary(self, action_id: str) -> UiActionSummary:
-        action = self._action(action_id)
-        enabled = action.enabled_for(self._main_window)
-        return UiActionSummary(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=self.identity.widget_id,
-                action_id=action.value,
-            ),
-            title=action.title,
-            enabled=enabled,
-            invocation_mode="async",
-            side_effects=action.side_effects,
-            confirmation_required=action.confirmation_required,
-            selection_mode="global",
-            current_selection_count=0,
-            target_scope_ids=(),
-            disabled_error=None if enabled else action.unavailable_error,
-        )
-
-    def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
-        try:
-            action = self._action(request.action_id)
-            action.invoke_on(self._main_window)
-        except Exception as exc:
-            return UiActionInvokeResult(
-                schema_version=SCHEMA_VERSION,
-                identity=UiActionIdentity(
-                    widget_id=request.widget_id,
-                    action_id=request.action_id,
-                ),
-                status=UiActionInvocationStatus.REJECTED.value,
-                receipt=UiMutationReceipt.rejected_for(request.request_token),
-                errors=(AgentError.from_exception("main_window_action_failed", exc),),
-            )
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=self.identity.widget_id,
-                action_id=action.value,
-            ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
-            receipt=UiMutationReceipt.accepted_for(request.request_token),
-            warnings=action.warnings,
-        )
-
-    @staticmethod
-    def _action(action_id: str) -> MainWindowAction:
-        return MainWindowAction(action_id)
-
-
 class ManagedWindowActionProvider(UiActionProviderABC):
     """Action provider for generic WindowManager-managed form windows."""
 
@@ -3029,6 +2968,10 @@ class MainWindowBridgeProviderSet(UiBridgeProviderSetABC):
                 provider_type.create(self.main_window)
             )
         context.registry.register_action_provider(
-            MainWindowActionProvider(self.main_window)
+            SessionOperationActionProvider(
+                identity=MAIN_WINDOW_ACTION_PROVIDER_IDENTITY,
+                session=self.main_window.session,
+                operations=(CheckForUpdates, RestartApplication, ExitApplication),
+            )
         )
         context.registry.register_action_provider(ManagedWindowActionProvider())

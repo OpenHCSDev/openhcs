@@ -426,6 +426,24 @@ class PlateManagerWidget(
             ).apply_namespace,
         )
 
+    def show_dataset_code(self, selection_mode: SelectedAllSelectionMode) -> None:
+        """Open the dataset code document in the code editor."""
+
+        document = self.dataset_document(selection_mode)
+        operations = self.code_document_operations(
+            DatasetDocumentScope.from_carrier(document)
+        )
+        SimpleCodeEditorService(self).edit_code(
+            initial_content=document.source,
+            title="Edit Orchestrator Configuration",
+            callback=lambda edited: self._action_controller.apply_edited_code(
+                operations, edited
+            ),
+            use_external=external_editor_enabled(),
+            declaration_type=type(document.payload),
+            code_data={"clean_mode": document.clean_mode},
+        )
+
     def results_orchestrator(self, scope_id: str | None):
         """The orchestrator whose results a dataset's live measurements show."""
 
@@ -534,21 +552,7 @@ class ShowDatasetCodePresenter(OperationPresenter):
 
     def present(self, renderer: GuiRenderer, request) -> None:
         del request
-        manager = renderer.plate_manager
-        document = manager.dataset_document()
-        operations = manager.code_document_operations(
-            DatasetDocumentScope.from_carrier(document)
-        )
-        SimpleCodeEditorService(manager).edit_code(
-            initial_content=document.source,
-            title="Edit Orchestrator Configuration",
-            callback=lambda edited: manager._action_controller.apply_edited_code(
-                operations, edited
-            ),
-            use_external=external_editor_enabled(),
-            declaration_type=type(document.payload),
-            code_data={"clean_mode": document.clean_mode},
-        )
+        renderer.plate_manager.show_dataset_code(SelectedAllSelectionMode.SELECTED)
 
 
 class ShowLiveResultsPresenter(OperationPresenter):

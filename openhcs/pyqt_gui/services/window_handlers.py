@@ -115,7 +115,7 @@ class OpenHCSWindowCreationAuthority:
                         rollback=handle_save,
                     ),
                     before_mutation=(
-                        plate_manager.require_pipeline_definition_mutation_allowed
+                        plate_manager.session.require_definition_mutation_allowed
                     ),
                 ),
                 ConfigWindowTabSpec(
@@ -125,7 +125,7 @@ class OpenHCSWindowCreationAuthority:
                         rollback=handle_ui_save,
                     ),
                     before_mutation=(
-                        plate_manager.require_pipeline_definition_mutation_allowed
+                        plate_manager.session.require_definition_mutation_allowed
                     ),
                 ),
             ),
@@ -191,7 +191,7 @@ class OpenHCSWindowCreationAuthority:
                 ConfigWindowTabSpec(
                     state=state,
                     before_mutation=(
-                        lambda: plate_manager.require_pipeline_definition_mutation_allowed(
+                        lambda: plate_manager.session.require_definition_mutation_allowed(
                             scope_id
                         )
                     ),
@@ -241,10 +241,10 @@ class OpenHCSWindowCreationAuthority:
             step_index=editor_scope.step_token.index,
             plate_scope=editor_scope.plate_scope,
             compiled_artifact_inspection_provider=(
-                plate_manager.compiled_artifact_inspection_for_plate
+                plate_manager.session.compiled_inspection
             ),
             before_mutation=(
-                lambda: plate_manager.require_pipeline_definition_mutation_allowed(
+                lambda: plate_manager.session.require_definition_mutation_allowed(
                     editor_scope.plate_scope
                 )
             ),

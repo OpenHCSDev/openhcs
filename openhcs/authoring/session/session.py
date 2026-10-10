@@ -284,6 +284,8 @@ class Session:
         self.debug_sessions: dict[str, DebugSession] = {}
         self.debug_snapshots: dict[str, tuple[DebugSnapshot, ...]] = {}
         self.debug_terminal_summaries: dict[str, DebugTerminalSummary] = {}
+        self.inspected_debug_sessions: dict[str, DebugSession] = {}
+        """Debug sessions a client loaded from snapshots without running them."""
         self.runtime_projection = ExecutionRuntimeProjection()
         self.debug_runtime_projection = DebugRuntimeProjection.empty(
             self.runtime_projection
@@ -382,13 +384,10 @@ class Session:
             phase=EndpointStartupPhase.DISCONNECTED, message="Not connected"
         )
 
-    def apply_global_config(self, config: GlobalPipelineConfig) -> None:
-        """Make ``config`` the global config of every dataset."""
+    def adopt_global_config(self, config: GlobalPipelineConfig) -> None:
+        """A saved global config: every dataset now resolves against it."""
 
         self.global_config = config
-        global_state = ObjectStateRegistry.get_by_scope("")
-        if global_state is not None:
-            global_state.update_object_instance(config)
         ensure_global_config_context(GlobalPipelineConfig, config)
         for scope_id in dataset_scope_ids():
             orchestrator = ObjectStateRegistry.get_object(scope_id)
@@ -396,6 +395,15 @@ class Session:
                 self.publish(
                     DatasetConfigChanged(scope_id, orchestrator.get_effective_config())
                 )
+
+    def apply_global_config(self, config: GlobalPipelineConfig) -> None:
+        """Write ``config`` into the global ObjectState and adopt it."""
+
+        self.require_definition_mutation_allowed()
+        global_state = ObjectStateRegistry.get_by_scope("")
+        if global_state is not None:
+            global_state.update_object_instance(config)
+        self.adopt_global_config(config)
         self.publish(GlobalConfigChanged(config))
 
     def apply_dataset_configs(self, configs: dict[str, PipelineConfig]) -> None:
@@ -646,6 +654,61 @@ class Session:
 
         self.set_pipeline_source(scope_id, inspect.getsource(example))
 
+    def add_step(
+        self,
+        scope_id: str,
+        staged_step: FunctionStep,
+        edited_step: FunctionStep,
+        staged_scope_id: str,
+    ) -> None:
+        """Append a step staged for editing, under the staged step's scope."""
+
+        self.require_definition_mutation_allowed(scope_id)
+        label = f"add step {edited_step.name}"
+        with ObjectStateRegistry.atomic(label):
+            ScopeTokenService.transfer_token(scope_id, staged_step, edited_step)
+            PipelineObjectStateBinding.update_plate_steps(
+                scope_id, [*self.pipeline_steps(scope_id), edited_step]
+            )
+            ObjectStateRegistry.record_snapshot(label, staged_scope_id)
+        self.pipeline_changed(scope_id)
+        self.publish(StatusReported(f"Added new step: {edited_step.name}"))
+
+    def replace_step(
+        self,
+        scope_id: str,
+        current_step: FunctionStep,
+        edited_step: FunctionStep,
+    ) -> None:
+        self.require_definition_mutation_allowed(scope_id)
+        PipelineObjectStateBinding.replace_plate_step(scope_id, current_step, edited_step)
+        self.pipeline_changed(scope_id)
+        self.publish(StatusReported(f"Updated step: {edited_step.name}"))
+
+    def move_step(self, scope_id: str, from_index: int, to_index: int) -> None:
+        self.require_definition_mutation_allowed(scope_id)
+        steps = self.pipeline_steps(scope_id)
+        steps.insert(to_index, steps.pop(from_index))
+        PipelineObjectStateBinding.update_plate_steps(scope_id, steps)
+        ObjectStateRegistry.record_snapshot("reorder steps", scope_id=scope_id)
+        self.pipeline_changed(scope_id)
+
+    def insert_steps(
+        self,
+        scope_id: str,
+        index: int,
+        new_steps: list[FunctionStep],
+    ) -> None:
+        self.require_definition_mutation_allowed(scope_id)
+        steps = self.pipeline_steps(scope_id)
+        names = ", ".join(step.name for step in new_steps)
+        with ObjectStateRegistry.atomic(f"paste {len(new_steps)} step(s): {names}"):
+            for step in new_steps:
+                ScopeTokenService.ensure_token(scope_id, step)
+            steps[index:index] = new_steps
+            PipelineObjectStateBinding.update_plate_steps(scope_id, steps)
+        self.pipeline_changed(scope_id)
+
     def delete_steps(self, scope_id: str, step_scope_ids: Iterable[str]) -> None:
         doomed = set(step_scope_ids)
         self.require_definition_mutation_allowed(scope_id)
@@ -670,6 +733,16 @@ class Session:
 
         self.require_definition_mutation_allowed(scope_id)
         self.invalidate_compilation(scope_id)
+        for sessions in (self.debug_sessions, self.inspected_debug_sessions):
+            debug_session = sessions.get(scope_id)
+            if debug_session is not None:
+                sessions[scope_id] = debug_session.mark_dirty_from_cursor()
+                if sessions[scope_id].dirty_from_cursor is not None:
+                    self.publish(
+                        StatusReported(
+                            "Debug snapshots downstream of the current cursor are dirty."
+                        )
+                    )
         self.publish(PipelineChanged(scope_id))
         self.publish(DatasetsChanged())
 
@@ -781,6 +854,12 @@ class Session:
             orchestrator._state = state
         self.publish(DatasetStateChanged(scope_id, state))
         self.publish(DatasetsChanged())
+
+    def compiled_inspection(self, scope_id: str):
+        """The compiler's artifact inspection of a compiled dataset, if any."""
+
+        compiled = self.compiled.get(scope_id)
+        return None if compiled is None else compiled.inspection
 
     def set_compiled(self, scope_id: str, compiled: CompiledDataset | None) -> None:
         if compiled is None:
@@ -1194,6 +1273,53 @@ class Session:
             ).with_cursor(context.cursor)
         self.publish(DebugSnapshotAvailable(notification))
 
+    def displayed_debug_session(self, scope_id: str) -> DebugSession | None:
+        """The running debug session, else the one loaded from a snapshot."""
+
+        active = self.debug_sessions.get(scope_id)
+        if active is not None:
+            return active
+        if scope_id in self.debug_terminal_summaries:
+            return None
+        return self.inspected_debug_sessions.get(scope_id)
+
+    def inspect_debug_snapshot(
+        self,
+        notification: DebugSnapshotAvailableNotification,
+        snapshot: DebugSnapshot | None,
+    ) -> None:
+        """Move the displayed debug cursor to a snapshot a client opened."""
+
+        event = notification.progress_event
+        context = notification.debug_context
+        scope_id = event.plate_id
+        active = self.debug_sessions.get(scope_id)
+        summary = self.debug_terminal_summaries.get(scope_id)
+        if active is not None:
+            self.debug_sessions[scope_id] = active.with_snapshot_store(
+                snapshot_store_ref=context.snapshot_store_ref,
+                snapshot_store_backend=context.snapshot_store_backend,
+                axis_id=event.axis_id,
+            ).with_cursor(context.cursor)
+        elif summary is not None and summary.debug_session_id == context.debug_session_id:
+            self.inspected_debug_sessions.pop(scope_id, None)
+            if snapshot is not None:
+                self.debug_terminal_summaries[scope_id] = summary.with_snapshot(
+                    snapshot=snapshot,
+                    snapshot_id=context.snapshot_id,
+                    snapshot_store_ref=context.snapshot_store_ref,
+                    snapshot_store_backend=context.snapshot_store_backend,
+                )
+        else:
+            self.inspected_debug_sessions[scope_id] = DebugSession(
+                debug_session_id=context.debug_session_id,
+                plate_id=scope_id,
+                axis_id=event.axis_id,
+                snapshot_store_ref=context.snapshot_store_ref,
+                snapshot_store_backend=context.snapshot_store_backend,
+            ).with_cursor(context.cursor)
+        self.refresh()
+
     def _close_debug_session(self, scope_id: str) -> None:
         active = self.debug_sessions.pop(scope_id, None)
         if active is None or active.plate_id != scope_id:
@@ -1234,7 +1360,7 @@ class Session:
                     else status.value
                 ),
             ),
-            session=self.debug_sessions.get(scope_id),
+            session=self.displayed_debug_session(scope_id),
             terminal_summary=self.debug_terminal_summaries.get(scope_id),
             pause_boundaries=DebugPauseBoundaryState(
                 pause_step_indices=tuple(

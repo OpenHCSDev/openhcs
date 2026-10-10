@@ -56,7 +56,8 @@ from openhcs.agent.dto.execution_connection import (
     ExecutionConnectionSpec,
 )
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.datasets import DatasetWorkflowOperation
 from openhcs.agent.ui_bridge_identities import (
     MainWindowWidgetIdentity as MainWindowWidgetIdentity,
 )
@@ -134,12 +135,12 @@ def _identity_enum(
     return Enum(enum_name, members, type=str)
 
 
-def _plate_manager_workflow_enum() -> type[Enum]:
-    """Project selected-plate workflows from PlateManager action declarations."""
+def _dataset_workflow_enum() -> type[Enum]:
+    """The dataset workflow operations, as a wire enum of operation ids."""
     members = {
-        action.plate_operation.name: action.value
-        for action in PlateManagerAction
-        if action.plate_operation is not None
+        operation.workflow_name: operation.operation_id
+        for operation in SessionOperation.all()
+        if issubclass(operation, DatasetWorkflowOperation)
     }
     return Enum("UiSelectedPlateWorkflowKind", members, type=str)
 
@@ -150,7 +151,7 @@ UiStateSurfaceId = _identity_enum(
     UiStateSurfaceIdentityDeclarationBase,
 )
 UiWidgetId = _identity_enum("UiWidgetId", UiWidgetIdentityDeclaration)
-UiSelectedPlateWorkflowKind = _plate_manager_workflow_enum()
+UiSelectedPlateWorkflowKind = _dataset_workflow_enum()
 
 
 class UiBridgeOperationStatus(str, Enum):

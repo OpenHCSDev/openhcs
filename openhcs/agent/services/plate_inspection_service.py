@@ -44,7 +44,7 @@ from openhcs.agent.dto.plate import (
     PlateWorkspacePreparationOperation,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
-from openhcs.agent.ui_bridge_actions import PlateOperation
+from openhcs.authoring.session.operations.datasets import InitializeDatasets
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerOrchestratorCodeDocumentIdentity,
 )
@@ -940,7 +940,7 @@ class PlateInspectionWorkflowAdvicePolicy:
             ui_code_document_id=(
                 PlateManagerOrchestratorCodeDocumentIdentity.require_value()
             ),
-            ui_operation=PlateOperation.INIT.value,
+            ui_operation=InitializeDatasets.operation_id,
             knowledge_query=cls.KNOWLEDGE_QUERY,
             probable_native_ingestion_owners=probable_native_ingestion_owners,
             message=message,

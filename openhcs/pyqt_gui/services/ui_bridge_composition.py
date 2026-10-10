@@ -37,10 +37,10 @@ class OpenHCSUiBridgeCompositionRoot:
                 )
             ),
             (
-                main_window.plate_manager_widget.require_pipeline_definition_mutation_allowed_for_scope
+                main_window.session.require_definition_mutation_allowed_for_object_scope
             ),
             (
-                main_window.plate_manager_widget.require_pipeline_definition_mutation_allowed
+                main_window.session.require_definition_mutation_allowed
             ),
         )
 

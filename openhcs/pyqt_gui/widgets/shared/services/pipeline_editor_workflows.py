@@ -3,36 +3,27 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Coroutine, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
-from objectstate.object_state import ObjectState, ObjectStateRegistry
+from objectstate.object_state import ObjectState
 from PyQt6.QtWidgets import QFileDialog
 from pyqt_reactive.widgets.shared.manager_workflows import (
     ManagerCodeExecutionWorkflow,
-    ManagerDeletionWorkflow,
 )
 
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.debug import (
     DebugCommandType,
     DebugCursor,
-    DebugSession,
     FileManagerDebugSnapshotStore,
 )
 from openhcs.core.debug_views import DebugViewModel
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.steps.function_step import FunctionStep
-from openhcs.authoring.session.pipelines import (
-    PipelineObjectStateBinding,
-)
-from openhcs.pyqt_gui.widgets.shared.services.gui_event_bus_broadcast import (
-    GuiEventBusBroadcaster,
-)
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     PipelineDebugActionDeclarationBase,
 )
@@ -43,27 +34,7 @@ logger = logging.getLogger(__name__)
 TimeTravelDirtyStates: TypeAlias = Iterable[tuple[str, ObjectState]]
 
 if TYPE_CHECKING:
-    from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-
-
-@dataclass(frozen=True, slots=True)
-class PipelineEditorCoroutineRunner:
-    """Run async GUI workflow commands from Qt slots without requiring qasync."""
-
-    editor: Any
-
-    def submit(self, coroutine: Coroutine[Any, Any, None]) -> None:
-        self.editor.service_adapter.execute_async_operation(
-            self._guard,
-            coroutine,
-        )
-
-    async def _guard(self, coroutine: Coroutine[Any, Any, None]) -> None:
-        try:
-            await coroutine
-        except Exception as exc:
-            logger.exception("Pipeline editor async command failed")
-            self.editor.status_message.emit(str(exc))
+    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,16 +115,13 @@ class PipelineEditorFunctionPresentation:
         if not func:
             return ()
         normalized = normalize_function_pattern(func)
-        cursor = (
-            None
-            if self.editor.debug_session_state is None
-            else self.editor.debug_session_state.cursor
+        displayed = (
+            self.editor.session.displayed_debug_session(self.editor.current_plate)
+            if self.editor.current_plate
+            else None
         )
-        dirty_cursor = (
-            None
-            if self.editor.debug_session_state is None
-            else self.editor.debug_session_state.dirty_from_cursor
-        )
+        cursor = None if displayed is None else displayed.cursor
+        dirty_cursor = None if displayed is None else displayed.dirty_from_cursor
         return tuple(
             FunctionPatternInvocationBadge(
                 group_key=item.key.group_key,
@@ -251,115 +219,70 @@ class PipelineEditorDebugWorkflow:
         self,
         command_type: DebugCommandType = DebugCommandType.RUN,
     ) -> None:
-        if not self.editor.current_plate:
-            self.editor.status_message.emit("Select a plate before running debug mode.")
+        scope_id = self.editor.current_plate
+        if not scope_id:
+            self.editor.status_message.emit("Select a dataset before running debug mode.")
             return
-        if self.editor.plate_manager is None:
-            self.editor.status_message.emit(
-                "Debug run requires a connected Plate Manager."
-            )
-            return
+        session = self.editor.session
         command_label = command_type.value.replace("_", " ")
-        self.editor.status_message.emit(
-            f"Submitting debug {command_label} for {self.editor.current_plate}"
-        )
-        start_step_index = self.start_step_index(command_type)
-        start_after_invocation_key = self.start_after_invocation_key(command_type)
-        self.editor.debug_terminal_summary = None
-        PipelineEditorCoroutineRunner(self.editor).submit(
-            self.editor.plate_manager.action_run_debug_plate(
-                self.editor.current_plate,
-                command_type=command_type,
-                pause_step_indices=self.pause_step_indices(),
-                start_step_index=start_step_index,
-                start_after_invocation_key=start_after_invocation_key,
-            )
+        self.editor.status_message.emit(f"Submitting debug {command_label} for {scope_id}")
+        cursor = self._replay_cursor(command_type)
+        session.debug_terminal_summaries.pop(scope_id, None)
+        session.start(
+            session.run_debug,
+            scope_id,
+            command_type=command_type,
+            pause_step_indices=self.pause_step_indices(),
+            start_step_index=0 if cursor is None else cursor.step_index,
+            start_after_invocation_key=None if cursor is None else cursor.invocation_key,
         )
 
     def pause_step_indices(self) -> tuple[int, ...]:
         return tuple(
             index
-            for index, step in enumerate(self.editor.pipeline_steps)
+            for index, step in enumerate(self.editor.displayed_steps)
             if step.debug_pause
         )
 
-    def start_step_index(self, command_type: DebugCommandType) -> int:
-        cursor = self._replay_cursor(command_type)
-        if cursor is not None:
-            return cursor.step_index
-        return 0
-
-    def start_after_invocation_key(
-        self,
-        command_type: DebugCommandType,
-    ) -> str | None:
-        cursor = self._replay_cursor(command_type)
-        if cursor is None:
-            return None
-        return cursor.invocation_key
-
     def _replay_cursor(self, command_type: DebugCommandType) -> DebugCursor | None:
-        session = self.editor.debug_session_state
+        scope_id = self.editor.current_plate
+        displayed = self.editor.session.displayed_debug_session(scope_id)
         if (
             command_type is DebugCommandType.RESTART
-            and session is not None
-            and session.dirty_from_cursor is not None
+            and displayed is not None
+            and displayed.dirty_from_cursor is not None
         ):
-            return session.dirty_from_cursor
-        if (
-            command_type is DebugCommandType.STEP
-            and session is not None
-            and session.cursor is not None
-        ):
-            return session.cursor
+            return displayed.dirty_from_cursor
         if command_type is DebugCommandType.STEP:
-            terminal_summary = None
-            if self.editor.current_plate and self.editor.plate_manager is not None:
-                terminal_summary = (
-                    self.editor.plate_manager.debug_terminal_summary_for_plate(
-                        self.editor.current_plate
-                    )
-                )
-            if terminal_summary is None:
-                terminal_summary = self.editor.debug_terminal_summary
-            if terminal_summary is not None:
-                return terminal_summary.cursor
+            if displayed is not None and displayed.cursor is not None:
+                return displayed.cursor
+            summary = self.editor.session.debug_terminal_summaries.get(scope_id)
+            if summary is not None:
+                return summary.cursor
         return None
 
     def stop_command(self) -> None:
-        if self.editor.plate_manager is None:
-            self.editor.status_message.emit(
-                "Debug stop requires a connected Plate Manager."
-            )
-            return
-        self.editor.plate_manager.action_stop_execution(force=True)
+        self.editor.session.stop_execution(True)
         self.editor.status_message.emit("Requested debug execution stop.")
 
     def show_runtime_inspection(self) -> None:
-        if self.editor.plate_manager is None:
+        active = self.editor.debug_session_context().active_session
+        if active is None:
             self.editor.status_message.emit(
                 "Runtime inspection requires an active debug session."
             )
             return
-        session = self.editor.debug_session_context().active_session
-        if session is None:
-            self.editor.status_message.emit(
-                "Runtime inspection requires an active debug session."
+        session = self.editor.session
+
+        async def inspect() -> None:
+            view_model = await session.debug_runs.inspect_runtime(
+                debug_session_id=active.debug_session_id,
             )
-            return
-        PipelineEditorCoroutineRunner(self.editor).submit(
-            self._show_runtime_inspection(session)
-        )
+            session.main_thread.post(lambda: self._render_runtime_inspection(view_model))
 
-    async def _show_runtime_inspection(self, session: DebugSession) -> None:
-        view_model = await self.editor.plate_manager.action_inspect_debug_runtime(
-            debug_session_id=session.debug_session_id,
-        )
-        self.editor.service_adapter.ui_dispatcher.post(
-            lambda: self._render_runtime_inspection(view_model)
-        )
+        session.start(inspect)
 
-    def _render_runtime_inspection(self, view_model: DebugViewModel) -> None:
+    def _inspector(self) -> DebugInspectorWindow:
         if self.editor.debug_inspector_window is None:
             self.editor.debug_inspector_window = DebugInspectorWindow(self.editor)
             self.editor.debug_inspector_window.artifact_export_requested.connect(
@@ -368,112 +291,47 @@ class PipelineEditorDebugWorkflow:
             self.editor.debug_inspector_window.artifact_open_requested.connect(
                 self.handle_artifact_open_request
             )
-        self.editor.debug_inspector_window.set_inspection_view_model(view_model)
-        self.editor.debug_inspector_window.show()
-        self.editor.debug_inspector_window.raise_()
+        return self.editor.debug_inspector_window
+
+    def _render_runtime_inspection(self, view_model: DebugViewModel) -> None:
+        inspector = self._inspector()
+        inspector.set_inspection_view_model(view_model)
+        inspector.show()
+        inspector.raise_()
 
     def show_snapshot(self, notification) -> None:
-        debug_context = notification.debug_context
-        snapshot_store_ref = debug_context.snapshot_store_ref
-        snapshot_store_backend = debug_context.snapshot_store_backend
-        snapshot_id = debug_context.snapshot_id
-        if snapshot_store_ref is None or snapshot_id is None:
+        context = notification.debug_context
+        if context.snapshot_store_ref is None or context.snapshot_id is None:
             self.editor.status_message.emit(
                 "Debug snapshot event did not include a snapshot store."
             )
             return
-
-        if self.editor.debug_inspector_window is None:
-            self.editor.debug_inspector_window = DebugInspectorWindow(self.editor)
-            self.editor.debug_inspector_window.artifact_export_requested.connect(
-                self.handle_artifact_export_request
+        inspector = self._inspector()
+        snapshot = notification.snapshot
+        if snapshot is not None:
+            inspector.set_snapshot(snapshot)
+        elif context.snapshot_store_backend is None:
+            snapshot = inspector.load_snapshot(
+                root_path=context.snapshot_store_ref,
+                debug_session_id=context.debug_session_id,
+                snapshot_id=context.snapshot_id,
             )
-            self.editor.debug_inspector_window.artifact_open_requested.connect(
-                self.handle_artifact_open_request
-            )
-        active_session = None
-        if self.editor.plate_manager is not None:
-            active_session = self.editor.plate_manager.debug_session_for_plate(
-                notification.progress_event.plate_id
-            )
-        terminal_summary = self.editor.debug_terminal_summary
-        loaded_session = DebugSession(
-            debug_session_id=debug_context.debug_session_id,
-            plate_id=notification.progress_event.plate_id,
-            axis_id=notification.progress_event.axis_id,
-            snapshot_store_ref=snapshot_store_ref,
-            snapshot_store_backend=snapshot_store_backend,
-        )
-        if active_session is not None:
-            self.editor.debug_session_state = active_session.with_snapshot_store(
-                snapshot_store_ref=snapshot_store_ref,
-                snapshot_store_backend=snapshot_store_backend,
-                axis_id=notification.progress_event.axis_id,
-            ).with_cursor(debug_context.cursor)
-            self.editor.debug_terminal_summary = None
-        elif (
-            terminal_summary is not None
-            and terminal_summary.debug_session_id == debug_context.debug_session_id
-        ):
-            self.editor.debug_session_state = None
         else:
-            self.editor.debug_session_state = loaded_session.with_cursor(
-                debug_context.cursor
-            )
-        self.editor.update_item_list()
-        self.editor.update_button_states()
-        if notification.snapshot is not None:
-            self.editor.debug_inspector_window.set_snapshot(notification.snapshot)
-            if (
-                terminal_summary is not None
-                and terminal_summary.debug_session_id == debug_context.debug_session_id
-            ):
-                self.editor.debug_terminal_summary = terminal_summary.with_snapshot(
-                    snapshot=notification.snapshot,
-                    snapshot_id=snapshot_id,
-                    snapshot_store_ref=snapshot_store_ref,
-                    snapshot_store_backend=snapshot_store_backend,
-                )
-        elif snapshot_store_backend is None:
-            snapshot = self.editor.debug_inspector_window.load_snapshot(
-                root_path=snapshot_store_ref,
-                debug_session_id=debug_context.debug_session_id,
-                snapshot_id=snapshot_id,
-            )
-            if (
-                terminal_summary is not None
-                and terminal_summary.debug_session_id == debug_context.debug_session_id
-            ):
-                self.editor.debug_terminal_summary = terminal_summary.with_snapshot(
-                    snapshot=snapshot,
-                    snapshot_id=snapshot_id,
-                    snapshot_store_ref=snapshot_store_ref,
-                    snapshot_store_backend=snapshot_store_backend,
-                )
-        else:
-            snapshot = self.editor.debug_inspector_window.load_snapshot_from_store(
+            snapshot = inspector.load_snapshot_from_store(
                 store=FileManagerDebugSnapshotStore(
                     filemanager=self.editor.service_adapter.get_file_manager(),
-                    backend=snapshot_store_backend,
-                    root_path=snapshot_store_ref,
-                    debug_session_id=debug_context.debug_session_id,
+                    backend=context.snapshot_store_backend,
+                    root_path=context.snapshot_store_ref,
+                    debug_session_id=context.debug_session_id,
                 ),
-                snapshot_id=snapshot_id,
+                snapshot_id=context.snapshot_id,
             )
-            if (
-                terminal_summary is not None
-                and terminal_summary.debug_session_id == debug_context.debug_session_id
-            ):
-                self.editor.debug_terminal_summary = terminal_summary.with_snapshot(
-                    snapshot=snapshot,
-                    snapshot_id=snapshot_id,
-                    snapshot_store_ref=snapshot_store_ref,
-                    snapshot_store_backend=snapshot_store_backend,
-                )
-        self.editor.debug_inspector_window.show()
-        self.editor.debug_inspector_window.raise_()
+        self.editor.session.inspect_debug_snapshot(notification, snapshot)
+        inspector.show()
+        inspector.raise_()
         self.editor.status_message.emit(
-            f"Loaded debug snapshot {snapshot_id} for {notification.progress_event.step_name}"
+            f"Loaded debug snapshot {context.snapshot_id} for "
+            f"{notification.progress_event.step_name}"
         )
 
     def handle_artifact_open_request(self, request) -> None:
@@ -483,7 +341,10 @@ class PipelineEditorDebugWorkflow:
         )
 
     def handle_artifact_export_request(self, request) -> None:
-        if self.editor.plate_manager is None or self.editor.debug_session_state is None:
+        scope_id = self.editor.current_plate
+        session = self.editor.session
+        displayed = session.displayed_debug_session(scope_id) if scope_id else None
+        if displayed is None:
             self.editor.status_message.emit(
                 "Debug artifact export requires an active debug session."
             )
@@ -495,19 +356,19 @@ class PipelineEditorDebugWorkflow:
         )
         if not export_root:
             return
-        task = self.editor.plate_manager.action_export_debug_artifact(
-            debug_session_id=self.editor.debug_session_state.debug_session_id,
+        session.start(
+            session.debug_runs.export_artifact,
+            debug_session_id=displayed.debug_session_id,
             artifact_ref=request.artifact_ref,
             export_root=export_root,
-            snapshot_store_ref=self.editor.debug_session_state.snapshot_store_ref,
-            snapshot_store_backend=self.editor.debug_session_state.snapshot_store_backend,
+            snapshot_store_ref=displayed.snapshot_store_ref,
+            snapshot_store_backend=displayed.snapshot_store_backend,
         )
-        PipelineEditorCoroutineRunner(self.editor).submit(task)
 
 
 @dataclass(frozen=True, slots=True)
 class PipelineEditorCodeWorkflow(ManagerCodeExecutionWorkflow):
-    """Applies edited pipeline-step code to pipeline editor state."""
+    """Applies an edited pipeline document to the current dataset."""
 
     workflow_key = "pipeline_editor"
     editor: Any
@@ -517,52 +378,12 @@ class PipelineEditorCodeWorkflow(ManagerCodeExecutionWorkflow):
         return None
 
     def apply_namespace(self, namespace: dict) -> bool:
-        if not self.validate_namespace(namespace):
-            return False
-
-        document = PipelineDocumentCodec.from_namespace(namespace)
-        self.editor.require_pipeline_definition_mutation_allowed(
-            self.editor.current_plate
+        scope_id = self.editor.current_plate
+        if not scope_id:
+            raise RuntimeError("Select a dataset before applying a pipeline document.")
+        self.editor.session.set_pipeline_document(
+            scope_id, PipelineDocumentCodec.from_namespace(namespace)
         )
-        pipeline_steps = document.pipeline_steps
-        self.editor.pipeline_steps = pipeline_steps
-        self.editor._normalize_step_scope_tokens(register=False)
-
-        if self.editor.current_plate:
-            if self.editor.plate_manager is not None:
-                from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
-                    PlateManagerCodeWorkflow,
-                )
-
-                PlateManagerCodeWorkflow(
-                    self.editor.plate_manager
-                ).apply_per_plate_configs(
-                    {self.editor.current_plate: document.pipeline_config}
-                )
-            self.editor.update_pipeline_for_plate(
-                self.editor.current_plate,
-                self.editor.pipeline_steps,
-            )
-            PipelineObjectStateBinding.commit_plate_state(
-                self.editor.current_plate,
-            )
-            self.editor.notify_pipeline_definition_changed(self.editor.current_plate)
-            logger.debug(
-                "Updated Pipeline ObjectState (%d steps) for plate: %s",
-                len(self.editor.pipeline_steps),
-                self.editor.current_plate,
-            )
-
-        self.editor.update_item_list()
-        self.editor._suppress_pipeline_state_sync = True
-        try:
-            self.editor.pipeline_changed.emit(self.editor.pipeline_steps)
-        finally:
-            self.editor._suppress_pipeline_state_sync = False
-        self.editor.status_message.emit(
-            f"Pipeline updated with {len(pipeline_steps)} steps"
-        )
-        GuiEventBusBroadcaster(self.editor.event_bus).pipeline_changed(pipeline_steps)
         return True
 
     def validate_namespace(self, namespace: dict) -> bool:
@@ -571,167 +392,3 @@ class PipelineEditorCodeWorkflow(ManagerCodeExecutionWorkflow):
         except (TypeError, ValueError):
             return False
         return True
-
-
-@dataclass(frozen=True, slots=True)
-class PipelineEditorDeletionWorkflow(ManagerDeletionWorkflow):
-    """Deletes pipeline steps and updates backing ObjectState atomically."""
-
-    workflow_key = "pipeline_editor"
-    editor: Any
-
-    def validate(self, items: list[Any]) -> bool:
-        del items
-        return True
-
-    def delete(self, items: list[Any]) -> None:
-        self.editor.require_pipeline_definition_mutation_allowed(
-            self.editor.current_plate
-        )
-        step_names = [step.name for step in items]
-        label = f"delete step{'s' if len(items) > 1 else ''} {', '.join(step_names)}"
-
-        with ObjectStateRegistry.atomic(label):
-            for step in items:
-                self.unregister_step_state(step)
-
-            deleted_step_ids = {id(step) for step in items}
-            self.editor.pipeline_steps = [
-                step
-                for step in self.editor.pipeline_steps
-                if id(step) not in deleted_step_ids
-            ]
-            self.editor._normalize_step_scope_tokens(register=False)
-
-            if self.editor.current_plate:
-                self.editor.update_pipeline_for_plate(
-                    self.editor.current_plate,
-                    self.editor.pipeline_steps,
-                )
-
-        if self.editor.selected_step in [step.name for step in items]:
-            self.editor.selected_step = ""
-
-    def unregister_step_state(self, step: Any) -> None:
-        scope_id = self.editor._build_step_scope_id(step)
-        count = ObjectStateRegistry.unregister_scope_and_descendants(scope_id)
-        logger.debug(
-            "Cascade unregistered %d ObjectState(s) for deleted step: %s",
-            count,
-            scope_id,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class PipelineEditorListWorkflow:
-    """Owns pipeline editor list refresh side effects."""
-
-    editor: Any
-
-    def prepare_update(self) -> None:
-        self.editor._normalize_step_scope_tokens(register=False)
-
-    def post_reorder(self) -> None:
-        self.editor.require_pipeline_definition_mutation_allowed(
-            self.editor.current_plate
-        )
-        self.editor._normalize_step_scope_tokens(register=False)
-        if self.editor.current_plate:
-            self.editor.update_pipeline_for_plate(
-                self.editor.current_plate,
-                self.editor.pipeline_steps,
-            )
-        self.editor.pipeline_changed.emit(self.editor.pipeline_steps)
-        GuiEventBusBroadcaster(self.editor.event_bus).pipeline_changed(
-            self.editor.pipeline_steps
-        )
-        ObjectStateRegistry.record_snapshot(
-            "reorder steps",
-            scope_id=str(self.editor.current_plate),
-        )
-
-    def restore_after_time_travel(
-        self,
-        dirty_states: TimeTravelDirtyStates | None = None,
-        triggering_scope: str | None = None,
-    ) -> None:
-        from objectstate.time_travel_profile import TimeTravelProfiler
-
-        del triggering_scope
-
-        with TimeTravelProfiler.phase(
-            "openhcs.pipeline_editor.restore_after_time_travel"
-        ):
-            with TimeTravelProfiler.phase("openhcs.pipeline_editor.load_steps"):
-                if self.editor.current_plate:
-                    self.editor.pipeline_steps = (
-                        self.editor._get_steps_from_pipeline_state(
-                            self.editor.current_plate
-                        )
-                    )
-                else:
-                    self.editor.pipeline_steps = []
-
-            with TimeTravelProfiler.phase("openhcs.pipeline_editor.normalize_tokens"):
-                self.editor._normalize_step_scope_tokens(register=False)
-            with TimeTravelProfiler.phase("openhcs.pipeline_editor.update_item_list"):
-                self.editor.update_item_list()
-            with TimeTravelProfiler.phase(
-                "openhcs.pipeline_editor.update_button_states"
-            ):
-                self.editor.update_button_states()
-            if not self._changed_pipeline_structure(dirty_states):
-                return
-
-            with TimeTravelProfiler.phase(
-                "openhcs.pipeline_editor.broadcast_pipeline_changed"
-            ):
-                self.editor._suppress_pipeline_state_sync = True
-                try:
-                    self.editor.pipeline_changed.emit(self.editor.pipeline_steps)
-                finally:
-                    self.editor._suppress_pipeline_state_sync = False
-                GuiEventBusBroadcaster(self.editor.event_bus).pipeline_changed(
-                    self.editor.pipeline_steps
-                )
-
-    def _changed_pipeline_structure(
-        self,
-        dirty_states: TimeTravelDirtyStates | None,
-    ) -> bool:
-        from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
-
-        if not self.editor.current_plate:
-            return False
-        if dirty_states is None:
-            return False
-
-        pipeline_scope = PipelineScopeIdentity.from_plate_scope(
-            self.editor.current_plate
-        ).scope_id
-        for scope_id, _state in dirty_states:
-            if scope_id == pipeline_scope:
-                return True
-        return False
-
-
-@dataclass(frozen=True, slots=True)
-class PipelineStepSaveWorkflow:
-    """Updates one edited step while preserving scope-token continuity."""
-
-    editor: "PipelineEditorWidget"
-    step_to_edit: FunctionStep
-    plate_scope: str
-
-    def save(self, edited_step: FunctionStep) -> None:
-        self.editor.require_pipeline_definition_mutation_allowed(self.plate_scope)
-        authoritative_steps = PipelineObjectStateBinding.replace_plate_step(
-            self.plate_scope,
-            self.step_to_edit,
-            edited_step,
-        )
-        self.editor.accept_authoritative_pipeline_steps(
-            self.plate_scope,
-            authoritative_steps,
-        )
-        self.editor.status_message.emit(f"Updated step: {edited_step.name}")
