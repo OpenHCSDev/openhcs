@@ -28,6 +28,7 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
 )
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from tests.unit.pyqt_gui.session_harness import (
+    release_widgets,
     GuiServiceStub,
     caller_session,
     qt_app,
@@ -271,6 +272,7 @@ def test_ui_config_reaches_the_session_progress_interval_and_transport() -> None
         finally:
             manager.cleanup()
             manager.close()
+            release_widgets(qt_app(), manager)
 
 
 def test_removed_ui_config_and_lifecycle_mirrors_do_not_recur() -> None:

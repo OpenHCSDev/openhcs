@@ -163,7 +163,7 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.pyqt_gui.config import get_default_ui_config
     from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-    from tests.unit.pyqt_gui.session_harness import GuiServiceStub
+    from tests.unit.pyqt_gui.session_harness import GuiServiceStub, release_widgets
 
     application = QApplication.instance() or QApplication([])
     root, source = _synthetic_dataset(tmp_path)
@@ -227,6 +227,8 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
         assert manager.buttons[RunDatasets.operation_id].text() == "Run"
     finally:
         manager.cleanup()
+        manager.close()
+        release_widgets(application, manager)
         session.close()
         dispatcher.close()
 

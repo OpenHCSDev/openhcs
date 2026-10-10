@@ -321,9 +321,9 @@ class PipelineEditorWidget(
         )
         self.show_debug_snapshot = self.debug_workflow.show_snapshot
         self._events = QtSessionEventRelay(session, parent=self)
-        self._events.published.connect(
-            lambda record: self.on_session_event(record.event)
-        )
+        # A bound method, not a closure over self: PyQt holds bound-method
+        # slots weakly, so the connection does not keep this widget alive.
+        self._events.published.connect(self._on_session_record)
         self.setup_ui()
         self.setup_connections()
         self._load_current_steps()
@@ -345,6 +345,9 @@ class PipelineEditorWidget(
             ScopeTokenService.seed_from_objects(scope_id, self.displayed_steps)
 
     # -- session events -------------------------------------------------------
+
+    def _on_session_record(self, record) -> None:
+        self.on_session_event(record.event)
 
     @singledispatchmethod
     def on_session_event(self, event: SessionEvent) -> None:

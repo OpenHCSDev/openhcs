@@ -688,7 +688,7 @@ def test_restart_selection_stays_aligned_after_a_list_refresh(tmp_path) -> None:
         selected = []
         manager.plate_selected.connect(selected.append)
 
-        DesktopRestartUiState(paths[1]).restore(manager, plate_paths=paths)
+        DesktopRestartUiState(paths[1]).restore(gui.session, plate_paths=paths)
         manager.update_item_list()
         gui.settle()
 

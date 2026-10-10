@@ -170,4 +170,22 @@ def session_gui(**session_kwargs) -> Iterator[SessionGui]:
             pipeline_editor.close()
             plate_manager.cleanup()
             plate_manager.close()
-            app.processEvents()
+            # Free both widget trees now. Left to garbage collection, a later
+            # test's application-wide restyle can walk a widget whose wrapper
+            # is collected mid-walk.
+            release_widgets(app, pipeline_editor, plate_manager)
+
+
+def release_widgets(app, *widgets) -> None:
+    """Delete widgets and process their deferred deletion before returning."""
+
+    from PyQt6.QtCore import QCoreApplication, QEvent
+
+    # Run zero-delay timers the widgets queued first: pyqt-reactive's manager
+    # header queues ``QTimer.singleShot(0, status_label.adjustSize)`` with no
+    # context object, so it would otherwise fire on the deleted label.
+    app.processEvents()
+    for widget in widgets:
+        widget.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete.value)
+    app.processEvents()

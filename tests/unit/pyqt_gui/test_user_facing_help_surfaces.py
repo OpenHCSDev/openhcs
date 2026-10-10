@@ -43,6 +43,7 @@ from openhcs.pyqt_gui.windows.help_window import (
     KnowledgeDocumentSelection,
 )
 from tests.unit.pyqt_gui.session_harness import (
+    release_widgets,
     GuiServiceStub,
     caller_session,
     qt_app,
@@ -486,6 +487,7 @@ def _open_manager_help(session, main_window, knowledge_service, calls) -> None:
         pipeline.close()
         plate.cleanup()
         plate.close()
+        release_widgets(qt_app(), pipeline, plate)
 
 
 def test_context_help_installation_delegates_to_title_composition() -> None:

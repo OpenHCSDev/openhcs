@@ -208,9 +208,9 @@ class PlateManagerWidget(
         super().__init__(service_adapter, color_scheme, parent=parent)
         self.code_execution_workflow = PlateManagerCodeWorkflow(session)
         self._events = QtSessionEventRelay(session, parent=self)
-        self._events.published.connect(
-            lambda record: self.on_session_event(record.event)
-        )
+        # A bound method, not a closure over self: PyQt holds bound-method
+        # slots weakly, so the connection does not keep this widget alive.
+        self._events.published.connect(self._on_session_record)
         self.setup_ui()
         self.setup_manager_connections()
         self.update_button_states()
@@ -253,6 +253,9 @@ class PlateManagerWidget(
         return tuple(row.scope_id for row in self.get_selected_items())
 
     # -- session events -------------------------------------------------------
+
+    def _on_session_record(self, record) -> None:
+        self.on_session_event(record.event)
 
     @singledispatchmethod
     def on_session_event(self, event: SessionEvent) -> None:

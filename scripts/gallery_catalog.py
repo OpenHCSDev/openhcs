@@ -1,8 +1,6 @@
 """Nominal source declarations for the public OpenHCS application gallery."""
 
 from __future__ import annotations
-from openhcs.authoring.session.operations import SessionOperation
-from openhcs.authoring.session.operations.datasets import ShowDatasetImages, ShowLiveResults
 
 import argparse
 import hashlib
@@ -28,6 +26,11 @@ from pyqt_reactive.services.system_monitor_actions import SystemMonitorAction
 from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.operations.datasets import (
+    ShowDatasetImages,
+    ShowLiveResults,
+)
 from openhcs.agent.ui_bridge_identities import (
     GlobalConfigWindowIdentity,
     ImageBrowserWindowIdentity,

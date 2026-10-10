@@ -49,6 +49,7 @@ from openhcs.pyqt_gui.windows.debug_inspector_window import (
     DebugArtifactMaterializeRequest,
 )
 from tests.unit.pyqt_gui.session_harness import (
+    release_widgets,
     GuiServiceStub,
     add_datasets,
     caller_session,
@@ -372,6 +373,7 @@ def debug_editor(tmp_path, monkeypatch, *, run_started_work: bool = False):
             yield DebugEditor(session, scope_id, editor, started, messages)
         finally:
             editor.close()
+            release_widgets(qt_app(), editor)
 
 
 def _identity(image):

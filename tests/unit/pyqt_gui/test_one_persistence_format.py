@@ -24,6 +24,7 @@ from openhcs.pyqt_gui.services.main_window_workflows import MainWindowPipelineAc
 from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
 from tests.unit.pyqt_gui.session_harness import (
+    release_widgets,
     GuiServiceStub,
     add_datasets,
     caller_session,
@@ -89,6 +90,7 @@ def test_pipeline_round_trips_through_python_file(tmp_path: Path) -> None:
             )
         finally:
             editor.close()
+            release_widgets(qt_app(), editor)
 
 
 def test_step_settings_round_trip_through_python_file(tmp_path: Path) -> None:

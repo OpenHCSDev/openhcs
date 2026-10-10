@@ -18,6 +18,7 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.config import get_default_ui_config
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from tests.unit.pyqt_gui.session_harness import (
+    release_widgets,
     GuiServiceStub,
     add_datasets,
     caller_session,
@@ -125,3 +126,4 @@ def test_run_button_uses_endpoint_readiness_without_disabling_stop(
         finally:
             manager.cleanup()
             manager.close()
+            release_widgets(qt_app(), manager)
