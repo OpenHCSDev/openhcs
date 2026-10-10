@@ -67,11 +67,7 @@ class ExecutionConnectionProjection:
         return self.connection.transport_mode
 
 
-class RuntimeServerToolRequest(AgentCliRequest):
-    """Nominal request type for generated runtime-server dev-client commands."""
-
-
-class RuntimeServerConnectionToolRequest(RuntimeServerToolRequest):
+class RuntimeServerConnectionToolRequest(AgentCliRequest):
     """Nominal request type for runtime-server tools using connection fields."""
 
     connection: ExecutionConnectionSpec
@@ -492,7 +488,7 @@ class RuntimeServerScanResult(ExecutionConnectionProjection):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeServerScanRequest(RuntimeServerToolRequest):
+class RuntimeServerScanRequest(AgentCliRequest):
     """Scan candidate ports for running OpenHCS execution servers."""
 
     ports: tuple[int, ...] | None = None

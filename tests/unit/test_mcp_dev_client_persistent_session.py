@@ -125,10 +125,10 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
     monkeypatch,
 ) -> None:
     from openhcs.mcp.dev_client_commands import ui
-    from openhcs.mcp.server import HealthCheckMcpToolBinding
+    from openhcs.mcp.server import McpCapabilityBinder
     from openhcs.serialization.json import to_jsonable
 
-    health_payload = to_jsonable(HealthCheckMcpToolBinding.execute(None))
+    health_payload = to_jsonable(McpCapabilityBinder.server_health())
 
     decoded_arguments = []
     parse_arguments = ui.parse_json_object
@@ -329,10 +329,10 @@ def test_persistent_client_preserves_local_usage_errors(
 def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
     monkeypatch,
 ) -> None:
-    from openhcs.mcp.server import HealthCheckMcpToolBinding
+    from openhcs.mcp.server import McpCapabilityBinder
     from openhcs.serialization.json import to_jsonable
 
-    health_payload = to_jsonable(HealthCheckMcpToolBinding.execute(None))
+    health_payload = to_jsonable(McpCapabilityBinder.server_health())
 
     class ProgressAwareFakeMcpDevStdioSession:
         def __init__(self, server_spec, server_stderr) -> None:

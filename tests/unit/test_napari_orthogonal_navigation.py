@@ -235,11 +235,11 @@ def test_displayed_z_may_be_fractional_and_span_slices_but_hidden_y_must_not():
 
 
 def test_generated_mcp_signature_derives_display_axes_from_existing_request():
-    from openhcs.mcp.server import McpViewerRequestToolBindingABC
+    from openhcs.agent.capabilities import agent_capabilities
 
-    parameters = McpViewerRequestToolBindingABC.request_option_parameters(
-        ViewerWindowNavigationRequest
-    )
+    capability = agent_capabilities.navigate_viewer_window
+    assert capability.input_contract is ViewerWindowNavigationRequest
+    parameters = capability.invocation.option_parameters(ViewerWindowNavigationRequest)
     assert "display_axes" in {parameter.name for parameter in parameters}
     request = ViewerWindowNavigationRequest.from_fields(
         connection=ExecutionConnectionSpec(port=5982),

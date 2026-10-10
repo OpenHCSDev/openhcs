@@ -24,7 +24,6 @@ from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     AgentCapabilityExposition,
     AgentDataclassRequestServiceInvocation,
-    CapabilityKind,
     CapabilityTargetContext,
     CapabilityVisibility,
     CapabilityWorkflowGroup,
@@ -53,7 +52,6 @@ class MeasuredPipelineCapability(BenchmarkCapability):
 
 class DiscoverBenchmarkCasesCapability(BenchmarkCapability):
     name = "openhcs_list_benchmark_cases"
-    kind = CapabilityKind.TOOL
     title = "List benchmark cases"
     description = (
         "Select exact comparison-manifest case names and report source readiness "
@@ -64,7 +62,7 @@ class DiscoverBenchmarkCasesCapability(BenchmarkCapability):
     )
     input_contract = BenchmarkCaseDiscoveryRequest
     output_contract = BenchmarkCaseCatalog
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: BenchmarkControlService(context.path_policy),
         method=lambda service, request: service.discover_cases(request),
     )
@@ -72,7 +70,6 @@ class DiscoverBenchmarkCasesCapability(BenchmarkCapability):
 
 class InspectBenchmarkRunCapability(BenchmarkCapability):
     name = "openhcs_inspect_benchmark_run"
-    kind = CapabilityKind.TOOL
     title = "Inspect benchmark run"
     description = (
         "Returns the typed recorded rerun invocation and lifecycle status, "
@@ -82,7 +79,7 @@ class InspectBenchmarkRunCapability(BenchmarkCapability):
     )
     input_contract = BenchmarkRunInspectionRequest
     output_contract = BenchmarkRunInspection
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: BenchmarkControlService(context.path_policy),
         method=lambda service, request: service.inspect_run(request),
     )
@@ -90,7 +87,6 @@ class InspectBenchmarkRunCapability(BenchmarkCapability):
 
 class ReportBenchmarkRunCapability(BenchmarkCapability):
     name = "openhcs_report_benchmark_run"
-    kind = CapabilityKind.TOOL
     title = "Report benchmark run"
     description = (
         "Render a bounded comparison-suite report from the same typed receipt "
@@ -99,7 +95,7 @@ class ReportBenchmarkRunCapability(BenchmarkCapability):
     )
     input_contract = BenchmarkRunInspectionRequest
     output_contract = BenchmarkRunReport
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: BenchmarkControlService(context.path_policy),
         method=lambda service, request: service.report_run(request),
     )
@@ -107,7 +103,6 @@ class ReportBenchmarkRunCapability(BenchmarkCapability):
 
 class InspectMeasuredPipelineRunCapability(MeasuredPipelineCapability):
     name = "openhcs_inspect_measured_pipeline_run"
-    kind = CapabilityKind.TOOL
     title = "Inspect measured pipeline run"
     description = (
         "Inspect a completed ordinary OpenHCS pipeline measurement from its typed "
@@ -117,7 +112,7 @@ class InspectMeasuredPipelineRunCapability(MeasuredPipelineCapability):
         "for that."
     )
     output_contract = MeasuredPipelineRunInspection
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: BenchmarkControlService(context.path_policy),
         method=lambda service, request: service.inspect_measured_run(request),
     )
@@ -125,7 +120,6 @@ class InspectMeasuredPipelineRunCapability(MeasuredPipelineCapability):
 
 class FinalizeMeasuredPipelineRunCapability(BenchmarkCapability):
     name = "openhcs_finalize_measured_pipeline_run"
-    kind = CapabilityKind.TOOL
     title = "Finalize measured pipeline run"
     description = (
         "Validate the runtime observation and retain a typed benchmark receipt "
@@ -141,7 +135,7 @@ class FinalizeMeasuredPipelineRunCapability(BenchmarkCapability):
     )
     input_contract = MeasuredPipelineRunFinalizationRequest
     output_contract = MeasuredPipelineRunReceipt
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: BenchmarkControlService(
             context.path_policy, context.execution_service
         ),
@@ -151,7 +145,6 @@ class FinalizeMeasuredPipelineRunCapability(BenchmarkCapability):
 
 class ReportMeasuredPipelineRunCapability(MeasuredPipelineCapability):
     name = "openhcs_report_measured_pipeline_run"
-    kind = CapabilityKind.TOOL
     title = "Report measured pipeline run"
     description = (
         "Render a concise report from the same bounded completed-run receipt "
@@ -159,7 +152,7 @@ class ReportMeasuredPipelineRunCapability(MeasuredPipelineCapability):
         "does not certify pipeline output files."
     )
     output_contract = MeasuredPipelineRunReport
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: BenchmarkControlService(context.path_policy),
         method=lambda service, request: service.report_measured_run(request),
     )

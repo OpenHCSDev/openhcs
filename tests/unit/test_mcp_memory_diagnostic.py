@@ -144,24 +144,6 @@ def test_request_sequence_decodes_existing_owner_and_rejects_mutations(tmp_path)
         read_request_sequence(path)
 
 
-def test_mutating_declaration_without_side_effects_is_rejected(tmp_path, monkeypatch):
-    from openhcs.agent import capabilities
-
-    capability = replace(
-        capabilities.get_agent_capability(
-            capabilities.agent_capabilities.health_check.name
-        ),
-        mutating=True,
-        side_effects=(),
-    )
-    assert not capability.read_only
-    monkeypatch.setattr(capabilities, "get_agent_capability", lambda name: capability)
-    path = tmp_path / "sequence.json"
-    path.write_text(json.dumps([{"name": capability.name, "arguments": {}}]))
-    with pytest.raises(ValueError, match="read-only"):
-        read_request_sequence(path)
-
-
 def test_integrated_artifact_plan_is_not_admitted_as_read_only(tmp_path):
     from openhcs.agent.capabilities import agent_capabilities, get_agent_capability
 

@@ -30,7 +30,7 @@ from zmqruntime.config import TransportMode
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.agent.capabilities import (
-    AgentCapabilitySpec,
+    AgentCapabilityDeclaration,
     FullLocalCapabilitySurfaceProfile,
     LocalCapabilitySurfaceProfile,
     get_agent_capability,
@@ -804,7 +804,7 @@ class McpDevToolBatchResponse(McpDevResponse):
             results=tuple(result.decoded_for_rendering() for result in framed.results),
         )
 
-    def payload_for(self, capability: AgentCapabilitySpec):
+    def payload_for(self, capability: type[AgentCapabilityDeclaration]):
         result = next(
             (result for result in self.results if result.tool == capability.name), None
         )
@@ -2612,6 +2612,8 @@ def mcp_dev_command_key(
     if isinstance(declared_command, str):
         return declared_command
     declared_capability = vars(command_spec_type).get("capability")
-    if isinstance(declared_capability, AgentCapabilitySpec):
+    if isinstance(declared_capability, type) and issubclass(
+        declared_capability, AgentCapabilityDeclaration
+    ):
         return declared_capability.cli_command
     return None

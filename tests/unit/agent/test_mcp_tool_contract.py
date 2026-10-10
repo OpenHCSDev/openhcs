@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -63,9 +66,31 @@ def current_mcp_contract() -> dict[str, object]:
     return asyncio.run(collect())
 
 
+def _fresh_process_contract() -> dict[str, object]:
+    """Collect in a fresh interpreter, as a client sees it; tests may register
+    temporary declarations in this process."""
+    repository_root = Path(__file__).resolve().parents[3]
+    completed = subprocess.run(
+        (
+            sys.executable,
+            "-c",
+            "import json, sys; sys.path.insert(0, sys.argv[1]); "
+            "import test_mcp_tool_contract as contract; "
+            "print(json.dumps(contract.current_mcp_contract()))",
+            str(Path(__file__).resolve().parent),
+        ),
+        cwd=repository_root,
+        env={**os.environ, "PYTHONPATH": str(repository_root)},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(completed.stdout.strip().splitlines()[-1])
+
+
 def test_mcp_tools_resources_and_schemas_match_main_contract():
     expected = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
-    actual = current_mcp_contract()
+    actual = _fresh_process_contract()
 
     assert actual["surfaces"] == expected["surfaces"]
     assert sorted(actual["tools"]) == sorted(expected["tools"])

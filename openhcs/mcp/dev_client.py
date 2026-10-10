@@ -46,10 +46,7 @@ from openhcs.mcp.dev_client_core import (
     workflow_poll_summary_result as workflow_poll_summary_result,
     workflow_poll_terminal_status as workflow_poll_terminal_status,
 )
-from openhcs.mcp.dev_client_commanding import (
-    GeneratedMcpDevCommandProfile as GeneratedMcpDevCommandProfile,
-    McpDevCommandSpec,
-)
+from openhcs.mcp.dev_client_commanding import McpDevCommandSpec
 from openhcs.mcp import dev_client_commands as dev_client_commands
 from openhcs.mcp.dev_client_rendering import (
     DEFAULT_CODE_DOCUMENT_MAX_CHARS as DEFAULT_CODE_DOCUMENT_MAX_CHARS,
@@ -61,7 +58,6 @@ __all__ = (
     "AllComponents",
     "DEFAULT_CODE_DOCUMENT_MAX_CHARS",
     "DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS",
-    "GeneratedMcpDevCommandProfile",
     "McpDevCliUsageError",
     "McpDevClientPhase",
     "McpDevClient",

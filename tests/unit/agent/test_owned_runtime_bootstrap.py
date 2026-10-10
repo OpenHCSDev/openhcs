@@ -798,11 +798,11 @@ def test_close_uses_standard_context_and_declared_service_invocation(
     typed_request = dataclass_from_mapping(
         RuntimeBootstrapCloseRequest, {"handle": to_jsonable(handle)}
     )
-    from openhcs.agent.capabilities import get_agent_capability_declaration
+    from openhcs.agent.capabilities import get_agent_capability
 
-    declaration = get_agent_capability_declaration(
+    declaration = get_agent_capability(
         agent_capabilities.close_owned_runtime.name
     )
-    result = declaration.request_invocation.execute(context, typed_request)
+    result = declaration.invocation.execute(context, typed_request)
     assert result.handle == handle and result.outcome.process_exited is True
     close.assert_called_once()
