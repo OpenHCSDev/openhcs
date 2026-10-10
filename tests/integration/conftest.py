@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+import socket
+from collections.abc import Callable, Iterator, Sequence
+from dataclasses import replace
 from typing import Any
 
 import pytest
+from zmqruntime import EndpointShutdownMode, ZMQClient
+from zmqruntime.transport import DataControlPortPairAuthority
+
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 from tests.integration.helpers.fixture_utils import (
     BACKEND_CONFIGS,
@@ -112,3 +118,53 @@ def enable_fiji(
     return bool(
         request.config.getoption("--enable-fiji") or visualizer_config["enable_fiji"]
     )
+
+
+def _os_assigned_port() -> int:
+    """Ask the OS for a currently unused port to start this run's search from."""
+    while True:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.bind(("127.0.0.1", 0))
+            port = probe.getsockname()[1]
+        if port + OPENHCS_ZMQ_CONFIG.control_port_offset <= 65535:
+            return port
+
+
+@pytest.fixture
+def free_port_pair() -> Iterator[Callable[[], int]]:
+    """Allocate this test's own data/control endpoint pairs.
+
+    Every server, viewer and client a test starts takes its port from here, so
+    concurrent runs never share an endpoint. Pairs come from the transport owner
+    that will bind them; the search starts at an OS-assigned port instead of the
+    configured default, which every concurrent run would otherwise pick first.
+    Whatever still listens on an allocated pair at teardown, such as a viewer
+    a spawned execution server kept alive, is shut down.
+    """
+    allocated: set[int] = set()
+    data_ports: list[int] = []
+
+    def allocate() -> int:
+        pair = DataControlPortPairAuthority.acquire(
+            replace(OPENHCS_ZMQ_CONFIG, default_port=_os_assigned_port()),
+            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+            excluded=allocated,
+        )
+        allocated.update(pair.ports)
+        data_ports.append(pair.data_port)
+        return pair.data_port
+
+    yield allocate
+
+    for port in data_ports:
+        endpoint = OPENHCS_ZMQ_CONFIG.client_endpoint(port)
+        for mode in (EndpointShutdownMode.GRACEFUL, EndpointShutdownMode.FORCE):
+            if not endpoint.occupied_ports(OPENHCS_ZMQ_CONFIG):
+                break
+            ZMQClient.shutdown_endpoint_on_port(
+                port,
+                mode,
+                transport_mode=endpoint.transport_mode,
+                host=endpoint.host,
+                config=OPENHCS_ZMQ_CONFIG,
+            )
