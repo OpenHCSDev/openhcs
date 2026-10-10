@@ -279,11 +279,11 @@ def main() -> None:
         raise ValueError("Amortized comparison requires measured CP8 and the OH one-worker twelve-assignment mode")
     amortized_stats = {}
     for scope in ("execution", "total"):
-        source = sources[oh_serial_name, scope]
+        source, native_source = sources[oh_serial_name, scope], sources[cp8_name, scope]
         ratios = []
         for case_name, row in tables[oh_serial_name, scope].items():
-            reference = cases[cp8_name][case_name]["native_headline_reference"]
-            native = reference["execution_seconds" if scope == "execution" else "prepared_invocation_seconds"] / 8
+            native_row = tables[cp8_name, scope][case_name]
+            native = native_source.metric_rows(case_name, native_row, category_row=native_row)[0].raw_seconds / 8
             ratios.append(native / (source.metric_rows(case_name, row, category_row=row)[1].raw_seconds / 12))
         summary = figures.SpeedupSummaryStatistics.from_series(
             figures.SpeedupDistributionSeries("CP8 measured / OH 12 one worker, per sample", tuple(ratios)))
