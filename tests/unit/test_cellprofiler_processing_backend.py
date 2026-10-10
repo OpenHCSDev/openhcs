@@ -498,7 +498,9 @@ def test_openhcs_registry_cache_identity_includes_memory_import_policy(
     assert cpu_only_signature["context"]["allowed_memory_types"] == [
         MemoryType.NUMPY.value
     ]
-    assert gpu_enabled_signature["context"]["allowed_memory_types"] is None
+    assert gpu_enabled_signature["context"]["allowed_memory_types"] == sorted(
+        memory_type.value for memory_type in MemoryType if memory_type.is_installed()
+    )
     assert cpu_only_signature != gpu_enabled_signature
     assert cpu_only_path != gpu_enabled_path
     assert cpu_only_path.parent == gpu_enabled_path.parent == tmp_path
@@ -509,6 +511,7 @@ def test_openhcs_registry_cache_identity_includes_framework_packages(
 ) -> None:
     registry = OpenHCSRegistry()
     registry.MODULES_TO_SCAN = []
+    monkeypatch.delenv(OpenHCSProcessEnvironment.cpu_only_key, raising=False)
     monkeypatch.setattr(
         MemoryType,
         "is_installed",
@@ -519,10 +522,10 @@ def test_openhcs_registry_cache_identity_includes_framework_packages(
     monkeypatch.setattr(MemoryType, "is_installed", lambda _memory_type: True)
     full_signature = json.loads(registry.get_discovery_signature())
 
-    assert numpy_only_signature["context"]["installed_memory_types"] == [
+    assert numpy_only_signature["context"]["allowed_memory_types"] == [
         MemoryType.NUMPY.value
     ]
-    assert full_signature["context"]["installed_memory_types"] == sorted(
+    assert full_signature["context"]["allowed_memory_types"] == sorted(
         memory_type.value for memory_type in MemoryType
     )
     assert numpy_only_signature != full_signature

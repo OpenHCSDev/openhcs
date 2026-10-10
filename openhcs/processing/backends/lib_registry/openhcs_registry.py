@@ -36,7 +36,9 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.processing.custom_functions.runtime_registry import CustomFunctionCanonicalLookup
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionCanonicalLookup,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,9 @@ class _CatalogDeclarationSourceSelection(ast.NodeVisitor):
     """Read declaration eligibility through Python's native AST traversal owner."""
 
     def __init__(
-        self, keys: frozenset[str], attributes: tuple[str, ...],
+        self,
+        keys: frozenset[str],
+        attributes: tuple[str, ...],
         normalize: Callable[[str], str],
     ) -> None:
         self.keys = keys
@@ -117,12 +121,14 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
         projection is cached.
         """
         missing = lookup_keys.difference(
-            key for declaration in dict.values(cls.__registry__)
+            key
+            for declaration in dict.values(cls.__registry__)
             for key in declared_keys(declaration)
         )
         if not missing:
             return tuple(
-                declaration for declaration in dict.values(cls.__registry__)
+                declaration
+                for declaration in dict.values(cls.__registry__)
                 if lookup_keys.intersection(declared_keys(declaration))
             )
 
@@ -134,13 +140,16 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
             if source is None:
                 return True
             module_ast = ast.parse(source, filename=spec.origin or module_name)
-            selection = _CatalogDeclarationSourceSelection(missing, attributes, normalize)
+            selection = _CatalogDeclarationSourceSelection(
+                missing, attributes, normalize
+            )
             selection.visit(module_ast)
             return selection.selected
 
         cls.__registry__.discover_matching(eligible)
         return tuple(
-            declaration for declaration in dict.values(cls.__registry__)
+            declaration
+            for declaration in dict.values(cls.__registry__)
             if lookup_keys.intersection(declared_keys(declaration))
         )
 
@@ -153,9 +162,13 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
     def for_backend_function_name(cls, function_name: str) -> type | None:
         """Resolve one function through this nominal catalog's declarations."""
         if not isinstance(function_name, str) or not function_name.strip():
-            raise ValueError(f"{cls.__name__}.function_name must be a non-empty string.")
+            raise ValueError(
+                f"{cls.__name__}.function_name must be a non-empty string."
+            )
         matches = cls.discover_source_declarations(
-            frozenset((function_name,)), ("function_name", "function_variants"), str,
+            frozenset((function_name,)),
+            ("function_name", "function_variants"),
+            str,
             lambda declaration: frozenset(declaration.declared_function_names()),
         )
         if len(matches) > 1:
@@ -211,11 +224,18 @@ _MEMORY_DECORATOR_IMPORT_MODULES = frozenset(
 )
 
 
-def _allowed_openhcs_memory_types() -> frozenset[str] | None:
-    """Return the memory types eligible for OpenHCS registry imports."""
-    if not OpenHCSProcessEnvironment.cpu_only_mode():
-        return None
-    return frozenset((MemoryType.NUMPY.value,))
+def _allowed_openhcs_memory_types() -> frozenset[str]:
+    """Return the installed memory types eligible for OpenHCS registry imports.
+
+    A declaration whose framework is not installed (an optional extra) is not
+    part of this installation's catalog; CPU-only mode further admits NumPy only.
+    """
+    installed = frozenset(
+        memory_type.value for memory_type in MemoryType if memory_type.is_installed()
+    )
+    if OpenHCSProcessEnvironment.cpu_only_mode():
+        return installed & {MemoryType.NUMPY.value}
+    return installed
 
 
 def _catalog_memory_types(func: Callable) -> frozenset[MemoryType] | None:
@@ -226,21 +246,15 @@ def _catalog_memory_types(func: Callable) -> frozenset[MemoryType] | None:
     except ValueError:
         return None
     allowed = _allowed_openhcs_memory_types()
-    if allowed is not None and any(
-        memory_type.value not in allowed for memory_type in declared
-    ):
-        return None
-    if any(not memory_type.is_installed() for memory_type in declared):
+    if any(memory_type.value not in allowed for memory_type in declared):
         return None
     return declared
 
 
 def _module_declares_allowed_memory_type(
     module_name: str,
-    allowed_memory_types: frozenset[str] | None,
+    allowed_memory_types: frozenset[str],
 ) -> bool:
-    if allowed_memory_types is None:
-        return True
     spec = importlib.util.find_spec(module_name)
     if spec is not None and spec.submodule_search_locations is not None:
         return True
@@ -491,17 +505,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
     def cache_discovery_context(self) -> dict[str, Any]:
         """Project the declaration-import policy into catalogue cache identity."""
 
-        allowed_memory_types = _allowed_openhcs_memory_types()
-        return {
-            "allowed_memory_types": (
-                None if allowed_memory_types is None else sorted(allowed_memory_types)
-            ),
-            "installed_memory_types": sorted(
-                memory_type.value
-                for memory_type in MemoryType
-                if memory_type.is_installed()
-            ),
-        }
+        return {"allowed_memory_types": sorted(_allowed_openhcs_memory_types())}
 
     def is_library_available(self) -> bool:
         """OpenHCS is always available."""
@@ -666,7 +670,8 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             or callable_contract.output_memory_type not in VALID_MEMORY_TYPES
         ):
             logger.debug(
-                "Skipping %s - invalid input/output memory declarations", declared.__name__
+                "Skipping %s - invalid input/output memory declarations",
+                declared.__name__,
             )
             return None
 
@@ -688,7 +693,9 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         if callable_contract is None:
             return None
         declared = inspect.unwrap(func)
-        plate_scoped = callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
+        plate_scoped = (
+            callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
+        )
 
         contract = self._processing_contract_for_function(
             callable_contract,
